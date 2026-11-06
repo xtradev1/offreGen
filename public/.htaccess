@@ -1,0 +1,50 @@
+# À copier en public/.htaccess. La racine web du site pointe sur public/ et rien d'autre.
+# Modèle pour PHP sous Apache. La sonde d'exposition et ses fichiers témoins font foi : ce fichier
+# n'est réputé correct qu'après une sonde verte sur le vrai hébergement.
+# Aucun bloc IfModule : si un module manque, le site renvoie une erreur 500 au lieu de perdre sa
+# protection en silence.
+# Prérequis : certificat valide, car HSTS et la redirection HTTPS s'appliquent dès le premier déploiement.
+
+Options -Indexes -MultiViews
+
+RewriteEngine On
+
+# HTTPS. Infomaniak documente ce test derrière son proxy. En cas de boucle de redirection,
+# remplacer la condition par : RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# Le dossier standard .well-known reste lisible (validation de certificat).
+RewriteRule ^\.well-known/ - [L]
+
+# Fichiers et dossiers cachés refusés.
+RewriteRule (^|/)\. - [F,L]
+
+# Seul le contrôleur frontal s'exécute. Le motif couvre aussi /x.php/suite, qui exécuterait x.php.
+RewriteRule ^index\.php$ - [L]
+RewriteRule \.(php[0-9s]?|phar|phtml)(/|$) - [F,L,NC]
+
+# Refus par défaut : un fichier existant n'est servi que si son extension figure dans cette liste.
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_URI} !\.(css|js|mjs|png|jpe?g|gif|svg|webp|avif|ico|woff2?|txt|webmanifest)$ [NC]
+RewriteRule ^ - [F,L]
+
+# Un fichier statique autorisé est servi. Tout le reste passe par le contrôleur frontal.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]
+
+# Seconde ligne, active même si les règles ci-dessus changent.
+<FilesMatch "\.(env|ini|log|sql|bak|old|orig|swp|sh|lock|ya?ml|md|dist|zip|tar|gz)$">
+  Require all denied
+</FilesMatch>
+
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+# Fonctions du navigateur fermées par défaut. Micro autorisé sur ce site pour la dictée vocale.
+Header always set Permissions-Policy "camera=(), microphone=(self), geolocation=()"
+# Politique fermée : toute source externe s'ajoute explicitement, avec sa raison en commentaire.
+Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'"
+Header always set Strict-Transport-Security "max-age=31536000"
+Header always unset X-Powered-By
+Header unset X-Powered-By

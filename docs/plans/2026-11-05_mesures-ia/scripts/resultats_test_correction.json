@@ -1,0 +1,812 @@
+{
+ "qwen3.8:27b": [
+  {
+   "passe": 0,
+   "cmd": "ajoute une remise de 5 %",
+   "typ": "ordre",
+   "ok": true,
+   "i": 871,
+   "e": 27,
+   "cost": 0.0005294000000000001,
+   "d": 18.01,
+   "load": 14.3,
+   "calls": [
+    [
+     "set_global_discount",
+     {
+      "percent": 5
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "le parquet du salon c'est 65 francs le mètre carré",
+   "typ": "ordre",
+   "ok": true,
+   "i": 879,
+   "e": 41,
+   "cost": 0.0005746000000000001,
+   "d": 3.38,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L2",
+      "prix": 65
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "finalement c'est 42 mètres carrés de parquet dans le salon",
+   "typ": "ordre",
+   "ok": true,
+   "i": 879,
+   "e": 41,
+   "cost": 0.0005746000000000001,
+   "d": 3.4,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L2",
+      "qte": 42
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "enlève les plinthes",
+   "typ": "ordre",
+   "ok": true,
+   "i": 870,
+   "e": 28,
+   "cost": 0.000532,
+   "d": 3.2,
+   "load": 0.0,
+   "calls": [
+    [
+     "remove_line",
+     {
+      "line_id": "L4"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "ajoute deux jours d'électricien à 720 francs",
+   "typ": "ordre",
+   "ok": true,
+   "i": 878,
+   "e": 66,
+   "cost": 0.0006492000000000001,
+   "d": 3.67,
+   "load": 0.0,
+   "calls": [
+    [
+     "add_line",
+     {
+      "label": "Électricien",
+      "unite": "jour",
+      "qte": 2,
+      "prix": 720
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "passe le parquet de la chambre à 70",
+   "typ": "ordre",
+   "ok": true,
+   "i": 874,
+   "e": 41,
+   "cost": 0.0005726,
+   "d": 3.47,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L3",
+      "prix": 70
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "5 % de remise sur la peinture seulement",
+   "typ": "ordre",
+   "ok": true,
+   "i": 871,
+   "e": 40,
+   "cost": 0.0005684,
+   "d": 3.38,
+   "load": 0.0,
+   "calls": [
+    [
+     "set_line_discount",
+     {
+      "line_id": "L5",
+      "percent": 5
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "le parquet du salon à 65, les plinthes à 16 et une remise de 3 %",
+   "typ": "ordre",
+   "ok": true,
+   "i": 887,
+   "e": 109,
+   "cost": 0.0007818,
+   "d": 4.26,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L2",
+      "prix": 65
+     }
+    ],
+    [
+     "update_line",
+     {
+      "line_id": "L4",
+      "prix": 16
+     }
+    ],
+    [
+     "set_global_discount",
+     {
+      "percent": 3
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "trois jours et demi de pose au lieu de trois",
+   "typ": "ordre",
+   "ok": true,
+   "i": 874,
+   "e": 42,
+   "cost": 0.0005756000000000001,
+   "d": 3.4,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L6",
+      "qte": 3.5
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "change le prix du parquet",
+   "typ": "piege",
+   "ok": true,
+   "i": 868,
+   "e": 65,
+   "cost": 0.0006422,
+   "d": 4.03,
+   "load": 0.0,
+   "calls": [
+    [
+     "ask_clarification",
+     {
+      "question": "Lequel des deux parquet souhaitez-vous modifier : le parquet chêne du salon (L2) ou celui de la chambre (L3) ? Et à quel nouveau prix unitaire ?"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "mets 70",
+   "typ": "piege",
+   "ok": true,
+   "i": 868,
+   "e": 49,
+   "cost": 0.0005942,
+   "d": 3.8,
+   "load": 0.0,
+   "calls": [
+    [
+     "ask_clarification",
+     {
+      "question": "Sur quelle ligne souhaitez-vous mettre 70 ? (prix unitaire, quantité, ou autre ?)"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 0,
+   "cmd": "le client va peut-être demander une remise",
+   "typ": "piege",
+   "ok": true,
+   "i": 871,
+   "e": 56,
+   "cost": 0.0006164,
+   "d": 3.71,
+   "load": 0.0,
+   "calls": [
+    [
+     "ask_clarification",
+     {
+      "question": "Souhaitez-vous appliquer une remise maintenant ? Si oui, quel pourcentage et sur quelle ligne (ou sur toute l'offre) ?"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "ajoute une remise de 5 %",
+   "typ": "ordre",
+   "ok": true,
+   "i": 871,
+   "e": 27,
+   "cost": 0.0005294000000000001,
+   "d": 3.28,
+   "load": 0.0,
+   "calls": [
+    [
+     "set_global_discount",
+     {
+      "percent": 5
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "le parquet du salon c'est 65 francs le mètre carré",
+   "typ": "ordre",
+   "ok": true,
+   "i": 879,
+   "e": 41,
+   "cost": 0.0005746000000000001,
+   "d": 3.32,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L2",
+      "prix": 65
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "finalement c'est 42 mètres carrés de parquet dans le salon",
+   "typ": "ordre",
+   "ok": true,
+   "i": 879,
+   "e": 41,
+   "cost": 0.0005746000000000001,
+   "d": 3.38,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L2",
+      "qte": 42
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "enlève les plinthes",
+   "typ": "ordre",
+   "ok": true,
+   "i": 870,
+   "e": 28,
+   "cost": 0.000532,
+   "d": 3.28,
+   "load": 0.0,
+   "calls": [
+    [
+     "remove_line",
+     {
+      "line_id": "L4"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "ajoute deux jours d'électricien à 720 francs",
+   "typ": "ordre",
+   "ok": true,
+   "i": 878,
+   "e": 66,
+   "cost": 0.0006492000000000001,
+   "d": 3.68,
+   "load": 0.0,
+   "calls": [
+    [
+     "add_line",
+     {
+      "label": "Électricien",
+      "unite": "jour",
+      "qte": 2,
+      "prix": 720
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "passe le parquet de la chambre à 70",
+   "typ": "ordre",
+   "ok": true,
+   "i": 874,
+   "e": 41,
+   "cost": 0.0005726,
+   "d": 3.45,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L3",
+      "prix": 70
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "5 % de remise sur la peinture seulement",
+   "typ": "ordre",
+   "ok": true,
+   "i": 871,
+   "e": 40,
+   "cost": 0.0005684,
+   "d": 3.39,
+   "load": 0.0,
+   "calls": [
+    [
+     "set_line_discount",
+     {
+      "line_id": "L5",
+      "percent": 5
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "le parquet du salon à 65, les plinthes à 16 et une remise de 3 %",
+   "typ": "ordre",
+   "ok": true,
+   "i": 887,
+   "e": 109,
+   "cost": 0.0007818,
+   "d": 4.21,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L2",
+      "prix": 65
+     }
+    ],
+    [
+     "update_line",
+     {
+      "line_id": "L4",
+      "prix": 16
+     }
+    ],
+    [
+     "set_global_discount",
+     {
+      "percent": 3
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "trois jours et demi de pose au lieu de trois",
+   "typ": "ordre",
+   "ok": true,
+   "i": 874,
+   "e": 42,
+   "cost": 0.0005756000000000001,
+   "d": 3.44,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L6",
+      "qte": 3.5
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "change le prix du parquet",
+   "typ": "piege",
+   "ok": true,
+   "i": 868,
+   "e": 63,
+   "cost": 0.0006362,
+   "d": 3.99,
+   "load": 0.0,
+   "calls": [
+    [
+     "ask_clarification",
+     {
+      "question": "Lequel des deux parquet souhaitez-vous modifier : le parquet chêne du salon (L2) ou celui de la chambre (L3) ? Et à quel nouveau prix ?"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "mets 70",
+   "typ": "piege",
+   "ok": true,
+   "i": 868,
+   "e": 59,
+   "cost": 0.0006242,
+   "d": 3.81,
+   "load": 0.0,
+   "calls": [
+    [
+     "ask_clarification",
+     {
+      "question": "Sur quelle ligne souhaitez-vous mettre 70 ? (par exemple : le prix unitaire d'une ligne, la quantité, ou la remise globale ?)"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 1,
+   "cmd": "le client va peut-être demander une remise",
+   "typ": "piege",
+   "ok": true,
+   "i": 871,
+   "e": 56,
+   "cost": 0.0006164,
+   "d": 3.75,
+   "load": 0.0,
+   "calls": [
+    [
+     "ask_clarification",
+     {
+      "question": "Souhaitez-vous appliquer une remise maintenant ? Si oui, quel pourcentage et sur quelle ligne (ou sur toute l'offre) ?"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "ajoute une remise de 5 %",
+   "typ": "ordre",
+   "ok": true,
+   "i": 871,
+   "e": 27,
+   "cost": 0.0005294000000000001,
+   "d": 3.26,
+   "load": 0.0,
+   "calls": [
+    [
+     "set_global_discount",
+     {
+      "percent": 5
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "le parquet du salon c'est 65 francs le mètre carré",
+   "typ": "ordre",
+   "ok": true,
+   "i": 879,
+   "e": 41,
+   "cost": 0.0005746000000000001,
+   "d": 3.43,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L2",
+      "prix": 65
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "finalement c'est 42 mètres carrés de parquet dans le salon",
+   "typ": "ordre",
+   "ok": true,
+   "i": 879,
+   "e": 41,
+   "cost": 0.0005746000000000001,
+   "d": 3.44,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L2",
+      "qte": 42
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "enlève les plinthes",
+   "typ": "ordre",
+   "ok": true,
+   "i": 870,
+   "e": 28,
+   "cost": 0.000532,
+   "d": 3.29,
+   "load": 0.0,
+   "calls": [
+    [
+     "remove_line",
+     {
+      "line_id": "L4"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "ajoute deux jours d'électricien à 720 francs",
+   "typ": "ordre",
+   "ok": true,
+   "i": 878,
+   "e": 66,
+   "cost": 0.0006492000000000001,
+   "d": 3.71,
+   "load": 0.0,
+   "calls": [
+    [
+     "add_line",
+     {
+      "label": "Électricien",
+      "unite": "jour",
+      "qte": 2,
+      "prix": 720
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "passe le parquet de la chambre à 70",
+   "typ": "ordre",
+   "ok": true,
+   "i": 874,
+   "e": 41,
+   "cost": 0.0005726,
+   "d": 3.46,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L3",
+      "prix": 70
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "5 % de remise sur la peinture seulement",
+   "typ": "ordre",
+   "ok": true,
+   "i": 871,
+   "e": 40,
+   "cost": 0.0005684,
+   "d": 3.39,
+   "load": 0.0,
+   "calls": [
+    [
+     "set_line_discount",
+     {
+      "line_id": "L5",
+      "percent": 5
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "le parquet du salon à 65, les plinthes à 16 et une remise de 3 %",
+   "typ": "ordre",
+   "ok": true,
+   "i": 887,
+   "e": 109,
+   "cost": 0.0007818,
+   "d": 4.23,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L2",
+      "prix": 65
+     }
+    ],
+    [
+     "update_line",
+     {
+      "line_id": "L4",
+      "prix": 16
+     }
+    ],
+    [
+     "set_global_discount",
+     {
+      "percent": 3
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "trois jours et demi de pose au lieu de trois",
+   "typ": "ordre",
+   "ok": true,
+   "i": 874,
+   "e": 42,
+   "cost": 0.0005756000000000001,
+   "d": 3.42,
+   "load": 0.0,
+   "calls": [
+    [
+     "update_line",
+     {
+      "line_id": "L6",
+      "qte": 3.5
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "change le prix du parquet",
+   "typ": "piege",
+   "ok": true,
+   "i": 868,
+   "e": 65,
+   "cost": 0.0006422,
+   "d": 4.05,
+   "load": 0.0,
+   "calls": [
+    [
+     "ask_clarification",
+     {
+      "question": "Lequel des deux parquet souhaitez-vous modifier : le parquet chêne du salon (L2) ou celui de la chambre (L3) ? Et à quel nouveau prix unitaire ?"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "mets 70",
+   "typ": "piege",
+   "ok": true,
+   "i": 868,
+   "e": 55,
+   "cost": 0.0006122,
+   "d": 3.89,
+   "load": 0.0,
+   "calls": [
+    [
+     "ask_clarification",
+     {
+      "question": "Sur quelle ligne souhaitez-vous mettre 70 ? (par exemple : le prix unitaire d'une ligne, ou la quantité ?)"
+     }
+    ]
+   ],
+   "texte": ""
+  },
+  {
+   "passe": 2,
+   "cmd": "le client va peut-être demander une remise",
+   "typ": "piege",
+   "ok": true,
+   "i": 871,
+   "e": 62,
+   "cost": 0.0006344,
+   "d": 3.86,
+   "load": 0.0,
+   "calls": [
+    [
+     "ask_clarification",
+     {
+      "question": "Souhaitez-vous appliquer une remise sur l'offre ? Si oui, quel pourcentage et sur quelle ligne (ou sur l'ensemble de l'offre) ?"
+     }
+    ]
+   ],
+   "texte": ""
+  }
+ ],
+ "gemma4:31b": [
+  {
+   "passe": 0,
+   "cmd": "ajoute une remise de 5 %",
+   "typ": "ordre",
+   "ok": true,
+   "i": 604,
+   "e": 15,
+   "cost": 0.00022680000000000004,
+   "d": 17.73,
+   "load": 14.3,
+   "calls": [
+    [
+     "set_global_discount",
+     {
+      "percent": 5
+     }
+    ]
+   ],
+   "texte": ""
+  }
+ ]
+}
