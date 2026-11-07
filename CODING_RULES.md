@@ -26,7 +26,10 @@ répétées ici.
 ## Ergonomie
 - L'application s'utilise sur un téléphone, sur un chantier : grandes zones de toucher, lisible en plein jour.
 - Une action fréquente se fait en un clic.
-- Supprimer une ligne d'offre : deux variantes à départager par des tests avec des artisans, un clic suivi d'« Annuler » pendant quelques secondes, ou un clic suivi d'une confirmation. Choix de Xavier après ces tests.
+- Utilisable au pouce, d'une main : les actions principales sont dans le tiers bas de l'écran, les confirmations s'ouvrent en bas, chaque cible mesure 44 px au moins. Le haut de l'écran ne porte que des informations et des actions secondaires.
+- Supprimer une ligne d'offre : un clic, puis « Annuler » reste visible quelques secondes. Choix de Xavier sur la maquette du 2026-11-06, à confirmer par les tests avec des artisans.
+- Une ligne incertaine s'affiche « À vérifier », sans pourcentage de confiance et sans rappel de la dictée (choix de Xavier, 2026-11-06).
+- Le document envoyé au client ne montre ni la marge, ni le fournisseur d'une ligne libre, ni le motif ou le pourcentage d'une majoration : la ligne garde son nom, à son nouveau prix (Xavier, 2026-11-06).
 - Une confirmation est toujours demandée pour ce qui ne se rattrape pas : envoyer une offre au client, supprimer une offre entière.
 - L'audio arrive de deux façons : un fichier enregistré avec l'application du téléphone puis importé (prioritaire), ou un enregistrement dans l'application. Le traitement est asynchrone : l'artisan est prévenu quand l'offre est prête.
 - Toute correction vocale a son équivalent à l'écran, qui ne coûte aucun appel au modèle.
