@@ -11,7 +11,7 @@ répétées ici.
 - Bibliothèques retenues : `symfony/http-foundation`, `routing`, `validator`, `security-csrf`, `rate-limiter`, `http-client`, `mailer`, `dotenv` (branche 7.4 LTS), `twig/twig`, `doctrine/migrations`, `monolog/monolog`, `spomky-labs/otphp` ou `pragmarx/google2fa`. En développement : `phpunit/phpunit`, `phpstan/phpstan`.
 - Toute autre dépendance se justifie en une ligne dans `PROJECT_ROADMAP.md`. Aucun paquet ne donne la structure de l'application.
 - Base de données, accès : MySQL ou MariaDB chez Infomaniak (?), PDO et requêtes préparées, toujours par la couche d'accès aux données.
-- Environnement d'exécution local : (à préciser. Constat du 2026-11-05 : ni PHP, ni Composer, ni Docker sur ce poste.)
+- Environnement d'exécution local : WSL, Ubuntu 24.04, copie de travail dans `~/offreGen`. PHP 8.5.12 (dépôt ppa:ondrej/php), Composer 2.11.1 (installeur officiel, signature vérifiée), MariaDB 10.11.14. Installé et vérifié le 2026-11-07. MariaDB se démarre par `sudo service mariadb start`.
 
 ## Organisation des fichiers
 - (à préciser : arborescence, où vont les modèles, les contrôleurs, les vues, les scripts)

@@ -15,8 +15,8 @@
 ## Context
 - Données : adresses et état des logements des clients de l'artisan, transmis à Infomaniak. Une dictée peut contenir par accident des données sensibles (santé d'un occupant, par exemple).
 - Hébergement Infomaniak (PHP 8.5 disponible selon Xavier). IA chez Infomaniak : Whisper pour la transcription, un modèle de langue pour l'extraction et les corrections.
-- Dépôt GitHub privé `xtradev1/offreGen`, plan Free. Dépôt conservé dans SynologyDrive.
-- Suivi du temps : projet Origin 44, sans tâche pour l'instant.
+- Dépôt GitHub privé `xtradev1/offreGen`, plan Free. Copie de travail dans WSL (`~/offreGen`) depuis le 2026-11-07 ; la copie de SynologyDrive n'est plus tenue à jour.
+- Suivi du temps : projet Origin 44, tâche 315 « De la voix à l'offre » (sous-tâches 316 à 322).
 - Règles opposables : `CODING_RULES.md`, `docs/SECURITE.md`, `docs/DEPLOIEMENT.md`.
 
 ## Decisions
@@ -41,7 +41,8 @@
 - [2026-11-06] Maquette v2, réponses de Xavier : lignes sur une seule ligne ; rien de la dictée à l'écran ; une seule fenêtre pour ajouter ; ligne libre au prix de vente ou au prix d'achat plus marge ; majoration ou ligne de supplément validée, sans motif sur le document du client ; catalogue « bien mieux » ; aperçu validé, « un poil petit sur téléphone ». Acompte à revoir : il se décide au moment de l'envoi, avec son délai. L'unité doit se changer d'un toucher. Maquette v3.
 - [2026-11-07] Maquette v3, réponses de Xavier : unité sans réponse, gardée telle quelle. Acompte à revoir : « l'acompte doit être un truc en plus, par exemple générer un acompte une fois l'offre figée ». Maquette v4 : l'envoi fige l'offre, « Générer un acompte » crée une facture d'acompte à part (pourcentage, délai, TVA comprise, place du code QR), plusieurs possibles sans dépasser 100 %.
 - [2026-11-07] Acompte à part validé par Xavier, avec une demande : « il faut pouvoir mettre un pourcentage précis ou un chiffre précis ». Ajouté : champs pourcentage et montant liés, montant repris au centime, limite au total de l'offre.
-- [2026-11-07] Environnement de développement : PHP 8.5, Composer et MariaDB dans WSL (accord de Xavier). Jeton d'API Infomaniak : Xavier l'ajoutera plus tard.
+- [2026-11-07] Environnement de développement : PHP 8.5, Composer et MariaDB dans WSL (accord de Xavier), installés et vérifiés le jour même (`CODING_RULES.md`). Composer remplacé par l'installeur officiel à la demande de Xavier. Jeton d'API Infomaniak : Xavier l'ajoutera plus tard.
+- [2026-11-07] Copie de travail : clone dans WSL (`~/offreGen`), GitHub comme seule référence, accord de Xavier. Remplace la décision du 2026-11-05 sur SynologyDrive. Raisons : lenteur de `/mnt/c` depuis WSL, synchronisation de `vendor/`, `.git` et `.env` par SynologyDrive.
 - [2026-11-06] **Entorse au socle :** audit externe reporté. Xavier : « tant que l'app ne tourne pas chez au moins 4-5 artisans ça ne vaut pas la peine ». Déclencheur : l'application en service chez 4 à 5 artisans. Le pilote tourne donc avec de vraies données sans audit externe.
 
 ## Current state
@@ -56,12 +57,11 @@
 
 ### Next
 - [ ] Fusionner la PR de la maquette (Xavier).
-- [ ] Chantier « de la voix à l'offre » : brancher l'enregistrement, la transcription, l'extraction et les commandes vocales, mesurer et optimiser. Bloqué par l'environnement de développement et l'accès à l'API d'Infomaniak (voir Blocked).
+- [ ] Chantier « de la voix à l'offre » : brancher l'enregistrement, la transcription, l'extraction et les commandes vocales, mesurer et optimiser. La partie Infomaniak attend le jeton d'API (voir Blocked).
 - [ ] Test d'import : enregistrer 30 à 60 min avec l'application native d'un iPhone et d'un Android, puis importer le fichier dans une page web. Compter les gestes, noter les formats obtenus.
 - [ ] Test d'enregistrement dans l'application web : écran verrouillé, réseau coupé en cours de route (après le test d'import).
 - [ ] Test d'extraction complète sur 5 vraies visites (section 9 du cadrage, risque principal).
 - [ ] Tests Infomaniak : ratio réel de Whisper, formats audio acceptés, taille maximale d'un fichier, minimum facturé, appels d'outils, limites de débit.
-- [ ] Choisir l'environnement de développement (PHP, Composer et Docker absents du poste).
 - [ ] Écrire les workflows GitHub, dont l'audit quotidien des dépendances.
 - [ ] Créer le site de test et dérouler la liste « À prouver » de `docs/DEPLOIEMENT.md`.
 - [ ] Convention de sous-traitance (art. 9 LPD) prête avant le premier artisan pilote.
@@ -70,7 +70,7 @@
 - [ ] Test d'extraction complète.
 - reason : il faut de vrais enregistrements de visite, avec le devis que l'artisan aurait rédigé.
 - [ ] Chantier « de la voix à l'offre ».
-- reason : environnement WSL à installer (accord du 2026-11-07) ; jeton d'API Infomaniak à fournir par Xavier ; les mesures du 2026-11-05 ont tourné en local (faster-whisper, Ollama).
+- reason : jeton d'API Infomaniak à fournir par Xavier ; les mesures du 2026-11-05 ont tourné en local (faster-whisper, Ollama). Environnement installé le 2026-11-07. Tâche Origin 315.
 
 ## References and links
 - Title : Cadrage produit et mesures
