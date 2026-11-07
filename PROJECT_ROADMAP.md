@@ -8,7 +8,7 @@
 - Last updated : 2026-11-06
 
 ## Executive summary
-- Aucune ligne d'application n'existe. Le socle de sécurité et de déploiement est posé dans le dépôt, sans commit.
+- Aucune ligne d'application n'existe. Le socle de sécurité et de déploiement est commité et poussé sur GitHub. Une maquette d'ergonomie cliquable en est à sa version 2.
 - Le produit est cadré dans `docs/plans/2026-11-05_mesures-ia/cadrage-produit.md`, avec des mesures réelles (Whisper, correction vocale) et des hypothèses économiques.
 - Le premier risque est l'extraction juste d'une offre à partir d'une vraie visite. Le coût de l'IA est faible dans tous les scénarios calculés.
 
@@ -30,19 +30,33 @@
 - [2026-11-06] Ergonomie, demande de Xavier : une ligne doit pouvoir être effacée en un clic. Annulation ou confirmation : à départager par des tests d'utilisation avec des artisans.
 - [2026-11-06] GitHub Free conservé par Xavier (refus de Pro). **Entorse au socle :** ni branche protégée, ni secret par environnement. Compensations dans `docs/SECURITE.md` section 3.
 - [2026-11-06] Application web, sur iPhone et Android. Priorité à l'import d'un fichier enregistré avec l'application du téléphone, qui marche sans réseau. Traitement asynchrone : l'offre est prête le soir, sans besoin de temps réel. L'enregistrement dans l'application et le mode hors ligne viennent ensuite.
+- [2026-11-06] Ergonomie, demande de Xavier : « ça doit être utilisable depuis le pouce ». Règle dans `CODING_RULES.md`.
+- [2026-11-06] Offre prête : un courriel dans tous les cas, plus une notification.
+- [2026-11-06] Contrôle de compréhension, idée de Xavier : un second modèle bon marché, chez Infomaniak pour rester en Suisse, note chaque ligne extraite. Sous un seuil, la ligne s'affiche en rouge. Seuil et fiabilité de la note à mesurer.
+- [2026-11-06] Calculs (TVA, ordre remise et TVA, remise sur variante, arrondi aux 5 centimes) : réglages fixés une fois par l'artisan.
+- [2026-11-06] Pas de conversation avec le modèle : chaque commande vocale est traitée seule. L'historique à garder se décidera à l'usage et après le test du cache d'Infomaniak.
 - [2026-11-06] Relecture du code sensible (connexion, droits, filtre par client, appels de fonctions) par Fable, sur proposition de Xavier. Au-delà de 30 $ par lancement, accord préalable.
-- [2026-11-06] **Entorse au socle :** audit externe reporté. Xavier : « tant que l'app ne tourne pas chez au moins 4-5 artisans ça ne vaut pas la peine ». Déclencheur : l'application en service chez 4 à 5 artisans. Le pilote tourne donc avec de vraies données sans audit externe.
+- [2026-11-06] Maquette, réponses de Xavier : suppression d'une ligne en un clic avec « Annuler » (à confirmer par les tests chez les artisans), ligne incertaine marquée « À vérifier » sans pourcentage, création d'une offre validée, écran de l'offre à revoir.
+- [2026-11-06] Besoins ajoutés par Xavier : ligne libre pour l'offre d'un fournisseur, sans créer de produit au catalogue ; travail plus difficile que d'habitude compté par majoration du prix ou par ligne de supplément, au choix de chaque artisan ; acomptes (par exemple à 10 jours) ; recherche dans le catalogue ; aperçu plus propre. Proposés dans la maquette v2.
+- [2026-11-06] Maquette v2, réponses de Xavier : lignes sur une seule ligne ; rien de la dictée à l'écran ; une seule fenêtre pour ajouter ; ligne libre au prix de vente ou au prix d'achat plus marge ; majoration ou ligne de supplément validée, sans motif sur le document du client ; catalogue « bien mieux » ; aperçu validé, « un poil petit sur téléphone ». Acompte à revoir : il se décide au moment de l'envoi, avec son délai. L'unité doit se changer d'un toucher. Maquette v3.
+- [2026-11-07] Maquette v3, réponses de Xavier : unité sans réponse, gardée telle quelle. Acompte à revoir : « l'acompte doit être un truc en plus, par exemple générer un acompte une fois l'offre figée ». Maquette v4 : l'envoi fige l'offre, « Générer un acompte » crée une facture d'acompte à part (pourcentage, délai, TVA comprise, place du code QR), plusieurs possibles sans dépasser 100 %.
+- [2026-11-07] Acompte à part validé par Xavier, avec une demande : « il faut pouvoir mettre un pourcentage précis ou un chiffre précis ». Ajouté : champs pourcentage et montant liés, montant repris au centime, limite au total de l'offre.
+- [2026-11-07] Environnement de développement : PHP 8.5, Composer et MariaDB dans WSL (accord de Xavier). Jeton d'API Infomaniak : Xavier l'ajoutera plus tard.
+- [2026-11-06] **Entorse au socle :** audit externe reporté. Xavier : « tant que l'app ne tourne pas chez au moins 4-5 artisans ça ne vaut pas la peine ». Déclencheur : l'application en service chez 4 à 5 artisans. Le pilote tourne donc avec de vraies données sans audit externe.
 
 ## Current state
 ### Done
 - [x] Socle posé : `CODING_RULES.md`, `docs/SECURITE.md`, `docs/DEPLOIEMENT.md`, sonde d'exposition, `public/.htaccess`, fichiers témoins, `.gitignore`, `.gitattributes`.
 - [x] Cadrage produit et scripts de mesure archivés dans `docs/plans/2026-11-05_mesures-ia/`.
-- [x] Premier commit sur `main` (non poussé).
+- [x] Premier commit sur `main`, poussé sur GitHub le 2026-11-06.
+- [x] Maquette d'ergonomie cliquable, trois métiers fictifs : `docs/plans/2026-11-06_maquette-ux/MAQUETTE-offre-vocale.html`. Versions 2 et 3 le 2026-11-06, version 4 le 2026-11-07, après les retours de Xavier.
 
 ### In progress
 - [ ] Aucun.
 
 ### Next
+- [ ] Fusionner la PR de la maquette (Xavier).
+- [ ] Chantier « de la voix à l'offre » : brancher l'enregistrement, la transcription, l'extraction et les commandes vocales, mesurer et optimiser. Bloqué par l'environnement de développement et l'accès à l'API d'Infomaniak (voir Blocked).
 - [ ] Test d'import : enregistrer 30 à 60 min avec l'application native d'un iPhone et d'un Android, puis importer le fichier dans une page web. Compter les gestes, noter les formats obtenus.
 - [ ] Test d'enregistrement dans l'application web : écran verrouillé, réseau coupé en cours de route (après le test d'import).
 - [ ] Test d'extraction complète sur 5 vraies visites (section 9 du cadrage, risque principal).
@@ -55,6 +69,8 @@
 ### Blocked
 - [ ] Test d'extraction complète.
 - reason : il faut de vrais enregistrements de visite, avec le devis que l'artisan aurait rédigé.
+- [ ] Chantier « de la voix à l'offre ».
+- reason : environnement WSL à installer (accord du 2026-11-07) ; jeton d'API Infomaniak à fournir par Xavier ; les mesures du 2026-11-05 ont tourné en local (faster-whisper, Ollama).
 
 ## References and links
 - Title : Cadrage produit et mesures
@@ -82,8 +98,11 @@
 - Audit externe : prestataire et budget à définir. Ordre de grandeur lu chez un vendeur suisse : CHF 4 500 à 15 000, sans devis.
 - Accès de Claude à l'environnement de test : à confirmer par Xavier.
 - Économie : environ 220 clients à 49 CHF pour 10 000 CHF par mois, avant charges sociales et impôts (calcul du 2026-11-06, le cadrage en donnait 235). L'acquisition de clients et l'import des catalogues sont le frein, à valider par le test de disposition à payer.
+- Facturation : la facture d'acompte entre dans le produit (2026-11-07). La facture de solde, le code QR suisse et le suivi des paiements restent à cadrer.
+- Offre figée après l'envoi : rien n'est prévu pour corriger une offre envoyée (nouvelle version, annulation).
 - `.htaccess` jamais exécuté sur Apache, branche HTTPS de la sonde jamais exercée. Rien n'est prouvé sur Infomaniak.
 
 ## Session log
 - [2026-11-05] Roadmap initialized. Cadrage, choix de la pile, pose du socle.
-- [2026-11-06] Cadrage produit reçu et archivé. Règle d'ergonomie, relecture par Fable, report de l'audit externe, GitHub Free, import audio prioritaire. Premier commit.
+- [2026-11-06] Cadrage produit reçu et archivé. Règle d'ergonomie, relecture par Fable, report de l'audit externe, GitHub Free, import audio prioritaire. Premier commit. Maquette v1, réponses de Xavier, maquette v2 (lignes, ajout, ligne libre, majoration, acomptes, catalogue, aperçu), réponses de Xavier, maquette v3 (unité, acompte à l'envoi).
+- [2026-11-07] Réponses sur la v3, maquette v4 (acompte à part, offre figée après l'envoi).

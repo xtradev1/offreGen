@@ -1,0 +1,1401 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>offreGen : maquette d'ergonomie, version 4</title>
+<style>
+html:root {
+  --ink: #1B1F24; --muted: #69717C; --line: #E4E7EB; --surface: #FFFFFF; --bg: #F3F4F6; --chip: #EFF1F4;
+  --accent: #2457C5; --accent-soft: #E8EEFB; --on-accent: #FFFFFF; --ok: #1E7F4F; --ok-soft: #E6F4EC; --warn: #9A5B00; --warn-soft: #FDF3E1; --bad: #B42318; --bad-soft: #FCE9E7;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--accent);
+}
+@media (prefers-color-scheme: dark) { html:root:not([data-theme="light"]) {
+  --ink: #E7EAEE; --muted: #9BA3AE; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33;
+  --accent: #8AACF2; --accent-soft: #1F2C47; --on-accent: #0E1524; --ok: #5CC796; --ok-soft: #17301F; --warn: #E9B44C; --warn-soft: #362A12; --bad: #F1857A; --bad-soft: #3A1D1A; } }
+html:root[data-theme="dark"] {
+  --ink: #E7EAEE; --muted: #9BA3AE; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33;
+  --accent: #8AACF2; --accent-soft: #1F2C47; --on-accent: #0E1524; --ok: #5CC796; --ok-soft: #17301F; --warn: #E9B44C; --warn-soft: #362A12; --bad: #F1857A; --bad-soft: #3A1D1A; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.page { max-width: 1100px; margin: 0 auto; padding: 0 16px 64px; }
+h1 { font-size: 24px; margin: 20px 0 4px; }
+h2 { font-size: 20px; margin: 40px 0 10px; scroll-margin-top: 56px; }
+p.lead { margin: 0 0 8px; color: var(--muted); }
+.banner { background: var(--accent-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+.layout { display: grid; grid-template-columns: 400px 1fr; gap: 28px; align-items: start; margin-top: 16px; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+.side h3 { font-size: 16px; margin: 0 0 6px; }
+.side ul { margin: 0 0 18px; padding-left: 18px; }
+.side li { margin: 4px 0; }
+.switches { display: grid; gap: 10px; margin-bottom: 18px; }
+.switch { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; }
+.switch > span { min-width: 150px; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg button { font: inherit; font-size: 14px; border: 0; background: var(--surface); color: var(--ink); padding: 6px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* Téléphone */
+.phone { width: 100%; max-width: 400px; height: 800px; background: var(--surface); border: 1px solid var(--line); border-radius: 28px; box-shadow: 0 12px 40px rgba(0,0,0,.12); overflow: hidden; position: relative; display: flex; flex-direction: column; font-size: 15px; }
+@media (max-width: 480px) { .phone { border-radius: 16px; height: 740px; } .tabs, .actionbar { padding-right: 60px; } }
+svg.i { width: 20px; height: 20px; flex: none; }
+.bar { display: flex; align-items: center; gap: 4px; min-height: 56px; padding: 6px 12px 6px 4px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.bar h4 { margin: 0 0 0 10px; font-size: 17px; font-weight: 650; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.back { display: inline-flex; align-items: center; font: inherit; font-size: 15px; color: var(--accent); background: none; border: 0; min-height: 44px; padding: 0 6px 0 2px; cursor: pointer; }
+.screen { flex: 1; overflow-y: auto; background: var(--surface); padding: 0 14px 28px; }
+.screen.gris { background: var(--bg); }
+.actionbar { display: flex; gap: 8px; align-items: center; padding: 10px 12px; background: var(--surface); border-top: 1px solid var(--line); }
+.actionbar:empty { display: none; }
+.actionbar .btn { flex: 1; min-height: 52px; }
+.mic { flex: none; width: 60px; height: 60px; border-radius: 50%; border: 0; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(36,87,197,.3); }
+.mic svg.i { width: 26px; height: 26px; }
+.tabs { display: flex; background: var(--surface); border-top: 1px solid var(--line); }
+.tabs button { flex: 1; font: inherit; font-size: 12px; border: 0; background: none; color: var(--muted); padding: 7px 4px 9px; min-height: 56px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tabs button[aria-current="page"] { color: var(--accent); font-weight: 600; }
+.btn { font: inherit; font-size: 15px; font-weight: 550; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 14px; min-height: 48px; cursor: pointer; text-align: center; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.lien { font: inherit; font-size: 15px; font-weight: 550; color: var(--accent); background: none; border: 0; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0; cursor: pointer; }
+.muted { color: var(--muted); font-size: 14px; }
+.petit { font-size: 13px; }
+.status { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); white-space: nowrap; }
+.status.pret { background: var(--accent-soft); color: var(--accent); }
+.status.envoye { background: var(--ok-soft); color: var(--ok); }
+
+/* Liste des offres */
+.ent { margin: 14px 2px 8px; }
+.ocard { display: grid; gap: 4px; width: 100%; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 8px 0; cursor: pointer; }
+.ocard .l1, .ocard .l2 { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.ocard .l2 { font-size: 14px; color: var(--muted); }
+.ocard .l2 b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* Offre */
+.ohead { padding: 14px 0 6px; }
+.ohead .who { font-size: 13px; color: var(--muted); }
+.ohead .t { font-size: 20px; font-weight: 700; margin: 2px 0 6px; }
+.ohead .meta { display: flex; gap: 10px; align-items: center; }
+.rows { --cols: minmax(0, 1fr) 62px 52px 64px 44px; }
+.cat { margin: 18px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.rows.une .cat { display: grid; grid-template-columns: var(--cols); column-gap: 4px; align-items: end; }
+.cat h5, .ccat h5 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cat .ch { font-size: 11px; color: var(--muted); text-align: right; }
+.row { border-bottom: 1px solid var(--line); position: relative; }
+.rows.une .row { display: grid; grid-template-columns: var(--cols); column-gap: 4px; align-items: center; min-height: 52px; }
+.rows.une .note { grid-column: 1 / -1; }
+.row.flag { box-shadow: inset 3px 0 0 var(--warn); padding-left: 10px; }
+.row.miss { box-shadow: inset 3px 0 0 var(--bad); padding-left: 10px; }
+.row.supp .nm { padding-left: 14px; color: var(--muted); }
+.row.new { animation: flash 1.8s ease-out; }
+@keyframes flash { from { background: var(--accent-soft); } to { background: transparent; } }
+.nm { font: inherit; font-size: 14.5px; line-height: 1.3; text-align: left; color: var(--ink); background: none; border: 0; padding: 9px 0; cursor: pointer; min-width: 0; overflow-wrap: break-word; }
+.nm small { display: block; font-size: 12px; line-height: 1.35; color: var(--muted); margin-top: 2px; }
+.nm small.maj { color: var(--warn); }
+.tag { font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 5px; margin-right: 4px; }
+.q { display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+.u { font-size: 12px; color: var(--muted); }
+.p { text-align: right; }
+.tt { text-align: right; font-weight: 600; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ro { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.num { font: inherit; font-size: 14px; color: var(--ink); background: none; border: 0; min-height: 44px; min-width: 44px; padding: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: flex-end; font-variant-numeric: tabular-nums; }
+.num .u { margin-left: 4px; }
+.num i { font-style: normal; background: var(--chip); border-radius: 6px; padding: 4px 6px; white-space: nowrap; }
+.num:hover i, .num:focus-visible i { box-shadow: inset 0 0 0 1px var(--accent); }
+.num.manque i { background: var(--bad-soft); color: var(--bad); font-weight: 600; }
+.del { width: 44px; min-height: 44px; display: grid; place-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 0; }
+.del svg.i { width: 18px; height: 18px; }
+.del:hover { color: var(--ink); }
+.note { display: flex; align-items: center; gap: 8px; font-size: 12.5px; line-height: 1.35; padding: 0 0 4px; }
+.note span { flex: 1; }
+.note.warn { color: var(--warn); }
+.note.bad { color: var(--bad); }
+.okbtn { font: inherit; background: none; border: 0; padding: 0; min-height: 44px; cursor: pointer; }
+.okbtn span { display: inline-block; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 6px 12px; }
+input.edit { font: inherit; font-size: 14px; width: 60px; padding: 6px; border: 2px solid var(--accent); border-radius: 8px; background: var(--surface); color: var(--ink); text-align: right; }
+.vide { font-size: 13px; color: var(--muted); margin: 8px 0; }
+.totals { margin-top: 14px; font-variant-numeric: tabular-nums; }
+.totals .r { display: flex; justify-content: space-between; align-items: center; min-height: 32px; color: var(--muted); font-size: 14px; }
+.totals .r .num { margin-left: 6px; }
+.totals .r.grand { color: var(--ink); font-size: 18px; font-weight: 700; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; }
+
+/* Catalogue */
+.search { position: sticky; top: 0; z-index: 2; background: var(--surface); padding: 10px 0 6px; }
+.search .box { display: flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 12px; padding: 0 12px; color: var(--muted); }
+.search input { flex: 1; font: inherit; font-size: 15px; border: 0; background: none; color: var(--ink); outline: none; min-height: 46px; min-width: 0; }
+.fchips { display: flex; gap: 6px; overflow-x: auto; padding: 0 0 4px; scrollbar-width: none; }
+.fchips button, .pills button { flex: none; font: inherit; background: none; border: 0; padding: 0; min-height: 44px; min-width: 44px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.fchips button span, .pills button span { display: inline-block; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 12px; white-space: nowrap; }
+.fchips button[aria-pressed="true"] span, .pills button[aria-pressed="true"] span { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.pills { display: flex; flex-wrap: wrap; gap: 0 6px; }
+.unites { grid-column: 1 / -1; align-items: center; padding: 0 0 6px; }
+.unites > b { font-size: 12px; font-weight: 400; color: var(--muted); margin-right: 2px; }
+.docrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; text-align: left; font: inherit; font-size: 14px; color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--line); min-height: 56px; padding: 6px 0; cursor: pointer; font-variant-numeric: tabular-nums; }
+.docrow small { display: block; color: var(--muted); font-size: 12.5px; }
+.solde { display: flex; justify-content: space-between; align-items: center; min-height: 40px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fige { margin: 6px 0 0; }
+
+.ccat { display: flex; justify-content: space-between; align-items: end; margin: 14px 0 0; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
+.ccat span { font-size: 12px; color: var(--muted); }
+.crow { display: grid; grid-template-columns: minmax(0, 1fr) auto 52px; align-items: center; column-gap: 4px; border-bottom: 1px solid var(--line); }
+.crow .u { padding-left: 2px; }
+
+/* Aperçu : le document du client reste blanc, comme sur papier */
+.alert { border-radius: 12px; padding: 10px 12px; margin: 12px 0 0; font-size: 14px; }
+.alert.bad { background: var(--bad-soft); color: var(--bad); }
+.alert.warn { background: var(--warn-soft); color: var(--warn); }
+.paper { background: #fff; color: #1B1F24; border-radius: 4px; box-shadow: 0 2px 14px rgba(0,0,0,.14); padding: 18px 14px 14px; margin: 12px 0; font-size: 12.5px; line-height: 1.4; }
+.paper .ph { display: flex; justify-content: space-between; gap: 12px; border-bottom: 2px solid #1B1F24; padding-bottom: 8px; }
+.paper .ph b { font-size: 14px; }
+.paper .ref { text-align: right; }
+.paper .pclient { margin: 16px 0 12px auto; width: 56%; }
+.paper .pobj { font-size: 15px; font-weight: 700; margin: 8px 0 6px; }
+.paper table { width: 100%; border-collapse: collapse; }
+.paper th { font-weight: 600; text-align: left; border-bottom: 1px solid #1B1F24; padding: 4px 2px; }
+.paper td { padding: 4px 2px; border-bottom: 1px solid #E5E7EB; vertical-align: top; }
+.paper .n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.paper tr.grp td { font-weight: 700; padding-top: 10px; border-bottom: 0; text-transform: uppercase; font-size: 11px; letter-spacing: .06em; color: #4B5563; }
+.paper tr.st td { color: #4B5563; border-bottom: 0; padding-bottom: 6px; }
+
+.paper .ptot { width: 66%; margin: 10px 0 0 auto; }
+.paper .ptot td { border: 0; padding: 2px; }
+.paper .ptot tr.g td { font-weight: 700; font-size: 14px; border-top: 2px solid #1B1F24; padding-top: 6px; }
+.paper .pcond { margin-top: 14px; }
+.paper .pcond ul { margin: 4px 0 0; padding-left: 16px; }
+.paper .psign { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
+.paper .psign div { border-top: 1px solid #9CA3AF; padding-top: 4px; color: #6B7280; font-size: 11px; }
+.paper .ptot.plein { width: 100%; }
+.paper .qr { margin-top: 18px; border: 1px dashed #9CA3AF; border-radius: 4px; padding: 18px 10px; text-align: center; color: #6B7280; font-size: 11px; }
+.paper footer { margin-top: 16px; color: #9CA3AF; font-size: 10.5px; text-align: center; }
+
+/* Réglages */
+.card { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 10px 0; background: var(--surface); }
+.card h6 { margin: 0 0 6px; font-size: 14px; }
+.card p { margin: 0 0 6px; }
+.radio, .check { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; min-height: 44px; font-size: 14px; cursor: pointer; }
+.radio input, .check input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: var(--accent); }
+.radio small { display: block; color: var(--muted); font-size: 12.5px; }
+.regle { margin: 0; padding-left: 18px; font-size: 14px; }
+
+/* Nouvelle offre, enregistrement, préparation */
+.intro { margin: 16px 0; }
+.intro li { margin: 6px 0; }
+.rec { text-align: center; padding: 40px 0; }
+.rec .dot { width: 110px; height: 110px; border-radius: 50%; margin: 14px auto 18px; background: var(--bad); }
+.rec .dot.on { animation: pulse 1.2s infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 16px rgba(180,35,24,.18); } }
+.timer { font: 600 34px ui-monospace, monospace; }
+.steps { list-style: none; padding: 0; margin: 20px 0; }
+.steps li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; }
+.steps li.done::before { content: "✓"; color: var(--ok); font-weight: 700; }
+.steps li.cur::before { content: "…"; color: var(--accent); font-weight: 700; }
+.steps li.todo::before { content: "○"; color: var(--muted); }
+
+/* Feuilles, dialogues, bandeaux */
+.sheet-back { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 20; display: flex; align-items: flex-end; }
+.sheet { background: var(--surface); width: 100%; border-radius: 18px 18px 0 0; padding: 6px 16px 16px; max-height: 88%; overflow-y: auto; }
+.sh-h { display: flex; align-items: center; justify-content: space-between; }
+.sh-h h4 { margin: 0; font-size: 17px; }
+.x { width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; margin-right: -10px; }
+.sheet .search { position: static; padding-top: 4px; }
+.res { max-height: 250px; overflow-y: auto; margin: 2px 0 10px; border-top: 1px solid var(--line); }
+.pick { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; width: 100%; font: inherit; font-size: 14.5px; text-align: left; color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--line); min-height: 48px; padding: 6px 2px; cursor: pointer; }
+.pick span { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pick .pn { font-weight: 400; }
+.pick small { display: block; font-size: 12px; color: var(--muted); }
+.autres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.autres .btn { flex-direction: column; gap: 2px; font-size: 13px; padding: 8px 4px; min-height: 62px; }
+.field { display: grid; gap: 4px; margin: 10px 0; font-size: 13px; color: var(--muted); }
+.field input, .field select { font: inherit; font-size: 15px; padding: 10px; min-height: 46px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); width: 100%; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.duo .field { margin: 6px 0; }
+.seg2 { display: grid; grid-template-columns: 1fr 1fr; background: var(--chip); border-radius: 12px; padding: 3px; margin: 12px 0 4px; }
+.seg2 button { font: inherit; font-size: 14px; border: 0; background: none; color: var(--muted); border-radius: 10px; min-height: 44px; cursor: pointer; }
+.seg2 button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.calc { font-size: 14px; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.sub { margin: 16px 0 2px; font-size: 14px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.row2 .btn { min-height: 52px; }
+.sheet .row2 { position: sticky; bottom: -16px; background: var(--surface); padding: 10px 0 16px; margin-bottom: -16px; }
+.chips { display: grid; gap: 8px; }
+.chips .btn { justify-content: flex-start; text-align: left; }
+.dialog-back { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 30; display: flex; align-items: flex-end; padding: 12px; }
+.dialog { background: var(--surface); border-radius: 16px; padding: 18px; width: 100%; }
+.dialog p { margin: 0 0 14px; }
+.snack { position: absolute; left: 12px; right: 12px; bottom: 140px; background: var(--ink); color: var(--surface); border-radius: 12px; padding: 4px 6px 4px 14px; display: flex; align-items: center; gap: 10px; z-index: 25; font-size: 14px; min-height: 48px; }
+.snack span { flex: 1; }
+.snack button { font: inherit; border: 0; background: transparent; color: var(--surface); font-weight: 700; text-decoration: underline; cursor: pointer; min-height: 44px; padding: 0 10px; }
+.notif { position: absolute; left: 10px; right: 10px; top: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.2); padding: 10px 12px; z-index: 40; font-size: 14px; cursor: pointer; }
+.notif b { display: block; }
+
+/* Décisions */
+.decision { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
+.decision h3 { margin: 0 0 6px; font-size: 16px; }
+.decision .choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.decision .choices button { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+.decision .choices button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.decision textarea { width: 100%; min-height: 60px; font: inherit; font-size: 14px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+figure { margin: 12px 0; max-width: 400px; }
+figure img, .mk-compare img { max-width: 100%; height: auto; }
+.mk-compare figure { max-width: none; }
+.regles li { margin: 5px 0; }
+.sources li { font-size: 14px; word-break: break-word; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+<h1>offreGen : maquette d'ergonomie, version 4</h1>
+<p class="lead">Prototype cliquable, sans serveur ni IA. La dictée, la transcription et la lecture des postes sont simulées.</p>
+<nav id="mk-toc"></nav>
+
+<h2 id="prototype">Prototype</h2>
+<div class="banner">Toutes les données sont fictives : entreprises, clients, adresses, fournisseurs et numéros d'offre. Les prix s'appuient sur les sources listées en bas de page.</div>
+<div class="layout">
+  <div>
+    <div class="phone" id="phone" aria-label="Prototype de l'application">
+      <div class="bar" id="bar"></div>
+      <div class="screen" id="screen"></div>
+      <div class="actionbar" id="actions"></div>
+      <nav class="tabs" id="tabs"></nav>
+      <div id="layer"></div>
+    </div>
+  </div>
+  <div class="side">
+    <div class="switches">
+      <div class="switch"><span>Métier</span><div class="seg" id="sw-metier">
+        <button data-v="peintre">Peintre</button><button data-v="menuisier">Menuisier</button><button data-v="sanitaire" aria-pressed="true">Sanitaire</button></div></div>
+      <div class="switch"><span>Travail plus difficile</span><div class="seg" id="sw-diff">
+        <button data-v="majorer" aria-pressed="true">Majorer le prix</button><button data-v="ligne">Ligne de supplément</button></div></div>
+    </div>
+    <h3>Nouveau dans cette version</h3>
+    <ul>
+      <li>L'envoi ne parle plus d'acompte : il confirme l'envoi, puis l'offre est figée.</li>
+      <li>Sur une offre figée, « Générer un acompte » crée une facture d'acompte à part : pourcentage, délai de paiement, montant.</li>
+      <li>Les factures d'acompte sont listées sous l'offre, avec le reste à facturer.</li>
+    </ul>
+    <h3>À essayer</h3>
+    <ul>
+      <li>Offre de M. Golay, déjà envoyée : « Générer un acompte », 30 %, 10 jours.</li>
+      <li>Offre de Mme Bovet : saisir le prix de l'évacuation de la baignoire, aperçu, « Envoyer au client ». L'écran de l'offre devient figé.</li>
+      <li>Générer un second acompte : la fenêtre rappelle ce qui est déjà demandé et refuse de dépasser 100 %.</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="d-acompte">Acompte</h2>
+<div class="mk-compare">
+  <figure><img src="MAQUETTE-offre-vocale-img/acompte-avant.jpg" alt="Version 3 : l'acompte se choisit dans la fenêtre d'envoi"><figcaption>Avant : dans la fenêtre d'envoi</figcaption></figure>
+  <figure><img src="MAQUETTE-offre-vocale-img/acompte-apres.jpg" alt="Version 4 : offre figée, fenêtre « Générer un acompte »"><figcaption>Après : sur l'offre figée</figcaption></figure>
+</div>
+<figure><img src="MAQUETTE-offre-vocale-img/facture-acompte.jpg" alt="Facture d'acompte générée, avec montant, TVA comprise, délai et emplacement du code QR"><figcaption>La facture d'acompte générée.</figcaption></figure>
+<div class="decision" data-key="acompte-precis">
+  <h3>1. Pourcentage ou montant précis</h3>
+  <p class="muted">Ta demande du 2026-11-07. Sous les boutons 20, 30 et 50 %, deux champs : un pourcentage précis (27,5 %) ou un montant précis (CHF 2 000). On saisit l'un, l'autre se calcule. Un montant saisi est repris au centime près, sans arrondi aux 5 centimes. La limite reste le total de l'offre.</p>
+  <div class="choices"><button data-c="valider">Valider</button><button data-c="revoir">À revoir</button></div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+<p><button class="btn primary" id="copy">Copier le texte</button> <span class="muted" id="copy-ok"></span></p>
+
+<h2 id="regle">Réglé</h2>
+<ul class="regles">
+  <li>L'acompte, un document à part : l'envoi fige l'offre, puis « Générer un acompte » crée une facture d'acompte (validé le 2026-11-07).</li>
+  <li>Changer l'unité : toucher la quantité, puis l'unité (sans réponse le 2026-11-07, gardé tel quel).</li>
+  <li>Supprimer une ligne : un clic et « Annuler » (2026-11-06, à confirmer par les tests chez les artisans).</li>
+  <li>Ligne incertaine : « À vérifier », sans pourcentage et sans rappel de la dictée (2026-11-06).</li>
+  <li>Lignes de l'offre : désignation, quantité, prix et total sur une seule ligne (variante A, 2026-11-06).</li>
+  <li>Créer une offre : enregistrer ou importer, validé.</li>
+  <li>Ajouter : une seule fenêtre pour le catalogue, la ligne libre, le nouveau produit et la catégorie, validé.</li>
+  <li>Ligne libre : prix de vente saisi, ou prix d'achat et marge (variante B). Ni le fournisseur ni la marge ne paraissent sur le document.</li>
+  <li>Travail plus difficile : majoration ou ligne de supplément, au choix de chaque artisan dans ses réglages, validé. En majoration, le document du client ne donne aucun motif : « Pose paroi de douche », plus chère, rien d'autre (demande du 2026-11-06).</li>
+  <li>Catalogue : « bien mieux, je suis content » (2026-11-06).</li>
+  <li>Aperçu : validé, agrandi d'un point parce qu'il est « un poil petit sur téléphone ».</li>
+  <li>Offre prête : un courriel dans tous les cas, et une notification.</li>
+  <li>Les calculs se font dans le code, jamais par l'IA. TVA, remise avant TVA et arrondi se règlent une fois, dans les réglages.</li>
+  <li>Pas de conversation : chaque commande vocale est traitée seule.</li>
+  <li>Utilisable au pouce : les actions principales sont dans le bas de l'écran, chaque cible mesure 44 px au moins.</li>
+</ul>
+
+<h2 id="simule">Ce qui est simulé</h2>
+<ul>
+  <li>La transcription et la lecture des postes : l'offre « prête » est écrite à l'avance.</li>
+  <li>Les commandes vocales : on choisit une phrase dans une liste au lieu de parler.</li>
+  <li>Le courriel, la notification et l'envoi au client : rien ne part.</li>
+  <li>En mode « majorer », toucher le prix change le prix habituel, la majoration s'ajoute ensuite.</li>
+  <li>Changer l'unité ne recalcule pas le prix unitaire.</li>
+  <li>La facture d'acompte : son numéro, sa date du 07.11.2026 et la section de paiement QR, qui n'est qu'un cadre vide.</li>
+  <li>Rien n'est enregistré : recharger la page remet les données de départ.</li>
+</ul>
+
+<h2 id="sources">Sources des prix</h2>
+<ul class="sources" id="liste-sources"></ul>
+</div>
+
+<script id="donnees">
+const NB = ' ';
+const METIERS = {
+  peintre: {
+    entreprise: { nom: 'Peinture Morel Sàrl', adresse: 'Rue de la Condémine 12, 1630 Bulle', tel: '026 000 00 00', ide: 'CHE-000.000.001 TVA', lieu: 'Bulle' },
+    categories: ['Préparation', 'Peinture intérieure', 'Peinture extérieure', 'Divers'],
+    catalogue: [
+      { id: 'p1', cat: 'Préparation', nom: 'Protection des sols et des meubles', unite: 'forfait', prix: 180, syn: ['bâcher', 'protéger'] },
+      { id: 'p2', cat: 'Préparation', nom: 'Rebouchage et ponçage des murs', unite: 'm²', prix: 9, syn: ['reboucher', 'enduit'] },
+      { id: 'p3', cat: 'Préparation', nom: "Couche d'impression", unite: 'm²', prix: 5, syn: ['fond', 'primaire'] },
+      { id: 'p4', cat: 'Peinture intérieure', nom: 'Peinture des murs, 2 couches', unite: 'm²', prix: 28, syn: ['murs', 'dispersion'] },
+      { id: 'p5', cat: 'Peinture intérieure', nom: 'Peinture des plafonds, 2 couches', unite: 'm²', prix: 32, syn: ['plafond'] },
+      { id: 'p6', cat: 'Peinture intérieure', nom: 'Laquage des plinthes', unite: 'm', prix: 12, syn: ['plinthes'] },
+      { id: 'p7', cat: 'Peinture intérieure', nom: 'Laquage de porte, 2 faces', unite: 'pce', prix: 160, syn: ['porte'] },
+      { id: 'p8', cat: 'Peinture intérieure', nom: 'Peinture anti-moisissure', unite: 'm²', prix: null, syn: ['anti-moisissure'] },
+      { id: 'p9', cat: 'Peinture extérieure', nom: 'Peinture de façade, 2 couches', unite: 'm²', prix: 45, syn: ['façade'] },
+      { id: 'p10', cat: 'Peinture extérieure', nom: 'Échafaudage, montage et location', unite: 'm²', prix: 20, syn: ['échafaudage'] },
+      { id: 'p11', cat: 'Divers', nom: 'Déplacement', unite: 'forfait', prix: 60, syn: ['déplacement'] },
+      { id: 'p12', cat: 'Divers', nom: 'Heure de régie', unite: 'h', prix: 80, syn: ['régie', 'heure'] },
+    ],
+    offres: [
+      { id: 'o1', no: '2026-041', client: 'M. Favre', adresse: 'Route de Riaz 8, 1630 Bulle', titre: "Cage d'escalier", statut: 'envoye', date: '28.10.2026',
+        lignes: [['p1', 1], ['p2', 30], ['p4', 85], ['p5', 22], ['p11', 1]] },
+      { id: 'o2', no: '2026-042', client: 'Mme Dubois', adresse: 'Chemin des Mésanges 3, 1630 Bulle', titre: 'Salon et deux chambres', statut: 'pret', date: '06.11.2026',
+        lignes: [['p1', 1], ['p2', 40],
+          ['p4', 65, { nom: 'Peinture des murs du salon, 2 couches', diff: { motif: 'hauteur 4 m, échelle', pct: 25 } }],
+          ['p4', 48, { nom: 'Peinture des murs des chambres, 2 couches' }],
+          ['p5', 45, { conf: 0.68, entendu: 'les plafonds aussi, environ quarante-cinq' }], ['p6', 38], ['p7', 3],
+          ['p8', 12, { entendu: "de l'anti-moisissure, une douzaine de mètres carrés" }], ['p11', 1]] },
+    ],
+    commandes: [
+      { texte: 'Les plafonds du salon aussi, compte l\'échelle', type: 'diff', ref: 'p5', index: 0, motif: 'hauteur 4 m, échelle', pct: 25 },
+      { texte: 'Ajoute la location de la nacelle, 380 francs', type: 'libre', ligne: { cat: 'Divers', nom: 'Location de nacelle, 1 jour', unite: 'forfait', prix: 380, source: 'Devis du loueur (fictif)' } },
+      { texte: 'Les plafonds, c\'est 50 mètres carrés', type: 'qte', ref: 'p5', valeur: 50 },
+      { texte: 'Ajoute deux heures de régie', type: 'ajout', ref: 'p12', valeur: 2 },
+      { texte: 'Enlève les plinthes', type: 'suppr', ref: 'p6' },
+      { texte: 'Change le prix des murs', type: 'ambigu', question: 'Quelle ligne de murs ?', options: [
+        { label: 'Murs du salon', ref: 'p4', index: 0 }, { label: 'Murs des chambres', ref: 'p4', index: 1 }] },
+    ],
+  },
+  menuisier: {
+    entreprise: { nom: 'Menuiserie Vuilleumier SA', adresse: 'Rue des Philosophes 40, 1400 Yverdon-les-Bains', tel: '024 000 00 00', ide: 'CHE-000.000.002 TVA', lieu: 'Yverdon-les-Bains' },
+    categories: ['Démontage', 'Parquet', 'Portes', 'Finitions', 'Divers'],
+    catalogue: [
+      { id: 'm1', cat: 'Démontage', nom: "Dépose de l'ancien revêtement", unite: 'm²', prix: 15, syn: ['dépose', 'arracher'] },
+      { id: 'm2', cat: 'Parquet', nom: 'Sous-couche isolante', unite: 'm²', prix: 8, syn: ['sous-couche'] },
+      { id: 'm3', cat: 'Parquet', nom: 'Parquet chêne contrecollé, pose collée', unite: 'm²', prix: 95, syn: ['parquet', 'chêne'] },
+      { id: 'm4', cat: 'Parquet', nom: 'Stratifié, pose flottante', unite: 'm²', prix: 48, syn: ['stratifié'] },
+      { id: 'm5', cat: 'Parquet', nom: 'Ponçage et vitrification', unite: 'm²', prix: 38, syn: ['poncer', 'vitrifier'] },
+      { id: 'm6', cat: 'Finitions', nom: 'Plinthes chêne, fournies et posées', unite: 'm', prix: 22, syn: ['plinthes'] },
+      { id: 'm7', cat: 'Finitions', nom: 'Barre de seuil', unite: 'pce', prix: 45, syn: ['seuil'] },
+      { id: 'm8', cat: 'Portes', nom: 'Porte intérieure complète, posée', unite: 'pce', prix: 850, syn: ['porte'] },
+      { id: 'm9', cat: 'Portes', nom: 'Ajustage de porte', unite: 'pce', prix: 70, syn: ['raboter', 'ajuster'] },
+      { id: 'm10', cat: 'Divers', nom: 'Évacuation des déchets', unite: 'forfait', prix: 150, syn: ['déchets', 'benne'] },
+      { id: 'm11', cat: 'Divers', nom: 'Heure de régie', unite: 'h', prix: 90, syn: ['régie', 'heure'] },
+      { id: 'm12', cat: 'Divers', nom: 'Déplacement', unite: 'forfait', prix: 60, syn: ['déplacement'] },
+    ],
+    offres: [
+      { id: 'o1', no: '2026-118', client: 'M. Pittet', adresse: 'Rue du Midi 14, 1400 Yverdon-les-Bains', titre: "Portes de l'appartement", statut: 'envoye', date: '30.10.2026',
+        lignes: [['m8', 4], ['m9', 1], ['m12', 1]] },
+      { id: 'o2', no: '2026-119', client: 'Mme Jaquier', adresse: 'Avenue des Bains 21, 1400 Yverdon-les-Bains', titre: 'Parquet séjour et couloir', statut: 'pret', date: '06.11.2026',
+        lignes: [['m1', 34], ['m2', 34], ['m3', 26], ['m4', 8], ['m6', 30, { conf: 0.64, entendu: 'les plinthes, une trentaine de mètres' }], ['m7', 2],
+          ['m9', 2], ['m10', 1], [null, 1, { cat: 'Finitions', nom: "Remplacement de la moquette de l'escalier", unite: 'forfait', entendu: "et voir pour la moquette de l'escalier" }]] },
+    ],
+    commandes: [
+      { texte: 'Le séjour n\'est pas d\'équerre, compte les coupes', type: 'diff', ref: 'm3', index: 0, motif: "pièce hors d'équerre, coupes", pct: 10 },
+      { texte: 'Ajoute la porte coulissante du fournisseur, 1 280 francs', type: 'libre', ligne: { cat: 'Portes', nom: 'Porte coulissante en applique, selon offre fournisseur', unite: 'pce', prix: 1280, source: 'Fournisseur, offre n° 2290 (fictive)' } },
+      { texte: 'Le chêne, mets-le à 89', type: 'prix', ref: 'm3', valeur: 89 },
+      { texte: 'Ajoute trois heures de régie', type: 'ajout', ref: 'm11', valeur: 3 },
+      { texte: 'Enlève les seuils', type: 'suppr', ref: 'm7' },
+      { texte: 'Change le parquet', type: 'ambigu', question: 'Quel parquet ?', options: [
+        { label: 'Chêne contrecollé du séjour', ref: 'm3', index: 0 }, { label: 'Stratifié du couloir', ref: 'm4', index: 0 }] },
+    ],
+  },
+  sanitaire: {
+    entreprise: { nom: 'Sanitaires Rochat Sàrl', adresse: 'Rue Louis-de-Savoie 30, 1110 Morges', tel: '021 000 00 00', ide: 'CHE-000.000.003 TVA', lieu: 'Morges' },
+    categories: ['Démontage', 'Fournitures', 'Pose', 'Conduites', 'Divers'],
+    catalogue: [
+      { id: 's1', cat: 'Démontage', nom: 'Démontage des anciens appareils', unite: 'forfait', prix: 450, syn: ['démonter', 'démontage'] },
+      { id: 's2', cat: 'Pose', nom: 'Pose WC suspendu avec bâti', unite: 'pce', prix: 480, syn: ['wc', 'toilettes'] },
+      { id: 's3', cat: 'Pose', nom: 'Pose lavabo et meuble', unite: 'pce', prix: 320, syn: ['lavabo', 'meuble'] },
+      { id: 's4', cat: 'Pose', nom: 'Pose douche de plain-pied, receveur et écoulement', unite: 'pce', prix: 1200, syn: ['douche', 'italienne'] },
+      { id: 's5', cat: 'Pose', nom: 'Pose paroi de douche', unite: 'pce', prix: 280, syn: ['paroi', 'vitre'] },
+      { id: 's6', cat: 'Pose', nom: 'Pose mitigeur', unite: 'pce', prix: 120, syn: ['mitigeur', 'robinet', 'thermostatique'] },
+      { id: 's7', cat: 'Conduites', nom: "Conduites d'alimentation, multicouche", unite: 'm', prix: 65, syn: ['conduites', 'tuyaux'] },
+      { id: 's8', cat: 'Conduites', nom: 'Écoulement PE', unite: 'm', prix: 75, syn: ['écoulement'] },
+      { id: 's9', cat: 'Fournitures', nom: 'Chauffe-eau électrique 200 L, fourni et posé', unite: 'pce', prix: 2600, syn: ['boiler', 'chauffe-eau'] },
+      { id: 's10', cat: 'Divers', nom: 'Heure de monteur', unite: 'h', prix: 105, syn: ['heure', 'monteur'] },
+      { id: 's11', cat: 'Divers', nom: 'Déplacement', unite: 'forfait', prix: 70, syn: ['déplacement'] },
+      { id: 's12', cat: 'Divers', nom: 'Évacuation des déchets', unite: 'forfait', prix: 180, syn: ['déchets', 'benne'] },
+    ],
+    offres: [
+      { id: 'o1', no: '2026-077', client: 'M. Golay', adresse: 'Rue Centrale 5, 1110 Morges', titre: 'Remplacement du boiler', statut: 'envoye', date: '29.10.2026',
+        lignes: [['s9', 1], ['s10', 3], ['s11', 1]] },
+      { id: 'o2', no: '2026-078', client: 'Mme Bovet', adresse: 'Chemin du Lac 17, 1110 Morges', titre: 'Salle de bains complète', statut: 'pret', date: '06.11.2026',
+        lignes: [['s1', 1],
+          [null, 1, { cat: 'Fournitures', nom: 'Appareils selon offre n° 4471 : WC suspendu, lavabo et meuble, receveur, paroi, 2 mitigeurs', unite: 'forfait', prix: 5840, source: 'Léman Sanitaire (fictif), offre du 04.11.2026' }],
+          ['s2', 1], ['s3', 1], ['s4', 1], ['s5', 1], ['s6', 2],
+          ['s7', 6, { conf: 0.71, entendu: 'les conduites, je dirais six mètres' }], ['s8', 4], ['s10', 8], ['s11', 1],
+          [null, 1, { cat: 'Divers', nom: 'Évacuation de la baignoire', unite: 'forfait', entendu: 'la baignoire part' }]] },
+    ],
+    commandes: [
+      { texte: 'C\'est au quatrième sans ascenseur', type: 'diff', ref: 's1', index: 0, motif: '4e étage sans ascenseur', pct: 20 },
+      { texte: 'Ajoute l\'offre du fournisseur pour le chauffe-eau, 1 950 francs', type: 'libre', ligne: { cat: 'Fournitures', nom: 'Chauffe-eau 200 L selon offre n° 4502', unite: 'pce', prix: 1950, source: 'Léman Sanitaire (fictif)' } },
+      { texte: 'Les conduites, c\'est huit mètres', type: 'qte', ref: 's7', valeur: 8 },
+      { texte: 'Ajoute deux heures de monteur', type: 'ajout', ref: 's10', valeur: 2 },
+      { texte: 'Enlève la paroi de douche', type: 'suppr', ref: 's5' },
+      { texte: 'Change le prix de la pose', type: 'ambigu', question: 'Quelle pose ?', options: [
+        { label: 'Pose WC suspendu', ref: 's2', index: 0 }, { label: 'Pose lavabo et meuble', ref: 's3', index: 0 }, { label: 'Pose douche de plain-pied', ref: 's4', index: 0 }] },
+    ],
+  },
+};
+// Commandes communes à tous les métiers.
+const COMMUNES = [
+  { texte: 'Ajoute une remise de 5 %', type: 'remise', valeur: 5 },
+];
+// Aucun devis d'artisan suisse détaillé n'a été trouvé. Les prix sont fictifs, calés sur ces repères vérifiés le 2026-11-06.
+const SOURCES = [
+  { metier: 'Peintre', url: 'https://magicheidi.ch/blog/maler-offerte-schweiz', titre: 'magicheidi.ch, Maler Offerte Schweiz', note: 'murs 25 à 45 CHF/m², façade 35 à 70 CHF/m² ; la page les présente comme des hypothèses de calcul' },
+  { metier: 'Menuisier', url: 'https://media.hornbach.ch/cmsm/ch/fr-ch/parkett.pdf', titre: 'Hornbach Suisse, tarifs de pose de parquet', note: 'pose seule, sans matériel : clipsé 29 à 33 CHF/m², collé 45 CHF/m², plinthes 11 CHF/m' },
+  { metier: 'Sanitaire', url: 'https://neho.ch/fr/blog/renovation-salle-de-bain', titre: 'neho.ch, rénovation de salle de bains', note: 'Vaud : 7 500 à 24 000 CHF par salle de bains, tableau dit « anecdotique » par la page' },
+  { metier: 'Sanitaire', url: 'https://www.lamaisonsaintgobain.fr/salles-de-bain/conseils/renovation-de-la-salle-de-bain/exemple-de-devis-de-salle-de-bain', titre: 'Saint-Gobain, exemple de devis de salle de bains', note: 'France, en euros : structure des postes' },
+  { metier: 'Tous', url: 'https://www.estv.admin.ch/fr/taux-de-la-tva-suisse', titre: 'AFC, taux de TVA', note: 'taux normal 8,1 %' },
+];
+</script>
+
+<script>
+(function () {
+  const $ = (s, r) => (r || document).querySelector(s);
+  const typo = (s) => String(s).replace(/« /g, '«' + NB).replace(/ »/g, NB + '»').replace(/ ([:;!?%])(?=\s|<|$)/g, NB + '$1');
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fmt = (n, d) => (Math.round(n * 100) / 100).toLocaleString('de-CH', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const chf = (n) => 'CHF' + NB + fmt(n, 2);
+  const court = (n) => (Math.abs(Math.round(n * 100) - Math.round(n) * 100) < 1 ? fmt(n, 0) + '.-' : fmt(n, 2));
+  const qn = (n) => (Math.round(n * 100) / 100).toLocaleString('de-CH', { maximumFractionDigits: 2 });
+  const r05 = (n) => Math.round(n * 20) / 20;
+  const r2 = (n) => Math.round(n * 100) / 100;
+  const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  let uid = 0;
+  const nid = () => 'l' + (++uid);
+
+  const I = {
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+    trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    back: '<path d="m15 18-6-6 6-6"/>',
+    next: '<path d="m9 18 6-6-6-6"/>',
+    upload: '<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
+    rec: '<circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/>',
+    stop: '<rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" stroke="none"/>',
+    doc: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+    box: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+    reglages: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  };
+  const ico = (n) => '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + I[n] + '</svg>';
+  const UNITES = ['pce', 'm²', 'm', 'm³', 'h', 'forfait'];
+  const MOTIFS = ['Hauteur', 'Accès difficile', 'Support abîmé', 'Autre'];
+
+  const ui = { metier: 'sanitaire', ligne: 'une', difficulte: 'majorer', marge: 15, ac: 0,
+    tab: 'offres', vue: 'liste', offre: null, flash: null, fcat: '', cq: '' };
+  let S;
+
+  function faireLigne(M, ref, qte, e) {
+    const c = M.catalogue.find((x) => x.id === ref) || {};
+    e = e || {};
+    return { id: nid(), ref: ref || null, cat: e.cat || c.cat, nom: e.nom || c.nom, unite: e.unite || c.unite, qte,
+      pu: ref ? c.prix : (e.prix == null ? null : e.prix), conf: e.conf || 1, entendu: e.entendu || null,
+      libre: !ref, source: e.source || null, diff: e.diff ? { motif: e.diff.motif, pct: e.diff.pct } : null };
+  }
+
+  function charger(metier) {
+    const M = JSON.parse(JSON.stringify(METIERS[metier]));
+    M.offres.forEach((o) => { o.remise = 0; o.acomptes = []; o.lignes = o.lignes.map(([ref, qte, e]) => faireLigne(M, ref, qte, e)); });
+    M.modele = JSON.parse(JSON.stringify(M.offres.find((o) => o.statut === 'pret')));
+    M.prochain = M.offres.length;
+    S = M;
+  }
+
+  let clientSaisi = '';
+  function nouvelleOffre() {
+    const o = JSON.parse(JSON.stringify(S.modele));
+    o.id = 'o' + nid();
+    o.no = o.no.slice(0, 5) + String(+o.no.slice(5) + (++S.prochain)).padStart(3, '0');
+    o.lignes.forEach((l) => { l.id = nid(); });
+    o.acomptes = [];
+    if (clientSaisi) o.client = clientSaisi;
+    return o;
+  }
+
+  // Lignes affichées : la majoration change le prix, ou ajoute une ligne de supplément, selon le réglage.
+  function rangs(o) {
+    const out = [];
+    o.lignes.forEach((l) => {
+      const d = l.diff && l.pu != null;
+      if (d && ui.difficulte === 'majorer') out.push({ l, pu: r2(l.pu * (1 + l.diff.pct / 100)), maj: true });
+      else out.push({ l, pu: l.pu });
+      if (d && ui.difficulte === 'ligne') out.push({ l, pu: r2(l.pu * l.diff.pct / 100), supp: true });
+    });
+    return out;
+  }
+  function totaux(o) {
+    const brut = rangs(o).reduce((t, r) => t + (r.pu == null ? 0 : r.l.qte * r.pu), 0);
+    const remise = brut * (o.remise || 0) / 100;
+    const net = brut - remise;
+    const tva = net * 0.081;
+    const total = r05(net + tva);
+    return { brut, remise, net, tva, total };
+  }
+  function cats(o) {
+    const c = S.categories.filter((x) => o.lignes.some((l) => l.cat === x));
+    o.lignes.forEach((l) => { if (!c.includes(l.cat)) c.push(l.cat); });
+    (o.catsVides || []).forEach((x) => { if (!c.includes(x)) c.push(x); });
+    return c;
+  }
+  const delai = (j) => (j === 0 ? 'à réception' : 'à ' + j + ' jours');
+  const AUJ = '07.11.2026';
+  let fige = false;
+
+  const phone = $('#phone');
+  const offre = () => S.offres.find((o) => o.id === ui.offre);
+  const STAT = { pret: 'Prête à relire', envoye: 'Envoyée', brouillon: 'Brouillon' };
+
+  function render() {
+    $('#layer').innerHTML = '';
+    document.querySelectorAll('#tabs button').forEach((b) => b.setAttribute('aria-current', b.dataset.tab === ui.tab ? 'page' : 'false'));
+    $('#tabs').style.display = (ui.vue === 'enregistrer' || ui.vue === 'traitement') && ui.tab === 'offres' ? 'none' : 'flex';
+    let bar = '', html = '', gris = false;
+    const retour = (go, t) => '<button class="back" data-go="' + go + '">' + ico('back') + t + '</button>';
+    if (ui.tab === 'catalogue') { bar = '<h4>Mon catalogue</h4>'; html = vueCatalogue(); }
+    else if (ui.tab === 'reglages') { bar = '<h4>Réglages</h4>'; html = vueReglages(); gris = true; }
+    else if (ui.vue === 'liste') { bar = '<h4>Mes offres</h4>'; html = vueListe(); gris = true; }
+    else if (ui.vue === 'nouvelle') { bar = retour('liste', 'Offres') + '<h4>Nouvelle offre</h4>'; html = vueNouvelle(); }
+    else if (ui.vue === 'enregistrer') { bar = '<h4>Enregistrement</h4>'; html = vueEnregistrer(); }
+    else if (ui.vue === 'traitement') { bar = '<h4>Préparation de l\'offre</h4>'; html = vueTraitement(); }
+    else if (ui.vue === 'offre') { const o = offre(); bar = retour('liste', 'Offres') + '<h4>' + esc(o.client) + '</h4>'; html = vueOffre(o); }
+    else if (ui.vue === 'apercu') { bar = retour('offre', 'Offre') + '<h4>Aperçu</h4>'; html = vueApercu(offre()); gris = true; }
+    else if (ui.vue === 'acompte') { bar = retour('offre', 'Offre') + '<h4>Facture d\'acompte</h4>'; html = vueAcompte(offre()); gris = true; }
+    $('#bar').innerHTML = typo(bar);
+    $('#screen').className = 'screen' + (gris ? ' gris' : '');
+    $('#screen').innerHTML = typo(html);
+    // Un nouvel écran s'ouvre en haut ; le même écran garde sa position.
+    const cle = ui.tab + '/' + ui.vue + '/' + ui.offre + '/' + ui.ac;
+    if (cle !== derniereCle) { $('#screen').scrollTop = 0; derniereCle = cle; }
+    $('#actions').innerHTML = typo(actions());
+  }
+  let derniereCle = '';
+
+  // Actions principales, toujours dans le bas de l'écran, sous le pouce.
+  function actions() {
+    if (ui.tab === 'catalogue') return '<button class="btn primary" data-act="nouveau-produit">' + ico('plus') + 'Nouveau produit</button>';
+    if (ui.tab !== 'offres') return '';
+    if (ui.vue === 'liste') return '<button class="btn primary" data-act="nouvelle">' + ico('mic') + 'Nouvelle offre</button>';
+    if (ui.vue === 'nouvelle') return '<button class="btn primary" data-act="enregistrer">' + ico('rec') + 'Enregistrer</button>' +
+      '<label class="btn">' + ico('upload') + 'Importer<input type="file" id="fichier" accept="audio/*,.m4a,.mp3,.wav,.ogg,.opus,.amr,.aac" hidden></label>';
+    if (ui.vue === 'enregistrer') return '<button class="btn danger" data-act="stop">' + ico('stop') + 'Terminer</button>';
+    if (ui.vue === 'traitement') return '<button class="btn" data-go="liste">Revenir aux offres</button>';
+    if (ui.vue === 'offre' && offre().statut === 'envoye') return '<button class="btn" data-go="apercu">Voir l\'offre</button><button class="btn primary" data-act="acompte">Générer un acompte</button>';
+    if (ui.vue === 'acompte') { const a = offre().acomptes[ui.ac]; return '<button class="btn" data-go="offre">' + ico('back') + 'Offre</button>' + (a.statut === 'envoye' ? '' : '<button class="btn primary" data-act="envoiac">Envoyer au client</button>'); }
+    if (ui.vue === 'offre') return '<button class="btn" data-act="ajouter">' + ico('plus') + 'Ajouter</button><button class="mic" data-act="micro" aria-label="Commande vocale">' + ico('mic') + '</button><button class="btn primary" data-go="apercu">Aperçu' + ico('next') + '</button>';
+    if (ui.vue === 'apercu') { const o = offre(); if (o.statut === 'envoye') return '<button class="btn" data-go="offre">' + ico('back') + 'Offre</button><button class="btn primary" data-act="acompte">Générer un acompte</button>';
+      const manque = o.lignes.some((l) => l.pu == null);
+      return '<button class="btn" data-go="offre">' + ico('back') + 'Modifier</button><button class="btn primary" data-act="envoyer"' + (manque ? ' disabled' : '') + '>Envoyer au client</button>'; }
+    return '';
+  }
+
+  function vueListe() {
+    let h = '<p class="muted ent">' + esc(S.entreprise.nom) + ' (fictive)</p>';
+    S.offres.slice().reverse().forEach((o) => {
+      const t = totaux(o);
+      h += '<button class="ocard" data-open="' + o.id + '"><span class="l1"><b>' + esc(o.titre) + '</b><span class="status ' + o.statut + '">' + STAT[o.statut] + '</span></span>' +
+        '<span class="l2"><span>' + esc(o.client) + ' · ' + o.date + '</span><b>' + chf(t.total) + '</b></span></button>';
+    });
+    return h;
+  }
+
+  function vueNouvelle() {
+    return '<div class="intro"><p>Comment voulez-vous décrire les travaux ?</p><ul class="muted"><li><b>Enregistrer</b> : sur place ou dans la voiture, en parlant au téléphone.</li>' +
+      '<li><b>Importer</b> : le fichier de l\'enregistreur du téléphone (m4a, mp3, wav…).</li></ul></div>' +
+      '<div class="field"><label for="cl">Client (facultatif, l\'IA le trouve aussi dans la dictée)</label><input id="cl" placeholder="Nom du client"></div>' +
+      '<p class="muted">Si le client est présent, demandez son accord avant d\'enregistrer.</p>';
+  }
+
+  let chrono = null, secondes = 0;
+  const horloge = () => String(Math.floor(secondes / 60)).padStart(2, '0') + ':' + String(secondes % 60).padStart(2, '0');
+  function vueEnregistrer() {
+    return '<div class="rec"><div class="timer" id="timer">' + horloge() + '</div><div class="dot on" aria-hidden="true"></div>' +
+      '<p>Décrivez les travaux, pièce par pièce. Touchez « Terminer » en bas pour finir.</p><p class="muted">Simulation : le temps défile dix fois plus vite.</p></div>';
+  }
+
+  let etape = 0, fichierNom = null;
+  const ETAPES = ['Envoi de l\'enregistrement', 'Transcription', 'Lecture des postes', 'Recherche dans votre catalogue', 'Contrôle de la compréhension'];
+  function vueTraitement() {
+    let h = (fichierNom ? '<p class="muted">Fichier : ' + esc(fichierNom) + '</p>' : '') + '<ul class="steps">';
+    ETAPES.forEach((e, i) => { h += '<li class="' + (i < etape ? 'done' : i === etape ? 'cur' : 'todo') + '">' + e + '</li>'; });
+    return h + '</ul><p>Vous pouvez fermer l\'application : un courriel et une notification vous préviendront quand l\'offre sera prête.</p>';
+  }
+
+  function rang(r) {
+    const l = r.l;
+    if (fige) return '<div class="row" data-row="' + l.id + (r.supp ? 's' : '') + '"><div class="nm">' + (r.supp ? 'Supplément : ' + esc(l.diff.motif) : esc(l.nom)) + '</div>' +
+      '<div class="q"><span class="ro">' + qn(l.qte) + '</span><span class="u">' + esc(l.unite) + '</span></div><div class="p"><span class="ro">' + (r.pu == null ? '?' : court(r.pu)) + '</span></div>' +
+      '<div class="tt">' + (r.pu == null ? '' : court(l.qte * r.pu)) + '</div><span></span></div>';
+    if (r.supp) {
+      return '<div class="row supp' + (ui.flash === l.id + 's' ? ' new' : '') + '" data-row="' + l.id + 's"><button class="nm" data-line="' + l.id + '">Supplément : ' + esc(l.diff.motif) +
+        '<small>+' + qn(l.diff.pct) + ' % de la ligne au-dessus</small></button>' +
+        '<div class="q"><span class="ro">' + qn(l.qte) + '</span><span class="u">' + esc(l.unite) + '</span></div><div class="p"><span class="ro">' + court(r.pu) + '</span></div>' +
+        '<div class="tt">' + court(l.qte * r.pu) + '</div><button class="del" data-deldiff="' + l.id + '" aria-label="Retirer le supplément">' + ico('trash') + '</button></div>';
+    }
+    const miss = l.pu == null, flag = !miss && l.conf < 0.8;
+    let sous = '';
+    if (r.maj) sous = '<small class="maj">' + court(l.pu) + ' + ' + qn(l.diff.pct) + ' % : ' + esc(l.diff.motif) + '</small>';
+    else if (l.libre && l.source) sous = '<small><span class="tag">Ligne libre</span>' + esc(l.source) + '</small>';
+    else if (l.libre) sous = '<small><span class="tag">Ligne libre</span>absente du catalogue</small>';
+    let note = '';
+    if (flag) note = '<div class="note warn"><span>À vérifier</span><button class="okbtn" data-ok="' + l.id + '"><span>C\'est juste</span></button></div>';
+    else if (miss) note = '<div class="note bad"><span>Prix manquant</span></div>';
+    return '<div class="row' + (flag ? ' flag' : '') + (miss ? ' miss' : '') + (ui.flash === l.id ? ' new' : '') + '" data-row="' + l.id + '">' +
+      '<button class="nm" data-line="' + l.id + '">' + esc(l.nom) + sous + '</button>' +
+      '<div class="q"><button class="num" data-qte="' + l.id + '"><i>' + qn(l.qte) + '</i><span class="u">' + esc(l.unite) + '</span></button></div>' +
+      '<div class="p"><button class="num' + (miss ? ' manque' : '') + '" data-prix="' + l.id + '"><i>' + (miss ? 'Prix ?' : court(r.pu)) + '</i></button></div>' +
+      '<div class="tt">' + (miss ? '' : court(l.qte * r.pu)) + '</div>' +
+      '<button class="del" data-del="' + l.id + '" aria-label="Supprimer la ligne">' + ico('trash') + '</button>' + note + '</div>';
+  }
+
+  function vueOffre(o) {
+    const R = rangs(o);
+    fige = o.statut === 'envoye';
+    let h = '<div class="ohead"><div class="who">' + esc(o.adresse) + '</div><div class="t">' + esc(o.titre) + '</div>' +
+      '<div class="meta"><span class="status ' + o.statut + '">' + STAT[o.statut] + '</span><span class="muted">Offre ' + o.no + ' · ' + o.date + '</span></div>' + (fige ? '<p class="muted petit fige">Envoyée, donc figée : elle ne se modifie plus.</p>' : '') + '</div>';
+    h += '<div class="rows ' + ui.ligne + '">';
+    cats(o).forEach((c) => {
+      h += '<div class="cat"><h5>' + esc(c) + '</h5>' + (ui.ligne === 'une' ? '<span class="ch">Qté</span><span class="ch">Prix</span><span class="ch">Total</span><span></span>' : '') + '</div>';
+      const rs = R.filter((r) => r.l.cat === c);
+      rs.forEach((r) => { h += rang(r); });
+      if (!rs.length) h += '<p class="vide">Catégorie vide : « Ajouter » y range les produits de cette catégorie.</p>';
+    });
+    h += '</div>';
+    const t = totaux(o);
+    h += '<div class="totals"><div class="r"><span>Sous-total</span><span>' + chf(t.brut) + '</span></div>' +
+      (fige ? (o.remise ? '<div class="r"><span>Remise ' + qn(o.remise) + ' %</span><span>-' + chf(t.remise) + '</span></div>' : '') :
+        '<div class="r"><span>Remise<button class="num" data-remise="1"><i>' + qn(o.remise) + ' %</i></button></span><span>' + (o.remise ? '-' + chf(t.remise) : '') + '</span></div>') +
+      '<div class="r"><span>TVA 8,1 %</span><span>' + chf(t.tva) + '</span></div>' +
+      '<div class="r grand"><span>Total TTC</span><span>' + chf(t.total) + '</span></div></div>';
+    if (fige) {
+      h += '<div class="cat"><h5>Acomptes</h5></div>';
+      let reste = t.total;
+      o.acomptes.forEach((a, i) => { reste -= a.montant;
+        h += '<button class="docrow" data-voirac="' + i + '"><span><b>Facture d\'acompte ' + a.no + '</b><small>' + qn(a.pct) + ' %, ' + delai(a.jours) + ' · ' + (a.statut === 'envoye' ? 'envoyée' : 'à envoyer') + '</small></span><b>' + chf(a.montant) + '</b></button>'; });
+      h += o.acomptes.length ? '<div class="solde"><span>Reste à facturer</span><span>' + chf(reste) + '</span></div>' : '<p class="vide">Aucun acompte demandé.</p>';
+    }
+    return h;
+  }
+
+  const dateValidite = (d) => plusJours(d, 30);
+  function plusJours(d, n) {
+    const [j, m, a] = d.split('.').map(Number);
+    const x = new Date(a, m - 1, j + n);
+    return String(x.getDate()).padStart(2, '0') + '.' + String(x.getMonth() + 1).padStart(2, '0') + '.' + x.getFullYear();
+  }
+
+  function vueApercu(o) {
+    const t = totaux(o), R = rangs(o), E = S.entreprise;
+    const manque = o.lignes.filter((l) => l.pu == null).length;
+    const doute = o.lignes.filter((l) => l.pu != null && l.conf < 0.8).length;
+    let h = '';
+    if (manque) h += '<div class="alert bad">' + manque + ' ligne' + (manque > 1 ? 's' : '') + ' sans prix : à compléter avant l\'envoi.</div>';
+    if (doute) h += '<div class="alert warn">' + doute + ' ligne' + (doute > 1 ? 's' : '') + ' encore à vérifier.</div>';
+    const i = o.adresse.lastIndexOf(', ');
+    h += '<article class="paper"><header class="ph"><div><b>' + esc(E.nom) + '</b><br>' + esc(E.adresse) + '<br>' + esc(E.tel) + '</div>' +
+      '<div class="ref"><b>Offre ' + o.no + '</b><br>' + esc(E.lieu) + ', le ' + o.date + '</div></header>' +
+      '<div class="pclient">' + esc(o.client) + '<br>' + esc(o.adresse.slice(0, i)) + '<br>' + esc(o.adresse.slice(i + 2)) + '</div>' +
+      '<p class="pobj">' + esc(o.titre) + '</p><table><thead><tr><th>Désignation</th><th class="n">Qté</th><th class="n">Prix</th><th class="n">Montant</th></tr></thead><tbody>';
+    cats(o).forEach((c) => {
+      const rs = R.filter((r) => r.l.cat === c);
+      if (!rs.length) return;
+      let st = 0;
+      h += '<tr class="grp"><td colspan="4">' + esc(c) + '</td></tr>';
+      rs.forEach((r) => {
+        const nom = r.supp ? 'Supplément : ' + esc(r.l.diff.motif) : esc(r.l.nom);
+        const m = r.pu == null ? null : r.l.qte * r.pu;
+        st += m || 0;
+        h += '<tr><td>' + nom + '</td><td class="n">' + qn(r.l.qte) + NB + esc(r.l.unite) + '</td><td class="n">' + (r.pu == null ? '?' : fmt(r.pu, 2)) + '</td><td class="n">' + (m == null ? '?' : fmt(m, 2)) + '</td></tr>';
+      });
+      if (rs.length > 1) h += '<tr class="st"><td colspan="3">Total ' + esc(c.toLowerCase()) + '</td><td class="n">' + fmt(st, 2) + '</td></tr>';
+    });
+    h += '</tbody></table><table class="ptot">' +
+      '<tr><td>Sous-total</td><td class="n">' + fmt(t.brut, 2) + '</td></tr>' +
+      (o.remise ? '<tr><td>Remise ' + qn(o.remise) + ' %</td><td class="n">-' + fmt(t.remise, 2) + '</td></tr><tr><td>Total HT</td><td class="n">' + fmt(t.net, 2) + '</td></tr>' : '') +
+      '<tr><td>TVA 8,1 %</td><td class="n">' + fmt(t.tva, 2) + '</td></tr>' +
+      '<tr class="g"><td>Total TTC</td><td class="n">' + chf(t.total) + '</td></tr></table>';
+    h += '<div class="pcond"><b>Conditions</b><ul>';
+    h += '<li>Paiement : à 30 jours dès la fin des travaux.</li>' +
+      '<li>Offre valable jusqu\'au ' + dateValidite(o.date) + '. Prix en francs suisses, TVA comprise dans le total.</li></ul></div>' +
+      '<div class="psign"><div>Lieu et date</div><div>Bon pour accord, signature du client</div></div>' +
+      '<footer>' + esc(E.nom) + ' · ' + esc(E.ide) + ' · données fictives</footer></article>';
+    if (o.statut === 'envoye') h += '<p class="muted">Offre envoyée.</p>';
+    return h;
+  }
+
+  function vueAcompte(o) {
+    const a = o.acomptes[ui.ac], E = S.entreprise, i = o.adresse.lastIndexOf(', ');
+    const tva = a.montant - a.montant / 1.081;
+    return '<article class="paper"><header class="ph"><div><b>' + esc(E.nom) + '</b><br>' + esc(E.adresse) + '<br>' + esc(E.tel) + '</div>' +
+      '<div class="ref"><b>Facture d\'acompte <span style="white-space:nowrap">' + a.no + '</span></b><br>' + esc(E.lieu) + ', le ' + a.date + '</div></header>' +
+      '<div class="pclient">' + esc(o.client) + '<br>' + esc(o.adresse.slice(0, i)) + '<br>' + esc(o.adresse.slice(i + 2)) + '</div>' +
+      '<p class="pobj">' + esc(o.titre) + '</p><p>Selon notre offre ' + o.no + ' du ' + o.date + ', d\'un total de ' + chf(totaux(o).total) + ', TVA comprise.</p>' +
+      '<table class="ptot plein"><tr><td>Acompte de ' + qn(a.pct) + ' %</td><td class="n">' + fmt(a.montant, 2) + '</td></tr>' +
+      '<tr><td>dont TVA 8,1 %</td><td class="n">' + fmt(tva, 2) + '</td></tr><tr class="g"><td>À payer</td><td class="n">' + chf(a.montant) + '</td></tr></table>' +
+      '<div class="pcond"><b>Conditions</b><ul><li>Payable ' + (a.jours ? 'dans les ' + a.jours + ' jours, jusqu\'au ' + plusJours(a.date, a.jours) : 'à réception') + '.</li><li>Le solde sera facturé à la fin des travaux.</li></ul></div>' +
+      '<div class="qr">Section paiement avec code QR (simulée)</div>' +
+      '<footer>' + esc(E.nom) + ' · ' + esc(E.ide) + ' · données fictives</footer></article>' + (a.statut === 'envoye' ? '<p class="muted">Facture d\'acompte envoyée.</p>' : '');
+  }
+
+  function vueCatalogue() {
+    let h = '<div class="search"><div class="box">' + ico('search') + '<input id="cq" type="search" placeholder="Chercher parmi ' + S.catalogue.length + ' produits" value="' + esc(ui.cq) + '" autocomplete="off"></div></div>';
+    h += '<div class="fchips">' + [''].concat(S.categories).map((c) => '<button data-fcat="' + esc(c) + '" aria-pressed="' + (ui.fcat === c) + '"><span>' + (c ? esc(c) : 'Tout') + '</span></button>').join('') + '</div>';
+    return h + '<div id="clist">' + listeCatalogue() + '</div>';
+  }
+  const trouve = (x, s) => !s || norm(x.nom).includes(s) || x.syn.some((y) => norm(y).includes(s));
+  function listeCatalogue() {
+    const s = norm(ui.cq);
+    const items = S.catalogue.filter((x) => (!ui.fcat || x.cat === ui.fcat) && trouve(x, s));
+    if (!items.length) return '<p class="vide">Aucun produit « ' + esc(ui.cq) + ' ».</p><button class="lien" data-act="nouveau-produit">' + ico('plus') + 'Créer « ' + esc(ui.cq) + ' »</button>';
+    let h = '';
+    S.categories.forEach((c) => {
+      const it = items.filter((x) => x.cat === c);
+      if (!it.length) return;
+      h += '<div class="ccat"><h5>' + esc(c) + '</h5><span>' + it.length + '</span></div>';
+      it.forEach((x) => {
+        h += '<div class="crow"><button class="nm" data-prod="' + x.id + '">' + esc(x.nom) + '</button>' +
+          '<button class="num' + (x.prix == null ? ' manque' : '') + '" data-cprix="' + x.id + '"><i>' + (x.prix == null ? 'Prix ?' : court(x.prix)) + '</i></button><span class="u">/ ' + esc(x.unite) + '</span></div>';
+      });
+    });
+    return h;
+  }
+
+  const radio = (nom, val, titre, ex) => '<label class="radio"><input type="radio" name="r-' + nom + '" value="' + val + '"' + (ui[nom] === val ? ' checked' : '') + '><span>' + titre + (ex ? '<small>' + ex + '</small>' : '') + '</span></label>';
+  function vueReglages() {
+    const E = S.entreprise;
+    return '<div class="card"><h6>Entreprise</h6><p class="muted">' + esc(E.nom) + ', ' + esc(E.adresse) + '</p></div>' +
+      '<div class="card"><h6>Quand une offre est prête</h6><label class="check"><input type="checkbox" checked disabled> Courriel, toujours</label><label class="check"><input type="checkbox" checked> Notification sur ce téléphone</label></div>' +
+      '<div class="card"><h6>Travail plus difficile que d\'habitude</h6><p class="muted petit">Hauteur, accès, support abîmé : comment le compter dans l\'offre ?</p>' +
+        radio('difficulte', 'majorer', 'Majorer le prix de la ligne', 'Les murs à 28.- passent à 35.- avec +25 %.') +
+        radio('difficulte', 'ligne', 'Ajouter une ligne de supplément', '« Supplément : hauteur 4 m » sous la ligne des murs.') + '</div>' +
+      '<div class="card"><h6>Lignes libres</h6><div class="r">Marge par défaut sur le prix d\'achat <button class="num" data-marge="1"><i>' + qn(ui.marge) + ' %</i></button></div></div>' +
+      '<div class="card"><h6>Calculs, réglés une fois</h6><ul class="regle"><li>TVA 8,1 %</li><li>Remise appliquée avant la TVA</li><li>Total arrondi aux 5 centimes</li><li>Offres valables 30 jours</li></ul></div>';
+  }
+
+  // Couches : feuille, dialogue, bandeau
+  const tete = (t) => '<div class="sh-h"><h4>' + t + '</h4><button class="x" data-close="1" aria-label="Fermer">' + ico('close') + '</button></div>';
+  const champ = (lib, ctl) => '<label class="field">' + lib + ctl + '</label>';
+  const liste = (id, vals, sel) => '<select id="' + id + '">' + vals.map((v) => '<option' + (v === sel ? ' selected' : '') + '>' + esc(v) + '</option>').join('') + '</select>';
+  function sheet(html) { $('#layer').innerHTML = '<div class="sheet-back" data-close="1"><div class="sheet">' + typo(html) + '</div></div>'; }
+  function dialog(html) { $('#layer').innerHTML = '<div class="dialog-back"><div class="dialog">' + typo(html) + '</div></div>'; }
+  const fermer = () => { $('#layer').innerHTML = ''; };
+  let snackTimer = null, undo = null;
+  function snack(texte, annuler) {
+    clearTimeout(snackTimer);
+    const old = $('.snack', phone); if (old) old.remove();
+    phone.insertAdjacentHTML('beforeend', '<div class="snack"><span>' + typo(esc(texte)) + '</span>' + (annuler ? '<button data-undo="1">Annuler</button>' : '') + '</div>');
+    snackTimer = setTimeout(() => { const s = $('.snack', phone); if (s) s.remove(); undo = null; }, 5000);
+  }
+  function notif(titre, texte, go) {
+    phone.insertAdjacentHTML('beforeend', '<div class="notif" data-notif="' + go + '"><b>' + typo(esc(titre)) + '</b>' + typo(esc(texte)) + '</div>');
+    setTimeout(() => { const n = $('.notif', phone); if (n) n.remove(); }, 7000);
+  }
+  // Fait défiler l'écran jusqu'à la ligne et la fait clignoter une fois.
+  function montrer(id) {
+    ui.flash = id; render();
+    const el = $('[data-row="' + id + '"]'), sc = $('#screen');
+    if (el) sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 120;
+    setTimeout(() => { ui.flash = null; }, 1800);
+    return el;
+  }
+
+  function supprimer(o, id) {
+    const i = o.lignes.findIndex((l) => l.id === id);
+    if (i < 0) return;
+    const [l] = o.lignes.splice(i, 1);
+    undo = () => { o.lignes.splice(i, 0, l); };
+    render();
+    snack('« ' + l.nom + ' » supprimée', true);
+  }
+
+  function editer(btn, valeur, appliquer) {
+    const input = document.createElement('input');
+    input.className = 'edit'; input.type = 'number'; input.inputMode = 'decimal'; input.step = 'any';
+    input.value = valeur == null ? '' : valeur;
+    btn.replaceWith(input); input.focus(); input.select();
+    let fini = false;
+    const ok = () => { if (fini) return; fini = true; const v = parseFloat(String(input.value).replace(',', '.')); if (!isNaN(v) && v >= 0) appliquer(v); render(); };
+    input.addEventListener('blur', ok);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { fini = true; render(); } });
+  }
+
+  function ajouterDuCatalogue(o, ref, qte) {
+    const l = faireLigne(S, ref, qte);
+    o.lignes.push(l);
+    return l;
+  }
+  // Le produit choisi se range dans sa catégorie, la quantité s'ouvre aussitôt.
+  function placer(o, l) {
+    const el = montrer(l.id);
+    const b = el && $('[data-qte="' + l.id + '"]', el);
+    if (b) editerQte(l, b);
+  }
+  function editerQte(l, btn) {
+    const row = btn.closest('.row');
+    editer(btn, l.qte, (v) => { l.qte = v; l.conf = 1; });
+    if (row) row.insertAdjacentHTML('beforeend', typo('<div class="pills unites"><b>Unité</b>' + UNITES.map((u) => '<button data-unite="' + u + '" data-lu="' + l.id + '" aria-pressed="' + (u === l.unite) + '"><span>' + u + '</span></button>').join('') + '</div>'));
+  }
+
+  let ambigu = null;
+  function commande(o, cmd) {
+    const lignes = (ref) => o.lignes.filter((l) => l.ref === ref);
+    if (cmd.type === 'remise') { o.remise = cmd.valeur; render(); snack('Remise de ' + cmd.valeur + ' % appliquée', false); return; }
+    if (cmd.type === 'qte' || cmd.type === 'prix') {
+      const l = lignes(cmd.ref)[0];
+      if (!l) { dialog('<p>Je ne trouve pas cette ligne dans l\'offre. Rien n\'a été modifié.</p><div class="row2"><button class="btn" data-close="1">Fermer</button></div>'); return; }
+      if (cmd.type === 'qte') l.qte = cmd.valeur; else l.pu = cmd.valeur;
+      l.conf = 1; montrer(l.id); snack('« ' + l.nom + ' » modifiée', false); return;
+    }
+    if (cmd.type === 'diff') {
+      const l = lignes(cmd.ref)[cmd.index];
+      if (!l) return;
+      l.diff = { motif: cmd.motif, pct: cmd.pct };
+      montrer(ui.difficulte === 'ligne' ? l.id + 's' : l.id);
+      snack(ui.difficulte === 'ligne' ? 'Ligne de supplément ajoutée' : 'Prix majoré de ' + cmd.pct + ' %', false); return;
+    }
+    if (cmd.type === 'libre') { const l = faireLigne(S, null, 1, cmd.ligne); o.lignes.push(l); montrer(l.id); snack('Ligne libre ajoutée', false); return; }
+    if (cmd.type === 'ajout') { const l = ajouterDuCatalogue(o, cmd.ref, cmd.valeur); montrer(l.id); snack('Ligne ajoutée', false); return; }
+    if (cmd.type === 'suppr') { const l = lignes(cmd.ref)[0]; if (l) supprimer(o, l.id); return; }
+    if (cmd.type === 'ambigu') {
+      let h = tete(esc(cmd.question)) + '<p class="muted">La commande « ' + esc(cmd.texte) + ' » peut viser plusieurs lignes. Rien n\'est modifié avant votre choix.</p><div class="chips">';
+      cmd.options.forEach((op, i) => { h += '<button class="btn" data-amb="' + i + '">' + esc(op.label) + '</button>'; });
+      sheet(h + '</div>');
+      ambigu = cmd;
+    }
+  }
+
+  // Fenêtre « Ajouter » : catalogue, ligne libre, nouveau produit, catégorie.
+  function feuilleAjout() {
+    sheet(tete('Ajouter à l\'offre') +
+      '<div class="search"><div class="box">' + ico('search') + '<input id="cherche" type="search" placeholder="Chercher dans le catalogue" autocomplete="off"></div></div>' +
+      '<div id="res" class="res"></div>' +
+      '<div class="autres"><button class="btn" data-act="libre">' + ico('plus') + 'Ligne libre</button><button class="btn" data-act="nouveau-produit" data-pour="offre">' + ico('plus') + 'Nouveau produit</button><button class="btn" data-act="categorie">' + ico('plus') + 'Catégorie</button></div>' +
+      '<p class="muted petit">Ligne libre : une offre de fournisseur ou un travail ponctuel. Elle reste dans cette offre, le catalogue ne change pas.</p>');
+    listerProduits('');
+  }
+  function listerProduits(q) {
+    const r = $('#res'); if (!r) return;
+    const s = norm(q);
+    const items = S.catalogue.filter((x) => trouve(x, s));
+    r.innerHTML = typo(items.length ? items.map((x) => '<button class="pick" data-pick="' + x.id + '"><b class="pn">' + esc(x.nom) + '<small>' + esc(x.cat) + '</small></b><span>' + (x.prix == null ? 'prix ?' : court(x.prix)) + ' / ' + esc(x.unite) + '</span></button>').join('')
+      : '<p class="vide">Rien pour « ' + esc(q) + ' » dans le catalogue.</p><div class="chips"><button class="btn" data-act="libre" data-nom="' + esc(q) + '">' + ico('plus') + 'Ligne libre « ' + esc(q) + ' »</button><button class="btn" data-act="nouveau-produit" data-pour="offre" data-nom="' + esc(q) + '">' + ico('plus') + 'Créer « ' + esc(q) + ' » au catalogue</button></div>');
+  }
+
+  function feuilleLibre(nom) {
+    const o = offre();
+    const toutes = cats(o).concat(S.categories.filter((c) => !cats(o).includes(c)));
+    const def = S.categories.includes('Fournitures') ? 'Fournitures' : 'Divers';
+    sheet(tete('Ligne libre') + '<p class="muted petit">Pour une offre de fournisseur ou un travail ponctuel. La ligne reste dans cette offre, le catalogue ne change pas.</p>' +
+      champ('Désignation', '<input id="ll-nom" value="' + esc(nom || '') + '" placeholder="Par exemple : appareils selon offre n° 4471">') +
+      champ('Fournisseur et n° d\'offre (pour vous, absent du document du client)', '<input id="ll-src" placeholder="Facultatif">') +
+      '<div class="duo">' + champ('Quantité', '<input id="ll-q" type="number" inputmode="decimal" value="1">') + champ('Unité', liste('ll-u', UNITES, 'forfait')) + '</div>' +
+      champ('Catégorie', liste('ll-cat', toutes, def)) +
+      '<div class="seg2" id="ll-mode"><button data-llm="vente" aria-pressed="true">Prix de vente</button><button data-llm="achat" aria-pressed="false">Achat + marge</button></div>' +
+      '<div id="ll-vente">' + champ('Prix de vente (CHF)', '<input id="ll-prix" type="number" inputmode="decimal">') + '</div>' +
+      '<div id="ll-achat" hidden><div class="duo">' + champ('Prix d\'achat (CHF)', '<input id="ll-achat-v" type="number" inputmode="decimal">') + champ('Marge (%)', '<input id="ll-marge" type="number" inputmode="decimal" value="' + ui.marge + '">') + '</div>' +
+      '<p class="calc" id="ll-calc">Prix de vente : -</p></div>' +
+      '<label class="check"><input type="checkbox" id="ll-cata"> Garder aussi dans le catalogue</label>' +
+      '<div class="row2"><button class="btn" data-close="1">Annuler</button><button class="btn primary" data-act="librok">Ajouter à l\'offre</button></div>');
+  }
+  function prixLibre() {
+    if ($('#ll-achat').hidden) return parseFloat($('#ll-prix').value);
+    const a = parseFloat($('#ll-achat-v').value), m = parseFloat($('#ll-marge').value);
+    return isNaN(a) ? NaN : r05(a * (1 + (isNaN(m) ? 0 : m) / 100));
+  }
+
+  function feuilleProduit(nom, pourOffre) {
+    sheet(tete('Nouveau produit') + champ('Désignation', '<input id="np-nom" value="' + esc(nom || '') + '">') +
+      '<div class="duo">' + champ('Unité', liste('np-u', UNITES, 'pce')) + champ('Prix (CHF)', '<input id="np-prix" type="number" inputmode="decimal">') + '</div>' +
+      champ('Catégorie', '<select id="np-cat">' + S.categories.map((c) => '<option>' + esc(c) + '</option>').join('') + '<option value="__nouvelle">+ Nouvelle catégorie…</option></select>') +
+      '<div id="np-nc" hidden>' + champ('Nom de la nouvelle catégorie', '<input id="np-ncat">') + '</div>' +
+      (pourOffre ? '<label class="check"><input type="checkbox" id="np-offre" checked> Ajouter aussi à cette offre</label>' : '') +
+      '<div class="row2"><button class="btn" data-close="1">Annuler</button><button class="btn primary" data-act="npok">Enregistrer</button></div>');
+  }
+
+  let diffTmp = null;
+  function feuilleLigne(l) {
+    diffTmp = l.diff ? { motif: l.diff.motif, pct: l.diff.pct } : { motif: '', pct: 25 };
+    sheet(tete('Ligne') + champ('Désignation', '<input id="li-nom" value="' + esc(l.nom) + '">') +
+      champ('Catégorie', liste('li-cat', S.categories.concat(S.categories.includes(l.cat) ? [] : [l.cat]), l.cat)) +
+      '<h5 class="sub">Plus difficile que d\'habitude ?</h5>' +
+      '<div class="pills">' + MOTIFS.map((m) => '<button data-motif="' + m + '" aria-pressed="false"><span>' + m + '</span></button>').join('') + '</div>' +
+      champ('Motif, tel qu\'il paraîtra', '<input id="li-motif" value="' + esc(diffTmp.motif) + '" placeholder="Par exemple : hauteur 4 m, échelle">') +
+      '<div class="pills" id="li-pcts">' + [10, 20, 25, 50].map((p) => '<button data-pct="' + p + '" aria-pressed="' + (diffTmp.pct === p) + '"><span>+' + p + ' %</span></button>').join('') + '</div>' +
+      '<p class="muted petit">Selon vos réglages, ' + (ui.difficulte === 'majorer' ? 'le prix de la ligne est majoré.' : 'une ligne de supplément s\'ajoute sous celle-ci.') + '</p>' +
+      '<div class="row2">' + (l.diff ? '<button class="btn" data-act="sansdiff">Sans majoration</button>' : '<button class="btn" data-close="1">Annuler</button>') + '<button class="btn primary" data-act="ligneok">Enregistrer</button></div>' +
+      (l.libre ? '<p><button class="lien" data-act="versCatalogue">' + ico('plus') + 'Ajouter au catalogue</button></p>' : ''));
+  }
+  let ligneEnCours = null;
+
+  // Envoi : une confirmation, puis l'offre est figée.
+  function feuilleEnvoi() {
+    const o = offre(), doute = o.lignes.filter((l) => l.pu != null && l.conf < 0.8).length;
+    sheet(tete('Envoyer à ' + esc(o.client)) + '<p class="muted">Par courriel, avec l\'offre en PDF. Une fois envoyée, l\'offre est figée ; on peut ensuite générer un acompte.</p>' +
+      (doute ? '<p class="note warn">' + doute + ' ligne' + (doute > 1 ? 's' : '') + ' encore à vérifier.</p>' : '') +
+      '<div class="row2"><button class="btn" data-close="1">Pas encore</button><button class="btn primary" data-act="envoiok">Envoyer</button></div>');
+  }
+  // Acompte : un document à part, généré sur une offre figée. Pourcentage ou montant précis.
+  function feuilleAcompte() {
+    const o = offre(), t = totaux(o).total, deja = o.acomptes.reduce((x, a) => x + a.montant, 0);
+    acTmp = { pct: 30, montant: r05(t * 0.3), jours: 10 };
+    sheet(tete('Générer un acompte') + '<p class="muted petit">Sur l\'offre ' + o.no + ', ' + chf(t) + (deja ? ', dont ' + chf(deja) + ' déjà demandés' : '') + '.</p>' +
+      '<h5 class="sub">Montant</h5><div class="pills" id="ac-pct">' + [20, 30, 50].map((x) => '<button data-acp="' + x + '" aria-pressed="' + (x === 30) + '"><span>' + x + ' %</span></button>').join('') + '</div>' +
+      '<div class="duo">' + champ('Pourcentage précis', '<input id="ac-p" type="number" inputmode="decimal" step="any" min="0" value="30">') +
+        champ('Montant précis (CHF)', '<input id="ac-m" type="number" inputmode="decimal" step="any" min="0" value="' + acTmp.montant.toFixed(2) + '">') + '</div>' +
+      '<h5 class="sub">Délai de paiement</h5><div class="pills" id="ac-j">' + [[0, 'À réception'], [10, '10 jours'], [30, '30 jours']].map(([j, x]) => '<button data-acj="' + j + '" aria-pressed="' + (j === 10) + '"><span>' + x + '</span></button>').join('') + '</div>' +
+      '<p class="calc" id="ac-calc">' + texteAcompte() + '</p>' +
+      '<div class="row2"><button class="btn" data-close="1">Annuler</button><button class="btn primary" data-act="acok">Générer</button></div>');
+  }
+  function texteAcompte() {
+    if (!(acTmp.montant > 0)) return 'Saisissez un pourcentage ou un montant.';
+    return 'Facture d\'acompte de ' + chf(acTmp.montant) + ' (' + qn(acTmp.pct) + ' %), payable ' + (acTmp.jours ? 'à ' + acTmp.jours + ' jours' : 'à réception') + '.';
+  }
+  // Le pourcentage et le montant se suivent : on saisit l'un, l'autre se calcule.
+  function acompteSaisi(champId, valeur) {
+    const t = totaux(offre()).total, v = parseFloat(String(valeur).replace(',', '.'));
+    if (champId === 'ac-p') { acTmp.pct = v; acTmp.montant = isNaN(v) ? NaN : r05(t * v / 100); $('#ac-m').value = isNaN(v) ? '' : acTmp.montant.toFixed(2); }
+    else { acTmp.montant = isNaN(v) ? NaN : r2(v); acTmp.pct = isNaN(v) ? NaN : r2(v / t * 100); $('#ac-p').value = isNaN(v) ? '' : acTmp.pct; }
+    $('#ac-pct').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.acp === acTmp.pct && champId === 'ac-p' ? 'true' : 'false'));
+    $('#ac-calc').textContent = texteAcompte();
+  }
+  let acTmp = null;
+  const presser = (grp, b) => { grp.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); };
+
+  phone.addEventListener('click', (e) => {
+    const t = e.target.closest('button, [data-open], [data-notif], .sheet-back, label');
+    if (!t) return;
+    const d = t.dataset, o = ui.offre ? offre() : null;
+    if (t.classList.contains('sheet-back') && e.target !== t) return;
+    if (d.close) { fermer(); return; }
+    if (d.tab || d.go) { const s = $('.snack', phone); if (s) s.remove(); }
+    if (d.tab) { ui.tab = d.tab; if (d.tab === 'offres') ui.vue = 'liste'; render(); return; }
+    if (d.go) { ui.vue = d.go; ui.tab = 'offres'; render(); return; }
+    if (d.open) { ui.offre = d.open; ui.vue = 'offre'; render(); return; }
+    if (d.notif) { ui.offre = d.notif; ui.vue = 'offre'; ui.tab = 'offres'; t.remove(); render(); return; }
+    if (d.undo) { if (undo) { undo(); undo = null; } const s = $('.snack', phone); if (s) s.remove(); render(); return; }
+    if (d.act === 'nouvelle') { ui.vue = 'nouvelle'; render(); return; }
+    if (d.act === 'enregistrer') { clientSaisi = (($('#cl') || {}).value || '').trim(); fichierNom = null; secondes = 0; ui.vue = 'enregistrer'; render();
+      chrono = setInterval(() => { secondes += 10; const el = $('#timer'); if (el) el.textContent = horloge(); }, 1000); return; }
+    if (d.act === 'stop') { clearInterval(chrono); lancerTraitement(); return; }
+    if (d.act === 'micro') {
+      let h = tete('Commande vocale') + '<p class="muted">Simulation : choisissez ce que vous diriez.</p><div class="chips">';
+      S.commandes.concat(COMMUNES).forEach((c, i) => { h += '<button class="btn" data-cmd="' + i + '">« ' + esc(c.texte) + ' »</button>'; });
+      sheet(h + '</div>'); return;
+    }
+    if (d.cmd) { fermer(); commande(o, S.commandes.concat(COMMUNES)[+d.cmd]); return; }
+    if (d.amb) { const op = ambigu.options[+d.amb]; fermer();
+      const l = o.lignes.filter((x) => x.ref === op.ref)[op.index];
+      if (l) { const el = montrer(l.id); const b = el && $('[data-prix="' + l.id + '"]', el); if (b) editer(b, l.pu, (v) => { l.pu = v; }); } return; }
+    if (d.del) { supprimer(o, d.del); return; }
+    if (d.deldiff) { const l = o.lignes.find((x) => x.id === d.deldiff); const avant = l.diff; l.diff = null; undo = () => { l.diff = avant; }; render(); snack('Supplément retiré', true); return; }
+    if (d.ok) { const l = o.lignes.find((x) => x.id === d.ok); l.conf = 1; render(); return; }
+    if (d.qte) { editerQte(o.lignes.find((x) => x.id === d.qte), t); return; }
+    if (d.unite) { const l = o.lignes.find((x) => x.id === d.lu); l.unite = d.unite; presser(t.parentNode, t); const i = $('input.edit', phone); if (i) i.focus(); return; }
+    if (d.prix) { const l = o.lignes.find((x) => x.id === d.prix); editer(t, l.pu, (v) => { l.pu = v; l.conf = 1; }); return; }
+    if (d.remise) { editer(t, o.remise, (v) => { o.remise = Math.min(v, 100); }); return; }
+    if (d.marge) { editer(t, ui.marge, (v) => { ui.marge = v; }); return; }
+    if (d.cprix) { const x = S.catalogue.find((c) => c.id === d.cprix); editer(t, x.prix, (v) => { x.prix = v; }); return; }
+    if (d.fcat !== undefined) { ui.fcat = d.fcat; render(); return; }
+    if (d.act === 'ajouter') { feuilleAjout(); return; }
+    if (d.pick) { fermer(); const l = ajouterDuCatalogue(o, d.pick, 1); placer(o, l); return; }
+    if (d.act === 'libre') { feuilleLibre(d.nom || ''); return; }
+    if (d.llm) { presser($('#ll-mode'), t); $('#ll-vente').hidden = d.llm !== 'vente'; $('#ll-achat').hidden = d.llm !== 'achat'; return; }
+    if (d.act === 'librok') {
+      const nom = $('#ll-nom').value.trim(); if (!nom) { $('#ll-nom').focus(); return; }
+      const p = prixLibre(), q = parseFloat($('#ll-q').value);
+      const e2 = { cat: $('#ll-cat').value, nom, unite: $('#ll-u').value, prix: isNaN(p) ? null : p, source: $('#ll-src').value.trim() || null };
+      let l;
+      if ($('#ll-cata').checked) { const id = 'n' + nid(); S.catalogue.push({ id, cat: e2.cat, nom, unite: e2.unite, prix: e2.prix, syn: [norm(nom)] }); l = faireLigne(S, id, isNaN(q) ? 1 : q); }
+      else l = faireLigne(S, null, isNaN(q) ? 1 : q, e2);
+      o.lignes.push(l); fermer(); montrer(l.id); snack(l.libre ? 'Ligne libre ajoutée' : 'Ligne ajoutée, produit gardé au catalogue', false); return;
+    }
+    if (d.act === 'categorie') {
+      sheet(tete('Nouvelle catégorie') + champ('Nom', '<input id="nomcat" placeholder="Par exemple : Cuisine">') + '<div class="row2"><button class="btn" data-close="1">Annuler</button><button class="btn primary" data-act="catok">Créer</button></div>');
+      setTimeout(() => { const i = $('#nomcat'); if (i) i.focus(); }, 50); return;
+    }
+    if (d.act === 'catok') { const v = ($('#nomcat').value || '').trim(); if (!v) return;
+      if (!S.categories.includes(v)) S.categories.push(v);
+      if (o) o.catsVides = (o.catsVides || []).concat(v);
+      fermer(); render(); snack('Catégorie « ' + v + ' » créée', false); return; }
+    if (d.act === 'nouveau-produit') { feuilleProduit(d.nom || (ui.tab === 'catalogue' ? ui.cq : ''), d.pour === 'offre'); return; }
+    if (d.act === 'npok') {
+      const nom = $('#np-nom').value.trim(); if (!nom) { $('#np-nom').focus(); return; }
+      let cat = $('#np-cat').value;
+      if (cat === '__nouvelle') { cat = $('#np-ncat').value.trim(); if (!cat) { $('#np-ncat').focus(); return; } if (!S.categories.includes(cat)) S.categories.push(cat); }
+      const p = parseFloat($('#np-prix').value), id = 'n' + nid();
+      S.catalogue.push({ id, cat, nom, unite: $('#np-u').value, prix: isNaN(p) ? null : p, syn: [norm(nom)] });
+      const dansOffre = $('#np-offre') && $('#np-offre').checked;
+      fermer();
+      if (dansOffre && o) { const l = ajouterDuCatalogue(o, id, 1); placer(o, l); }
+      else { ui.cq = ''; render(); }
+      snack('« ' + nom + ' » ajouté au catalogue', false); return;
+    }
+    if (d.prod) { const x = S.catalogue.find((c) => c.id === d.prod);
+      sheet(tete('Produit') + champ('Désignation', '<input id="pr-nom" value="' + esc(x.nom) + '">') +
+        '<div class="duo">' + champ('Unité', liste('pr-u', UNITES, x.unite)) + champ('Prix (CHF)', '<input id="pr-prix" type="number" inputmode="decimal" value="' + (x.prix == null ? '' : x.prix) + '">') + '</div>' +
+        champ('Catégorie', liste('pr-cat', S.categories, x.cat)) +
+        champ('Mots reconnus dans la dictée, séparés par des virgules', '<input id="pr-syn" value="' + esc(x.syn.join(', ')) + '">') +
+        '<div class="row2"><button class="btn" data-close="1">Annuler</button><button class="btn primary" data-act="prok" data-id="' + x.id + '">Enregistrer</button></div>'); return; }
+    if (d.act === 'prok') { const x = S.catalogue.find((c) => c.id === d.id); const p = parseFloat($('#pr-prix').value);
+      x.nom = $('#pr-nom').value.trim() || x.nom; x.unite = $('#pr-u').value; x.prix = isNaN(p) ? null : p; x.cat = $('#pr-cat').value;
+      x.syn = $('#pr-syn').value.split(',').map((s) => s.trim()).filter(Boolean); fermer(); render(); return; }
+    if (d.line) { ligneEnCours = o.lignes.find((x) => x.id === d.line); feuilleLigne(ligneEnCours); return; }
+    if (d.motif) { const i = $('#li-motif'); i.value = d.motif === 'Autre' ? '' : d.motif.toLowerCase() + ' : '; i.focus(); return; }
+    if (d.pct) { diffTmp.pct = +d.pct; presser($('#li-pcts'), t); return; }
+    if (d.act === 'ligneok') { const l = ligneEnCours, m = $('#li-motif').value.trim().replace(/\s*:\s*$/, '');
+      l.nom = $('#li-nom').value.trim() || l.nom; l.cat = $('#li-cat').value;
+      const nouveau = m && !l.diff;
+      l.diff = m ? { motif: m, pct: diffTmp.pct } : l.diff;
+      fermer(); montrer(nouveau && ui.difficulte === 'ligne' ? l.id + 's' : l.id); return; }
+    if (d.act === 'sansdiff') { ligneEnCours.diff = null; fermer(); render(); return; }
+    if (d.act === 'versCatalogue') { const l = ligneEnCours, id = 'n' + nid();
+      S.catalogue.push({ id, cat: l.cat, nom: l.nom, unite: l.unite, prix: l.pu, syn: [norm(l.nom)] }); l.ref = id; l.libre = false; l.source = null; fermer(); render(); snack('« ' + l.nom + ' » ajouté au catalogue', false); return; }
+    if (d.act === 'acompte') { feuilleAcompte(); return; }
+    if (d.acp !== undefined) { $('#ac-p').value = d.acp; acompteSaisi('ac-p', d.acp); presser($('#ac-pct'), t); return; }
+    if (d.acj !== undefined) { acTmp.jours = +d.acj; presser($('#ac-j'), t); $('#ac-calc').textContent = texteAcompte(); return; }
+    if (d.act === 'acok') {
+      const total = totaux(o).total, deja = o.acomptes.reduce((x, a) => x + a.montant, 0);
+      if (!(acTmp.montant > 0)) { snack('Saisissez un pourcentage ou un montant', false); return; }
+      if (deja + acTmp.montant > total + 0.004) { snack('Les acomptes dépasseraient le total de l\'offre (100 %)', false); return; }
+      o.acomptes.push({ no: o.no + '-A' + (o.acomptes.length + 1), pct: acTmp.pct, jours: acTmp.jours, montant: acTmp.montant, date: AUJ, statut: 'pret' });
+      ui.ac = o.acomptes.length - 1; ui.vue = 'acompte'; fermer(); render(); snack('Facture d\'acompte prête à envoyer', false); return;
+    }
+    if (d.voirac !== undefined) { ui.ac = +d.voirac; ui.vue = 'acompte'; render(); return; }
+    if (d.act === 'envoiac') { o.acomptes[ui.ac].statut = 'envoye'; render(); snack('Facture d\'acompte envoyée (simulation)', false); return; }
+    if (d.act === 'envoyer') { feuilleEnvoi(); return; }
+    if (d.act === 'envoiok') { o.statut = 'envoye'; fermer(); render(); snack('Offre envoyée et figée (simulation)', false); return; }
+  });
+
+  phone.addEventListener('mousedown', (e) => { if (e.target.closest('.unites')) e.preventDefault(); });
+  phone.addEventListener('input', (e) => {
+    if (e.target.id === 'cherche') listerProduits(e.target.value);
+    if (e.target.id === 'ac-p' || e.target.id === 'ac-m') acompteSaisi(e.target.id, e.target.value);
+    if (e.target.id === 'cq') { ui.cq = e.target.value; $('#clist').innerHTML = typo(listeCatalogue()); }
+    if (e.target.id === 'll-achat-v' || e.target.id === 'll-marge') { const p = prixLibre(); $('#ll-calc').textContent = 'Prix de vente : ' + (isNaN(p) ? '-' : chf(p)); }
+  });
+  phone.addEventListener('change', (e) => {
+    const n = e.target.name;
+    if (n === 'r-difficulte') { ui[n.slice(2)] = e.target.value; synchro(); render(); }
+    if (e.target.id === 'np-cat') { $('#np-nc').hidden = e.target.value !== '__nouvelle'; }
+    if (e.target.id === 'fichier' && e.target.files[0]) { clientSaisi = (($('#cl') || {}).value || '').trim(); const f = e.target.files[0]; fichierNom = f.name + ' (' + (f.size / 1048576).toFixed(1) + ' Mo)'; lancerTraitement(); }
+  });
+
+  function lancerTraitement() {
+    etape = 0; ui.vue = 'traitement'; render();
+    const o = nouvelleOffre();
+    const tick = setInterval(() => {
+      etape++;
+      if (ui.vue === 'traitement') render();
+      if (etape >= ETAPES.length) {
+        clearInterval(tick);
+        S.offres.push(o);
+        if (ui.vue === 'traitement') { ui.vue = 'liste'; render(); }
+        notif('offreGen : votre offre est prête', o.titre + ' pour ' + o.client + '. Un courriel vous a aussi été envoyé.', o.id);
+      }
+    }, 900);
+  }
+
+  // Sélecteurs à côté du téléphone
+  function synchro() {
+    [['#sw-metier', 'metier'], ['#sw-diff', 'difficulte']].forEach(([id, k]) =>
+      $(id).querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x.dataset.v === ui[k] ? 'true' : 'false')));
+  }
+  function seg(id, key, after) {
+    $(id).addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      ui[key] = b.dataset.v; synchro();
+      if (after) after(); render();
+    });
+  }
+  seg('#sw-metier', 'metier', () => { charger(ui.metier); ui.vue = 'liste'; ui.tab = 'offres'; ui.offre = null; ui.fcat = ''; ui.cq = ''; });
+  seg('#sw-diff', 'difficulte');
+
+  $('#tabs').innerHTML = typo('<button data-tab="offres">' + ico('doc') + 'Offres</button><button data-tab="catalogue">' + ico('box') + 'Catalogue</button><button data-tab="reglages">' + ico('reglages') + 'Réglages</button>');
+  $('#liste-sources').innerHTML = typo(SOURCES.map((s) => '<li>' + esc(s.metier) + ' : <a href="' + esc(s.url) + '">' + esc(s.titre) + '</a>' + (s.note ? ' (' + esc(s.note) + ')' : '') + '</li>').join(''));
+
+  // Décisions : réponses gardées dans le navigateur
+  const KEY = 'offregen-maquette-ux-v5';
+  let rep = {};
+  try { rep = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (err) { rep = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(rep)); } catch (err) { /* stockage indisponible */ } };
+  document.querySelectorAll('.decision[data-key]').forEach((d) => {
+    const k = d.dataset.key; rep[k] = rep[k] || {};
+    const ta = d.querySelector('textarea');
+    d.querySelectorAll('.choices button').forEach((b) => {
+      b.setAttribute('aria-pressed', rep[k].choix === b.dataset.c ? 'true' : 'false');
+      b.addEventListener('click', () => { rep[k].choix = b.dataset.c; rep[k].libelle = b.textContent; save();
+        d.querySelectorAll('.choices button').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); });
+    });
+    if (ta) { ta.value = rep[k].commentaire || ''; ta.addEventListener('input', () => { rep[k].commentaire = ta.value; save(); }); }
+  });
+  $('#copy').addEventListener('click', () => {
+    const txt = [...document.querySelectorAll('.decision[data-key]')].map((d) => {
+      const r = rep[d.dataset.key] || {};
+      return d.querySelector('h3').textContent + NB + ': ' + (r.libelle || 'sans réponse') + (r.commentaire ? '. ' + r.commentaire.trim() : '');
+    }).join('\n');
+    const fin = () => { $('#copy-ok').textContent = 'Copié.'; };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(fin, () => { window.prompt('Copier :', txt); });
+    else window.prompt('Copier :', txt);
+  });
+
+  charger(ui.metier);
+  render();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>
