@@ -1,0 +1,67 @@
+{# Nouvelle offre : parler ou importer, en un geste.
+   Accueil (rond = true) : des boutons ronds au centre, au pouce, sans texte. Deux variantes à l'essai
+   (choix de Xavier attendu, app.js les applique) : A, un « + » qui s'ouvre sur le micro à gauche et
+   l'import à droite ; B, le micro et l'import posés côte à côte. L'enregistrement et l'envoi montent
+   ensuite dans une fenêtre du bas. Sans JavaScript, le « + » mène à /import.
+   Page /import : les deux boutons dans la page, qui marche aussi sans JavaScript. #}
+{% set icone_micro %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>{% endset %}
+{% set icone_import %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>{% endset %}
+{% set sans_micro %}Le micro demande une connexion sécurisée (https). En attendant, enregistrez avec le téléphone, puis importez le fichier.{% endset %}
+{% set rond = rond|default(false) %}
+{% set etats %}
+  <div class="rec" data-etat="enregistrement" hidden>
+    <div class="timer" data-minuteur>00:00</div>
+    <div class="dot on" aria-hidden="true"></div>
+    <p>Parlez, pièce par pièce.</p>
+    <button class="btn danger large" type="button" data-terminer>
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>Terminer</button>
+    <button class="lien" type="button" data-abandonner>Abandonner sans envoyer</button>
+  </div>
+
+  <div class="rec" data-etat="envoi" hidden>
+    <p>Envoi…</p>
+    <progress max="100" value="0" data-progression></progress>
+    <p class="muted" data-progression-texte></p>
+  </div>
+
+  <div data-etat="echec" hidden>
+    <p class="alerte bad" role="alert" data-echec-texte>L'envoi a échoué.</p>
+    <button class="btn primary large" type="button" data-reessayer>Réessayer l'envoi</button>
+    <p class="centre"><a class="lien" href="#" download="visite.webm" data-garder hidden>Garder l'enregistrement dans un fichier</a></p>
+  </div>
+{% endset %}
+
+<div class="nouvelle" data-nouvelle>
+  <form id="import" method="post" action="/import" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <input class="cache" id="audio" name="audio" type="file" accept="audio/*,.m4a,.mp3,.ogg,.opus,.wav,.amr,.3gp,.webm" required data-envoi-fichier>
+    {% if not rond %}<noscript><p class="muted">Choisissez le fichier avec «&nbsp;Importer&nbsp;», puis envoyez-le.</p><button class="btn" type="submit">Envoyer le fichier choisi</button></noscript>{% endif %}
+  </form>
+
+  {% if rond %}
+    <div class="dial-fond" data-dial-fond hidden></div>
+    <div class="fab-zone" id="nouvelle-offre" data-fab-zone data-variante="a">
+      <p class="dial-note" data-sans-micro hidden>{{ sans_micro }}</p>
+      <button class="pastille micro" type="button" aria-label="Parler" data-enregistrer hidden>{{ icone_micro }}</button>
+      <a class="fab" href="/import" aria-label="Nouvelle offre" aria-controls="nouvelle-offre" aria-expanded="false" data-fab>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+      <button class="pastille" type="button" aria-label="Importer un fichier" data-importer>{{ icone_import }}</button>
+    </div>
+    <div class="feuille-fond" data-feuille hidden>
+      <div class="feuille" role="dialog" aria-modal="true" aria-label="Nouvelle offre">
+        <div class="poignee" aria-hidden="true"></div>
+        <button class="x coin" type="button" data-fermer aria-label="Fermer" hidden><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        {{ etats }}
+      </div>
+    </div>
+  {% else %}
+    <div data-etat="choix">
+      <div class="choix2">
+        <button class="rond micro" type="button" data-enregistrer hidden>{{ icone_micro }}<span>Parler</span></button>
+        <label class="rond" for="audio">{{ icone_import }}<span>Importer</span></label>
+      </div>
+      <p class="alerte info" data-sans-micro hidden>{{ sans_micro }}</p>
+    </div>
+    {{ etats }}
+  {% endif %}
+</div>

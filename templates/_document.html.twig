@@ -1,0 +1,49 @@
+{# Le document d'offre remis au client : aperçu à l'écran et PDF (dompdf, CSS 2.1 seulement : tableaux, pas de grille).
+   Ni marge, ni fournisseur, ni « à vérifier » (CODING_RULES, Ergonomie). #}
+<div class="doc">
+  <table class="doc-tete"><tr>
+    <td class="doc-entreprise"><b>{{ r.entreprise }}</b>{% for ligne in r.adresse|split("\n") %}{% if ligne %}<br>{{ ligne }}{% endif %}{% endfor %}{% if r.telephone %}<br>{{ r.telephone }}{% endif %}{% if r.courrielContact %}<br>{{ r.courrielContact }}{% endif %}</td>
+    <td class="doc-ref"><b>Offre n°&nbsp;{{ offre.numero }}</b><br>{% if r.localite %}{{ r.localite }}, le{% else %}Le{% endif %} {{ (offre.modifiee_le ?? offre.cree_le)|jour }}</td>
+  </tr></table>
+
+  <div class="doc-client">{% if offre.client_nom %}{{ offre.client_nom }}{% for ligne in (offre.client_adresse ?? '')|split("\n") %}{% if ligne %}<br>{{ ligne }}{% endif %}{% endfor %}{% else %}&nbsp;{% endif %}</div>
+
+  <p class="doc-objet">{{ offre.titre }}</p>
+
+  <table class="doc-lignes">
+    <thead><tr><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix</th><th class="n">Montant</th></tr></thead>
+    <tbody>
+      {% for g in groupes %}
+        <tr class="doc-grp"><td colspan="4">{{ g.nom }}</td></tr>
+        {% for x in g.lignes %}
+          <tr>
+            <td>{{ x.l.designation }}</td>
+            <td class="n">{{ x.l.quantite_milliemes|quantite }}&nbsp;{{ x.l.unite }}</td>
+            <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.l.prix_centimes|montant }}{% endif %}</td>
+            <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.total|montant }}{% endif %}</td>
+          </tr>
+        {% endfor %}
+        {% if g.lignes|length > 1 %}<tr class="doc-st"><td colspan="3">Total {{ g.nom|lower }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="doc-totaux">
+    <tr><td>Sous-total{% if tva > 0 %} HT{% endif %}</td><td class="n">{{ totaux.ht|montant }}</td></tr>
+    {% if tva > 0 %}<tr><td>TVA {{ tva|taux }}</td><td class="n">{{ totaux.tva|montant }}</td></tr>{% endif %}
+    {% if totaux.arrondi != 0 %}<tr><td>Arrondi</td><td class="n">{{ totaux.arrondi|montant }}</td></tr>{% endif %}
+    <tr class="doc-g"><td>Total{% if tva > 0 %} TTC{% endif %}</td><td class="n">{{ totaux.ttc|chf }}</td></tr>
+  </table>
+
+  <div class="doc-cond">
+    <b>Conditions</b>
+    <ul>
+      <li>Paiement&nbsp;: {{ r.conditionsPaiement }}</li>
+      <li>Offre valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if tva > 0 %}, TVA comprise dans le total{% endif %}.</li>
+    </ul>
+  </div>
+
+  <table class="doc-signature"><tr><td>Lieu et date</td><td>Bon pour accord, signature du client</td></tr></table>
+
+  <div class="doc-pied">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if tva > 0 %} TVA{% endif %}{% endif %}</div>
+</div>

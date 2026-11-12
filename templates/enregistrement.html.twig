@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block entete_html %}{% if not fini %}<meta http-equiv="refresh" content="5">{% endif %}{% endblock %}
+{% block titre %}Préparation de l'offre · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
+{% block entete %}Préparation de l'offre{% endblock %}
+
+{% block contenu %}
+  <p class="muted">Fichier : {{ e.nom_origine }}</p>
+  {% if echec %}
+    <p class="alerte bad" role="alert">La préparation a échoué après plusieurs essais. Importez le fichier une nouvelle fois ; si l'échec revient, écrivez-nous.</p>
+  {% endif %}
+  <ul class="steps">
+    {% for etape in etapes %}<li class="{{ etape.etat }}">{{ etape.libelle }}</li>{% endfor %}
+  </ul>
+  {% if e.statut == 'pret' %}
+    <p>L'offre est prête.</p>
+  {% elseif not echec %}
+    <p>Vous pouvez fermer l'application : un courriel vous préviendra quand l'offre sera prête.</p>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    {% if e.statut == 'pret' and e.offre_id %}
+      <a class="btn primary" href="/offres/{{ e.offre_id }}">Voir l'offre</a>
+    {% elseif echec %}
+      <a class="btn primary" href="/import">Importer à nouveau</a>
+    {% else %}
+      <a class="btn" href="/">Revenir aux offres</a>
+    {% endif %}
+  </div>
+{% endblock %}

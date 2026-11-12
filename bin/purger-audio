@@ -1,0 +1,19 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Lancé par cron une fois par jour : supprime l'audio des enregistrements dont la date de
+// suppression est passée (30 jours après l'offre prête ou l'échec).
+// Usage : bin/purger-audio
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$resultat = Conteneur::depuisEnvironnement(dirname(__DIR__))->purge()->purger();
+echo "{$resultat['supprimes']} fichier(s) audio supprimé(s), {$resultat['erreurs']} erreur(s).\n";
+exit($resultat['erreurs'] > 0 ? 1 : 0);

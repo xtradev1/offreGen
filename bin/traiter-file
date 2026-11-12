@@ -1,0 +1,36 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Lancé par cron chaque minute : reprend chaque enregistrement ni prêt ni en échec dont le verrou
+// est libre ou expiré. Deux lancements qui se chevauchent ne traitent pas le même enregistrement.
+// Usage : bin/traiter-file [--silencieux]
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+const DUREE_MAX_SECONDES = 50;
+
+$silencieux = in_array('--silencieux', $argv, true);
+$c = Conteneur::depuisEnvironnement(dirname(__DIR__));
+$debut = time();
+$vus = 0;
+foreach ($c->fileTraitement()->aReprendre($c->horloge()->now(), 20) as $uuid) {
+    $statut = $c->traiteur()->avancer($uuid);
+    $vus++;
+    if (!$silencieux) {
+        echo "{$uuid} : {$statut}\n";
+    }
+    // La minute suivante, cron relance : on ne déborde pas sur lui.
+    if (time() - $debut > DUREE_MAX_SECONDES) {
+        break;
+    }
+}
+if (!$silencieux) {
+    echo "$vus enregistrement(s) repris.\n";
+}

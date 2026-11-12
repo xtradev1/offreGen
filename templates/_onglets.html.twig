@@ -1,0 +1,9 @@
+{# Barre d'onglets du bas, comme la maquette v4. « actif » : offres, catalogue ou reglages. #}
+<nav class="tabs" aria-label="Sections">
+  <a href="/"{% if actif == 'offres' %} aria-current="page"{% endif %}>
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>Offres</a>
+  <a href="/catalogue"{% if actif == 'catalogue' %} aria-current="page"{% endif %}>
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>Catalogue</a>
+  <a href="/reglages"{% if actif == 'reglages' %} aria-current="page"{% endif %}>
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>Réglages</a>
+</nav>

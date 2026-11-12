@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Supprimer un produit · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/catalogue/{{ p.id }}">Produit</a>{% endblock %}
+{% block entete %}Supprimer un produit{% endblock %}
+
+{% block contenu %}
+  <p>Supprimer «&nbsp;{{ p.designation }}&nbsp;» du catalogue&nbsp;?</p>
+  <p class="muted">Les offres déjà faites gardent leur ligne, avec sa désignation et son prix. L'IA ne proposera plus ce produit.</p>
+  <form id="suppression" method="post" action="/catalogue/{{ p.id }}/supprimer">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/catalogue/{{ p.id }}">Garder</a>
+    <button class="btn danger" type="submit" form="suppression">Supprimer</button>
+  </div>
+{% endblock %}

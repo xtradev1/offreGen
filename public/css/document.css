@@ -1,0 +1,27 @@
+/* Document d'offre remis au client. Une seule feuille pour l'aperçu à l'écran (dans .paper) et le PDF
+   (dompdf : CSS 2.1, ni grille, ni flexbox, ni variables). Toujours noir sur blanc, même en thème sombre. */
+@page { margin: 18mm 16mm 16mm 18mm; }
+body.pdf { margin: 0; font-family: "DejaVu Sans", sans-serif; font-size: 9.5pt; color: #1b1f24; background: #fff; }
+.paper { background: #fff; color: #1b1f24; border-radius: 6px; padding: 20px 16px; box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-size: 12px; line-height: 1.4; overflow-x: auto; }
+.doc table { width: 100%; border-collapse: collapse; }
+.doc td, .doc th { vertical-align: top; padding: 0; }
+.doc .n { text-align: right; white-space: nowrap; }
+.doc-tete td { width: 50%; }
+.doc-ref { text-align: right; }
+.doc-client { margin: 28px 0 22px 55%; min-height: 3.6em; }
+.doc-objet { font-weight: bold; font-size: 1.15em; margin: 0 0 12px; }
+.doc-lignes th { text-align: left; font-weight: bold; border-bottom: 1.5px solid #1b1f24; padding: 4px 4px 4px 0; }
+.doc-lignes th.n { text-align: right; padding-right: 0; padding-left: 6px; }
+.doc-lignes td { padding: 4px 4px 4px 0; border-bottom: 0.5px solid #d7dbe0; }
+.doc-lignes td.n { padding-left: 6px; padding-right: 0; }
+.doc-grp td { font-weight: bold; padding-top: 10px; border-bottom: 0; }
+.doc-st td { font-style: italic; color: #4b525b; border-bottom: 0; }
+.doc-totaux { margin: 10px 0 0 45%; width: 55% !important; }
+.doc-totaux td { padding: 3px 0; }
+.doc-g td { font-weight: bold; font-size: 1.15em; border-top: 1.5px solid #1b1f24; padding-top: 6px; }
+.doc-cond { margin: 22px 0 0; }
+.doc-cond ul { margin: 4px 0 0; padding-left: 16px; }
+.doc-signature { margin-top: 34px; }
+.doc-signature td { width: 50%; padding-top: 28px; border-top: 0.5px solid #8a929c; font-size: .9em; color: #4b525b; }
+.doc-signature td + td { padding-left: 20px; }
+.doc-pied { margin-top: 26px; font-size: .85em; color: #69717c; text-align: center; }

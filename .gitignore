@@ -16,3 +16,6 @@
 *.log
 *.sql.gz
 *.bak
+
+# Fichiers produits par l application (audio, courriels, cache)
+/var/

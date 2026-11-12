@@ -5,10 +5,11 @@
 - Goal : application d'offres vocales pour artisans. L'artisan décrit les travaux à voix haute pendant la visite, l'application produit une offre à partir de son catalogue, il la corrige à la voix ou à l'écran.
 - Owner : Xavier Frelechoz (XtraDev)
 - Created : 2026-11-05
-- Last updated : 2026-11-06
+- Last updated : 2026-11-07
 
 ## Executive summary
-- Aucune ligne d'application n'existe. Le socle de sécurité et de déploiement est commité et poussé sur GitHub. Une maquette d'ergonomie cliquable en est à sa version 2.
+- Aucune ligne d'application n'existe. Le socle de sécurité et de déploiement est sur GitHub. La maquette d'ergonomie (version 4) est validée et fusionnée. L'environnement de développement tourne dans WSL.
+- Chantier en cours : « De la voix à l'offre » (`docs/plans/2026-11-07_voix-offre/ETAT.md`). Sous-chantier 01 (socle et import) livré en code le 2026-11-07 : connexion, import, traitement immédiat et cron, offre lue, comptes démo, avec transcription et extraction factices. Pas encore recetté par Xavier, pas encore commité.
 - Le produit est cadré dans `docs/plans/2026-11-05_mesures-ia/cadrage-produit.md`, avec des mesures réelles (Whisper, correction vocale) et des hypothèses économiques.
 - Le premier risque est l'extraction juste d'une offre à partir d'une vraie visite. Le coût de l'IA est faible dans tous les scénarios calculés.
 
@@ -43,6 +44,15 @@
 - [2026-11-07] Acompte à part validé par Xavier, avec une demande : « il faut pouvoir mettre un pourcentage précis ou un chiffre précis ». Ajouté : champs pourcentage et montant liés, montant repris au centime, limite au total de l'offre.
 - [2026-11-07] Environnement de développement : PHP 8.5, Composer et MariaDB dans WSL (accord de Xavier), installés et vérifiés le jour même (`CODING_RULES.md`). Composer remplacé par l'installeur officiel à la demande de Xavier. Jeton d'API Infomaniak : Xavier l'ajoutera plus tard.
 - [2026-11-07] Copie de travail : clone dans WSL (`~/offreGen`), GitHub comme seule référence, accord de Xavier. Remplace la décision du 2026-11-05 sur SynologyDrive. Raisons : lenteur de `/mnt/c` depuis WSL, synchronisation de `vendor/`, `.git` et `.env` par SynologyDrive.
+- [2026-11-07] Règles de code complétées par Xavier : arborescence, nommage en français pour le métier, CSRF (`CODING_RULES.md`).
+- [2026-11-07] Connexion réelle dès le squelette, et comptes de démo pour présenter offreGen et le faire tester (Xavier). Détail dans `docs/plans/2026-11-07_voix-offre/SPEC.md`.
+- [2026-11-07] Traitement d'un audio : démarré tout de suite après l'import, puis cron chaque minute pour vérifier et terminer ce qui n'a pas été fait (Xavier).
+- [2026-11-07] **Entorse au socle :** de vraies visites au banc de mesure, avec l'accord des clients, en plus de visites rejouées (Xavier : « on peut bosser avec de vraies données, c'est le mieux »). Compensations : stockage dans WSL hors dépôt et hors SynologyDrive, envoi seulement à Infomaniak, Claude ne lit ni l'audio ni la transcription d'une vraie visite, suppression en fin de banc. Conditions dans la SPEC du chantier.
+- [2026-11-07] Dépendances ajoutées : `symfony/security-core` et `symfony/password-hasher` figées en 7.4, parce que `security-csrf` 7.4 les tirait en 8.1, hors de la branche LTS. `twig/twig` 3, PHPUnit 12, PHPStan 2.
+- [2026-11-07] Dépendances ajoutées au sous-chantier 01 : `doctrine/migrations` 3.9 (DBAL 4), `monolog/monolog` 3, `symfony/clock` 7.4 (horloge que les tests figent). `symfony/string` et `symfony/console`, tirés par les migrations, figés en 7.4. Audit sans alerte.
+- [2026-11-07] Les en-têtes de sécurité sont posés deux fois : par `public/.htaccess` chez l'hébergeur, par `Noyau` en secours et en local. Un test exige que les deux copies restent identiques.
+- [2026-11-12] IA réelle en local d'abord (Xavier : « ensuite on ajoutera juste les clés API ») : Whisper turbo dans WSL sur le processeur, Qwen 27B dans l'Ollama de Windows (variante `offregen-qwen3.8`, contexte 16 384 jetons). Le PHP parle le protocole d'Infomaniak ; passer au serveur ne change que le `.env`. Détail : `docs/plans/2026-11-07_voix-offre/10-ia-locale/`.
+- [2026-11-12] Dépendances : `symfony/http-client` et `symfony/mime` 7.4. Hors dépôt : `python3.12-venv` dans Ubuntu, faster-whisper 1.2.1 dans `~/offregen-ia`.
 - [2026-11-06] **Entorse au socle :** audit externe reporté. Xavier : « tant que l'app ne tourne pas chez au moins 4-5 artisans ça ne vaut pas la peine ». Déclencheur : l'application en service chez 4 à 5 artisans. Le pilote tourne donc avec de vraies données sans audit externe.
 
 ## Current state
@@ -52,12 +62,18 @@
 - [x] Premier commit sur `main`, poussé sur GitHub le 2026-11-06.
 - [x] Maquette d'ergonomie cliquable, trois métiers fictifs : `docs/plans/2026-11-06_maquette-ux/MAQUETTE-offre-vocale.html`. Versions 2 et 3 le 2026-11-06, version 4 le 2026-11-07, après les retours de Xavier.
 
+- [x] Maquette fusionnée dans `main` (PR #1, 3a28c6f).
+- [x] Environnement de développement dans WSL : PHP 8.5.12, Composer 2.11.1, MariaDB 10.11.14, clone `~/offreGen` (2026-11-07). PR `environnement-wsl` fusionnée par Xavier (9c0ce79). ffmpeg 6.1 ajouté pour les fichiers audio de test.
+- [x] Sous-chantier 01 « socle et import » livré en code (2026-11-07), branche `chantier-voix-offre` : 89 tests, PHPStan niveau 8, parcours cliqué avec captures. Preuves dans `docs/plans/2026-11-07_voix-offre/01-socle-import/ETAT.md`.
+- [x] Sous-chantier 10 « IA réelle en local » livré en code (2026-11-12) : une dictée fictive de 28 s devient une offre juste en 17 à 28 s. 121 tests, plus un test de bout en bout sur les vrais services.
+
 ### In progress
-- [ ] Aucun.
+- [ ] Chantier « de la voix à l'offre » : brancher l'enregistrement, la transcription, l'extraction et les commandes vocales, mesurer et optimiser. Neuf sous-chantiers, le 01 livré en code ; suivi dans `docs/plans/2026-11-07_voix-offre/ETAT.md`.
 
 ### Next
-- [ ] Fusionner la PR de la maquette (Xavier).
-- [ ] Chantier « de la voix à l'offre » : brancher l'enregistrement, la transcription, l'extraction et les commandes vocales, mesurer et optimiser. La partie Infomaniak attend le jeton d'API (voir Blocked).
+- [ ] Commiter la branche `chantier-voix-offre` et ouvrir la PR (accord de Xavier attendu).
+- [ ] Recette des sous-chantiers 01 et 10 par Xavier en local, avec ses propres dictées fictives (`10-ia-locale/RECETTE.md`).
+- [ ] Sous-chantier 02 : site de test sur le serveur Cloud Infomaniak, avec la sonde d'exposition verte.
 - [ ] Test d'import : enregistrer 30 à 60 min avec l'application native d'un iPhone et d'un Android, puis importer le fichier dans une page web. Compter les gestes, noter les formats obtenus.
 - [ ] Test d'enregistrement dans l'application web : écran verrouillé, réseau coupé en cours de route (après le test d'import).
 - [ ] Test d'extraction complète sur 5 vraies visites (section 9 du cadrage, risque principal).
@@ -69,8 +85,8 @@
 ### Blocked
 - [ ] Test d'extraction complète.
 - reason : il faut de vrais enregistrements de visite, avec le devis que l'artisan aurait rédigé.
-- [ ] Chantier « de la voix à l'offre ».
-- reason : jeton d'API Infomaniak à fournir par Xavier ; les mesures du 2026-11-05 ont tourné en local (faster-whisper, Ollama). Environnement installé le 2026-11-07. Tâche Origin 315.
+- [ ] Transcription, extraction et commandes vocales chez Infomaniak (sous-tâches Origin 319 à 321).
+- reason : jeton d'API Infomaniak à fournir par Xavier. Tout tourne déjà en local (sous-chantier 10) ; le jeton ne sert qu'au passage sur le serveur.
 
 ## References and links
 - Title : Cadrage produit et mesures
@@ -101,8 +117,16 @@
 - Facturation : la facture d'acompte entre dans le produit (2026-11-07). La facture de solde, le code QR suisse et le suivi des paiements restent à cadrer.
 - Offre figée après l'envoi : rien n'est prévu pour corriger une offre envoyée (nouvelle version, annulation).
 - `.htaccess` jamais exécuté sur Apache, branche HTTPS de la sonde jamais exercée. Rien n'est prouvé sur Infomaniak.
+- Conservation de la transcription : l'audio est supprimé 30 jours après l'offre prête ou l'échec (décision de Xavier) ; la transcription, aussi personnelle que l'audio, reste en base sans durée décidée.
+- Une transcription qui ne revient jamais laisse l'enregistrement en `transcription` pour toujours : aucun délai d'abandon avant le sous-chantier 04.
+- Frein de connexion : une connexion réussie ne remet pas à zéro les échecs du même courriel. Raffinement possible au sous-chantier 09 (le compteur par adresse IP, lui, ne doit pas se remettre à zéro).
+- Transcription Infomaniak : 50 000 Ko au plus, ni amr ni 3gp (documentation du 2026-11-12). La conversion exige ffmpeg sur l'hébergement Cloud, non vérifié. Le contenu exact de `data` d'un lot réussi et l'acceptation de l'envoi multipart sont des hypothèses à vérifier au premier appel avec le jeton.
+- Whisper sur la carte graphique depuis WSL : plantage de ctranslate2 (pilote 610.88). En local, la transcription tourne sur le processeur (une heure de dictée : environ 13 minutes).
+- Extraction locale : au-delà d'environ 40 minutes de dictée, le contexte de 16 384 jetons de `offregen-qwen3.8` ne suffit plus.
 
 ## Session log
 - [2026-11-05] Roadmap initialized. Cadrage, choix de la pile, pose du socle.
 - [2026-11-06] Cadrage produit reçu et archivé. Règle d'ergonomie, relecture par Fable, report de l'audit externe, GitHub Free, import audio prioritaire. Premier commit. Maquette v1, réponses de Xavier, maquette v2 (lignes, ajout, ligne libre, majoration, acomptes, catalogue, aperçu), réponses de Xavier, maquette v3 (unité, acompte à l'envoi).
-- [2026-11-07] Réponses sur la v3, maquette v4 (acompte à part, offre figée après l'envoi).
+- [2026-11-07] Réponses sur la v3, maquette v4 (acompte à part, offre figée après l'envoi), validée et fusionnée. Environnement WSL installé, clone de travail. Chantier « de la voix à l'offre » ouvert, phase 0.
+- [2026-11-12] Sous-chantier 10 : documentation d'Infomaniak lue, Whisper local au même protocole, extraction par Qwen dans Ollama, test de bout en bout et parcours cliqué sur les vrais services.
+- [2026-11-07] Chantier : cadrage, découpage en neuf sous-chantiers, sous-chantier 01 enchaîné jusqu'au lot 8 (Xavier : « enchaîne jusqu'au dernier lot »). Défauts trouvés en route : variables d'environnement ignorées sous Ubuntu, en-têtes de sécurité absents hors Apache, purge oubliée pour les échecs, variable PHP avalée par une espace insécable.

@@ -1,0 +1,46 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Crée un compte et affiche son mot de passe, une seule fois.
+// Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N]
+// Un compte démo a un plafond quotidien d'imports (10 par défaut).
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$positionnels = [];
+$demo = false;
+$plafond = null;
+foreach (array_slice($argv, 1) as $arg) {
+    if ($arg === '--demo') {
+        $demo = true;
+    } elseif (preg_match('/^--plafond=(\d+)$/', $arg, $m) === 1) {
+        $plafond = (int) $m[1];
+    } else {
+        $positionnels[] = $arg;
+    }
+}
+if (count($positionnels) !== 2) {
+    fwrite(STDERR, "Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N]\n");
+    exit(2);
+}
+if ($demo && $plafond === null) {
+    $plafond = 10;
+}
+
+try {
+    $c = Conteneur::depuisEnvironnement(dirname(__DIR__));
+    $motDePasse = $c->comptes()->creer($positionnels[0], $positionnels[1], $demo, $plafond);
+} catch (\InvalidArgumentException $e) {
+    fwrite(STDERR, $e->getMessage() . "\n");
+    exit(1);
+}
+
+echo "Compte créé : {$positionnels[0]}" . ($demo ? " (démo, $plafond imports par jour)" : '') . "\n";
+echo "Mot de passe, affiché une seule fois : $motDePasse\n";

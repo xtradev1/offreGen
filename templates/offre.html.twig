@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}{{ offre.titre }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
+{% block entete %}Offre {{ offre.numero }}{% endblock %}
+
+{% block contenu %}
+  <a class="ohead" href="/offres/{{ offre.id }}/modifier">
+    <span class="who">{% if offre.client_nom %}{{ offre.client_nom }}{% if offre.client_adresse %}, {{ offre.client_adresse|replace({"\n": ', '}) }}{% endif %}{% else %}<span class="manque-client">Client à compléter</span>{% endif %}</span>
+    <span class="t">{{ offre.titre }}</span>
+    <span class="meta"><span class="status pret">Prête à relire</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span></span>
+  </a>
+
+  <div class="rows une">
+    {% for g in groupes %}
+      <div class="cat"><h5>{{ g.nom }}</h5><span class="ch">Qté</span><span class="ch">Prix</span><span class="ch">Total</span><span></span></div>
+      {% for r in g.lignes %}
+        {% set l = r.l %}
+        {% set base = '/offres/' ~ offre.id ~ '/lignes/' ~ l.id %}
+        {% set manque = l.prix_centimes == 0 %}
+        <div class="row{% if manque %} miss{% elseif l.a_verifier %} flag{% endif %}" id="l{{ l.id }}">
+          <a class="nm" href="{{ base }}">{{ l.designation }}{% if l.produit_id is null %}<small><span class="tag">Ligne libre</span></small>{% endif %}</a>
+          <form class="q" method="post" action="{{ base }}">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <input class="saisie" name="quantite" value="{{ l.quantite_milliemes|saisie_quantite }}" inputmode="decimal" autocomplete="off" required aria-label="Quantité, {{ l.designation }}" data-envoi-change>
+            <span class="u">{{ l.unite }}</span>
+          </form>
+          <form class="p" method="post" action="{{ base }}">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <input class="saisie{% if manque %} manque{% endif %}" name="prix" value="{{ l.prix_centimes|saisie_prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?" aria-label="Prix unitaire en francs, {{ l.designation }}" data-envoi-change>
+          </form>
+          <div class="tt">{% if not manque %}{{ r.total|montant }}{% endif %}</div>
+          <form method="post" action="{{ base }}/supprimer">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <button class="del" type="submit" aria-label="Supprimer la ligne {{ l.designation }}"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>
+          </form>
+          {% if manque %}
+            <div class="note bad"><span>Prix manquant</span></div>
+          {% elseif l.a_verifier %}
+            <form class="note warn" method="post" action="{{ base }}/juste">
+              <input type="hidden" name="_csrf" value="{{ csrf() }}">
+              <span>À vérifier</span><button class="okbtn" type="submit"><span>C'est juste</span></button>
+            </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="vide">Aucun poste dans cette offre. «&nbsp;Ajouter&nbsp;», en bas, en ajoute un.</p>
+    {% endfor %}
+  </div>
+
+  <div class="totals">
+    <div class="r"><span>Sous-total{% if tva > 0 %} HT{% endif %}</span><span>{{ totaux.ht|chf }}</span></div>
+    {% if tva > 0 %}<div class="r"><span>TVA {{ tva|taux }}</span><span>{{ totaux.tva|chf }}</span></div>{% endif %}
+    {% if totaux.arrondi != 0 %}<div class="r"><span>Arrondi</span><span>{{ totaux.arrondi|chf }}</span></div>{% endif %}
+    <div class="r grand"><span>Total{% if tva > 0 %} TTC{% endif %}</span><span>{{ totaux.ttc|chf }}</span></div>
+  </div>
+  <p class="muted petit">Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.</p>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/offres/{{ offre.id }}/ajouter">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ajouter</a>
+    <a class="btn primary" href="/offres/{{ offre.id }}/document">Générer l'offre
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+  </div>
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'offres'} %}{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Réglages · offreGen{% endblock %}
+{% block entete %}Réglages{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% if erreurs is not empty %}<p class="alerte bad" role="alert">Les réglages ne sont pas enregistrés&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  <form id="reglages" method="post" action="/reglages">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    {# En premier : c'est ce qui change le plus souvent. Un toucher sur une proposition remplit le champ
+       (app.js) ; le champ reste libre pour tout autre texte. #}
+    <div class="card">
+      <h6>Conditions de l'offre</h6>
+      <div class="champ">
+        <label for="validite_jours">Offre valable (jours)</label>
+        <div class="puces quatre" role="group" aria-label="Durées proposées">
+          {% for j in validites %}<button class="puce" type="button" data-remplit="validite_jours" data-valeur="{{ j }}" aria-pressed="{{ champs.validite_jours == j ~ '' ? 'true' : 'false' }}">{{ j }}&nbsp;jours</button>{% endfor %}
+        </div>
+        <input id="validite_jours" name="validite_jours" value="{{ champs.validite_jours }}" inputmode="numeric" required{{ f.invalide(erreurs, 'validite_jours') }}>
+        {{ f.erreur(erreurs, 'validite_jours') }}
+      </div>
+      <div class="champ">
+        <label for="conditions_paiement">Paiement</label>
+        <div class="puces" role="group" aria-label="Conditions proposées">
+          {% for texte in paiements %}<button class="puce long" type="button" data-remplit="conditions_paiement" data-valeur="{{ texte }}" aria-pressed="{{ champs.conditions_paiement == texte ? 'true' : 'false' }}">{{ texte }}</button>{% endfor %}
+        </div>
+        <textarea id="conditions_paiement" name="conditions_paiement" rows="2" maxlength="255" required{{ f.invalide(erreurs, 'conditions_paiement') }}>{{ champs.conditions_paiement }}</textarea>
+        {{ f.erreur(erreurs, 'conditions_paiement') }}
+      </div>
+      <label class="check"><input type="checkbox" name="arrondi" value="1"{% if arrondi %} checked{% endif %}>
+        <span>Arrondir le total aux 5 centimes<small>L'écart s'affiche sur la ligne «&nbsp;Arrondi&nbsp;».</small></span></label>
+      <p class="muted petit">Changer la TVA ou l'arrondi change aussi le total des offres déjà faites.</p>
+    </div>
+
+    <div class="card">
+      <h6>Entreprise, en tête de l'offre</h6>
+      <div class="champ">
+        <label for="entreprise">Nom</label>
+        <input id="entreprise" name="entreprise" value="{{ champs.entreprise }}" maxlength="190" required autocomplete="organization"{{ f.invalide(erreurs, 'entreprise') }}>
+        {{ f.erreur(erreurs, 'entreprise') }}
+      </div>
+      <div class="champ">
+        <label for="adresse">Adresse</label>
+        <textarea id="adresse" name="adresse" rows="2" placeholder="Rue de l'Exemple 12&#10;2800 Delémont" autocomplete="street-address"{{ f.invalide(erreurs, 'adresse') }}>{{ champs.adresse }}</textarea>
+        {{ f.erreur(erreurs, 'adresse') }}
+      </div>
+      <div class="duo">
+        <div class="champ">
+          <label for="telephone">Téléphone</label>
+          <input id="telephone" name="telephone" value="{{ champs.telephone }}" inputmode="tel" autocomplete="tel"{{ f.invalide(erreurs, 'telephone') }}>
+          {{ f.erreur(erreurs, 'telephone') }}
+        </div>
+        <div class="champ">
+          <label for="ide">Numéro IDE</label>
+          <input id="ide" name="ide" value="{{ champs.ide }}" placeholder="CHE-123.456.789" autocomplete="off"{{ f.invalide(erreurs, 'ide') }}>
+          {{ f.erreur(erreurs, 'ide') }}
+        </div>
+      </div>
+      <div class="champ">
+        <label for="courriel_contact">Courriel pour les clients</label>
+        <input id="courriel_contact" name="courriel_contact" type="email" value="{{ champs.courriel_contact }}" inputmode="email" autocomplete="email"{{ f.invalide(erreurs, 'courriel_contact') }}>
+        {{ f.erreur(erreurs, 'courriel_contact') }}
+      </div>
+      <p class="muted">Compte&nbsp;: {{ courriel }}{% if demo %} (démonstration){% endif %}</p>
+    </div>
+
+    <div class="card">
+      <h6>TVA</h6>
+      <label class="radio"><input type="radio" name="tva" value="810"{% if champs.tva == '810' %} checked{% endif %}>
+        <span>Assujetti, 8,1&nbsp;%<small>La TVA s'ajoute au sous-total de chaque offre.</small></span></label>
+      <label class="radio"><input type="radio" name="tva" value="0"{% if champs.tva == '0' %} checked{% endif %}>
+        <span>Non assujetti<small>Moins de 100&nbsp;000 francs de chiffre d'affaires par an&nbsp;: l'offre ne porte pas de TVA.</small></span></label>
+      {{ f.erreur(erreurs, 'tva') }}
+    </div>
+
+  </form>
+
+  <form class="pied" method="post" action="/deconnexion">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <button class="lien" type="submit">Se déconnecter</button>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><button class="btn primary" type="submit" form="reglages">Enregistrer</button></div>
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'reglages'} %}{% endblock %}

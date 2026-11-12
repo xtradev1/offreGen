@@ -1,0 +1,6 @@
+# Variante de Qwen 27B pour offreGen. Le contexte par défaut de l'Ollama de Xavier (131 072 jetons)
+# déborde de la carte : 59 s par offre au lieu de 13 s (mesuré le 2026-11-12).
+# Sous Windows : ollama create offregen-qwen3.8 -f Modelfile
+FROM qwen3.8:27b
+PARAMETER num_ctx 16384
+PARAMETER temperature 0

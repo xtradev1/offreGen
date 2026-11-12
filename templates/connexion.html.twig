@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Connexion · offreGen{% endblock %}
+{% block entete %}Connexion{% endblock %}
+
+{% block contenu %}
+  {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+  <p class="muted">Connectez-vous pour importer une visite et retrouver vos offres.</p>
+  <form id="connexion" method="post" action="/connexion">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="courriel">Courriel</label>
+      <input id="courriel" name="courriel" type="email" autocomplete="username" inputmode="email" value="{{ courriel }}" required>
+    </div>
+    <div class="champ">
+      <label for="mot_de_passe">Mot de passe</label>
+      <input id="mot_de_passe" name="mot_de_passe" type="password" autocomplete="current-password" required>
+    </div>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><button class="btn primary" type="submit" form="connexion">Se connecter</button></div>
+{% endblock %}

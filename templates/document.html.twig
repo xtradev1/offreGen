@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block entete_html %}<link rel="stylesheet" href="/css/document.css">{% endblock %}
+{% block titre %}Offre {{ offre.numero }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}Offre {{ offre.numero }}{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  {% if manque > 0 %}<p class="alerte bad">{{ manque }} ligne{{ manque > 1 ? 's' : '' }} sans prix&nbsp;: à compléter avant de l'envoyer.</p>{% endif %}
+  {% if doute > 0 %}<p class="alerte warn">{{ doute }} ligne{{ doute > 1 ? 's' : '' }} encore à vérifier.</p>{% endif %}
+  {% if not offre.client_nom %}<p class="alerte warn">Client à compléter&nbsp;: <a href="/offres/{{ offre.id }}/modifier">ajouter le nom et l'adresse</a>.</p>{% endif %}
+  {% if not r.adresse %}<p class="alerte warn">Votre adresse manque en tête de l'offre&nbsp;: <a href="/reglages">la compléter dans les réglages</a>.</p>{% endif %}
+  <article class="paper">{% include '_document.html.twig' %}</article>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/offres/{{ offre.id }}">Modifier</a>
+    <a class="btn primary" href="/offres/{{ offre.id }}/pdf" target="_blank" rel="noopener">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>PDF</a>
+  </div>
+{% endblock %}

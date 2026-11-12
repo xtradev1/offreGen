@@ -43,7 +43,7 @@ Sans objet seulement pour une application à client unique, avec la raison écri
 - [ ] Journal des connexions et journal des modifications, séparés et exportables.
 - [ ] Données sensibles chiffrées au repos quand elles le justifient. Clés hors de la base.
 - [ ] Sauvegardes chiffrées, sur un support hors de l'hébergement, restauration testée et chronométrée.
-- [ ] Données réelles uniquement en production. Le développement et le test utilisent des données fictives.
+- [ ] Données réelles uniquement en production. Le développement et le test utilisent des données fictives. Exception : le banc de mesure du chantier « de la voix à l'offre » (entorse du 2026-11-07 au roadmap), aux conditions écrites dans `docs/plans/2026-11-07_voix-offre/SPEC.md`.
 - [ ] Fichiers audio importés : type vérifié sur le contenu et non sur le nom, taille plafonnée, stockés hors de `public/`, supprimés selon une durée de conservation écrite.
 
 ## 6. Modèles de langue

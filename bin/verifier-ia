@@ -1,0 +1,67 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Dit si la transcription et l'extraction réglées dans .env répondent. N'envoie aucun audio ni texte :
+// demande un lot inexistant au service de transcription et la liste des modèles au service d'extraction.
+// Usage : bin/verifier-ia
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$c = Conteneur::depuisEnvironnement(dirname(__DIR__));
+$http = $c->http();
+$echecs = 0;
+$entetes = static fn (string $cle): array => $cle === '' ? [] : ['Authorization' => 'Bearer ' . $cle];
+
+echo 'Transcription : ';
+if ($c->parametre('TRANSCRIPTION') !== 'api') {
+    echo "factice (TRANSCRIPTION n'est pas « api »)\n";
+} else {
+    $url = rtrim($c->parametre('TRANSCRIPTION_URL'), '/') . '/1/ai/' . $c->parametre('TRANSCRIPTION_PRODUIT', '0') . '/results/00000000-0000-4000-8000-000000000000';
+    try {
+        $code = $http->request('GET', $url, ['headers' => $entetes($c->parametre('TRANSCRIPTION_CLE')), 'timeout' => 10])->getStatusCode();
+        if ($code === 404) {
+            echo "joignable, " . $c->parametre('TRANSCRIPTION_URL') . " (lot inconnu : 404, attendu)\n";
+        } else {
+            echo "réponse inattendue, HTTP {$code} (401 : clé refusée)\n";
+            $echecs++;
+        }
+    } catch (\Throwable $e) {
+        echo 'injoignable : ' . $e->getMessage() . "\n";
+        $echecs++;
+    }
+}
+
+echo 'Extraction : ';
+if ($c->parametre('EXTRACTION') !== 'api') {
+    echo "factice (EXTRACTION n'est pas « api »)\n";
+} else {
+    $modele = $c->parametre('EXTRACTION_MODELE');
+    try {
+        $reponse = $http->request('GET', rtrim($c->parametre('EXTRACTION_URL'), '/') . '/models', [
+            'headers' => $entetes($c->parametre('EXTRACTION_CLE')), 'timeout' => 10,
+        ]);
+        $code = $reponse->getStatusCode();
+        $liste = $code === 200 ? json_decode($reponse->getContent(false), true) : null;
+        $noms = is_array($liste) && is_array($liste['data'] ?? null) ? array_column($liste['data'], 'id') : [];
+        if ($code !== 200) {
+            echo "réponse inattendue, HTTP {$code} (401 : clé refusée)\n";
+            $echecs++;
+        } elseif (!in_array($modele, $noms, true) && !in_array($modele . ':latest', $noms, true)) {
+            echo "joignable, mais le modèle « {$modele} » est absent. Modèles : " . implode(', ', array_slice($noms, 0, 15)) . "\n";
+            $echecs++;
+        } else {
+            echo "joignable, modèle « {$modele} » présent, " . $c->parametre('EXTRACTION_URL') . "\n";
+        }
+    } catch (\Throwable $e) {
+        echo 'injoignable : ' . $e->getMessage() . "\n";
+        $echecs++;
+    }
+}
+exit($echecs > 0 ? 1 : 0);

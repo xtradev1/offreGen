@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Mes offres · offreGen{% endblock %}
+{% block entete %}Mes offres{% endblock %}
+{% block ecran_classe %} gris avec-rond{% endblock %}
+
+{% block contenu %}
+  <p class="muted ent">{{ entreprise }}{% if demo %} (compte de démonstration){% endif %}</p>
+
+  {% if en_cours is not empty %}
+    <div class="cat"><h5>En préparation</h5></div>
+    {% for e in en_cours %}
+      <a class="ocard" href="/enregistrements/{{ e.uuid }}">
+        <span class="l1"><b>{{ e.nom_origine }}</b>
+          {% if e.statut == 'echec' %}<span class="status echec">Échec</span>{% else %}<span class="status">En préparation</span>{% endif %}</span>
+        <span class="l2"><span>Reçu le {{ e.recu_le|date_locale }}</span></span>
+      </a>
+    {% endfor %}
+  {% endif %}
+
+  <div class="cat"><h5>Offres</h5></div>
+  {% for o in offres %}
+    <a class="ocard" href="/offres/{{ o.id }}">
+      <span class="l1"><b>{{ o.titre }}</b><span class="status pret">Prête à relire</span></span>
+      <span class="l2"><span>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}Offre {{ o.numero }} · {% if o.modifiee_le %}modifiée le {{ o.modifiee_le|date_locale }}{% else %}{{ o.cree_le|date_locale }}{% endif %}</span><b>{{ totaux[o.id]|chf }}</b></span>
+    </a>
+  {% else %}
+    <p class="vide">Aucune offre pour l'instant. Le bouton rond «&nbsp;+&nbsp;», en bas à droite, enregistre ou importe la visite.</p>
+  {% endfor %}
+{% endblock %}
+
+{% block actions %}{% include '_nouvelle_offre.html.twig' with {rond: true} %}{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'offres'} %}{% endblock %}

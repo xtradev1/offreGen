@@ -1,0 +1,397 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OffreGen\Tests\Http;
+
+use OffreGen\Compte\Reglages;
+use OffreGen\Tests\Outils\BaseDeTest;
+use OffreGen\Tests\Outils\Jeu;
+use OffreGen\Tests\Outils\Monde;
+use OffreGen\Tests\Outils\Navigateur;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Les écrans du sous-chantier 11 : réglages, catalogue, offre modifiable. Chaque écriture passe
+ * par le formulaire affiché (jeton repris de la page), comme le ferait le navigateur.
+ * Jeu : une ligne « Peinture murale a », 12,5 m² à 18.50, catégorie « Peinture ».
+ */
+final class EcransTest extends TestCase
+{
+    private Jeu $jeu;
+    private Navigateur $a;
+    private int $ligne;
+    private string $offre;
+
+    protected function setUp(): void
+    {
+        $this->jeu = new Jeu();
+        $this->a = new Navigateur(Monde::conteneur());
+        $this->a->connecter('a@exemple.ch');
+        $this->offre = '/offres/' . $this->jeu->offre['a'];
+        $this->ligne = (int) BaseDeTest::ligne("SELECT id FROM ligne WHERE offre_id = {$this->jeu->offre['a']}")['id'];
+    }
+
+    /** @return array<string, mixed> */
+    private function ligneEnBase(?int $id = null): array
+    {
+        return BaseDeTest::ligne('SELECT * FROM ligne WHERE id = ' . ($id ?? $this->ligne));
+    }
+
+    private function page(string $chemin): string
+    {
+        $reponse = $this->a->get($chemin);
+        self::assertSame(200, $reponse->getStatusCode(), $chemin);
+        return (string) $reponse->getContent();
+    }
+
+    // Réglages
+
+    public function testNonAssujettiRetireLaTvaDeLOffre(): void
+    {
+        $this->page('/reglages');
+        self::assertSame(303, $this->a->post('/reglages', ['entreprise' => 'Peinture Exemple', 'tva' => '0', 'arrondi' => '1', 'validite_jours' => '30', 'conditions_paiement' => 'À 30 jours.'])->getStatusCode());
+        self::assertStringContainsString('Réglages enregistrés', $this->page('/reglages'));
+        self::assertSame(['entreprise' => 'Peinture Exemple', 'tva_pour_dix_mille' => 0, 'arrondi_cinq_centimes' => 1],
+            BaseDeTest::ligne("SELECT entreprise, tva_pour_dix_mille, arrondi_cinq_centimes FROM artisan WHERE id = {$this->jeu->a}"));
+        $offre = $this->page($this->offre);
+        // 231.25 sans TVA ; arrondi aux 5 centimes : 231.25.
+        self::assertStringNotContainsString('TVA', $offre);
+        self::assertStringContainsString("CHF\u{00A0}231.25", $offre);
+    }
+
+    public function testSansArrondiLeTotalResteAuCentime(): void
+    {
+        $this->page('/reglages');
+        $this->a->post('/reglages', ['entreprise' => 'Entreprise A', 'tva' => '810', 'validite_jours' => '30', 'conditions_paiement' => 'À 30 jours.']);
+        // 231.25 + 18.73 = 249.98, sans la ligne « Arrondi ».
+        $offre = $this->page($this->offre);
+        self::assertStringContainsString("CHF\u{00A0}249.98", $offre);
+        self::assertStringNotContainsString('Arrondi', $offre);
+    }
+
+    public function testReglageFauxRefuseSansRienChanger(): void
+    {
+        $this->page('/reglages');
+        self::assertSame(422, $this->a->post('/reglages', ['entreprise' => '  ', 'tva' => '500', 'arrondi' => '1'])->getStatusCode());
+        self::assertSame(['entreprise' => 'Entreprise A', 'tva_pour_dix_mille' => 810],
+            BaseDeTest::ligne("SELECT entreprise, tva_pour_dix_mille FROM artisan WHERE id = {$this->jeu->a}"));
+    }
+
+    // Catalogue
+
+    public function testCatalogueMontreLesProduitsEtLaRechercheMasqueLesAutres(): void
+    {
+        $page = $this->page('/catalogue');
+        self::assertMatchesRegularExpression('/<a class="crow" id="p\d+" href="\/catalogue\/\d+" data-en-feuille data-texte="peinture murale a peinture">/', $page);
+        self::assertStringContainsString('18.50', $page);
+        self::assertStringContainsString('aria-current="page">', $page);
+        $cherche = $this->page('/catalogue?q=MURALE');
+        self::assertMatchesRegularExpression('/data-texte="peinture murale a peinture">/', $cherche);
+        $rien = $this->page('/catalogue?q=fa%C3%A7ade');
+        self::assertMatchesRegularExpression('/data-texte="peinture murale a peinture" hidden>/', $rien);
+        self::assertMatchesRegularExpression('/<p class="vide" data-aucun>/', $rien);
+    }
+
+    public function testCreerUnProduitPuisLeModifier(): void
+    {
+        $this->page('/catalogue/nouveau');
+        $champs = ['designation' => 'Crépi rustique', 'unite' => 'm²', 'prix' => '34,50', 'categorie' => 'Peinture', 'nouvelle_categorie' => 'Façade', 'synonymes' => 'crépi, rustique'];
+        $reponse = $this->a->post('/catalogue', $champs);
+        self::assertSame(303, $reponse->getStatusCode());
+        $p = BaseDeTest::ligne("SELECT id, categorie, prix_centimes, synonymes FROM produit WHERE designation = 'Crépi rustique' AND artisan_id = {$this->jeu->a}");
+        self::assertSame(['categorie' => 'Façade', 'prix_centimes' => 3450, 'synonymes' => 'crépi, rustique'], array_diff_key($p, ['id' => 0]));
+        self::assertSame('/catalogue#p' . $p['id'], $reponse->headers->get('Location'));
+
+        $this->page('/catalogue/' . $p['id']);
+        self::assertSame(303, $this->a->post('/catalogue/' . $p['id'], ['prix' => ''] + $champs)->getStatusCode());
+        self::assertSame(0, BaseDeTest::ligne("SELECT prix_centimes FROM produit WHERE id = {$p['id']}")['prix_centimes']);
+        self::assertStringContainsString('Prix&nbsp;?', $this->page('/catalogue'));
+    }
+
+    public function testProduitFauxRefuseEtRienNEstCree(): void
+    {
+        $this->page('/catalogue/nouveau');
+        $reponse = $this->a->post('/catalogue', ['designation' => 'Crépi', 'unite' => 'pce', 'prix' => 'cher', 'categorie' => 'Peinture', 'nouvelle_categorie' => '', 'synonymes' => '']);
+        self::assertSame(422, $reponse->getStatusCode());
+        self::assertStringContainsString('aria-invalid="true" aria-describedby="err-prix"', (string) $reponse->getContent());
+        self::assertSame(0, BaseDeTest::compter('produit', "designation = 'Crépi'"));
+    }
+
+    public function testSupprimerUnProduitGardeLaLigneDeLOffre(): void
+    {
+        $id = $this->jeu->produit['a'];
+        $this->page("/catalogue/$id/supprimer");
+        self::assertSame(303, $this->a->post("/catalogue/$id/supprimer", [])->getStatusCode());
+        self::assertSame(0, BaseDeTest::compter('produit', "id = $id"));
+        $l = $this->ligneEnBase();
+        self::assertSame(['designation' => 'Peinture murale a', 'prix_centimes' => 1850, 'produit_id' => null],
+            ['designation' => $l['designation'], 'prix_centimes' => $l['prix_centimes'], 'produit_id' => $l['produit_id']]);
+        self::assertStringContainsString('Hors catalogue', $this->page($this->offre));
+    }
+
+    // Offre
+
+    public function testOffreGroupeeParCategorieSansRappelDeLaDictee(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE ligne SET entendu = 'les murs, douze et demi' WHERE id = {$this->ligne}");
+        $page = $this->page($this->offre);
+        self::assertStringContainsString('<h5>Peinture</h5>', $page);
+        self::assertStringContainsString('name="quantite" value="12.5"', $page);
+        self::assertStringContainsString('name="prix" value="18.50"', $page);
+        self::assertStringNotContainsString('douze et demi', $page);
+        self::assertStringNotContainsString('Entendu', $page);
+    }
+
+    public function testCorrigerLaQuantiteRetireAVerifierEtChangeLeTotal(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 1 WHERE id = {$this->ligne}");
+        $this->page($this->offre);
+        $reponse = $this->a->post("{$this->offre}/lignes/{$this->ligne}", ['quantite' => '20,5']);
+        self::assertSame("{$this->offre}#l{$this->ligne}", $reponse->headers->get('Location'));
+        $l = $this->ligneEnBase();
+        self::assertSame([20500, 0, 1850], [$l['quantite_milliemes'], $l['a_verifier'], $l['prix_centimes']]);
+        // 20,5 × 18.50 = 379.25 ; TVA 30.71925 → 30.72 ; 409.97 → 409.95.
+        self::assertStringContainsString("CHF\u{00A0}409.95", $this->page($this->offre));
+    }
+
+    public function testQuantiteFausseRefuseeAvecUnMessage(): void
+    {
+        $this->page($this->offre);
+        self::assertSame(303, $this->a->post("{$this->offre}/lignes/{$this->ligne}", ['quantite' => '0'])->getStatusCode());
+        self::assertSame(12500, $this->ligneEnBase()['quantite_milliemes']);
+        self::assertStringContainsString('Rien n&#039;a été modifié.', $this->page($this->offre));
+    }
+
+    public function testPrixEffaceDevientPrixManquant(): void
+    {
+        $this->page($this->offre);
+        $this->a->post("{$this->offre}/lignes/{$this->ligne}", ['prix' => '']);
+        self::assertSame(0, $this->ligneEnBase()['prix_centimes']);
+        self::assertStringContainsString('Prix manquant', $this->page($this->offre));
+    }
+
+    public function testCEstJusteRetireAVerifierSansRienChanger(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 1 WHERE id = {$this->ligne}");
+        self::assertStringContainsString("C'est juste", $this->page($this->offre));
+        $this->a->post("{$this->offre}/lignes/{$this->ligne}/juste", []);
+        $l = $this->ligneEnBase();
+        self::assertSame([0, 12500, 1850], [$l['a_verifier'], $l['quantite_milliemes'], $l['prix_centimes']]);
+    }
+
+    public function testSupprimerPuisAnnuler(): void
+    {
+        $this->page($this->offre);
+        self::assertSame(303, $this->a->post("{$this->offre}/lignes/{$this->ligne}/supprimer", [])->getStatusCode());
+        $apres = $this->page($this->offre);
+        self::assertStringNotContainsString('name="quantite"', $apres);
+        self::assertStringContainsString("action=\"{$this->offre}/lignes/{$this->ligne}/restaurer\"", $apres);
+        self::assertStringContainsString("CHF\u{00A0}0.00", $apres);
+        self::assertNotNull($this->ligneEnBase()['supprimee_le']);
+
+        self::assertSame(303, $this->a->post("{$this->offre}/lignes/{$this->ligne}/restaurer", [])->getStatusCode());
+        self::assertNull($this->ligneEnBase()['supprimee_le']);
+        self::assertStringContainsString("CHF\u{00A0}250.00", $this->page($this->offre));
+    }
+
+    public function testAjouterUnProduitDuCatalogueOuvreSaQuantite(): void
+    {
+        $this->page("{$this->offre}/ajouter");
+        $reponse = $this->a->post("{$this->offre}/lignes", ['produit' => (string) $this->jeu->produit['a']]);
+        $nouvelle = (int) BaseDeTest::ligne("SELECT MAX(id) AS id FROM ligne WHERE offre_id = {$this->jeu->offre['a']}")['id'];
+        self::assertSame("{$this->offre}#l$nouvelle", $reponse->headers->get('Location'));
+        $l = $this->ligneEnBase($nouvelle);
+        self::assertSame([2, 1000, 1850, 0, $this->jeu->produit['a']], [$l['rang'], $l['quantite_milliemes'], $l['prix_centimes'], $l['a_verifier'], $l['produit_id']]);
+        self::assertStringContainsString("data-focus-ligne=\"$nouvelle\"", $this->page($this->offre));
+    }
+
+    public function testLigneLibreGardeeAuCatalogue(): void
+    {
+        $this->page("{$this->offre}/ajouter");
+        $champs = ['designation' => 'Échafaudage roulant', 'quantite' => '2', 'unite' => 'forfait', 'prix' => '150', 'garder' => '1', 'categorie' => 'Peinture', 'nouvelle_categorie' => 'Location'];
+        self::assertSame(303, $this->a->post("{$this->offre}/lignes", $champs)->getStatusCode());
+        $p = BaseDeTest::ligne("SELECT id, categorie, prix_centimes FROM produit WHERE designation = 'Échafaudage roulant' AND artisan_id = {$this->jeu->a}");
+        $l = BaseDeTest::ligne("SELECT produit_id, quantite_milliemes FROM ligne WHERE designation = 'Échafaudage roulant'");
+        self::assertSame(['Location', 15000, $p['id'], 2000], [$p['categorie'], $p['prix_centimes'], $l['produit_id'], $l['quantite_milliemes']]);
+        self::assertStringContainsString('<h5>Location</h5>', $this->page($this->offre));
+    }
+
+    public function testLigneLibreSansPrixResteHorsCatalogue(): void
+    {
+        $this->page("{$this->offre}/ajouter");
+        $this->a->post("{$this->offre}/lignes", ['designation' => 'Moquette escalier', 'quantite' => '1', 'unite' => 'forfait', 'prix' => '']);
+        $l = BaseDeTest::ligne("SELECT produit_id, prix_centimes FROM ligne WHERE designation = 'Moquette escalier'");
+        self::assertSame([null, 0], [$l['produit_id'], $l['prix_centimes']]);
+        self::assertSame(1, BaseDeTest::compter('produit', "artisan_id = {$this->jeu->a}"));
+        $page = $this->page($this->offre);
+        self::assertStringContainsString('<h5>Hors catalogue</h5>', $page);
+        self::assertStringContainsString('Prix manquant', $page);
+    }
+
+    public function testPageDeLaLigneChangeDesignationEtUnite(): void
+    {
+        $this->page("{$this->offre}/lignes/{$this->ligne}");
+        $reponse = $this->a->post("{$this->offre}/lignes/{$this->ligne}", ['designation' => 'Murs du salon', 'quantite' => '12.5', 'unite' => 'forfait', 'prix' => '18.50']);
+        self::assertSame(303, $reponse->getStatusCode());
+        $l = $this->ligneEnBase();
+        self::assertSame(['Murs du salon', 'forfait'], [$l['designation'], $l['unite']]);
+    }
+
+    public function testPageDeLaLigneFausseRestaureLaSaisie(): void
+    {
+        $this->page("{$this->offre}/lignes/{$this->ligne}");
+        $reponse = $this->a->post("{$this->offre}/lignes/{$this->ligne}", ['designation' => 'Murs', 'quantite' => 'beaucoup', 'unite' => 'm²', 'prix' => '18.50']);
+        self::assertSame(422, $reponse->getStatusCode());
+        self::assertStringContainsString('value="beaucoup"', (string) $reponse->getContent());
+        self::assertSame('Peinture murale a', $this->ligneEnBase()['designation']);
+    }
+
+    public function testNouvelleOffreEstUnBoutonRondQuiSOuvreSurParlerEtImporter(): void
+    {
+        $accueil = $this->page('/');
+        self::assertStringContainsString('<a class="fab" href="/import" aria-label="Nouvelle offre" aria-controls="nouvelle-offre" aria-expanded="false" data-fab>', $accueil);
+        // Boutons ronds sans texte : leur nom n'est donné qu'aux lecteurs d'écran.
+        self::assertStringContainsString('<button class="pastille micro" type="button" aria-label="Parler" data-enregistrer hidden>', $accueil);
+        self::assertStringContainsString('<button class="pastille" type="button" aria-label="Importer un fichier" data-importer>', $accueil);
+        // Rappel de l'accord du client retiré de l'écran à la demande de Xavier (2026-11-12).
+        self::assertStringNotContainsString('demandez son accord', $accueil);
+        self::assertStringContainsString('<div class="feuille-fond" data-feuille hidden>', $accueil);
+        // Chaque état n'existe qu'une fois, et le formulaire de repli n'apparaît pas sur l'accueil.
+        self::assertSame(1, substr_count($accueil, 'data-etat="enregistrement"'));
+        self::assertStringNotContainsString('<noscript>', $accueil);
+        // Sans JavaScript, le bouton mène à la page d'import, qui marche seule.
+        $import = $this->page('/import');
+        self::assertStringContainsString('<noscript>', $import);
+        self::assertStringContainsString('<label class="rond" for="audio">', $import);
+        self::assertSame(1, substr_count($import, 'data-etat="enregistrement"'));
+    }
+
+    public function testLaFicheProduitSOuvreParDessusLaListe(): void
+    {
+        BaseDeTest::pdo()->exec("INSERT INTO produit (artisan_id, categorie, designation, unite, prix_centimes) VALUES ({$this->jeu->a}, 'Sols', 'Parquet', 'm²', 9000)");
+        $liste = $this->page('/catalogue');
+        self::assertStringContainsString('<div class="feuille-fond" data-feuille-page hidden>', $liste);
+        self::assertMatchesRegularExpression('#<a class="crow" id="p\d+" href="/catalogue/\d+" data-en-feuille data-texte=#', $liste);
+        self::assertStringContainsString('href="/catalogue/nouveau" data-en-feuille>', $liste);
+        // Catégorie choisie : les autres produits restent cachés même quand on tape dans la recherche.
+        $sols = $this->page('/catalogue?cat=Sols');
+        self::assertMatchesRegularExpression('#data-texte="[^"]*peinture[^"]*" data-hors-cat hidden>#', $sols);
+        self::assertDoesNotMatchRegularExpression('#data-texte="parquet[^"]*" data-hors-cat#', $sols);
+        // La fiche garde quatre champs visibles ; le reste est replié.
+        $fiche = $this->page('/catalogue/nouveau');
+        self::assertStringContainsString('<h1>Nouveau produit</h1>', $fiche);
+        self::assertStringContainsString('data-premier', $fiche);
+        self::assertMatchesRegularExpression('#<details class="plus">\s*<summary>Nouvelle catégorie, mots de la dictée</summary>#', $fiche);
+        self::assertStringContainsString('<h1>Modifier le produit</h1>', $this->page('/catalogue/' . $this->jeu->produit['a']));
+    }
+
+    // Sous-chantier 12 : sauvegarde, en-tête, document
+
+    public function testCorrectionDateLOffreEtLaRemonteDansLaListe(): void
+    {
+        $this->page($this->offre);
+        $this->a->post("{$this->offre}/lignes/{$this->ligne}", ['quantite' => '3']);
+        self::assertSame('2026-11-07 10:00:00', BaseDeTest::ligne("SELECT modifiee_le FROM offre WHERE id = {$this->jeu->offre['a']}")['modifiee_le']);
+        self::assertStringContainsString('modifiée le 07.11.2026 11:00', $this->page('/'));
+        self::assertStringContainsString('Enregistrée le 07.11.2026 11:00', $this->page($this->offre));
+    }
+
+    public function testNumeroDOffrePropreAChaqueArtisan(): void
+    {
+        $n = BaseDeTest::ligne("SELECT a.numero AS a, b.numero AS b FROM offre a, offre b WHERE a.id = {$this->jeu->offre['a']} AND b.id = {$this->jeu->offre['b']}");
+        self::assertSame(['a' => 1, 'b' => 1], $n);
+        self::assertStringContainsString('<h1>Offre 1</h1>', $this->page($this->offre));
+    }
+
+    public function testEnteteClientEtObjet(): void
+    {
+        self::assertStringContainsString('Client à compléter', $this->page($this->offre));
+        $this->page("{$this->offre}/modifier");
+        $reponse = $this->a->post("{$this->offre}/modifier", ['titre' => 'Salon et cuisine', 'client_nom' => ' Madame  Exemple ', 'client_adresse' => "Rue du Test 4\r\n\r\n2800 Delémont "]);
+        self::assertSame(303, $reponse->getStatusCode());
+        $o = BaseDeTest::ligne("SELECT titre, client_nom, client_adresse FROM offre WHERE id = {$this->jeu->offre['a']}");
+        self::assertSame(['titre' => 'Salon et cuisine', 'client_nom' => 'Madame Exemple', 'client_adresse' => "Rue du Test 4\n2800 Delémont"], $o);
+        self::assertStringContainsString('Madame Exemple, Rue du Test 4, 2800 Delémont', $this->page($this->offre));
+    }
+
+    public function testEnteteSansObjetRefuse(): void
+    {
+        $this->page("{$this->offre}/modifier");
+        self::assertSame(422, $this->a->post("{$this->offre}/modifier", ['titre' => ' ', 'client_nom' => 'X', 'client_adresse' => ''])->getStatusCode());
+        self::assertSame('Offre a', BaseDeTest::ligne("SELECT titre FROM offre WHERE id = {$this->jeu->offre['a']}")['titre']);
+    }
+
+    public function testValiditeEtPaiementSeChoisissentDUnToucher(): void
+    {
+        $page = $this->page('/reglages');
+        // La carte des conditions vient en premier : c'est elle qui change le plus souvent.
+        self::assertLessThan(strpos($page, 'Entreprise, en tête'), strpos($page, 'Conditions de l&#039;offre') ?: strpos($page, "Conditions de l'offre"));
+        foreach (Reglages::VALIDITES_PROPOSEES as $jours) {
+            self::assertStringContainsString('data-remplit="validite_jours" data-valeur="' . $jours . '"', $page);
+        }
+        self::assertStringContainsString('data-remplit="validite_jours" data-valeur="30" aria-pressed="true"', $page);
+        self::assertStringContainsString('data-remplit="validite_jours" data-valeur="60" aria-pressed="false"', $page);
+        foreach (Reglages::PAIEMENTS_PROPOSES as $texte) {
+            self::assertStringContainsString('data-valeur="' . htmlspecialchars($texte, ENT_QUOTES) . '"', $page);
+        }
+
+        // Un choix tout fait s'enregistre comme une saisie, et l'écran le montre choisi.
+        $paiement = Reglages::PAIEMENTS_PROPOSES[2];
+        self::assertSame(303, $this->a->post('/reglages', ['entreprise' => 'Peinture Exemple', 'tva' => '810', 'arrondi' => '1',
+            'validite_jours' => '60', 'conditions_paiement' => $paiement])->getStatusCode());
+        self::assertSame(['validite_jours' => 60, 'conditions_paiement' => $paiement],
+            BaseDeTest::ligne("SELECT validite_jours, conditions_paiement FROM artisan WHERE id = {$this->jeu->a}"));
+        $page = $this->page('/reglages');
+        self::assertStringContainsString('data-remplit="validite_jours" data-valeur="60" aria-pressed="true"', $page);
+        self::assertStringContainsString('data-valeur="' . htmlspecialchars($paiement, ENT_QUOTES) . '" aria-pressed="true"', $page);
+    }
+
+    public function testReglagesDeLEnteteNormalisesEtRefuses(): void
+    {
+        $this->page('/reglages');
+        $champs = ['entreprise' => 'Peinture A', 'adresse' => "Rue 1\n2800 Delémont", 'telephone' => '032 422 00 00', 'courriel_contact' => 'info@exemple.ch',
+                   'ide' => 'che 123 456 789 tva', 'tva' => '810', 'arrondi' => '1', 'validite_jours' => '45', 'conditions_paiement' => 'À 10 jours.'];
+        self::assertSame(303, $this->a->post('/reglages', $champs)->getStatusCode());
+        self::assertSame(['ide' => 'CHE-123.456.789', 'validite_jours' => 45, 'adresse' => "Rue 1\n2800 Delémont"],
+            BaseDeTest::ligne("SELECT ide, validite_jours, adresse FROM artisan WHERE id = {$this->jeu->a}"));
+        $this->page('/reglages');
+        $reponse = $this->a->post('/reglages', ['ide' => 'CHE-12', 'courriel_contact' => 'pas un courriel', 'validite_jours' => '0'] + $champs);
+        self::assertSame(422, $reponse->getStatusCode());
+        foreach (['ide', 'courriel_contact', 'validite_jours'] as $champ) {
+            self::assertStringContainsString("aria-describedby=\"err-$champ\"", (string) $reponse->getContent(), $champ);
+        }
+        self::assertSame('CHE-123.456.789', BaseDeTest::ligne("SELECT ide FROM artisan WHERE id = {$this->jeu->a}")['ide']);
+    }
+
+    public function testDocumentDeLOffre(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET adresse = 'Rue 1\n2800 Delémont', ide = 'CHE-123.456.789', validite_jours = 30 WHERE id = {$this->jeu->a}");
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_nom = 'Madame Exemple', client_adresse = 'Rue du Test 4' WHERE id = {$this->jeu->offre['a']}");
+        $doc = $this->page("{$this->offre}/document");
+        foreach (['Entreprise A', 'Offre n°&nbsp;1', 'Delémont, le 07.11.2026', 'Madame Exemple<br>Rue du Test 4', 'Peinture murale a',
+                  '12.5&nbsp;m²', '231.25', 'TVA 8,1', "CHF\u{00A0}250.00", "valable jusqu'au 07.12.2026", 'CHE-123.456.789 TVA'] as $attendu) {
+            self::assertStringContainsString($attendu, $doc);
+        }
+        self::assertStringNotContainsString('À vérifier', $doc);
+    }
+
+    public function testDocumentSignaleCeQuiManque(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE ligne SET prix_centimes = 0 WHERE id = {$this->ligne}");
+        $doc = $this->page("{$this->offre}/document");
+        self::assertStringContainsString('1 ligne sans prix', $doc);
+        self::assertStringContainsString('Client à compléter', $doc);
+        self::assertStringContainsString('Votre adresse manque', $doc);
+    }
+
+    public function testPdfDeLOffre(): void
+    {
+        $reponse = $this->a->get("{$this->offre}/pdf");
+        self::assertSame(200, $reponse->getStatusCode());
+        self::assertSame('application/pdf', $reponse->headers->get('Content-Type'));
+        self::assertSame('inline; filename="Offre-1.pdf"', $reponse->headers->get('Content-Disposition'));
+        self::assertStringStartsWith('%PDF-', (string) $reponse->getContent());
+        self::assertGreaterThan(2000, strlen((string) $reponse->getContent()));
+    }
+}
