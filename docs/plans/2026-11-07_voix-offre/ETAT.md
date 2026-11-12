@@ -69,8 +69,8 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | 16 | Marque et modèles dans l'application : logo, couleur, modèles retenus | (à ouvrir) | 14 | en attente : « Moderne » gardé ou non |
 | 17 | Clients : liste, fiche, rattachement aux offres | (à ouvrir) | 12 | à cadrer |
 | 18 | Facture : « Facturer » depuis l'offre, numéro modifiable, QR-facture, PDF | (à ouvrir) | 14, 16 | à cadrer |
-| 19 | Envoi par courriel de l'offre et de la facture | (à ouvrir) | 18 | question à Xavier |
-| 20 | Extraction optimisée (cadrage, section 5) à côté de l'actuelle, banc de comparaison | (à ouvrir) | 10 | accord de Xavier attendu |
+| 19 | Envoi par courriel de l'offre et de la facture | (à ouvrir) | 18 | plus tard : « pdf pour l'instant » (Xavier, 2026-11-12) |
+| 20 | Extraction optimisée (cadrage, section 5) à côté de l'actuelle, banc de comparaison | (à ouvrir) | 10 | plus tard (Xavier, 2026-11-12) |
 | 21 | Liste des offres : en préparation, échecs hors quota, tri, archives | `21-liste-offres/` | 15 | livré en code, recette de Xavier attendue |
 
 ## Décisions

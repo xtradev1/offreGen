@@ -316,11 +316,30 @@ label.puce { position: relative; display: inline-flex; align-items: center; just
 .groupe legend { font-size: 14px; font-weight: 600; padding: 0; margin: 0 0 8px; }
 /* Ce qui suit un choix n'apparaît que quand il sert. */
 .si-autre, .si-delai, .si-acomptes { display: none; }
-.choix:has(> .puces input[value="autre"]:checked) > .si-autre { display: grid; margin: 10px 0 0; }
+.choix:has(> .puces input[value="autre"]:checked) > .si-autre,
+.choix:has(> .teintes input[value="autre"]:checked) > .si-autre { display: grid; margin: 10px 0 0; }
 .paiement:has(input[name="paiement_type"][value="jours"]:checked) .si-delai,
 .paiement:has(input[name="paiement_type"][value="net"]:checked) .si-delai,
 .paiement:has(input[name="paiement_type"][value="acomptes"]:checked) .si-acomptes { display: block; margin-top: 10px; }
 @supports not selector(:has(*)) { .si-autre, .si-delai, .si-acomptes { display: block; margin-top: 10px; } }
+/* Ma marque : logo, pastilles de couleur (SVG : la CSP refuse les styles en ligne), vignettes des modèles. */
+.logo-ligne { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.logo-apercu { max-height: 48px; max-width: 160px; border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 4px; }
+.teintes { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.teinte { position: relative; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; transition: scale .12s; }
+.teinte input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.teinte svg { width: 100%; height: 100%; display: block; border-radius: 50%; box-shadow: 0 0 0 1px var(--line); }
+.teinte:has(input:checked) svg { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
+.teinte:has(input:focus-visible) svg { outline: 2px solid var(--accent); outline-offset: 4px; }
+.teinte:active { scale: .9; }
+.teinte-autre { min-height: 44px; }
+.champ input[type="color"] { padding: 4px; min-height: 48px; max-width: 120px; }
+.modeles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.modele { position: relative; display: grid; gap: 4px; justify-items: center; font-size: 13px; cursor: pointer; padding: 6px; border-radius: 10px; border: 2px solid transparent; }
+.modele input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.modele img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.modele:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.modele:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 .phrase { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
 .phrase span { color: var(--ink); }
 .puce:active { scale: .96; }

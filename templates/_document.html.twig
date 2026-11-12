@@ -1,29 +1,73 @@
 {# Le document d'offre remis au client : aperçu à l'écran et PDF (dompdf, CSS 2.1 seulement : tableaux, pas de grille).
+   Six modèles (m.modele, maquette validée par Xavier le 2026-11-12). La couleur passe par des classes (c-texte,
+   c-fond, c-filet, c-teinte, c-teinte-forte) que définit Marque::css() : la CSP refuse les styles en ligne.
    Ni marge, ni fournisseur, ni « à vérifier » (CODING_RULES, Ergonomie). #}
-<div class="doc">
-  <table class="doc-tete"><tr>
-    <td class="doc-entreprise"><b>{{ r.entreprise }}</b>{% for ligne in r.adresse|split("\n") %}{% if ligne %}<br>{{ ligne }}{% endif %}{% endfor %}{% if r.telephone %}<br>{{ r.telephone }}{% endif %}{% if r.courrielContact %}<br>{{ r.courrielContact }}{% endif %}</td>
-    <td class="doc-ref"><b>Offre n°&nbsp;{{ offre.numero }}</b><br>{% if r.localite %}{{ r.localite }}, le{% else %}Le{% endif %} {{ (offre.modifiee_le ?? offre.cree_le)|jour }}</td>
-  </tr></table>
+{% set modele = m.modele %}
+{% set tech = modele == 'technique' %}
+{% set epure = modele == 'epure' %}
+{% set moderne = modele == 'moderne' %}
+{% set date_offre = (offre.modifiee_le ?? offre.cree_le)|jour %}
+{% set adresse = r.adresse|split("\n")|filter(l => l != '') %}
+{% set coord %}<b>{{ r.entreprise }}</b>{% for ligne in adresse %}<br>{{ ligne }}{% endfor %}{% if r.telephone %}<br>{{ r.telephone }}{% endif %}{% if r.courrielContact %}<br>{{ r.courrielContact }}{% endif %}{% endset %}
+{% set coord_ligne %}<b>{{ r.entreprise }}</b>{% for ligne in adresse %} · {{ ligne }}{% endfor %}{% if r.telephone %} · {{ r.telephone }}{% endif %}{% if r.courrielContact %} · {{ r.courrielContact }}{% endif %}{% endset %}
+{% set logo %}{% if logo_src %}<img class="doc-logo" src="{{ logo_src }}" alt="{{ r.entreprise }}">{% else %}<span class="doc-nom c-texte">{{ r.entreprise }}</span>{% endif %}{% endset %}
+{% set client %}{% if offre.client_nom %}{{ offre.client_nom }}{% for ligne in (offre.client_adresse ?? '')|split("\n") %}{% if ligne %}<br>{{ ligne }}{% endif %}{% endfor %}{% else %}&nbsp;{% endif %}{% endset %}
+{% set colonnes = tech ? 5 : 4 %}
+{% set entete_classe = {sobre: 'c-texte c-filet', bandeau: 'c-fond', atelier: 'c-filet'}[modele] ?? '' %}
+{% set total_classe = {sobre: 'c-filet', bandeau: 'c-fond', atelier: 'c-texte c-filet', moderne: 'c-teinte-forte c-texte'}[modele] ?? '' %}
+<div class="doc m-{{ modele }}{% if tech %} c-filet{% endif %}">
 
-  <div class="doc-client">{% if offre.client_nom %}{{ offre.client_nom }}{% for ligne in (offre.client_adresse ?? '')|split("\n") %}{% if ligne %}<br>{{ ligne }}{% endif %}{% endfor %}{% else %}&nbsp;{% endif %}</div>
+  {% if modele == 'bandeau' %}
+    <div class="doc-bande c-fond"><table class="doc-tete"><tr>
+      <td>{% if logo_src %}<span class="doc-boite"><img class="doc-logo" src="{{ logo_src }}" alt="{{ r.entreprise }}"></span>{% else %}<span class="doc-nom">{{ r.entreprise }}</span>{% endif %}</td>
+      <td class="doc-coord">{{ coord }}</td>
+    </tr></table></div>
+  {% elseif modele == 'atelier' %}
+    <div class="doc-centre">{{ logo }}</div>
+    <div class="doc-coord-ligne">{{ coord_ligne }}</div>
+    <div class="doc-double c-filet"></div>
+  {% elseif moderne %}
+    <table class="doc-tete"><tr>
+      <td>{{ logo }}<div class="doc-coord-g">{{ coord }}</div></td>
+      <td class="doc-grand-titre c-texte">OFFRE<br><span>n°&nbsp;{{ offre.numero }}</span></td>
+    </tr></table>
+    <table class="doc-infos c-teinte"><tr>
+      <td><span class="doc-etiquette">Date</span><br>{{ date_offre }}</td>
+      <td><span class="doc-etiquette">Client</span><br>{{ client }}</td>
+      <td><span class="doc-etiquette">Valable jusqu'au</span><br>{{ valable_jusqu_au }}</td>
+    </tr></table>
+  {% else %}
+    <table class="doc-tete"><tr><td>{{ logo }}</td><td class="doc-coord">{{ coord }}</td></tr></table>
+    {% if modele == 'sobre' %}<div class="doc-regle c-fond"></div>{% endif %}
+  {% endif %}
 
-  <p class="doc-objet">{{ offre.titre }}</p>
+  {% if not moderne %}
+    <div class="doc-client">{{ client }}</div>
+    {% if epure %}<div class="doc-trait c-fond"></div>{% endif %}
+    <p class="doc-titre{% if modele in ['sobre', 'bandeau', 'atelier'] %} c-texte{% endif %}">Offre n°&nbsp;{{ offre.numero }}{% if tech %} <span class="c-texte">· {{ offre.titre }}</span>{% endif %}</p>
+    <p class="doc-date">{% if r.localite %}{{ r.localite }}, le{% else %}Le{% endif %} {{ date_offre }}</p>
+  {% endif %}
+  {% if not tech %}<p class="doc-objet">Objet&nbsp;: {{ offre.titre }}</p>{% endif %}
 
   <table class="doc-lignes">
-    <thead><tr><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix</th><th class="n">Montant</th></tr></thead>
+    <thead><tr>
+      {% if tech %}<th class="pos">Pos.</th>{% endif %}
+      <th class="{{ entete_classe }}">Désignation</th><th class="n {{ entete_classe }}">Quantité</th><th class="n {{ entete_classe }}">Prix</th><th class="n {{ entete_classe }}">Montant</th>
+    </tr></thead>
     <tbody>
       {% for g in groupes %}
-        <tr class="doc-grp"><td colspan="4">{{ g.nom }}</td></tr>
+        {% set gi = loop.index %}
+        {% if not epure %}<tr class="doc-grp"><td colspan="{{ colonnes }}"{% if modele in ['atelier', 'moderne'] %} class="c-texte"{% endif %}>{% if tech %}{{ gi }}&nbsp;&nbsp;{% endif %}{{ g.nom }}</td></tr>{% endif %}
         {% for x in g.lignes %}
-          <tr>
+          <tr{% if moderne and loop.index0 is even %} class="c-teinte"{% endif %}>
+            {% if tech %}<td class="pos">{{ gi }}.{{ loop.index }}</td>{% endif %}
             <td>{{ x.l.designation }}</td>
             <td class="n">{{ x.l.quantite_milliemes|quantite }}&nbsp;{{ x.l.unite }}</td>
             <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.l.prix_centimes|montant }}{% endif %}</td>
             <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.total|montant }}{% endif %}</td>
           </tr>
         {% endfor %}
-        {% if g.lignes|length > 1 %}<tr class="doc-st"><td colspan="3">Total {{ g.nom|lower }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endif %}
+        {% if g.lignes|length > 1 and not epure %}<tr class="doc-st"><td colspan="{{ colonnes - 1 }}">Total {{ g.nom|lower }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endif %}
       {% endfor %}
     </tbody>
   </table>
@@ -32,8 +76,9 @@
     <tr><td>Sous-total{% if tva > 0 %} HT{% endif %}</td><td class="n">{{ totaux.ht|montant }}</td></tr>
     {% if tva > 0 %}<tr><td>TVA {{ tva|taux }}</td><td class="n">{{ totaux.tva|montant }}</td></tr>{% endif %}
     {% if totaux.arrondi != 0 %}<tr><td>Arrondi</td><td class="n">{{ totaux.arrondi|montant }}</td></tr>{% endif %}
-    <tr class="doc-g"><td>Total{% if tva > 0 %} TTC{% endif %}</td><td class="n">{{ totaux.ttc|chf }}</td></tr>
+    {% if not epure %}<tr class="doc-g"><td class="{{ total_classe }}">Total{% if tva > 0 %} TTC{% endif %}</td><td class="n {{ total_classe }}">{{ totaux.ttc|chf }}</td></tr>{% endif %}
   </table>
+  {% if epure %}<p class="doc-grand-total c-texte">Total{% if tva > 0 %} TTC{% endif %} {{ totaux.ttc|chf }}</p>{% endif %}
 
   <div class="doc-cond">
     <b>Conditions</b>

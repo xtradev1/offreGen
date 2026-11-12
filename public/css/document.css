@@ -1,27 +1,95 @@
 /* Document d'offre remis au client. Une seule feuille pour l'aperçu à l'écran (dans .paper) et le PDF
-   (dompdf : CSS 2.1, ni grille, ni flexbox, ni variables). Toujours noir sur blanc, même en thème sombre. */
+   (dompdf : CSS 2.1, ni grille, ni flexbox, ni variables). Toujours noir sur blanc, même en thème sombre.
+   Six modèles (.m-sobre, .m-bandeau, .m-atelier, .m-technique, .m-moderne, .m-epure) ; la couleur de
+   l'artisan vient des classes c-* de Marque::css(). */
 @page { margin: 18mm 16mm 16mm 18mm; }
 body.pdf { margin: 0; font-family: "DejaVu Sans", sans-serif; font-size: 9.5pt; color: #1b1f24; background: #fff; }
 .paper { background: #fff; color: #1b1f24; border-radius: 6px; padding: 20px 16px; box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-size: 12px; line-height: 1.4; overflow-x: auto; }
 .doc table { width: 100%; border-collapse: collapse; }
 .doc td, .doc th { vertical-align: top; padding: 0; }
 .doc .n { text-align: right; white-space: nowrap; }
-.doc-tete td { width: 50%; }
-.doc-ref { text-align: right; }
-.doc-client { margin: 28px 0 22px 55%; min-height: 3.6em; }
-.doc-objet { font-weight: bold; font-size: 1.15em; margin: 0 0 12px; }
-.doc-lignes th { text-align: left; font-weight: bold; border-bottom: 1.5px solid #1b1f24; padding: 4px 4px 4px 0; }
-.doc-lignes th.n { text-align: right; padding-right: 0; padding-left: 6px; }
-.doc-lignes td { padding: 4px 4px 4px 0; border-bottom: 0.5px solid #d7dbe0; }
-.doc-lignes td.n { padding-left: 6px; padding-right: 0; }
+
+/* En-tête commun : logo (ou nom) à gauche, coordonnées à droite. */
+.doc-tete td { width: 50%; vertical-align: top; }
+.doc-logo { max-height: 56px; max-width: 200px; }
+.doc-nom { font-size: 1.35em; font-weight: bold; }
+.doc-coord { text-align: right; font-size: .92em; color: #4b525b; }
+.doc-coord b { color: #1b1f24; }
+.doc-client { margin: 26px 0 20px 55%; min-height: 3.6em; }
+.doc-titre { font-weight: bold; font-size: 1.45em; margin: 0 0 2px; }
+.doc-date { margin: 0 0 4px; font-size: .92em; color: #4b525b; }
+.doc-objet { margin: 0 0 14px; color: #4b525b; }
+
+/* Lignes */
+.doc-lignes th { text-align: left; font-weight: bold; font-size: .85em; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1.5px solid #1b1f24; padding: 5px 4px 5px 4px; }
+.doc-lignes th.n { text-align: right; padding-left: 6px; }
+.doc-lignes td { padding: 4px; border-bottom: 0.5px solid #d7dbe0; }
+.doc-lignes td.n { padding-left: 6px; }
+.doc-lignes .pos { width: 34px; color: #4b525b; }
 .doc-grp td { font-weight: bold; padding-top: 10px; border-bottom: 0; }
-.doc-st td { font-style: italic; color: #4b525b; border-bottom: 0; }
+.doc-st td { font-style: italic; color: #4b525b; border-bottom: 0; text-align: right; }
+
+/* Totaux */
 .doc-totaux { margin: 10px 0 0 45%; width: 55% !important; }
-.doc-totaux td { padding: 3px 0; }
+.doc-totaux td { padding: 3px 4px; }
 .doc-g td { font-weight: bold; font-size: 1.15em; border-top: 1.5px solid #1b1f24; padding-top: 6px; }
+
+/* Pied */
 .doc-cond { margin: 22px 0 0; }
 .doc-cond ul { margin: 4px 0 0; padding-left: 16px; }
 .doc-signature { margin-top: 34px; }
 .doc-signature td { width: 50%; padding-top: 28px; border-top: 0.5px solid #8a929c; font-size: .9em; color: #4b525b; }
 .doc-signature td + td { padding-left: 20px; }
-.doc-pied { margin-top: 26px; font-size: .85em; color: #69717c; text-align: center; }
+.doc-pied { margin-top: 26px; font-size: .85em; color: #69717c; text-align: center; border-top: 0.5px solid #d7dbe0; padding-top: 6px; }
+
+/* 1 Sobre : un filet de couleur sous l'en-tête, titres de colonnes en couleur. */
+.m-sobre .doc-regle { height: 3px; margin: 14px 0 0; }
+.m-sobre .doc-lignes th { border-bottom-width: 2px; }
+.m-sobre .doc-g td { border-top-width: 2px; }
+
+/* 2 Bandeau : bande de couleur en tête, logo sur un cartouche blanc, entêtes de colonnes pleines. */
+.m-bandeau .doc-bande { padding: 14px 16px; }
+.m-bandeau .doc-bande .doc-coord, .m-bandeau .doc-bande .doc-coord b, .m-bandeau .doc-bande .doc-nom { color: #fff; }
+.m-bandeau .doc-boite { display: inline-block; background: #fff; padding: 6px 8px; }
+.m-bandeau .doc-titre { text-transform: uppercase; letter-spacing: .02em; }
+.m-bandeau .doc-lignes th { border-bottom: 0; }
+.m-bandeau .doc-g td { border-top: 0; padding: 7px 6px; }
+
+/* 3 Atelier : centré, empattements, double filet. */
+.m-atelier { font-family: "DejaVu Serif", Georgia, serif; }
+.m-atelier .doc-centre { text-align: center; }
+.m-atelier .doc-coord-ligne { text-align: center; font-size: .9em; color: #4b525b; margin-top: 6px; }
+.m-atelier .doc-double { border-top: 3px double; margin: 14px 0 0; }
+.m-atelier .doc-client { margin-left: 0; }
+.m-atelier .doc-titre { font-weight: normal; letter-spacing: .04em; }
+.m-atelier .doc-lignes th { font-weight: normal; font-style: italic; text-transform: none; font-size: .95em; border-bottom-width: 1px; }
+.m-atelier .doc-lignes td { border-bottom: 0.5px dotted #c9cdd2; }
+.m-atelier .doc-g td { border-top: 3px double; font-weight: normal; font-size: 1.25em; }
+
+/* 4 Technique : barre de couleur à gauche, grille, positions numérotées. */
+.m-technique { border-left: 6px solid; padding-left: 12px; font-size: .95em; }
+.m-technique .doc-lignes th, .m-technique .doc-lignes td { border: 0.5px solid #cfd3d8; padding: 4px 5px; }
+.m-technique .doc-lignes th { background: #f1f3f5; text-transform: none; font-size: .9em; letter-spacing: 0; }
+.m-technique .doc-grp td { background: #fafbfc; }
+.m-technique .doc-st td { border-left: 0; border-right: 0; }
+.m-technique .doc-totaux td { border: 0.5px solid #cfd3d8; padding: 3px 6px; }
+.m-technique .doc-g td { border-top: 0.5px solid #cfd3d8; }
+
+/* 5 Moderne : grand titre en couleur, bandeau d'informations teinté, lignes alternées. */
+.m-moderne .doc-coord-g { font-size: .9em; color: #4b525b; margin-top: 8px; }
+.m-moderne .doc-coord-g b { color: #1b1f24; }
+.m-moderne .doc-grand-titre { text-align: right; font-size: 2.6em; font-weight: bold; letter-spacing: .06em; line-height: 1.05; }
+.m-moderne .doc-grand-titre span { font-size: .4em; font-weight: normal; letter-spacing: 0; color: #4b525b; }
+.m-moderne .doc-infos { margin: 20px 0 12px; }
+.m-moderne .doc-infos td { width: 33%; padding: 9px 12px; }
+.m-moderne .doc-etiquette { font-size: .75em; text-transform: uppercase; letter-spacing: .06em; color: #5d636b; }
+.m-moderne .doc-lignes td { border-bottom: 0; }
+.m-moderne .doc-grp td { font-size: .85em; text-transform: uppercase; letter-spacing: .05em; }
+.m-moderne .doc-st td { border-top: 0.5px solid #e6e8eb; }
+.m-moderne .doc-g td { border-top: 0; padding: 7px 6px; }
+
+/* 6 Épuré : sans groupes, un trait de couleur, un grand total. */
+.m-epure .doc-trait { width: 60px; height: 4px; margin: 0 0 18px; }
+.m-epure .doc-lignes th { font-weight: normal; color: #7a8089; border-bottom: 0.5px solid #e6e8eb; }
+.m-epure .doc-lignes td { border-bottom: 0; padding: 6px 4px; }
+.m-epure .doc-grand-total { text-align: right; font-size: 1.9em; font-weight: bold; margin: 12px 0 0; }

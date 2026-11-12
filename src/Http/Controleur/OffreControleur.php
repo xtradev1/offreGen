@@ -87,7 +87,10 @@ final class OffreControleur
     public function pdf(Request $requete, array $parametres): Response
     {
         $d = $this->donnees($requete, $parametres);
-        $d['css'] = (string) file_get_contents($this->c->racine() . '/public/css/document.css');
+        $d['css'] = (string) file_get_contents($this->c->racine() . '/public/css/document.css') . "\n" . $d['m']->css();
+        // dompdf ne lit aucune adresse (ressources distantes coupées) : le logo voyage dans le document.
+        $logo = $d['m']->logo === null ? null : $this->c->dossierLogos() . '/' . basename($d['m']->logo);
+        $d['logo_src'] = $logo !== null && is_file($logo) ? 'data:image/jpeg;base64,' . base64_encode((string) file_get_contents($logo)) : null;
         $pdf = $this->c->documentPdf()->rendre($this->c->twig()->render('document_pdf.html.twig', $d));
         $nom = 'Offre-' . $d['offre']['numero'] . '.pdf';
         return new Response($pdf, 200, [
@@ -101,7 +104,7 @@ final class OffreControleur
      * Tout ce que montrent l'écran de l'offre et son document.
      *
      * @param array<string, string> $parametres
-     * @return array{offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     * @return array{m: \OffreGen\Compte\Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
      */
     private function donnees(Request $requete, array $parametres): array
     {
@@ -112,7 +115,11 @@ final class OffreControleur
         $totaux = Totaux::calculer($lignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes);
         $date = new \DateTimeImmutable($offre['modifiee_le'] ?? $offre['cree_le'], new \DateTimeZone('UTC'));
         $valable = $date->setTimezone(new \DateTimeZone('Europe/Zurich'))->modify('+' . $r->validiteJours . ' days')->format('d.m.Y');
+        $m = $this->c->reglages($portee)->lireMarque();
         return [
+            'm' => $m,
+            // Aperçu à l'écran : le logo par son adresse (la CSP refuse les images en data:) ; pdf() le remplace.
+            'logo_src' => $m->logo === null ? null : '/reglages/logo?v=' . $m->logo,
             'offre' => $offre,
             'groupes' => self::grouper($lignes, $totaux['lignes']),
             'totaux' => $totaux,

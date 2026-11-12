@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Donnees;
 
+use OffreGen\Compte\Marque;
 use OffreGen\Compte\Reglages;
 
 /**
@@ -31,6 +32,33 @@ final class DepotReglages
             $l['entreprise'], $l['tva_pour_dix_mille'], $l['arrondi_cinq_centimes'] === 1,
             $l['adresse'] ?? '', $l['telephone'] ?? '', $l['courriel_contact'] ?? '', $l['ide'] ?? '',
             $l['validite_jours'], $type, $l['paiement_jours'], $acomptes,
+        );
+    }
+
+    public function lireMarque(): Marque
+    {
+        /** @var array{modele: string, couleur: string|null, logo_fichier: string|null, couleur_logo: string|null}|null $l */
+        $l = $this->base->un('SELECT modele, couleur, logo_fichier, couleur_logo FROM artisan WHERE id = :a', ['a' => $this->portee->artisanId]);
+        if ($l === null) {
+            throw new \RuntimeException('Compte introuvable.');
+        }
+        return new Marque(Marque::modeleValide($l['modele']), $l['couleur'], $l['logo_fichier'], $l['couleur_logo']);
+    }
+
+    public function enregistrerMarque(string $modele, ?string $couleur): void
+    {
+        $this->base->ecrire(
+            'UPDATE artisan SET modele = :m, couleur = :c WHERE id = :a',
+            ['m' => Marque::modeleValide($modele), 'c' => $couleur, 'a' => $this->portee->artisanId],
+        );
+    }
+
+    /** Nouveau logo (ou aucun) ; sa couleur devient celle des documents, modifiable ensuite. */
+    public function changerLogo(?string $fichier, ?string $couleurDuLogo): void
+    {
+        $this->base->ecrire(
+            'UPDATE artisan SET logo_fichier = :f, couleur_logo = :cl, couleur = COALESCE(:c, couleur) WHERE id = :a',
+            ['f' => $fichier, 'cl' => $couleurDuLogo, 'c' => $couleurDuLogo, 'a' => $this->portee->artisanId],
         );
     }
 

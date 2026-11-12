@@ -638,7 +638,15 @@ function choixDesReglages() {
   });
 }
 
+// Un fichier choisi part tout de suite (logo des réglages) : un toucher de moins.
+function envoisAutomatiques() {
+  document.querySelectorAll('input[type=file][data-envoi-auto]').forEach((champ) => {
+    champ.addEventListener('change', () => { if (champ.files && champ.files.length && champ.form) champ.form.submit(); });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  envoisAutomatiques();
   choixDesReglages();
   corrections();
   envoisDeFormulaires();

@@ -8,6 +8,7 @@ use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use OffreGen\Audio\DureeAudio;
+use OffreGen\Compte\TraitementLogo;
 use OffreGen\Audio\PreparationAudio;
 use OffreGen\Audio\Purge;
 use OffreGen\Audio\StockageAudio;
@@ -256,6 +257,17 @@ final class Conteneur
             $twig->addExtension(new Formats());
             return $twig;
         });
+    }
+
+    public function traitementLogo(): TraitementLogo
+    {
+        return $this->une(TraitementLogo::class, fn (): TraitementLogo => new TraitementLogo($this->parametre('FFMPEG', 'ffmpeg')));
+    }
+
+    /** Les logos des artisans, hors du dossier public : servis par /reglages/logo au seul artisan connecté. */
+    public function dossierLogos(): string
+    {
+        return $this->parametre('LOGOS_DOSSIER', $this->racine . '/var/logos');
     }
 
     public function dureeAudio(): DureeAudio

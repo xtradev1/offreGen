@@ -19,19 +19,27 @@ final class Dossiers
         $this->racine = sys_get_temp_dir() . '/offregen-test-' . bin2hex(random_bytes(4));
         mkdir($this->racine . '/audio', 0700, true);
         mkdir($this->racine . '/courriels', 0700, true);
+        mkdir($this->racine . '/logos', 0700, true);
     }
 
     /** @return array<string, string> */
     public function env(): array
     {
-        return ['AUDIO_DOSSIER' => $this->racine . '/audio', 'COURRIELS_DOSSIER' => $this->racine . '/courriels'];
+        return ['AUDIO_DOSSIER' => $this->racine . '/audio', 'COURRIELS_DOSSIER' => $this->racine . '/courriels', 'LOGOS_DOSSIER' => $this->racine . '/logos'];
     }
 
-    public function envoi(string $fixture, ?string $nomClient = null): UploadedFile
+    public function envoi(string $fixture, ?string $nomClient = null, string $sousDossier = 'audio'): UploadedFile
     {
         $copie = $this->racine . '/envoi-' . bin2hex(random_bytes(4));
-        copy(dirname(__DIR__) . '/fixtures/audio/' . $fixture, $copie);
+        copy(dirname(__DIR__) . '/fixtures/' . $sousDossier . '/' . $fixture, $copie);
         return new UploadedFile($copie, $nomClient ?? $fixture, null, UPLOAD_ERR_OK, true);
+    }
+
+    /** @return list<string> les logos rangés */
+    public function logos(): array
+    {
+        $liste = glob($this->racine . '/logos/*');
+        return $liste === false ? [] : $liste;
     }
 
     /** @return list<string> */
