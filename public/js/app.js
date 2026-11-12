@@ -645,7 +645,112 @@ function envoisAutomatiques() {
   });
 }
 
+// Réglages : chaque changement s'enregistre seul (choix de Xavier du 2026-11-12). Le bouton
+// Enregistrer reste pour qui n'a pas JavaScript, et revient si un envoi automatique échoue.
+function reglagesAutomatiques() {
+  const form = document.querySelector('form[data-auto]');
+  if (!form) return;
+  const etat = form.querySelector('[data-auto-etat]');
+  const boutons = document.querySelectorAll('[data-sans-auto]');
+  let secours = false;
+  const montrerBoutons = (voir) => {
+    secours = voir;
+    boutons.forEach((b) => {
+      b.hidden = !voir;
+      const barre = b.closest('.actionbar');
+      if (barre) barre.hidden = !voir;
+    });
+  };
+  montrerBoutons(false);
+  const dire = (texte, classe) => {
+    if (!etat) return;
+    etat.textContent = texte;
+    etat.className = 'auto-etat' + (classe ? ' ' + classe : '');
+  };
+
+  // Les champs attendus (badge « à compléter ») : le badge suit la saisie une fois enregistrée.
+  const attendus = [];
+  form.querySelectorAll('.champ').forEach((ch) => {
+    const badge = ch.querySelector('label .badge.manque');
+    const champ = ch.querySelector('input.manque, textarea.manque');
+    if (badge && champ) attendus.push({ badge, champ });
+  });
+  const rafraichirBadges = () => attendus.forEach(({ badge, champ }) => {
+    const rempli = champ.value.trim() !== '';
+    badge.hidden = rempli;
+    champ.classList.toggle('manque', !rempli);
+  });
+
+  const afficherErreurs = (erreurs) => {
+    form.querySelectorAll('[data-erreur]').forEach((s) => {
+      const nom = s.dataset.erreur;
+      const message = erreurs[nom] || '';
+      s.textContent = message;
+      s.hidden = message === '';
+      form.querySelectorAll('[aria-describedby="err-' + nom + '"]').forEach((c) => {
+        if (message) c.setAttribute('aria-invalid', 'true'); else c.removeAttribute('aria-invalid');
+      });
+    });
+  };
+
+  let minuterie = null;
+  let enCours = false;
+  let encore = false;
+  const corps = () => new FormData(form);
+  const envoyer = async () => {
+    clearTimeout(minuterie);
+    minuterie = null;
+    if (enCours) { encore = true; return; }
+    enCours = true;
+    dire('Enregistrement…');
+    try {
+      const r = await fetch(form.action, { method: 'POST', body: corps(), headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+      const json = (r.headers.get('Content-Type') || '').indexOf('json') >= 0 ? await r.json() : null;
+      if (r.ok && json && json.ok) {
+        afficherErreurs({});
+        rafraichirBadges();
+        dire('Enregistré', 'ok');
+      } else if (r.status === 422 && json) {
+        afficherErreurs(json.erreurs || {});
+        dire('Pas enregistré : corrigez le champ signalé.', 'bad');
+      } else {
+        throw new Error('réponse ' + r.status);
+      }
+    } catch (e) {
+      // Session expirée, réseau coupé : on rend la main au bouton, qui recharge la page.
+      dire('Pas enregistré. Touchez Enregistrer.', 'bad');
+      montrerBoutons(true);
+    } finally {
+      enCours = false;
+      if (encore) { encore = false; envoyer(); }
+    }
+  };
+  const attendre = () => { clearTimeout(minuterie); minuterie = setTimeout(envoyer, 900); };
+  const tape = (c) => c.matches('textarea, input:not([type]), input[type=text], input[type=tel], input[type=email], input[type=number]');
+
+  form.addEventListener('input', (e) => { if (e.target.form === form && tape(e.target)) attendre(); });
+  form.addEventListener('change', (e) => {
+    const c = e.target;
+    if (c.form !== form) return; // le champ du logo appartient à son propre formulaire
+    // « Autre » touché alors que son champ est vide : on attend la saisie, rien à enregistrer encore.
+    if (c.type === 'radio' && c.value === 'autre') {
+      const champ = c.closest('.choix') && c.closest('.choix').querySelector('.si-autre input');
+      if (champ && champ.value.trim() === '') return;
+    }
+    envoyer();
+  });
+  form.addEventListener('submit', (e) => { if (!secours) { e.preventDefault(); envoyer(); } });
+  // Une saisie en attente part quand on quitte l'écran (retour au sommaire, autre onglet).
+  window.addEventListener('pagehide', () => {
+    if (minuterie === null) return;
+    clearTimeout(minuterie);
+    minuterie = null;
+    fetch(form.action, { method: 'POST', body: corps(), headers: { Accept: 'application/json' }, credentials: 'same-origin', keepalive: true });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  reglagesAutomatiques();
   envoisAutomatiques();
   choixDesReglages();
   corrections();

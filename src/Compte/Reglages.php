@@ -57,6 +57,16 @@ final readonly class Reglages
         };
     }
 
+    /** Le paiement en quelques mots, pour le sommaire des réglages (une ligne de téléphone). */
+    public function resumePaiement(): string
+    {
+        return match ($this->paiementType) {
+            'net' => "net à {$this->paiementJours} jours",
+            'acomptes' => 'acomptes ' . implode(' / ', $this->paiementAcomptes) . ' %',
+            default => "à {$this->paiementJours} jours",
+        };
+    }
+
     /**
      * La première tranche à la commande, la dernière à la fin des travaux, celles du milieu en cours de travaux.
      *

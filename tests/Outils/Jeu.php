@@ -45,6 +45,8 @@ final class Jeu
         foreach (['a' => $this->a, 'b' => $this->b] as $nom => $id) {
             $this->remplir($nom, new Portee($id));
         }
+        // Comptes déjà réglés : l'assistant du premier lancement ne s'ouvre pas (testé à part).
+        BaseDeTest::pdo()->exec("UPDATE artisan SET reglages_faits_le = '2026-11-01 08:00:00' WHERE id IN ($this->a, $this->b)");
     }
 
     private function remplir(string $nom, Portee $portee): void

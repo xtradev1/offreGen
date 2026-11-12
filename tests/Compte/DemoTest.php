@@ -54,6 +54,7 @@ final class DemoTest extends TestCase
         self::assertSame(0, BaseDeTest::compter('ligne', "artisan_id = $a AND produit_id IS NULL"));
         self::assertSame(1, BaseDeTest::compter('ligne', "artisan_id = $a AND designation = 'Parquet chêne contrecollé, pose collée' AND quantite_milliemes = 16000 AND prix_centimes = 9500"));
         self::assertSame(0, BaseDeTest::compter('enregistrement', "artisan_id = $a"));
+        self::assertSame(1, BaseDeTest::compter('artisan', "id = $a AND reglages_faits_le IS NULL"), 'l\'assistant revient pour le prochain visiteur');
         self::assertSame(12, BaseDeTest::compter('produit', "artisan_id = $a"));
         self::assertSame(1, BaseDeTest::compter('produit', "artisan_id = $a AND designation = 'Parquet chêne contrecollé, pose collée' AND prix_centimes = 9500"));
         // Le compte lui-même reste, et B n'est pas touché.

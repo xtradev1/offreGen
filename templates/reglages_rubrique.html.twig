@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{# Une rubrique des réglages, seule à l'écran ; ou une étape de l'assistant du premier lancement
+   (assistant défini). Dans les réglages, chaque changement s'enregistre seul (app.js, data-auto) ;
+   sans JavaScript, le bouton Enregistrer envoie le formulaire. #}
+{% block titre %}{{ titre }} · offreGen{% endblock %}
+{% block retour %}{% if not assistant %}<a class="back" href="/reglages">Réglages</a>{% endif %}{% endblock %}
+{% block entete %}{{ assistant ? 'Bienvenue' : titre }}{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  {% if assistant %}
+    <div class="progression" aria-hidden="true">{% for e in assistant.etapes %}<i{% if loop.index <= assistant.numero %} class="fait"{% endif %}></i>{% endfor %}</div>
+    <p class="muted petit">Étape {{ assistant.numero }} sur {{ assistant.etapes|length }}</p>
+    <h2 class="etape-titre">{{ titre }}</h2>
+  {% endif %}
+  {% if erreurs is not empty %}<p class="alerte bad" role="alert">Pas enregistré&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  <form id="reglages" method="post" action="{{ assistant ? '/bienvenue/' ~ sections|first : '/reglages' }}"{% if not assistant %} data-auto{% endif %}>
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <input type="hidden" name="retour" value="{{ retour }}">
+    {% if not assistant %}<p class="auto-etat" data-auto-etat aria-live="polite"></p>{% endif %}
+    {% for s in sections %}{% include '_reglages_' ~ s ~ '.html.twig' %}{% endfor %}
+  </form>
+  {% if 'marque' in sections %}
+    {# Formulaires du logo, hors du formulaire principal : leurs champs s'y rattachent par l'attribut form. #}
+    <form id="form-logo" method="post" action="/reglages/logo" enctype="multipart/form-data"><input type="hidden" name="_csrf" value="{{ csrf() }}"><input type="hidden" name="retour" value="{{ assistant ? '/bienvenue/marque' : '/reglages/marque' }}"></form>
+    <form id="form-logo-retirer" method="post" action="/reglages/logo/retirer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><input type="hidden" name="retour" value="{{ assistant ? '/bienvenue/marque' : '/reglages/marque' }}"></form>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    {% if assistant %}
+      <form method="post" action="/bienvenue/passer" class="passer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="btn" type="submit">Plus tard</button></form>
+      <button class="btn primary" type="submit" form="reglages">{{ assistant.numero == assistant.etapes|length ? 'Terminer' : 'Suivant' }}</button>
+    {% else %}
+      <button class="btn primary" type="submit" form="reglages" data-sans-auto>Enregistrer</button>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block onglets %}{% if not assistant %}{% include '_onglets.html.twig' with {actif: 'reglages'} %}{% endif %}{% endblock %}

@@ -1,0 +1,31 @@
+{% import '_reglages_macros.html.twig' as f %}
+<div class="card">
+  <div class="champ">
+    <label for="entreprise">Nom</label>
+    <input id="entreprise" name="entreprise" value="{{ champs.entreprise }}" maxlength="190" required autocomplete="organization"{{ f.invalide(erreurs, 'entreprise') }}>
+    {{ f.erreur(erreurs, 'entreprise') }}
+  </div>
+  <div class="champ">
+    <label for="adresse">Adresse{% if not champs.adresse %} <span class="badge manque">à compléter</span>{% endif %}</label>
+    <textarea id="adresse" name="adresse" rows="2" placeholder="Rue de l'Exemple 12&#10;2800 Delémont" autocomplete="street-address"{% if not champs.adresse %} class="manque"{% endif %}{{ f.invalide(erreurs, 'adresse') }}>{{ champs.adresse }}</textarea>
+    <span class="muted petit">En tête de chaque offre, et pour la date «&nbsp;Delémont, le…&nbsp;».</span>
+    {{ f.erreur(erreurs, 'adresse') }}
+  </div>
+  <div class="duo">
+    <div class="champ">
+      <label for="telephone">Téléphone</label>
+      <input id="telephone" name="telephone" value="{{ champs.telephone }}" inputmode="tel" autocomplete="tel"{{ f.invalide(erreurs, 'telephone') }}>
+      {{ f.erreur(erreurs, 'telephone') }}
+    </div>
+    <div class="champ">
+      <label for="ide">Numéro IDE{% if not champs.ide and champs.tva != '0' %} <span class="badge manque">à compléter</span>{% endif %}</label>
+      <input id="ide" name="ide" value="{{ champs.ide }}" placeholder="CHE-123.456.789" autocomplete="off"{% if not champs.ide and champs.tva != '0' %} class="manque"{% endif %}{{ f.invalide(erreurs, 'ide') }}>
+      {{ f.erreur(erreurs, 'ide') }}
+    </div>
+  </div>
+  <div class="champ">
+    <label for="courriel_contact">Courriel pour les clients</label>
+    <input id="courriel_contact" name="courriel_contact" type="email" value="{{ champs.courriel_contact }}" inputmode="email" autocomplete="email"{{ f.invalide(erreurs, 'courriel_contact') }}>
+    {{ f.erreur(erreurs, 'courriel_contact') }}
+  </div>
+</div>

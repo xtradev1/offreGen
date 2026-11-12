@@ -11,6 +11,7 @@ use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
+use OffreGen\Donnees\DepotReglages;
 use OffreGen\Donnees\Portee;
 use OffreGen\Offre\LigneExtraite;
 use Psr\Clock\ClockInterface;
@@ -80,6 +81,8 @@ final class Comptes
             $enregistrements->toutEffacer();
             $produits = new DepotProduits($this->base, $portee);
             $produits->remplacerTout($catalogue);
+            // Le prochain visiteur de la démonstration voit l'assistant du premier lancement.
+            (new DepotReglages($this->base, $portee))->assistantARefaire();
             $parNom = array_column($produits->tous(), null, 'designation');
             // La plus ancienne d'abord : elle reçoit le numéro 1.
             usort($exemples, static fn (array $x, array $y): int => $y['il_y_a_jours'] <=> $x['il_y_a_jours']);

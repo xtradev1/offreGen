@@ -1,0 +1,40 @@
+{% import '_reglages_macros.html.twig' as f %}
+{# Ma marque, en trois touchers : le logo (envoyé à part, formulaire form-logo, sa couleur est proposée
+   d'office), la couleur, le modèle. La CSP refuse les styles en ligne : pastilles dessinées en SVG. #}
+<div class="card" id="marque">
+  <fieldset class="groupe">
+    <legend>1. Logo</legend>
+    <div class="logo-ligne">
+      {% if marque.logo %}<img class="logo-apercu" src="/reglages/logo?v={{ marque.logo }}" alt="Votre logo">{% else %}<span class="muted petit">Aucun logo</span>{% endif %}
+      <label class="btn" for="logo">{{ marque.logo ? 'Changer' : 'Choisir le logo' }}</label>
+      <input class="cache" id="logo" name="logo" type="file" accept="image/png,image/jpeg" form="form-logo" data-envoi-auto>
+      {% if marque.logo %}<button class="lien" type="submit" form="form-logo-retirer">Retirer</button>{% endif %}
+    </div>
+    <noscript><button class="btn" type="submit" form="form-logo">Envoyer le logo choisi</button></noscript>
+    <p class="muted petit">PNG ou JPEG, 5&nbsp;Mo au plus. Sa couleur devient celle de vos documents.</p>
+  </fieldset>
+  <fieldset class="groupe choix">
+    <legend>2. Couleur</legend>
+    <div class="teintes">
+      {% for t in teintes %}
+        <label class="teinte" title="{{ t == marque.couleurDuLogo ? 'Couleur du logo' : t }}"><input type="radio" name="couleur_choix" value="{{ t }}"{% if champs.couleur_choix == t %} checked{% endif %}>
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="{{ t }}"/></svg><span class="cache">{{ t == marque.couleurDuLogo ? 'Couleur du logo' : 'Couleur ' ~ t }}</span></label>
+      {% endfor %}
+      <label class="puce teinte-autre"><input type="radio" name="couleur_choix" value="autre"{% if champs.couleur_choix == 'autre' %} checked{% endif %}>Autre</label>
+    </div>
+    <div class="champ si-autre">
+      <label for="couleur">Votre couleur</label>
+      <input id="couleur" name="couleur" type="color" value="{{ champs.couleur|default('#1D4E89')|lower }}"{{ f.invalide(erreurs, 'couleur') }}>
+    </div>
+    {{ f.erreur(erreurs, 'couleur') }}
+  </fieldset>
+  <fieldset class="groupe">
+    <legend>3. Modèle</legend>
+    <div class="modeles">
+      {% for cle, nom in modeles %}
+        <label class="modele"><input type="radio" name="modele" value="{{ cle }}"{% if champs.modele == cle %} checked{% endif %}>
+          <img src="/img/modeles/{{ cle }}.jpg" alt="" width="180" height="255"><span>{{ nom }}</span></label>
+      {% endfor %}
+    </div>
+  </fieldset>
+</div>

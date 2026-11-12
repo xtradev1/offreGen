@@ -27,7 +27,7 @@ return static function (Conteneur $c): array {
     $catalogue = static fn (): CatalogueControleur => new CatalogueControleur($c);
     $reglages = static fn (): ReglagesControleur => new ReglagesControleur($c);
 
-    return [
+    $routes = [
         new Route('connexion', '/connexion', ['GET'], static fn (Request $r): Response => $connexion()->afficher($r), Route::PUBLIC),
         new Route('connexion_envoi', '/connexion', ['POST'], static fn (Request $r): Response => $connexion()->soumettre($r), Route::PUBLIC),
         new Route('deconnexion', '/deconnexion', ['POST'], static fn (Request $r): Response => $connexion()->deconnecter($r), Route::ARTISAN),
@@ -66,5 +66,15 @@ return static function (Conteneur $c): array {
         new Route('produit_supprimer', '/catalogue/{id}/supprimer', ['POST'], static fn (Request $r, array $p): Response => $catalogue()->supprimer($r, $p), Route::ARTISAN),
         new Route('reglages', '/reglages', ['GET'], static fn (Request $r): Response => $reglages()->afficher($r), Route::ARTISAN),
         new Route('reglages_enregistrer', '/reglages', ['POST'], static fn (Request $r): Response => $reglages()->enregistrer($r), Route::ARTISAN),
+        new Route('bienvenue_passer', '/bienvenue/passer', ['POST'], static fn (Request $r): Response => $reglages()->passer($r), Route::ARTISAN),
     ];
+    // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.
+    foreach (array_keys(ReglagesControleur::RUBRIQUES) as $nom) {
+        $routes[] = new Route("reglages_$nom", "/reglages/$nom", ['GET'], static fn (Request $r): Response => $reglages()->rubrique($r, $nom), Route::ARTISAN);
+    }
+    foreach (array_keys(ReglagesControleur::ETAPES) as $nom) {
+        $routes[] = new Route("bienvenue_$nom", "/bienvenue/$nom", ['GET'], static fn (Request $r): Response => $reglages()->etape($r, $nom), Route::ARTISAN);
+        $routes[] = new Route("bienvenue_{$nom}_enregistrer", "/bienvenue/$nom", ['POST'], static fn (Request $r): Response => $reglages()->enregistrerEtape($r, $nom), Route::ARTISAN);
+    }
+    return $routes;
 };

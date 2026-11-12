@@ -67,7 +67,7 @@ final class EcransTest extends TestCase
     public function testSansArrondiLeTotalResteAuCentime(): void
     {
         $this->page('/reglages');
-        $this->a->post('/reglages', ['entreprise' => 'Entreprise A', 'tva' => '810', 'validite_jours' => '30', 'paiement_jours' => '30']);
+        $this->a->post('/reglages', ['entreprise' => 'Entreprise A', 'tva' => '810', 'arrondi' => '0']);
         // 231.25 + 18.73 = 249.98, sans la ligne « Arrondi ».
         $offre = $this->page($this->offre);
         self::assertStringContainsString("CHF\u{00A0}249.98", $offre);
@@ -437,9 +437,7 @@ final class EcransTest extends TestCase
 
     public function testValiditeEtPaiementSeChoisissentDUnToucher(): void
     {
-        $page = $this->page('/reglages');
-        // La carte des conditions vient en premier : c'est elle qui change le plus souvent.
-        self::assertLessThan(strpos($page, 'Entreprise, en tête'), strpos($page, 'Conditions de l&#039;offre') ?: strpos($page, "Conditions de l'offre"));
+        $page = $this->page('/reglages/conditions');
         // Valeurs par défaut cochées : 30 jours de validité, paiement à 30 jours.
         self::assertStringContainsString('name="validite_choix" value="30" checked', $page);
         self::assertStringContainsString('name="validite_choix" value="autre">Autre', $page);
@@ -454,7 +452,7 @@ final class EcransTest extends TestCase
             'paiement_acomptes_choix' => 'autre', 'paiement_acomptes' => '20, 30, 50'])->getStatusCode());
         self::assertSame(['validite_jours' => 45, 'paiement_type' => 'acomptes', 'paiement_acomptes' => '20,30,50'],
             BaseDeTest::ligne("SELECT validite_jours, paiement_type, paiement_acomptes FROM artisan WHERE id = {$this->jeu->a}"));
-        $page = $this->page('/reglages');
+        $page = $this->page('/reglages/conditions');
         self::assertStringContainsString('name="validite_choix" value="autre" checked', $page);
         self::assertStringContainsString('name="paiement_acomptes_choix" value="autre" checked', $page);
         self::assertStringContainsString('value="20, 30, 50"', $page);

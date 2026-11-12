@@ -35,6 +35,23 @@ final class DepotReglages
         );
     }
 
+    /** Vrai si l'assistant du premier lancement a été fait ou passé. */
+    public function assistantFait(): bool
+    {
+        return $this->base->valeur('SELECT reglages_faits_le FROM artisan WHERE id = :a', ['a' => $this->portee->artisanId]) !== null;
+    }
+
+    public function marquerAssistantFait(\DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire('UPDATE artisan SET reglages_faits_le = :q WHERE id = :a', ['q' => Dates::versBase($quand), 'a' => $this->portee->artisanId]);
+    }
+
+    /** L'assistant s'ouvrira de nouveau (remise à zéro d'un compte de démonstration). */
+    public function assistantARefaire(): void
+    {
+        $this->base->ecrire('UPDATE artisan SET reglages_faits_le = NULL WHERE id = :a', ['a' => $this->portee->artisanId]);
+    }
+
     public function lireMarque(): Marque
     {
         /** @var array{modele: string, couleur: string|null, logo_fichier: string|null, couleur_logo: string|null}|null $l */

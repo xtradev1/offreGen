@@ -1,0 +1,19 @@
+{% import '_reglages_macros.html.twig' as f %}
+<div class="card">
+  <fieldset class="groupe">
+    <legend>TVA</legend>
+    <label class="radio"><input type="radio" name="tva" value="810"{% if champs.tva == '810' %} checked{% endif %}>
+      <span>Assujetti, 8,1&nbsp;%<small>La TVA s'ajoute au sous-total de chaque offre.</small></span></label>
+    <label class="radio"><input type="radio" name="tva" value="0"{% if champs.tva == '0' %} checked{% endif %}>
+      <span>Non assujetti<small>Moins de 100&nbsp;000 francs de chiffre d'affaires par an&nbsp;: l'offre ne porte pas de TVA.</small></span></label>
+    {{ f.erreur(erreurs, 'tva') }}
+  </fieldset>
+  <fieldset class="groupe">
+    <legend>Arrondi</legend>
+    {# Case décochée : le champ caché envoie 0 ; cochée, la case envoie 1 après lui et l'emporte. #}
+    <input type="hidden" name="arrondi" value="0">
+    <label class="check"><input type="checkbox" name="arrondi" value="1"{% if arrondi %} checked{% endif %}>
+      <span>Arrondir le total aux 5 centimes<small>L'écart s'affiche sur la ligne «&nbsp;Arrondi&nbsp;».</small></span></label>
+  </fieldset>
+  <p class="muted petit">Changer la TVA ou l'arrondi change aussi le total des offres déjà faites.</p>
+</div>

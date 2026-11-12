@@ -76,7 +76,7 @@ final class MarqueEcranTest extends TestCase
         self::assertSame(200, $logo->getStatusCode());
         self::assertSame('image/jpeg', $logo->headers->get('Content-Type'));
         self::assertStringContainsString('private', (string) $logo->headers->get('Cache-Control'));
-        $page = $this->page('/reglages');
+        $page = $this->page('/reglages/marque');
         self::assertStringContainsString('src="/reglages/logo?v=' . $m['logo_fichier'] . '"', $page);
         // La couleur du logo est la première pastille, cochée.
         self::assertStringContainsString('name="couleur_choix" value="' . $m['couleur'] . '" checked', $page);
@@ -93,7 +93,7 @@ final class MarqueEcranTest extends TestCase
         $avant = $this->marqueDeA();
         $this->envoyerLogo('pas-une-image.png');
         self::assertSame($avant, $this->marqueDeA());
-        self::assertStringContainsString('Le logo doit être une image PNG ou JPEG.', $this->page('/reglages'));
+        self::assertStringContainsString('Le logo doit être une image PNG ou JPEG.', $this->page('/reglages/marque'));
 
         // Retiré : plus de fichier, plus d'adresse.
         self::assertSame(303, $this->a->post('/reglages/logo/retirer', [])->getStatusCode());

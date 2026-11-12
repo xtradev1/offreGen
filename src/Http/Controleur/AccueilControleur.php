@@ -9,6 +9,7 @@ use OffreGen\Donnees\Portee;
 use OffreGen\Donnees\Statut;
 use OffreGen\Http\Conteneur;
 use OffreGen\Offre\Totaux;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -30,6 +31,10 @@ final class AccueilControleur
     public function liste(Request $requete): Response
     {
         $portee = new Portee($requete->attributes->getInt('_artisan'));
+        // Premier lancement : l'assistant des réglages d'abord (choix de Xavier du 2026-11-12).
+        if (!$this->c->reglages($portee)->assistantFait()) {
+            return new RedirectResponse('/bienvenue/entreprise', 303);
+        }
         $artisan = $this->c->artisans()->parId($portee->artisanId);
         $depot = $this->c->offres($portee);
         $offres = $depot->liste();

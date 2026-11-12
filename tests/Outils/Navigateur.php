@@ -34,12 +34,20 @@ final class Navigateur
      * @param array<string, string> $champs sans _csrf, il est repris de la dernière page
      * @param array<string, UploadedFile> $fichiers
      */
-    public function post(string $chemin, array $champs, array $fichiers = [], bool $avecJeton = true): Response
+    public function post(string $chemin, array $champs, array $fichiers = [], bool $avecJeton = true, bool $json = false): Response
     {
         if ($avecJeton && !isset($champs['_csrf'])) {
             $champs['_csrf'] = $this->jeton();
         }
-        return $this->envoyer(Request::create($chemin, 'POST', $champs, files: $fichiers, server: ['REMOTE_ADDR' => $this->ip]));
+        // $json : comme l'enregistrement automatique d'app.js, qui demande une réponse en JSON.
+        $serveur = ['REMOTE_ADDR' => $this->ip] + ($json ? ['HTTP_ACCEPT' => 'application/json'] : []);
+        $page = $this->dernierePage;
+        $reponse = $this->envoyer(Request::create($chemin, 'POST', $champs, files: $fichiers, server: $serveur));
+        if ($json) {
+            // Le JSON n'a pas de formulaire : le jeton de la page affichée reste valable, comme dans le navigateur.
+            $this->dernierePage = $page;
+        }
+        return $reponse;
     }
 
     public function connecter(string $courriel, string $motDePasse = Jeu::MOT_DE_PASSE): Response
