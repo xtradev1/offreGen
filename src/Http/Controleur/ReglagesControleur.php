@@ -95,7 +95,57 @@ final class ReglagesControleur
             return new JsonResponse(['ok' => true]);
         }
         Flash::dire($requete, 'info', 'Réglages enregistrés');
+        if ($retour === '/bienvenue/marque') {
+            // Modèle choisi depuis son aperçu, pendant l'assistant : retour à l'étape.
+            return new RedirectResponse($retour, 303);
+        }
         return new RedirectResponse(array_key_exists($rubrique, self::RUBRIQUES) ? '/reglages/' . $rubrique : '/reglages', 303);
+    }
+
+    /**
+     * « Voir en grand » : le vrai document dans le modèle demandé, avec le logo et la couleur de l'artisan
+     * et sa dernière offre (un exemple s'il n'en a pas). Rien n'est enregistré.
+     */
+    public function apercuModele(Request $requete, string $modele): Response
+    {
+        $portee = $this->portee($requete);
+        $offres = $this->c->offres($portee);
+        $offre = $offres->liste(1)[0] ?? null;
+        $lignes = $offre === null ? [] : $offres->lignes($offre['id']);
+        if ($offre === null || $lignes === []) {
+            [$offre, $lignes] = self::exemple($this->c->horloge()->now());
+        }
+        $m = $this->c->reglages($portee)->lireMarque();
+        $apercu = new Marque($modele, $m->couleurChoisie, $m->logo, $m->couleurDuLogo);
+        $assistant = $requete->query->getString('depuis') === 'bienvenue';
+        return new Response($this->c->twig()->render('modele_apercu.html.twig', (new OffreControleur($this->c))->vueDocument($portee, $offre, $lignes, $apercu) + [
+            'modele' => $modele,
+            'modeles' => Marque::MODELES,
+            'choisi' => $m->modele,
+            'retour' => $assistant ? '/bienvenue/marque' : '/reglages/marque',
+            'depuis' => $assistant ? '?depuis=bienvenue' : '',
+        ]));
+    }
+
+    /**
+     * Une petite offre de peintre, pour l'aperçu d'un compte qui n'a encore rien dicté.
+     *
+     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_nom: string, client_adresse: string, cree_le: string, modifiee_le: null}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: null, categorie: string}>}
+     */
+    private static function exemple(\DateTimeImmutable $maintenant): array
+    {
+        $offre = ['id' => 0, 'numero' => 1, 'enregistrement_id' => null, 'titre' => 'Rafraîchissement du séjour',
+                  'client_nom' => 'Madame Exemple', 'client_adresse' => "Rue de l'Exemple 1\n2800 Delémont",
+                  'cree_le' => $maintenant->format('Y-m-d H:i:s'), 'modifiee_le' => null];
+        $lignes = [];
+        foreach ([['Préparation', 'Protection des sols et des meubles', 1000, 'forfait', 18000],
+                  ['Préparation', 'Ponçage et rebouchage des murs', 42000, 'm²', 900],
+                  ['Peinture', 'Peinture murale, deux couches', 42000, 'm²', 1850],
+                  ['Peinture', 'Peinture du plafond', 18000, 'm²', 2100]] as $i => [$categorie, $designation, $quantite, $unite, $prix]) {
+            $lignes[] = ['id' => $i + 1, 'offre_id' => 0, 'rang' => $i + 1, 'designation' => $designation, 'quantite_milliemes' => $quantite,
+                         'unite' => $unite, 'prix_centimes' => $prix, 'a_verifier' => 0, 'entendu' => null, 'produit_id' => null, 'categorie' => $categorie];
+        }
+        return [$offre, $lignes];
     }
 
     /** Une étape de l'assistant du premier lancement. */

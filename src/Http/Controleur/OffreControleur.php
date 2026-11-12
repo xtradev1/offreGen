@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Compte\Marque;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Conteneur;
@@ -104,18 +105,28 @@ final class OffreControleur
      * Tout ce que montrent l'écran de l'offre et son document.
      *
      * @param array<string, string> $parametres
-     * @return array{m: \OffreGen\Compte\Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     * @return array{m: Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
      */
     private function donnees(Request $requete, array $parametres): array
     {
         $portee = new Portee($requete->attributes->getInt('_artisan'));
         $offre = $this->offre($requete, $parametres);
-        $lignes = $this->c->offres($portee)->lignes($offre['id']);
+        return $this->vueDocument($portee, $offre, $this->c->offres($portee)->lignes($offre['id']), $this->c->reglages($portee)->lireMarque());
+    }
+
+    /**
+     * Le document d'une offre, dans la marque donnée : celle de l'artisan, ou un autre modèle pour l'aperçu des réglages.
+     *
+     * @param Offre $offre
+     * @param list<Ligne> $lignes
+     * @return array{m: Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     */
+    public function vueDocument(Portee $portee, array $offre, array $lignes, Marque $m): array
+    {
         $r = $this->c->reglages($portee)->lire();
         $totaux = Totaux::calculer($lignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes);
         $date = new \DateTimeImmutable($offre['modifiee_le'] ?? $offre['cree_le'], new \DateTimeZone('UTC'));
         $valable = $date->setTimezone(new \DateTimeZone('Europe/Zurich'))->modify('+' . $r->validiteJours . ' days')->format('d.m.Y');
-        $m = $this->c->reglages($portee)->lireMarque();
         return [
             'm' => $m,
             // Aperçu à l'écran : le logo par son adresse (la CSP refuse les images en data:) ; pdf() le remplace.

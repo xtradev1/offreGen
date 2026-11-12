@@ -136,6 +136,34 @@ final class MarqueEcranTest extends TestCase
         self::assertStringContainsString('/Subtype /Image', (string) $pdf->getContent());
     }
 
+    /** « Voir en grand » (Xavier, 2026-11-12) : le vrai document, dans le modèle demandé, sans rien enregistrer. */
+    public function testUnModeleSeVoitEnGrandAvantDeLeChoisir(): void
+    {
+        $marque = $this->page('/reglages/marque');
+        self::assertStringContainsString('href="/reglages/modeles/bandeau"', $marque);
+        self::assertStringContainsString('href="/reglages/modeles/bandeau?depuis=bienvenue"', $this->page('/bienvenue/marque'));
+
+        $apercu = $this->page('/reglages/modeles/bandeau');
+        self::assertStringContainsString('class="doc m-bandeau"', $apercu);
+        self::assertStringContainsString('Peinture murale a', $apercu,'la dernière offre de l\'artisan sert d\'exemple');
+        self::assertStringContainsString('href="/reglages/modeles/technique"', $apercu, 'on passe d\'un modèle à l\'autre');
+        self::assertStringContainsString('href="/reglages/marque"', $apercu);
+        self::assertSame('sobre', $this->marqueDeA()['modele'], 'regarder ne change rien');
+
+        // « Choisir ce modèle » enregistre et revient à Ma marque, ou à l'étape de l'assistant.
+        self::assertSame(303, $this->a->post('/reglages', ['modele' => 'bandeau', 'retour' => '/reglages/marque'])->getStatusCode());
+        self::assertSame('bandeau', $this->marqueDeA()['modele']);
+        $this->page('/reglages/modeles/epure?depuis=bienvenue');
+        $r = $this->a->post('/reglages', ['modele' => 'epure', 'retour' => '/bienvenue/marque']);
+        self::assertSame('/bienvenue/marque', $r->headers->get('Location'));
+        self::assertSame('epure', $this->marqueDeA()['modele']);
+
+        // Sans aucune offre, un exemple tient lieu de document.
+        BaseDeTest::pdo()->exec("UPDATE offre SET supprimee_le = '2026-11-01 08:00:00' WHERE artisan_id = {$this->jeu->a}");
+        self::assertStringContainsString('class="doc m-atelier"', $this->page('/reglages/modeles/atelier'));
+        self::assertSame(404, $this->a->get('/reglages/modeles/inconnu')->getStatusCode());
+    }
+
     public function testSansChampsDeMarqueLesReglagesGardentLaMarque(): void
     {
         BaseDeTest::pdo()->exec("UPDATE artisan SET modele = 'atelier', couleur = '#8A5A2B' WHERE id = {$this->jeu->a}");

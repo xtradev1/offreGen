@@ -32,8 +32,12 @@
     <legend>3. Modèle</legend>
     <div class="modeles">
       {% for cle, nom in modeles %}
-        <label class="modele"><input type="radio" name="modele" value="{{ cle }}"{% if champs.modele == cle %} checked{% endif %}>
-          <img src="/img/modeles/{{ cle }}.jpg" alt="" width="180" height="255"><span>{{ nom }}</span></label>
+        <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="{{ cle }}"{% if champs.modele == cle %} checked{% endif %}>
+            <img src="/img/modeles/{{ cle }}.jpg" alt="" width="180" height="255"><span>{{ nom }}</span></label>
+          <a class="voir" href="/reglages/modeles/{{ cle }}{% if assistant %}?depuis=bienvenue{% endif %}" aria-label="Voir le modèle {{ nom }} en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Voir en grand</a>
+        </div>
       {% endfor %}
     </div>
   </fieldset>

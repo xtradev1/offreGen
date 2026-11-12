@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use OffreGen\Compte\Marque;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Controleur\AccueilControleur;
 use OffreGen\Http\Controleur\CatalogueControleur;
@@ -71,6 +72,9 @@ return static function (Conteneur $c): array {
     // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.
     foreach (array_keys(ReglagesControleur::RUBRIQUES) as $nom) {
         $routes[] = new Route("reglages_$nom", "/reglages/$nom", ['GET'], static fn (Request $r): Response => $reglages()->rubrique($r, $nom), Route::ARTISAN);
+    }
+    foreach (array_keys(Marque::MODELES) as $nom) {
+        $routes[] = new Route("reglages_modele_$nom", "/reglages/modeles/$nom", ['GET'], static fn (Request $r): Response => $reglages()->apercuModele($r, $nom), Route::ARTISAN);
     }
     foreach (array_keys(ReglagesControleur::ETAPES) as $nom) {
         $routes[] = new Route("bienvenue_$nom", "/bienvenue/$nom", ['GET'], static fn (Request $r): Response => $reglages()->etape($r, $nom), Route::ARTISAN);

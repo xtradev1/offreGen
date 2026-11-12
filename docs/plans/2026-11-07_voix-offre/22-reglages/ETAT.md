@@ -38,6 +38,9 @@ Xavier essaie sur `http://localhost:8000` avec le compte de démonstration (remi
 - 2026-11-12 : tests adaptés aux nouvelles pages (EcransTest, MarqueEcranTest) ; nouveau `ReglagesRangesTest` (7 tests) ; `SqlHorsDonneesTest` a attrapé du SQL dans `Comptes`, déplacé dans `DepotReglages::assistantARefaire()`.
 - 2026-11-12 : défauts trouvés sur les captures et corrigés : résumé des conditions coupé, lien « Se déconnecter » décalé de 8 px.
 - 2026-11-12 : défaut connu, hors de ce sous-chantier : la puce « 30 / 30 / 40 » touche presque son bord à 390 px.
+- 2026-11-12 : demande de Xavier : « pour les modèles il faut un bouton pour voir le modèle en grand ». Les vignettes (180 × 255 px) seraient floues une fois agrandies : « Voir en grand » ouvre le vrai document dans ce modèle (`/reglages/modeles/{modele}`, une adresse fixe par modèle), avec le logo, la couleur et la dernière offre de l'artisan, un exemple s'il n'en a aucune. Puces pour passer d'un modèle à l'autre, « Choisir ce modèle » enregistre et revient à Ma marque ou à l'étape de l'assistant. Test : `MarqueEcranTest::testUnModeleSeVoitEnGrandAvantDeLeChoisir`. Suite : 236 tests verts, PHPStan sans erreur. Parcours cliqué : aperçu Bandeau puis Moderne, choix, retour à Ma marque avec « Réglages enregistrés ».
+- 2026-11-12 : constat non expliqué : le modèle du compte de démonstration est passé d'Épuré à Sobre entre deux parcours. Pas reproduit (choix, sommaire, aperçu puis retour, étape de l'assistant : le modèle reste). À surveiller.
+- 2026-11-12 : incident : un script de contrôle a imprimé le corps des POST, mot de passe du compte de démonstration compris. Signalé à Xavier, régénération conseillée. Les scripts n'impriment plus le corps des requêtes de connexion.
 
 ## Preuves
 

@@ -373,3 +373,9 @@ a.rubrique .fl { flex: none; font-size: 22px; line-height: 1; color: var(--muted
 .auto-etat.ok { color: var(--ok); }
 .auto-etat.bad { color: var(--bad); }
 .actionbar .passer { flex: 1; display: flex; margin: 0; }
+/* « Voir en grand » sous chaque modèle, et sa page d'aperçu. */
+.modele-case { display: grid; align-content: start; }
+.voir { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px; font-size: 12.5px; color: var(--accent); text-decoration: none; }
+.voir svg.i { width: 14px; height: 14px; }
+.modeles-nav { margin: 0 0 12px; }
+.actionbar .choisir { flex: 1; display: flex; margin: 0; }
