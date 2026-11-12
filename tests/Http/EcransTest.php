@@ -247,20 +247,19 @@ final class EcransTest extends TestCase
         self::assertSame('Peinture murale a', $this->ligneEnBase()['designation']);
     }
 
-    public function testNouvelleOffreEstUnBoutonRondQuiSOuvreSurParlerEtImporter(): void
+    public function testNouvelleOffreEstDeuxBoutonsRondsParlerEtImporter(): void
     {
         $accueil = $this->page('/');
-        self::assertStringContainsString('<a class="fab" href="/import" aria-label="Nouvelle offre" aria-controls="nouvelle-offre" aria-expanded="false" data-fab>', $accueil);
-        // Boutons ronds sans texte : leur nom n'est donné qu'aux lecteurs d'écran.
-        self::assertStringContainsString('<button class="pastille micro" type="button" aria-label="Parler" data-enregistrer hidden>', $accueil);
-        self::assertStringContainsString('<button class="pastille" type="button" aria-label="Importer un fichier" data-importer>', $accueil);
+        // Variante B, choisie par Xavier : pas de « + », le micro à gauche puis l'import, sans texte.
+        self::assertStringNotContainsString('data-fab', $accueil);
+        self::assertMatchesRegularExpression('#<button class="pastille micro" type="button" aria-label="Parler" data-enregistrer hidden>.*</button>\s*<a class="pastille" href="/import" aria-label="Importer un fichier" data-importer>#s', $accueil);
         // Rappel de l'accord du client retiré de l'écran à la demande de Xavier (2026-11-12).
         self::assertStringNotContainsString('demandez son accord', $accueil);
         self::assertStringContainsString('<div class="feuille-fond" data-feuille hidden>', $accueil);
         // Chaque état n'existe qu'une fois, et le formulaire de repli n'apparaît pas sur l'accueil.
         self::assertSame(1, substr_count($accueil, 'data-etat="enregistrement"'));
         self::assertStringNotContainsString('<noscript>', $accueil);
-        // Sans JavaScript, le bouton mène à la page d'import, qui marche seule.
+        // Sans JavaScript, l'import mène à la page d'import, qui marche seule.
         $import = $this->page('/import');
         self::assertStringContainsString('<noscript>', $import);
         self::assertStringContainsString('<label class="rond" for="audio">', $import);

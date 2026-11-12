@@ -130,7 +130,7 @@ function bandeaux() {
   }
 }
 
-// Calques : fenêtres du bas et pastilles du bouton rond. Ils montent à l'ouverture, redescendent à la
+// Calques : fenêtres du bas (enregistrement, fiche produit). Ils montent à l'ouverture, redescendent à la
 // fermeture. Le retour du téléphone ferme le calque du dessus au lieu de quitter la page.
 const DUREE_ANIMATION = 330;
 const minuteries = new WeakMap();
@@ -171,19 +171,11 @@ const calques = (() => {
     },
     // La fermeture passe par l'historique : popstate cache le calque, comme pour le bouton retour.
     fermer(c) { if (ouvert() === c) history.back(); },
-    // Les pastilles cèdent leur place à la fenêtre d'enregistrement, sur la même entrée d'historique.
-    remplacer(ancien, nouveau) {
-      const i = pile.indexOf(ancien);
-      if (i < 0) { this.ouvrir(nouveau); return; }
-      pile[i] = nouveau;
-      ancien.cacher();
-      nouveau.montrer();
-    },
   };
 })();
 
-// Nouvelle offre : parler ou importer. Sur l'accueil, un bouton rond s'ouvre en deux pastilles, puis
-// l'enregistrement et l'envoi montent dans une fenêtre du bas ; sur /import, tout est dans la page.
+// Nouvelle offre : parler ou importer. Sur l'accueil, deux boutons ronds au centre ; l'enregistrement
+// et l'envoi montent dans une fenêtre du bas. Sur /import, tout est dans la page.
 // Le micro n'est permis que sur https ou sur localhost. Les deux chemins partent par POST /import.
 function nouvelleOffre() {
   const zone = document.querySelector('[data-nouvelle]');
@@ -193,9 +185,6 @@ function nouvelleOffre() {
   const entree = el('[data-envoi-fichier]');
   const feuille = el('[data-feuille]');
   const fermerX = el('[data-fermer]');
-  const fab = el('[data-fab]');
-  const boutons = el('[data-fab-zone]');
-  const dialFond = el('[data-dial-fond]');
   const importer = el('[data-importer]');
   const micro = el('[data-enregistrer]');
   const possible = window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder;
@@ -210,32 +199,6 @@ function nouvelleOffre() {
   // Retour sur une page gardée en mémoire par le navigateur : la liste a changé depuis.
   window.addEventListener('pageshow', (e) => { if (e.persisted) window.location.reload(); });
 
-  // PROVISOIRE, à retirer quand Xavier aura choisi : variante A (« + » qui s'ouvre) ou B (deux boutons
-  // posés), choisie par ?variante=a|b dans l'adresse et gardée par le navigateur.
-  if (boutons) {
-    let variante = new URLSearchParams(window.location.search).get('variante');
-    try {
-      if (variante === 'a' || variante === 'b') window.localStorage.setItem('offregen-variante', variante);
-      else variante = window.localStorage.getItem('offregen-variante');
-    } catch (e) { /* stockage refusé : variante A */ }
-    boutons.dataset.variante = variante === 'b' ? 'b' : 'a';
-  }
-
-  const pastilles = boutons && {
-    montrer: () => {
-      apparaitre(dialFond);
-      boutons.classList.add('ouvert');
-      fab.setAttribute('aria-expanded', 'true');
-      fab.setAttribute('aria-label', 'Fermer');
-      setTimeout(() => (micro.hidden ? importer : micro).focus({ preventScroll: true }), 60);
-    },
-    cacher: () => {
-      disparaitre(dialFond);
-      boutons.classList.remove('ouvert');
-      fab.setAttribute('aria-expanded', 'false');
-      fab.setAttribute('aria-label', 'Nouvelle offre');
-    },
-  };
   const fenetre = feuille && {
     montrer: () => apparaitre(feuille),
     cacher: () => { disparaitre(feuille); etatCourant = 'choix'; occupe = false; },
@@ -254,22 +217,14 @@ function nouvelleOffre() {
     if (!fenetre) return;
     feuille.classList.toggle('pleine', etat === 'enregistrement');
     if (etat === 'choix') { calques.fermer(fenetre); return; }
-    if (calques.ouvert() === fenetre) return;
-    if (calques.ouvert() === pastilles) calques.remplacer(pastilles, fenetre); else calques.ouvrir(fenetre);
+    if (calques.ouvert() !== fenetre) calques.ouvrir(fenetre);
   };
 
-  if (fab) {
-    fab.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (calques.ouvert() === pastilles) calques.fermer(pastilles); else calques.ouvrir(pastilles);
-    });
-    dialFond.addEventListener('click', () => calques.fermer(pastilles));
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && calques.ouvert() === pastilles) calques.fermer(pastilles); });
-  }
-  if (importer) importer.addEventListener('click', () => entree.click());
+  // Importer : avec JavaScript, le choix du fichier s'ouvre sur place ; sans, le lien mène à /import.
+  if (importer) importer.addEventListener('click', (e) => { e.preventDefault(); entree.click(); });
   // Onde au toucher des boutons ronds.
   zone.addEventListener('pointerdown', (e) => {
-    const b = e.target.closest('.fab, .pastille');
+    const b = e.target.closest('.pastille');
     if (!b) return;
     b.classList.remove('touche');
     void b.offsetWidth;

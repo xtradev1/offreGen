@@ -1,8 +1,7 @@
 {# Nouvelle offre : parler ou importer, en un geste.
-   Accueil (rond = true) : des boutons ronds au centre, au pouce, sans texte. Deux variantes à l'essai
-   (choix de Xavier attendu, app.js les applique) : A, un « + » qui s'ouvre sur le micro à gauche et
-   l'import à droite ; B, le micro et l'import posés côte à côte. L'enregistrement et l'envoi montent
-   ensuite dans une fenêtre du bas. Sans JavaScript, le « + » mène à /import.
+   Accueil (rond = true) : deux boutons ronds au centre, au pouce, sans texte : le micro à gauche,
+   l'import à droite. L'enregistrement et l'envoi montent ensuite dans une fenêtre du bas.
+   Sans JavaScript, l'import mène à /import ; le micro, qui a besoin de JavaScript, reste caché.
    Page /import : les deux boutons dans la page, qui marche aussi sans JavaScript. #}
 {% set icone_micro %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>{% endset %}
 {% set icone_import %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>{% endset %}
@@ -39,13 +38,11 @@
   </form>
 
   {% if rond %}
-    <div class="dial-fond" data-dial-fond hidden></div>
-    <div class="fab-zone" id="nouvelle-offre" data-fab-zone data-variante="a">
+    {# Choix de Xavier du 2026-11-12 (variante B) : le micro à gauche, l'import à droite, posés d'emblée. #}
+    <div class="fab-zone">
       <p class="dial-note" data-sans-micro hidden>{{ sans_micro }}</p>
       <button class="pastille micro" type="button" aria-label="Parler" data-enregistrer hidden>{{ icone_micro }}</button>
-      <a class="fab" href="/import" aria-label="Nouvelle offre" aria-controls="nouvelle-offre" aria-expanded="false" data-fab>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
-      <button class="pastille" type="button" aria-label="Importer un fichier" data-importer>{{ icone_import }}</button>
+      <a class="pastille" href="/import" aria-label="Importer un fichier" data-importer>{{ icone_import }}</a>
     </div>
     <div class="feuille-fond" data-feuille hidden>
       <div class="feuille" role="dialog" aria-modal="true" aria-label="Nouvelle offre">

@@ -6,6 +6,7 @@ namespace OffreGen\Tests\Offre;
 
 use OffreGen\Offre\ExtracteurApi;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -58,6 +59,38 @@ final class ExtracteurApiTest extends TestCase
         self::assertSame(['type' => 'function', 'function' => ['name' => 'proposer_offre']], $corps['tool_choice']);
         self::assertStringContainsString("4|Peinture intérieure|Peinture des murs, 2 couches|m²|28.00|murs", $corps['messages'][1]['content']);
         self::assertStringContainsString("8|Peinture intérieure|Peinture anti-moisissure|m²|?|", $corps['messages'][1]['content']);
+    }
+
+    public function testLesJetonsConsommesVontAuJournalSansLeTexte(): void
+    {
+        $journal = new class extends AbstractLogger {
+            /** @var list<string> */
+            public array $lignes = [];
+
+            public function log($level, string|\Stringable $message, array $context = []): void
+            {
+                $this->lignes[] = $level . ' ' . $message;
+            }
+
+            public function vider(): void
+            {
+                $this->lignes = [];
+            }
+        };
+        $donnees = ['choices' => [['message' => ['role' => 'assistant', 'content' => '', 'tool_calls' => [
+            ['id' => 'appel-1', 'type' => 'function', 'function' => ['name' => 'proposer_offre', 'arguments' => self::ARGUMENTS_REELS]],
+        ]]]], 'usage' => ['prompt_tokens' => 2140, 'completion_tokens' => 310, 'total_tokens' => 2450]];
+        $http = new MockHttpClient(new MockResponse((string) json_encode($donnees), ['http_code' => 200]));
+        (new ExtracteurApi($http, 'https://api.exemple.test/v1', 'jeton', 'qwen-test', $journal))->extraire('Madame Secret, rue Privée 3.', self::CATALOGUE);
+
+        self::assertContains('info offreGen, extraction : 2140 jetons envoyés, 310 reçus, modèle qwen-test.', $journal->lignes);
+        self::assertStringNotContainsString('Secret', implode("\n", $journal->lignes));
+
+        // Sans compte de jetons dans la réponse : rien d'inventé.
+        $journal->vider();
+        (new ExtracteurApi(new MockHttpClient(self::reponseOutil(self::ARGUMENTS_REELS)), 'https://api.exemple.test/v1', 'jeton', 'qwen-test', $journal))
+            ->extraire('Dictée.', self::CATALOGUE);
+        self::assertStringNotContainsString('jetons', implode("\n", $journal->lignes));
     }
 
     public function testReponseReelleDevientDesLignesDuCatalogue(): void

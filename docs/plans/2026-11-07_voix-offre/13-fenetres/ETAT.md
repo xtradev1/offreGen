@@ -28,6 +28,9 @@ Recette de Xavier dans le navigateur. Ensuite : commit et PR sur son accord (so
 - 2026-11-12 : Xavier : « Il faut absolument qu'on puisse choisir les conditions de paiement et la validité de l'offre. Dans les paramètres [...] facile à changer [...] des paramètres presets ». Les deux champs existaient (sous-chantier 12) : ajout des choix d'un toucher, carte remontée en tête des Réglages.
 - 2026-11-12 : Xavier demande aussi logo, couleurs et 4 à 6 modèles de document. Reporté à un sous-chantier dédié (envoi d'image : contrôle, stockage, PDF), avec maquette des modèles d'abord.
 
+- 2026-11-12 : Xavier choisit la variante B. Variante A, paramètre ?variante et méthode calques.remplacer retirés (plus aucun appelant). Sans JavaScript, l'import est un lien vers /import.
+- 2026-11-12 : jetons consommés par l'extraction écrits au journal de l'application (nombres seuls, jamais le texte), pour chiffrer le coût d'une offre. Test écrit, vu rouge sans l'appel, vert avec. Premier relevé réel (dictée de synthèse de 28 s, catalogue de 12 produits, 6 lignes) : 1266 jetons envoyés, 333 reçus ; offre prête 22 s après l'envoi.
+
 ## Décisions
 
 | Date | Décision | Raison |
@@ -36,7 +39,7 @@ Recette de Xavier dans le navigateur. Ensuite : commit et PR sur son accord (so
 | 2026-11-12 | Fiche produit chargée dans une fenêtre par-dessus la liste, à partir des pages existantes ; aucune route nouvelle. La liste se met à jour sans rechargement. | Rester dans la liste ; les pages restent le repli sans JavaScript, et l'isolation n'a rien de neuf à couvrir. |
 | 2026-11-12 | Le retour du téléphone ferme la fenêtre du dessus ; pendant l'enregistrement, il ne ferme rien. | Sur Android, le retour quittait la page. |
 | 2026-11-12 | Fiche produit : quatre champs visibles ; nouvelle catégorie et mots de la dictée repliés, ouverts d'office quand ils servent. | « Je clique les 3-4 éléments que j'ai à mettre ». |
-| 2026-11-12 | Boutons ronds au centre, sans texte (nom pour les lecteurs d'écran seulement), onde au toucher. Deux variantes à l'essai par ?variante=a ou b, code provisoire. | Demande de Xavier : « le toucher avec le pouce », « deux variantes ». |
+| 2026-11-12 | Boutons ronds au centre, sans texte (nom pour les lecteurs d'écran seulement), onde au toucher : variante B, micro à gauche, import à droite. | Demande de Xavier : « le toucher avec le pouce », « deux variantes ». |
 | 2026-11-12 | Rappel « demandez son accord » retiré de l'écran. | Décision de Xavier, contraire à la SPEC point 7 ; à reporter dans les conditions d'utilisation. |
 | 2026-11-12 | Réglages : validité en 15, 30, 60, 90 jours et quatre conditions de paiement d'un toucher ; le champ reste libre. | « Facile à changer », « presets ». |
 | 2026-11-12 | Remise à zéro de la démo : deux offres d'exemple par métier, clients inventés, lignes tirées du catalogue fictif. | Un compte de démonstration doit montrer des offres. |

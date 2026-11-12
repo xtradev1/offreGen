@@ -65,7 +65,23 @@ final class ExtracteurApi implements Extracteur
             'timeout' => 300,
         ]);
         $donnees = ReponseApi::lire($reponse, 'Extraction');
+        $this->noterJetons($donnees);
         return $this->valider(self::argumentsDeLOutil($donnees), $catalogue);
+    }
+
+    /**
+     * Jetons consommés, tels que le service les déclare : de quoi chiffrer le coût d'une offre.
+     * Seulement des nombres, jamais le texte de la dictée. Rien si le service ne les donne pas.
+     *
+     * @param array<string, mixed> $donnees
+     */
+    private function noterJetons(array $donnees): void
+    {
+        $usage = $donnees['usage'] ?? null;
+        if (!is_array($usage) || !is_int($usage['prompt_tokens'] ?? null) || !is_int($usage['completion_tokens'] ?? null)) {
+            return;
+        }
+        $this->journal->info(sprintf('offreGen, extraction : %d jetons envoyés, %d reçus, modèle %s.', $usage['prompt_tokens'], $usage['completion_tokens'], $this->modele));
     }
 
     /**
