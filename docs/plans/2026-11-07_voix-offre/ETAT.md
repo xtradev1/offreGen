@@ -66,7 +66,7 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | 13 | Fenêtres qui montent : bouton rond Nouvelle offre, fiche produit par-dessus la liste, offres d'exemple de la démo (retour de Xavier du 2026-11-12) | `13-fenetres/` | 12 | livré en code, recette de Xavier attendue |
 | 14 | Marque et modèles : logo, couleur, six modèles d'offre et de facture, QR-facture (demande de Xavier du 2026-11-12) | `14-marque-modeles/` | 13 | maquette, réponse de Xavier attendue |
 | 15 | Enregistrement court et suivi en direct : 5 s au minimum, dictée vide donne une offre vide, étapes qui avancent | `15-suivi-envoi/` | 13 | livré en code, recette de Xavier attendue |
-| 16 | Marque et modèles dans l'application : logo, couleur, modèles retenus | (à ouvrir) | 14 | en attente : « Moderne » gardé ou non |
+| 16 | Marque et modèles dans l'application : logo, couleur, modèles retenus | `16-marque/` | 14 | livré en code, recette de Xavier attendue |
 | 17 | Clients : liste, fiche, rattachement aux offres | (à ouvrir) | 12 | à cadrer |
 | 18 | Facture : « Facturer » depuis l'offre, numéro modifiable, QR-facture, PDF | (à ouvrir) | 14, 16 | à cadrer |
 | 19 | Envoi par courriel de l'offre et de la facture | (à ouvrir) | 18 | plus tard : « pdf pour l'instant » (Xavier, 2026-11-12) |
