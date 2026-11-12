@@ -478,26 +478,42 @@ function fichesEnFenetre() {
   });
 }
 
-// Réglages : une proposition touchée remplit son champ ; la proposition égale au champ reste marquée.
-function propositions() {
-  const puces = [...document.querySelectorAll('.puce[data-remplit]')];
-  const marquer = (champ) => puces
-    .filter((p) => p.dataset.remplit === champ.id)
-    .forEach((p) => p.setAttribute('aria-pressed', String(p.dataset.valeur === champ.value.trim())));
-  puces.forEach((p) => p.addEventListener('click', () => {
-    const champ = document.getElementById(p.dataset.remplit);
-    if (!champ) return;
-    champ.value = p.dataset.valeur;
-    marquer(champ);
-  }));
-  new Set(puces.map((p) => p.dataset.remplit)).forEach((id) => {
-    const champ = document.getElementById(id);
-    if (champ) champ.addEventListener('input', () => marquer(champ));
+// Réglages : la phrase « Paiement » de l'offre suit les choix avant l'enregistrement.
+function choixDesReglages() {
+  const bloc = document.querySelector('[data-paiement]');
+  const sortie = bloc && bloc.querySelector('[data-phrase]');
+  if (!sortie) return;
+  const form = bloc.closest('form');
+  const coche = (nom) => { const c = form.querySelector('input[name="' + nom + '"]:checked'); return c ? c.value : ''; };
+  const tape = (nom) => (form.elements[nom] ? form.elements[nom].value.trim() : '');
+  // Même règle que Reglages::conditionsPaiement(), qui reste celle du document.
+  const phrase = () => {
+    if (coche('paiement_type') === 'acomptes') {
+      const choix = coche('paiement_acomptes_choix');
+      const t = ((choix === 'autre' ? tape('paiement_acomptes') : choix).match(/\d+/g) || []).map(Number);
+      const n = t.length;
+      const juste = n >= 2 && n <= 4 && t.every((x) => x >= 1 && x <= 99) && t.reduce((s, x) => s + x, 0) === 100;
+      if (!juste) return 'acomptes à compléter, ils doivent faire 100 %';
+      return t.map((p, i) => p + ' % ' + (i === 0 ? 'à la commande' : i === n - 1 ? 'à la fin des travaux' : 'en cours de travaux')).join(', ') + '.';
+    }
+    const choix = coche('paiement_jours_choix');
+    const j = choix === 'autre' ? tape('paiement_jours') : choix;
+    if (!/^\d{1,3}$/.test(j) || +j < 1 || +j > 120) return 'délai à compléter, de 1 à 120 jours';
+    return coche('paiement_type') === 'net' ? 'Net à ' + +j + ' jours dès réception de la facture.' : 'À ' + +j + ' jours dès la fin des travaux.';
+  };
+  form.addEventListener('input', () => { sortie.textContent = phrase(); });
+  form.addEventListener('change', (e) => {
+    sortie.textContent = phrase();
+    // « Autre » touché : le champ qui vient d'apparaître reçoit le clavier.
+    if (e.target.type === 'radio' && e.target.value === 'autre') {
+      const champ = e.target.closest('.choix').querySelector('.si-autre input');
+      if (champ) champ.focus();
+    }
   });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  propositions();
+  choixDesReglages();
   corrections();
   envoisDeFormulaires();
   filtres();

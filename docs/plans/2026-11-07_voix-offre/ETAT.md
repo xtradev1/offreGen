@@ -42,6 +42,7 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-12 : sous-chantier 12 ouvert et livré en code (retour de recette de Xavier sur 11). Détail et preuves dans `12-generer-offre/ETAT.md`.
 - 2026-11-12 : sous-chantier 13 ouvert et livré en code (retour de Xavier sur 12). Détail et preuves dans `13-fenetres/ETAT.md`.
 - 2026-11-12 : sous-chantiers 01, 10, 11, 12 et 13 commités sur `chantier-voix-offre` (176a2a7) et poussés ; PR à ouvrir par Xavier (gh absent). Sous-chantier 14 ouvert, maquette écrite.
+- 2026-11-12 : écart à la SPEC découvert (sous-chantier 10) : l'extraction envoie tout le catalogue en un appel, la SPEC veut des candidats et deux appels au plus. Xavier veut comparer les deux versions. Détail dans `13-fenetres/ETAT.md`.
 
 ## Sous-chantiers
 

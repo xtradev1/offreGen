@@ -12,26 +12,54 @@
   {% if erreurs is not empty %}<p class="alerte bad" role="alert">Les réglages ne sont pas enregistrés&nbsp;: corrigez les champs signalés.</p>{% endif %}
   <form id="reglages" method="post" action="/reglages">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
-    {# En premier : c'est ce qui change le plus souvent. Un toucher sur une proposition remplit le champ
-       (app.js) ; le champ reste libre pour tout autre texte. #}
+    {# En premier : c'est ce qui change le plus souvent. Des boutons radio habillés en pastilles : un toucher
+       choisit, « Autre » ouvre la saisie (CSS :has, sans JavaScript). La phrase de l'offre se construit
+       des choix, dans Reglages::conditionsPaiement(). #}
     <div class="card">
       <h6>Conditions de l'offre</h6>
-      <div class="champ">
-        <label for="validite_jours">Offre valable (jours)</label>
-        <div class="puces quatre" role="group" aria-label="Durées proposées">
-          {% for j in validites %}<button class="puce" type="button" data-remplit="validite_jours" data-valeur="{{ j }}" aria-pressed="{{ champs.validite_jours == j ~ '' ? 'true' : 'false' }}">{{ j }}&nbsp;jours</button>{% endfor %}
+      <fieldset class="groupe choix">
+        <legend>Offre valable</legend>
+        <div class="puces quatre">
+          {% for j in validites %}<label class="puce"><input type="radio" name="validite_choix" value="{{ j }}"{% if champs.validite_choix == j ~ '' %} checked{% endif %}>{{ j }}&nbsp;jours</label>{% endfor %}
+          <label class="puce"><input type="radio" name="validite_choix" value="autre"{% if champs.validite_choix == 'autre' %} checked{% endif %}>Autre</label>
         </div>
-        <input id="validite_jours" name="validite_jours" value="{{ champs.validite_jours }}" inputmode="numeric" required{{ f.invalide(erreurs, 'validite_jours') }}>
+        <div class="champ si-autre">
+          <label for="validite_jours">Nombre de jours, de 1 à 365</label>
+          <input id="validite_jours" name="validite_jours" value="{{ champs.validite_jours }}" inputmode="numeric" autocomplete="off"{{ f.invalide(erreurs, 'validite_jours') }}>
+        </div>
         {{ f.erreur(erreurs, 'validite_jours') }}
-      </div>
-      <div class="champ">
-        <label for="conditions_paiement">Paiement</label>
-        <div class="puces" role="group" aria-label="Conditions proposées">
-          {% for texte in paiements %}<button class="puce long" type="button" data-remplit="conditions_paiement" data-valeur="{{ texte }}" aria-pressed="{{ champs.conditions_paiement == texte ? 'true' : 'false' }}">{{ texte }}</button>{% endfor %}
+      </fieldset>
+
+      <fieldset class="groupe paiement" data-paiement>
+        <legend>Paiement</legend>
+        <div class="puces trois">
+          {% for type, libelle in types %}<label class="puce"><input type="radio" name="paiement_type" value="{{ type }}"{% if champs.paiement_type == type %} checked{% endif %}>{{ libelle }}</label>{% endfor %}
         </div>
-        <textarea id="conditions_paiement" name="conditions_paiement" rows="2" maxlength="255" required{{ f.invalide(erreurs, 'conditions_paiement') }}>{{ champs.conditions_paiement }}</textarea>
-        {{ f.erreur(erreurs, 'conditions_paiement') }}
-      </div>
+        {{ f.erreur(erreurs, 'paiement_type') }}
+        <div class="choix si-delai">
+          <div class="puces cinq">
+            {% for j in delais %}<label class="puce"><input type="radio" name="paiement_jours_choix" value="{{ j }}"{% if champs.paiement_jours_choix == j ~ '' %} checked{% endif %}>{{ j }}&nbsp;j</label>{% endfor %}
+            <label class="puce"><input type="radio" name="paiement_jours_choix" value="autre"{% if champs.paiement_jours_choix == 'autre' %} checked{% endif %}>Autre</label>
+          </div>
+          <div class="champ si-autre">
+            <label for="paiement_jours">Nombre de jours, de 1 à 120</label>
+            <input id="paiement_jours" name="paiement_jours" value="{{ champs.paiement_jours }}" inputmode="numeric" autocomplete="off"{{ f.invalide(erreurs, 'paiement_jours') }}>
+          </div>
+          {{ f.erreur(erreurs, 'paiement_jours') }}
+        </div>
+        <div class="choix si-acomptes">
+          <div class="puces quatre">
+            {% for a in acomptes %}<label class="puce"><input type="radio" name="paiement_acomptes_choix" value="{{ a }}"{% if champs.paiement_acomptes_choix == a %} checked{% endif %}>{{ a|replace({',': ' / '}) }}</label>{% endfor %}
+            <label class="puce"><input type="radio" name="paiement_acomptes_choix" value="autre"{% if champs.paiement_acomptes_choix == 'autre' %} checked{% endif %}>Autre</label>
+          </div>
+          <div class="champ si-autre">
+            <label for="paiement_acomptes">Acomptes en %, de 2 à 4, qui font 100</label>
+            <input id="paiement_acomptes" name="paiement_acomptes" value="{{ champs.paiement_acomptes }}" placeholder="30, 30, 40" autocomplete="off"{{ f.invalide(erreurs, 'paiement_acomptes') }}>
+          </div>
+          {{ f.erreur(erreurs, 'paiement_acomptes') }}
+        </div>
+        <p class="phrase">Sur l'offre&nbsp;: «&nbsp;<span data-phrase>{{ phrase }}</span>&nbsp;»</p>
+      </fieldset>
       <label class="check"><input type="checkbox" name="arrondi" value="1"{% if arrondi %} checked{% endif %}>
         <span>Arrondir le total aux 5 centimes<small>L'écart s'affiche sur la ligne «&nbsp;Arrondi&nbsp;».</small></span></label>
       <p class="muted petit">Changer la TVA ou l'arrondi change aussi le total des offres déjà faites.</p>

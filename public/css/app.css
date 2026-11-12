@@ -247,10 +247,28 @@ a.nm:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* Propositions d'un toucher : elles remplissent le champ qui suit. */
 .puces { display: flex; flex-wrap: wrap; gap: 8px; }
 .puce { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; min-height: 44px; cursor: pointer; transition: background .15s ease, color .15s ease, scale .12s ease; -webkit-tap-highlight-color: transparent; }
-.puces.quatre { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-.puces.quatre .puce { padding: 8px 2px; white-space: nowrap; }
-.puce.long { border-radius: 12px; text-align: left; width: 100%; }
-.puce[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.puces.trois, .puces.quatre, .puces.cinq { display: grid; gap: 6px; }
+.puces.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.puces.quatre { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.puces.cinq { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.puces.trois .puce, .puces.quatre .puce, .puces.cinq .puce { padding: 8px 2px; text-align: center; }
+.puces.quatre .puce, .puces.cinq .puce { white-space: nowrap; }
+/* Pastille qui porte un bouton radio : le rond est caché, la pastille cochée prend la couleur. */
+label.puce { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.puce input[type="radio"] { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.puce:has(input:checked) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.puce:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.groupe { border: 0; padding: 0; margin: 0 0 16px; min-width: 0; }
+.groupe legend { font-size: 14px; font-weight: 600; padding: 0; margin: 0 0 8px; }
+/* Ce qui suit un choix n'apparaît que quand il sert. */
+.si-autre, .si-delai, .si-acomptes { display: none; }
+.choix:has(> .puces input[value="autre"]:checked) > .si-autre { display: grid; margin: 10px 0 0; }
+.paiement:has(input[name="paiement_type"][value="jours"]:checked) .si-delai,
+.paiement:has(input[name="paiement_type"][value="net"]:checked) .si-delai,
+.paiement:has(input[name="paiement_type"][value="acomptes"]:checked) .si-acomptes { display: block; margin-top: 10px; }
+@supports not selector(:has(*)) { .si-autre, .si-delai, .si-acomptes { display: block; margin-top: 10px; } }
+.phrase { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
+.phrase span { color: var(--ink); }
 .puce:active { scale: .96; }
 .puce:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .puce { transition: none; } }

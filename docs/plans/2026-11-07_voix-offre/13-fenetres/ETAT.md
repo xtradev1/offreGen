@@ -31,6 +31,11 @@ Recette de Xavier dans le navigateur. Ensuite : commit et PR sur son accord (so
 - 2026-11-12 : Xavier choisit la variante B. Variante A, paramètre ?variante et méthode calques.remplacer retirés (plus aucun appelant). Sans JavaScript, l'import est un lien vers /import.
 - 2026-11-12 : jetons consommés par l'extraction écrits au journal de l'application (nombres seuls, jamais le texte), pour chiffrer le coût d'une offre. Test écrit, vu rouge sans l'appel, vert avec. Premier relevé réel (dictée de synthèse de 28 s, catalogue de 12 produits, 6 lignes) : 1266 jetons envoyés, 333 reçus ; offre prête 22 s après l'envoi.
 
+- 2026-11-12 : retour de Xavier sur les conditions : validité « 15, 30, 60, et le 90 tu le transformes en un custom [...] autre » ; « si c'est 0 jours [...] l'offre n'a pas de validité [...] ça c'est dangereux je trouve » ; paiement « paiement à [...] 30 jours, 10 jours, 15 jours, 20 jours », « une version net », « plusieurs acomptes [...] 30 %, 30 %, 40 % » ; « il faut vraiment simplifier ».
+- 2026-11-12 : interprété : une offre sans validité (vide ou 0) est refusée, puisque Xavier la juge dangereuse. À confirmer.
+- 2026-11-12 : paiement stocké en champs (type, jours, acomptes), phrase du document fabriquée par Reglages::conditionsPaiement() ; texte libre conditions_paiement retiré (migration Version20261112000004, jouée en dev et en test ; aucune production). Choix en boutons radio habillés en pastilles, « Autre » et détails affichés par CSS :has, sans JavaScript ; aperçu de la phrase en direct par app.js.
+- 2026-11-12 : question de Xavier : les coûts donnés comprennent-ils son « système d'optimisation » ? Non. Écart de Claude découvert : la SPEC (Architecture, d'après le cadrage section 5) veut un catalogue jamais envoyé en entier et deux appels au plus ; l'extraction du sous-chantier 10 envoie tout le catalogue en un appel avec outil. Écart non consigné jusqu'ici. Xavier veut pouvoir tester les deux versions.
+
 ## Décisions
 
 | Date | Décision | Raison |

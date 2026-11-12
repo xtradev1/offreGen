@@ -50,7 +50,7 @@ final class EcransTest extends TestCase
     public function testNonAssujettiRetireLaTvaDeLOffre(): void
     {
         $this->page('/reglages');
-        self::assertSame(303, $this->a->post('/reglages', ['entreprise' => 'Peinture Exemple', 'tva' => '0', 'arrondi' => '1', 'validite_jours' => '30', 'conditions_paiement' => 'À 30 jours.'])->getStatusCode());
+        self::assertSame(303, $this->a->post('/reglages', ['entreprise' => 'Peinture Exemple', 'tva' => '0', 'arrondi' => '1', 'validite_jours' => '30', 'paiement_jours' => '30'])->getStatusCode());
         self::assertStringContainsString('Réglages enregistrés', $this->page('/reglages'));
         self::assertSame(['entreprise' => 'Peinture Exemple', 'tva_pour_dix_mille' => 0, 'arrondi_cinq_centimes' => 1],
             BaseDeTest::ligne("SELECT entreprise, tva_pour_dix_mille, arrondi_cinq_centimes FROM artisan WHERE id = {$this->jeu->a}"));
@@ -63,7 +63,7 @@ final class EcransTest extends TestCase
     public function testSansArrondiLeTotalResteAuCentime(): void
     {
         $this->page('/reglages');
-        $this->a->post('/reglages', ['entreprise' => 'Entreprise A', 'tva' => '810', 'validite_jours' => '30', 'conditions_paiement' => 'À 30 jours.']);
+        $this->a->post('/reglages', ['entreprise' => 'Entreprise A', 'tva' => '810', 'validite_jours' => '30', 'paiement_jours' => '30']);
         // 231.25 + 18.73 = 249.98, sans la ligne « Arrondi ».
         $offre = $this->page($this->offre);
         self::assertStringContainsString("CHF\u{00A0}249.98", $offre);
@@ -326,31 +326,43 @@ final class EcransTest extends TestCase
         $page = $this->page('/reglages');
         // La carte des conditions vient en premier : c'est elle qui change le plus souvent.
         self::assertLessThan(strpos($page, 'Entreprise, en tête'), strpos($page, 'Conditions de l&#039;offre') ?: strpos($page, "Conditions de l'offre"));
-        foreach (Reglages::VALIDITES_PROPOSEES as $jours) {
-            self::assertStringContainsString('data-remplit="validite_jours" data-valeur="' . $jours . '"', $page);
-        }
-        self::assertStringContainsString('data-remplit="validite_jours" data-valeur="30" aria-pressed="true"', $page);
-        self::assertStringContainsString('data-remplit="validite_jours" data-valeur="60" aria-pressed="false"', $page);
-        foreach (Reglages::PAIEMENTS_PROPOSES as $texte) {
-            self::assertStringContainsString('data-valeur="' . htmlspecialchars($texte, ENT_QUOTES) . '"', $page);
-        }
+        // Valeurs par défaut cochées : 30 jours de validité, paiement à 30 jours.
+        self::assertStringContainsString('name="validite_choix" value="30" checked', $page);
+        self::assertStringContainsString('name="validite_choix" value="autre">Autre', $page);
+        self::assertStringNotContainsString('value="90"', $page);
+        self::assertStringContainsString('name="paiement_type" value="jours" checked', $page);
+        self::assertStringContainsString('name="paiement_jours_choix" value="30" checked', $page);
+        self::assertStringContainsString('<span data-phrase>À 30 jours dès la fin des travaux.</span>', $page);
 
-        // Un choix tout fait s'enregistre comme une saisie, et l'écran le montre choisi.
-        $paiement = Reglages::PAIEMENTS_PROPOSES[2];
+        // Acomptes « Autre » : enregistrés, cochés au retour, et la phrase va dans le document.
         self::assertSame(303, $this->a->post('/reglages', ['entreprise' => 'Peinture Exemple', 'tva' => '810', 'arrondi' => '1',
-            'validite_jours' => '60', 'conditions_paiement' => $paiement])->getStatusCode());
-        self::assertSame(['validite_jours' => 60, 'conditions_paiement' => $paiement],
-            BaseDeTest::ligne("SELECT validite_jours, conditions_paiement FROM artisan WHERE id = {$this->jeu->a}"));
+            'validite_choix' => 'autre', 'validite_jours' => '45', 'paiement_type' => 'acomptes',
+            'paiement_acomptes_choix' => 'autre', 'paiement_acomptes' => '20, 30, 50'])->getStatusCode());
+        self::assertSame(['validite_jours' => 45, 'paiement_type' => 'acomptes', 'paiement_acomptes' => '20,30,50'],
+            BaseDeTest::ligne("SELECT validite_jours, paiement_type, paiement_acomptes FROM artisan WHERE id = {$this->jeu->a}"));
         $page = $this->page('/reglages');
-        self::assertStringContainsString('data-remplit="validite_jours" data-valeur="60" aria-pressed="true"', $page);
-        self::assertStringContainsString('data-valeur="' . htmlspecialchars($paiement, ENT_QUOTES) . '" aria-pressed="true"', $page);
+        self::assertStringContainsString('name="validite_choix" value="autre" checked', $page);
+        self::assertStringContainsString('name="paiement_acomptes_choix" value="autre" checked', $page);
+        self::assertStringContainsString('value="20, 30, 50"', $page);
+        $phrase = "20\u{00A0}% à la commande, 30\u{00A0}% en cours de travaux, 50\u{00A0}% à la fin des travaux.";
+        self::assertStringContainsString($phrase, $page);
+        self::assertStringContainsString($phrase, $this->page($this->offre . '/document'));
+
+        // Pas d'offre sans validité ; des acomptes qui ne font pas 100 sont refusés, rien n'est changé.
+        $this->page('/reglages');
+        $refus = $this->a->post('/reglages', ['entreprise' => 'Peinture Exemple', 'tva' => '810', 'validite_choix' => 'autre', 'validite_jours' => '0',
+            'paiement_type' => 'acomptes', 'paiement_acomptes_choix' => 'autre', 'paiement_acomptes' => '30, 30']);
+        self::assertSame(422, $refus->getStatusCode());
+        self::assertStringContainsString("L&#039;offre doit avoir une durée de validité", (string) $refus->getContent());
+        self::assertStringContainsString('De 2 à 4 acomptes qui font 100', (string) $refus->getContent());
+        self::assertSame(45, BaseDeTest::ligne("SELECT validite_jours FROM artisan WHERE id = {$this->jeu->a}")['validite_jours']);
     }
 
     public function testReglagesDeLEnteteNormalisesEtRefuses(): void
     {
         $this->page('/reglages');
         $champs = ['entreprise' => 'Peinture A', 'adresse' => "Rue 1\n2800 Delémont", 'telephone' => '032 422 00 00', 'courriel_contact' => 'info@exemple.ch',
-                   'ide' => 'che 123 456 789 tva', 'tva' => '810', 'arrondi' => '1', 'validite_jours' => '45', 'conditions_paiement' => 'À 10 jours.'];
+                   'ide' => 'che 123 456 789 tva', 'tva' => '810', 'arrondi' => '1', 'validite_jours' => '45', 'paiement_jours' => '30'];
         self::assertSame(303, $this->a->post('/reglages', $champs)->getStatusCode());
         self::assertSame(['ide' => 'CHE-123.456.789', 'validite_jours' => 45, 'adresse' => "Rue 1\n2800 Delémont"],
             BaseDeTest::ligne("SELECT ide, validite_jours, adresse FROM artisan WHERE id = {$this->jeu->a}"));
