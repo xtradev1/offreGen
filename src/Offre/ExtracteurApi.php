@@ -66,7 +66,14 @@ final class ExtracteurApi implements Extracteur
         ]);
         $donnees = ReponseApi::lire($reponse, 'Extraction');
         $this->noterJetons($donnees);
-        return $this->valider(self::argumentsDeLOutil($donnees), $catalogue);
+        $proposition = self::argumentsDeLOutil($donnees);
+        if ($proposition === null) {
+            // Règle de Xavier (2026-11-12) : rien d'utile dit, offre vide. Avec une température à 0, réessayer
+            // donnait cinq fois la même réponse, puis un échec.
+            $this->journal->warning('offreGen, extraction : le modèle n\'a proposé aucune ligne, offre vide.');
+            return new ResultatExtraction(null, []);
+        }
+        return $this->valider($proposition, $catalogue);
     }
 
     /**
@@ -139,13 +146,18 @@ final class ExtracteurApi implements Extracteur
     }
 
     /**
+     * Les arguments de l'appel à proposer_offre ; null si le modèle a répondu sans l'appeler.
+     *
      * @param array<string, mixed> $donnees
-     * @return array<string, mixed>
+     * @return array<string, mixed>|null
      */
-    private static function argumentsDeLOutil(array $donnees): array
+    private static function argumentsDeLOutil(array $donnees): ?array
     {
         $choix = is_array($donnees['choices'] ?? null) ? $donnees['choices'] : [];
-        $message = is_array($choix[0] ?? null) && is_array($choix[0]['message'] ?? null) ? $choix[0]['message'] : [];
+        $message = is_array($choix[0] ?? null) && is_array($choix[0]['message'] ?? null) ? $choix[0]['message'] : null;
+        if ($message === null) {
+            throw new \RuntimeException('Extraction : réponse sans message du modèle.');
+        }
         $appels = is_array($message['tool_calls'] ?? null) ? $message['tool_calls'] : [];
         foreach ($appels as $appel) {
             $fonction = is_array($appel) && is_array($appel['function'] ?? null) ? $appel['function'] : [];
@@ -159,7 +171,8 @@ final class ExtracteurApi implements Extracteur
                 return $decode;
             }
         }
-        throw new \RuntimeException('Extraction : le modèle n\'a pas appelé proposer_offre.');
+        // Le modèle a répondu sans remplir l'offre : la dictée ne contenait rien d'utile.
+        return null;
     }
 
     /** @param list<array{id: int, categorie: string, designation: string, unite: string, prix_centimes: int, synonymes: string|null}> $catalogue */

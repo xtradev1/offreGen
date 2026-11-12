@@ -68,6 +68,8 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .feuille:focus { outline: none; }
 .poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 8px auto 2px; }
 .x.coin { position: absolute; top: 4px; right: 14px; }
+/* Message sous la croix de fermeture : de la place pour elle. */
+.feuille [data-etat="court"], .feuille [data-etat="echec"] { padding-top: 40px; }
 /* Fiche dans une fenêtre : le corps défile, les boutons restent en bas, au pouce. */
 .feuille.cadre { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; }
 .sh-corps { overflow-y: auto; flex: 1 1 auto; padding: 4px 2px 8px; }
@@ -148,14 +150,30 @@ body.calque-ouvert { overflow: hidden; }
 @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.88); opacity: .75; } }
 @media (prefers-reduced-motion: reduce) { .rec .dot.on { animation: none; } }
 .timer { font: 600 34px ui-monospace, monospace; font-variant-numeric: tabular-nums; }
-.rec progress { width: 100%; height: 12px; accent-color: var(--accent); }
-.steps { list-style: none; padding: 0; margin: 20px 0; }
-.steps li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; }
-.steps li::before { flex: none; width: 1.2em; text-align: center; }
-.steps li.done::before { content: "✓"; color: var(--ok); font-weight: 700; }
-.steps li.cur::before { content: "…"; color: var(--accent); font-weight: 700; }
-.steps li.todo { color: var(--muted); }
-.steps li.todo::before { content: "○"; }
+/* Étapes du traitement : un rond qui tourne sur l'étape en cours, une coche verte qui saute quand elle
+   est faite, un trait qui se colore de l'une à l'autre. */
+.suivi { padding: 4px 0 8px; }
+.suivi-titre { font-size: 17px; margin: 4px 0 6px; text-align: center; }
+.etapes { list-style: none; padding: 0; margin: 12px 0; }
+.etapes li { position: relative; display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: center; column-gap: 12px; row-gap: 6px; padding: 11px 0; color: var(--muted); transition: color .3s ease; }
+.etapes li:not(:last-child)::after { content: ""; position: absolute; left: 15px; top: calc(50% + 17px); height: calc(100% - 34px); width: 2px; background: var(--line); transition: background .4s ease; }
+.etapes li.done:not(:last-child)::after { background: var(--ok); }
+.etapes .marque { width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; position: relative; z-index: 1; }
+.etapes li.cur, .etapes li.done { color: var(--ink); }
+.etapes li.cur { font-weight: 600; }
+.etapes li.cur .marque { border-color: var(--accent-soft); border-top-color: var(--accent); animation: tourne .8s linear infinite; }
+.etapes li.done .marque { background: var(--ok); border-color: var(--ok); animation: saute .35s cubic-bezier(.3, 1.6, .5, 1); }
+.etapes li.done .marque::before { content: ""; width: 7px; height: 13px; border: solid #fff; border-width: 0 3px 3px 0; transform: translateY(-2px) rotate(45deg); }
+.etapes li.bad { color: var(--bad); font-weight: 600; }
+.etapes li.bad .marque { background: var(--bad); border-color: var(--bad); }
+.etapes li.bad .marque::before { content: "!"; color: #fff; font-weight: 700; }
+.etapes progress { grid-column: 2; width: 100%; height: 8px; accent-color: var(--accent); }
+@keyframes tourne { to { transform: rotate(360deg); } }
+@keyframes saute { from { transform: scale(.4); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .etapes li.cur .marque { animation: none; border-color: var(--accent); }
+  .etapes li.done .marque { animation: none; }
+}
 
 /* Offre. */
 .ohead { display: block; padding: 6px 0 6px; color: var(--ink); text-decoration: none; border-radius: 8px; }

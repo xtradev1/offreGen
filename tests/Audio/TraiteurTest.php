@@ -14,6 +14,7 @@ use OffreGen\Donnees\FileTraitement;
 use OffreGen\Donnees\Portee;
 use OffreGen\Donnees\Statut;
 use OffreGen\Offre\Extracteur;
+use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\ExtracteurFactice;
 use OffreGen\Offre\Messagerie;
 use OffreGen\Offre\MessagerieFichier;
@@ -23,6 +24,7 @@ use OffreGen\Tests\Outils\Jeu;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\HttpClient\MockHttpClient;
 
 final class TraiteurTest extends TestCase
 {
@@ -86,6 +88,31 @@ final class TraiteurTest extends TestCase
         $courriels = $this->dossiers->courriels();
         self::assertCount(1, $courriels);
         self::assertStringContainsString('https://exemple.test/offres/', (string) file_get_contents($courriels[0]));
+    }
+
+    public function testUneDicteeSansParoleDonneUneOffreVideSansAppelerLeModele(): void
+    {
+        // Règle de Xavier (2026-11-12) : s'il n'a rien dit, l'offre est vide, et elle compte quand même.
+        $muet = new class implements Transcripteur {
+            public function demarrer(string $cheminAudio): string
+            {
+                return 'ref-muet';
+            }
+
+            public function resultat(string $reference): string
+            {
+                return "  \n ";
+            }
+        };
+        $modele = new MockHttpClient(static function (): never {
+            throw new \LogicException('Le modèle ne doit pas être appelé pour une dictée vide.');
+        });
+        $extracteur = new ExtracteurApi($modele, 'https://api.exemple.test/v1', 'jeton', 'qwen-test', new NullLogger());
+
+        self::assertSame(Statut::PRET, $this->traiteur($muet, $extracteur)->avancer(self::UUID));
+        self::assertSame(1, $this->offresDeLEnregistrement());
+        self::assertSame(0, BaseDeTest::compter('ligne l JOIN offre o ON o.id = l.offre_id JOIN enregistrement e ON e.id = o.enregistrement_id',
+            "e.uuid = '" . self::UUID . "'"));
     }
 
     public function testExceptionALExtractionPuisRepriseSansDoublon(): void

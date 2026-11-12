@@ -25,6 +25,13 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 $conteneur = Conteneur::depuisEnvironnement(dirname(__DIR__));
 $reponse = $conteneur->noyau()->traiter(Request::createFromGlobals());
+// Sans fastcgi_finish_request (php -S en développement), le navigateur attendait la fin du traitement
+// avant de recevoir la réponse de l'envoi (constaté le 2026-11-12). Longueur annoncée et connexion
+// fermée : il la tient pour complète dès qu'elle est arrivée.
+if ($conteneur->apresReponse()->nombre() > 0 && !function_exists('fastcgi_finish_request')) {
+    $reponse->headers->set('Connection', 'close');
+    $reponse->headers->set('Content-Length', (string) strlen((string) $reponse->getContent()));
+}
 $reponse->send();
 
 // La réponse est partie : l'artisan a la main. Le travail inscrit pendant la requête
@@ -35,6 +42,12 @@ if ($conteneur->apresReponse()->nombre() > 0) {
     set_time_limit(300);
     if (function_exists('fastcgi_finish_request')) {
         fastcgi_finish_request();
+    }
+    // La session reste verrouillée jusqu'à la fin du script : sans cette ligne, toute autre page du même
+    // artisan (la préparation, l'état demandé chaque seconde) attendait la fin du traitement, une vingtaine
+    // de secondes (constaté le 2026-11-12, en local et, par le même verrou, sous PHP-FPM).
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
     }
     $conteneur->apresReponse()->executer();
 }

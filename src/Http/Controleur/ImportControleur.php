@@ -45,6 +45,14 @@ final class ImportControleur
         } catch (AudioRefuse $e) {
             return $this->page($e->getMessage(), 422);
         }
+        // Règle de Xavier (2026-11-12) : moins de 5 secondes, rien n'est gardé. Durée illisible : accepté.
+        $minimum = (int) $this->c->parametre('DUREE_MIN_SECONDES', '5');
+        $duree = $this->c->dureeAudio()->secondes($fichier->getPathname());
+        if ($duree === null) {
+            $this->c->journal()->warning('offreGen, import : durée illisible par ffprobe, minimum non vérifié.');
+        } elseif ($duree < $minimum) {
+            return $this->page("Enregistrement non pris en compte : $minimum secondes au minimum.", 422);
+        }
 
         $uuid = Uuid::v4();
         $stockage = $this->c->stockageAudio();

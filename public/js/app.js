@@ -174,6 +174,42 @@ const calques = (() => {
   };
 })();
 
+// Étapes du traitement (envoi, transcription, création de l'offre, offre prête) : fait, en cours, en
+// échec ou à venir, selon le nombre d'étapes faites.
+function marquerEtapes(liste, faites, echec) {
+  [...liste.children].forEach((li, i) => {
+    li.className = i < faites ? 'done' : i === faites ? (echec ? 'bad' : 'cur') : 'todo';
+  });
+}
+
+// Demande l'état chaque seconde et fait avancer les étapes ; appelle fini(offre) quand l'offre est prête.
+// Rend une fonction qui arrête le suivi.
+function suivreEtapes(liste, uuid, fini) {
+  const message = liste.parentElement.querySelector('[data-etapes-message]');
+  const dire = (t) => { if (message) message.textContent = t; };
+  let arret = false;
+  const tour = () => fetch('/enregistrements/' + uuid + '/etat', { credentials: 'same-origin', cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+    .then((e) => {
+      if (arret) return;
+      marquerEtapes(liste, e.faites, e.echec);
+      dire(e.echec ? 'La préparation a échoué après plusieurs essais.' : e.essais > 0 ? 'Un souci passager, nouvel essai en cours…' : '');
+      if (e.offre) { arret = true; fini(e.offre); }
+      if (e.echec) arret = true;
+    })
+    .catch(() => dire('Connexion perdue, nouvel essai…'))
+    .finally(() => { if (!arret) setTimeout(tour, 1000); });
+  tour();
+  return () => { arret = true; };
+}
+
+// Page de préparation : les étapes avancent seules, et l'offre s'ouvre quand elle est prête.
+function preparation() {
+  const liste = document.querySelector('main [data-etapes][data-uuid]');
+  if (!liste) return;
+  suivreEtapes(liste, liste.dataset.uuid, (offre) => setTimeout(() => window.location.replace('/offres/' + offre), 900));
+}
+
 // Nouvelle offre : parler ou importer. Sur l'accueil, deux boutons ronds au centre ; l'enregistrement
 // et l'envoi montent dans une fenêtre du bas. Sur /import, tout est dans la page.
 // Le micro n'est permis que sur https ou sur localhost. Les deux chemins partent par POST /import.
@@ -193,6 +229,7 @@ function nouvelleOffre() {
 
   let etatCourant = 'choix';
   let occupe = false;
+  let arreterSuivi = () => {};
   let duMicro = false; // le fichier en cours vient du micro : le fermer sans l'envoyer le perdrait
   const perteAcceptee = () => !duMicro || window.confirm('Fermer sans envoyer ? L’enregistrement est perdu s’il n’est pas gardé dans un fichier.');
   window.addEventListener('beforeunload', (e) => { if (occupe) e.preventDefault(); });
@@ -201,10 +238,11 @@ function nouvelleOffre() {
 
   const fenetre = feuille && {
     montrer: () => apparaitre(feuille),
-    cacher: () => { disparaitre(feuille); etatCourant = 'choix'; occupe = false; },
+    cacher: () => { disparaitre(feuille); etatCourant = 'choix'; occupe = false; arreterSuivi(); },
     // Pendant l'enregistrement et l'envoi, le retour ne ferme rien ; après un échec, il demande.
     retenir: () => {
-      if (etatCourant === 'choix') return false;
+      // Après l'envoi, le traitement continue au serveur : la fenêtre peut se fermer.
+      if (etatCourant === 'choix' || etatCourant === 'suivi' || etatCourant === 'court') return false;
       if (etatCourant === 'echec') return !perteAcceptee();
       return true;
     },
@@ -213,7 +251,7 @@ function nouvelleOffre() {
   const montrer = (etat) => {
     etatCourant = etat;
     zone.querySelectorAll('[data-etat]').forEach((s) => { s.hidden = s.dataset.etat !== etat; });
-    if (fermerX) fermerX.hidden = etat !== 'echec';
+    if (fermerX) fermerX.hidden = etat !== 'echec' && etat !== 'court';
     if (!fenetre) return;
     feuille.classList.toggle('pleine', etat === 'enregistrement');
     if (etat === 'choix') { calques.fermer(fenetre); return; }
@@ -242,12 +280,15 @@ function nouvelleOffre() {
 
   let fichier = null;
   const echec = (texte) => { el('[data-echec-texte]').textContent = texte; montrer('echec'); };
+  const liste = el('[data-etapes]');
   const envoyer = () => {
     montrer('envoi');
     occupe = true;
+    marquerEtapes(liste, 0, false);
     const progression = el('[data-progression]');
     const texte = el('[data-progression-texte]');
     progression.value = 0;
+    progression.hidden = false;
     texte.textContent = '';
     const donnees = new FormData();
     donnees.append('_csrf', form.querySelector('input[name=_csrf]').value);
@@ -260,9 +301,16 @@ function nouvelleOffre() {
       texte.textContent = (e.loaded / 1048576).toFixed(1) + ' sur ' + (e.total / 1048576).toFixed(1) + ' Mo';
     });
     xhr.addEventListener('load', () => {
-      // Le serveur répond par une redirection vers la page de préparation, que XHR suit.
+      // Le serveur répond par une redirection vers la page de préparation, que XHR suit. L'envoi est
+      // fait : l'audio est au serveur, la fenêtre peut se fermer. Les étapes suivantes avancent ici.
       if (xhr.status === 200 && xhr.responseURL.includes('/enregistrements/')) {
-        partir(xhr.responseURL);
+        occupe = false;
+        etatCourant = 'suivi';
+        progression.hidden = true;
+        texte.textContent = '';
+        marquerEtapes(liste, 1, false);
+        const uuid = xhr.responseURL.split('/enregistrements/')[1].split(/[/?#]/)[0];
+        arreterSuivi = suivreEtapes(liste, uuid, (offre) => setTimeout(() => { if (etatCourant === 'suivi') partir('/offres/' + offre); }, 900));
         return;
       }
       const page = new DOMParser().parseFromString(xhr.responseText || '', 'text/html');
@@ -290,6 +338,9 @@ function nouvelleOffre() {
   let morceaux = [];
   let minuteur = null;
   let veille = null;
+  let debut = 0;
+  // Règle de Xavier (2026-11-12) : moins de 5 secondes, l'enregistrement n'est pas envoyé.
+  const DUREE_MIN_MS = 5000;
   const libererMicro = () => {
     clearInterval(minuteur);
     if (flux) flux.getTracks().forEach((t) => t.stop());
@@ -314,7 +365,7 @@ function nouvelleOffre() {
     enregistreur.start(1000);
     occupe = true;
     duMicro = true;
-    const debut = Date.now();
+    debut = Date.now();
     const affichage = el('[data-minuteur]');
     const deux = (n) => String(n).padStart(2, '0');
     affichage.textContent = '00:00';
@@ -329,8 +380,15 @@ function nouvelleOffre() {
 
   el('[data-terminer]').addEventListener('click', () => {
     if (!enregistreur) return;
+    const tropCourt = Date.now() - debut < DUREE_MIN_MS;
     enregistreur.addEventListener('stop', () => {
       libererMicro();
+      if (tropCourt) {
+        occupe = false;
+        duMicro = false;
+        montrer('court');
+        return;
+      }
       const type = enregistreur.mimeType || 'audio/webm';
       const extension = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
       const d = new Date();
@@ -345,6 +403,9 @@ function nouvelleOffre() {
     }, { once: true });
     enregistreur.stop();
   });
+
+  // Trop court : on recommence tout de suite, le micro se rouvre.
+  el('[data-recommencer]').addEventListener('click', () => micro.click());
 
   el('[data-abandonner]').addEventListener('click', () => {
     if (!window.confirm('Abandonner l’enregistrement ? Il ne sera pas gardé.')) return;
@@ -519,5 +580,6 @@ document.addEventListener('DOMContentLoaded', () => {
   filtres();
   bandeaux();
   nouvelleOffre();
+  preparation();
   fichesEnFenetre();
 });

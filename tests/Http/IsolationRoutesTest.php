@@ -46,6 +46,7 @@ final class IsolationRoutesTest extends TestCase
     {
         return [
             'enregistrement' => ['/enregistrements/' . $this->jeu->uuid['a'], '/enregistrements/' . $this->jeu->uuid['b']],
+            'enregistrement_etat' => ['/enregistrements/' . $this->jeu->uuid['a'] . '/etat', '/enregistrements/' . $this->jeu->uuid['b'] . '/etat'],
             'offre' => ['/offres/' . $this->jeu->offre['a'], '/offres/' . $this->jeu->offre['b']],
             'offre_entete' => ['/offres/' . $this->jeu->offre['a'] . '/modifier', '/offres/' . $this->jeu->offre['b'] . '/modifier'],
             'offre_document' => ['/offres/' . $this->jeu->offre['a'] . '/document', '/offres/' . $this->jeu->offre['b'] . '/document'],

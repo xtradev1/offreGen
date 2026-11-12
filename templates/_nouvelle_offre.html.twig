@@ -17,10 +17,20 @@
     <button class="lien" type="button" data-abandonner>Abandonner sans envoyer</button>
   </div>
 
-  <div class="rec" data-etat="envoi" hidden>
-    <p>Envoi…</p>
-    <progress max="100" value="0" data-progression></progress>
-    <p class="muted" data-progression-texte></p>
+  {# Dès « Terminer » ou le fichier choisi : les étapes, la première en cours avec sa barre d'envoi. #}
+  {% set etapes_depart = [] %}
+  {% for libelle in constant('OffreGen\\Http\\Controleur\\EnregistrementControleur::ETAPES') %}
+    {% set etapes_depart = etapes_depart|merge([{libelle: libelle, etat: loop.first ? 'cur' : 'todo'}]) %}
+  {% endfor %}
+  <div class="suivi" data-etat="envoi" hidden>
+    <h2 class="suivi-titre">Préparation de l'offre</h2>
+    {% include '_etapes.html.twig' with {etapes: etapes_depart} %}
+    <p class="muted petit centre" data-progression-texte></p>
+  </div>
+
+  <div data-etat="court" hidden>
+    <p class="alerte warn" role="alert">Enregistrement non pris en compte&nbsp;: 5 secondes au minimum.</p>
+    <button class="btn primary large" type="button" data-recommencer>Recommencer</button>
   </div>
 
   <div data-etat="echec" hidden>

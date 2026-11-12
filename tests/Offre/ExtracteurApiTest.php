@@ -147,11 +147,30 @@ final class ExtracteurApiTest extends TestCase
         self::assertSame(12346, $r->lignes[0]->quantiteMilliemes);
     }
 
-    public function testSansAppelDOutilErreur(): void
+    public function testSansAppelDOutilUneOffreVide(): void
     {
-        $this->expectExceptionMessage("n'a pas appelé proposer_offre");
-        $reponse = new MockResponse((string) json_encode(['choices' => [['message' => ['content' => 'Voici votre offre…']]]]));
-        $this->extracteur($reponse)->extraire('Dictée.', self::CATALOGUE);
+        // Constaté le 2026-11-12 : une dictée sans rien d'utile, le modèle répond une phrase au lieu de
+        // l'outil, cinq fois de suite (température 0), et l'enregistrement finissait en échec. Règle de
+        // Xavier : rien d'utile dit, offre vide.
+        $journal = new class extends AbstractLogger {
+            /** @var list<string> */
+            public array $lignes = [];
+
+            public function log($level, string|\Stringable $message, array $context = []): void
+            {
+                $this->lignes[] = $level . ' ' . $message;
+            }
+        };
+        $reponse = new MockResponse((string) json_encode(['choices' => [['message' => ['role' => 'assistant', 'content' => 'Je n\'ai rien à proposer.']]]]));
+        $r = (new ExtracteurApi(new MockHttpClient($reponse), 'https://api.exemple.test/v1', 'jeton', 'qwen-test', $journal))->extraire('Euh… bon.', self::CATALOGUE);
+        self::assertSame([null, []], [$r->titre, $r->lignes]);
+        self::assertContains('warning offreGen, extraction : le modèle n\'a proposé aucune ligne, offre vide.', $journal->lignes);
+    }
+
+    public function testReponseSansChoixResteUneErreur(): void
+    {
+        $this->expectExceptionMessage('Extraction : réponse sans message du modèle.');
+        $this->extracteur(new MockResponse((string) json_encode(['erreur' => 'surcharge'])))->extraire('Dictée.', self::CATALOGUE);
     }
 
     public function testDicteeVideSansAppel(): void

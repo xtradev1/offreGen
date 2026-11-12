@@ -1,22 +1,21 @@
 {% extends 'base.html.twig' %}
 
-{% block entete_html %}{% if not fini %}<meta http-equiv="refresh" content="5">{% endif %}{% endblock %}
+{# Sans JavaScript, la page se recharge ; avec, app.js fait avancer les étapes chaque seconde. #}
+{% block entete_html %}{% if not fini %}<noscript><meta http-equiv="refresh" content="5"></noscript>{% endif %}{% endblock %}
 {% block titre %}Préparation de l'offre · offreGen{% endblock %}
 {% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
 {% block entete %}Préparation de l'offre{% endblock %}
 
 {% block contenu %}
-  <p class="muted">Fichier : {{ e.nom_origine }}</p>
+  <p class="muted">Fichier&nbsp;: {{ e.nom_origine }}</p>
   {% if echec %}
-    <p class="alerte bad" role="alert">La préparation a échoué après plusieurs essais. Importez le fichier une nouvelle fois ; si l'échec revient, écrivez-nous.</p>
+    <p class="alerte bad" role="alert">La préparation a échoué après plusieurs essais. Importez le fichier une nouvelle fois&nbsp;; si l'échec revient, écrivez-nous.</p>
   {% endif %}
-  <ul class="steps">
-    {% for etape in etapes %}<li class="{{ etape.etat }}">{{ etape.libelle }}</li>{% endfor %}
-  </ul>
-  {% if e.statut == 'pret' %}
-    <p>L'offre est prête.</p>
-  {% elseif not echec %}
-    <p>Vous pouvez fermer l'application : un courriel vous préviendra quand l'offre sera prête.</p>
+  <div class="suivi">
+    {% include '_etapes.html.twig' with {uuid: fini ? '' : e.uuid} %}
+  </div>
+  {% if not fini %}
+    <p class="muted petit centre">Vous pouvez fermer l'application&nbsp;: un courriel vous préviendra quand l'offre sera prête.</p>
   {% endif %}
 {% endblock %}
 

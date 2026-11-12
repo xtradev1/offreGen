@@ -28,9 +28,13 @@ final class ImportTest extends TestCase
         $this->dossiers->effacer();
     }
 
-    private function navigateurConnecte(string $immediat = '0'): Navigateur
+    /**
+     * Les fichiers de format (visite.*) durent une seconde : ces tests coupent le minimum de durée,
+     * vérifié à part par testEnregistrementDeMoinsDeCinqSecondesRefuse.
+     */
+    private function navigateurConnecte(string $immediat = '0', string $dureeMin = '0'): Navigateur
     {
-        $n = new Navigateur(Monde::conteneur(env: $this->dossiers->env() + ['TRAITEMENT_IMMEDIAT' => $immediat]));
+        $n = new Navigateur(Monde::conteneur(env: $this->dossiers->env() + ['TRAITEMENT_IMMEDIAT' => $immediat, 'DUREE_MIN_SECONDES' => $dureeMin]));
         self::assertSame(303, $n->connecter('a@exemple.ch')->getStatusCode());
         self::assertSame(200, $n->get('/import')->getStatusCode());
         return $n;
@@ -52,6 +56,29 @@ final class ImportTest extends TestCase
         self::assertSame('0600', substr(sprintf('%o', fileperms($chemin)), -4));
         // Sans traitement immédiat, rien n'a été programmé.
         self::assertSame(0, $n->c->apresReponse()->nombre());
+    }
+
+    public function testEnregistrementDeMoinsDeCinqSecondesRefuse(): void
+    {
+        // Règle de Xavier (2026-11-12), avec le minimum par défaut de l'application.
+        $n = new Navigateur(Monde::conteneur(env: $this->dossiers->env() + ['TRAITEMENT_IMMEDIAT' => '0']));
+        $n->connecter('a@exemple.ch');
+        $n->get('/import');
+        $avant = BaseDeTest::compter('enregistrement');
+
+        $court = $n->post('/import', [], ['audio' => $this->dossiers->envoi('visite.m4a')]);
+        self::assertSame(422, $court->getStatusCode());
+        self::assertStringContainsString('Enregistrement non pris en compte : 5 secondes au minimum.', (string) $court->getContent());
+        self::assertSame($avant, BaseDeTest::compter('enregistrement'));
+        self::assertSame([], glob($this->dossiers->env()['AUDIO_DOSSIER'] . '/*/*') ?: []);
+        // Le WebM du navigateur, sans durée annoncée, est mesuré quand même.
+        $n->get('/import');
+        self::assertSame(422, $n->post('/import', [], ['audio' => $this->dossiers->envoi('court-sans-duree.webm')])->getStatusCode());
+        self::assertSame($avant, BaseDeTest::compter('enregistrement'));
+
+        $n->get('/import');
+        self::assertSame(303, $n->post('/import', [], ['audio' => $this->dossiers->envoi('dictee-peintre.ogg')])->getStatusCode());
+        self::assertSame($avant + 1, BaseDeTest::compter('enregistrement'));
     }
 
     public function testFauxAudioRefuse422SansRienGarder(): void

@@ -7,6 +7,7 @@ namespace OffreGen\Http;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use OffreGen\Audio\DureeAudio;
 use OffreGen\Audio\PreparationAudio;
 use OffreGen\Audio\Purge;
 use OffreGen\Audio\StockageAudio;
@@ -255,6 +256,11 @@ final class Conteneur
             $twig->addExtension(new Formats());
             return $twig;
         });
+    }
+
+    public function dureeAudio(): DureeAudio
+    {
+        return $this->une(DureeAudio::class, fn (): DureeAudio => new DureeAudio($this->parametre('FFPROBE', 'ffprobe')));
     }
 
     public function validateurAudio(): ValidateurAudio

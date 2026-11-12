@@ -321,6 +321,29 @@ final class EcransTest extends TestCase
         self::assertSame('Offre a', BaseDeTest::ligne("SELECT titre FROM offre WHERE id = {$this->jeu->offre['a']}")['titre']);
     }
 
+    public function testLaPreparationAvanceEtapeParEtape(): void
+    {
+        $uuid = $this->jeu->uuid['a'];
+        $page = $this->page("/enregistrements/$uuid");
+        // Reçu : l'envoi est fait, la transcription en cours ; app.js interroge l'état de cet enregistrement.
+        self::assertMatchesRegularExpression('#<ol class="etapes" data-etapes data-uuid="' . $uuid . '">\s*<li class="done">.*Envoi de l&\#039;enregistrement.*<li class="cur">.*Transcription de la dictée.*<li class="todo">.*Création de l&\#039;offre.*<li class="todo">.*Offre prête#s', $page);
+        self::assertStringContainsString('<noscript><meta http-equiv="refresh" content="5"></noscript>', $page);
+
+        $etat = $this->a->get("/enregistrements/$uuid/etat");
+        self::assertSame('no-store, private', $etat->headers->get('Cache-Control'));
+        self::assertSame(['statut' => 'recu', 'faites' => 1, 'echec' => false, 'essais' => 0, 'offre' => null], json_decode((string) $etat->getContent(), true));
+
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'transcrit' WHERE uuid = '$uuid'");
+        self::assertSame(2, json_decode((string) $this->a->get("/enregistrements/$uuid/etat")->getContent(), true)['faites']);
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'pret' WHERE uuid = '$uuid'");
+        self::assertSame(['statut' => 'pret', 'faites' => 4, 'echec' => false, 'essais' => 0, 'offre' => $this->jeu->offre['a']],
+            json_decode((string) $this->a->get("/enregistrements/$uuid/etat")->getContent(), true));
+        // Prête : plus de suivi sur la page, le bouton mène à l'offre.
+        $page = $this->page("/enregistrements/$uuid");
+        self::assertStringNotContainsString('data-uuid', $page);
+        self::assertStringContainsString('href="/offres/' . $this->jeu->offre['a'] . '">Voir l\'offre', $page);
+    }
+
     public function testValiditeEtPaiementSeChoisissentDUnToucher(): void
     {
         $page = $this->page('/reglages');
