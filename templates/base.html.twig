@@ -16,10 +16,11 @@
     {% set msg = messages() %}
     {% for texte in msg.info ?? [] %}<div class="snack" role="status"><span>{{ texte }}</span></div>{% endfor %}
     {% for texte in msg.erreur ?? [] %}<div class="snack bad" role="alert"><span>{{ texte }}</span></div>{% endfor %}
+    {# « Annuler » : une ligne supprimée (offre, ligne, designation) ou une offre rangée (action, texte). #}
     {% for a in msg.annuler ?? [] %}
-      <form class="snack" role="status" method="post" action="/offres/{{ a.offre }}/lignes/{{ a.ligne }}/restaurer" data-disparait>
+      <form class="snack" role="status" method="post" action="{{ a.action ?? ('/offres/' ~ a.offre ~ '/lignes/' ~ a.ligne ~ '/restaurer') }}" data-disparait>
         <input type="hidden" name="_csrf" value="{{ csrf() }}">
-        <span>«&nbsp;{{ a.designation }}&nbsp;» supprimée</span><button type="submit">Annuler</button>
+        <span>{% if a.texte is defined %}{{ a.texte }}{% else %}«&nbsp;{{ a.designation }}&nbsp;» supprimée{% endif %}</span><button type="submit">Annuler</button>
       </form>
     {% endfor %}
     {% for id in msg.focus ?? [] %}<span hidden data-focus-ligne="{{ id }}"></span>{% endfor %}

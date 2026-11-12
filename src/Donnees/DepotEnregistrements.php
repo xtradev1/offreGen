@@ -39,15 +39,38 @@ final class DepotEnregistrements
         );
     }
 
-    /** @return list<Enregistrement> les enregistrements pas encore prêts, du plus récent au plus ancien */
+    /** @return list<Enregistrement> les enregistrements pas encore prêts et pas retirés, du plus récent au plus ancien */
     public function enCours(): array
     {
         /** @var list<Enregistrement> */
         return $this->base->lire(
             'SELECT ' . self::COLONNES . ' FROM enregistrement e LEFT JOIN offre o ON o.enregistrement_id = e.id AND o.artisan_id = e.artisan_id
-             WHERE e.artisan_id = :a AND e.statut <> :pret ORDER BY e.recu_le DESC, e.id DESC LIMIT 50',
+             WHERE e.artisan_id = :a AND e.statut <> :pret AND e.retire_le IS NULL ORDER BY e.recu_le DESC, e.id DESC LIMIT 50',
             ['a' => $this->portee->artisanId, 'pret' => Statut::PRET],
         );
+    }
+
+    /** Un échec retiré de la liste. Il n'a pas donné d'offre : il ne comptait déjà pas. */
+    public function retirer(string $uuid, \DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire(
+            'UPDATE enregistrement SET retire_le = :q WHERE uuid = :u AND artisan_id = :a AND statut = :echec',
+            ['q' => Dates::versBase($quand), 'u' => $uuid, 'a' => $this->portee->artisanId, 'echec' => Statut::ECHEC],
+        );
+    }
+
+    /**
+     * Relance un échec là où il s'était arrêté : une transcription déjà faite n'est ni refaite ni payée
+     * deux fois. Faux s'il n'y a plus de quoi relancer (audio purgé et pas de transcription).
+     */
+    public function reessayer(string $uuid): bool
+    {
+        return $this->base->ecrire(
+            "UPDATE enregistrement SET statut = IF(transcription IS NOT NULL, :transcrit, :recu), tentatives = 0, erreur = NULL,
+                    verrou_jeton = NULL, verrou_jusqu_a = NULL, transcription_ref = IF(transcription IS NOT NULL, transcription_ref, NULL)
+             WHERE uuid = :u AND artisan_id = :a AND statut = :echec AND (transcription IS NOT NULL OR fichier IS NOT NULL)",
+            ['transcrit' => Statut::TRANSCRIT, 'recu' => Statut::RECU, 'u' => $uuid, 'a' => $this->portee->artisanId, 'echec' => Statut::ECHEC],
+        ) > 0;
     }
 
     /** Imports reçus depuis $depuis : c'est ce qui coûte (transcription, modèle), donc ce que le plafond démo compte. */

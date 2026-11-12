@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace OffreGen\Tests\Http;
 
 use OffreGen\Compte\Reglages;
+use OffreGen\Donnees\DepotEnregistrements;
+use OffreGen\Donnees\DepotOffres;
+use OffreGen\Donnees\Portee;
+use OffreGen\Offre\LigneExtraite;
 use OffreGen\Tests\Outils\BaseDeTest;
 use OffreGen\Tests\Outils\Jeu;
 use OffreGen\Tests\Outils\Monde;
@@ -319,6 +323,93 @@ final class EcransTest extends TestCase
         $this->page("{$this->offre}/modifier");
         self::assertSame(422, $this->a->post("{$this->offre}/modifier", ['titre' => ' ', 'client_nom' => 'X', 'client_adresse' => ''])->getStatusCode());
         self::assertSame('Offre a', BaseDeTest::ligne("SELECT titre FROM offre WHERE id = {$this->jeu->offre['a']}")['titre']);
+    }
+
+    // Sous-chantier 21 : liste des offres (réponses de Xavier du 2026-11-12)
+
+    /**
+     * Deux offres de plus pour A : Façade (1000.00, client Zoé), Volets (50.00 à vérifier, client Albert).
+     *
+     * @return array{int, int}
+     */
+    private function deuxOffresDePlus(): array
+    {
+        $depot = new DepotOffres($this->jeu->base, new Portee($this->jeu->a));
+        $facade = $depot->creerExemple('Façade', [new LigneExtraite('Façade', 1000, 'forfait', 100000, false, null)], $this->jeu->maintenant, 'Zoé Modèle', '');
+        $volets = $depot->creerExemple('Volets', [new LigneExtraite('Volets', 1000, 'forfait', 5000, true, null)], $this->jeu->maintenant, 'Albert Essai', '');
+        return [$facade, $volets];
+    }
+
+    /** Les titres de la section « Offres », dans l'ordre de la page (archives exclues). */
+    private function ordre(string $page): string
+    {
+        $offres = explode('data-archives', $page)[0];
+        preg_match_all('#<b class="titre">([^<]+)</b>#', $offres, $m);
+        return implode(', ', $m[1]);
+    }
+
+    public function testListeTrieeDeQuatreFacons(): void
+    {
+        $this->deuxOffresDePlus();
+        self::assertSame('Façade, Offre a, Volets', $this->ordre($this->page('/?tri=montant')));
+        // Client de A à Z, l'offre sans client à la fin.
+        self::assertSame('Volets, Façade, Offre a', $this->ordre($this->page('/?tri=client')));
+        self::assertStringStartsWith('Volets', $this->ordre($this->page('/?tri=relire')));
+        $page = $this->page('/?tri=montant');
+        self::assertStringContainsString('href="/?tri=montant" aria-current="true"', $page);
+        // Tri inconnu : l'ordre par défaut, sans erreur.
+        self::assertStringContainsString('href="/" aria-current="true"', $this->page('/?tri=<script>'));
+    }
+
+    public function testArchiverEtSupprimerGardentLeCompteDuMois(): void
+    {
+        [$facade] = $this->deuxOffresDePlus();
+        self::assertStringContainsString('3 offres ce mois', $this->page('/'));
+
+        self::assertSame(303, $this->a->post("/offres/$facade/archiver", [])->getStatusCode());
+        $page = $this->page('/');
+        self::assertStringNotContainsString('Façade', $this->ordre($page));
+        self::assertMatchesRegularExpression('#data-archives.*Archives.*1.*Façade#s', $page);
+        self::assertStringContainsString("action=\"/offres/$facade/restaurer\"", $page);
+        self::assertStringContainsString('3 offres ce mois', $page);
+
+        $this->a->post("/offres/$facade/restaurer", []);
+        self::assertStringContainsString('Façade', $this->ordre($this->page('/')));
+
+        self::assertSame(303, $this->a->post("/offres/$facade/supprimer", [])->getStatusCode());
+        $page = $this->page('/');
+        self::assertStringNotContainsString('Façade</b>', $page);
+        self::assertStringContainsString('3 offres ce mois', $page);
+        self::assertStringContainsString("«\u{00A0}Façade\u{00A0}» supprimée", $page);
+        self::assertSame(404, $this->a->get("/offres/$facade")->getStatusCode());
+        // « Annuler » la rend.
+        $this->page('/');
+        $this->a->post("/offres/$facade/restaurer", []);
+        self::assertSame(200, $this->a->get("/offres/$facade")->getStatusCode());
+    }
+
+    public function testUnEchecNeComptePasSeRetireOuSeRelance(): void
+    {
+        $depot = new DepotEnregistrements($this->jeu->base, new Portee($this->jeu->a));
+        $muet = '33333333-3333-4333-8333-333333333333';
+        $transcrit = '44444444-4444-4444-8444-444444444444';
+        $depot->creer($muet, 'visite.webm', 'audio/webm', 10, "{$this->jeu->a}/$muet.webm", $this->jeu->maintenant);
+        $depot->creer($transcrit, 'visite2.webm', 'audio/webm', 10, "{$this->jeu->a}/$transcrit.webm", $this->jeu->maintenant);
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'echec', tentatives = 5, erreur = 'x' WHERE uuid IN ('$muet', '$transcrit')");
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET transcription = 'texte' WHERE uuid = '$transcrit'");
+
+        $page = $this->page('/');
+        self::assertSame(2, substr_count($page, 'Échec · ne compte pas dans vos offres'));
+        self::assertStringContainsString('1 offre ce mois', $page);
+
+        self::assertSame(303, $this->a->post("/enregistrements/$muet/retirer", [])->getStatusCode());
+        self::assertSame(1, substr_count($this->page('/'), 'Échec · ne compte pas dans vos offres'));
+
+        // Relancé là où il s'était arrêté : la transcription faite n'est pas refaite (ni payée deux fois).
+        $reponse = $this->a->post("/enregistrements/$transcrit/reessayer", []);
+        self::assertSame("/enregistrements/$transcrit", $reponse->headers->get('Location'));
+        self::assertSame(['statut' => 'transcrit', 'tentatives' => 0, 'erreur' => null],
+            BaseDeTest::ligne("SELECT statut, tentatives, erreur FROM enregistrement WHERE uuid = '$transcrit'"));
     }
 
     public function testLaPreparationAvanceEtapeParEtape(): void

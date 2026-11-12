@@ -76,6 +76,11 @@ final class IsolationRoutesTest extends TestCase
             'ligne_restaurer' => [$this->cheminLigne('b', '/restaurer'), []],
             'produit_modifier' => ['/catalogue/' . $this->jeu->produit['b'], $produit],
             'produit_supprimer' => ['/catalogue/' . $this->jeu->produit['b'] . '/supprimer', []],
+            'offre_archiver' => ['/offres/' . $this->jeu->offre['b'] . '/archiver', []],
+            'offre_supprimer' => ['/offres/' . $this->jeu->offre['b'] . '/supprimer', []],
+            'offre_restaurer' => ['/offres/' . $this->jeu->offre['b'] . '/restaurer', []],
+            'enregistrement_reessayer' => ['/enregistrements/' . $this->jeu->uuid['b'] . '/reessayer', []],
+            'enregistrement_retirer' => ['/enregistrements/' . $this->jeu->uuid['b'] . '/retirer', []],
         ];
     }
 
@@ -84,7 +89,8 @@ final class IsolationRoutesTest extends TestCase
     {
         $b = $this->jeu->b;
         $tout = [];
-        foreach (['artisan' => "id = $b", 'offre' => "artisan_id = $b", 'ligne' => "artisan_id = $b", 'produit' => "artisan_id = $b"] as $table => $condition) {
+        foreach (['artisan' => "id = $b", 'offre' => "artisan_id = $b", 'ligne' => "artisan_id = $b", 'produit' => "artisan_id = $b",
+                  'enregistrement' => "artisan_id = $b"] as $table => $condition) {
             $requete = BaseDeTest::pdo()->query("SELECT * FROM $table WHERE $condition ORDER BY id");
             self::assertNotFalse($requete);
             $tout[$table] = $requete->fetchAll(\PDO::FETCH_ASSOC);

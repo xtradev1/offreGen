@@ -137,6 +137,41 @@ body.calque-ouvert { overflow: hidden; }
 .ocard .l1 b { min-width: 0; overflow-wrap: anywhere; }
 .ocard .l2 { font-size: 14px; color: var(--muted); }
 .ocard .l2 b { color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.status.relue { background: var(--ok-soft); color: var(--ok); }
+.status .tourne { display: inline-block; width: 11px; height: 11px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--accent-soft); border-top-color: var(--accent); animation: tourne .8s linear infinite; vertical-align: -1px; margin-right: 5px; }
+.compteur { margin: 0 2px 4px; font-size: 13.5px; color: var(--muted); }
+/* Échec : en rouge, avec Réessayer ou Retirer ; il ne compte pas. */
+.ocard.echec { border-color: var(--bad); background: var(--bad-soft); }
+.ocard.echec .l2 { color: var(--bad); }
+.ocard.echec .act { display: flex; gap: 8px; margin-top: 6px; }
+.ocard.echec .act form { margin: 0; }
+.ocard.echec .act button { font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; border-radius: 10px; padding: 6px 14px; cursor: pointer; border: 1px solid var(--bad); background: var(--surface); color: var(--bad); }
+.ocard.echec .act button.prim { background: var(--bad); color: #fff; }
+/* Balayer une offre vers la gauche : la carte glisse et montre Archiver et Supprimer (app.js). */
+.glisse { position: relative; margin: 8px 0; border-radius: 14px; overflow: hidden; }
+.glisse > .ocard { position: relative; z-index: 1; margin: 0; transition: transform .22s ease; touch-action: pan-y; user-select: none; -webkit-user-drag: none; }
+.glisse.ouverte > .ocard, .actions-glisse:focus-within + .ocard { transform: translateX(-176px); }
+/* Cachés tant que la carte n'est ni balayée ni atteinte au clavier : sinon leur rouge déborde aux coins
+   arrondis (constaté le 2026-11-12). Opacité plutôt que visibilité : Tab doit les atteindre. */
+.actions-glisse { position: absolute; inset: 0 0 0 auto; display: flex; opacity: 0; transition: opacity 0s linear .22s; }
+.glisse.ouverte .actions-glisse, .glisse.tire .actions-glisse, .actions-glisse:focus-within { opacity: 1; transition-delay: 0s; }
+.actions-glisse form { margin: 0; display: flex; }
+.actions-glisse button { font: inherit; font-size: 14px; font-weight: 600; width: 88px; border: 0; color: #fff; cursor: pointer; }
+.actions-glisse .arch { background: var(--muted); }
+.actions-glisse .supp { background: var(--bad); }
+.actions-glisse button:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
+/* Archives repliées en bas : la liste ne grossit pas. */
+.archives { margin: 22px 0 0; border-top: 1px solid var(--line); }
+.archives summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 0 2px; font-size: 14px; color: var(--muted); }
+.archives summary::-webkit-details-marker { display: none; }
+.archives summary::after { content: "›"; font-size: 20px; transition: transform .2s; }
+.archives[open] summary::after { transform: rotate(90deg); }
+.archives summary span:last-child { margin-left: auto; margin-right: 10px; }
+.archive { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; }
+.archive .ocard { opacity: .8; }
+.archive form { margin: 0; }
+.cat.liste > span { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .glisse > .ocard { transition: none; } .status .tourne { animation: none; } }
 .vide { font-size: 13px; color: var(--muted); margin: 8px 0; }
 .pied { margin: 28px 0 0; text-align: center; }
 .lien { font: inherit; font-size: 14px; color: var(--muted); background: none; border: 0; text-decoration: underline; min-height: 44px; padding: 0 8px; cursor: pointer; display: inline-flex; align-items: center; }
@@ -184,6 +219,7 @@ body.calque-ouvert { overflow: hidden; }
 .ohead .meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .rows { --cols: minmax(0, 1fr) 66px 58px 66px 40px; }
 .cat { margin: 18px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.cat.liste { display: flex; justify-content: space-between; align-items: baseline; }
 .rows.une .cat { display: grid; grid-template-columns: var(--cols); column-gap: 4px; align-items: end; }
 .cat h5, .ccat h5 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .cat .ch { font-size: 11px; color: var(--muted); text-align: right; }

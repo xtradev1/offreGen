@@ -6,27 +6,72 @@
 
 {% block contenu %}
   <p class="muted ent">{{ entreprise }}{% if demo %} (compte de démonstration){% endif %}</p>
+  {# Archivées et supprimées comprises ; un échec n'a pas donné d'offre et ne compte pas. #}
+  <p class="compteur">{{ du_mois }} offre{% if du_mois > 1 %}s{% endif %} ce mois</p>
 
-  {% if en_cours is not empty %}
-    <div class="cat"><h5>En préparation</h5></div>
-    {% for e in en_cours %}
+  {% if en_preparation is not empty or echecs is not empty %}
+    <div class="cat liste"><h5>En préparation</h5></div>
+    {% for e in en_preparation %}
       <a class="ocard" href="/enregistrements/{{ e.uuid }}">
-        <span class="l1"><b>{{ e.nom_origine }}</b>
-          {% if e.statut == 'echec' %}<span class="status echec">Échec</span>{% else %}<span class="status">En préparation</span>{% endif %}</span>
-        <span class="l2"><span>Reçu le {{ e.recu_le|date_locale }}</span></span>
+        <span class="l1"><b>Visite du {{ e.recu_le|date_locale }}</b>
+          <span class="status"><span class="tourne" aria-hidden="true"></span>{{ e.statut == 'transcrit' ? 'Création de l\'offre' : 'Transcription' }}</span></span>
+        <span class="l2"><span>{{ e.nom_origine }}</span></span>
       </a>
+    {% endfor %}
+    {% for e in echecs %}
+      <div class="ocard echec">
+        <span class="l1"><b>Visite du {{ e.recu_le|date_locale }}</b></span>
+        <span class="l2"><span>Échec · ne compte pas dans vos offres</span></span>
+        <span class="act">
+          <form method="post" action="/enregistrements/{{ e.uuid }}/reessayer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="prim" type="submit">Réessayer</button></form>
+          <form method="post" action="/enregistrements/{{ e.uuid }}/retirer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button type="submit">Retirer</button></form>
+        </span>
+      </div>
     {% endfor %}
   {% endif %}
 
-  <div class="cat"><h5>Offres</h5></div>
+  <div class="cat liste"><h5>Offres</h5><span>{{ offres|length }}</span></div>
+  {% if offres|length > 1 %}
+    <nav class="fchips tri" aria-label="Trier les offres">
+      {% for cle, libelle in tris %}<a href="{{ cle == 'recent' ? '/' : '/?tri=' ~ cle }}"{% if cle == tri %} aria-current="true"{% endif %}><span>{{ libelle }}</span></a>{% endfor %}
+    </nav>
+  {% endif %}
+  {# Balayer une offre vers la gauche montre Archiver et Supprimer (app.js) ; au clavier, la touche
+     Tab les atteint et les fait apparaître. #}
   {% for o in offres %}
-    <a class="ocard" href="/offres/{{ o.id }}">
-      <span class="l1"><b>{{ o.titre }}</b><span class="status pret">Prête à relire</span></span>
-      <span class="l2"><span>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}Offre {{ o.numero }} · {% if o.modifiee_le %}modifiée le {{ o.modifiee_le|date_locale }}{% else %}{{ o.cree_le|date_locale }}{% endif %}</span><b>{{ totaux[o.id]|chf }}</b></span>
-    </a>
+    <div class="glisse" data-glisse>
+      <div class="actions-glisse">
+        <form method="post" action="/offres/{{ o.id }}/archiver"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="arch" type="submit">Archiver</button></form>
+        <form method="post" action="/offres/{{ o.id }}/supprimer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="supp" type="submit">Supprimer</button></form>
+      </div>
+      <a class="ocard" href="/offres/{{ o.id }}">
+        <span class="l1"><b class="titre">{{ o.titre }}</b>
+          {% if a_relire[o.id] > 0 %}<span class="status pret">{{ a_relire[o.id] }} à vérifier</span>{% else %}<span class="status relue">Prête</span>{% endif %}</span>
+        <span class="l2"><span>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}Offre {{ o.numero }} · {% if o.modifiee_le %}modifiée le {{ o.modifiee_le|date_locale }}{% else %}{{ o.cree_le|date_locale }}{% endif %}</span><b>{{ totaux[o.id]|chf }}</b></span>
+      </a>
+    </div>
   {% else %}
-    <p class="vide">Aucune offre pour l'instant. Le bouton rond «&nbsp;+&nbsp;», en bas à droite, enregistre ou importe la visite.</p>
+    {% if archives is not empty %}
+      <p class="vide">Aucune offre en cours&nbsp;: les autres sont dans les archives, en bas.</p>
+    {% else %}
+      <p class="vide">Aucune offre pour l'instant. Le micro, en bas, enregistre la visite&nbsp;; la flèche importe un fichier.</p>
+    {% endif %}
   {% endfor %}
+
+  {% if archives is not empty %}
+    <details class="archives" data-archives>
+      <summary><span>Archives</span><span>{{ archives|length }}</span></summary>
+      {% for o in archives %}
+        <div class="archive">
+          <a class="ocard" href="/offres/{{ o.id }}">
+            <span class="l1"><b>{{ o.titre }}</b></span>
+            <span class="l2"><span>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}Offre {{ o.numero }}</span><b>{{ totaux[o.id]|chf }}</b></span>
+          </a>
+          <form method="post" action="/offres/{{ o.id }}/restaurer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="lien" type="submit">Restaurer</button></form>
+        </div>
+      {% endfor %}
+    </details>
+  {% endif %}
 {% endblock %}
 
 {% block actions %}{% include '_nouvelle_offre.html.twig' with {rond: true} %}{% endblock %}

@@ -539,6 +539,71 @@ function fichesEnFenetre() {
   });
 }
 
+// Liste des offres : balayer une offre vers la gauche montre Archiver et Supprimer (choix de Xavier du
+// 2026-11-12). Un glissé n'ouvre pas l'offre, un défilement vertical reste un défilement, une seule
+// offre ouverte à la fois. Au clavier, Tab atteint les deux boutons (CSS :focus-within).
+function balayage() {
+  const cartes = [...document.querySelectorAll('[data-glisse]')];
+  if (!cartes.length) return;
+  const LARGEUR = 176;
+  const fermerTout = (sauf) => cartes.forEach((c) => { if (c !== sauf) c.classList.remove('ouverte'); });
+  cartes.forEach((c) => {
+    const face = c.querySelector('.ocard');
+    let x0 = null;
+    let y0 = 0;
+    let dx = 0;
+    let glisse = false;
+    face.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      x0 = e.clientX;
+      y0 = e.clientY;
+      dx = 0;
+      glisse = false;
+    });
+    face.addEventListener('pointermove', (e) => {
+      if (x0 === null) return;
+      const mx = e.clientX - x0;
+      if (!glisse) {
+        if (Math.abs(mx) < 8) return;
+        if (Math.abs(e.clientY - y0) > Math.abs(mx)) { x0 = null; return; }
+        glisse = true;
+        c.classList.add('tire');
+        face.setPointerCapture(e.pointerId);
+        face.style.transition = 'none';
+        fermerTout(c);
+      }
+      const depart = c.classList.contains('ouverte') ? -LARGEUR : 0;
+      dx = Math.min(0, Math.max(-LARGEUR - 24, depart + mx));
+      face.style.transform = 'translateX(' + dx + 'px)';
+    });
+    const fin = () => {
+      if (x0 === null) return;
+      x0 = null;
+      face.style.transition = '';
+      face.style.transform = '';
+      c.classList.remove('tire');
+      if (glisse) c.classList.toggle('ouverte', dx < -LARGEUR / 2);
+    };
+    face.addEventListener('pointerup', fin);
+    face.addEventListener('pointercancel', fin);
+    // La fin d'un glissé envoie un clic : il ne fait rien (constaté le 2026-11-12, il refermait l'offre
+    // qu'on venait d'ouvrir). Une offre déjà ouverte se referme au toucher au lieu de s'ouvrir.
+    face.addEventListener('click', (e) => {
+      if (glisse) {
+        e.preventDefault();
+        glisse = false;
+        return;
+      }
+      if (c.classList.contains('ouverte')) {
+        e.preventDefault();
+        c.classList.remove('ouverte');
+      }
+    });
+    face.addEventListener('dragstart', (e) => e.preventDefault());
+  });
+  document.addEventListener('pointerdown', (e) => { if (!e.target.closest('[data-glisse]')) fermerTout(null); });
+}
+
 // Réglages : la phrase « Paiement » de l'offre suit les choix avant l'enregistrement.
 function choixDesReglages() {
   const bloc = document.querySelector('[data-paiement]');
@@ -581,5 +646,6 @@ document.addEventListener('DOMContentLoaded', () => {
   bandeaux();
   nouvelleOffre();
   preparation();
+  balayage();
   fichesEnFenetre();
 });

@@ -71,7 +71,7 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | 18 | Facture : « Facturer » depuis l'offre, numéro modifiable, QR-facture, PDF | (à ouvrir) | 14, 16 | à cadrer |
 | 19 | Envoi par courriel de l'offre et de la facture | (à ouvrir) | 18 | question à Xavier |
 | 20 | Extraction optimisée (cadrage, section 5) à côté de l'actuelle, banc de comparaison | (à ouvrir) | 10 | accord de Xavier attendu |
-| 21 | Liste des offres : en préparation, échecs hors quota, tri, archives | `21-liste-offres/` | 15 | maquette |
+| 21 | Liste des offres : en préparation, échecs hors quota, tri, archives | `21-liste-offres/` | 15 | livré en code, recette de Xavier attendue |
 
 ## Décisions
 

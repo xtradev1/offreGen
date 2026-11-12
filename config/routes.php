@@ -11,6 +11,7 @@ use OffreGen\Http\Controleur\ConnexionControleur;
 use OffreGen\Http\Controleur\EnregistrementControleur;
 use OffreGen\Http\Controleur\ImportControleur;
 use OffreGen\Http\Controleur\OffreControleur;
+use OffreGen\Http\Controleur\RangementControleur;
 use OffreGen\Http\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,6 +36,11 @@ return static function (Conteneur $c): array {
         new Route('import_envoi', '/import', ['POST'], static fn (Request $r): Response => $import()->envoyer($r), Route::ARTISAN),
         new Route('enregistrement', '/enregistrements/{uuid}', ['GET'], static fn (Request $r, array $p): Response => (new EnregistrementControleur($c))->afficher($r, $p), Route::ARTISAN),
         new Route('enregistrement_etat', '/enregistrements/{uuid}/etat', ['GET'], static fn (Request $r, array $p): Response => (new EnregistrementControleur($c))->etat($r, $p), Route::ARTISAN),
+        new Route('enregistrement_reessayer', '/enregistrements/{uuid}/reessayer', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->reessayer($r, $p), Route::ARTISAN),
+        new Route('enregistrement_retirer', '/enregistrements/{uuid}/retirer', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->retirer($r, $p), Route::ARTISAN),
+        new Route('offre_archiver', '/offres/{id}/archiver', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->archiver($r, $p), Route::ARTISAN),
+        new Route('offre_supprimer', '/offres/{id}/supprimer', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->supprimer($r, $p), Route::ARTISAN),
+        new Route('offre_restaurer', '/offres/{id}/restaurer', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->restaurer($r, $p), Route::ARTISAN),
         new Route('offre', '/offres/{id}', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->afficher($r, $p), Route::ARTISAN),
         new Route('offre_entete', '/offres/{id}/modifier', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->entete($r, $p), Route::ARTISAN),
         new Route('offre_entete_enregistrer', '/offres/{id}/modifier', ['POST'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->modifierEntete($r, $p), Route::ARTISAN),

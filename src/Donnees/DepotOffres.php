@@ -8,7 +8,8 @@ use OffreGen\Offre\LigneExtraite;
 
 /**
  * Les offres d'un artisan et leurs lignes. Une ligne supprimée garde sa place (supprimee_le) :
- * « Annuler » la remet ; les lectures l'ignorent.
+ * « Annuler » la remet ; les lectures l'ignorent. Une offre se range de même : archivée (archivee_le)
+ * ou supprimée (supprimee_le), elle reste en base et compte dans les offres du mois.
  *
  * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_nom: string|null, client_adresse: string|null, cree_le: string, modifiee_le: string|null}
  * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null}
@@ -73,14 +74,61 @@ final class DepotOffres
         });
     }
 
-    /** @return Offre|null */
+    /** @return Offre|null l'offre, archivée comprise ; une offre supprimée est introuvable */
     public function parId(int $id): ?array
     {
         /** @var Offre|null */
         return $this->base->un(
-            'SELECT ' . self::COLONNES_OFFRE . ' FROM offre WHERE id = :id AND artisan_id = :a',
+            'SELECT ' . self::COLONNES_OFFRE . ' FROM offre WHERE id = :id AND artisan_id = :a AND supprimee_le IS NULL',
             ['id' => $id, 'a' => $this->portee->artisanId],
         );
+    }
+
+    /** Descend dans les archives. Faux si l'offre n'est pas à lui. */
+    public function archiver(int $id, \DateTimeImmutable $quand): bool
+    {
+        return $this->marquer($id, 'archivee_le = :q', $quand);
+    }
+
+    /** Retirée de la vue pour de bon, sauf « Annuler ». Elle reste dans le compte du mois. */
+    public function supprimer(int $id, \DateTimeImmutable $quand): bool
+    {
+        return $this->marquer($id, 'supprimee_le = :q', $quand);
+    }
+
+    /** Sortie des archives, ou suppression annulée. Faux si l'offre n'est pas à lui. */
+    public function restaurer(int $id): bool
+    {
+        $aLui = $this->base->valeur('SELECT id FROM offre WHERE id = :id AND artisan_id = :a', ['id' => $id, 'a' => $this->portee->artisanId]);
+        if ($aLui === false) {
+            return false;
+        }
+        $this->base->ecrire(
+            'UPDATE offre SET archivee_le = NULL, supprimee_le = NULL WHERE id = :id AND artisan_id = :a',
+            ['id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
+    /** Les offres créées depuis cette date, archivées et supprimées comprises (règle de Xavier). */
+    public function creeesDepuis(\DateTimeImmutable $depuis): int
+    {
+        return (int) $this->base->valeur(
+            'SELECT COUNT(*) FROM offre WHERE artisan_id = :a AND cree_le >= :d',
+            ['a' => $this->portee->artisanId, 'd' => Dates::versBase($depuis)],
+        );
+    }
+
+    private function marquer(int $id, string $affectation, \DateTimeImmutable $quand): bool
+    {
+        if ($this->parId($id) === null) {
+            return false;
+        }
+        $this->base->ecrire(
+            "UPDATE offre SET $affectation WHERE id = :id AND artisan_id = :a",
+            ['q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
     }
 
     /** Titre et client, corrigés par l'artisan. Faux si l'offre n'est pas à lui. */
@@ -137,12 +185,24 @@ final class DepotOffres
         );
     }
 
-    /** @return list<Offre> de la dernière travaillée à la plus ancienne */
-    public function liste(int $limite = 50): array
+    /** @return list<Offre> les offres ni archivées ni supprimées, de la dernière travaillée à la plus ancienne */
+    public function liste(int $limite = 500): array
     {
         /** @var list<Offre> */
         return $this->base->lire(
-            'SELECT ' . self::COLONNES_OFFRE . ' FROM offre WHERE artisan_id = :a ORDER BY COALESCE(modifiee_le, cree_le) DESC, id DESC LIMIT ' . max(1, $limite),
+            'SELECT ' . self::COLONNES_OFFRE . ' FROM offre WHERE artisan_id = :a AND archivee_le IS NULL AND supprimee_le IS NULL
+             ORDER BY COALESCE(modifiee_le, cree_le) DESC, id DESC LIMIT ' . max(1, $limite),
+            ['a' => $this->portee->artisanId],
+        );
+    }
+
+    /** @return list<Offre> les offres archivées, de la dernière archivée à la plus ancienne */
+    public function archives(int $limite = 200): array
+    {
+        /** @var list<Offre> */
+        return $this->base->lire(
+            'SELECT ' . self::COLONNES_OFFRE . ' FROM offre WHERE artisan_id = :a AND archivee_le IS NOT NULL AND supprimee_le IS NULL
+             ORDER BY archivee_le DESC, id DESC LIMIT ' . max(1, $limite),
             ['a' => $this->portee->artisanId],
         );
     }
