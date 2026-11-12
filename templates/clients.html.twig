@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{# Onglet Clients (maquette validée le 2026-11-12) : par ordre alphabétique, civilités ignorées ; recherche par
+   nom ou localité ; chaque ligne dit la localité, le nombre d'offres et la date de la dernière. #}
+{% block titre %}Clients · offreGen{% endblock %}
+{% block entete %}Clients{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  <form class="search" method="get" action="/clients" role="search">
+    <div class="box">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="kq" name="q" type="search" placeholder="Chercher un nom, une localité" autocomplete="off" aria-label="Chercher un client" data-filtre="#klist">
+    </div>
+  </form>
+  <p class="compteur">{{ clients|length }} client{{ clients|length > 1 ? 's' : '' }}</p>
+
+  <div id="klist">
+    {% set lettre = '' %}
+    {% for k in clients %}
+      {% if k.lettre != lettre %}
+        {% set lettre = k.lettre %}
+        <div class="klettre" data-groupe><h5>{{ lettre }}</h5></div>
+      {% endif %}
+      <a class="krow" id="k{{ k.id }}" href="/clients/{{ k.id }}" data-en-feuille data-texte="{{ k.texte }}">
+        <span class="ini" aria-hidden="true">{{ k.initiales }}</span>
+        <span class="corps"><b>{{ k.nom }}</b>
+          <small>{% if k.localite %}{{ k.localite }} · {% endif %}{% if k.nb_offres > 0 %}{{ k.nb_offres }} offre{{ k.nb_offres > 1 ? 's' : '' }}, la dernière le {{ k.derniere|jour }}{% else %}aucune offre{% endif %}</small></span>
+        <span class="fl" aria-hidden="true">›</span>
+      </a>
+    {% else %}
+      <p class="vide">Aucun client pour l'instant. Une fiche naît quand vous confirmez le client d'une offre, ou avec «&nbsp;Nouveau client&nbsp;», en bas.</p>
+    {% endfor %}
+    <p class="vide" data-aucun hidden>Aucun client ne correspond.
+      <a class="lien" href="/clients/nouveau" data-en-feuille data-creer="/clients/nouveau?nom=">Créer ce client</a></p>
+  </div>
+{% endblock %}
+
+{% block actions %}
+  {% include '_feuille.html.twig' with {options: {rafraichir: '#klist', lignes: '#klist .krow', prefixe: 'k', recherche: '#kq'}} %}
+  <div class="actionbar"><a class="btn primary" href="/clients/nouveau" data-en-feuille>
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nouveau client</a></div>
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'clients'} %}{% endblock %}

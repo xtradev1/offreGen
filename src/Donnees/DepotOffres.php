@@ -11,12 +11,18 @@ use OffreGen\Offre\LigneExtraite;
  * « Annuler » la remet ; les lectures l'ignorent. Une offre se range de même : archivée (archivee_le)
  * ou supprimée (supprimee_le), elle reste en base et compte dans les offres du mois.
  *
- * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_nom: string|null, client_adresse: string|null, cree_le: string, modifiee_le: string|null}
+ * Le client d'une offre : sa fiche (client_id), sinon le nom et le lieu dictés, proposition à confirmer.
+ * client_nom et client_adresse donnent l'un ou l'autre, pour l'écran et le document.
+ *
+ * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null}
  * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null}
  */
 final class DepotOffres
 {
-    private const COLONNES_OFFRE = 'id, numero, enregistrement_id, titre, client_nom, client_adresse, cree_le, modifiee_le';
+    private const SELECT_OFFRE = 'SELECT o.id, o.numero, o.enregistrement_id, o.titre, o.client_id,
+            COALESCE(c.nom, o.client_dicte) AS client_nom, CASE WHEN c.id IS NULL THEN o.lieu_dicte ELSE c.adresse END AS client_adresse,
+            o.client_dicte, o.lieu_dicte, o.cree_le, o.modifiee_le
+         FROM offre o LEFT JOIN client c ON c.id = o.client_id AND c.artisan_id = o.artisan_id';
 
     /** Colonnes d'une ligne ; la catégorie vient du produit du catalogue, s'il existe encore. */
     private const COLONNES_LIGNE = 'l.id, l.offre_id, l.rang, l.designation, l.quantite_milliemes, l.unite, l.prix_centimes, l.a_verifier, l.entendu, l.produit_id, p.categorie
@@ -33,9 +39,9 @@ final class DepotOffres
      *
      * @param list<LigneExtraite> $lignes
      */
-    public function creerDepuisEnregistrement(int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?string $clientNom = null, ?string $clientAdresse = null): int
+    public function creerDepuisEnregistrement(int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?int $clientId = null, ?string $clientDicte = null, ?string $lieuDicte = null): int
     {
-        return $this->creer($enregistrementId, $titre, $lignes, $quand, $clientNom, $clientAdresse);
+        return $this->creer($enregistrementId, $titre, $lignes, $quand, $clientId, $clientDicte, $lieuDicte);
     }
 
     /**
@@ -43,20 +49,21 @@ final class DepotOffres
      *
      * @param list<LigneExtraite> $lignes
      */
-    public function creerExemple(string $titre, array $lignes, \DateTimeImmutable $quand, string $clientNom, string $clientAdresse): int
+    public function creerExemple(string $titre, array $lignes, \DateTimeImmutable $quand, int $clientId): int
     {
-        return $this->creer(null, $titre, $lignes, $quand, $clientNom, $clientAdresse);
+        return $this->creer(null, $titre, $lignes, $quand, $clientId, null, null);
     }
 
     /** @param list<LigneExtraite> $lignes */
-    private function creer(?int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?string $clientNom, ?string $clientAdresse): int
+    private function creer(?int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?int $clientId, ?string $clientDicte, ?string $lieuDicte): int
     {
-        return $this->base->transaction(function () use ($enregistrementId, $titre, $lignes, $quand, $clientNom, $clientAdresse): int {
+        return $this->base->transaction(function () use ($enregistrementId, $titre, $lignes, $quand, $clientId, $clientDicte, $lieuDicte): int {
             $numero = (int) $this->base->valeur('SELECT COALESCE(MAX(numero), 0) + 1 FROM offre WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
             $this->base->ecrire(
-                'INSERT INTO offre (artisan_id, numero, enregistrement_id, titre, client_nom, client_adresse, cree_le) VALUES (:a, :n, :e, :t, :cn, :ca, :q)',
+                'INSERT INTO offre (artisan_id, numero, enregistrement_id, titre, client_id, client_dicte, lieu_dicte, cree_le) VALUES (:a, :n, :e, :t, :ci, :cn, :ca, :q)',
                 ['a' => $this->portee->artisanId, 'n' => $numero, 'e' => $enregistrementId, 't' => mb_substr($titre, 0, 190),
-                 'cn' => $clientNom === null ? null : mb_substr($clientNom, 0, 190), 'ca' => $clientAdresse === null ? null : mb_substr($clientAdresse, 0, 255),
+                 'ci' => $this->clientDeLArtisan($clientId),
+                 'cn' => $clientDicte === null ? null : mb_substr($clientDicte, 0, 190), 'ca' => $lieuDicte === null ? null : mb_substr($lieuDicte, 0, 255),
                  'q' => Dates::versBase($quand)],
             );
             $offreId = $this->base->dernierId();
@@ -79,7 +86,7 @@ final class DepotOffres
     {
         /** @var Offre|null */
         return $this->base->un(
-            'SELECT ' . self::COLONNES_OFFRE . ' FROM offre WHERE id = :id AND artisan_id = :a AND supprimee_le IS NULL',
+            self::SELECT_OFFRE . ' WHERE o.id = :id AND o.artisan_id = :a AND o.supprimee_le IS NULL',
             ['id' => $id, 'a' => $this->portee->artisanId],
         );
     }
@@ -131,16 +138,29 @@ final class DepotOffres
         return true;
     }
 
-    /** Titre et client, corrigés par l'artisan. Faux si l'offre n'est pas à lui. */
-    public function modifierEntete(int $id, string $titre, ?string $clientNom, ?string $clientAdresse, \DateTimeImmutable $quand): bool
+    /** L'objet de l'offre, corrigé par l'artisan. Faux si l'offre n'est pas à lui. */
+    public function modifierTitre(int $id, string $titre, \DateTimeImmutable $quand): bool
     {
         if ($this->parId($id) === null) {
             return false;
         }
         $this->base->ecrire(
-            'UPDATE offre SET titre = :t, client_nom = :cn, client_adresse = :ca, modifiee_le = :q WHERE id = :id AND artisan_id = :a',
-            ['t' => mb_substr($titre, 0, 190), 'cn' => $clientNom, 'ca' => $clientAdresse, 'q' => Dates::versBase($quand),
-             'id' => $id, 'a' => $this->portee->artisanId],
+            'UPDATE offre SET titre = :t, modifiee_le = :q WHERE id = :id AND artisan_id = :a',
+            ['t' => mb_substr($titre, 0, 190), 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
+    /** L'offre désigne cette fiche. Faux si l'offre ou la fiche n'est pas à l'artisan. */
+    public function rattacherClient(int $id, int $clientId, \DateTimeImmutable $quand): bool
+    {
+        $client = $this->clientDeLArtisan($clientId);
+        if ($client === null || $this->parId($id) === null) {
+            return false;
+        }
+        $this->base->ecrire(
+            'UPDATE offre SET client_id = :c, modifiee_le = :q WHERE id = :id AND artisan_id = :a',
+            ['c' => $client, 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
         );
         return true;
     }
@@ -190,8 +210,8 @@ final class DepotOffres
     {
         /** @var list<Offre> */
         return $this->base->lire(
-            'SELECT ' . self::COLONNES_OFFRE . ' FROM offre WHERE artisan_id = :a AND archivee_le IS NULL AND supprimee_le IS NULL
-             ORDER BY COALESCE(modifiee_le, cree_le) DESC, id DESC LIMIT ' . max(1, $limite),
+            self::SELECT_OFFRE . ' WHERE o.artisan_id = :a AND o.archivee_le IS NULL AND o.supprimee_le IS NULL
+             ORDER BY COALESCE(o.modifiee_le, o.cree_le) DESC, o.id DESC LIMIT ' . max(1, $limite),
             ['a' => $this->portee->artisanId],
         );
     }
@@ -201,8 +221,8 @@ final class DepotOffres
     {
         /** @var list<Offre> */
         return $this->base->lire(
-            'SELECT ' . self::COLONNES_OFFRE . ' FROM offre WHERE artisan_id = :a AND archivee_le IS NOT NULL AND supprimee_le IS NULL
-             ORDER BY archivee_le DESC, id DESC LIMIT ' . max(1, $limite),
+            self::SELECT_OFFRE . ' WHERE o.artisan_id = :a AND o.archivee_le IS NOT NULL AND o.supprimee_le IS NULL
+             ORDER BY o.archivee_le DESC, o.id DESC LIMIT ' . max(1, $limite),
             ['a' => $this->portee->artisanId],
         );
     }
@@ -311,6 +331,16 @@ final class DepotOffres
     public function toutEffacer(): void
     {
         $this->base->ecrire('DELETE FROM offre WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
+    }
+
+    /** Une fiche client n'est désignée que si elle appartient à l'artisan. */
+    private function clientDeLArtisan(?int $clientId): ?int
+    {
+        if ($clientId === null) {
+            return null;
+        }
+        $trouve = $this->base->valeur('SELECT id FROM client WHERE id = :c AND artisan_id = :a', ['c' => $clientId, 'a' => $this->portee->artisanId]);
+        return $trouve === false ? null : (int) $trouve;
     }
 
     /** Un produit proposé par l'extraction n'est gardé que s'il appartient à l'artisan. */

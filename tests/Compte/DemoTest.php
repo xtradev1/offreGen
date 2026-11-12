@@ -48,7 +48,10 @@ final class DemoTest extends TestCase
         $a = $this->jeu->a;
         // Les anciennes offres partent ; deux offres d'exemple, tirées du catalogue fictif, les remplacent.
         self::assertSame(0, BaseDeTest::compter('offre', "artisan_id = $a AND titre = 'Offre a'"));
-        self::assertSame(2, BaseDeTest::compter('offre', "artisan_id = $a AND enregistrement_id IS NULL AND client_nom IS NOT NULL"));
+        self::assertSame(2, BaseDeTest::compter('offre', "artisan_id = $a AND enregistrement_id IS NULL AND client_id IS NOT NULL"));
+        // Chaque client d'exemple a sa fiche ; l'ancienne fiche du jeu de test est partie.
+        self::assertSame(2, BaseDeTest::compter('client', "artisan_id = $a"));
+        self::assertSame(0, BaseDeTest::compter('client', "artisan_id = $a AND nom = 'Client a'"));
         // La plus ancienne porte le numéro 1.
         self::assertSame(1, BaseDeTest::compter('offre', "artisan_id = $a AND numero = 1 AND cree_le < (SELECT o2.cree_le FROM (SELECT cree_le FROM offre WHERE artisan_id = $a AND numero = 2) o2)"));
         self::assertSame(0, BaseDeTest::compter('ligne', "artisan_id = $a AND produit_id IS NULL"));

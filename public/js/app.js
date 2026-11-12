@@ -78,41 +78,45 @@ function envoisDeFormulaires() {
 
 // Filtre à la frappe d'une liste rendue en entier par le serveur (catalogue, ajout à l'offre).
 function filtres() {
-  document.querySelectorAll('input[data-filtre]').forEach((champ) => {
-    const liste = document.querySelector(champ.dataset.filtre);
-    if (!liste) return;
-    const appliquer = () => {
-      const mots = normaliser(champ.value).split(' ').filter(Boolean);
-      let trouves = 0;
-      let groupe = null;
-      let dansGroupe = 0;
-      const fermer = () => {
-        if (groupe) {
-          groupe.hidden = dansGroupe === 0;
-          const compte = groupe.querySelector('[data-compte]');
-          if (compte) compte.textContent = String(dansGroupe);
-        }
-      };
-      [...liste.children].forEach((el) => {
-        if (el.hasAttribute('data-groupe')) { fermer(); groupe = el; dansGroupe = 0; return; }
-        if (!el.hasAttribute('data-texte')) return;
-        // Un produit d'une autre catégorie que celle choisie reste caché, quoi qu'on tape.
-        const garde = !el.hasAttribute('data-hors-cat') && mots.every((m) => el.dataset.texte.includes(m));
-        el.hidden = !garde;
-        if (garde) { trouves++; dansGroupe++; }
-      });
-      fermer();
-      const aucun = liste.querySelector('[data-aucun]');
-      if (aucun) aucun.hidden = trouves > 0;
-      const creer = liste.querySelector('[data-creer]');
-      if (creer) creer.href = '/catalogue/nouveau?q=' + encodeURIComponent(champ.value.trim());
-      const copie = champ.dataset.copie && document.querySelector(champ.dataset.copie);
-      if (copie && trouves === 0) copie.value = champ.value.trim();
+  document.querySelectorAll('input[data-filtre]').forEach(brancherFiltre);
+}
+
+function brancherFiltre(champ) {
+  if (champ.dataset.branche) return;
+  champ.dataset.branche = '1';
+  const liste = document.querySelector(champ.dataset.filtre);
+  if (!liste) return;
+  const appliquer = () => {
+    const mots = normaliser(champ.value).split(' ').filter(Boolean);
+    let trouves = 0;
+    let groupe = null;
+    let dansGroupe = 0;
+    const fermer = () => {
+      if (groupe) {
+        groupe.hidden = dansGroupe === 0;
+        const compte = groupe.querySelector('[data-compte]');
+        if (compte) compte.textContent = String(dansGroupe);
+      }
     };
-    champ.addEventListener('input', appliquer);
-    // La liste est déjà filtrée : Entrée ne recharge pas la page.
-    if (champ.form) champ.form.addEventListener('submit', (e) => { e.preventDefault(); appliquer(); });
-  });
+    [...liste.children].forEach((el) => {
+      if (el.hasAttribute('data-groupe')) { fermer(); groupe = el; dansGroupe = 0; return; }
+      if (!el.hasAttribute('data-texte')) return;
+      // Un produit d'une autre catégorie que celle choisie reste caché, quoi qu'on tape.
+      const garde = !el.hasAttribute('data-hors-cat') && mots.every((m) => el.dataset.texte.includes(m));
+      el.hidden = !garde;
+      if (garde) { trouves++; dansGroupe++; }
+    });
+    fermer();
+    const aucun = liste.querySelector('[data-aucun]');
+    if (aucun) aucun.hidden = trouves > 0;
+    const creer = liste.querySelector('[data-creer]');
+    if (creer) creer.href = (creer.dataset.creer || '/catalogue/nouveau?q=') + encodeURIComponent(champ.value.trim());
+    const copie = champ.dataset.copie && document.querySelector(champ.dataset.copie);
+    if (copie && trouves === 0) copie.value = champ.value.trim();
+  };
+  champ.addEventListener('input', appliquer);
+  // La liste est déjà filtrée : Entrée ne recharge pas la page.
+  if (champ.form) champ.form.addEventListener('submit', (e) => { e.preventDefault(); appliquer(); });
 }
 
 function bandeaux() {
@@ -428,14 +432,26 @@ function fichesEnFenetre() {
   const corps = fond.querySelector('[data-feuille-corps]');
   const pied = fond.querySelector('[data-feuille-pied]');
   const ici = window.location.pathname;
+  // Ce que la fermeture recharge, la ligne qui s'éclaire, le champ qui refiltre (défaut : le catalogue).
+  const aRafraichir = (fond.dataset.rafraichir || '#clist,.fchips').split(',');
+  const lignes = fond.dataset.lignes || '#clist .crow';
+  const prefixe = fond.dataset.prefixe || 'p';
+  const recherche = fond.dataset.recherche || '#cq';
   let declencheur = null;
+  let enregistreSeul = null;
   const calque = {
     montrer: () => apparaitre(fond),
     cacher: () => {
       disparaitre(fond);
       if (declencheur && declencheur.isConnected) declencheur.focus({ preventScroll: true });
+      // Une fiche enregistrée au fil de la saisie : la liste derrière se met à jour.
+      if (enregistreSeul !== null) { const id = enregistreSeul; enregistreSeul = null; rafraichir('', new Set(), id); }
     },
   };
+  fond.addEventListener('enregistre', (e) => {
+    const m = (e.target.getAttribute('action') || '').match(/\/(\d+)$/);
+    enregistreSeul = m ? m[1] : '';
+  });
   const fermer = () => calques.fermer(calque);
 
   const afficher = (html) => {
@@ -448,6 +464,8 @@ function fichesEnFenetre() {
     const barre = page.querySelector('.bas .actionbar');
     pied.replaceChildren(...(barre ? [barre] : []));
     corps.scrollTop = 0;
+    corps.querySelectorAll('form[data-auto]').forEach(brancherAuto);
+    corps.querySelectorAll('input[data-filtre]').forEach(brancherFiltre);
     const dejaOuverte = calques.ouvert() === calque;
     if (!dejaOuverte) calques.ouvrir(calque);
     // Nouveau produit : la désignation s'ouvre au clavier. Champ refusé : il reçoit le focus.
@@ -468,19 +486,19 @@ function fichesEnFenetre() {
       .then((r) => r.text())
       .then((html) => {
         const page = new DOMParser().parseFromString(html, 'text/html');
-        ['#clist', '.fchips'].forEach((s) => {
+        aRafraichir.forEach((s) => {
           const neuf = page.querySelector(s);
           const vieux = document.querySelector(s);
           if (neuf && vieux) vieux.replaceChildren(...neuf.childNodes);
         });
-        const champ = document.querySelector('#cq');
-        const neufChamp = page.querySelector('#cq');
+        const champ = document.querySelector(recherche);
+        const neufChamp = page.querySelector(recherche);
         if (champ && neufChamp) { champ.placeholder = neufChamp.placeholder; champ.dispatchEvent(new Event('input')); }
         // Un nouveau message remplace le précédent : deux bandeaux au même endroit se chevauchent.
         const messages = message.querySelectorAll('.snack');
         if (messages.length) document.querySelectorAll('.app > .snack').forEach((s) => s.remove());
         messages.forEach((s) => { document.querySelector('.app').append(s); setTimeout(() => s.remove(), 4000); });
-        const ligne = modifie ? document.getElementById('p' + modifie) : [...document.querySelectorAll('#clist .crow')].find((r) => !avant.has(r.id));
+        const ligne = modifie ? document.getElementById(prefixe + modifie) : [...document.querySelectorAll(lignes)].find((r) => !avant.has(r.id));
         if (ligne && !ligne.hidden) {
           declencheur = ligne;
           ligne.classList.remove('eclair');
@@ -496,6 +514,8 @@ function fichesEnFenetre() {
     const a = e.target.closest('a[href]');
     if (!a) return;
     if (fond.contains(a)) {
+      // Un lien qui mène ailleurs (une offre depuis la fiche d'un client) quitte la page.
+      if (a.hasAttribute('data-sortir')) return;
       // Dans la fiche : un lien vers la liste ferme la fenêtre, un autre (Supprimer, Garder) s'y charge.
       e.preventDefault();
       const u = new URL(a.href, window.location.href);
@@ -512,12 +532,14 @@ function fichesEnFenetre() {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && calques.ouvert() === calque) fermer(); });
 
   fond.addEventListener('submit', (e) => {
+    // Déjà pris en main (enregistrement automatique d'une fiche) : rien à envoyer en plus.
+    if (e.defaultPrevented) return;
     e.preventDefault();
     const form = e.target;
     const boutons = fond.querySelectorAll('button[type=submit]');
     boutons.forEach((b) => { b.disabled = true; });
-    const avant = new Set([...document.querySelectorAll('#clist .crow')].map((r) => r.id));
-    const modifie = (form.getAttribute('action').match(/^\/catalogue\/(\d+)$/) || [])[1] || null;
+    const avant = new Set([...document.querySelectorAll(lignes)].map((r) => r.id));
+    const modifie = (form.getAttribute('action').match(new RegExp('^' + ici + '/(\\d+)$')) || [])[1] || null;
     fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' })
       .then((r) => r.text().then((html) => {
         if (r.ok && r.redirected && new URL(r.url).pathname === ici) {
@@ -645,11 +667,15 @@ function envoisAutomatiques() {
   });
 }
 
-// Réglages : chaque changement s'enregistre seul (choix de Xavier du 2026-11-12). Le bouton
+// Réglages et fiche client : chaque changement s'enregistre seul (choix de Xavier du 2026-11-12). Le bouton
 // Enregistrer reste pour qui n'a pas JavaScript, et revient si un envoi automatique échoue.
-function reglagesAutomatiques() {
-  const form = document.querySelector('form[data-auto]');
-  if (!form) return;
+function enregistrementsAutomatiques() {
+  document.querySelectorAll('form[data-auto]').forEach(brancherAuto);
+}
+
+function brancherAuto(form) {
+  if (form.dataset.branche) return;
+  form.dataset.branche = '1';
   const etat = form.querySelector('[data-auto-etat]');
   const boutons = document.querySelectorAll('[data-sans-auto]');
   let secours = false;
@@ -710,6 +736,8 @@ function reglagesAutomatiques() {
         afficherErreurs({});
         rafraichirBadges();
         dire('Enregistré', 'ok');
+        // La fenêtre qui monte rafraîchit la liste derrière elle à sa fermeture.
+        form.dispatchEvent(new CustomEvent('enregistre', { bubbles: true }));
       } else if (r.status === 422 && json) {
         afficherErreurs(json.erreurs || {});
         dire('Pas enregistré : corrigez le champ signalé.', 'bad');
@@ -750,7 +778,7 @@ function reglagesAutomatiques() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  reglagesAutomatiques();
+  enregistrementsAutomatiques();
   envoisAutomatiques();
   choixDesReglages();
   corrections();

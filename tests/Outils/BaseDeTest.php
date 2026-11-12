@@ -64,7 +64,7 @@ final class BaseDeTest
     public static function vider(): void
     {
         $pdo = self::pdo();
-        foreach (['ligne', 'offre', 'produit', 'enregistrement', 'journal_connexion', 'artisan'] as $table) {
+        foreach (['ligne', 'offre', 'client', 'produit', 'enregistrement', 'journal_connexion', 'artisan'] as $table) {
             $pdo->exec("DELETE FROM $table");
         }
     }

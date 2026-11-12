@@ -39,37 +39,27 @@ final class OffreControleur
         return new Response($this->c->twig()->render('offre.html.twig', $this->donnees($requete, $parametres)));
     }
 
-    /** @param array<string, string> $parametres */
+    /**
+     * L'objet de l'offre. Le client se choisit dans sa fenêtre (ClientControleur::choixPourOffre).
+     *
+     * @param array<string, string> $parametres
+     */
     public function entete(Request $requete, array $parametres): Response
     {
         $offre = $this->offre($requete, $parametres);
-        $champs = ['titre' => $offre['titre'], 'client_nom' => $offre['client_nom'] ?? '', 'client_adresse' => $offre['client_adresse'] ?? ''];
-        return $this->formulaireEntete($offre, $champs, [], 200);
+        return $this->formulaireEntete($offre, ['titre' => $offre['titre']], [], 200);
     }
 
     /** @param array<string, string> $parametres */
     public function modifierEntete(Request $requete, array $parametres): Response
     {
         $offre = $this->offre($requete, $parametres);
-        $r = $requete->request;
-        $champs = ['titre' => $r->getString('titre'), 'client_nom' => $r->getString('client_nom'), 'client_adresse' => $r->getString('client_adresse')];
-        $erreurs = [];
+        $champs = ['titre' => $requete->request->getString('titre')];
         $titre = Saisie::texte($champs['titre'], 190);
         if ($titre === null) {
-            $erreurs['titre'] = "Indiquez l'objet de l'offre (190 caractères au plus).";
+            return $this->formulaireEntete($offre, $champs, ['titre' => "Indiquez l'objet de l'offre (190 caractères au plus)."], 422);
         }
-        $nom = trim($champs['client_nom']) === '' ? '' : Saisie::texte($champs['client_nom'], 190);
-        if ($nom === null) {
-            $erreurs['client_nom'] = '190 caractères au plus.';
-        }
-        $adresse = Saisie::lignes($champs['client_adresse'], 4, 255);
-        if ($adresse === null) {
-            $erreurs['client_adresse'] = 'Quatre lignes et 255 caractères au plus.';
-        }
-        if ($titre === null || $nom === null || $adresse === null || $erreurs !== []) {
-            return $this->formulaireEntete($offre, $champs, $erreurs, 422);
-        }
-        $this->offres($requete)->modifierEntete($offre['id'], $titre, $nom === '' ? null : $nom, $adresse === '' ? null : $adresse, $this->c->horloge()->now());
+        $this->offres($requete)->modifierTitre($offre['id'], $titre, $this->c->horloge()->now());
         Flash::dire($requete, 'info', 'Offre enregistrée');
         return new RedirectResponse('/offres/' . $offre['id'], 303);
     }

@@ -8,6 +8,7 @@ use OffreGen\Audio\StockageAudio;
 use OffreGen\Catalogue\CatalogueFictif;
 use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
+use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
@@ -78,6 +79,8 @@ final class Comptes
         $this->base->transaction(function () use ($portee, $enregistrements, $catalogue, $exemples): void {
             $offres = new DepotOffres($this->base, $portee);
             $offres->toutEffacer();
+            $clients = new DepotClients($this->base, $portee);
+            $clients->toutEffacer();
             $enregistrements->toutEffacer();
             $produits = new DepotProduits($this->base, $portee);
             $produits->remplacerTout($catalogue);
@@ -86,6 +89,7 @@ final class Comptes
             $parNom = array_column($produits->tous(), null, 'designation');
             // La plus ancienne d'abord : elle reçoit le numéro 1.
             usort($exemples, static fn (array $x, array $y): int => $y['il_y_a_jours'] <=> $x['il_y_a_jours']);
+            $parNomClient = [];
             foreach ($exemples as $o) {
                 $lignes = [];
                 foreach ($o['lignes'] as $designation => $quantite) {
@@ -93,7 +97,9 @@ final class Comptes
                     $lignes[] = new LigneExtraite($p['designation'], $quantite * 1000, $p['unite'], $p['prix_centimes'], false, $p['id']);
                 }
                 $quand = $this->horloge->now()->modify("-{$o['il_y_a_jours']} days");
-                $offres->creerExemple($o['titre'], $lignes, $quand, $o['client'], $o['adresse']);
+                // Les clients des exemples ont leur fiche : la démonstration montre l'onglet Clients rempli.
+                $parNomClient[$o['client']] ??= $clients->creer(['nom' => $o['client'], 'adresse' => $o['adresse'], 'telephone' => null, 'courriel' => null], $quand);
+                $offres->creerExemple($o['titre'], $lignes, $quand, $parNomClient[$o['client']]);
             }
         });
 

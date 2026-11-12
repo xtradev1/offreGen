@@ -13,21 +13,12 @@
   <form id="entete" method="post" action="/offres/{{ offre.id }}/modifier">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     <div class="champ">
-      <label for="client_nom">Client</label>
-      <input id="client_nom" name="client_nom" value="{{ champs.client_nom }}" maxlength="190" autocomplete="off" placeholder="Madame, Monsieur…"{{ f.invalide(erreurs, 'client_nom') }}>
-      {{ f.erreur(erreurs, 'client_nom') }}
-    </div>
-    <div class="champ">
-      <label for="client_adresse">Adresse du client</label>
-      <textarea id="client_adresse" name="client_adresse" rows="2" autocomplete="off" placeholder="Rue et numéro&#10;NPA et localité"{{ f.invalide(erreurs, 'client_adresse') }}>{{ champs.client_adresse }}</textarea>
-      {{ f.erreur(erreurs, 'client_adresse') }}
-    </div>
-    <div class="champ">
       <label for="titre">Objet de l'offre</label>
       <input id="titre" name="titre" value="{{ champs.titre }}" maxlength="190" required{{ f.invalide(erreurs, 'titre') }}>
       {{ f.erreur(erreurs, 'titre') }}
     </div>
   </form>
+  <p class="muted petit">Le client se choisit en touchant son nom en haut de l'offre.</p>
 {% endblock %}
 
 {% block actions %}

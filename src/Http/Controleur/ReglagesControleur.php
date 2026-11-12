@@ -130,12 +130,12 @@ final class ReglagesControleur
     /**
      * Une petite offre de peintre, pour l'aperçu d'un compte qui n'a encore rien dicté.
      *
-     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_nom: string, client_adresse: string, cree_le: string, modifiee_le: null}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: null, categorie: string}>}
+     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_id: null, client_nom: string, client_adresse: string, client_dicte: null, lieu_dicte: null, cree_le: string, modifiee_le: null}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: null, categorie: string}>}
      */
     private static function exemple(\DateTimeImmutable $maintenant): array
     {
-        $offre = ['id' => 0, 'numero' => 1, 'enregistrement_id' => null, 'titre' => 'Rafraîchissement du séjour',
-                  'client_nom' => 'Madame Exemple', 'client_adresse' => "Rue de l'Exemple 1\n2800 Delémont",
+        $offre = ['id' => 0, 'numero' => 1, 'enregistrement_id' => null, 'titre' => 'Rafraîchissement du séjour', 'client_id' => null,
+                  'client_nom' => 'Madame Exemple', 'client_adresse' => "Rue de l'Exemple 1\n2800 Delémont", 'client_dicte' => null, 'lieu_dicte' => null,
                   'cree_le' => $maintenant->format('Y-m-d H:i:s'), 'modifiee_le' => null];
         $lignes = [];
         foreach ([['Préparation', 'Protection des sols et des meubles', 1000, 'forfait', 18000],

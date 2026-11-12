@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{# « Client de l'offre » (variante B, Xavier, 2026-11-12) : le nom dicté à confirmer, les fiches qui lui
+   ressemblent, puis toutes les fiches ; un toucher rattache l'offre. Dans la fenêtre qui monte sur l'offre,
+   ou seule sans JavaScript. #}
+{% block titre %}Client de l'offre · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}Client de l'offre{% endblock %}
+
+{% macro choix(offre, k, detail) %}
+  <form method="post" action="/offres/{{ offre.id }}/client" class="kchoix-f">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <input type="hidden" name="client" value="{{ k.id }}">
+    <button class="kchoix{% if offre.client_id == k.id %} on{% endif %}" type="submit"{% if offre.client_id == k.id %} aria-current="true"{% endif %}>
+      <span class="rond" aria-hidden="true"></span>
+      <span><b>{{ k.nom }}</b><small>{{ detail }}</small></span>
+    </button>
+  </form>
+{% endmacro %}
+
+{% block contenu %}
+  {% import _self as m %}
+  {% if offre.client_id is null and offre.client_dicte %}
+    <div class="dicte">
+      <p class="muted petit">Entendu dans la dictée</p>
+      <p><b>{{ offre.client_dicte }}</b>{% if offre.lieu_dicte %}, {{ offre.lieu_dicte|replace({"\n": ', '}) }}{% endif %}</p>
+      <form method="post" action="/offres/{{ offre.id }}/client">
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <input type="hidden" name="creer" value="1">
+        <button class="btn primary" type="submit">Créer la fiche «&nbsp;{{ offre.client_dicte }}&nbsp;»</button>
+      </form>
+    </div>
+    {% if proches is not empty %}
+      <h3 class="sous-titre">Ou une fiche qui ressemble</h3>
+      {% for k in proches %}{{ m.choix(offre, k, (k.localite ? k.localite ~ ' · ' : '') ~ (k.ressemblance * 100)|round ~ ' % de ressemblance') }}{% endfor %}
+    {% endif %}
+  {% endif %}
+
+  {% if clients is not empty %}
+    <h3 class="sous-titre">{{ offre.client_id is null and offre.client_dicte ? 'Toutes les fiches' : 'Choisir le client' }}</h3>
+    <div class="search box-seule">
+      <div class="box">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="kc" type="search" placeholder="Chercher un client" autocomplete="off" aria-label="Chercher un client" data-filtre="#kchoix">
+      </div>
+    </div>
+    <div id="kchoix">
+      {% for k in clients %}
+        <div data-texte="{{ k.texte }}">{{ m.choix(offre, k, (k.localite ? k.localite ~ ' · ' : '') ~ (k.nb_offres > 0 ? k.nb_offres ~ ' offre' ~ (k.nb_offres > 1 ? 's' : '') : 'aucune offre')) }}</div>
+      {% endfor %}
+      <p class="vide" data-aucun hidden>Aucun client ne correspond.</p>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/clients/nouveau?offre={{ offre.id }}">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nouveau client</a>
+  </div>
+{% endblock %}

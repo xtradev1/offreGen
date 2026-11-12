@@ -55,6 +55,8 @@ final class IsolationRoutesTest extends TestCase
             'ligne' => [$this->cheminLigne('a'), $this->cheminLigne('b')],
             'produit' => ['/catalogue/' . $this->jeu->produit['a'], '/catalogue/' . $this->jeu->produit['b']],
             'produit_suppression' => ['/catalogue/' . $this->jeu->produit['a'] . '/supprimer', '/catalogue/' . $this->jeu->produit['b'] . '/supprimer'],
+            'client' => ['/clients/' . $this->jeu->client['a'], '/clients/' . $this->jeu->client['b']],
+            'offre_client' => ['/offres/' . $this->jeu->offre['a'] . '/client', '/offres/' . $this->jeu->offre['b'] . '/client'],
         ];
     }
 
@@ -68,7 +70,13 @@ final class IsolationRoutesTest extends TestCase
     {
         $produit = ['designation' => 'Volé', 'unite' => 'pce', 'prix' => '1', 'categorie' => 'X', 'nouvelle_categorie' => '', 'synonymes' => ''];
         return [
-            'offre_entete_enregistrer' => ['/offres/' . $this->jeu->offre['b'] . '/modifier', ['titre' => 'Volée', 'client_nom' => 'A', 'client_adresse' => '']],
+            'offre_entete_enregistrer' => ['/offres/' . $this->jeu->offre['b'] . '/modifier', ['titre' => 'Volée']],
+            'client_modifier' => ['/clients/' . $this->jeu->client['b'], ['nom' => 'Volé']],
+            'client_supprimer' => ['/clients/' . $this->jeu->client['b'] . '/supprimer', []],
+            'offre_client_choisir' => ['/offres/' . $this->jeu->offre['b'] . '/client', ['client' => (string) $this->jeu->client['a']]],
+            // Une offre de A ne prend pas la fiche de B ; une fiche créée « pour » l'offre de B est refusée.
+            'offre_client_choisir_fiche_de_b' => ['/offres/' . $this->jeu->offre['a'] . '/client', ['client' => (string) $this->jeu->client['b']]],
+            'client_creer_pour_offre_de_b' => ['/clients', ['nom' => 'Volé', 'offre' => (string) $this->jeu->offre['b']]],
             'ligne_ajouter' => ['/offres/' . $this->jeu->offre['b'] . '/lignes', ['designation' => 'Volée', 'quantite' => '1', 'unite' => 'pce', 'prix' => '1']],
             'ligne_corriger' => [$this->cheminLigne('b'), ['quantite' => '99']],
             'ligne_juste' => [$this->cheminLigne('b', '/juste'), []],
@@ -90,7 +98,7 @@ final class IsolationRoutesTest extends TestCase
         $b = $this->jeu->b;
         $tout = [];
         foreach (['artisan' => "id = $b", 'offre' => "artisan_id = $b", 'ligne' => "artisan_id = $b", 'produit' => "artisan_id = $b",
-                  'enregistrement' => "artisan_id = $b"] as $table => $condition) {
+                  'enregistrement' => "artisan_id = $b", 'client' => "artisan_id = $b"] as $table => $condition) {
             $requete = BaseDeTest::pdo()->query("SELECT * FROM $table WHERE $condition ORDER BY id");
             self::assertNotFalse($requete);
             $tout[$table] = $requete->fetchAll(\PDO::FETCH_ASSOC);

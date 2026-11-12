@@ -6,6 +6,7 @@ use OffreGen\Compte\Marque;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Controleur\AccueilControleur;
 use OffreGen\Http\Controleur\CatalogueControleur;
+use OffreGen\Http\Controleur\ClientControleur;
 use OffreGen\Http\Controleur\LigneControleur;
 use OffreGen\Http\Controleur\ReglagesControleur;
 use OffreGen\Http\Controleur\ConnexionControleur;
@@ -27,6 +28,7 @@ return static function (Conteneur $c): array {
     $ligne = static fn (): LigneControleur => new LigneControleur($c);
     $catalogue = static fn (): CatalogueControleur => new CatalogueControleur($c);
     $reglages = static fn (): ReglagesControleur => new ReglagesControleur($c);
+    $client = static fn (): ClientControleur => new ClientControleur($c);
 
     $routes = [
         new Route('connexion', '/connexion', ['GET'], static fn (Request $r): Response => $connexion()->afficher($r), Route::PUBLIC),
@@ -65,6 +67,14 @@ return static function (Conteneur $c): array {
         new Route('produit_modifier', '/catalogue/{id}', ['POST'], static fn (Request $r, array $p): Response => $catalogue()->modifier($r, $p), Route::ARTISAN),
         new Route('produit_suppression', '/catalogue/{id}/supprimer', ['GET'], static fn (Request $r, array $p): Response => $catalogue()->confirmerSuppression($r, $p), Route::ARTISAN),
         new Route('produit_supprimer', '/catalogue/{id}/supprimer', ['POST'], static fn (Request $r, array $p): Response => $catalogue()->supprimer($r, $p), Route::ARTISAN),
+        new Route('clients', '/clients', ['GET'], static fn (Request $r): Response => $client()->liste($r), Route::ARTISAN),
+        new Route('client_creer', '/clients', ['POST'], static fn (Request $r): Response => $client()->creer($r), Route::ARTISAN),
+        new Route('client_nouveau', '/clients/nouveau', ['GET'], static fn (Request $r): Response => $client()->nouveau($r), Route::ARTISAN),
+        new Route('client', '/clients/{id}', ['GET'], static fn (Request $r, array $p): Response => $client()->afficher($r, $p), Route::ARTISAN),
+        new Route('client_modifier', '/clients/{id}', ['POST'], static fn (Request $r, array $p): Response => $client()->modifier($r, $p), Route::ARTISAN),
+        new Route('client_supprimer', '/clients/{id}/supprimer', ['POST'], static fn (Request $r, array $p): Response => $client()->supprimer($r, $p), Route::ARTISAN),
+        new Route('offre_client', '/offres/{id}/client', ['GET'], static fn (Request $r, array $p): Response => $client()->choixPourOffre($r, $p), Route::ARTISAN),
+        new Route('offre_client_choisir', '/offres/{id}/client', ['POST'], static fn (Request $r, array $p): Response => $client()->choisirPourOffre($r, $p), Route::ARTISAN),
         new Route('reglages', '/reglages', ['GET'], static fn (Request $r): Response => $reglages()->afficher($r), Route::ARTISAN),
         new Route('reglages_enregistrer', '/reglages', ['POST'], static fn (Request $r): Response => $reglages()->enregistrer($r), Route::ARTISAN),
         new Route('bienvenue_passer', '/bienvenue/passer', ['POST'], static fn (Request $r): Response => $reglages()->passer($r), Route::ARTISAN),

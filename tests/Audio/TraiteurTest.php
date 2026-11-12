@@ -8,7 +8,9 @@ use OffreGen\Audio\StockageAudio;
 use OffreGen\Audio\Traiteur;
 use OffreGen\Audio\Transcripteur;
 use OffreGen\Audio\TranscripteurFactice;
+use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
+use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\FileTraitement;
 use OffreGen\Donnees\Portee;
@@ -18,6 +20,7 @@ use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\ExtracteurFactice;
 use OffreGen\Offre\Messagerie;
 use OffreGen\Offre\MessagerieFichier;
+use OffreGen\Offre\ResultatExtraction;
 use OffreGen\Tests\Outils\BaseDeTest;
 use OffreGen\Tests\Outils\Dossiers;
 use OffreGen\Tests\Outils\Jeu;
@@ -234,6 +237,48 @@ final class TraiteurTest extends TestCase
     {
         $v = BaseDeTest::ligne("SELECT transcription_depuis FROM enregistrement WHERE uuid = '" . self::UUID . "'")['transcription_depuis'];
         return is_string($v) ? $v : null;
+    }
+
+    /** Une dictée qui nomme le client : « Madame Rossi », lieu « Delémont ». */
+    private function dicteeAvecClient(string $nom): Extracteur
+    {
+        return new class ($nom) implements Extracteur {
+            public function __construct(private string $nom)
+            {
+            }
+
+            public function extraire(string $transcription, array $catalogue): ResultatExtraction
+            {
+                return new ResultatExtraction('Cuisine', [], $this->nom, 'Delémont');
+            }
+        };
+    }
+
+    /** @return array<string, mixed> */
+    private function clientDeLOffre(): array
+    {
+        return BaseDeTest::ligne("SELECT o.client_id, o.client_dicte, o.lieu_dicte FROM offre o JOIN enregistrement e ON e.id = o.enregistrement_id WHERE e.uuid = '" . self::UUID . "'");
+    }
+
+    /** Règle de Xavier (2026-11-12) : à plus de 80 % de ressemblance, l'offre rejoint la fiche. */
+    public function testLeClientDicteRejointSaFiche(): void
+    {
+        $fiche = static fn (int $artisan, string $nom): int => (new DepotClients(new Base(BaseDeTest::pdo()), new Portee($artisan)))
+            ->creer(['nom' => $nom, 'adresse' => null, 'telephone' => null, 'courriel' => null], new \DateTimeImmutable('2026-11-01'));
+        $rossi = $fiche($this->jeu->a, 'Mme Rossi');
+        // La même cliente chez B ne compte pas : chez A, la fiche est seule en tête.
+        $fiche($this->jeu->b, 'Madame Rossi');
+        self::assertSame(Statut::PRET, $this->traiteur(x: $this->dicteeAvecClient('Madame Rossi'))->avancer(self::UUID));
+        self::assertSame(['client_id' => $rossi, 'client_dicte' => 'Madame Rossi', 'lieu_dicte' => 'Delémont'], $this->clientDeLOffre());
+    }
+
+    /** Sinon le nom dicté reste une proposition : aucune fiche ne naît sans l'artisan. */
+    public function testUnClientInconnuResteAConfirmer(): void
+    {
+        $avant = BaseDeTest::compter('client', '1 = 1');
+        self::assertSame(Statut::PRET, $this->traiteur(x: $this->dicteeAvecClient('Famille Dupont'))->avancer(self::UUID));
+        self::assertSame(['client_id' => null, 'client_dicte' => 'Famille Dupont', 'lieu_dicte' => 'Delémont'], $this->clientDeLOffre());
+        self::assertSame($avant, BaseDeTest::compter('client', '1 = 1'));
     }
 
     public function testCourrielEnPanneNeDefaitPasLOffre(): void

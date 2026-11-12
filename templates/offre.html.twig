@@ -5,11 +5,12 @@
 {% block entete %}Offre {{ offre.numero }}{% endblock %}
 
 {% block contenu %}
-  <a class="ohead" href="/offres/{{ offre.id }}/modifier">
-    <span class="who">{% if offre.client_nom %}{{ offre.client_nom }}{% if offre.client_adresse %}, {{ offre.client_adresse|replace({"\n": ', '}) }}{% endif %}{% else %}<span class="manque-client">Client à compléter</span>{% endif %}</span>
-    <span class="t">{{ offre.titre }}</span>
+  {# Le client ouvre « Client de l'offre » par-dessus l'offre ; l'objet ouvre son écran. #}
+  <div class="ohead">
+    <a class="who" href="/offres/{{ offre.id }}/client" data-en-feuille>{% if offre.client_nom %}<b>{{ offre.client_nom }}</b>{% if offre.client_adresse %}, {{ offre.client_adresse|replace({"\n": ', '}) }}{% endif %}{% if offre.client_id is null %} <span class="etiquette nouveau">nouveau client, à confirmer</span>{% endif %}{% else %}<span class="manque-client">Choisir le client</span>{% endif %}</a>
+    <a class="t" href="/offres/{{ offre.id }}/modifier">{{ offre.titre }}</a>
     <span class="meta"><span class="status pret">Prête à relire</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span></span>
-  </a>
+  </div>
 
   <div class="rows une">
     {% for g in groupes %}
@@ -59,6 +60,7 @@
 {% endblock %}
 
 {% block actions %}
+  {% include '_feuille.html.twig' with {options: {rafraichir: '.ohead'}} %}
   <div class="actionbar">
     <a class="btn" href="/offres/{{ offre.id }}/ajouter">
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ajouter</a>

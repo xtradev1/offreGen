@@ -11,6 +11,8 @@ use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
 use OffreGen\Donnees\FileTraitement;
 use OffreGen\Donnees\Portee;
+use OffreGen\Client\Rapprochement;
+use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\Statut;
 use OffreGen\Donnees\VerrouPerdu;
 use OffreGen\Offre\Extracteur;
@@ -134,10 +136,13 @@ final class Traiteur
         $offres = new DepotOffres($this->base, $portee);
         $maintenant = $this->horloge->now();
         $titre = $resultat->titre ?? 'Visite du ' . $maintenant->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y');
+        // Plus de 80 % de ressemblance avec une fiche : l'offre la désigne. Sinon le nom dicté reste une
+        // proposition, que l'artisan confirme ou remplace (règle de Xavier du 2026-11-12).
+        $clientId = $resultat->client === null ? null : Rapprochement::meilleur($resultat->client, (new DepotClients($this->base, $portee))->pourRapprochement());
 
-        return $this->base->transaction(function () use ($offres, $e, $jeton, $titre, $lignes, $maintenant, $resultat): int {
+        return $this->base->transaction(function () use ($offres, $e, $jeton, $titre, $lignes, $maintenant, $resultat, $clientId): int {
             $offreId = $offres->idParEnregistrement($e['id'])
-                ?? $offres->creerDepuisEnregistrement($e['id'], $titre, $lignes, $maintenant, $resultat->client, $resultat->lieu);
+                ?? $offres->creerDepuisEnregistrement($e['id'], $titre, $lignes, $maintenant, $clientId, $resultat->client, $resultat->lieu);
             // Si le verrou est perdu ici, VerrouPerdu annule aussi l'offre : jamais d'offre sans statut prêt.
             $this->file->pret($e['uuid'], $jeton, $maintenant, $maintenant->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
             return $offreId;

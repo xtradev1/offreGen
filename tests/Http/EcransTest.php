@@ -6,6 +6,7 @@ namespace OffreGen\Tests\Http;
 
 use OffreGen\Compte\Reglages;
 use OffreGen\Donnees\DepotEnregistrements;
+use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
 use OffreGen\Offre\LigneExtraite;
@@ -307,21 +308,22 @@ final class EcransTest extends TestCase
         self::assertStringContainsString('<h1>Offre 1</h1>', $this->page($this->offre));
     }
 
-    public function testEnteteClientEtObjet(): void
+    /** L'en-tête ne porte plus que l'objet : le client se choisit dans sa fenêtre (sous-chantier 17). */
+    public function testEnteteObjetSeul(): void
     {
-        self::assertStringContainsString('Client à compléter', $this->page($this->offre));
-        $this->page("{$this->offre}/modifier");
-        $reponse = $this->a->post("{$this->offre}/modifier", ['titre' => 'Salon et cuisine', 'client_nom' => ' Madame  Exemple ', 'client_adresse' => "Rue du Test 4\r\n\r\n2800 Delémont "]);
-        self::assertSame(303, $reponse->getStatusCode());
-        $o = BaseDeTest::ligne("SELECT titre, client_nom, client_adresse FROM offre WHERE id = {$this->jeu->offre['a']}");
-        self::assertSame(['titre' => 'Salon et cuisine', 'client_nom' => 'Madame Exemple', 'client_adresse' => "Rue du Test 4\n2800 Delémont"], $o);
-        self::assertStringContainsString('Madame Exemple, Rue du Test 4, 2800 Delémont', $this->page($this->offre));
+        $offre = $this->page($this->offre);
+        self::assertStringContainsString('Choisir le client', $offre);
+        self::assertStringContainsString('href="' . $this->offre . '/client" data-en-feuille', $offre);
+        $entete = $this->page("{$this->offre}/modifier");
+        self::assertStringNotContainsString('name="client_nom"', $entete);
+        self::assertSame(303, $this->a->post("{$this->offre}/modifier", ['titre' => ' Salon  et cuisine '])->getStatusCode());
+        self::assertSame('Salon et cuisine', BaseDeTest::ligne("SELECT titre FROM offre WHERE id = {$this->jeu->offre['a']}")['titre']);
     }
 
     public function testEnteteSansObjetRefuse(): void
     {
         $this->page("{$this->offre}/modifier");
-        self::assertSame(422, $this->a->post("{$this->offre}/modifier", ['titre' => ' ', 'client_nom' => 'X', 'client_adresse' => ''])->getStatusCode());
+        self::assertSame(422, $this->a->post("{$this->offre}/modifier", ['titre' => ' '])->getStatusCode());
         self::assertSame('Offre a', BaseDeTest::ligne("SELECT titre FROM offre WHERE id = {$this->jeu->offre['a']}")['titre']);
     }
 
@@ -335,8 +337,10 @@ final class EcransTest extends TestCase
     private function deuxOffresDePlus(): array
     {
         $depot = new DepotOffres($this->jeu->base, new Portee($this->jeu->a));
-        $facade = $depot->creerExemple('Façade', [new LigneExtraite('Façade', 1000, 'forfait', 100000, false, null)], $this->jeu->maintenant, 'Zoé Modèle', '');
-        $volets = $depot->creerExemple('Volets', [new LigneExtraite('Volets', 1000, 'forfait', 5000, true, null)], $this->jeu->maintenant, 'Albert Essai', '');
+        $clients = new DepotClients($this->jeu->base, new Portee($this->jeu->a));
+        $fiche = static fn (string $nom): int => $clients->creer(['nom' => $nom, 'adresse' => null, 'telephone' => null, 'courriel' => null], new \DateTimeImmutable('2026-11-07'));
+        $facade = $depot->creerExemple('Façade', [new LigneExtraite('Façade', 1000, 'forfait', 100000, false, null)], $this->jeu->maintenant, $fiche('Zoé Modèle'));
+        $volets = $depot->creerExemple('Volets', [new LigneExtraite('Volets', 1000, 'forfait', 5000, true, null)], $this->jeu->maintenant, $fiche('Albert Essai'));
         return [$facade, $volets];
     }
 
@@ -490,7 +494,8 @@ final class EcransTest extends TestCase
     public function testDocumentDeLOffre(): void
     {
         BaseDeTest::pdo()->exec("UPDATE artisan SET adresse = 'Rue 1\n2800 Delémont', ide = 'CHE-123.456.789', validite_jours = 30 WHERE id = {$this->jeu->a}");
-        BaseDeTest::pdo()->exec("UPDATE offre SET client_nom = 'Madame Exemple', client_adresse = 'Rue du Test 4' WHERE id = {$this->jeu->offre['a']}");
+        // Nom et lieu dictés, pas encore confirmés : le document les porte déjà.
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_dicte = 'Madame Exemple', lieu_dicte = 'Rue du Test 4' WHERE id = {$this->jeu->offre['a']}");
         $doc = $this->page("{$this->offre}/document");
         foreach (['Entreprise A', 'Offre n°&nbsp;1', 'Delémont, le 07.11.2026', 'Madame Exemple<br>Rue du Test 4', 'Peinture murale a',
                   '12.5&nbsp;m²', '231.25', 'TVA 8,1', "CHF\u{00A0}250.00", "valable jusqu'au 07.12.2026", 'CHE-123.456.789 TVA'] as $attendu) {

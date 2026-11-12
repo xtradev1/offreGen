@@ -6,6 +6,7 @@ namespace OffreGen\Tests\Outils;
 
 use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
+use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
@@ -13,7 +14,8 @@ use OffreGen\Donnees\Portee;
 use OffreGen\Offre\LigneExtraite;
 
 /**
- * Données de test : deux artisans A et B, chacun avec un produit, un enregistrement et une offre.
+ * Données de test : deux artisans A et B, chacun avec un produit, un enregistrement, une offre et une fiche client
+ * (l'offre ne la désigne pas : elle garde le cas « client à choisir »).
  */
 final class Jeu
 {
@@ -30,6 +32,8 @@ final class Jeu
     public array $enregistrement = [];
     /** @var array<string, int> */
     public array $produit = [];
+    /** @var array<string, int> */
+    public array $client = [];
 
     private static ?string $hache = null;
 
@@ -57,6 +61,8 @@ final class Jeu
         $this->uuid[$nom] = sprintf('00000000-0000-4000-8000-00000000000%s', $nom === 'a' ? '1' : '2');
         $this->enregistrement[$nom] = (new DepotEnregistrements($this->base, $portee))
             ->creer($this->uuid[$nom], "visite-$nom.m4a", 'audio/mp4', 1000, "$portee->artisanId/{$this->uuid[$nom]}.m4a", $this->maintenant);
+        $this->client[$nom] = (new DepotClients($this->base, $portee))->creer(
+            ['nom' => "Client $nom", 'adresse' => "Rue $nom 1\n2800 Delémont", 'telephone' => null, 'courriel' => null], $this->maintenant);
         $this->offre[$nom] = (new DepotOffres($this->base, $portee))->creerDepuisEnregistrement(
             $this->enregistrement[$nom],
             "Offre $nom",
