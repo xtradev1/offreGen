@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Réglages · offreGen</title>
+<style>
+:root {
+  --ink: #1B1F24; --muted: #69717C; --line: #E4E7EB; --surface: #FFFFFF; --bg: #F3F4F6; --chip: #EFF1F4;
+  --accent: #2457C5; --accent-soft: #E8EEFB; --on-accent: #fff; --ok: #1E7F4F; --ok-soft: #E6F4EC; --warn: #9A5B00; --warn-soft: #FDF3E1;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--accent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ink: #E7EAEE; --muted: #9BA3AE; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #8AACF2; --accent-soft: #1F2C47; --on-accent: #0E1524; --ok: #5CC796; --ok-soft: #17301F; --warn: #E9B44C; --warn-soft: #362A12; }
+}
+:root[data-theme="dark"] { --ink: #E7EAEE; --muted: #9BA3AE; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #8AACF2; --accent-soft: #1F2C47; --on-accent: #0E1524; --ok: #5CC796; --ok-soft: #17301F; --warn: #E9B44C; --warn-soft: #362A12; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 26px; margin: 18px 0 6px; }
+h2 { font-size: 21px; margin: 40px 0 8px; }
+h3 { font-size: 17px; margin: 0 0 4px; }
+.chapeau { color: var(--muted); max-width: 780px; }
+.grille { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .grille { grid-template-columns: minmax(0, 1fr); } }
+.carte { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin: 0 0 12px; }
+.carte p { margin: 0 0 8px; font-size: 15px; }
+.note { font-size: 14px; color: var(--muted); }
+
+/* Téléphone */
+.tel { width: 100%; max-width: 390px; height: 760px; border: 1px solid var(--line); border-radius: 26px; overflow: hidden; background: var(--surface); display: flex; flex-direction: column; position: relative; }
+.tel .barre { display: flex; align-items: center; gap: 8px; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); font-weight: 650; font-size: 17px; min-height: 52px; }
+.tel .barre button { border: 0; background: none; color: var(--accent); font: inherit; font-size: 15px; cursor: pointer; padding: 0 4px 0 0; }
+.tel .ecran { flex: 1; overflow-y: auto; background: var(--bg); padding: 12px 14px 90px; }
+.onglets { position: absolute; left: 0; right: 0; bottom: 0; display: flex; background: var(--surface); border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.onglets div { flex: 1; text-align: center; padding: 10px 0 12px; }
+.onglets .on { color: var(--accent); font-weight: 600; }
+
+/* Option A : sommaire */
+.etat { display: flex; align-items: center; gap: 10px; margin: 2px 2px 12px; font-size: 13.5px; color: var(--muted); }
+.etat .points { display: flex; gap: 4px; }
+.etat .points i { width: 22px; height: 6px; border-radius: 3px; background: var(--line); display: block; }
+.etat .points i.ok { background: var(--ok); }
+.rubrique { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin: 0 0 8px; cursor: pointer; }
+.rubrique .ic { width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 18px; }
+.rubrique b { display: block; font-size: 15px; }
+.rubrique small { display: block; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rubrique .fl { color: var(--muted); font-size: 20px; }
+.badge { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
+.badge.manque { background: var(--warn-soft); color: var(--warn); }
+.badge.ok { background: var(--ok-soft); color: var(--ok); }
+.logo-mini { height: 18px; vertical-align: -4px; margin-right: 4px; }
+.section { display: none; }
+.section.ouverte { display: block; }
+.champ { display: grid; gap: 5px; margin: 0 0 12px; }
+.champ label { font-size: 14px; font-weight: 600; }
+.champ input, .champ textarea { font: inherit; font-size: 16px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--surface); color: var(--ink); width: 100%; }
+.champ input.manque, .champ textarea.manque { border-color: var(--warn); background: var(--warn-soft); }
+.aide { font-size: 12.5px; color: var(--muted); }
+.puces { display: flex; gap: 6px; flex-wrap: wrap; }
+.puces span { font-size: 14px; border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; background: var(--surface); }
+.puces span.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.enreg { position: absolute; left: 14px; right: 14px; bottom: 64px; }
+.enreg button { width: 100%; font: inherit; font-weight: 600; min-height: 48px; border: 0; border-radius: 12px; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+.auto { font-size: 13px; color: var(--ok); text-align: right; min-height: 20px; margin: -4px 2px 6px; }
+
+/* Option B : assistant */
+.progression { display: flex; gap: 6px; margin: 0 0 14px; }
+.progression i { flex: 1; height: 5px; border-radius: 3px; background: var(--line); display: block; }
+.progression i.fait { background: var(--accent); }
+.etape-titre { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+.pied-assistant { position: absolute; left: 14px; right: 14px; bottom: 64px; display: flex; gap: 8px; }
+.pied-assistant button { flex: 1; font: inherit; font-weight: 600; min-height: 48px; border-radius: 12px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.pied-assistant button.prim { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+/* Réponses */
+.reponse { border-top: 1px dashed var(--line); margin-top: 10px; padding-top: 10px; }
+.reponse .boutons { display: flex; gap: 8px; flex-wrap: wrap; }
+.reponse button { font: inherit; font-size: 14px; min-height: 44px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.reponse button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.reponse textarea { width: 100%; margin-top: 8px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: var(--surface); color: var(--ink); min-height: 44px; }
+.recap textarea { width: 100%; min-height: 140px; font: 13px/1.4 ui-monospace, Consolas, monospace; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface); color: var(--ink); }
+.recap .copier { font: inherit; min-height: 44px; padding: 8px 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav id="mk-toc"></nav>
+<h1>Réglages, mieux rangés</h1>
+<p class="chapeau">Aujourd'hui, une seule longue page de quatre cartes et un bouton «&nbsp;Enregistrer&nbsp;» tout en bas&nbsp;: on ne voit pas ce qui manque, et on fait défiler pour tout. Deux façons de ranger, à essayer sur les téléphones (ils se cliquent), puis la façon d'enregistrer. Données d'exemple&nbsp;: l'adresse et le numéro IDE manquent, pour montrer le repère «&nbsp;à compléter&nbsp;».</p>
+
+<h2 id="sommaire" data-toc="A. Sommaire">A. Un sommaire par rubriques</h2>
+<div class="grille">
+  <div class="tel" id="telA" aria-label="Option A">
+    <div class="barre"><button type="button" data-retour hidden>‹ Réglages</button><span data-titre>Réglages</span></div>
+    <div class="ecran">
+      <div class="section ouverte" data-section="accueil">
+        <div class="etat"><span class="points"><i class="ok"></i><i class="ok"></i><i></i><i class="ok"></i></span><span>3 rubriques sur 4 complètes</span></div>
+        <button class="rubrique" type="button" data-ouvre="entreprise"><span class="ic">🏢</span><span><b>Mon entreprise <span class="badge manque">à compléter</span></b><small>Peinture Morel Sàrl · adresse et IDE manquent</small></span><span class="fl">›</span></button>
+        <button class="rubrique" type="button" data-ouvre="marque"><span class="ic">🎨</span><span><b>Ma marque</b><small>Logo · bleu · modèle Bandeau</small></span><span class="fl">›</span></button>
+        <button class="rubrique" type="button" data-ouvre="conditions"><span class="ic">📄</span><span><b>Conditions de l'offre</b><small>Valable 30 jours · à 30 jours dès la fin des travaux</small></span><span class="fl">›</span></button>
+        <button class="rubrique" type="button" data-ouvre="tva"><span class="ic">%</span><span><b>TVA et arrondi</b><small>Assujetti 8,1&nbsp;% · arrondi aux 5 centimes</small></span><span class="fl">›</span></button>
+        <p class="note" style="margin:16px 2px 0">Compte&nbsp;: demo-peintre@exemple.ch · <u>Se déconnecter</u></p>
+      </div>
+      <div class="section" data-section="entreprise">
+        <div class="auto" data-auto></div>
+        <div class="champ"><label>Nom</label><input value="Peinture Morel Sàrl"></div>
+        <div class="champ"><label>Adresse <span class="badge manque">à compléter</span></label><textarea class="manque" rows="2" placeholder="Rue et numéro&#10;NPA et localité"></textarea><span class="aide">En tête de chaque offre, et pour la date «&nbsp;Delémont, le…&nbsp;».</span></div>
+        <div class="champ"><label>Téléphone</label><input value="032 422 00 00"></div>
+        <div class="champ"><label>Courriel pour les clients</label><input value="info@peinture-morel.example"></div>
+        <div class="champ"><label>Numéro IDE <span class="badge manque">à compléter</span></label><input class="manque" placeholder="CHE-123.456.789"><span class="aide">Obligatoire si vous êtes assujetti à la TVA.</span></div>
+      </div>
+      <div class="section" data-section="marque">
+        <div class="auto" data-auto></div>
+        <p class="note">Logo, couleur, modèle&nbsp;: comme aujourd'hui, seuls sur leur écran.</p>
+        <div class="champ"><label>Modèle</label><div class="puces"><span>Sobre</span><span class="on">Bandeau</span><span>Atelier</span><span>Technique</span><span>Moderne</span><span>Épuré</span></div></div>
+      </div>
+      <div class="section" data-section="conditions">
+        <div class="auto" data-auto></div>
+        <div class="champ"><label>Offre valable</label><div class="puces"><span>15 jours</span><span class="on">30 jours</span><span>60 jours</span><span>Autre</span></div></div>
+        <div class="champ"><label>Paiement</label><div class="puces"><span class="on">À … jours</span><span>Net à … jours</span><span>Acomptes</span></div></div>
+      </div>
+      <div class="section" data-section="tva">
+        <div class="auto" data-auto></div>
+        <div class="champ"><label>TVA</label><div class="puces"><span class="on">Assujetti, 8,1&nbsp;%</span><span>Non assujetti</span></div></div>
+        <div class="champ"><label>Arrondi</label><div class="puces"><span class="on">Aux 5 centimes</span><span>Au centime</span></div></div>
+      </div>
+    </div>
+    <div class="enreg" data-enreg hidden><button type="button">Enregistrer</button></div>
+    <div class="onglets"><div>Offres</div><div>Clients</div><div>Catalogue</div><div class="on">Réglages</div></div>
+  </div>
+  <div>
+    <div class="carte">
+      <h3>Le sommaire</h3>
+      <p>Quatre rubriques, chacune avec un résumé d'une ligne&nbsp;: on voit tout sans faire défiler. Un repère «&nbsp;à compléter&nbsp;» montre ce qui manque, et le compteur en haut dit où on en est. Touche une rubrique&nbsp;: elle s'ouvre seule, avec ses champs.</p>
+      <p class="note">Ordre proposé&nbsp;: d'abord ce qu'on règle une fois (entreprise, marque), puis ce qui change plus souvent (conditions, TVA). Dis-le si tu veux un autre ordre.</p>
+      <div class="reponse" data-decision="sommaire" data-titre="A. Sommaire par rubriques avec résumés et « à compléter »" data-choix="Valider|Pas valider"></div>
+    </div>
+  </div>
+</div>
+
+<h2 id="assistant" data-toc="B. Assistant">B. Un assistant pour le premier réglage</h2>
+<div class="grille">
+  <div class="tel" id="telB" aria-label="Option B">
+    <div class="barre"><span data-titre-b>Bienvenue</span></div>
+    <div class="ecran">
+      <div class="progression" data-prog><i class="fait"></i><i></i><i></i><i></i></div>
+      <div data-etapes></div>
+    </div>
+    <div class="pied-assistant"><button type="button" data-prec>Retour</button><button type="button" class="prim" data-suiv>Suivant</button></div>
+    <div class="onglets"><div>Offres</div><div>Clients</div><div>Catalogue</div><div class="on">Réglages</div></div>
+  </div>
+  <div>
+    <div class="carte">
+      <h3>L'assistant</h3>
+      <p>Au premier lancement seulement&nbsp;: quatre écrans courts, un sujet chacun, «&nbsp;Suivant&nbsp;» en bas, au pouce. Ensuite, les réglages s'ouvrent sur le sommaire (A). Il se combine avec A, il ne le remplace pas.</p>
+      <div class="reponse" data-decision="assistant" data-titre="B. Assistant au premier lancement, puis sommaire" data-choix="Valider|Pas valider"></div>
+    </div>
+  </div>
+</div>
+
+<h2 id="enregistrer" data-toc="Enregistrer">Comment ça s'enregistre</h2>
+<div class="carte">
+  <p><b>1.</b> Un bouton «&nbsp;Enregistrer&nbsp;» en bas de chaque rubrique (aujourd'hui&nbsp;: un seul bouton pour toute la page).</p>
+  <p><b>2.</b> Enregistrement automatique&nbsp;: chaque changement part tout seul, «&nbsp;Enregistré ✓&nbsp;» s'affiche en haut de la rubrique, plus de bouton. Comme les corrections de l'offre aujourd'hui.</p>
+  <p class="note">Dans l'option A, la rubrique «&nbsp;Mon entreprise&nbsp;» montre le mode choisi plus bas&nbsp;: tape dans un champ pour voir.</p>
+  <div class="reponse" data-decision="enregistrement" data-titre="Enregistrement : bouton par rubrique (1) ou automatique (2)" data-choix="1, bouton par rubrique|2, automatique"></div>
+</div>
+
+<h2 id="recap" data-toc="Copier">Tes réponses</h2>
+<div class="recap carte">
+  <textarea id="texte-recap" readonly></textarea>
+  <p style="margin-top:8px"><button class="copier" type="button" id="copier">Copier le texte</button> <span class="note" id="copie"></span></p>
+</div>
+</main>
+
+<script>
+'use strict';
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// Option A : ouvrir une rubrique, revenir au sommaire ; le mode d'enregistrement suit la réponse 3.
+const telA = document.getElementById('telA');
+const TITRES = { entreprise: 'Mon entreprise', marque: 'Ma marque', conditions: "Conditions de l'offre", tva: 'TVA et arrondi' };
+let mode = 'auto';
+function ouvrir(nom) {
+  telA.querySelectorAll('.section').forEach((s) => s.classList.toggle('ouverte', s.dataset.section === nom));
+  telA.querySelector('[data-retour]').hidden = nom === 'accueil';
+  telA.querySelector('[data-titre]').textContent = nom === 'accueil' ? 'Réglages' : TITRES[nom];
+  telA.querySelector('[data-enreg]').hidden = nom === 'accueil' || mode === 'auto';
+}
+telA.addEventListener('click', (e) => {
+  const r = e.target.closest('[data-ouvre]');
+  if (r) ouvrir(r.dataset.ouvre);
+  if (e.target.closest('[data-retour]')) ouvrir('accueil');
+});
+telA.addEventListener('input', (e) => {
+  if (mode !== 'auto') return;
+  const auto = e.target.closest('.section').querySelector('[data-auto]');
+  auto.textContent = 'Enregistrement…';
+  clearTimeout(auto._t);
+  auto._t = setTimeout(() => { auto.textContent = 'Enregistré ✓'; }, 600);
+  if (e.target.classList.contains('manque') && e.target.value.trim()) e.target.classList.remove('manque');
+});
+
+// Option B : assistant en quatre écrans.
+const ETAPES = [
+  ['Votre entreprise', '<div class="champ"><label>Nom</label><input value="Peinture Morel Sàrl"></div><div class="champ"><label>Adresse</label><textarea rows="2" placeholder="Rue et numéro&#10;NPA et localité"></textarea></div><div class="champ"><label>Téléphone</label><input placeholder="032 000 00 00"></div>'],
+  ['Votre marque', '<p class="note">Le logo (sa couleur est proposée d\'office), puis le modèle.</p><div class="champ"><label>Modèle</label><div class="puces"><span class="on">Sobre</span><span>Bandeau</span><span>Atelier</span><span>Technique</span><span>Moderne</span><span>Épuré</span></div></div>'],
+  ['La TVA', '<div class="champ"><label>Êtes-vous assujetti&nbsp;?</label><div class="puces"><span class="on">Oui, 8,1&nbsp;%</span><span>Non</span></div></div><div class="champ"><label>Numéro IDE</label><input placeholder="CHE-123.456.789"></div>'],
+  ['Vos conditions', '<div class="champ"><label>Offre valable</label><div class="puces"><span>15 jours</span><span class="on">30 jours</span><span>60 jours</span><span>Autre</span></div></div><div class="champ"><label>Paiement</label><div class="puces"><span class="on">À … jours</span><span>Net à … jours</span><span>Acomptes</span></div></div>'],
+];
+let etape = 0;
+const telB = document.getElementById('telB');
+function dessinerB() {
+  telB.querySelector('[data-etapes]').innerHTML = `<p class="note">Étape ${etape + 1} sur ${ETAPES.length}</p><p class="etape-titre">${ETAPES[etape][0]}</p>${ETAPES[etape][1]}`;
+  telB.querySelectorAll('[data-prog] i').forEach((i, k) => i.classList.toggle('fait', k <= etape));
+  telB.querySelector('[data-prec]').disabled = etape === 0;
+  telB.querySelector('[data-suiv]').textContent = etape === ETAPES.length - 1 ? 'Terminer' : 'Suivant';
+  telB.querySelector('[data-titre-b]').textContent = etape === 0 ? 'Bienvenue' : 'Réglages';
+}
+telB.querySelector('[data-suiv]').addEventListener('click', () => {
+  if (etape < ETAPES.length - 1) { etape++; dessinerB(); return; }
+  telB.querySelector('[data-etapes]').innerHTML = '<p class="etape-titre">C\'est prêt ✓</p><p class="note">Vos offres auront votre en-tête, votre marque et vos conditions. Vous pourrez tout changer dans Réglages.</p>';
+  telB.querySelectorAll('[data-prog] i').forEach((i) => i.classList.add('fait'));
+});
+telB.querySelector('[data-prec]').addEventListener('click', () => { if (etape > 0) { etape--; dessinerB(); } });
+dessinerB();
+
+// Réponses, gardées dans ce navigateur.
+const CLE = 'offregen-maquette-reglages-v1';
+let reponses = {};
+try { reponses = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { reponses = {}; }
+const sauver = () => { try { localStorage.setItem(CLE, JSON.stringify(reponses)); } catch (e) { /* navigation privée */ } recap(); };
+function recap() {
+  const lignes = [...document.querySelectorAll('.reponse')].map((r) => {
+    const x = reponses[r.dataset.decision] || {};
+    return `- ${r.dataset.titre} : ${x.choix || '(sans réponse)'}${x.texte ? ' (' + x.texte.trim() + ')' : ''}`;
+  });
+  document.getElementById('texte-recap').value = 'Maquette réglages, mes réponses :\n' + lignes.join('\n');
+}
+document.querySelectorAll('.reponse').forEach((r) => {
+  const id = r.dataset.decision; const x = reponses[id] || {};
+  const choix = r.dataset.choix.split('|');
+  r.innerHTML = `<div class="boutons">${choix.map((c) => `<button type="button" aria-pressed="${x.choix === c}">${esc(c)}</button>`).join('')}</div><textarea placeholder="Ton commentaire (facultatif)" aria-label="Commentaire, ${esc(r.dataset.titre)}">${esc(x.texte || '')}</textarea>`;
+  r.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    reponses[id] = { ...(reponses[id] || {}), choix: b.textContent };
+    r.querySelectorAll('button').forEach((y) => y.setAttribute('aria-pressed', String(y === b)));
+    if (id === 'enregistrement') { mode = b.textContent.startsWith('1') ? 'bouton' : 'auto'; ouvrir('accueil'); }
+    sauver();
+  }));
+  r.querySelector('textarea').addEventListener('input', (e) => { reponses[id] = { ...(reponses[id] || {}), texte: e.target.value }; sauver(); });
+});
+if ((reponses.enregistrement || {}).choix && reponses.enregistrement.choix.startsWith('1')) mode = 'bouton';
+recap();
+document.getElementById('copier').addEventListener('click', () => {
+  const t = document.getElementById('texte-recap');
+  (navigator.clipboard ? navigator.clipboard.writeText(t.value) : Promise.reject()).then(() => { document.getElementById('copie').textContent = 'Copié.'; })
+    .catch(() => { t.select(); document.execCommand('copy'); document.getElementById('copie').textContent = 'Copié.'; });
+});
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>
