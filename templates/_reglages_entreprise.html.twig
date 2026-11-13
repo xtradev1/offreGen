@@ -24,6 +24,12 @@
     </div>
   </div>
   <div class="champ">
+    <label for="iban">IBAN{% if not champs.iban %} <span class="badge manque">à compléter</span>{% endif %}</label>
+    <input id="iban" name="iban" value="{{ champs.iban }}" placeholder="CH93 0076 2011 6238 5295 7" autocomplete="off" spellcheck="false"{% if not champs.iban %} class="manque"{% endif %}{{ f.invalide(erreurs, 'iban') }}>
+    <span class="muted petit">Pour la section de paiement de vos factures (QR-facture). Un IBAN suisse ou liechtensteinois.</span>
+    {{ f.erreur(erreurs, 'iban') }}
+  </div>
+  <div class="champ">
     <label for="courriel_contact">Courriel pour les clients</label>
     <input id="courriel_contact" name="courriel_contact" type="email" value="{{ champs.courriel_contact }}" inputmode="email" autocomplete="email"{{ f.invalide(erreurs, 'courriel_contact') }}>
     {{ f.erreur(erreurs, 'courriel_contact') }}

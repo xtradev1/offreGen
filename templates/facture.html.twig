@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{# La facture (sous-chantier 18) : en brouillon, ses lignes se corrigent comme celles de l'offre ; émise ou annulée,
+   elle se lit seulement. La finale déduit les acomptes émis. #}
+{% block titre %}Facture {{ f.numero }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/factures">Factures</a>{% endblock %}
+{% block entete %}Facture {{ f.numero }}{% endblock %}
+
+{% block contenu %}
+  <div class="ohead">
+    <span class="who"><b>{{ f.client_nom }}</b>{% if f.client_adresse %}, {{ f.client_adresse|replace({"\n": ', '}) }}{% endif %}
+      · <a href="/offres/{{ f.offre_id }}">selon offre n°&nbsp;{{ f.offre_numero }}</a></span>
+    {% if modifiable %}<a class="t" href="/factures/{{ f.id }}/modifier">{{ f.titre }}</a>{% else %}<span class="t">{{ f.titre }}</span>{% endif %}
+    <span class="meta"><span class="status {{ etat.classe }}">{{ etat.texte }}</span>
+      <span class="muted">Datée du {{ f.date_facture|jour }}{% if f.statut == 'brouillon' %}, échéance le {{ f.echeance|jour }}{% endif %}</span></span>
+  </div>
+  {% if manque > 0 and modifiable %}<p class="alerte bad">{{ manque }} ligne{{ manque > 1 ? 's' : '' }} sans prix&nbsp;: à compléter avant d'émettre la facture.</p>{% endif %}
+
+  {% include '_lignes.html.twig' with {base: '/factures/' ~ f.id, modifiable: modifiable, libre: false, vide: "Aucune ligne. « Ajouter », en bas, en ajoute une."} %}
+
+  <div class="totals">
+    <div class="r"><span>Sous-total{% if montants.taux > 0 %} HT{% endif %}</span><span>{{ montants.ht|chf }}</span></div>
+    {% if montants.taux > 0 %}<div class="r"><span>TVA {{ montants.taux|taux }}</span><span>{{ montants.tva|chf }}</span></div>{% endif %}
+    {% if montants.arrondi != 0 %}<div class="r"><span>Arrondi</span><span>{{ montants.arrondi|chf }}</span></div>{% endif %}
+    {% if montants.deja > 0 %}
+      <div class="r"><span>Total{% if montants.taux > 0 %} TTC{% endif %}</span><span>{{ montants.ttc|chf }}</span></div>
+      <div class="r"><span>Acomptes déjà facturés</span><span>−&nbsp;{{ montants.deja|chf }}</span></div>
+      <div class="r grand"><span>À payer</span><span>{{ montants.a_payer|chf }}</span></div>
+    {% else %}
+      <div class="r grand"><span>Total{% if montants.taux > 0 %} TTC{% endif %}</span><span>{{ montants.ttc|chf }}</span></div>
+    {% endif %}
+  </div>
+  {% if modifiable %}<p class="muted petit">Corrigez les quantités réelles, ajoutez les travaux en plus. L'offre ne change pas.</p>{% endif %}
+{% endblock %}
+
+{% block actions %}
+  {% if modifiable %}
+    <div class="actionbar">
+      <a class="btn" href="/factures/{{ f.id }}/ajouter">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ajouter</a>
+      <a class="btn primary" href="/factures/{{ f.id }}/document">Voir la facture
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    </div>
+  {% else %}
+    {# Émise ou annulée : l'aperçu (d'où l'on annule) et le PDF gardé à l'émission. #}
+    <div class="actionbar">
+      <a class="btn" href="/factures/{{ f.id }}/document">Voir la facture</a>
+      <a class="btn primary" href="/factures/{{ f.id }}/pdf" target="_blank" rel="noopener">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>PDF</a>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'factures'} %}{% endblock %}

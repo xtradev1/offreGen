@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{# « Émettre la facture ? » (sous-chantier 18, Xavier : « la facture devrait être figée »). Sans JavaScript. #}
+{% block titre %}Émettre la facture · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/factures/{{ f.id }}/document">Facture</a>{% endblock %}
+{% block entete %}Émettre la facture{% endblock %}
+
+{% block contenu %}
+  {% if raisons is not empty %}
+    <p class="alerte bad" role="alert">La facture {{ f.numero }} ne peut pas encore être émise.</p>
+    <ul>{% for x in raisons %}<li>{{ x }}</li>{% endfor %}</ul>
+  {% else %}
+    <p>Émettre la facture {{ f.numero }} pour {{ f.client_nom }}, {{ montants.a_payer|chf }} à payer jusqu'au {{ f.echeance|jour }}&nbsp;?</p>
+    <p class="muted">Une fois émise, elle ne se modifie plus&nbsp;: c'est le document que reçoit votre client, gardé tel quel. Pour corriger une erreur ensuite, vous l'annulerez et en referez une, au numéro suivant.</p>
+    <form id="emission" method="post" action="/factures/{{ f.id }}/emettre">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/factures/{{ f.id }}">{{ raisons is empty ? 'Pas encore' : 'Corriger' }}</a>
+    {% if raisons is empty %}<button class="btn primary" type="submit" form="emission">Émettre et PDF</button>{% endif %}
+  </div>
+{% endblock %}

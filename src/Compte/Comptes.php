@@ -10,6 +10,7 @@ use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotEnregistrements;
+use OffreGen\Donnees\DepotFactures;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
 use OffreGen\Donnees\DepotReglages;
@@ -77,6 +78,8 @@ final class Comptes
 
         $exemples = CatalogueFictif::offres($metier);
         $this->base->transaction(function () use ($portee, $enregistrements, $catalogue, $exemples): void {
+            // Les factures d'abord : elles désignent les offres.
+            (new DepotFactures($this->base, $portee))->toutEffacer();
             $offres = new DepotOffres($this->base, $portee);
             $offres->toutEffacer();
             $clients = new DepotClients($this->base, $portee);

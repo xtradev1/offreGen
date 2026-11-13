@@ -67,6 +67,42 @@ final class DemoTest extends TestCase
         self::assertSame(1, BaseDeTest::compter('produit', "artisan_id = {$this->jeu->b}"));
     }
 
+    public function testLaReinitialisationEffaceLesFacturesAvantLesOffres(): void
+    {
+        $pdo = BaseDeTest::pdo();
+        $pdo->exec("UPDATE artisan SET demo = 1 WHERE id = {$this->jeu->a}");
+        foreach (['a', 'b'] as $qui) {
+            $artisan = $qui === 'a' ? $this->jeu->a : $this->jeu->b;
+            $pdo->exec("INSERT INTO facture (artisan_id, offre_id, numero, genre, statut, date_facture, echeance, titre, client_nom, cree_le)
+                        VALUES ($artisan, {$this->jeu->offre[$qui]}, '2026-001', 'finale', 'annulee', '2026-11-13', '2026-12-13', 'X', 'Y', NOW())");
+            $emise = (int) $pdo->lastInsertId();
+            $pdo->exec("INSERT INTO facture (artisan_id, offre_id, numero, genre, statut, date_facture, echeance, titre, client_nom, cree_le, refaite_depuis)
+                        VALUES ($artisan, {$this->jeu->offre[$qui]}, '2026-002', 'finale', 'brouillon', '2026-11-13', '2026-12-13', 'X', 'Y', NOW(), $emise)");
+            $pdo->exec("INSERT INTO facture_ligne (artisan_id, facture_id, rang, designation, quantite_milliemes, unite, prix_centimes) VALUES ($artisan, $emise, 1, 'L', 1000, 'pce', 1)");
+            $pdo->exec("INSERT INTO facture_pdf (facture_id, artisan_id, contenu, cree_le) VALUES ($emise, $artisan, 'pdf', NOW())");
+        }
+
+        Monde::conteneur(env: $this->dossiers->env())->comptes()->reinitialiserDemo('a@exemple.ch', 'peintre');
+
+        foreach (['facture', 'facture_ligne', 'facture_pdf'] as $table) {
+            self::assertSame(0, BaseDeTest::compter($table, "artisan_id = {$this->jeu->a}"), $table);
+        }
+        self::assertSame(2, BaseDeTest::compter('facture', "artisan_id = {$this->jeu->b}"));
+        self::assertSame(1, BaseDeTest::compter('facture_pdf', "artisan_id = {$this->jeu->b}"));
+    }
+
+    public function testLaReinitialisationOublieLIbanTapeParUnVisiteur(): void
+    {
+        $pdo = BaseDeTest::pdo();
+        $pdo->exec("UPDATE artisan SET demo = 1, iban = 'CH9300762011623852957' WHERE id = {$this->jeu->a}");
+        $pdo->exec("UPDATE artisan SET iban = 'CH9300762011623852957' WHERE id = {$this->jeu->b}");
+
+        Monde::conteneur(env: $this->dossiers->env())->comptes()->reinitialiserDemo('a@exemple.ch', 'peintre');
+
+        self::assertSame(1, BaseDeTest::compter('artisan', "id = {$this->jeu->a} AND iban IS NULL"), 'Le visiteur suivant ne voit pas le compte bancaire du précédent.');
+        self::assertSame(1, BaseDeTest::compter('artisan', "id = {$this->jeu->b} AND iban IS NOT NULL"));
+    }
+
     public function testCompteQuiNEstPasDemoRefuseSansRienEffacer(): void
     {
         try {

@@ -64,7 +64,9 @@ final class BaseDeTest
     public static function vider(): void
     {
         $pdo = self::pdo();
-        foreach (['ligne', 'offre', 'client', 'produit', 'enregistrement', 'journal_connexion', 'artisan'] as $table) {
+        // Une facture refaite désigne l'ancienne : on détache avant d'effacer.
+        $pdo->exec('UPDATE facture SET refaite_depuis = NULL');
+        foreach (['facture_pdf', 'facture_ligne', 'facture', 'ligne', 'offre', 'client', 'produit', 'enregistrement', 'journal_connexion', 'artisan'] as $table) {
             $pdo->exec("DELETE FROM $table");
         }
     }

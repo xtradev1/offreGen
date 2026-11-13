@@ -46,14 +46,18 @@ final class ReglagesRangesTest extends TestCase
             self::assertStringContainsString("href=\"/reglages/$cle\"", $page);
         }
         self::assertStringContainsString('TVA et arrondi', $page);
-        // Jeu : assujetti, sans adresse ni IDE.
+        // Jeu : assujetti, sans adresse, ni IDE, ni IBAN.
         self::assertStringContainsString('3 rubriques sur 4 complètes', $page);
         self::assertMatchesRegularExpression('#Mon entreprise\s*<span class="badge manque">à compléter</span>#', $page);
-        self::assertStringContainsString('adresse et IDE manquent', $page);
+        self::assertStringContainsString('adresse, IDE et IBAN manquent', $page);
         self::assertStringContainsString('action="/deconnexion"', $page);
 
         $this->page('/reglages/entreprise');
         $this->a->post('/reglages', ['adresse' => "Rue 1\n2800 Delémont", 'ide' => 'CHE-123.456.789'], json: true);
+        self::assertStringContainsString('IBAN manque', $this->page('/reglages'), 'La facture le réclame (maquette 18, point réglé).');
+        $this->a->post('/reglages', ['iban' => 'CH93 0076 2011 6238 5295 7'], json: true);
+        self::assertStringContainsString('value="CH93 0076 2011 6238 5295 7"', $this->page('/reglages/entreprise'), 'Montré en groupes de quatre.');
+        self::assertSame('CH9300762011623852957', BaseDeTest::ligne('SELECT iban FROM artisan WHERE id = ' . $this->jeu->a)['iban']);
         $page = $this->page('/reglages');
         self::assertStringContainsString('4 rubriques sur 4 complètes', $page);
         self::assertStringNotContainsString('à compléter', $page);

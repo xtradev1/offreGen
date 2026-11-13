@@ -64,6 +64,13 @@ final class ReglagesTest extends TestCase
             (new Reglages('X', 810, true, paiementType: 'acomptes', paiementAcomptes: [30, 30, 40]))->conditionsPaiement());
     }
 
+    public function testIbanSaisiEnGroupesGardeCompact(): void
+    {
+        self::assertSame('CH9300762011623852957', self::saisie(['iban' => 'ch93 0076 2011 6238 5295 7'])->iban);
+        self::assertSame('', self::saisie([])->iban, 'Sans IBAN, les offres se font quand même.');
+        self::assertSame(['iban' => "Un IBAN suisse, par exemple CH93\u{00A0}0076\u{00A0}2011\u{00A0}6238\u{00A0}5295\u{00A0}7."], self::refus(['iban' => 'CH93 0076 2011 6238 5295 8']));
+    }
+
     public function testValiditeProposeeOuAutre(): void
     {
         self::assertSame(60, self::saisie(['validite_choix' => '60', 'validite_jours' => '999'])->validiteJours);

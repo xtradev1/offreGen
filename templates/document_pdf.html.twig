@@ -2,7 +2,7 @@
 <html lang="fr-CH">
 <head>
   <meta charset="utf-8">
-  <title>Offre {{ offre.numero }}, {{ r.entreprise }}</title>
+  <title>{% if f is defined %}Facture {{ f.numero }}{% else %}Offre {{ offre.numero }}{% endif %}, {{ r.entreprise }}</title>
   <style>{{ css|raw }}</style>
 </head>
 <body class="pdf">

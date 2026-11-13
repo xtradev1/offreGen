@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Compte\LogoRefuse;
+use OffreGen\Compte\Iban;
 use OffreGen\Compte\Marque;
 use OffreGen\Compte\Reglages;
 use OffreGen\Donnees\Portee;
@@ -22,7 +23,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ReglagesControleur
 {
-    private const CHAMPS = ['entreprise', 'adresse', 'telephone', 'courriel_contact', 'ide', 'tva', 'validite_choix', 'validite_jours',
+    private const CHAMPS = ['entreprise', 'adresse', 'telephone', 'courriel_contact', 'ide', 'iban', 'tva', 'validite_choix', 'validite_jours',
                             'paiement_type', 'paiement_jours_choix', 'paiement_jours', 'paiement_acomptes_choix', 'paiement_acomptes',
                             'modele', 'couleur_choix', 'couleur'];
 
@@ -42,10 +43,11 @@ final class ReglagesControleur
         $portee = $this->portee($requete);
         $r = $this->c->reglages($portee)->lire();
         $m = $this->c->reglages($portee)->lireMarque();
-        $manque = array_merge($r->adresse === '' ? ['adresse'] : [], $r->tvaPourDixMille > 0 && $r->ide === '' ? ['IDE'] : []);
+        // L'IBAN manque à la section de paiement des factures, pas aux offres (maquette 18, point réglé).
+        $manque = array_merge($r->adresse === '' ? ['adresse'] : [], $r->tvaPourDixMille > 0 && $r->ide === '' ? ['IDE'] : [], $r->iban === '' ? ['IBAN'] : []);
         $rubriques = [
             'entreprise' => ['complete' => $manque === [],
-                'resume' => $r->entreprise . ' · ' . ($manque === [] ? ($r->localite() !== '' ? $r->localite() : $r->telephone) : implode(' et ', $manque) . (count($manque) > 1 ? ' manquent' : ' manque'))],
+                'resume' => $r->entreprise . ' · ' . ($manque === [] ? ($r->localite() !== '' ? $r->localite() : $r->telephone) : self::enumeration($manque) . (count($manque) > 1 ? ' manquent' : ' manque'))],
             'marque' => ['complete' => true, 'resume' => ($m->logo !== null ? 'Logo' : 'Sans logo') . ' · modèle ' . Marque::MODELES[$m->modele]],
             'conditions' => ['complete' => true, 'resume' => 'Valable ' . $r->validiteJours . ' jours · ' . $r->resumePaiement()],
             'tva' => ['complete' => true,
@@ -221,6 +223,17 @@ final class ReglagesControleur
         return [$erreurs, $champs, $arrondi];
     }
 
+    /**
+     * « adresse », « adresse et IDE », « adresse, IDE et IBAN ».
+     *
+     * @param non-empty-list<string> $mots
+     */
+    private static function enumeration(array $mots): string
+    {
+        $dernier = array_pop($mots);
+        return $mots === [] ? $dernier : implode(', ', $mots) . ' et ' . $dernier;
+    }
+
     /** @return array<string, string> les réglages actuels, sous la forme des champs de l'écran */
     private function champsActuels(Portee $portee): array
     {
@@ -229,7 +242,7 @@ final class ReglagesControleur
         $acomptes = implode(',', $r->paiementAcomptes);
         $proposes = array_map(static fn (array $a): string => implode(',', $a), Reglages::ACOMPTES_PROPOSES);
         return ['entreprise' => $r->entreprise, 'adresse' => $r->adresse, 'telephone' => $r->telephone, 'courriel_contact' => $r->courrielContact,
-                'ide' => $r->ide, 'tva' => (string) $r->tvaPourDixMille,
+                'ide' => $r->ide, 'iban' => Iban::lisible($r->iban), 'tva' => (string) $r->tvaPourDixMille,
                 // Une valeur proposée se montre cochée ; une autre, sous « Autre ».
                 'validite_choix' => in_array($r->validiteJours, Reglages::VALIDITES_PROPOSEES, true) ? (string) $r->validiteJours : 'autre',
                 'validite_jours' => (string) $r->validiteJours,

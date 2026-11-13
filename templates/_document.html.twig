@@ -6,12 +6,22 @@
 {% set tech = modele == 'technique' %}
 {% set epure = modele == 'epure' %}
 {% set moderne = modele == 'moderne' %}
-{% set date_offre = (offre.modifiee_le ?? offre.cree_le)|jour %}
+{# Offre ou facture (sous-chantier 18) : « f » et « montants » n'existent que pour une facture, qui garde le client
+   copié le jour de sa création et déduit les acomptes émis. #}
+{% set facture = f is defined %}
+{% set doc_nom = facture ? 'Facture' : 'Offre' %}
+{% set doc_numero = facture ? f.numero : offre.numero %}
+{% set doc_objet = facture ? f.titre : offre.titre %}
+{% set doc_client_nom = facture ? f.client_nom : offre.client_nom %}
+{% set doc_client_adresse = facture ? f.client_adresse : offre.client_adresse %}
+{% set doc_ref %}{% if facture %}selon offre n°&nbsp;{{ f.offre_numero }} du {{ f.offre_cree_le|jour }}{% endif %}{% endset %}
+{% set t = facture ? montants : totaux|merge({taux: tva, deja: 0, a_payer: totaux.ttc}) %}
+{% set date_offre = facture ? f.date_facture|jour : (offre.modifiee_le ?? offre.cree_le)|jour %}
 {% set adresse = r.adresse|split("\n")|filter(l => l != '') %}
 {% set coord %}<b>{{ r.entreprise }}</b>{% for ligne in adresse %}<br>{{ ligne }}{% endfor %}{% if r.telephone %}<br>{{ r.telephone }}{% endif %}{% if r.courrielContact %}<br>{{ r.courrielContact }}{% endif %}{% endset %}
 {% set coord_ligne %}<b>{{ r.entreprise }}</b>{% for ligne in adresse %} · {{ ligne }}{% endfor %}{% if r.telephone %} · {{ r.telephone }}{% endif %}{% if r.courrielContact %} · {{ r.courrielContact }}{% endif %}{% endset %}
 {% set logo %}{% if logo_src %}<img class="doc-logo" src="{{ logo_src }}" alt="{{ r.entreprise }}">{% else %}<span class="doc-nom c-texte">{{ r.entreprise }}</span>{% endif %}{% endset %}
-{% set client %}{% if offre.client_nom %}{{ offre.client_nom }}{% for ligne in (offre.client_adresse ?? '')|split("\n") %}{% if ligne %}<br>{{ ligne }}{% endif %}{% endfor %}{% else %}&nbsp;{% endif %}{% endset %}
+{% set client %}{% if doc_client_nom %}{{ doc_client_nom }}{% for ligne in (doc_client_adresse ?? '')|split("\n") %}{% if ligne %}<br>{{ ligne }}{% endif %}{% endfor %}{% else %}&nbsp;{% endif %}{% endset %}
 {% set colonnes = tech ? 5 : 4 %}
 {% set entete_classe = {sobre: 'c-texte c-filet', bandeau: 'c-fond', atelier: 'c-filet'}[modele] ?? '' %}
 {% set total_classe = {sobre: 'c-filet', bandeau: 'c-fond', atelier: 'c-texte c-filet', moderne: 'c-teinte-forte c-texte'}[modele] ?? '' %}
@@ -29,12 +39,12 @@
   {% elseif moderne %}
     <table class="doc-tete"><tr>
       <td>{{ logo }}<div class="doc-coord-g">{{ coord }}</div></td>
-      <td class="doc-grand-titre c-texte">OFFRE<br><span>n°&nbsp;{{ offre.numero }}</span></td>
+      <td class="doc-grand-titre c-texte">{{ doc_nom|upper }}<br><span>n°&nbsp;{{ doc_numero }}</span></td>
     </tr></table>
     <table class="doc-infos c-teinte"><tr>
       <td><span class="doc-etiquette">Date</span><br>{{ date_offre }}</td>
       <td><span class="doc-etiquette">Client</span><br>{{ client }}</td>
-      <td><span class="doc-etiquette">Valable jusqu'au</span><br>{{ valable_jusqu_au }}</td>
+      <td>{% if facture %}<span class="doc-etiquette">Échéance</span><br>{{ f.echeance|jour }}{% else %}<span class="doc-etiquette">Valable jusqu'au</span><br>{{ valable_jusqu_au }}{% endif %}</td>
     </tr></table>
   {% else %}
     <table class="doc-tete"><tr><td>{{ logo }}</td><td class="doc-coord">{{ coord }}</td></tr></table>
@@ -44,10 +54,10 @@
   {% if not moderne %}
     <div class="doc-client">{{ client }}</div>
     {% if epure %}<div class="doc-trait c-fond"></div>{% endif %}
-    <p class="doc-titre{% if modele in ['sobre', 'bandeau', 'atelier'] %} c-texte{% endif %}">Offre n°&nbsp;{{ offre.numero }}{% if tech %} <span class="c-texte">· {{ offre.titre }}</span>{% endif %}</p>
-    <p class="doc-date">{% if r.localite %}{{ r.localite }}, le{% else %}Le{% endif %} {{ date_offre }}</p>
+    <p class="doc-titre{% if modele in ['sobre', 'bandeau', 'atelier'] %} c-texte{% endif %}">{{ doc_nom }} n°&nbsp;{{ doc_numero }}{% if tech %} <span class="c-texte">· {{ doc_objet }}</span>{% endif %}</p>
+    <p class="doc-date">{% if r.localite %}{{ r.localite }}, le{% else %}Le{% endif %} {{ date_offre }}{% if facture and tech %} · {{ doc_ref }}{% endif %}</p>
   {% endif %}
-  {% if not tech %}<p class="doc-objet">Objet&nbsp;: {{ offre.titre }}</p>{% endif %}
+  {% if not tech %}<p class="doc-objet">Objet&nbsp;: {{ doc_objet }}{% if facture %} · {{ doc_ref }}{% endif %}</p>{% endif %}
 
   <table class="doc-lignes">
     <thead><tr>
@@ -73,22 +83,35 @@
   </table>
 
   <table class="doc-totaux">
-    <tr><td>Sous-total{% if tva > 0 %} HT{% endif %}</td><td class="n">{{ totaux.ht|montant }}</td></tr>
-    {% if tva > 0 %}<tr><td>TVA {{ tva|taux }}</td><td class="n">{{ totaux.tva|montant }}</td></tr>{% endif %}
-    {% if totaux.arrondi != 0 %}<tr><td>Arrondi</td><td class="n">{{ totaux.arrondi|montant }}</td></tr>{% endif %}
-    {% if not epure %}<tr class="doc-g"><td class="{{ total_classe }}">Total{% if tva > 0 %} TTC{% endif %}</td><td class="n {{ total_classe }}">{{ totaux.ttc|chf }}</td></tr>{% endif %}
+    <tr><td>Sous-total{% if t.taux > 0 %} HT{% endif %}</td><td class="n">{{ t.ht|montant }}</td></tr>
+    {% if t.taux > 0 %}<tr><td>TVA {{ t.taux|taux }}</td><td class="n">{{ t.tva|montant }}</td></tr>{% endif %}
+    {% if t.arrondi != 0 %}<tr><td>Arrondi</td><td class="n">{{ t.arrondi|montant }}</td></tr>{% endif %}
+    {% if t.deja > 0 %}
+      <tr><td>Total{% if t.taux > 0 %} TTC{% endif %}</td><td class="n">{{ t.ttc|montant }}</td></tr>
+      <tr><td>Acomptes déjà facturés</td><td class="n">−&nbsp;{{ t.deja|montant }}</td></tr>
+      {% if not epure %}<tr class="doc-g"><td class="{{ total_classe }}">À payer</td><td class="n {{ total_classe }}">{{ t.a_payer|chf }}</td></tr>{% endif %}
+    {% elseif not epure %}<tr class="doc-g"><td class="{{ total_classe }}">Total{% if t.taux > 0 %} TTC{% endif %}</td><td class="n {{ total_classe }}">{{ t.ttc|chf }}</td></tr>{% endif %}
   </table>
-  {% if epure %}<p class="doc-grand-total c-texte">Total{% if tva > 0 %} TTC{% endif %} {{ totaux.ttc|chf }}</p>{% endif %}
+  {% if epure %}<p class="doc-grand-total c-texte">{% if t.deja > 0 %}À payer {{ t.a_payer|chf }}{% else %}Total{% if t.taux > 0 %} TTC{% endif %} {{ t.ttc|chf }}{% endif %}</p>{% endif %}
 
+  {% if facture %}
   <div class="doc-cond">
-    <b>Conditions</b>
     <ul>
-      <li>Paiement&nbsp;: {{ r.conditionsPaiement }}</li>
-      <li>Offre valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if tva > 0 %}, TVA comprise dans le total{% endif %}.</li>
+      <li>Payable jusqu'au {{ f.echeance|jour }}{% if qr is defined and qr %} avec la section de paiement ci-dessous{% endif %}. Merci de votre confiance.</li>
+      <li>Montants en francs suisses{% if t.taux > 0 %}, TVA comprise dans le total{% endif %}.</li>
     </ul>
   </div>
+  {% else %}
+    <div class="doc-cond">
+      <b>Conditions</b>
+      <ul>
+        <li>Paiement&nbsp;: {{ r.conditionsPaiement }}</li>
+        <li>Offre valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if t.taux > 0 %}, TVA comprise dans le total{% endif %}.</li>
+      </ul>
+    </div>
 
-  <table class="doc-signature"><tr><td>Lieu et date</td><td>Bon pour accord, signature du client</td></tr></table>
+    <table class="doc-signature"><tr><td>Lieu et date</td><td>Bon pour accord, signature du client</td></tr></table>
+  {% endif %}
 
-  <div class="doc-pied">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if tva > 0 %} TVA{% endif %}{% endif %}</div>
+  <div class="doc-pied">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if t.taux > 0 %} TVA{% endif %}{% endif %}</div>
 </div>

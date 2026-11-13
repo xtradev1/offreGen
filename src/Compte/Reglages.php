@@ -9,7 +9,8 @@ use OffreGen\Offre\SaisieRefusee;
 
 /**
  * Les réglages d'un compte qui changent une offre : l'en-tête du document (entreprise, adresse,
- * téléphone, courriel, IDE), la TVA, l'arrondi du total, la validité et les conditions de paiement.
+ * téléphone, courriel, IDE), la TVA, l'arrondi du total, la validité et les conditions de paiement ;
+ * et l'IBAN, pour la section de paiement des factures (forme compacte, vide s'il n'est pas donné).
  */
 final readonly class Reglages
 {
@@ -44,6 +45,7 @@ final readonly class Reglages
         public string $paiementType = 'jours',
         public int $paiementJours = 30,
         public array $paiementAcomptes = [],
+        public string $iban = '',
     ) {
     }
 
@@ -119,7 +121,7 @@ final readonly class Reglages
     /**
      * Le formulaire de l'écran Réglages ; SaisieRefusee si un champ est faux.
      *
-     * @param array<string, string> $champs entreprise, adresse, telephone, courriel_contact, ide, tva,
+     * @param array<string, string> $champs entreprise, adresse, telephone, courriel_contact, ide, iban, tva,
      *        validite_choix et validite_jours, paiement_type, paiement_jours_choix et paiement_jours,
      *        paiement_acomptes_choix et paiement_acomptes. Un « …_choix » proposé l'emporte ; « autre » ou
      *        absent : la valeur tapée.
@@ -148,6 +150,10 @@ final readonly class Reglages
         if ($ide === null) {
             $erreurs['ide'] = 'Le numéro IDE a la forme CHE-123.456.789.';
         }
+        $iban = Iban::lire($c('iban'));
+        if ($iban === null) {
+            $erreurs['iban'] = "Un IBAN suisse, par exemple CH93\u{00A0}0076\u{00A0}2011\u{00A0}6238\u{00A0}5295\u{00A0}7.";
+        }
         $taux = preg_match('/^\d{1,4}$/', $c('tva')) === 1 ? (int) $c('tva') : -1;
         if (!in_array($taux, self::TAUX_PERMIS, true)) {
             $erreurs['tva'] = 'Choisissez un taux de TVA.';
@@ -175,10 +181,10 @@ final readonly class Reglages
                 $erreurs['paiement_jours'] = 'Un délai de 1 à 120 jours.';
             }
         }
-        if ($nom === null || $adresse === null || $ide === null || $validite === null || $jours === null || $acomptes === null || $erreurs !== []) {
+        if ($nom === null || $adresse === null || $ide === null || $iban === null || $validite === null || $jours === null || $acomptes === null || $erreurs !== []) {
             throw new SaisieRefusee($erreurs);
         }
-        return new self($nom, $taux, $arrondi, $adresse, $telephone, $courriel, $ide, $validite, $type, $jours, $acomptes);
+        return new self($nom, $taux, $arrondi, $adresse, $telephone, $courriel, $ide, $validite, $type, $jours, $acomptes, $iban);
     }
 
     /** « che 123 456 789 tva » donne « CHE-123.456.789 » ; vide reste vide ; null si ce n'est pas un IDE. */

@@ -67,8 +67,8 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | 14 | Marque et modèles : logo, couleur, six modèles d'offre et de facture, QR-facture (demande de Xavier du 2026-11-12) | `14-marque-modeles/` | 13 | maquette, réponse de Xavier attendue |
 | 15 | Enregistrement court et suivi en direct : 5 s au minimum, dictée vide donne une offre vide, étapes qui avancent | `15-suivi-envoi/` | 13 | livré en code, recette de Xavier attendue |
 | 16 | Marque et modèles dans l'application : logo, couleur, modèles retenus | `16-marque/` | 14 | livré en code, recette de Xavier attendue |
-| 17 | Clients : liste, fiche, rattachement aux offres | `17-clients/` | 12 | livré en code (liste, fiche, client de l\'offre, rapprochement à 80 %), essai de Xavier attendu |
-| 18 | Facture : « Facturer » depuis l'offre, numéro modifiable, QR-facture, PDF | `18-facture/` | 14, 16 | maquette et essai QR faits, réponse de Xavier attendue |
+| 17 | Clients : liste, fiche, rattachement aux offres | `17-clients/` | 12 | livré en code (liste, fiche, client de l'offre, rapprochement à 80 %), essai de Xavier attendu |
+| 18 | Facture : « Facturer » depuis l'offre, numéro modifiable, QR-facture, PDF | `18-facture/` | 14, 16 | lots 1 à 5 livrés en code (brouillon, document, émission, annulation) ; lot 6 (adresses structurées, QR) attend bcmath et un choix de Xavier |
 | 19 | Envoi par courriel de l'offre et de la facture | (à ouvrir) | 18 | plus tard : « pdf pour l'instant » (Xavier, 2026-11-12) |
 | 20 | Extraction optimisée (cadrage, section 5) à côté de l'actuelle, banc de comparaison | (à ouvrir) | 10 | plus tard (Xavier, 2026-11-12) |
 | 21 | Liste des offres : en préparation, échecs hors quota, tri, archives | `21-liste-offres/` | 15 | livré en code, recette de Xavier attendue |

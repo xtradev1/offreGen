@@ -22,6 +22,7 @@ use OffreGen\Compte\Comptes;
 use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotClients;
+use OffreGen\Donnees\DepotFactures;
 use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
@@ -201,6 +202,11 @@ final class Conteneur
     public function documentPdf(): DocumentPdf
     {
         return $this->une(DocumentPdf::class, fn (): DocumentPdf => new DocumentPdf($this->racine . '/templates', $this->racine . '/var/cache/pdf'));
+    }
+
+    public function factures(Portee $p): DepotFactures
+    {
+        return new DepotFactures($this->base(), $p);
     }
 
     public function clients(Portee $p): DepotClients

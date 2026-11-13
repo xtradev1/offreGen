@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {% block titre %}Ligne · offreGen{% endblock %}
-{% block retour %}<a class="back" href="/offres/{{ offre.id }}#l{{ l.id }}">Offre</a>{% endblock %}
+{% block retour %}<a class="back" href="{{ cible.base }}#l{{ l.id }}">{{ cible.retour }}</a>{% endblock %}
 {% block entete %}Ligne{% endblock %}
 
 {% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
@@ -10,10 +10,10 @@
 {% block contenu %}
   {% import _self as f %}
   {% if erreurs is not empty %}<p class="alerte bad" role="alert">La ligne n'est pas modifiée&nbsp;: corrigez les champs signalés.</p>{% endif %}
-  <form id="ligne" method="post" action="/offres/{{ offre.id }}/lignes/{{ l.id }}">
+  <form id="ligne" method="post" action="{{ cible.base }}/lignes/{{ l.id }}">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     <div class="champ">
-      <label for="designation">Désignation, telle qu'elle paraîtra sur l'offre</label>
+      <label for="designation">Désignation, telle qu'elle paraîtra sur {{ cible.document }}</label>
       <input id="designation" name="designation" value="{{ champs.designation }}" maxlength="255" required{{ f.invalide(erreurs, 'designation') }}>
       {{ f.erreur(erreurs, 'designation') }}
     </div>
@@ -53,10 +53,10 @@
         </div>
       </div>
     {% else %}
-      <p class="muted petit">Corriger ici change cette offre seulement. Le prix du catalogue se change dans l'onglet Catalogue.</p>
+      <p class="muted petit">Corriger ici change {{ cible.ce }} seulement. Le prix du catalogue se change dans l'onglet Catalogue.</p>
     {% endif %}
   </form>
-  <form class="pied" method="post" action="/offres/{{ offre.id }}/lignes/{{ l.id }}/supprimer">
+  <form class="pied" method="post" action="{{ cible.base }}/lignes/{{ l.id }}/supprimer">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     <button class="lien" type="submit">Supprimer la ligne</button>
   </form>
@@ -64,7 +64,7 @@
 
 {% block actions %}
   <div class="actionbar">
-    <a class="btn" href="/offres/{{ offre.id }}#l{{ l.id }}">Annuler</a>
+    <a class="btn" href="{{ cible.base }}#l{{ l.id }}">Annuler</a>
     <button class="btn primary" type="submit" form="ligne">Enregistrer</button>
   </div>
 {% endblock %}

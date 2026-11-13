@@ -19,19 +19,19 @@ final class DepotReglages
     public function lire(): Reglages
     {
         $l = $this->base->un(
-            'SELECT entreprise, adresse, telephone, courriel_contact, ide, tva_pour_dix_mille, arrondi_cinq_centimes, validite_jours,
+            'SELECT entreprise, adresse, telephone, courriel_contact, ide, iban, tva_pour_dix_mille, arrondi_cinq_centimes, validite_jours,
                     paiement_type, paiement_jours, paiement_acomptes
              FROM artisan WHERE id = :a',
             ['a' => $this->portee->artisanId],
         ) ?? throw new \RuntimeException('Compte introuvable.');
-        /** @var array{entreprise: string, adresse: string|null, telephone: string|null, courriel_contact: string|null, ide: string|null, tva_pour_dix_mille: int, arrondi_cinq_centimes: int, validite_jours: int, paiement_type: string, paiement_jours: int, paiement_acomptes: string|null} $l */
+        /** @var array{entreprise: string, adresse: string|null, telephone: string|null, courriel_contact: string|null, ide: string|null, iban: string|null, tva_pour_dix_mille: int, arrondi_cinq_centimes: int, validite_jours: int, paiement_type: string, paiement_jours: int, paiement_acomptes: string|null} $l */
         $acomptes = $l['paiement_type'] === 'acomptes' ? (Reglages::acomptes($l['paiement_acomptes'] ?? '') ?? []) : [];
         // Des acomptes illisibles en base ne cassent pas l'écran : retour au paiement à N jours.
         $type = $l['paiement_type'] === 'acomptes' && $acomptes === [] ? 'jours' : $l['paiement_type'];
         return new Reglages(
             $l['entreprise'], $l['tva_pour_dix_mille'], $l['arrondi_cinq_centimes'] === 1,
             $l['adresse'] ?? '', $l['telephone'] ?? '', $l['courriel_contact'] ?? '', $l['ide'] ?? '',
-            $l['validite_jours'], $type, $l['paiement_jours'], $acomptes,
+            $l['validite_jours'], $type, $l['paiement_jours'], $acomptes, $l['iban'] ?? '',
         );
     }
 
@@ -46,10 +46,13 @@ final class DepotReglages
         $this->base->ecrire('UPDATE artisan SET reglages_faits_le = :q WHERE id = :a', ['q' => Dates::versBase($quand), 'a' => $this->portee->artisanId]);
     }
 
-    /** L'assistant s'ouvrira de nouveau (remise à zéro d'un compte de démonstration). */
+    /**
+     * L'assistant s'ouvrira de nouveau (remise à zéro d'un compte de démonstration). L'IBAN tapé par un visiteur
+     * s'efface : le suivant ne doit pas voir son compte bancaire.
+     */
     public function assistantARefaire(): void
     {
-        $this->base->ecrire('UPDATE artisan SET reglages_faits_le = NULL WHERE id = :a', ['a' => $this->portee->artisanId]);
+        $this->base->ecrire('UPDATE artisan SET reglages_faits_le = NULL, iban = NULL WHERE id = :a', ['a' => $this->portee->artisanId]);
     }
 
     public function lireMarque(): Marque
@@ -83,12 +86,12 @@ final class DepotReglages
     {
         $vide = static fn (string $s): ?string => $s === '' ? null : $s;
         $this->base->ecrire(
-            'UPDATE artisan SET entreprise = :e, adresse = :ad, telephone = :te, courriel_contact = :co, ide = :ide,
+            'UPDATE artisan SET entreprise = :e, adresse = :ad, telephone = :te, courriel_contact = :co, ide = :ide, iban = :ib,
                     tva_pour_dix_mille = :t, arrondi_cinq_centimes = :r, validite_jours = :v,
                     paiement_type = :pt, paiement_jours = :pj, paiement_acomptes = :pa
              WHERE id = :a',
             ['e' => $r->entreprise, 'ad' => $vide($r->adresse), 'te' => $vide($r->telephone), 'co' => $vide($r->courrielContact),
-             'ide' => $vide($r->ide), 't' => $r->tvaPourDixMille, 'r' => $r->arrondiCinqCentimes ? 1 : 0,
+             'ide' => $vide($r->ide), 'ib' => $vide($r->iban), 't' => $r->tvaPourDixMille, 'r' => $r->arrondiCinqCentimes ? 1 : 0,
              'v' => $r->validiteJours, 'pt' => $r->paiementType, 'pj' => $r->paiementJours,
              'pa' => $r->paiementAcomptes === [] ? null : implode(',', $r->paiementAcomptes), 'a' => $this->portee->artisanId],
         );

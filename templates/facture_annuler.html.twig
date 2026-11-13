@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{# Annuler une facture émise : elle reste, barrée, son numéro n'est jamais repris. « Annuler et refaire » crée
+   aussitôt un brouillon copié, au numéro suivant (sous-chantier 18). #}
+{% block titre %}Annuler la facture · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/factures/{{ f.id }}/document">Facture</a>{% endblock %}
+{% block entete %}Annuler la facture{% endblock %}
+
+{% block contenu %}
+  <p>Annuler la facture {{ f.numero }} ({{ f.client_nom }}, {{ montants.a_payer|chf }})&nbsp;?</p>
+  <p class="muted">Elle reste dans vos factures, marquée annulée, avec son PDF. Son numéro n'est pas repris. Prévenez votre client qu'elle est remplacée ou annulée.</p>
+  <form id="annulation" method="post" action="/factures/{{ f.id }}/annuler">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+  </form>
+  <form id="refaire" method="post" action="/factures/{{ f.id }}/annuler">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <input type="hidden" name="refaire" value="1">
+  </form>
+  <div class="pied"><button class="btn" type="submit" form="annulation">Annuler seulement</button></div>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/factures/{{ f.id }}/document">Garder</a>
+    <button class="btn primary" type="submit" form="refaire">Annuler et refaire</button>
+  </div>
+{% endblock %}

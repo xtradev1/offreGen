@@ -17,7 +17,7 @@ use OffreGen\Offre\LigneExtraite;
  * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null}
  * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null}
  */
-final class DepotOffres
+final class DepotOffres implements SupportLignes
 {
     private const SELECT_OFFRE = 'SELECT o.id, o.numero, o.enregistrement_id, o.titre, o.client_id,
             COALESCE(c.nom, o.client_dicte) AS client_nom, CASE WHEN c.id IS NULL THEN o.lieu_dicte ELSE c.adresse END AS client_adresse,

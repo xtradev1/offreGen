@@ -112,6 +112,8 @@ final class Noyau
             return ($route->action)($requete, $parametres);
         } catch (PageIntrouvable) {
             return $this->erreur(404, 'Page introuvable');
+        } catch (Conflit $e) {
+            return $this->erreur(409, $e->getMessage());
         } catch (\Throwable $e) {
             ($this->journal)('offreGen, erreur sur ' . $route->nom . ' : ' . $e->getMessage());
             return $this->erreur(500, 'Erreur du serveur');

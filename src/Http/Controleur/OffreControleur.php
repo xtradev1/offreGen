@@ -36,7 +36,7 @@ final class OffreControleur
     /** @param array<string, string> $parametres */
     public function afficher(Request $requete, array $parametres): Response
     {
-        return new Response($this->c->twig()->render('offre.html.twig', $this->donnees($requete, $parametres)));
+        return new Response($this->c->twig()->render('offre.html.twig', $this->avecFactures($requete, $this->donnees($requete, $parametres))));
     }
 
     /**
@@ -78,17 +78,42 @@ final class OffreControleur
     public function pdf(Request $requete, array $parametres): Response
     {
         $d = $this->donnees($requete, $parametres);
-        $d['css'] = (string) file_get_contents($this->c->racine() . '/public/css/document.css') . "\n" . $d['m']->css();
-        // dompdf ne lit aucune adresse (ressources distantes coupées) : le logo voyage dans le document.
-        $logo = $d['m']->logo === null ? null : $this->c->dossierLogos() . '/' . basename($d['m']->logo);
-        $d['logo_src'] = $logo !== null && is_file($logo) ? 'data:image/jpeg;base64,' . base64_encode((string) file_get_contents($logo)) : null;
-        $pdf = $this->c->documentPdf()->rendre($this->c->twig()->render('document_pdf.html.twig', $d));
+        $pdf = self::rendrePdf($this->c, $d);
         $nom = 'Offre-' . $d['offre']['numero'] . '.pdf';
         return new Response($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $nom . '"',
             'Cache-Control' => 'private, no-store',
         ]);
+    }
+
+    /**
+     * Le PDF d'un document (offre ou facture) : le CSS du document et celui de la marque voyagent dedans ; dompdf ne
+     * lit aucune adresse (ressources distantes coupées), donc le logo aussi.
+     *
+     * @param array<string, mixed> $d les données du document, avec « m » (Marque)
+     */
+    public static function rendrePdf(Conteneur $c, array $d): string
+    {
+        $m = $d['m'];
+        if (!$m instanceof Marque) {
+            throw new \LogicException('Document sans marque.');
+        }
+        $d['css'] = (string) file_get_contents($c->racine() . '/public/css/document.css') . "\n" . $m->css();
+        $logo = $m->logo === null ? null : $c->dossierLogos() . '/' . basename($m->logo);
+        $d['logo_src'] = $logo !== null && is_file($logo) ? 'data:image/jpeg;base64,' . base64_encode((string) file_get_contents($logo)) : null;
+        return $c->documentPdf()->rendre($c->twig()->render('document_pdf.html.twig', $d));
+    }
+
+    /**
+     * Les factures nées de l'offre, pour les liens « Facture 2026-001 » de son écran.
+     *
+     * @param array{offre: Offre} $d
+     * @return array{offre: Offre, factures: list<array<string, mixed>>}
+     */
+    private function avecFactures(Request $requete, array $d): array
+    {
+        return $d + ['factures' => $this->c->factures(new Portee($requete->attributes->getInt('_artisan')))->deOffre($d['offre']['id'])];
     }
 
     /**
@@ -134,16 +159,20 @@ final class OffreControleur
 
     /**
      * Groupes dans l'ordre où leur première ligne paraît dans l'offre, donc dans l'ordre de la dictée.
+     * Sert aussi aux lignes d'une facture, qui ont la même forme.
      *
-     * @param list<Ligne> $lignes
+     * @template T of array{categorie: string|null}
+     * @param list<T> $lignes
      * @param list<int> $totauxLignes total de chaque ligne, dans le même ordre
-     * @return list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>
+     * @return list<array{nom: string, lignes: list<array{l: T, total: int}>, total: int}>
      */
     public static function grouper(array $lignes, array $totauxLignes): array
     {
         $groupes = [];
         foreach ($lignes as $i => $l) {
-            $nom = $l['categorie'] ?? self::HORS_CATALOGUE;
+            // Lire la catégorie à part : un « ?? » sur $l resserrerait son type et perdrait T.
+            $categorie = $l['categorie'];
+            $nom = $categorie ?? self::HORS_CATALOGUE;
             $groupes[$nom] ??= ['nom' => $nom, 'lignes' => [], 'total' => 0];
             $groupes[$nom]['lignes'][] = ['l' => $l, 'total' => $totauxLignes[$i] ?? 0];
             $groupes[$nom]['total'] += $totauxLignes[$i] ?? 0;

@@ -1,8 +1,8 @@
 {% extends 'base.html.twig' %}
 
-{% block titre %}Ajouter à l'offre · offreGen{% endblock %}
-{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
-{% block entete %}Ajouter à l'offre{% endblock %}
+{% block titre %}Ajouter à {{ cible.document }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="{{ cible.base }}">{{ cible.retour }}</a>{% endblock %}
+{% block entete %}Ajouter à {{ cible.document }}{% endblock %}
 
 {% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
 {% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
@@ -10,7 +10,7 @@
 {% block contenu %}
   {% import _self as f %}
   {% if erreurs is empty %}
-    <form class="search" method="get" action="/offres/{{ offre.id }}/ajouter" role="search">
+    <form class="search" method="get" action="{{ cible.base }}/ajouter" role="search">
       <div class="box">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="cherche" name="q" type="search" value="{{ q }}" placeholder="Chercher dans le catalogue" autocomplete="off" aria-label="Chercher dans le catalogue" data-filtre="#res" data-copie="#libre-designation">
@@ -18,7 +18,7 @@
     </form>
     <div id="res" class="res">
       {% for p in produits %}
-        <form method="post" action="/offres/{{ offre.id }}/lignes" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
+        <form method="post" action="{{ cible.base }}/lignes" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
           <input type="hidden" name="_csrf" value="{{ csrf() }}">
           <button class="pick" type="submit" name="produit" value="{{ p.id }}"><b class="pn">{{ p.designation }}<small>{{ p.categorie }}</small></b>
             <span>{% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %} /&nbsp;{{ p.unite }}</span></button>
@@ -31,8 +31,8 @@
   {% endif %}
 
   <h2 class="sub" id="libre">Ligne libre</h2>
-  <p class="muted petit">Pour une offre de fournisseur ou un travail ponctuel. Elle reste dans cette offre&nbsp;; le catalogue ne change que si vous cochez la case.</p>
-  <form id="ajout-libre" method="post" action="/offres/{{ offre.id }}/lignes">
+  <p class="muted petit">Pour une offre de fournisseur ou un travail ponctuel. Elle reste dans {{ cible.ce }}&nbsp;; le catalogue ne change que si vous cochez la case.</p>
+  <form id="ajout-libre" method="post" action="{{ cible.base }}/lignes">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     <div class="champ">
       <label for="libre-designation">Désignation</label>
@@ -78,7 +78,7 @@
 
 {% block actions %}
   <div class="actionbar">
-    <a class="btn" href="/offres/{{ offre.id }}">Annuler</a>
+    <a class="btn" href="{{ cible.base }}">Annuler</a>
     <button class="btn primary" type="submit" form="ajout-libre">Ajouter la ligne libre</button>
   </div>
 {% endblock %}

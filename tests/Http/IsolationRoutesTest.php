@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OffreGen\Tests\Http;
 
+use OffreGen\Donnees\DepotFactures;
+use OffreGen\Donnees\Portee;
 use OffreGen\Http\Route;
 use OffreGen\Tests\Outils\BaseDeTest;
 use OffreGen\Tests\Outils\Jeu;
@@ -21,15 +23,44 @@ final class IsolationRoutesTest extends TestCase
     private Navigateur $a;
     /** @var array<string, int> */
     private array $ligne = [];
+    /** @var array<string, int> */
+    private array $facture = [];
+    /** @var array<string, int> */
+    private array $factureLigne = [];
+    /** @var array<string, int> */
+    private array $factureEmise = [];
 
     protected function setUp(): void
     {
         $this->jeu = new Jeu();
         foreach (['a', 'b'] as $nom) {
             $this->ligne[$nom] = (int) BaseDeTest::ligne("SELECT id FROM ligne WHERE offre_id = {$this->jeu->offre[$nom]}")['id'];
+            // Un brouillon de facture par artisan, avec la ligne de son offre (sous-chantier 18).
+            $this->facture[$nom] = (new DepotFactures($this->jeu->base, new Portee($nom === 'a' ? $this->jeu->a : $this->jeu->b)))->creer([
+                'offre_id' => $this->jeu->offre[$nom], 'numero' => '2026-001', 'genre' => 'finale', 'acompte_rang' => null, 'acompte_nombre' => null,
+                'acompte_pourcent' => null, 'date_facture' => new \DateTimeImmutable('2026-11-07'), 'echeance' => new \DateTimeImmutable('2026-12-07'),
+                'titre' => "Offre $nom", 'client_nom' => "Client $nom", 'client_adresse' => null,
+            ], [['designation' => "Peinture murale $nom", 'quantite_milliemes' => 12500, 'unite' => 'm²', 'prix_centimes' => 1850, 'categorie' => 'Peinture', 'produit_id' => null]], $this->jeu->maintenant);
+            $this->factureLigne[$nom] = (int) BaseDeTest::ligne("SELECT id FROM facture_ligne WHERE facture_id = {$this->facture[$nom]}")['id'];
+            // Et une facture émise, avec son PDF : celles qui se lisent en PDF et s'annulent.
+            $artisan = $nom === 'a' ? $this->jeu->a : $this->jeu->b;
+            BaseDeTest::pdo()->exec("INSERT INTO facture (artisan_id, offre_id, numero, genre, statut, date_facture, echeance, titre, client_nom, tva_pour_dix_mille, arrondi_cinq, ht, tva, arrondi, ttc, deja_facture, a_payer, cree_le, emise_le)
+                VALUES ($artisan, {$this->jeu->offre[$nom]}, '2026-002', 'finale', 'emise', '2026-11-07', '2026-12-07', 'Offre $nom', 'Client $nom', 810, 1, 100, 8, 2, 110, 0, 110, NOW(), NOW())");
+            $this->factureEmise[$nom] = (int) BaseDeTest::pdo()->lastInsertId();
+            BaseDeTest::pdo()->exec("INSERT INTO facture_pdf (facture_id, artisan_id, contenu, cree_le) VALUES ({$this->factureEmise[$nom]}, $artisan, '%PDF-$nom', NOW())");
         }
         $this->a = new Navigateur(Monde::conteneur());
         self::assertSame(303, $this->a->connecter('a@exemple.ch')->getStatusCode());
+    }
+
+    private function cheminFacture(string $nom, string $suite = ''): string
+    {
+        return '/factures/' . $this->facture[$nom] . $suite;
+    }
+
+    private function cheminLigneFacture(string $nom, string $suite = ''): string
+    {
+        return $this->cheminFacture($nom, '/lignes/' . $this->factureLigne[$nom] . $suite);
     }
 
     private function cheminLigne(string $nom, string $suite = ''): string
@@ -57,6 +88,15 @@ final class IsolationRoutesTest extends TestCase
             'produit_suppression' => ['/catalogue/' . $this->jeu->produit['a'] . '/supprimer', '/catalogue/' . $this->jeu->produit['b'] . '/supprimer'],
             'client' => ['/clients/' . $this->jeu->client['a'], '/clients/' . $this->jeu->client['b']],
             'offre_client' => ['/offres/' . $this->jeu->offre['a'] . '/client', '/offres/' . $this->jeu->offre['b'] . '/client'],
+            'offre_facturer' => ['/offres/' . $this->jeu->offre['a'] . '/facturer', '/offres/' . $this->jeu->offre['b'] . '/facturer'],
+            'facture' => [$this->cheminFacture('a'), $this->cheminFacture('b')],
+            'facture_document' => [$this->cheminFacture('a', '/document'), $this->cheminFacture('b', '/document')],
+            'facture_emission' => [$this->cheminFacture('a', '/emettre'), $this->cheminFacture('b', '/emettre')],
+            'facture_pdf' => ['/factures/' . $this->factureEmise['a'] . '/pdf', '/factures/' . $this->factureEmise['b'] . '/pdf'],
+            'facture_annulation' => ['/factures/' . $this->factureEmise['a'] . '/annuler', '/factures/' . $this->factureEmise['b'] . '/annuler'],
+            'facture_entete' => [$this->cheminFacture('a', '/modifier'), $this->cheminFacture('b', '/modifier')],
+            'facture_ajout' => [$this->cheminFacture('a', '/ajouter'), $this->cheminFacture('b', '/ajouter')],
+            'facture_ligne' => [$this->cheminLigneFacture('a'), $this->cheminLigneFacture('b')],
         ];
     }
 
@@ -89,6 +129,16 @@ final class IsolationRoutesTest extends TestCase
             'offre_restaurer' => ['/offres/' . $this->jeu->offre['b'] . '/restaurer', []],
             'enregistrement_reessayer' => ['/enregistrements/' . $this->jeu->uuid['b'] . '/reessayer', []],
             'enregistrement_retirer' => ['/enregistrements/' . $this->jeu->uuid['b'] . '/retirer', []],
+            'offre_facturer_creer' => ['/offres/' . $this->jeu->offre['b'] . '/facturer', ['genre' => 'finale', 'numero' => '2026-009', 'date' => '2026-11-07', 'echeance' => '2026-12-07']],
+            'facture_entete_enregistrer' => [$this->cheminFacture('b', '/modifier'), ['numero' => 'VOL-1', 'date' => '2026-11-07', 'echeance' => '2026-12-07']],
+            'facture_supprimer' => [$this->cheminFacture('b', '/supprimer'), []],
+            'facture_emettre' => [$this->cheminFacture('b', '/emettre'), []],
+            'facture_annuler' => ['/factures/' . $this->factureEmise['b'] . '/annuler', ['refaire' => '1']],
+            'facture_ligne_ajouter' => [$this->cheminFacture('b', '/lignes'), ['designation' => 'Volée', 'quantite' => '1', 'unite' => 'pce', 'prix' => '1']],
+            'facture_ligne_corriger' => [$this->cheminLigneFacture('b'), ['quantite' => '99']],
+            'facture_ligne_juste' => [$this->cheminLigneFacture('b', '/juste'), []],
+            'facture_ligne_supprimer' => [$this->cheminLigneFacture('b', '/supprimer'), []],
+            'facture_ligne_restaurer' => [$this->cheminLigneFacture('b', '/restaurer'), []],
         ];
     }
 
@@ -98,8 +148,9 @@ final class IsolationRoutesTest extends TestCase
         $b = $this->jeu->b;
         $tout = [];
         foreach (['artisan' => "id = $b", 'offre' => "artisan_id = $b", 'ligne' => "artisan_id = $b", 'produit' => "artisan_id = $b",
-                  'enregistrement' => "artisan_id = $b", 'client' => "artisan_id = $b"] as $table => $condition) {
-            $requete = BaseDeTest::pdo()->query("SELECT * FROM $table WHERE $condition ORDER BY id");
+                  'enregistrement' => "artisan_id = $b", 'client' => "artisan_id = $b", 'facture' => "artisan_id = $b",
+                  'facture_ligne' => "artisan_id = $b", 'facture_pdf' => "artisan_id = $b"] as $table => $condition) {
+            $requete = BaseDeTest::pdo()->query("SELECT * FROM $table WHERE $condition ORDER BY 1");
             self::assertNotFalse($requete);
             $tout[$table] = $requete->fetchAll(\PDO::FETCH_ASSOC);
         }

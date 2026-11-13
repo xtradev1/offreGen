@@ -11,6 +11,7 @@ use OffreGen\Http\Controleur\LigneControleur;
 use OffreGen\Http\Controleur\ReglagesControleur;
 use OffreGen\Http\Controleur\ConnexionControleur;
 use OffreGen\Http\Controleur\EnregistrementControleur;
+use OffreGen\Http\Controleur\FactureControleur;
 use OffreGen\Http\Controleur\ImportControleur;
 use OffreGen\Http\Controleur\OffreControleur;
 use OffreGen\Http\Controleur\RangementControleur;
@@ -29,6 +30,8 @@ return static function (Conteneur $c): array {
     $catalogue = static fn (): CatalogueControleur => new CatalogueControleur($c);
     $reglages = static fn (): ReglagesControleur => new ReglagesControleur($c);
     $client = static fn (): ClientControleur => new ClientControleur($c);
+    $facture = static fn (): FactureControleur => new FactureControleur($c);
+    $ligneFacture = static fn (): LigneControleur => new LigneControleur($c, LigneControleur::FACTURE);
 
     $routes = [
         new Route('connexion', '/connexion', ['GET'], static fn (Request $r): Response => $connexion()->afficher($r), Route::PUBLIC),
@@ -75,6 +78,27 @@ return static function (Conteneur $c): array {
         new Route('client_supprimer', '/clients/{id}/supprimer', ['POST'], static fn (Request $r, array $p): Response => $client()->supprimer($r, $p), Route::ARTISAN),
         new Route('offre_client', '/offres/{id}/client', ['GET'], static fn (Request $r, array $p): Response => $client()->choixPourOffre($r, $p), Route::ARTISAN),
         new Route('offre_client_choisir', '/offres/{id}/client', ['POST'], static fn (Request $r, array $p): Response => $client()->choisirPourOffre($r, $p), Route::ARTISAN),
+        // Factures (sous-chantier 18). Les lignes d'un brouillon passent par LigneControleur, comme celles de l'offre.
+        new Route('factures', '/factures', ['GET'], static fn (Request $r): Response => $facture()->liste($r), Route::ARTISAN),
+        new Route('offre_facturer', '/offres/{id}/facturer', ['GET'], static fn (Request $r, array $p): Response => $facture()->nouvelle($r, $p), Route::ARTISAN),
+        new Route('offre_facturer_creer', '/offres/{id}/facturer', ['POST'], static fn (Request $r, array $p): Response => $facture()->creer($r, $p), Route::ARTISAN),
+        new Route('facture', '/factures/{id}', ['GET'], static fn (Request $r, array $p): Response => $facture()->afficher($r, $p), Route::ARTISAN),
+        new Route('facture_document', '/factures/{id}/document', ['GET'], static fn (Request $r, array $p): Response => $facture()->document($r, $p), Route::ARTISAN),
+        new Route('facture_emission', '/factures/{id}/emettre', ['GET'], static fn (Request $r, array $p): Response => $facture()->confirmationEmission($r, $p), Route::ARTISAN),
+        new Route('facture_emettre', '/factures/{id}/emettre', ['POST'], static fn (Request $r, array $p): Response => $facture()->emettre($r, $p), Route::ARTISAN),
+        new Route('facture_pdf', '/factures/{id}/pdf', ['GET'], static fn (Request $r, array $p): Response => $facture()->pdf($r, $p), Route::ARTISAN),
+        new Route('facture_annulation', '/factures/{id}/annuler', ['GET'], static fn (Request $r, array $p): Response => $facture()->confirmationAnnulation($r, $p), Route::ARTISAN),
+        new Route('facture_annuler', '/factures/{id}/annuler', ['POST'], static fn (Request $r, array $p): Response => $facture()->annuler($r, $p), Route::ARTISAN),
+        new Route('facture_entete', '/factures/{id}/modifier', ['GET'], static fn (Request $r, array $p): Response => $facture()->entete($r, $p), Route::ARTISAN),
+        new Route('facture_entete_enregistrer', '/factures/{id}/modifier', ['POST'], static fn (Request $r, array $p): Response => $facture()->modifierEntete($r, $p), Route::ARTISAN),
+        new Route('facture_supprimer', '/factures/{id}/supprimer', ['POST'], static fn (Request $r, array $p): Response => $facture()->supprimer($r, $p), Route::ARTISAN),
+        new Route('facture_ajout', '/factures/{id}/ajouter', ['GET'], static fn (Request $r, array $p): Response => $ligneFacture()->pageAjout($r, $p), Route::ARTISAN),
+        new Route('facture_ligne_ajouter', '/factures/{id}/lignes', ['POST'], static fn (Request $r, array $p): Response => $ligneFacture()->ajouter($r, $p), Route::ARTISAN),
+        new Route('facture_ligne', '/factures/{id}/lignes/{ligne}', ['GET'], static fn (Request $r, array $p): Response => $ligneFacture()->page($r, $p), Route::ARTISAN),
+        new Route('facture_ligne_corriger', '/factures/{id}/lignes/{ligne}', ['POST'], static fn (Request $r, array $p): Response => $ligneFacture()->corriger($r, $p), Route::ARTISAN),
+        new Route('facture_ligne_juste', '/factures/{id}/lignes/{ligne}/juste', ['POST'], static fn (Request $r, array $p): Response => $ligneFacture()->confirmer($r, $p), Route::ARTISAN),
+        new Route('facture_ligne_supprimer', '/factures/{id}/lignes/{ligne}/supprimer', ['POST'], static fn (Request $r, array $p): Response => $ligneFacture()->supprimer($r, $p), Route::ARTISAN),
+        new Route('facture_ligne_restaurer', '/factures/{id}/lignes/{ligne}/restaurer', ['POST'], static fn (Request $r, array $p): Response => $ligneFacture()->restaurer($r, $p), Route::ARTISAN),
         new Route('reglages', '/reglages', ['GET'], static fn (Request $r): Response => $reglages()->afficher($r), Route::ARTISAN),
         new Route('reglages_enregistrer', '/reglages', ['POST'], static fn (Request $r): Response => $reglages()->enregistrer($r), Route::ARTISAN),
         new Route('bienvenue_passer', '/bienvenue/passer', ['POST'], static fn (Request $r): Response => $reglages()->passer($r), Route::ARTISAN),
