@@ -12,7 +12,7 @@
   {% if f.statut == 'annulee' %}<p class="alerte bad">Facture annulée le {{ f.annulee_le|jour }}. Son numéro n'est pas repris.</p>{% endif %}
   {% if modifiable %}
     {% if manque > 0 %}<p class="alerte bad">{{ manque }} ligne{{ manque > 1 ? 's' : '' }} sans prix&nbsp;: à compléter avant d'émettre la facture.</p>{% endif %}
-    {% if not r.adresse %}<p class="alerte warn">Votre adresse manque en tête de la facture&nbsp;: <a href="/reglages/entreprise">la compléter dans les réglages</a>.</p>{% endif %}
+    {% if r.adresse.estVide %}<p class="alerte warn">Votre adresse manque en tête de la facture&nbsp;: <a href="/reglages/entreprise">la compléter dans les réglages</a>.</p>{% endif %}
     {% if not r.iban %}<p class="alerte warn">Sans IBAN, la facture n'a pas de section de paiement&nbsp;: <a href="/reglages/entreprise">l'ajouter dans les réglages</a>.</p>{% endif %}
   {% endif %}
   <article class="paper">{% include '_document.html.twig' %}</article>

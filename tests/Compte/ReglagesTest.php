@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Tests\Compte;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Compte\Reglages;
 use OffreGen\Offre\SaisieRefusee;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -110,10 +111,13 @@ final class ReglagesTest extends TestCase
         self::assertSame([], self::saisie(['paiement_type' => 'jours', 'paiement_jours_choix' => '30', 'paiement_acomptes_choix' => '50,50'])->paiementAcomptes);
     }
 
-    public function testLocaliteSansNumeroPostal(): void
+    public function testAdresseEnChampsSepares(): void
     {
-        self::assertSame('Delémont', (new Reglages('X', 810, true, "Rue 1\n2800 Delémont"))->localite());
-        self::assertSame('Porrentruy', (new Reglages('X', 810, true, "CH-2900 Porrentruy"))->localite());
+        $r = self::saisie(['adresse_rue' => 'Rue de la Gare', 'adresse_numero' => '4', 'adresse_npa' => '2800', 'adresse_localite' => '']);
+        self::assertEquals(new Adresse('Rue de la Gare', '4', '2800', 'Delémont'), $r->adresse);
+        self::assertSame('Delémont', $r->localite());
         self::assertSame('', (new Reglages('X', 810, true))->localite());
+        self::assertTrue(self::saisie([])->adresse->estVide(), 'une adresse vide reste permise (« à compléter »)');
+        self::assertSame(['adresse_npa', 'adresse_localite'], array_keys(self::refus(['adresse_rue' => 'Rue de la Gare'])));
     }
 }

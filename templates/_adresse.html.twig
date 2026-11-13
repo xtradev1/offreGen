@@ -1,0 +1,43 @@
+{# Une adresse en champs séparés, comme l'exige la QR-facture (type S) : rue, numéro, NPA, localité, pays.
+   p : préfixe des noms de champs ; manque : badge « à compléter » quand elle est vide ; ancienne : l'adresse
+   d'avant les champs séparés, à reporter. Avec JavaScript (app.js, data-adresse) : adresses du registre officiel
+   proposées pendant la frappe, localité remplie depuis le NPA, « trouvée ou pas » en quittant l'adresse. #}
+{% import '_reglages_macros.html.twig' as f %}
+{% set vide = not (champs[p ~ 'rue'] or champs[p ~ 'npa'] or champs[p ~ 'localite']) %}
+<fieldset class="adresse" data-adresse>
+  <legend>Adresse{% if manque and vide %} <span class="badge manque" data-adresse-badge>à compléter</span>{% endif %}</legend>
+  {% if ancienne and vide %}<p class="alerte warn">Votre adresse d'avant, à reporter dans les champs&nbsp;: <b>{{ ancienne|replace({"\n": ', '}) }}</b></p>{% endif %}
+  <div class="rue-numero">
+    <div class="champ">
+      <label for="{{ p }}rue">Rue</label>
+      <input id="{{ p }}rue" name="{{ p }}rue" value="{{ champs[p ~ 'rue'] }}" maxlength="70" autocomplete="off" data-a="rue"{{ f.invalide(erreurs, p ~ 'rue') }}>
+      {{ f.erreur(erreurs, p ~ 'rue') }}
+    </div>
+    <div class="champ">
+      <label for="{{ p }}numero">N°</label>
+      <input id="{{ p }}numero" name="{{ p }}numero" value="{{ champs[p ~ 'numero'] }}" maxlength="16" autocomplete="off" data-a="numero"{{ f.invalide(erreurs, p ~ 'numero') }}>
+      {{ f.erreur(erreurs, p ~ 'numero') }}
+    </div>
+  </div>
+  <ul class="suggestions" data-adresse-suggestions hidden aria-label="Adresses du registre officiel"></ul>
+  <div class="npa-localite">
+    <div class="champ">
+      <label for="{{ p }}npa">NPA</label>
+      <input id="{{ p }}npa" name="{{ p }}npa" value="{{ champs[p ~ 'npa'] }}" maxlength="16" inputmode="numeric" autocomplete="off" data-a="npa"{{ f.invalide(erreurs, p ~ 'npa') }}>
+      {{ f.erreur(erreurs, p ~ 'npa') }}
+    </div>
+    <div class="champ">
+      <label for="{{ p }}localite">Localité</label>
+      <input id="{{ p }}localite" name="{{ p }}localite" value="{{ champs[p ~ 'localite'] }}" maxlength="35" autocomplete="off" data-a="localite"{{ f.invalide(erreurs, p ~ 'localite') }}>
+      {{ f.erreur(erreurs, p ~ 'localite') }}
+    </div>
+  </div>
+  <div class="champ">
+    <label for="{{ p }}pays">Pays</label>
+    <select id="{{ p }}pays" name="{{ p }}pays" data-a="pays"{{ f.invalide(erreurs, p ~ 'pays') }}>
+      {% for code, nom in pays_adresse %}<option value="{{ code }}"{% if (champs[p ~ 'pays'] ?: 'CH') == code %} selected{% endif %}>{{ nom }}</option>{% endfor %}
+    </select>
+    {{ f.erreur(erreurs, p ~ 'pays') }}
+  </div>
+  <p class="adresse-etat" data-adresse-etat aria-live="polite"></p>
+</fieldset>

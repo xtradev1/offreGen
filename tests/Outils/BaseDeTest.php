@@ -21,7 +21,8 @@ final class BaseDeTest
         $env = Conteneur::lireEnvironnement(dirname(__DIR__, 2));
         $env['APP_ENV'] = 'test';
         // Une variable du shell ne doit pas changer le comportement d'un test.
-        unset($env['TRAITEMENT_IMMEDIAT'], $env['AUDIO_DOSSIER'], $env['COURRIELS_DOSSIER'], $env['TRANSCRIPTION'], $env['EXTRACTION']);
+        // ADRESSES aussi : aucun test n'appelle swisstopo.
+        unset($env['TRAITEMENT_IMMEDIAT'], $env['AUDIO_DOSSIER'], $env['COURRIELS_DOSSIER'], $env['TRANSCRIPTION'], $env['EXTRACTION'], $env['ADRESSES']);
         return $env;
     }
 

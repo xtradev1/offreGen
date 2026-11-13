@@ -17,7 +17,7 @@
 {% set doc_ref %}{% if facture %}selon offre n°&nbsp;{{ f.offre_numero }} du {{ f.offre_cree_le|jour }}{% endif %}{% endset %}
 {% set t = facture ? montants : totaux|merge({taux: tva, deja: 0, a_payer: totaux.ttc}) %}
 {% set date_offre = facture ? f.date_facture|jour : (offre.modifiee_le ?? offre.cree_le)|jour %}
-{% set adresse = r.adresse|split("\n")|filter(l => l != '') %}
+{% set adresse = r.adresse.lignes|split("\n")|filter(l => l != '') %}
 {% set coord %}<b>{{ r.entreprise }}</b>{% for ligne in adresse %}<br>{{ ligne }}{% endfor %}{% if r.telephone %}<br>{{ r.telephone }}{% endif %}{% if r.courrielContact %}<br>{{ r.courrielContact }}{% endif %}{% endset %}
 {% set coord_ligne %}<b>{{ r.entreprise }}</b>{% for ligne in adresse %} · {{ ligne }}{% endfor %}{% if r.telephone %} · {{ r.telephone }}{% endif %}{% if r.courrielContact %} · {{ r.courrielContact }}{% endif %}{% endset %}
 {% set logo %}{% if logo_src %}<img class="doc-logo" src="{{ logo_src }}" alt="{{ r.entreprise }}">{% else %}<span class="doc-nom c-texte">{{ r.entreprise }}</span>{% endif %}{% endset %}

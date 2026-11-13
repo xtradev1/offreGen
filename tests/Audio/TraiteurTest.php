@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Tests\Audio;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Audio\StockageAudio;
 use OffreGen\Audio\Traiteur;
 use OffreGen\Audio\Transcripteur;
@@ -264,7 +265,7 @@ final class TraiteurTest extends TestCase
     public function testLeClientDicteRejointSaFiche(): void
     {
         $fiche = static fn (int $artisan, string $nom): int => (new DepotClients(new Base(BaseDeTest::pdo()), new Portee($artisan)))
-            ->creer(['nom' => $nom, 'adresse' => null, 'telephone' => null, 'courriel' => null], new \DateTimeImmutable('2026-11-01'));
+            ->creer(['nom' => $nom, 'adresse' => new Adresse(), 'telephone' => null, 'courriel' => null], new \DateTimeImmutable('2026-11-01'));
         $rossi = $fiche($this->jeu->a, 'Mme Rossi');
         // La même cliente chez B ne compte pas : chez A, la fiche est seule en tête.
         $fiche($this->jeu->b, 'Madame Rossi');

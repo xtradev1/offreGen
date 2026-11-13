@@ -434,3 +434,16 @@ a.rubrique .fl { flex: none; font-size: 22px; line-height: 1; color: var(--muted
 .client-facture span:last-child { color: var(--muted); font-size: 14px; }
 .liste-factures { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: 14px; }
 .liste-factures a.annulee { text-decoration: line-through; color: var(--muted); }
+
+/* Adresse en champs séparés (sous-chantier 18) : rue et numéro, NPA et localité, pays ; suggestions du registre. */
+fieldset.adresse { border: 0; padding: 0; margin: 0 0 8px; min-width: 0; position: relative; }
+fieldset.adresse legend { font-size: 14px; font-weight: 600; padding: 0; margin: 0 0 8px; }
+.rue-numero { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 10px; align-items: start; }
+.npa-localite { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: start; }
+.suggestions { list-style: none; margin: -8px 0 16px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
+.suggestions button { font: inherit; font-size: 15px; width: 100%; min-height: 44px; text-align: left; padding: 8px 10px; border: 0; border-radius: 8px; background: none; color: var(--ink); cursor: pointer; }
+.suggestions button:hover, .suggestions button:focus-visible { background: var(--chip); outline: none; }
+.adresse-etat { margin: -8px 0 12px; font-size: 13px; color: var(--muted); }
+.adresse-etat:empty { display: none; }
+.adresse-etat.ok { color: var(--ok); }
+.adresse-etat.warn { color: var(--warn); }

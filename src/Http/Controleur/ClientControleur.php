@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Client\Rapprochement;
 use OffreGen\Client\SaisieClient;
 use OffreGen\Donnees\DepotClients;
@@ -30,7 +31,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class ClientControleur
 {
-    private const CHAMPS = ['nom', 'adresse', 'telephone', 'courriel'];
+    private const CHAMPS = ['nom', 'adresse_rue', 'adresse_numero', 'adresse_npa', 'adresse_localite', 'adresse_pays', 'telephone', 'courriel'];
 
     public function __construct(private readonly Conteneur $c)
     {
@@ -41,8 +42,8 @@ final class ClientControleur
         $clients = $this->clients($requete)->tous();
         return new Response($this->c->twig()->render('clients.html.twig', [
             'clients' => array_map(static fn (array $k): array => $k + [
-                'texte' => self::texte($k['nom'] . ' ' . self::localite($k['adresse'])),
-                'localite' => self::localite($k['adresse']),
+                'texte' => self::texte($k['nom'] . ' ' . self::localiteDe($k)),
+                'localite' => self::localiteDe($k),
                 'lettre' => mb_strtoupper(mb_substr(self::texte(Rapprochement::cleDeTri($k['nom'])), 0, 1)),
                 'initiales' => mb_strtoupper(mb_substr(Rapprochement::cleDeTri($k['nom']), 0, 2)),
             ], $clients),
@@ -82,7 +83,14 @@ final class ClientControleur
     public function afficher(Request $requete, array $parametres): Response
     {
         $k = $this->client($requete, $parametres);
-        return $this->fiche($requete, $k, ['nom' => $k['nom'], 'adresse' => $k['adresse'] ?? '', 'telephone' => $k['telephone'] ?? '', 'courriel' => $k['courriel'] ?? ''], [], 200, null);
+        $a = DepotClients::adresse($k);
+        return $this->fiche($requete, $k, [
+            'nom' => $k['nom'], 'adresse_rue' => $a->rue, 'adresse_numero' => $a->numero, 'adresse_npa' => $a->npa,
+            'adresse_localite' => $a->localite, 'adresse_pays' => $a->pays,
+            // Une fiche d'avant les champs séparés, que la migration n'a pas su découper : son texte, à reporter.
+            'adresse_ancienne' => $a->estVide() ? ($k['adresse'] ?? '') : '',
+            'telephone' => $k['telephone'] ?? '', 'courriel' => $k['courriel'] ?? '',
+        ], [], 200, null);
     }
 
     /**
@@ -134,7 +142,7 @@ final class ClientControleur
             foreach ($clients as $k) {
                 $s = Rapprochement::ressemblance($offre['client_dicte'], $k['nom']);
                 if ($s >= 0.5) {
-                    $proches[] = $k + ['ressemblance' => $s, 'localite' => self::localite($k['adresse'])];
+                    $proches[] = $k + ['ressemblance' => $s, 'localite' => self::localiteDe($k)];
                 }
             }
             usort($proches, static fn (array $x, array $y): int => $y['ressemblance'] <=> $x['ressemblance']);
@@ -144,8 +152,8 @@ final class ClientControleur
             'offre' => $offre,
             'proches' => $proches,
             'clients' => array_map(static fn (array $k): array => $k + [
-                'localite' => self::localite($k['adresse']),
-                'texte' => self::texte($k['nom'] . ' ' . self::localite($k['adresse'])),
+                'localite' => self::localiteDe($k),
+                'texte' => self::texte($k['nom'] . ' ' . self::localiteDe($k)),
             ], $clients),
         ]));
     }
@@ -163,7 +171,11 @@ final class ClientControleur
             if ($offre['client_dicte'] === null) {
                 return new RedirectResponse('/offres/' . $offre['id'] . '/client', 303);
             }
-            $f = ['nom' => mb_substr($offre['client_dicte'], 0, 190), 'adresse' => $offre['lieu_dicte'], 'telephone' => null, 'courriel' => null];
+            // Le lieu dicté est découpé en champs s'il se lit (« Delémont » donne 2800 Delémont) ; sinon il reste en
+            // texte sur la fiche, à reporter dans les champs.
+            $adresse = Adresse::depuisTexte($offre['lieu_dicte']);
+            $f = ['nom' => mb_substr($offre['client_dicte'], 0, 190), 'adresse' => $adresse ?? new Adresse(),
+                  'ancienne' => $adresse === null ? $offre['lieu_dicte'] : null, 'telephone' => null, 'courriel' => null];
             $id = $this->clients($requete)->creer($f, $maintenant);
             $this->offres($requete)->rattacherClient($offre['id'], $id, $maintenant);
             Flash::dire($requete, 'info', 'Fiche ' . Flash::cite($f['nom']) . ' créée');
@@ -202,7 +214,17 @@ final class ClientControleur
         ]), $code);
     }
 
-    /** La localité d'une adresse suisse : la dernière ligne, sans le NPA. */
+    /**
+     * La localité d'une fiche : celle des champs, sinon celle du texte d'avant les champs séparés.
+     *
+     * @param array{localite: string|null, adresse: string|null} $k
+     */
+    private static function localiteDe(array $k): string
+    {
+        return $k['localite'] ?? self::localite($k['adresse']);
+    }
+
+    /** La localité d'une adresse suisse en texte : la dernière ligne, sans le NPA. */
     public static function localite(?string $adresse): string
     {
         $lignes = array_values(array_filter(array_map('trim', explode("\n", (string) $adresse)), static fn (string $l): bool => $l !== ''));

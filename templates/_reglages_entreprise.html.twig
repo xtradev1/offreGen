@@ -5,12 +5,8 @@
     <input id="entreprise" name="entreprise" value="{{ champs.entreprise }}" maxlength="190" required autocomplete="organization"{{ f.invalide(erreurs, 'entreprise') }}>
     {{ f.erreur(erreurs, 'entreprise') }}
   </div>
-  <div class="champ">
-    <label for="adresse">Adresse{% if not champs.adresse %} <span class="badge manque">à compléter</span>{% endif %}</label>
-    <textarea id="adresse" name="adresse" rows="2" placeholder="Rue de l'Exemple 12&#10;2800 Delémont" autocomplete="street-address"{% if not champs.adresse %} class="manque"{% endif %}{{ f.invalide(erreurs, 'adresse') }}>{{ champs.adresse }}</textarea>
-    <span class="muted petit">En tête de chaque offre, et pour la date «&nbsp;Delémont, le…&nbsp;».</span>
-    {{ f.erreur(erreurs, 'adresse') }}
-  </div>
+  {% include '_adresse.html.twig' with {p: 'adresse_', manque: true, ancienne: champs.adresse_ancienne ?? ''} %}
+  <p class="muted petit">En tête de chaque offre et de chaque facture, pour la date «&nbsp;Delémont, le…&nbsp;» et dans la section de paiement.</p>
   <div class="duo">
     <div class="champ">
       <label for="telephone">Téléphone</label>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use OffreGen\Compte\Marque;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Controleur\AccueilControleur;
+use OffreGen\Http\Controleur\AdresseControleur;
 use OffreGen\Http\Controleur\CatalogueControleur;
 use OffreGen\Http\Controleur\ClientControleur;
 use OffreGen\Http\Controleur\LigneControleur;
@@ -45,6 +46,10 @@ return static function (Conteneur $c): array {
         new Route('reglages_logo', '/reglages/logo', ['GET'], static fn (Request $r): Response => (new ReglagesControleur($c))->logo($r), Route::ARTISAN),
         new Route('reglages_logo_envoyer', '/reglages/logo', ['POST'], static fn (Request $r): Response => (new ReglagesControleur($c))->envoyerLogo($r), Route::ARTISAN),
         new Route('reglages_logo_retirer', '/reglages/logo/retirer', ['POST'], static fn (Request $r): Response => (new ReglagesControleur($c))->retirerLogo($r), Route::ARTISAN),
+        // Aide à la saisie d'une adresse (sous-chantier 18) : rien n'est écrit.
+        new Route('adresses_localites', '/adresses/localites', ['GET'], static fn (Request $r): Response => (new AdresseControleur($c))->localites($r), Route::ARTISAN),
+        new Route('adresses_suggestions', '/adresses/suggestions', ['GET'], static fn (Request $r): Response => (new AdresseControleur($c))->suggestions($r), Route::ARTISAN),
+        new Route('adresses_verification', '/adresses/verification', ['GET'], static fn (Request $r): Response => (new AdresseControleur($c))->verification($r), Route::ARTISAN),
         new Route('enregistrement_etat', '/enregistrements/{uuid}/etat', ['GET'], static fn (Request $r, array $p): Response => (new EnregistrementControleur($c))->etat($r, $p), Route::ARTISAN),
         new Route('enregistrement_reessayer', '/enregistrements/{uuid}/reessayer', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->reessayer($r, $p), Route::ARTISAN),
         new Route('enregistrement_retirer', '/enregistrements/{uuid}/retirer', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->retirer($r, $p), Route::ARTISAN),

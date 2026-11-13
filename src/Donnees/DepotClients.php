@@ -4,19 +4,26 @@ declare(strict_types=1);
 
 namespace OffreGen\Donnees;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Client\Rapprochement;
 
 /**
  * Les clients d'un artisan. Une fiche naît quand l'artisan la crée ou confirme le nom dicté (règle de Xavier
  * du 2026-11-12) ; elle ne se supprime que si aucune offre visible ne la désigne.
  *
- * @phpstan-type Client array{id: int, nom: string, adresse: string|null, telephone: string|null, courriel: string|null}
- * @phpstan-type ClientListe array{id: int, nom: string, adresse: string|null, telephone: string|null, courriel: string|null, nb_offres: int, derniere: string|null}
+ * L'adresse est en champs séparés (rue, numero, npa, localite, pays). La colonne `adresse` en garde le texte
+ * (Adresse::lignes), écrit ici seulement, pour l'écran de l'offre et le document ; une fiche d'avant les
+ * champs séparés que la migration n'a pas su découper y garde son ancien texte jusqu'à ce que l'adresse soit
+ * tapée en champs.
+ *
+ * @phpstan-type Client array{id: int, nom: string, adresse: string|null, rue: string|null, numero: string|null, npa: string|null, localite: string|null, pays: string|null, telephone: string|null, courriel: string|null}
+ * @phpstan-type ClientListe array{id: int, nom: string, adresse: string|null, rue: string|null, numero: string|null, npa: string|null, localite: string|null, pays: string|null, telephone: string|null, courriel: string|null, nb_offres: int, derniere: string|null}
  * @phpstan-type OffreDuClient array{id: int, numero: int, titre: string, cree_le: string, archivee_le: string|null}
+ * @phpstan-type FicheClient array{nom: string, adresse: Adresse, ancienne?: string|null, telephone: string|null, courriel: string|null}
  */
 final class DepotClients
 {
-    private const COLONNES = 'c.id, c.nom, c.adresse, c.telephone, c.courriel';
+    private const COLONNES = 'c.id, c.nom, c.adresse, c.rue, c.numero, c.npa, c.localite, c.pays, c.telephone, c.courriel';
 
     public function __construct(private readonly Base $base, private readonly Portee $portee)
     {
@@ -29,7 +36,7 @@ final class DepotClients
         $clients = $this->base->lire(
             'SELECT ' . self::COLONNES . ', COUNT(o.id) AS nb_offres, MAX(o.cree_le) AS derniere
              FROM client c LEFT JOIN offre o ON o.client_id = c.id AND o.artisan_id = c.artisan_id AND o.supprimee_le IS NULL
-             WHERE c.artisan_id = :a GROUP BY c.id, c.nom, c.adresse, c.telephone, c.courriel',
+             WHERE c.artisan_id = :a GROUP BY ' . self::COLONNES,
             ['a' => $this->portee->artisanId],
         );
         $alphabet = new \Collator('fr_CH');
@@ -66,32 +73,53 @@ final class DepotClients
         );
     }
 
-    /** @param array{nom: string, adresse: string|null, telephone: string|null, courriel: string|null} $f */
+    /** @param FicheClient $f « ancienne » : un lieu dicté qui ne se découpe pas, gardé en texte à reporter */
     public function creer(array $f, \DateTimeImmutable $quand): int
     {
         $this->base->ecrire(
-            'INSERT INTO client (artisan_id, nom, adresse, telephone, courriel, cree_le) VALUES (:a, :n, :ad, :t, :c, :q)',
-            ['a' => $this->portee->artisanId, 'n' => $f['nom'], 'ad' => $f['adresse'], 't' => $f['telephone'], 'c' => $f['courriel'],
-             'q' => Dates::versBase($quand)],
+            'INSERT INTO client (artisan_id, nom, rue, numero, npa, localite, pays, adresse, telephone, courriel, cree_le)
+             VALUES (:a, :n, :rue, :numero, :npa, :localite, :pays, :ad, :t, :c, :q)',
+            $f['adresse']->versBase('') + ['a' => $this->portee->artisanId, 'n' => $f['nom'], 'ad' => self::texte($f['adresse']) ?? ($f['ancienne'] ?? null),
+             't' => $f['telephone'], 'c' => $f['courriel'], 'q' => Dates::versBase($quand)],
         );
         return $this->base->dernierId();
     }
 
     /**
-     * @param array{nom: string, adresse: string|null, telephone: string|null, courriel: string|null} $f
+     * @param FicheClient $f
      * @return bool faux si la fiche n'est pas à l'artisan
      */
     public function modifier(int $id, array $f, \DateTimeImmutable $quand): bool
     {
-        if ($this->parId($id) === null) {
+        $avant = $this->parId($id);
+        if ($avant === null) {
             return false;
         }
+        // Sans adresse en champs, ni avant ni maintenant : le texte d'avant les champs séparés reste à reprendre.
+        $texte = $f['adresse']->estVide() && $avant['npa'] === null ? $avant['adresse'] : self::texte($f['adresse']);
         $this->base->ecrire(
-            'UPDATE client SET nom = :n, adresse = :ad, telephone = :t, courriel = :c, modifie_le = :q WHERE id = :id AND artisan_id = :a',
-            ['n' => $f['nom'], 'ad' => $f['adresse'], 't' => $f['telephone'], 'c' => $f['courriel'], 'q' => Dates::versBase($quand),
-             'id' => $id, 'a' => $this->portee->artisanId],
+            'UPDATE client SET nom = :n, rue = :rue, numero = :numero, npa = :npa, localite = :localite, pays = :pays, adresse = :ad,
+                    telephone = :t, courriel = :c, modifie_le = :q
+             WHERE id = :id AND artisan_id = :a',
+            $f['adresse']->versBase('') + ['n' => $f['nom'], 'ad' => $texte, 't' => $f['telephone'], 'c' => $f['courriel'],
+             'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
         );
         return true;
+    }
+
+    /**
+     * L'adresse d'une fiche, en champs (vide pour une fiche d'avant les champs séparés non découpée).
+     *
+     * @param array<string, mixed> $k
+     */
+    public static function adresse(array $k): Adresse
+    {
+        return Adresse::depuisBase($k, '');
+    }
+
+    private static function texte(Adresse $a): ?string
+    {
+        return $a->estVide() ? null : $a->lignes();
     }
 
     /**

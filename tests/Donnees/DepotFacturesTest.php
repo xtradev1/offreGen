@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Tests\Donnees;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Donnees\DepotFactures;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
@@ -41,6 +42,7 @@ final class DepotFacturesTest extends TestCase
             'acompte_rang' => null, 'acompte_nombre' => null, 'acompte_pourcent' => null,
             'date_facture' => new \DateTimeImmutable('2026-11-13'), 'echeance' => new \DateTimeImmutable('2026-12-13'),
             'titre' => "Offre $qui", 'client_nom' => "Client $qui", 'client_adresse' => "Rue $qui 1\n2800 Delémont",
+            'client_postale' => new Adresse("Rue $qui", '1', '2800', 'Delémont'),
         ], $lignes, $this->jeu->maintenant);
     }
 
@@ -128,7 +130,7 @@ final class DepotFacturesTest extends TestCase
             'offre_id' => $this->jeu->offre['b'], 'numero' => '2026-001', 'genre' => 'finale',
             'acompte_rang' => null, 'acompte_nombre' => null, 'acompte_pourcent' => null,
             'date_facture' => new \DateTimeImmutable('2026-11-13'), 'echeance' => new \DateTimeImmutable('2026-12-13'),
-            'titre' => 'Intrus', 'client_nom' => 'Intrus', 'client_adresse' => null,
+            'titre' => 'Intrus', 'client_nom' => 'Intrus', 'client_adresse' => null, 'client_postale' => new Adresse(),
         ], [], $this->jeu->maintenant);
     }
 

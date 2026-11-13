@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ReglagesControleur
 {
-    private const CHAMPS = ['entreprise', 'adresse', 'telephone', 'courriel_contact', 'ide', 'iban', 'tva', 'validite_choix', 'validite_jours',
+    private const CHAMPS = ['entreprise', 'adresse_rue', 'adresse_numero', 'adresse_npa', 'adresse_localite', 'adresse_pays', 'telephone', 'courriel_contact', 'ide', 'iban', 'tva', 'validite_choix', 'validite_jours',
                             'paiement_type', 'paiement_jours_choix', 'paiement_jours', 'paiement_acomptes_choix', 'paiement_acomptes',
                             'modele', 'couleur_choix', 'couleur'];
 
@@ -44,7 +44,7 @@ final class ReglagesControleur
         $r = $this->c->reglages($portee)->lire();
         $m = $this->c->reglages($portee)->lireMarque();
         // L'IBAN manque à la section de paiement des factures, pas aux offres (maquette 18, point réglé).
-        $manque = array_merge($r->adresse === '' ? ['adresse'] : [], $r->tvaPourDixMille > 0 && $r->ide === '' ? ['IDE'] : [], $r->iban === '' ? ['IBAN'] : []);
+        $manque = array_merge($r->adresse->estVide() ? ['adresse'] : [], $r->tvaPourDixMille > 0 && $r->ide === '' ? ['IDE'] : [], $r->iban === '' ? ['IBAN'] : []);
         $rubriques = [
             'entreprise' => ['complete' => $manque === [],
                 'resume' => $r->entreprise . ' · ' . ($manque === [] ? ($r->localite() !== '' ? $r->localite() : $r->telephone) : self::enumeration($manque) . (count($manque) > 1 ? ' manquent' : ' manque'))],
@@ -241,7 +241,12 @@ final class ReglagesControleur
         $m = $this->c->reglages($portee)->lireMarque();
         $acomptes = implode(',', $r->paiementAcomptes);
         $proposes = array_map(static fn (array $a): string => implode(',', $a), Reglages::ACOMPTES_PROPOSES);
-        return ['entreprise' => $r->entreprise, 'adresse' => $r->adresse, 'telephone' => $r->telephone, 'courriel_contact' => $r->courrielContact,
+        return ['entreprise' => $r->entreprise,
+                'adresse_rue' => $r->adresse->rue, 'adresse_numero' => $r->adresse->numero, 'adresse_npa' => $r->adresse->npa,
+                'adresse_localite' => $r->adresse->localite, 'adresse_pays' => $r->adresse->pays,
+                // Montrée seulement (elle n'est pas dans CHAMPS) : l'adresse d'avant, à reporter dans les champs.
+                'adresse_ancienne' => $this->c->reglages($portee)->adresseAReprendre(),
+                'telephone' => $r->telephone, 'courriel_contact' => $r->courrielContact,
                 'ide' => $r->ide, 'iban' => Iban::lisible($r->iban), 'tva' => (string) $r->tvaPourDixMille,
                 // Une valeur proposée se montre cochée ; une autre, sous « Autre ».
                 'validite_choix' => in_array($r->validiteJours, Reglages::VALIDITES_PROPOSEES, true) ? (string) $r->validiteJours : 'autre',

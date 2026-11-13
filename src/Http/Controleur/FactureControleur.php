@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Adresse\Adresse;
+use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotFactures;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
@@ -119,12 +121,15 @@ final class FactureControleur
                 'prix_centimes' => $l['prix_centimes'], 'categorie' => $l['categorie'], 'produit_id' => $l['produit_id'],
             ], $lignesOffre);
         }
+        // L'adresse du client en champs, pour la section de paiement ; vide pour une fiche d'avant les champs séparés.
+        $client = $this->c->clients($portee)->parId($offre['client_id']);
         try {
             $id = $this->c->factures($portee)->creer([
                 'offre_id' => $offre['id'], 'numero' => $entete['numero'], 'genre' => $choisi['genre'],
                 'acompte_rang' => $choisi['rang'], 'acompte_nombre' => $choisi['nombre'], 'acompte_pourcent' => $choisi['pourcent'],
                 'date_facture' => $entete['date'], 'echeance' => $entete['echeance'],
                 'titre' => $offre['titre'], 'client_nom' => (string) $offre['client_nom'], 'client_adresse' => $offre['client_adresse'],
+                'client_postale' => $client === null ? new Adresse() : DepotClients::adresse($client),
             ], $lignes, $this->c->horloge()->now());
         } catch (\PDOException $e) {
             // Deux factures créées au même instant avec le même numéro : l'index unique tranche.
@@ -255,7 +260,8 @@ final class FactureControleur
             'offre_id' => $f['offre_id'], 'numero' => $this->numeroPropose($requete), 'genre' => $f['genre'],
             'acompte_rang' => $f['acompte_rang'], 'acompte_nombre' => $f['acompte_nombre'], 'acompte_pourcent' => $f['acompte_pourcent'],
             'date_facture' => $date, 'echeance' => $date->modify("+$delai days"),
-            'titre' => $f['titre'], 'client_nom' => $f['client_nom'], 'client_adresse' => $f['client_adresse'], 'refaite_depuis' => $f['id'],
+            'titre' => $f['titre'], 'client_nom' => $f['client_nom'], 'client_adresse' => $f['client_adresse'],
+            'client_postale' => Adresse::depuisBase($f, 'client_'), 'refaite_depuis' => $f['id'],
         ], $lignes, $quand);
         Flash::dire($requete, 'info', 'Facture ' . $f['numero'] . ' annulée ; corrigez la nouvelle, puis émettez-la');
         return new RedirectResponse('/factures/' . $id, 303);

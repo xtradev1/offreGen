@@ -43,6 +43,13 @@ Entre les étapes 7 et 8, de vrais utilisateurs reçoivent la nouvelle version p
 - **Suppression ou renommage :** en deux versions. La première cesse d'utiliser la colonne, la suivante la supprime après une sauvegarde vérifiée.
 - **Retour arrière :** il concerne le code. La base n'est jamais restaurée automatiquement, car cela effacerait les données écrites depuis la sauvegarde. Une restauration est une décision humaine.
 
+## Adresses (sous-chantier 18)
+
+- `.env` de production : `ADRESSES=swisstopo`. Sans cette ligne, le registre factice répond : aucune suggestion, aucune vérification, la saisie marche quand même.
+- Le serveur doit pouvoir joindre `https://api3.geo.admin.ch` en HTTPS sortant (délai de 3 secondes ; au-delà, l'écran continue sans suggestions).
+- Le répertoire des NPA (`src/Adresse/localites.php`) est copié de swisstopo. Le refaire avant une mise en production, il change quelques fois par an : la marche à suivre est en tête de `outils/localites.php`.
+- La migration 10 (`Version20261113000002`) est additive. Contrôle de compatibilité fait en local le 2026-11-13 : la version 5de18b4 passe ses 345 tests sur la base migrée.
+
 ## Contrôles en production
 
 Aucun envoi de courriel, aucune écriture de données métier, aucun script à effet de bord.

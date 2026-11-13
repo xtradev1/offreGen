@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace OffreGen\Compte;
 
+use OffreGen\Adresse\Adresse;
+use OffreGen\Adresse\SaisieAdresse;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\SaisieRefusee;
 
 /**
- * Les réglages d'un compte qui changent une offre : l'en-tête du document (entreprise, adresse,
+ * Les réglages d'un compte qui changent une offre : l'en-tête du document (entreprise, adresse en champs séparés,
  * téléphone, courriel, IDE), la TVA, l'arrondi du total, la validité et les conditions de paiement ;
  * et l'IBAN, pour la section de paiement des factures (forme compacte, vide s'il n'est pas donné).
  */
@@ -37,7 +39,7 @@ final readonly class Reglages
         public string $entreprise,
         public int $tvaPourDixMille,
         public bool $arrondiCinqCentimes,
-        public string $adresse = '',
+        public Adresse $adresse = new Adresse(),
         public string $telephone = '',
         public string $courrielContact = '',
         public string $ide = '',
@@ -121,7 +123,8 @@ final readonly class Reglages
     /**
      * Le formulaire de l'écran Réglages ; SaisieRefusee si un champ est faux.
      *
-     * @param array<string, string> $champs entreprise, adresse, telephone, courriel_contact, ide, iban, tva,
+     * @param array<string, string> $champs entreprise, adresse_rue, adresse_numero, adresse_npa, adresse_localite,
+     *        adresse_pays, telephone, courriel_contact, ide, iban, tva,
      *        validite_choix et validite_jours, paiement_type, paiement_jours_choix et paiement_jours,
      *        paiement_acomptes_choix et paiement_acomptes. Un « …_choix » proposé l'emporte ; « autre » ou
      *        absent : la valeur tapée.
@@ -134,10 +137,8 @@ final readonly class Reglages
         if ($nom === null) {
             $erreurs['entreprise'] = "Indiquez le nom de l'entreprise (190 caractères au plus).";
         }
-        $adresse = Saisie::lignes($c('adresse'), 4, 255);
-        if ($adresse === null) {
-            $erreurs['adresse'] = 'Quatre lignes et 255 caractères au plus.';
-        }
+        [$adresse, $erreursAdresse] = SaisieAdresse::lire($champs, 'adresse_');
+        $erreurs += $erreursAdresse;
         $telephone = trim((string) preg_replace('/\s+/u', ' ', $c('telephone')));
         if ($telephone !== '' && preg_match('/^\+?[0-9 ().\/-]{6,40}$/', $telephone) !== 1) {
             $erreurs['telephone'] = 'Un numéro de téléphone, par exemple 032 422 00 00.';
@@ -201,11 +202,9 @@ final readonly class Reglages
         return 'CHE-' . substr($chiffres, 0, 3) . '.' . substr($chiffres, 3, 3) . '.' . substr($chiffres, 6, 3);
     }
 
-    /** Dernière ligne de l'adresse sans le numéro postal : « 2800 Delémont » donne « Delémont ». */
+    /** La localité de l'entreprise : « Delémont, le… » sur le document, et le sommaire des réglages. */
     public function localite(): string
     {
-        $lignes = $this->adresse === '' ? [] : explode("\n", $this->adresse);
-        $derniere = trim((string) end($lignes));
-        return trim((string) preg_replace('/^(CH-)?\d{4}\s+/', '', $derniere));
+        return $this->adresse->localite;
     }
 }

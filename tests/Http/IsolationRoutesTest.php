@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Tests\Http;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Donnees\DepotFactures;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Route;
@@ -39,7 +40,7 @@ final class IsolationRoutesTest extends TestCase
             $this->facture[$nom] = (new DepotFactures($this->jeu->base, new Portee($nom === 'a' ? $this->jeu->a : $this->jeu->b)))->creer([
                 'offre_id' => $this->jeu->offre[$nom], 'numero' => '2026-001', 'genre' => 'finale', 'acompte_rang' => null, 'acompte_nombre' => null,
                 'acompte_pourcent' => null, 'date_facture' => new \DateTimeImmutable('2026-11-07'), 'echeance' => new \DateTimeImmutable('2026-12-07'),
-                'titre' => "Offre $nom", 'client_nom' => "Client $nom", 'client_adresse' => null,
+                'titre' => "Offre $nom", 'client_nom' => "Client $nom", 'client_adresse' => null, 'client_postale' => new Adresse(),
             ], [['designation' => "Peinture murale $nom", 'quantite_milliemes' => 12500, 'unite' => 'm²', 'prix_centimes' => 1850, 'categorie' => 'Peinture', 'produit_id' => null]], $this->jeu->maintenant);
             $this->factureLigne[$nom] = (int) BaseDeTest::ligne("SELECT id FROM facture_ligne WHERE facture_id = {$this->facture[$nom]}")['id'];
             // Et une facture émise, avec son PDF : celles qui se lisent en PDF et s'annulent.

@@ -7,6 +7,10 @@ namespace OffreGen\Http;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use OffreGen\Adresse\Adresse;
+use OffreGen\Adresse\RegistreAdresses;
+use OffreGen\Adresse\RegistreFactice;
+use OffreGen\Adresse\RegistreSwisstopo;
 use OffreGen\Audio\DureeAudio;
 use OffreGen\Compte\TraitementLogo;
 use OffreGen\Audio\PreparationAudio;
@@ -267,6 +271,7 @@ final class Conteneur
             $twig->addFunction(new TwigFunction('csrf', fn (): string => $this->garde()->jeton()));
             $twig->addFunction(new TwigFunction('messages', fn (): array => $this->garde()->messages()));
             $twig->addExtension(new Formats());
+            $twig->addGlobal('pays_adresse', Adresse::PAYS);
             return $twig;
         });
     }
@@ -342,6 +347,17 @@ final class Conteneur
                 $this->parametre('EXTRACTION_SANS_RAISONNEMENT', '1') === '1',
             );
         });
+    }
+
+    /**
+     * ADRESSES=swisstopo : suggestions et vérification par le registre officiel de swisstopo (gratuit, sans clé).
+     * Autre valeur ou absente : registre factice, rien ne sort de la machine.
+     */
+    public function registreAdresses(): RegistreAdresses
+    {
+        return $this->une(RegistreAdresses::class, fn (): RegistreAdresses => $this->parametre('ADRESSES') === 'swisstopo'
+            ? new RegistreSwisstopo($this->http())
+            : new RegistreFactice());
     }
 
     public function http(): HttpClientInterface

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Tests\Http;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Compte\Reglages;
 use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\DepotClients;
@@ -338,7 +339,7 @@ final class EcransTest extends TestCase
     {
         $depot = new DepotOffres($this->jeu->base, new Portee($this->jeu->a));
         $clients = new DepotClients($this->jeu->base, new Portee($this->jeu->a));
-        $fiche = static fn (string $nom): int => $clients->creer(['nom' => $nom, 'adresse' => null, 'telephone' => null, 'courriel' => null], new \DateTimeImmutable('2026-11-07'));
+        $fiche = static fn (string $nom): int => $clients->creer(['nom' => $nom, 'adresse' => new Adresse(), 'telephone' => null, 'courriel' => null], new \DateTimeImmutable('2026-11-07'));
         $facade = $depot->creerExemple('Façade', [new LigneExtraite('Façade', 1000, 'forfait', 100000, false, null)], $this->jeu->maintenant, $fiche('Zoé Modèle'));
         $volets = $depot->creerExemple('Volets', [new LigneExtraite('Volets', 1000, 'forfait', 5000, true, null)], $this->jeu->maintenant, $fiche('Albert Essai'));
         return [$facade, $volets];
@@ -477,15 +478,16 @@ final class EcransTest extends TestCase
     public function testReglagesDeLEnteteNormalisesEtRefuses(): void
     {
         $this->page('/reglages');
-        $champs = ['entreprise' => 'Peinture A', 'adresse' => "Rue 1\n2800 Delémont", 'telephone' => '032 422 00 00', 'courriel_contact' => 'info@exemple.ch',
+        $champs = ['entreprise' => 'Peinture A', 'adresse_rue' => 'Rue', 'adresse_numero' => '1', 'adresse_npa' => '2800', 'adresse_localite' => 'Delémont',
+                   'telephone' => '032 422 00 00', 'courriel_contact' => 'info@exemple.ch',
                    'ide' => 'che 123 456 789 tva', 'tva' => '810', 'arrondi' => '1', 'validite_jours' => '45', 'paiement_jours' => '30'];
         self::assertSame(303, $this->a->post('/reglages', $champs)->getStatusCode());
-        self::assertSame(['ide' => 'CHE-123.456.789', 'validite_jours' => 45, 'adresse' => "Rue 1\n2800 Delémont"],
-            BaseDeTest::ligne("SELECT ide, validite_jours, adresse FROM artisan WHERE id = {$this->jeu->a}"));
+        self::assertSame(['ide' => 'CHE-123.456.789', 'validite_jours' => 45, 'adresse_npa' => '2800'],
+            BaseDeTest::ligne("SELECT ide, validite_jours, adresse_npa FROM artisan WHERE id = {$this->jeu->a}"));
         $this->page('/reglages');
-        $reponse = $this->a->post('/reglages', ['ide' => 'CHE-12', 'courriel_contact' => 'pas un courriel', 'validite_jours' => '0'] + $champs);
+        $reponse = $this->a->post('/reglages', ['ide' => 'CHE-12', 'courriel_contact' => 'pas un courriel', 'validite_jours' => '0', 'adresse_npa' => '12'] + $champs);
         self::assertSame(422, $reponse->getStatusCode());
-        foreach (['ide', 'courriel_contact', 'validite_jours'] as $champ) {
+        foreach (['ide', 'courriel_contact', 'validite_jours', 'adresse_npa'] as $champ) {
             self::assertStringContainsString("aria-describedby=\"err-$champ\"", (string) $reponse->getContent(), $champ);
         }
         self::assertSame('CHE-123.456.789', BaseDeTest::ligne("SELECT ide FROM artisan WHERE id = {$this->jeu->a}")['ide']);
@@ -493,7 +495,7 @@ final class EcransTest extends TestCase
 
     public function testDocumentDeLOffre(): void
     {
-        BaseDeTest::pdo()->exec("UPDATE artisan SET adresse = 'Rue 1\n2800 Delémont', ide = 'CHE-123.456.789', validite_jours = 30 WHERE id = {$this->jeu->a}");
+        BaseDeTest::pdo()->exec("UPDATE artisan SET adresse_rue = 'Rue', adresse_numero = '1', adresse_npa = '2800', adresse_localite = 'Delémont', adresse_pays = 'CH', ide = 'CHE-123.456.789', validite_jours = 30 WHERE id = {$this->jeu->a}");
         // Nom et lieu dictés, pas encore confirmés : le document les porte déjà.
         BaseDeTest::pdo()->exec("UPDATE offre SET client_dicte = 'Madame Exemple', lieu_dicte = 'Rue du Test 4' WHERE id = {$this->jeu->offre['a']}");
         $doc = $this->page("{$this->offre}/document");

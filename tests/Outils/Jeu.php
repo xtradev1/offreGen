@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Tests\Outils;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotClients;
@@ -62,7 +63,7 @@ final class Jeu
         $this->enregistrement[$nom] = (new DepotEnregistrements($this->base, $portee))
             ->creer($this->uuid[$nom], "visite-$nom.m4a", 'audio/mp4', 1000, "$portee->artisanId/{$this->uuid[$nom]}.m4a", $this->maintenant);
         $this->client[$nom] = (new DepotClients($this->base, $portee))->creer(
-            ['nom' => "Client $nom", 'adresse' => "Rue $nom 1\n2800 Delémont", 'telephone' => null, 'courriel' => null], $this->maintenant);
+            ['nom' => "Client $nom", 'adresse' => new Adresse("Rue $nom", '1', '2800', 'Delémont'), 'telephone' => null, 'courriel' => null], $this->maintenant);
         $this->offre[$nom] = (new DepotOffres($this->base, $portee))->creerDepuisEnregistrement(
             $this->enregistrement[$nom],
             "Offre $nom",

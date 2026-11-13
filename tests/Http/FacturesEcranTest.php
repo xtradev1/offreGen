@@ -91,6 +91,9 @@ final class FacturesEcranTest extends TestCase
         $id = $this->creer();
         $f = BaseDeTest::ligne("SELECT numero, genre, statut, client_nom, client_adresse, titre, date_facture, echeance FROM facture WHERE id = $id");
         self::assertSame(['2026-001', 'finale', 'brouillon', 'Client a', "Rue a 1\n2800 Delémont", 'Offre a', '2026-11-07', '2026-12-07'], array_values($f));
+        // L'adresse du client est copiée aussi en champs, pour la section de paiement.
+        self::assertSame(['client_rue' => 'Rue a', 'client_numero' => '1', 'client_npa' => '2800', 'client_localite' => 'Delémont', 'client_pays' => 'CH'],
+            BaseDeTest::ligne("SELECT client_rue, client_numero, client_npa, client_localite, client_pays FROM facture WHERE id = $id"));
         $page = $this->page("/factures/$id");
         self::assertStringContainsString('Facture 2026-001', $page);
         self::assertStringContainsString('Brouillon', $page);
@@ -359,7 +362,7 @@ final class FacturesEcranTest extends TestCase
         $r = $this->a->post("/factures/$id/annuler", ['refaire' => '1']);
         $nouvelle = (int) BaseDeTest::ligne('SELECT MAX(id) AS id FROM facture')['id'];
         self::assertSame("/factures/$nouvelle", $r->headers->get('Location'));
-        self::assertSame(1, BaseDeTest::compter('facture', "id = $nouvelle AND statut = 'brouillon' AND numero = '2026-002' AND refaite_depuis = $id AND genre = 'finale' AND client_nom = 'Client a'"));
+        self::assertSame(1, BaseDeTest::compter('facture', "id = $nouvelle AND statut = 'brouillon' AND numero = '2026-002' AND refaite_depuis = $id AND genre = 'finale' AND client_nom = 'Client a' AND client_npa = '2800' AND client_rue = 'Rue a'"));
         self::assertSame(1, BaseDeTest::compter('facture_ligne', "facture_id = $nouvelle AND quantite_milliemes = 14000"), 'Les lignes corrigées sont reprises.');
         self::assertSame(1, BaseDeTest::compter('facture', "id = $id AND statut = 'annulee'"));
     }

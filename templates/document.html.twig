@@ -10,7 +10,7 @@
   {% if manque > 0 %}<p class="alerte bad">{{ manque }} ligne{{ manque > 1 ? 's' : '' }} sans prix&nbsp;: à compléter avant de l'envoyer.</p>{% endif %}
   {% if doute > 0 %}<p class="alerte warn">{{ doute }} ligne{{ doute > 1 ? 's' : '' }} encore à vérifier.</p>{% endif %}
   {% if not offre.client_nom %}<p class="alerte warn">Client à compléter&nbsp;: <a href="/offres/{{ offre.id }}/client">le choisir</a>.</p>{% endif %}
-  {% if not r.adresse %}<p class="alerte warn">Votre adresse manque en tête de l'offre&nbsp;: <a href="/reglages">la compléter dans les réglages</a>.</p>{% endif %}
+  {% if r.adresse.estVide %}<p class="alerte warn">Votre adresse manque en tête de l'offre&nbsp;: <a href="/reglages">la compléter dans les réglages</a>.</p>{% endif %}
   <article class="paper">{% include '_document.html.twig' %}</article>
 {% endblock %}
 

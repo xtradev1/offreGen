@@ -89,8 +89,9 @@ le préfixe d'adresse et le parent. Les gabarits `ligne` et `ajout` prennent le 
    validité ni de signature, « Payable jusqu'au … », déjà facturé, à payer), aperçu à l'écran.
 5. **Émission** : émettre, PDF gardé et servi, annuler, annuler et refaire, 409 sur une facture figée.
    Tests : PDF identique après un changement de réglages ; aucune écriture sur une facture émise.
-6. **Adresses structurées et QR-facture** (attend bcmath dans WSL et le choix de Xavier sur la recherche
-   d'adresses) : rue, numéro, NPA, localité et pays en champs séparés pour l'entreprise et les fiches clients
+6. **Adresses structurées et QR-facture**, en deux temps : 6a, adresses (fait le 2026-11-13, variante B de Xavier :
+   champs séparés, NPA au répertoire officiel, suggestions swisstopo) ; 6b, QR-facture (attend bcmath dans WSL).
+   Contenu d'origine : rue, numéro, NPA, localité et pays en champs séparés pour l'entreprise et les fiches clients
    (Xavier, 2026-11-13 : « il faut absolument que ça corresponde au standard »), reprise des adresses en texte
    libre par un découpage proposé, à vérifier ; dépendances verrouillées, `QrFacture`, section de paiement à
    l'écran et au PDF, placement en deux rendus. Preuve : charge utile sans

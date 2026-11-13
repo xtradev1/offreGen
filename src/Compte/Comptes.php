@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Compte;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Audio\StockageAudio;
 use OffreGen\Catalogue\CatalogueFictif;
 use OffreGen\Donnees\Base;
@@ -101,7 +102,8 @@ final class Comptes
                 }
                 $quand = $this->horloge->now()->modify("-{$o['il_y_a_jours']} days");
                 // Les clients des exemples ont leur fiche : la démonstration montre l'onglet Clients rempli.
-                $parNomClient[$o['client']] ??= $clients->creer(['nom' => $o['client'], 'adresse' => $o['adresse'], 'telephone' => null, 'courriel' => null], $quand);
+                $parNomClient[$o['client']] ??= $clients->creer(['nom' => $o['client'], 'adresse' => Adresse::depuisTexte($o['adresse']) ?? new Adresse(),
+                    'telephone' => null, 'courriel' => null], $quand);
                 $offres->creerExemple($o['titre'], $lignes, $quand, $parNomClient[$o['client']]);
             }
         });

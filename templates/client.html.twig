@@ -20,11 +20,7 @@
       <input id="nom" name="nom" value="{{ champs.nom }}" maxlength="190" required autocomplete="off"{% if not k %} data-premier{% endif %}{{ f.invalide(erreurs, 'nom') }}>
       {{ f.erreur(erreurs, 'nom') }}
     </div>
-    <div class="champ">
-      <label for="adresse">Adresse</label>
-      <textarea id="adresse" name="adresse" rows="2" placeholder="Rue et numéro&#10;NPA et localité" autocomplete="off"{{ f.invalide(erreurs, 'adresse') }}>{{ champs.adresse }}</textarea>
-      {{ f.erreur(erreurs, 'adresse') }}
-    </div>
+    {% include '_adresse.html.twig' with {p: 'adresse_', manque: false, ancienne: champs.adresse_ancienne ?? ''} %}
     <div class="duo">
       <div class="champ">
         <label for="telephone">Téléphone</label>

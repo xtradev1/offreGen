@@ -464,6 +464,7 @@ function fichesEnFenetre() {
     const barre = page.querySelector('.bas .actionbar');
     pied.replaceChildren(...(barre ? [barre] : []));
     corps.scrollTop = 0;
+    corps.querySelectorAll('fieldset[data-adresse]').forEach(brancherAdresse);
     corps.querySelectorAll('form[data-auto]').forEach(brancherAuto);
     corps.querySelectorAll('input[data-filtre]').forEach(brancherFiltre);
     const dejaOuverte = calques.ouvert() === calque;
@@ -701,11 +702,19 @@ function brancherAuto(form) {
     const champ = ch.querySelector('input.manque, textarea.manque');
     if (badge && champ) attendus.push({ badge, champ });
   });
-  const rafraichirBadges = () => attendus.forEach(({ badge, champ }) => {
-    const rempli = champ.value.trim() !== '';
-    badge.hidden = rempli;
-    champ.classList.toggle('manque', !rempli);
-  });
+  const rafraichirBadges = () => {
+    attendus.forEach(({ badge, champ }) => {
+      const rempli = champ.value.trim() !== '';
+      badge.hidden = rempli;
+      champ.classList.toggle('manque', !rempli);
+    });
+    // L'adresse : son badge tombe quand elle est enregistrée avec son NPA.
+    form.querySelectorAll('fieldset[data-adresse]').forEach((g) => {
+      const badge = g.querySelector('[data-adresse-badge]');
+      const npa = g.querySelector('[data-a="npa"]');
+      if (badge && npa) badge.hidden = npa.value.trim() !== '';
+    });
+  };
 
   const afficherErreurs = (erreurs) => {
     form.querySelectorAll('[data-erreur]').forEach((s) => {
@@ -756,10 +765,25 @@ function brancherAuto(form) {
   const attendre = () => { clearTimeout(minuterie); minuterie = setTimeout(envoyer, 900); };
   const tape = (c) => c.matches('textarea, input:not([type]), input[type=text], input[type=tel], input[type=email], input[type=number]');
 
-  form.addEventListener('input', (e) => { if (e.target.form === form && tape(e.target)) attendre(); });
+  // L'adresse part entière : ses champs attendent qu'on la quitte (ou qu'on choisisse une suggestion), sinon la rue
+  // seule serait refusée faute de NPA à chaque pause de la frappe.
+  let adresseEnAttente = false;
+  const dansAdresse = (c) => c.closest && c.closest('fieldset[data-adresse]');
+  form.querySelectorAll('fieldset[data-adresse]').forEach((g) => {
+    const partir = () => { if (adresseEnAttente) { adresseEnAttente = false; envoyer(); } };
+    g.addEventListener('focusout', (e) => { if (!g.contains(e.relatedTarget)) partir(); });
+    g.addEventListener('adresse-choisie', () => { adresseEnAttente = true; partir(); });
+  });
+
+  form.addEventListener('input', (e) => {
+    if (e.target.form !== form || !tape(e.target)) return;
+    if (dansAdresse(e.target)) { adresseEnAttente = true; return; }
+    attendre();
+  });
   form.addEventListener('change', (e) => {
     const c = e.target;
     if (c.form !== form) return; // le champ du logo appartient à son propre formulaire
+    if (dansAdresse(c)) { adresseEnAttente = true; return; }
     // « Autre » touché alors que son champ est vide : on attend la saisie, rien à enregistrer encore.
     if (c.type === 'radio' && c.value === 'autre') {
       const champ = c.closest('.choix') && c.closest('.choix').querySelector('.si-autre input');
@@ -770,14 +794,113 @@ function brancherAuto(form) {
   form.addEventListener('submit', (e) => { if (!secours) { e.preventDefault(); envoyer(); } });
   // Une saisie en attente part quand on quitte l'écran (retour au sommaire, autre onglet).
   window.addEventListener('pagehide', () => {
-    if (minuterie === null) return;
+    if (minuterie === null && !adresseEnAttente) return;
     clearTimeout(minuterie);
     minuterie = null;
+    adresseEnAttente = false;
     fetch(form.action, { method: 'POST', body: corps(), headers: { Accept: 'application/json' }, credentials: 'same-origin', keepalive: true });
   });
 }
 
+// Adresse en champs séparés (sous-chantier 18, choix de Xavier du 2026-11-13 : « Tu tapes ton adresse et puis ça
+// te dit oui, tu es ici ou pas »). Pendant la frappe de la rue, les adresses du registre officiel (swisstopo, par
+// notre serveur) ; le NPA remplit la localité (répertoire copié chez nous) ; en quittant l'adresse, trouvée ou pas.
+// Sans JavaScript ou sans registre, les champs se tapent et le serveur contrôle le NPA quand même.
+function adresses() {
+  document.querySelectorAll('fieldset[data-adresse]').forEach(brancherAdresse);
+}
+
+function brancherAdresse(groupe) {
+  if (groupe.dataset.adresseBranchee) return;
+  groupe.dataset.adresseBranchee = '1';
+  const c = {};
+  ['rue', 'numero', 'npa', 'localite', 'pays'].forEach((k) => { c[k] = groupe.querySelector('[data-a="' + k + '"]'); });
+  const liste = groupe.querySelector('[data-adresse-suggestions]');
+  const etat = groupe.querySelector('[data-adresse-etat]');
+  if (!c.rue || !c.npa || !c.localite || !c.pays || !liste || !etat) return;
+  const dire = (texte, classe) => { etat.textContent = texte; etat.className = 'adresse-etat' + (classe ? ' ' + classe : ''); };
+  const suisse = () => c.pays.value === 'CH' || c.pays.value === 'LI';
+  const lire = (url) => fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const TROUVEE = 'Adresse trouvée au registre officiel des bâtiments.';
+
+  const fermer = () => { liste.hidden = true; liste.textContent = ''; };
+  const choisir = (s) => {
+    c.rue.value = s.rue; c.numero.value = s.numero; c.npa.value = s.npa; c.localite.value = s.localite; c.pays.value = 'CH';
+    fermer();
+    dire(TROUVEE, 'ok');
+    c.numero.focus();
+    groupe.dispatchEvent(new CustomEvent('adresse-choisie', { bubbles: true }));
+  };
+
+  let minuterie = null;
+  let demandee = '';
+  // « Bundesplatz 3 » tapé dans la rue : le numéro va dans son champ (même règle que SaisieAdresse côté serveur).
+  const NUMERO_AU_BOUT = /^(.*\S)\s+(\d+\s?[a-zA-Z]?(?:[/.-]\d+[a-zA-Z]?)?)$/;
+  const separerNumero = () => {
+    const m = c.rue.value.trim().match(NUMERO_AU_BOUT);
+    if (m && c.numero) { c.rue.value = m[1]; c.numero.value = m[2].replace(/\s/g, ''); }
+  };
+  c.rue.addEventListener('change', separerNumero);
+
+  const proposer = async () => {
+    // Le texte tapé seul, plus le numéro s'il n'est pas déjà dans la rue : l'ancien NPA ne restreint pas la recherche.
+    const rue = c.rue.value.trim();
+    const q = (NUMERO_AU_BOUT.test(rue) ? rue : rue + ' ' + c.numero.value).trim().replace(/\s+/g, ' ');
+    if (!suisse() || c.rue.value.trim().length < 3) { fermer(); return; }
+    if (q === demandee) return;
+    demandee = q;
+    const r = await lire('/adresses/suggestions?q=' + encodeURIComponent(q));
+    if (q !== demandee) return; // une frappe plus récente a sa propre réponse
+    fermer();
+    // Réponse arrivée après qu'on a quitté l'adresse : la liste ne s'ouvre plus par-dessus le reste.
+    if (!groupe.contains(document.activeElement)) return;
+    if (!r || !r.suggestions || r.suggestions.length === 0) return;
+    r.suggestions.forEach((s) => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = s.texte;
+      // Le clic ne retire pas le curseur du champ : l'adresse ne part pas à moitié.
+      b.addEventListener('mousedown', (e) => e.preventDefault());
+      b.addEventListener('click', () => choisir(s));
+      li.appendChild(b);
+      liste.appendChild(li);
+    });
+    liste.hidden = false;
+  };
+  const plusTard = () => { dire(''); clearTimeout(minuterie); minuterie = setTimeout(proposer, 350); };
+  c.rue.addEventListener('input', plusTard);
+  c.numero.addEventListener('input', plusTard);
+  groupe.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !liste.hidden) { e.preventDefault(); fermer(); } });
+
+  c.npa.addEventListener('input', async () => {
+    dire('');
+    const npa = c.npa.value.trim();
+    if (!suisse() || !/^\d{4}$/.test(npa)) return;
+    const r = await lire('/adresses/localites?npa=' + npa);
+    if (!r || c.npa.value.trim() !== npa) return;
+    if (r.localites.length === 0) { dire("Ce NPA n'existe pas au répertoire officiel des localités.", 'warn'); return; }
+    const tapee = c.localite.value.trim();
+    if (r.seule && (tapee === '' || r.localites.indexOf(tapee) < 0)) c.localite.value = r.seule;
+    else if (!r.seule && tapee === '') dire('Localités de ce NPA : ' + r.localites.join(', ') + '.');
+  });
+
+  const verifier = async () => {
+    fermer();
+    if (!suisse() || !c.rue.value.trim() || !/^\d{4}$/.test(c.npa.value.trim()) || etat.classList.contains('ok')) return;
+    const p = new URLSearchParams({ rue: c.rue.value, numero: c.numero.value, npa: c.npa.value, localite: c.localite.value });
+    const r = await lire('/adresses/verification?' + p.toString());
+    if (!r || r.trouvee === null) return;
+    if (r.trouvee) dire(TROUVEE, 'ok');
+    else dire("Adresse introuvable au registre officiel : vérifiez la rue et le numéro. Elle s'enregistre quand même.", 'warn');
+  };
+  groupe.addEventListener('focusout', (e) => { if (!groupe.contains(e.relatedTarget)) verifier(); });
+  groupe.addEventListener('input', () => { if (etat.classList.contains('ok')) dire(''); });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  adresses();
   enregistrementsAutomatiques();
   envoisAutomatiques();
   choixDesReglages();

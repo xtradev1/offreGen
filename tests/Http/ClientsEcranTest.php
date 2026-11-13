@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Tests\Http;
 
+use OffreGen\Adresse\Adresse;
 use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
@@ -40,7 +41,8 @@ final class ClientsEcranTest extends TestCase
 
     private function fiche(string $nom, ?string $adresse = null): int
     {
-        return $this->clients->creer(['nom' => $nom, 'adresse' => $adresse, 'telephone' => null, 'courriel' => null], $this->jeu->maintenant);
+        $a = $adresse === null ? new Adresse() : (Adresse::depuisTexte($adresse) ?? throw new \LogicException("adresse illisible : $adresse"));
+        return $this->clients->creer(['nom' => $nom, 'adresse' => $a, 'telephone' => null, 'courriel' => null], $this->jeu->maintenant);
     }
 
     private function offreA(): string
@@ -83,14 +85,40 @@ final class ClientsEcranTest extends TestCase
         self::assertStringContainsString('data-auto', $fiche);
         self::assertStringContainsString('Aucune offre pour ce client.', $fiche);
 
-        $ok = $this->a->post("/clients/$id", ['nom' => ' Mme  Rossi ', 'adresse' => "Rue du Stand 3\n2800 Delémont", 'telephone' => '079 555 44 10', 'courriel' => ''], json: true);
+        // Adresse en champs séparés : rue, numéro, NPA, localité, pays ; la localité prend son nom officiel.
+        foreach (['adresse_rue', 'adresse_numero', 'adresse_npa', 'adresse_localite', 'adresse_pays'] as $champ) {
+            self::assertStringContainsString('name="' . $champ . '"', $fiche);
+        }
+        self::assertStringNotContainsString('<textarea', $fiche);
+        $ok = $this->a->post("/clients/$id", ['nom' => ' Mme  Rossi ', 'adresse_rue' => 'Rue du Stand', 'adresse_numero' => '3', 'adresse_npa' => '2800',
+            'adresse_localite' => 'delemont', 'adresse_pays' => 'CH', 'telephone' => '079 555 44 10', 'courriel' => ''], json: true);
         self::assertSame(['ok' => true], json_decode((string) $ok->getContent(), true));
-        self::assertSame('Mme Rossi', $this->clients->parId($id)['nom'] ?? null);
+        self::assertSame(['nom' => 'Mme Rossi', 'rue' => 'Rue du Stand', 'numero' => '3', 'npa' => '2800', 'localite' => 'Delémont', 'pays' => 'CH', 'adresse' => "Rue du Stand 3\n2800 Delémont"],
+            BaseDeTest::ligne("SELECT nom, rue, numero, npa, localite, pays, adresse FROM client WHERE id = $id"));
 
-        $refus = $this->a->post("/clients/$id", ['nom' => 'Mme Rossi', 'courriel' => 'pas-un-courriel'], json: true);
+        $refus = $this->a->post("/clients/$id", ['nom' => 'Mme Rossi', 'courriel' => 'pas-un-courriel', 'adresse_rue' => 'Rue du Stand', 'adresse_npa' => '2801'], json: true);
         self::assertSame(422, $refus->getStatusCode());
-        self::assertSame(['courriel'], array_keys((array) (json_decode((string) $refus->getContent(), true)['erreurs'] ?? [])));
+        self::assertSame(['adresse_npa', 'courriel'], array_keys((array) (json_decode((string) $refus->getContent(), true)['erreurs'] ?? [])));
         self::assertSame('079 555 44 10', $this->clients->parId($id)['telephone'] ?? null, 'rien ne change');
+
+        // Adresse effacée : plus de texte non plus.
+        $this->a->post("/clients/$id", ['nom' => 'Mme Rossi'], json: true);
+        self::assertSame(['npa' => null, 'adresse' => null], BaseDeTest::ligne("SELECT npa, adresse FROM client WHERE id = $id"));
+    }
+
+    public function testUneAdresseDAvantLesChampsResteAReporter(): void
+    {
+        // Une fiche que la migration n'a pas su découper : son texte reste, montré pour être reporté.
+        $id = $this->fiche('Mme Rossi');
+        BaseDeTest::pdo()->exec("UPDATE client SET adresse = 'c/o Dupont\nRue du Stand 3\n2800 Delémont' WHERE id = $id");
+        self::assertStringContainsString("Votre adresse d'avant, à reporter dans les champs&nbsp;: <b>c/o Dupont, Rue du Stand 3, 2800 Delémont</b>", $this->page("/clients/$id"));
+        // Enregistrer le téléphone sans toucher à l'adresse ne l'efface pas.
+        $this->a->post("/clients/$id", ['nom' => 'Mme Rossi', 'telephone' => '079 555 44 10'], json: true);
+        self::assertSame("c/o Dupont\nRue du Stand 3\n2800 Delémont", BaseDeTest::ligne("SELECT adresse FROM client WHERE id = $id")['adresse']);
+        // Reportée dans les champs : le texte d'avant laisse la place.
+        $this->a->post("/clients/$id", ['nom' => 'Mme Rossi', 'adresse_rue' => 'Rue du Stand', 'adresse_numero' => '3', 'adresse_npa' => '2800'], json: true);
+        self::assertSame("Rue du Stand 3\n2800 Delémont", BaseDeTest::ligne("SELECT adresse FROM client WHERE id = $id")['adresse']);
+        self::assertStringNotContainsString("adresse d'avant", $this->page("/clients/$id"));
     }
 
     public function testUneNouvelleFichePeutDevenirLeClientDeLOffre(): void
@@ -144,14 +172,22 @@ final class ClientsEcranTest extends TestCase
         self::assertStringContainsString('<b>Mme Rossi</b>, Rue du Stand 3, 2800 Delémont', $offre);
         self::assertStringNotContainsString('à confirmer', $offre);
 
-        // Ou confirmer le nom dicté : la fiche naît à ce moment-là, avec le lieu dicté pour adresse.
+        // Ou confirmer le nom dicté : la fiche naît à ce moment-là, avec le lieu dicté pour adresse, découpé
+        // (« Delémont » prend son NPA, 2800, seul au répertoire).
         BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL WHERE id = {$this->jeu->offre['a']}");
         $avant = BaseDeTest::compter('client', "artisan_id = {$this->jeu->a}");
         $this->page($this->offreA() . '/client');
         $this->a->post($this->offreA() . '/client', ['creer' => '1']);
         self::assertSame($avant + 1, BaseDeTest::compter('client', "artisan_id = {$this->jeu->a}"));
-        $nouvelle = BaseDeTest::ligne("SELECT c.nom, c.adresse FROM client c JOIN offre o ON o.client_id = c.id WHERE o.id = {$this->jeu->offre['a']}");
-        self::assertSame(['nom' => 'Madame Rossi', 'adresse' => 'Delémont'], $nouvelle);
+        $nouvelle = BaseDeTest::ligne("SELECT c.nom, c.npa, c.localite, c.adresse FROM client c JOIN offre o ON o.client_id = c.id WHERE o.id = {$this->jeu->offre['a']}");
+        self::assertSame(['nom' => 'Madame Rossi', 'npa' => '2800', 'localite' => 'Delémont', 'adresse' => '2800 Delémont'], $nouvelle);
+
+        // Un lieu dicté qui ne se découpe pas reste en texte, à reporter.
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL, client_dicte = 'Monsieur Tardy', lieu_dicte = 'près de la gare' WHERE id = {$this->jeu->offre['a']}");
+        $this->page($this->offreA() . '/client');
+        $this->a->post($this->offreA() . '/client', ['creer' => '1']);
+        self::assertSame(['npa' => null, 'adresse' => 'près de la gare'],
+            BaseDeTest::ligne("SELECT c.npa, c.adresse FROM client c JOIN offre o ON o.client_id = c.id WHERE o.id = {$this->jeu->offre['a']}"));
     }
 
     public function testLaFicheDUnAutreArtisanNeSeRattachePas(): void

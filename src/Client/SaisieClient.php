@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace OffreGen\Client;
 
+use OffreGen\Adresse\Adresse;
+use OffreGen\Adresse\SaisieAdresse;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\SaisieRefusee;
 
-/** La fiche d'un client telle que l'artisan la tape : seul le nom est obligatoire. */
+/** La fiche d'un client telle que l'artisan la tape : seul le nom est obligatoire ; l'adresse est en champs séparés. */
 final class SaisieClient
 {
     /**
-     * @param array<string, string> $champs nom, adresse, telephone, courriel
-     * @return array{nom: string, adresse: string|null, telephone: string|null, courriel: string|null}
+     * @param array<string, string> $champs nom, adresse_rue, adresse_numero, adresse_npa, adresse_localite, adresse_pays, telephone, courriel
+     * @return array{nom: string, adresse: Adresse, telephone: string|null, courriel: string|null}
      * @throws SaisieRefusee
      */
     public static function lire(array $champs): array
@@ -23,10 +25,8 @@ final class SaisieClient
         if ($nom === null) {
             $erreurs['nom'] = 'Indiquez le nom du client (190 caractères au plus).';
         }
-        $adresse = Saisie::lignes($c('adresse'), 4, 255);
-        if ($adresse === null) {
-            $erreurs['adresse'] = 'Quatre lignes et 255 caractères au plus.';
-        }
+        [$adresse, $erreursAdresse] = SaisieAdresse::lire($champs, 'adresse_');
+        $erreurs += $erreursAdresse;
         $telephone = trim((string) preg_replace('/\s+/u', ' ', $c('telephone')));
         if ($telephone !== '' && preg_match('/^\+?[0-9 ().\/-]{6,40}$/', $telephone) !== 1) {
             $erreurs['telephone'] = 'Un numéro de téléphone, par exemple 079 555 00 00.';
@@ -38,7 +38,7 @@ final class SaisieClient
         if ($nom === null || $adresse === null || $erreurs !== []) {
             throw new SaisieRefusee($erreurs);
         }
-        return ['nom' => $nom, 'adresse' => $adresse === '' ? null : $adresse,
+        return ['nom' => $nom, 'adresse' => $adresse,
                 'telephone' => $telephone === '' ? null : $telephone, 'courriel' => $courriel === '' ? null : $courriel];
     }
 }

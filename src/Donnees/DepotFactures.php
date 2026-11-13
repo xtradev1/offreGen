@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OffreGen\Donnees;
 
+use OffreGen\Adresse\Adresse;
+
 /**
  * Les factures d'un artisan (sous-chantier 18). Une facture naît d'une offre de l'artisan : ses lignes y sont copiées,
  * catégorie comprise. Brouillon, elle se corrige ; émise ou annulée, plus rien ne l'écrit ici, sauf l'émission et
@@ -13,10 +15,13 @@ namespace OffreGen\Donnees;
  * Les lignes ont la forme de celles de l'offre (a_verifier toujours 0, entendu toujours null) : les mêmes gabarits
  * et le même calcul des totaux les servent.
  *
- * @phpstan-type Facture array{id: int, offre_id: int, offre_numero: int, offre_cree_le: string, numero: string, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, statut: string, date_facture: string, echeance: string, titre: string, client_nom: string, client_adresse: string|null, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, iban: string|null, reference: string|null, ht: int|null, tva: int|null, arrondi: int|null, ttc: int|null, deja_facture: int|null, a_payer: int|null, cree_le: string, modifiee_le: string|null, emise_le: string|null, annulee_le: string|null, refaite_depuis: int|null}
+ * L'adresse du client est copiée à la création, en texte (client_adresse, pour le document) et en champs
+ * (client_rue… client_pays, pour la section de paiement).
+ *
+ * @phpstan-type Facture array{id: int, offre_id: int, offre_numero: int, offre_cree_le: string, numero: string, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, statut: string, date_facture: string, echeance: string, titre: string, client_nom: string, client_adresse: string|null, client_rue: string|null, client_numero: string|null, client_npa: string|null, client_localite: string|null, client_pays: string|null, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, iban: string|null, reference: string|null, ht: int|null, tva: int|null, arrondi: int|null, ttc: int|null, deja_facture: int|null, a_payer: int|null, cree_le: string, modifiee_le: string|null, emise_le: string|null, annulee_le: string|null, refaite_depuis: int|null}
  * @phpstan-type FactureLigne array{id: int, facture_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: int|null, categorie: string|null}
  * @phpstan-type LigneACopier array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, categorie: string|null, produit_id: int|null}
- * @phpstan-type Entete array{offre_id: int, numero: string, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, date_facture: \DateTimeImmutable, echeance: \DateTimeImmutable, titre: string, client_nom: string, client_adresse: string|null, refaite_depuis?: int|null}
+ * @phpstan-type Entete array{offre_id: int, numero: string, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, date_facture: \DateTimeImmutable, echeance: \DateTimeImmutable, titre: string, client_nom: string, client_adresse: string|null, client_postale: Adresse, refaite_depuis?: int|null}
  */
 final class DepotFactures implements SupportLignes
 {
@@ -26,7 +31,7 @@ final class DepotFactures implements SupportLignes
 
     private const SELECT_FACTURE = 'SELECT f.id, f.offre_id, o.numero AS offre_numero, o.cree_le AS offre_cree_le, f.numero, f.genre,
             f.acompte_rang, f.acompte_nombre, f.acompte_pourcent, f.statut, f.date_facture, f.echeance, f.titre, f.client_nom,
-            f.client_adresse, f.tva_pour_dix_mille, f.arrondi_cinq, f.iban, f.reference, f.ht, f.tva, f.arrondi, f.ttc,
+            f.client_adresse, f.client_rue, f.client_numero, f.client_npa, f.client_localite, f.client_pays, f.tva_pour_dix_mille, f.arrondi_cinq, f.iban, f.reference, f.ht, f.tva, f.arrondi, f.ttc,
             f.deja_facture, f.a_payer, f.cree_le, f.modifiee_le, f.emise_le, f.annulee_le, f.refaite_depuis
          FROM facture f JOIN offre o ON o.id = f.offre_id AND o.artisan_id = f.artisan_id';
 
@@ -57,9 +62,11 @@ final class DepotFactures implements SupportLignes
             }
             $this->base->ecrire(
                 'INSERT INTO facture (artisan_id, offre_id, numero, genre, acompte_rang, acompte_nombre, acompte_pourcent, statut,
-                     date_facture, echeance, titre, client_nom, client_adresse, cree_le, refaite_depuis)
-                 VALUES (:a, :o, :n, :g, :ar, :an, :ap, :s, :d, :ec, :t, :cn, :ca, :q, :rd)',
-                ['a' => $this->portee->artisanId, 'o' => $e['offre_id'], 'n' => $e['numero'], 'g' => $e['genre'],
+                     date_facture, echeance, titre, client_nom, client_adresse, client_rue, client_numero, client_npa, client_localite,
+                     client_pays, cree_le, refaite_depuis)
+                 VALUES (:a, :o, :n, :g, :ar, :an, :ap, :s, :d, :ec, :t, :cn, :ca, :client_rue, :client_numero, :client_npa, :client_localite,
+                     :client_pays, :q, :rd)',
+                $e['client_postale']->versBase('client_') + ['a' => $this->portee->artisanId, 'o' => $e['offre_id'], 'n' => $e['numero'], 'g' => $e['genre'],
                  'ar' => $e['acompte_rang'], 'an' => $e['acompte_nombre'], 'ap' => $e['acompte_pourcent'], 's' => self::BROUILLON,
                  'd' => $e['date_facture']->format('Y-m-d'), 'ec' => $e['echeance']->format('Y-m-d'),
                  't' => mb_substr($e['titre'], 0, 190), 'cn' => mb_substr($e['client_nom'], 0, 190),

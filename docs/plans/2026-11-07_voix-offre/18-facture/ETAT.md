@@ -9,12 +9,13 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 6 du `PLAN.md` : adresses structurées et QR-facture, après la réponse de Xavier sur la recherche d'adresses et l'installation de bcmath.
+Lot 6b du `PLAN.md` : QR-facture (dépendances verrouillées, `QrFacture`, section de paiement à l'écran et au PDF, référence RF ou QRR à l'émission), dès que bcmath est installé dans WSL.
 
 ## En attente de toi
 
-- Installer l'extension bcmath dans WSL : `sudo apt install php8.5-bcmath` (Claude ne manipule pas ton mot de passe). Le lot 6 (code QR) l'attend ; les lots 1 à 5 avancent sans elle.
-- Choisir comment vérifier une adresse (lot 6) : A, champs séparés et NPA contrôlé sur la liste officielle de la Poste, rien ne sort ; B, A plus des suggestions de swisstopo pendant la frappe, l'adresse tapée part chez swisstopo depuis notre serveur ; C, A plus le registre officiel complet copié chez nous, rien ne sort, mais une copie à tenir à jour chaque mois.
+- Installer l'extension bcmath dans WSL, sans mot de passe, depuis PowerShell sous Windows : `wsl -d Ubuntu -u root -- apt install -y php8.5-bcmath`. Le lot 6b (code QR) l'attend.
+- Avant la mise en production : une phrase dans la politique de confidentialité sur l'envoi des adresses tapées à swisstopo (`docs/SECURITE.md`, 6 bis).
+- L'adresse de la démo, « Rue de la Gare 4, 2800 Delémont », n'existe pas au registre (Delémont n'a qu'une « Place de la Gare ») : l'écran dit « introuvable ». La garder (elle montre le message) ou en prendre une vraie ?
 - Si tu scannes le code de la maquette : il est en adresse « combinée » (type K), lue par les banques jusqu'au 21.11.2026 seulement. L'application émettra des adresses structurées (type S).
 
 ## Suivi Origin
@@ -37,6 +38,12 @@ Lot 6 du `PLAN.md` : adresses structurées et QR-facture, après la réponse de
 - 2026-11-13 : la dernière tranche des acomptes est la facture finale : elle reprend toutes les lignes et déduit le TTC des acomptes émis. Un acompte vaut le pourcentage du HT de l'offre le jour de sa création, corrigeable en brouillon. Échéance d'un acompte : 30 jours, aucun réglage ne la donne.
 - 2026-11-13 : le client d'un brouillon ne se change pas : il est copié de l'offre. Pour en changer, supprimer le brouillon, changer le client de l'offre, refacturer.
 - 2026-11-13 : onglet Factures en troisième position, après Clients (Clients deuxième, Xavier, 2026-11-12). Cinq onglets à 390 px : à vérifier à la capture.
+- 2026-11-13 : Xavier : « dans les réglages, quand tu mets adresse, il y a rue, NPA et ville […] c'est hyper important » ; recherche d'adresses : « tu peux faire Suisse Topo […] B avec A comme base ». Retenu : rue, n°, NPA, localité, pays en champs séparés (longueurs de la QR-facture), pour l'entreprise et les clients ; NPA contrôlé sur le répertoire officiel des localités de swisstopo copié chez nous (la liste de la Poste ne répondait plus : 404) ; suggestions et « trouvée ou pas » par le service de recherche de swisstopo, appelé par notre serveur.
+- 2026-11-13 : NPA inconnu refusé ; localité ramenée à son nom officiel (casse, accents, « Saint » abrégé ; « Lausanne » accepté pour 1000) ou refusée ; rue facultative (norme), numéro sans rue refusé ; numéro tapé au bout de la rue mis dans son champ. Une adresse introuvable au registre s'enregistre quand même : le registre ne connaît pas tout (bâtiment neuf), et le NPA est déjà contrôlé.
+- 2026-11-13 : migration 10 additive (`docs/DEPLOIEMENT.md`) : `artisan.adresse` et `client.adresse` gardent le texte, rendu depuis les champs, que l'ancienne version lit encore. Une première version renommait `artisan.adresse` : reprise avant tout commit, l'ancienne version n'aurait pas tourné sur la nouvelle base.
+- 2026-11-13 : une adresse d'avant que le découpage ne lit pas (trois lignes, NPA inconnu) reste en texte, et l'écran la montre « à reporter dans les champs » ; enregistrer un autre champ ne l'efface pas.
+- 2026-11-13 : la facture copie l'adresse du client en champs à sa création (`client_rue` … `client_pays`), à côté du texte : la section de paiement du lot 6b la lira.
+- 2026-11-13 : lot 6 coupé en deux : 6a adresses (fait), 6b QR-facture (attend bcmath).
 
 ## Journal
 
@@ -54,6 +61,8 @@ Lot 6 du `PLAN.md` : adresses structurées et QR-facture, après la réponse de
 - 2026-11-13 : lot 3 fait. `SupportLignes` (interface commune à `DepotOffres` et `DepotFactures`) ; `LigneControleur` sert l'offre et le brouillon de facture (409 par `Conflit` sur une facture figée) ; `FactureControleur` (liste, nouvelle facture, création, écran, en-tête, suppression du brouillon) ; `Montants` ; `_lignes.html.twig` partagé, en lecture seule sur une facture figée ; onglet Factures en troisième ; liens « Facture 2026-001 » sur l'offre ; « Facturer » sur l'aperçu de l'offre. Une offre sans client confirmé ne se facture pas. Le rang et le pourcentage d'un acompte viennent du serveur, jamais du formulaire. Tests d'écran écrits avant le contrôleur ; trois tests faux corrigés (jeton pris sur une page sans formulaire, ordre des attributs, apostrophe échappée). Six fautes volontaires, toutes détectées. Parcours cliqué en 390 px : cinq onglets de 78 px chacun ; « Ligne libre » retirée des factures après lecture des captures.
 - 2026-11-13 : lot 4 fait. `_document.html.twig` sert l'offre et la facture (titre, « selon offre n° … du … », échéance, acomptes déduits, à payer ; ni validité ni signature sur la facture) ; aperçu `facture_document.html.twig` avec les alertes (ligne sans prix, adresse, IBAN). Non-régression de l'offre : HTML des six modèles et de l'aperçu relevé avant et après, identique hors blancs.
 - 2026-11-13 : lot 5 fait. Confirmation « Émettre la facture ? » sans JavaScript (comme la suppression d'un produit), émission en une transaction (valeurs figées, PDF gardé dans `facture_pdf`, rendu avec les valeurs figées), PDF servi tel quel, 409 pour un brouillon ; annulation et « Annuler et refaire » (brouillon copié au numéro suivant, échéance au même délai) ; un acompte déduit par une finale émise ne s'annule pas avant elle ; émission refusée sans ligne, avec une ligne sans prix ou un montant à payer négatif. Rendu PDF partagé avec l'offre (`OffreControleur::rendrePdf`). Trouvé au parcours : l'écran d'une facture émise n'avait plus de barre d'action (ni aperçu, ni PDF, ni annulation) ; ajoutée, avec son test. Une espace mangée par l'outil d'édition dans `routes.php` corrigée.
+- 2026-11-13 : lots 1 à 5 commités (5de18b4) et poussés sur `chantier-voix-offre`, accord de Xavier.
+- 2026-11-13 : lot 6a fait (adresses). `Adresse`, `SaisieAdresse`, `Localites` (3 190 NPA, `outils/localites.php` les refait), migration 10 jouée sur dev et test, défaite puis rejouée ; réglages, assistant et fiche client en champs séparés (`_adresse.html.twig`) ; `RegistreSwisstopo` (délai 3 s, rien de gardé) et `RegistreFactice` (tests et développement) ; `AdresseControleur` (localités d'un NPA, suggestions, vérification ; 20 appels par minute et par session) ; app.js : suggestions pendant la frappe, NPA qui remplit la localité, « trouvée ou pas » en quittant l'adresse, enregistrement automatique qui attend qu'on quitte l'adresse. Trouvé par les tests : le `.env` local (`ADRESSES=swisstopo`) aurait fait appeler swisstopo par les tests ; `BaseDeTest::env` l'écarte, test à l'appui. Trouvé au parcours : rue et numéro tapés ensemble restaient dans la rue (« Bundesplatz 3 », n° 4) : le numéro au bout de la rue passe dans son champ, au serveur et à l'écran ; les suggestions mêlaient l'ancien numéro et l'ancien NPA ; une liste arrivée après la sortie du champ restait ouverte ; le message de NPA inconnu tenait sur cinq lignes ; un vide sous « Pays ». Tous corrigés. Contrôle de compatibilité : un premier essai avec `vendor` en lien symbolique chargeait le nouveau `src` sous les anciens tests (faux rouge) ; refait avec une copie, l'ancienne version passe.
 
 ## Preuves
 
@@ -174,3 +183,39 @@ SPC / 0200 / 1 / CH9300762011623852957 / K / Peinture Morel Sàrl / Rue de l'Exe
 Maquette : `check.js` bureau 1440/1440 et téléphone 390/390, image 1, cassée 0 ; capture de la facture relue par OpenCV : « décodé : oui », même contenu ; aucune erreur JavaScript.
 
 Non vérifié : lecture du code par une vraie application bancaire (à faire par Xavier) ; présence de bcmath chez Infomaniak.
+
+Lot 6a, adresses (2026-11-13) :
+
+```
+$ vendor/bin/phpunit
+OK (367 tests, 2222 assertions)
+$ vendor/bin/phpstan analyse
+ [OK] No errors
+$ migration 10 sur dev : avant, montée, retour à la 9, remontée
+artisan 2 avant  : "Rue de la Gare 4\n2800 Delémont"
+artisan 2 après  : rue "Rue de la Gare", n° "4", NPA "2800", localité "Delémont", CH ; texte inchangé
+retour à la 9    : colonnes retirées, texte identique ; test : même aller-retour, OK
+$ contrôle de compatibilité : 5de18b4 (copie de vendor, src chargé depuis le worktree) sur la base de test en version 10
+OK (345 tests, 2004 assertions)
+$ muter.py mutations-adresses.json
+détectée : NPA inconnu accepté
+détectée : localité qui ne correspond pas acceptée telle quelle
+détectée : fiche client : l'adresse d'avant effacée par un autre champ
+détectée : réglages : l'adresse d'avant effacée par un autre champ
+détectée : facture sans l'adresse du client en champs
+détectée : registre sollicité sans limite
+détectée : vérification : un autre numéro compte comme trouvé
+$ node parcours-18-adresses.js (390 px, vrai registre swisstopo, adresses publiques, démo remise à zéro avant et après)
+  suggestions : Rue de la Préfecture 1, 2800 Delémont / Ruelle de la Préfecture 1, 1964 Conthey / … / Rue de la Préfecture 2, 2800 Delémont / …
+  choisie : Rue de la Préfecture | 2 | 2800 | Delémont | CH ; « Adresse trouvée au registre officiel des bâtiments. » ; « Enregistré »
+  numéro 99 : « Adresse introuvable au registre officiel : vérifiez la rue et le numéro. Elle s'enregistre quand même. »
+  NPA 2800 : localité « Delémont »
+  NPA 2801 : « Ce NPA n'existe pas. » ; « Pas enregistré : corrigez le champ signalé. »
+  fiche client, « Bundesplatz 3 » tapé dans la rue : Bundesplatz 3, 3011 Bern en tête ; choisie : Bundesplatz | 3 | 3011 | Bern
+  fiche client, « Rue de la Préfecture 1 » tapé sans choisir : Rue de la Préfecture | 1 | 2800 | Delémont ; trouvée
+  document : « Peinture Morel Sàrl Rue de la Gare 4 2800 Delémont … » ; « Delémont, le 11.11.2026 »
+  erreurs : favicon.ico (connu) et le 422 voulu du NPA 2801
+$ swisstopo, à la main : « Rue de la Gare 4 2800 » ne rend que la Place de la Gare : « introuvable » est juste
+```
+
+Captures relues : `captures-18/201-entreprise.png`, `202-suggestions.png`, `204-introuvable.png`, `206-npa-faux.png`, `207b-fiche-tapee.png`.
