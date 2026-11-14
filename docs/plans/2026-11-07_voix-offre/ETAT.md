@@ -53,6 +53,8 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-14 : `GET /1/ai/models` : Qwen/Qwen3.8-27B-FP8 `coming_soon` et bêta, mais il répond ; seul modèle de langage `ready` : mistralai/Ministral-3-14B-Instruct-2512. Qwen respecte `reasoning_effort: none` (0 jeton de raisonnement) et l'outil imposé.
 - 2026-11-14 : transcription chez Infomaniak : envoi multipart accepté, `data` en texte brut, lot prêt en 3 interrogations. Un lot inconnu rend 403 `access_result_forbidden` (le serveur local rendait 404) : traité comme lot perdu, audio renvoyé ; `bin/verifier-ia` l'accepte. Tests écrits avant, vus rouges.
 - 2026-11-14 : parcours cliqué en 390 px, dictée de synthèse, accueil puis offre : prête en 10 s, 6 lignes justes ; journal : 1266 jetons envoyés, 335 reçus. Coût estimé aux tarifs publiés : environ 0,4 centime. Constat : « Madame Exemple, à Bulle » rattachée à la fiche « Famille Exemple, 1700 Fribourg ». Xavier : « si c'est pas la même localité ça ne doit pas marcher ».
+- 2026-11-14 : site de test : hébergement du serveur Cloud, domaine `easy-offres.xtradev.ch` (avec un s). Accès de Claude par clé SSH dédiée, accordé par Xavier tant que les données sont inventées. Relevé en lecture seule : PHP 8.5.12 avec bcmath et intl, composer, MariaDB 10.11, cron, 267 Go ; ffmpeg absent, déposé en version statique 7.0.2. `.env` posé hors du site (jeton recopié sans affichage, mots de passe de la base collés par Xavier). Les deux utilisateurs de la base se connectent avec les droits prévus.
+- 2026-11-14 : `/sante` n'existait pas, alors que `DEPLOIEMENT.md` et la sonde l'utilisent : écrite (tests avant, mutation attrapée). Script `outils/deployer-test.sh` : entorse au protocole écrite dans le roadmap.
 
 ## Sous-chantiers
 
@@ -61,7 +63,7 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | # | Sous-chantier | Dossier | Dépend de | État |
 |---|---|---|---|---|
 | 01 | Socle et import : squelette, connexion, isolation, comptes démo, import audio, traitement immédiat et cron, avec transcripteur et extracteur factices ; l'offre produite s'affiche | `01-socle-import/` | rien | livré en code, recette de Xavier attendue |
-| 02 | Site de test : serveur Cloud, déploiement depuis `main`, workflows GitHub, liste « À prouver » | `02-site-test/` | 01 | à faire |
+| 02 | Site de test : serveur Cloud, déploiement depuis `main`, workflows GitHub, liste « À prouver » | `02-site-test/` | 01 | site de test déployé à la main (`outils/deployer-test.sh`, 2026-11-14) ; workflow GitHub à faire |
 | 03 | Extraction et catalogue chez Infomaniak : clé et nom du modèle, ambiguïtés, second avis « À vérifier », chargement du catalogue CSV. L'extraction réelle tourne déjà en local (10) | `03-extraction/` | 10 | clé et modèle vérifiés chez Infomaniak (2026-11-14) ; le reste à faire |
 | 04 | Transcription Whisper chez Infomaniak : clé, numéro de produit, vérifier le format de `data` et l'envoi multipart (décisions fragiles du 10) | `04-transcription/` | 10, jeton | clé, numéro, `data` et multipart vérifiés chez Infomaniak (2026-11-14) |
 | 05 | Écran de l'offre et corrections à l'écran | repris par 11 | 01 | livré en code dans 11 |

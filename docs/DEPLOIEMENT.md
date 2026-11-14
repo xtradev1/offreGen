@@ -11,7 +11,7 @@ lancer la mise en production du commit recetté.
 | Déclencheur | Poste de travail | Fusion dans `main` | Lancement manuel par Xavier |
 | Données | Fictives | Fictives | Réelles |
 | Base, compte SSH, secrets | Propres | Propres | Propres |
-| Accès de Claude | Autorisé | À confirmer par Xavier | Aucun accès direct, workflow lancé par Xavier |
+| Accès de Claude | Autorisé | Complet, déploiement compris, tant que les données sont inventées (Xavier, 2026-11-14) | Aucun accès direct, workflow lancé par Xavier |
 
 ## Parcours
 
@@ -42,6 +42,20 @@ Entre les étapes 7 et 8, de vrais utilisateurs reçoivent la nouvelle version p
 - **Contrôle de compatibilité, en test :** après les migrations et avant la bascule, l'ancienne version doit encore passer sa sonde et ses tests de fumée. Un rouge bloque le commit. C'est ce contrôle qui attrape un `NOT NULL` sans valeur par défaut.
 - **Suppression ou renommage :** en deux versions. La première cesse d'utiliser la colonne, la suivante la supprime après une sauvegarde vérifiée.
 - **Retour arrière :** il concerne le code. La base n'est jamais restaurée automatiquement, car cela effacerait les données écrites depuis la sauvegarde. Une restauration est une décision humaine.
+
+## Site de test (entorse du 2026-11-14)
+
+En attendant le workflow GitHub (sous-chantier 02), le test se déploie depuis le poste : `outils/deployer-test.sh`.
+Mêmes étapes que le workflow, sauf la maintenance et la sauvegarde : le test ne contient que des données inventées.
+Jamais pour la production.
+
+- Hébergement du serveur Cloud d'Infomaniak, utilisateur SSH `3p81e5_easytest` (hôte `3p81e5.ftp.infomaniak.com`, port 22), limité à cet hébergement. Clé de Claude : `~/.ssh/offregen_test` dans WSL.
+- Disposition : `~/offregen/releases/<commit>/` ; `~/offregen/current` pointe sur la version en service ; `~/offregen/partage/` garde le `.env` (droits 600) et les données (`var/audio`, `logos`, `log`, `sessions`, `courriels`), reliés dans chaque version. Le cache (`var/cache`) reste propre à chaque version : partagé, il servirait des gabarits périmés.
+- Dossier racine du site, dans le Manager : `offregen/current/public`.
+- PHP 8.5 (`php-8.5` en ligne de commande, la commande `php` est en 8.4). Base MariaDB 10.11 `3p81e5_easy_offre_test`, utilisateurs `3p81e5_app` (données) et `3p81e5_struct` (structure).
+- Cron : `bin/traiter-file` chaque minute, posé par le script. **Pas de `bin/purger-audio`** : Xavier garde toutes les voix et tous les textes pour l'instant (2026-11-14).
+- ffmpeg statique 7.0.2 (johnvansickle.com), dans `~/outils/ffmpeg`, sha256 de l'archive `abda8d77ce8309141f83ab8edf0596834087c52467f6badf376a6a2a4c87cf67`. Version d'août 2024, sans les correctifs parus depuis : acceptable sur le test, à remplacer avant la production.
+- `GET /sante` rend le commit (fichier `REVISION` posé à la construction), l'état de la base et des migrations ; la sonde le lit avec le commit attendu.
 
 ## Adresses (sous-chantier 18)
 

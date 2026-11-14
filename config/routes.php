@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use OffreGen\Compte\Marque;
+use OffreGen\Donnees\EtatBase;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Controleur\AccueilControleur;
 use OffreGen\Http\Controleur\AdresseControleur;
@@ -16,6 +17,7 @@ use OffreGen\Http\Controleur\FactureControleur;
 use OffreGen\Http\Controleur\ImportControleur;
 use OffreGen\Http\Controleur\OffreControleur;
 use OffreGen\Http\Controleur\RangementControleur;
+use OffreGen\Http\Controleur\SanteControleur;
 use OffreGen\Http\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,6 +37,12 @@ return static function (Conteneur $c): array {
     $ligneFacture = static fn (): LigneControleur => new LigneControleur($c, LigneControleur::FACTURE);
 
     $routes = [
+        // État pour la sonde d'exposition, après chaque déploiement (docs/DEPLOIEMENT.md). Lecture seule.
+        new Route('sante', '/sante', ['GET'], static fn (): Response => (new SanteControleur(
+            static fn (): EtatBase => new EtatBase($c->base()),
+            $c->racine() . '/REVISION',
+            $c->racine() . '/migrations',
+        ))->etat(), Route::PUBLIC),
         new Route('connexion', '/connexion', ['GET'], static fn (Request $r): Response => $connexion()->afficher($r), Route::PUBLIC),
         new Route('connexion_envoi', '/connexion', ['POST'], static fn (Request $r): Response => $connexion()->soumettre($r), Route::PUBLIC),
         new Route('deconnexion', '/deconnexion', ['POST'], static fn (Request $r): Response => $connexion()->deconnecter($r), Route::ARTISAN),

@@ -31,7 +31,7 @@
 - [2026-11-06] Ergonomie, demande de Xavier : une ligne doit pouvoir être effacée en un clic. Annulation ou confirmation : à départager par des tests d'utilisation avec des artisans.
 - [2026-11-06] GitHub Free conservé par Xavier (refus de Pro). **Entorse au socle :** ni branche protégée, ni secret par environnement. Compensations dans `docs/SECURITE.md` section 3.
 - [2026-11-06] Application web, sur iPhone et Android. Priorité à l'import d'un fichier enregistré avec l'application du téléphone, qui marche sans réseau. Traitement asynchrone : l'offre est prête le soir, sans besoin de temps réel. L'enregistrement dans l'application et le mode hors ligne viennent ensuite.
-- [2026-11-06] Ergonomie, demande de Xavier : « ça doit être utilisable depuis le pouce ». Règle dans `CODING_RULES.md`.
+- [2026-11-06] Ergonomie, demande de Xavier : « ça doit être utilisable depuis le pouce ». Règle dans `CODING_RULES.md`.
 - [2026-11-06] Offre prête : un courriel dans tous les cas, plus une notification.
 - [2026-11-06] Contrôle de compréhension, idée de Xavier : un second modèle bon marché, chez Infomaniak pour rester en Suisse, note chaque ligne extraite. Sous un seuil, la ligne s'affiche en rouge. Seuil et fiabilité de la note à mesurer.
 - [2026-11-06] Calculs (TVA, ordre remise et TVA, remise sur variante, arrondi aux 5 centimes) : réglages fixés une fois par l'artisan.
@@ -53,6 +53,8 @@
 - [2026-11-07] Les en-têtes de sécurité sont posés deux fois : par `public/.htaccess` chez l'hébergeur, par `Noyau` en secours et en local. Un test exige que les deux copies restent identiques.
 - [2026-11-12] IA réelle en local d'abord (Xavier : « ensuite on ajoutera juste les clés API ») : Whisper turbo dans WSL sur le processeur, Qwen 27B dans l'Ollama de Windows (variante `offregen-qwen3.8`, contexte 16 384 jetons). Le PHP parle le protocole d'Infomaniak ; passer au serveur ne change que le `.env`. Détail : `docs/plans/2026-11-07_voix-offre/10-ia-locale/`.
 - [2026-11-12] Dépendances : `symfony/http-client` et `symfony/mime` 7.4. Hors dépôt : `python3.12-venv` dans Ubuntu, faster-whisper 1.2.1 dans `~/offregen-ia`.
+- [2026-11-14] **Entorse au protocole de déploiement :** le site de test (`easy-offres.xtradev.ch`) est déployé par Claude en SSH avec `outils/deployer-test.sh`, en attendant le workflow GitHub (sous-chantier 02). Mêmes étapes que le workflow, sans maintenance ni sauvegarde (données inventées seulement). Déclencheur de fin : le workflow GitHub en place. Accès de Claude au test accordé par Xavier tant que les données sont inventées.
+- [2026-11-14] ffmpeg statique 7.0.2 (johnvansickle.com, août 2024) déposé hors du site de test : le serveur n'a pas ffmpeg (logo, AMR et 3GP, durée minimale). Version sans correctifs depuis 2024 sur des fichiers venus de l'extérieur : à remplacer par une version suivie avant la production.
 - [2026-11-06] **Entorse au socle :** audit externe reporté. Xavier : « tant que l'app ne tourne pas chez au moins 4-5 artisans ça ne vaut pas la peine ». Déclencheur : l'application en service chez 4 à 5 artisans. Le pilote tourne donc avec de vraies données sans audit externe.
 
 ## Current state
@@ -104,7 +106,7 @@
 
 ## Risks / points to clarify
 - Enregistrement dans l'application web : un navigateur mobile peut couper le micro quand l'écran se verrouille (hypothèse, à tester sur iPhone et Android), et le réseau manque souvent sur un chantier. L'import d'un fichier natif contourne ces deux problèmes. Une heure d'audio pèse environ 14 Mo en Opus à 32 kbit/s, et 115 Mo en WAV 16 kHz mono.
-- Import sur iPhone : le glisser-déposer n'existe pas sur téléphone. Le chemin probable passe par « Partager », puis « Enregistrer dans Fichiers », puis le choix du fichier dans la page (hypothèse, à compter au test d'import).
+- Import sur iPhone : le glisser-déposer n'existe pas sur téléphone. Le chemin probable passe par « Partager », puis « Enregistrer dans Fichiers », puis le choix du fichier dans la page (hypothèse, à compter au test d'import).
 - Formats : m4a, mp3, amr, ogg ou wav selon le téléphone. Si Whisper d'Infomaniak ne les accepte pas tous, il faut convertir, et la présence d'un outil de conversion sur l'hébergement n'est pas vérifiée.
 - Enregistrement d'une conversation : si le client parle pendant l'enregistrement, son accord est requis (art. 179ter du Code pénal suisse, à faire confirmer par un juriste). L'application doit le rappeler à l'artisan.
 - Délai après la visite : Whisper d'Infomaniak est asynchrone, et son ratio réel est inconnu. Piste à tester : transcrire chaque morceau pendant l'enregistrement.
