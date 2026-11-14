@@ -22,8 +22,8 @@ final class ReponseApi
         $json = json_decode($corps, true);
         if ($code >= 400 || !is_array($json)) {
             $codeService = is_array($json) && is_array($json['error'] ?? null) && is_string($json['error']['code'] ?? null)
-                ? ' (' . $json['error']['code'] . ')' : '';
-            throw new ErreurApi("$quoi : réponse HTTP $code$codeService", $code);
+                ? $json['error']['code'] : null;
+            throw new ErreurApi("$quoi : réponse HTTP $code" . ($codeService === null ? '' : " ($codeService)"), $code, $codeService);
         }
         if (($json['result'] ?? null) === 'error') {
             throw new ErreurApi("$quoi : erreur du service", $code);

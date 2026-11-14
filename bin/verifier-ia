@@ -25,9 +25,13 @@ if ($c->parametre('TRANSCRIPTION') !== 'api') {
 } else {
     $url = rtrim($c->parametre('TRANSCRIPTION_URL'), '/') . '/1/ai/' . $c->parametre('TRANSCRIPTION_PRODUIT', '0') . '/results/00000000-0000-4000-8000-000000000000';
     try {
-        $code = $http->request('GET', $url, ['headers' => $entetes($c->parametre('TRANSCRIPTION_CLE')), 'timeout' => 10])->getStatusCode();
-        if ($code === 404) {
-            echo "joignable, " . $c->parametre('TRANSCRIPTION_URL') . " (lot inconnu : 404, attendu)\n";
+        $reponse = $http->request('GET', $url, ['headers' => $entetes($c->parametre('TRANSCRIPTION_CLE')), 'timeout' => 10]);
+        $code = $reponse->getStatusCode();
+        $erreur = json_decode($reponse->getContent(false), true);
+        $codeService = is_array($erreur) && is_array($erreur['error'] ?? null) ? ($erreur['error']['code'] ?? null) : null;
+        // Lot inconnu, réponse attendue : 404 du serveur local, 403 access_result_forbidden d'Infomaniak.
+        if ($code === 404 || ($code === 403 && $codeService === \OffreGen\Audio\TranscripteurApi::LOT_INCONNU)) {
+            echo "joignable, " . $c->parametre('TRANSCRIPTION_URL') . " (lot inconnu : {$code}, attendu)\n";
         } else {
             echo "réponse inattendue, HTTP {$code} (401 : clé refusée)\n";
             $echecs++;

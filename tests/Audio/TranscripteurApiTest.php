@@ -143,6 +143,26 @@ final class TranscripteurApiTest extends TestCase
         }
     }
 
+    /** Infomaniak, relevé le 2026-11-14 : un lot inconnu rend 403 access_result_forbidden, pas 404. */
+    public function testLotInconnuChezInfomaniakDemandeUnRenvoi(): void
+    {
+        $this->expectException(TranscriptionEchouee::class);
+        $this->transcripteur([self::json(['result' => 'error', 'error' => ['code' => 'access_result_forbidden', 'description' => 'access_result_forbidden']], 403)])
+            ->resultat('lot-1');
+    }
+
+    /** Un autre 403 (jeton sans le droit) n'est pas un lot perdu : renvoyer l'audio n'y changerait rien. */
+    public function testAutreRefusNEstPasUnLotPerdu(): void
+    {
+        try {
+            $this->transcripteur([self::json(['result' => 'error', 'error' => ['code' => 'not_authorized']], 403)])->resultat('lot-1');
+            self::fail('Refus non remonté.');
+        } catch (ErreurApi $e) {
+            self::assertSame(403, $e->getCode());
+            self::assertSame('not_authorized', $e->codeService);
+        }
+    }
+
     public function testPanneDuServiceNEstPasUnLotPerdu(): void
     {
         $this->expectException(ErreurApi::class);

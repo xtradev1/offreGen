@@ -16,7 +16,7 @@ Recette de Xavier, en local : sous-chantiers 01, 10, 11, 12 et 13 (`RECETTE.md`
 - Contredire, si besoin, deux choix retenus faute de réponse : comptes démo des prospects en production pilote ; production pilote ajoutée au chantier (sous-chantier 09).
 - Site de test avec de vraies données de testeurs (2026-11-14) : dire si Claude y accède quand même, ou si les vraies données vont sur un second site sans accès de Claude.
 - Sous-chantier 23 : écrire la durée de conservation des voix et des textes, et le texte du consentement des testeurs (sans eux, pas de vrais testeurs).
-- `.env` : coller le jeton Infomaniak dans `TRANSCRIPTION_CLE` et `EXTRACTION_CLE`, puis le dire à Claude.
+- Faire un essai avec ta propre voix, depuis le téléphone : seule la dictée de synthèse est passée chez Infomaniak.
 
 ## Suivi Origin
 
@@ -49,6 +49,10 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-14 : Xavier : « enregistre toutes les voix, textes pour l'instant car ils seront utilisés pour l'entraînement. J'avertirai les gens qui testent », et « pouvoir consulter les stats à tout moment et pouvoir rejouer les audio, textes ». Change la conservation de 30 jours de la SPEC (gate intention du 2026-11-07). Sous-chantier 23 ouvert. Constat : l'audio est effacé 30 jours après l'offre par `bin/purger-audio`, aucun cron ne le lance encore (`crontab -l` : vide) ; la transcription et le texte entendu par ligne restent ; la réponse brute du modèle, les durées et la version corrigée par l'artisan à côté de celle du modèle ne sont pas gardées.
 - 2026-11-14 : Xavier, sous-chantier 23 : statistiques pour lui seul (« oui seul moi »), sur tous les comptes ; coût « estimé et réel » ; rejouer veut dire les deux : réécouter et relire, et relancer transcription et extraction pour comparer (« la version optimisée »). Liste de statistiques proposée le même jour, acceptée sans retouche.
 - 2026-11-14 : documentation d'Infomaniak relue (Playwright) : la discussion v2 rend `usage` (jetons entrants, sortants, de raisonnement) ; le résultat d'une transcription ne rend aucune durée ni aucun coût ; `GET /1/ai/{produit}/consumptions` existe, contenu de la réponse non décrit, à lire avec le jeton. `GET /1/ai/models` exige le jeton (401 sans). Tarifs publiés (page française) : Qwen/Qwen3.8-27B-FP8 CHF 0.40 et 3.00 par million de jetons entrants et sortants, Whisper V3 CHF 0.006 la minute.
+- 2026-11-14 : `.env` du développement basculé sur Infomaniak (copie de l'ancien : `.env.avant-infomaniak`). Le numéro collé par Xavier (6 chiffres, celui du Manager) rend 403 ; `GET /1/ai` donne `product_id` 357, qui répond. Un seul jeton pour les deux réglages.
+- 2026-11-14 : `GET /1/ai/models` : Qwen/Qwen3.8-27B-FP8 `coming_soon` et bêta, mais il répond ; seul modèle de langage `ready` : mistralai/Ministral-3-14B-Instruct-2512. Qwen respecte `reasoning_effort: none` (0 jeton de raisonnement) et l'outil imposé.
+- 2026-11-14 : transcription chez Infomaniak : envoi multipart accepté, `data` en texte brut, lot prêt en 3 interrogations. Un lot inconnu rend 403 `access_result_forbidden` (le serveur local rendait 404) : traité comme lot perdu, audio renvoyé ; `bin/verifier-ia` l'accepte. Tests écrits avant, vus rouges.
+- 2026-11-14 : parcours cliqué en 390 px, dictée de synthèse, accueil puis offre : prête en 10 s, 6 lignes justes ; journal : 1266 jetons envoyés, 335 reçus. Coût estimé aux tarifs publiés : environ 0,4 centime. Constat : « Madame Exemple, à Bulle » rattachée à la fiche « Famille Exemple, 1700 Fribourg ». Xavier : « si c'est pas la même localité ça ne doit pas marcher ».
 
 ## Sous-chantiers
 
@@ -58,8 +62,8 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 |---|---|---|---|---|
 | 01 | Socle et import : squelette, connexion, isolation, comptes démo, import audio, traitement immédiat et cron, avec transcripteur et extracteur factices ; l'offre produite s'affiche | `01-socle-import/` | rien | livré en code, recette de Xavier attendue |
 | 02 | Site de test : serveur Cloud, déploiement depuis `main`, workflows GitHub, liste « À prouver » | `02-site-test/` | 01 | à faire |
-| 03 | Extraction et catalogue chez Infomaniak : clé et nom du modèle, ambiguïtés, second avis « À vérifier », chargement du catalogue CSV. L'extraction réelle tourne déjà en local (10) | `03-extraction/` | 10 | à faire |
-| 04 | Transcription Whisper chez Infomaniak : clé, numéro de produit, vérifier le format de `data` et l'envoi multipart (décisions fragiles du 10) | `04-transcription/` | 10, jeton | à faire |
+| 03 | Extraction et catalogue chez Infomaniak : clé et nom du modèle, ambiguïtés, second avis « À vérifier », chargement du catalogue CSV. L'extraction réelle tourne déjà en local (10) | `03-extraction/` | 10 | clé et modèle vérifiés chez Infomaniak (2026-11-14) ; le reste à faire |
+| 04 | Transcription Whisper chez Infomaniak : clé, numéro de produit, vérifier le format de `data` et l'envoi multipart (décisions fragiles du 10) | `04-transcription/` | 10, jeton | clé, numéro, `data` et multipart vérifiés chez Infomaniak (2026-11-14) |
 | 05 | Écran de l'offre et corrections à l'écran | repris par 11 | 01 | livré en code dans 11 |
 | 06 | Commandes vocales | `06-commandes/` | 04, 05 | à faire |
 | 07 | Banc de mesure : données fictives de Claude, puis visites de Xavier | `07-banc/` | 03, 04 | à faire |

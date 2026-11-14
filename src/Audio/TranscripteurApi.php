@@ -18,6 +18,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final class TranscripteurApi implements Transcripteur
 {
+    /** Code d'erreur d'Infomaniak pour un lot qui n'existe pas (ou plus) sous ce produit. */
+    public const LOT_INCONNU = 'access_result_forbidden';
+
     public function __construct(
         private readonly HttpClientInterface $http,
         private readonly PreparationAudio $preparation,
@@ -75,7 +78,8 @@ final class TranscripteurApi implements Transcripteur
             ]);
             $donnees = ReponseApi::lire($reponse, 'Résultat de la transcription');
         } catch (ErreurApi $e) {
-            if ($e->getCode() === 404) {
+            // Lot inconnu : 404 pour le serveur local, 403 access_result_forbidden chez Infomaniak (relevé le 2026-11-14).
+            if ($e->getCode() === 404 || ($e->getCode() === 403 && $e->codeService === self::LOT_INCONNU)) {
                 throw new TranscriptionEchouee('Lot de transcription introuvable chez le prestataire.');
             }
             throw $e;
