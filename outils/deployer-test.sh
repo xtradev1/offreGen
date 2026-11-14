@@ -62,6 +62,15 @@ cd "$HOME/offregen"
 r="releases/$commit"
 ln -sfn ../../partage/.env "$r/.env"
 for d in audio logos log sessions courriels; do rm -rf "$r/var/$d"; ln -sfn "../../../partage/var/$d" "$r/var/$d"; done
+# Le .env doit se lire avant tout. Le message de Dotenv recopie la ligne fautive, mot de passe compris
+# (incident du 2026-11-14) : seul son numéro sort d'ici.
+( cd "$r" && "$php" -r '
+  require "vendor/autoload.php";
+  try { (new Symfony\Component\Dotenv\Dotenv())->parse((string) file_get_contents(".env"), ".env"); }
+  catch (Symfony\Component\Dotenv\Exception\FormatException $e) {
+    fwrite(STDERR, "REFUS : .env illisible à la ligne " . $e->getContext()->getLineno() . " (valeur avec espace, # ou \$ : la mettre entre apostrophes).\n");
+    exit(1);
+  }' ) || exit 1
 ( cd "$r" && "$php" vendor/bin/doctrine-migrations migrate --no-interaction --allow-no-migration >&2 )
 precedent="$(readlink current 2>/dev/null || true)"
 ln -sfn "$r" current.nouveau && mv -Tf current.nouveau current
