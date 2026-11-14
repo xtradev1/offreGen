@@ -95,6 +95,16 @@ final class OffreControleur
      */
     public static function rendrePdf(Conteneur $c, array $d): string
     {
+        return $c->documentPdf()->rendre(self::htmlPdf($c, $d));
+    }
+
+    /**
+     * Le HTML que lit dompdf : feuille de style et logo en ligne (aucune ressource distante), images en data:.
+     *
+     * @param array<string, mixed> $d
+     */
+    public static function htmlPdf(Conteneur $c, array $d): string
+    {
         $m = $d['m'];
         if (!$m instanceof Marque) {
             throw new \LogicException('Document sans marque.');
@@ -102,7 +112,8 @@ final class OffreControleur
         $d['css'] = (string) file_get_contents($c->racine() . '/public/css/document.css') . "\n" . $m->css();
         $logo = $m->logo === null ? null : $c->dossierLogos() . '/' . basename($m->logo);
         $d['logo_src'] = $logo !== null && is_file($logo) ? 'data:image/jpeg;base64,' . base64_encode((string) file_get_contents($logo)) : null;
-        return $c->documentPdf()->rendre($c->twig()->render('document_pdf.html.twig', $d));
+        $d['pdf'] = true;
+        return $c->twig()->render('document_pdf.html.twig', $d);
     }
 
     /**

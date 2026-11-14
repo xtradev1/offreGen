@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Adresse\Adresse;
+use OffreGen\Compte\Reglages;
 use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotFactures;
 use OffreGen\Donnees\DepotOffres;
@@ -12,6 +13,8 @@ use OffreGen\Donnees\Portee;
 use OffreGen\Facture\Montants;
 use OffreGen\Facture\Numerotation;
 use OffreGen\Facture\PlanAcomptes;
+use OffreGen\Facture\QrFacture;
+use OffreGen\Facture\SectionPaiement;
 use OffreGen\Http\Conflit;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Flash;
@@ -191,14 +194,15 @@ final class FactureControleur
         $r = $this->c->reglages($portee)->lire();
         $fige = [
             'tva_pour_dix_mille' => $montants['taux'], 'arrondi_cinq' => $r->arrondiCinqCentimes ? 1 : 0,
-            'iban' => $r->iban === '' ? null : $r->iban, 'reference' => null,
+            'iban' => $r->iban === '' ? null : $r->iban,
+            'reference' => $r->iban === '' ? null : QrFacture::reference($r->iban, $f['id'], $f['numero']),
             'ht' => $montants['ht'], 'tva' => $montants['tva'], 'arrondi' => $montants['arrondi'], 'ttc' => $montants['ttc'],
             'deja_facture' => $montants['deja'], 'a_payer' => $montants['a_payer'],
         ];
         $quand = $this->c->horloge()->now();
         // Le PDF se rend avec les valeurs figées, exactement comme on le relira.
         $emise = array_merge($f, $fige, ['statut' => DepotFactures::EMISE, 'emise_le' => $quand->format('Y-m-d H:i:s')]);
-        $pdf = OffreControleur::rendrePdf($this->c, $this->vueDocument($requete, $emise));
+        $pdf = $this->rendrePdf($this->vueDocument($requete, $emise));
         if (!$this->c->factures($portee)->emettre($f['id'], $fige, $pdf, $quand)) {
             throw new Conflit('Cette facture est déjà émise.');
         }
@@ -265,6 +269,36 @@ final class FactureControleur
         ], $lignes, $quand);
         Flash::dire($requete, 'info', 'Facture ' . $f['numero'] . ' annulée ; corrigez la nouvelle, puis émettez-la');
         return new RedirectResponse('/factures/' . $id, 303);
+    }
+
+    /**
+     * Le PDF en deux rendus (décision de Xavier du 2026-11-12) : le premier garde 110 mm en bas de page (la section et
+     * la consigne « À détacher ») ; s'il tient sur une page, la section va au bas de la page 1, sinon sur une page à part.
+     *
+     * @param array<string, mixed> $vue
+     */
+    private function rendrePdf(array $vue): string
+    {
+        if ($vue['qr'] === null) {
+            return OffreControleur::rendrePdf($this->c, $vue);
+        }
+        $pdf = $this->c->documentPdf();
+        $place = $pdf->pages(OffreControleur::htmlPdf($this->c, ['qr_place' => 'essai'] + $vue)) === 1 ? 'bas' : 'apart';
+        return $pdf->rendre(OffreControleur::htmlPdf($this->c, ['qr_place' => $place] + $vue));
+    }
+
+    /**
+     * La section de paiement, ou la raison de son absence. Brouillon : IBAN des réglages, référence calculée comme elle
+     * le sera à l'émission ; facture émise ou annulée : IBAN et référence figés à l'émission.
+     *
+     * @param Facture $f
+     */
+    private static function section(array $f, Reglages $r, int $aPayer): SectionPaiement|string
+    {
+        $brouillon = $f['statut'] === DepotFactures::BROUILLON;
+        $iban = $brouillon ? $r->iban : (string) $f['iban'];
+        $reference = $brouillon ? ($iban === '' ? null : QrFacture::reference($iban, $f['id'], $f['numero'])) : $f['reference'];
+        return QrFacture::section($r->entreprise, $r->adresse, $iban, $reference, $f['numero'], $aPayer, $f['client_nom'], Adresse::depuisBase($f, 'client_'));
     }
 
     /**
@@ -367,11 +401,17 @@ final class FactureControleur
                 $groupes[$i]['nom'] = $g['nom'] === OffreControleur::HORS_CATALOGUE ? 'Acompte' : $g['nom'];
             }
         }
+        $qr = self::section($f, $r, $montants['a_payer']);
         return [
             'f' => $f,
             'groupes' => $groupes,
             'montants' => $montants,
             'r' => $r,
+            'qr' => $qr instanceof SectionPaiement ? $qr : null,
+            'qr_raison' => is_string($qr) ? $qr : null,
+            'qr_lien' => $qr !== QrFacture::RIEN_A_PAYER,
+            'qr_place' => null,
+            'pdf' => false,
             'modifiable' => $f['statut'] === DepotFactures::BROUILLON,
             'etat' => self::etat($f, $this->aujourdhui()->format('Y-m-d')),
             'manque' => count(array_filter($lignes, static fn (array $l): bool => $l['prix_centimes'] === 0)),

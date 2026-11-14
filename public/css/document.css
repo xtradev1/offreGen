@@ -93,3 +93,71 @@ body.pdf { margin: 0; font-family: "DejaVu Sans", sans-serif; font-size: 9.5pt; 
 .m-epure .doc-lignes th { font-weight: normal; color: #7a8089; border-bottom: 0.5px solid #e6e8eb; }
 .m-epure .doc-lignes td { border-bottom: 0; padding: 6px 4px; }
 .m-epure .doc-grand-total { text-align: right; font-size: 1.9em; font-weight: bold; margin: 12px 0 0; }
+
+/* Section de paiement de la QR-facture (norme SIX 2.3, lot 6b) : 210 × 105 mm, récépissé 62 mm, section paiement
+   148 mm. Polices permises par la norme : Helvetica, Arial, Liberation Sans, Frutiger. Noir sur blanc. */
+.qr-section { font-family: Helvetica, Arial, "Liberation Sans", sans-serif; color: #000; background: #fff; line-height: 1.15; }
+.qr-section p { margin: 0; }
+.qr-section table { border-collapse: collapse; width: 100%; }
+.qr-section td { vertical-align: top; padding: 0; }
+.qr-detacher { text-align: center; }
+.qr-feuille { border-top: 0.75pt dashed #000; }
+.qr-recu { border-right: 0.75pt dashed #000; }
+.qr-titre, .qr-e, .qr-depot { font-weight: bold; }
+.qr-depot { text-align: right; }
+.qr-monnaie { width: 40%; }
+
+/* PDF : mesures de la norme. Le code se dessine en 174 px (46 mm à 96 dpi) : dompdf lit le viewBox en pixels. */
+.pdf .qr-section { width: 210mm; }
+.pdf .qr-detacher { height: 5mm; font-size: 7pt; line-height: 5mm; }
+.pdf .qr-feuille { width: 210mm; }
+.pdf .qr-recu { width: 52mm; height: 95mm; padding: 5mm; }
+.pdf .qr-recu-infos { height: 63mm; }
+.pdf .qr-recu .qr-titre { font-size: 11pt; margin-bottom: 3mm; }
+.pdf .qr-recu .qr-e { font-size: 6pt; line-height: 9pt; }
+.pdf .qr-recu .qr-v { font-size: 8pt; line-height: 9pt; }
+/* L'espace avant un intitulé, jamais après une valeur : une marge basse traversait le bloc de hauteur fixe et
+   descendait le montant de 2,5 mm (vu à la mesure du 2026-11-14). */
+.pdf .qr-recu .qr-v + .qr-e { margin-top: 2.2mm; }
+.pdf .qr-recu .qr-montant { height: 14mm; }
+.pdf .qr-depot { font-size: 6pt; }
+.pdf .qr-paiement { width: 138mm; height: 95mm; padding: 5mm; }
+.pdf .qr-gauche { width: 51mm; }
+.pdf .qr-paiement .qr-titre { font-size: 11pt; margin-bottom: 8mm; }
+.pdf .qr-code-boite { height: 46mm; margin-bottom: 5mm; }
+.pdf .qr-code { width: 174px; height: 174px; }
+.pdf .qr-paiement .qr-e { font-size: 8pt; line-height: 11pt; }
+.pdf .qr-paiement .qr-v { font-size: 10pt; line-height: 11pt; }
+.pdf .qr-paiement .qr-v + .qr-e { margin-top: 2.8mm; }
+.pdf .qr-droite { width: 87mm; }
+.pdf .qr-cadre-recu { width: 196.5px; height: 75.6px; }
+.pdf .qr-cadre-paiement { width: 245.7px; height: 94.5px; }
+/* Bas de la page 1 (la facture tient sur une page) : collée au bord, marges de @page comprises. */
+.pdf .qr-bas { position: fixed; left: -18mm; bottom: -16mm; }
+/* Page à part : la consigne à 187 mm du haut, le trait à 192 mm (18 + 140 + 29). */
+.pdf .qr-espace { page-break-before: always; height: 140mm; }
+.pdf .qr-apart { position: relative; left: -18mm; top: 29mm; }
+
+/* Aperçu à l'écran : la section réduite à l'échelle de sa largeur (1 mm = 100/210 cqw), comme la maquette validée.
+   La colonne de l'application fait au plus 448 px : une section de largeur fixe y défilait et cachait sa colonne de
+   droite (mesuré le 2026-11-14). On zoome pour lire ; le PDF fait foi. */
+.paper .qr-section { margin-top: 24px; container-type: inline-size; overflow-wrap: break-word; }
+.paper .qr-feuille, .paper .qr-colonnes { table-layout: fixed; }
+.paper .qr-detacher { font-size: 1.18cqw; padding-bottom: .5cqw; }
+.paper .qr-recu { width: 24.76cqw; padding: 2.38cqw; }
+.paper .qr-paiement { padding: 2.38cqw; }
+.paper .qr-gauche { width: 24.29cqw; }
+.paper .qr-titre { font-size: 1.85cqw; margin-bottom: 1.4cqw; }
+.paper .qr-paiement .qr-titre { margin-bottom: 3.8cqw; }
+.paper .qr-recu .qr-e { font-size: 1.01cqw; }
+.paper .qr-recu .qr-v { font-size: 1.34cqw; }
+.paper .qr-recu .qr-v + .qr-e { margin-top: 1.05cqw; }
+.paper .qr-paiement .qr-e { font-size: 1.34cqw; }
+.paper .qr-paiement .qr-v { font-size: 1.68cqw; }
+.paper .qr-paiement .qr-v + .qr-e { margin-top: 1.33cqw; }
+.paper .qr-code-boite { width: 21.9cqw; margin-bottom: 2.38cqw; }
+.paper .qr-montant { margin-top: 2cqw; }
+.paper .qr-depot { font-size: 1.01cqw; margin-top: 3cqw; }
+.paper .qr-cadre-recu { display: block; width: 24.76cqw; }
+.paper .qr-cadre-paiement { display: block; width: 30.95cqw; }
+.paper .qr-code svg, .paper .qr-cadre-recu svg, .paper .qr-cadre-paiement svg { display: block; width: 100%; height: auto; }

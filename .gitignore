@@ -3,6 +3,10 @@
 .env.*
 !.env.example
 *.local.*
+# Verrous et copies de nano et vim : celui de .env (..env.swp) peut contenir le jeton
+*.swp
+*.swo
+*~
 
 # Dépendances, installées depuis les fichiers de verrouillage
 /vendor/

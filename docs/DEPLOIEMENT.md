@@ -50,6 +50,13 @@ Entre les étapes 7 et 8, de vrais utilisateurs reçoivent la nouvelle version p
 - Le répertoire des NPA (`src/Adresse/localites.php`) est copié de swisstopo. Le refaire avant une mise en production, il change quelques fois par an : la marche à suivre est en tête de `outils/localites.php`.
 - La migration 10 (`Version20261113000002`) est additive. Contrôle de compatibilité fait en local le 2026-11-13 : la version 5de18b4 passe ses 345 tests sur la base migrée.
 
+## QR-facture (sous-chantier 18, lot 6b)
+
+- Extension PHP **bcmath** exigée par sprain/swiss-qr-bill (références RF et QR). En local : `apt install php8.5-bcmath`. Sur le serveur Cloud d'Infomaniak : à activer et à prouver (`php -m | grep bcmath`) avant la première mise en production. Sans elle, `composer install` refuse de s'installer.
+- GD n'est pas exigée : le code est dessiné en SVG par bacon/bacon-qr-code.
+- Dépendances ajoutées : sprain/swiss-qr-bill 5.3.1, qui tire symfony/validator et symfony/intl, retenus en 7.4 comme le reste de Symfony (composer prenait la 8.1).
+- La section de paiement du PDF est en Helvetica, police de base du PDF, sans fichier à installer. Elle ne connaît que les caractères d'Europe de l'Ouest (Windows-1252) : un nom avec un caractère hors de cette table s'y affiche mal, le code QR reste juste.
+
 ## Contrôles en production
 
 Aucun envoi de courriel, aucune écriture de données métier, aucun script à effet de bord.

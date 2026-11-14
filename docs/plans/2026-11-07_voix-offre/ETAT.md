@@ -13,9 +13,10 @@ Recette de Xavier, en local : sous-chantiers 01, 10, 11, 12 et 13 (`RECETTE.md`
 
 ## En attente de toi
 
-- Confirmer l'orthographe du domaine de test : « esay-offre » ou « easy-offre » ?
 - Contredire, si besoin, deux choix retenus faute de réponse : comptes démo des prospects en production pilote ; production pilote ajoutée au chantier (sous-chantier 09).
-- Dire si Claude peut accéder au site de test (lire et déployer, données inventées seulement).
+- Site de test avec de vraies données de testeurs (2026-11-14) : dire si Claude y accède quand même, ou si les vraies données vont sur un second site sans accès de Claude.
+- Sous-chantier 23 : écrire la durée de conservation des voix et des textes, et le texte du consentement des testeurs (sans eux, pas de vrais testeurs).
+- `.env` : coller le jeton Infomaniak dans `TRANSCRIPTION_CLE` et `EXTRACTION_CLE`, puis le dire à Claude.
 
 ## Suivi Origin
 
@@ -44,6 +45,10 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-12 : sous-chantiers 01, 10, 11, 12 et 13 commités sur `chantier-voix-offre` (176a2a7) et poussés ; PR à ouvrir par Xavier (gh absent). Sous-chantier 14 ouvert, maquette écrite.
 - 2026-11-12 : demandes de Xavier ordonnées en sous-chantiers 15 à 21 ; 15 livré en code.
 - 2026-11-12 : écart à la SPEC découvert (sous-chantier 10) : l'extraction envoie tout le catalogue en un appel, la SPEC veut des candidats et deux appels au plus. Xavier veut comparer les deux versions. Détail dans `13-fenetres/ETAT.md`.
+- 2026-11-14 : Xavier : domaine de test `easy-offre` (la SPEC disait « esay », corrigée) ; « site de test on pourra faire données inventées et vraie de test ». bcmath installé dans WSL (`php -m` le liste) : le lot 6b du 18 peut partir.
+- 2026-11-14 : Xavier : « enregistre toutes les voix, textes pour l'instant car ils seront utilisés pour l'entraînement. J'avertirai les gens qui testent », et « pouvoir consulter les stats à tout moment et pouvoir rejouer les audio, textes ». Change la conservation de 30 jours de la SPEC (gate intention du 2026-11-07). Sous-chantier 23 ouvert. Constat : l'audio est effacé 30 jours après l'offre par `bin/purger-audio`, aucun cron ne le lance encore (`crontab -l` : vide) ; la transcription et le texte entendu par ligne restent ; la réponse brute du modèle, les durées et la version corrigée par l'artisan à côté de celle du modèle ne sont pas gardées.
+- 2026-11-14 : Xavier, sous-chantier 23 : statistiques pour lui seul (« oui seul moi »), sur tous les comptes ; coût « estimé et réel » ; rejouer veut dire les deux : réécouter et relire, et relancer transcription et extraction pour comparer (« la version optimisée »). Liste de statistiques proposée le même jour, acceptée sans retouche.
+- 2026-11-14 : documentation d'Infomaniak relue (Playwright) : la discussion v2 rend `usage` (jetons entrants, sortants, de raisonnement) ; le résultat d'une transcription ne rend aucune durée ni aucun coût ; `GET /1/ai/{produit}/consumptions` existe, contenu de la réponse non décrit, à lire avec le jeton. `GET /1/ai/models` exige le jeton (401 sans). Tarifs publiés (page française) : Qwen/Qwen3.8-27B-FP8 CHF 0.40 et 3.00 par million de jetons entrants et sortants, Whisper V3 CHF 0.006 la minute.
 
 ## Sous-chantiers
 
@@ -68,11 +73,12 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | 15 | Enregistrement court et suivi en direct : 5 s au minimum, dictée vide donne une offre vide, étapes qui avancent | `15-suivi-envoi/` | 13 | livré en code, recette de Xavier attendue |
 | 16 | Marque et modèles dans l'application : logo, couleur, modèles retenus | `16-marque/` | 14 | livré en code, recette de Xavier attendue |
 | 17 | Clients : liste, fiche, rattachement aux offres | `17-clients/` | 12 | livré en code (liste, fiche, client de l'offre, rapprochement à 80 %), essai de Xavier attendu |
-| 18 | Facture : « Facturer » depuis l'offre, numéro modifiable, QR-facture, PDF | `18-facture/` | 14, 16 | lots 1 à 5 commités (5de18b4) ; lot 6a (adresses en champs séparés, NPA officiel, suggestions swisstopo) livré en code ; lot 6b (QR) attend bcmath |
+| 18 | Facture : « Facturer » depuis l'offre, numéro modifiable, QR-facture, PDF | `18-facture/` | 14, 16 | lots 1 à 5 commités (5de18b4) ; lot 6a (adresses) commité (54acafa) ; lot 6b (QR-facture, section de paiement à l'écran et au PDF) livré en code ; reste le lot 7 (démo et recette) |
 | 19 | Envoi par courriel de l'offre et de la facture | (à ouvrir) | 18 | plus tard : « pdf pour l'instant » (Xavier, 2026-11-12) |
 | 20 | Extraction optimisée (cadrage, section 5) à côté de l'actuelle, banc de comparaison | (à ouvrir) | 10 | plus tard (Xavier, 2026-11-12) |
 | 21 | Liste des offres : en préparation, échecs hors quota, tri, archives | `21-liste-offres/` | 15 | livré en code, recette de Xavier attendue |
 | 22 | Réglages mieux rangés : sommaire, assistant, enregistrement | `22-reglages/` | 16 | livré en code (sommaire, assistant, enregistrement automatique), essai de Xavier attendu |
+| 23 | Tout garder pour l'entraînement : audio, transcription, réponse du modèle, offre avant et après corrections, durées ; statistiques ; réécouter et rejouer (demande de Xavier du 2026-11-14) | `23-garder-rejouer/` (à ouvrir) | 10, 15 | réponses de Xavier reçues, maquette à faire |
 
 ## Décisions
 

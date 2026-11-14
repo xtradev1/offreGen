@@ -97,7 +97,7 @@
   {% if facture %}
   <div class="doc-cond">
     <ul>
-      <li>Payable jusqu'au {{ f.echeance|jour }}{% if qr is defined and qr %} avec la section de paiement ci-dessous{% endif %}. Merci de votre confiance.</li>
+      <li>Payable jusqu'au {{ f.echeance|jour }}{% if qr %} avec la section de paiement {{ qr_place == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}. Merci de votre confiance.</li>
       <li>Montants en francs suisses{% if t.taux > 0 %}, TVA comprise dans le total{% endif %}.</li>
     </ul>
   </div>
@@ -115,3 +115,6 @@
 
   <div class="doc-pied">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if t.taux > 0 %} TVA{% endif %}{% endif %}</div>
 </div>
+{# Section de paiement (lot 6b) : hors de .doc, qui porte la marge et la barre du modèle Technique. Absente du premier
+   rendu PDF (« essai »), qui ne sert qu'à compter les pages. #}
+{% if facture and qr and qr_place != 'essai' %}{% include '_paiement.html.twig' %}{% endif %}

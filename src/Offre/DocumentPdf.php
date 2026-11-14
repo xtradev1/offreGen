@@ -19,6 +19,17 @@ final class DocumentPdf
 
     public function rendre(string $html): string
     {
+        return (string) $this->dompdf($html)->output();
+    }
+
+    /** Le nombre de pages du rendu, sans produire le PDF : premier des deux rendus d'une facture (placement de la section de paiement). */
+    public function pages(string $html): int
+    {
+        return $this->dompdf($html)->getCanvas()->get_page_count();
+    }
+
+    private function dompdf(string $html): Dompdf
+    {
         if (!is_dir($this->dossierTemporaire)) {
             mkdir($this->dossierTemporaire, 0700, true);
         }
@@ -34,6 +45,6 @@ final class DocumentPdf
         $pdf = new Dompdf($options);
         $pdf->loadHtml($html, 'UTF-8');
         $pdf->render();
-        return (string) $pdf->output();
+        return $pdf;
     }
 }

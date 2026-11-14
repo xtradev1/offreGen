@@ -9,11 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 6b du `PLAN.md` : QR-facture (dépendances verrouillées, `QrFacture`, section de paiement à l'écran et au PDF, référence RF ou QRR à l'émission), dès que bcmath est installé dans WSL.
+Lot 7 du `PLAN.md` : démo et recette (parcours cliqué complet, `RECETTE.md`). Puis commit du lot 6b et du lot 7 sur l'accord de Xavier.
 
 ## En attente de toi
 
-- Installer l'extension bcmath dans WSL, sans mot de passe, depuis PowerShell sous Windows : `wsl -d Ubuntu -u root -- apt install -y php8.5-bcmath`. Le lot 6b (code QR) l'attend.
+- Scanner avec ton application bancaire le code d'une facture de la démo (sans payer) : OpenCV le lit, une banque est la vraie preuve.
 - Avant la mise en production : une phrase dans la politique de confidentialité sur l'envoi des adresses tapées à swisstopo (`docs/SECURITE.md`, 6 bis).
 - L'adresse de la démo, « Rue de la Gare 4, 2800 Delémont », n'existe pas au registre (Delémont n'a qu'une « Place de la Gare ») : l'écran dit « introuvable ». La garder (elle montre le message) ou en prendre une vraie ?
 - Si tu scannes le code de la maquette : il est en adresse « combinée » (type K), lue par les banques jusqu'au 21.11.2026 seulement. L'application émettra des adresses structurées (type S).
@@ -44,6 +44,13 @@ Lot 6b du `PLAN.md` : QR-facture (dépendances verrouillées, `QrFacture`, sect
 - 2026-11-13 : une adresse d'avant que le découpage ne lit pas (trois lignes, NPA inconnu) reste en texte, et l'écran la montre « à reporter dans les champs » ; enregistrer un autre champ ne l'efface pas.
 - 2026-11-13 : la facture copie l'adresse du client en champs à sa création (`client_rue` … `client_pays`), à côté du texte : la section de paiement du lot 6b la lira.
 - 2026-11-13 : lot 6 coupé en deux : 6a adresses (fait), 6b QR-facture (attend bcmath).
+- 2026-11-14 : bcmath installé par Xavier. composer prenait symfony/validator et symfony/intl en 8.1 pour sprain : retenus en 7.4 comme le reste de Symfony (exigence explicite dans `composer.json`).
+- 2026-11-14 : `QrFacture` : sprain bâtit et valide la charge utile, bacon dessine le code (niveau M) ; un client que la norme refuse (nom de plus de 70 caractères, adresse sans NPA) est omis, « Payable par » reste un cadre vide ; sans nom, NPA, localité ou IBAN de l'artisan, ou sans rien à payer, pas de section, et l'aperçu dit pourquoi avec un lien vers les réglages.
+- 2026-11-14 : brouillon : l'aperçu montre la section avec l'IBAN des réglages et la référence calculée comme à l'émission ; facture émise ou annulée : IBAN et référence figés à l'émission. Les factures émises avant le 6b (développement seulement) n'ont pas de référence : leur aperçu peut montrer une section que leur PDF n'a pas.
+- 2026-11-14 : section en Helvetica (police permise par la norme, de base dans le PDF) ; le reste du document garde DejaVu. Consigne « À détacher avant le versement » au-dessus du trait : la norme demande les ciseaux ou cette consigne pour un PDF envoyé.
+- 2026-11-14 : placement : premier rendu avec 110 mm gardés en bas ; une page : section au bas de la page 1 (position fixe, collée au bord) ; sinon page à part, même si la dernière page a de la place (décision de Xavier du 2026-11-12 : « plus longue qu'une page »).
+- 2026-11-14 : aperçu à l'écran : la section réduite à l'échelle de sa largeur (unités cqw), comme la maquette validée. La colonne de l'application fait au plus 448 px : une section de largeur fixe défilait et cachait sa colonne de droite.
+- 2026-11-14 : `.gitignore` : `*.swp`, `*.swo`, `*~`. Un `..env.swp` (verrou de nano sur `.env`) apparaissait dans `git status` pendant que Xavier éditait son `.env`.
 
 ## Journal
 
@@ -63,6 +70,7 @@ Lot 6b du `PLAN.md` : QR-facture (dépendances verrouillées, `QrFacture`, sect
 - 2026-11-13 : lot 5 fait. Confirmation « Émettre la facture ? » sans JavaScript (comme la suppression d'un produit), émission en une transaction (valeurs figées, PDF gardé dans `facture_pdf`, rendu avec les valeurs figées), PDF servi tel quel, 409 pour un brouillon ; annulation et « Annuler et refaire » (brouillon copié au numéro suivant, échéance au même délai) ; un acompte déduit par une finale émise ne s'annule pas avant elle ; émission refusée sans ligne, avec une ligne sans prix ou un montant à payer négatif. Rendu PDF partagé avec l'offre (`OffreControleur::rendrePdf`). Trouvé au parcours : l'écran d'une facture émise n'avait plus de barre d'action (ni aperçu, ni PDF, ni annulation) ; ajoutée, avec son test. Une espace mangée par l'outil d'édition dans `routes.php` corrigée.
 - 2026-11-13 : lots 1 à 5 commités (5de18b4) et poussés sur `chantier-voix-offre`, accord de Xavier.
 - 2026-11-13 : lot 6a fait (adresses). `Adresse`, `SaisieAdresse`, `Localites` (3 190 NPA, `outils/localites.php` les refait), migration 10 jouée sur dev et test, défaite puis rejouée ; réglages, assistant et fiche client en champs séparés (`_adresse.html.twig`) ; `RegistreSwisstopo` (délai 3 s, rien de gardé) et `RegistreFactice` (tests et développement) ; `AdresseControleur` (localités d'un NPA, suggestions, vérification ; 20 appels par minute et par session) ; app.js : suggestions pendant la frappe, NPA qui remplit la localité, « trouvée ou pas » en quittant l'adresse, enregistrement automatique qui attend qu'on quitte l'adresse. Trouvé par les tests : le `.env` local (`ADRESSES=swisstopo`) aurait fait appeler swisstopo par les tests ; `BaseDeTest::env` l'écarte, test à l'appui. Trouvé au parcours : rue et numéro tapés ensemble restaient dans la rue (« Bundesplatz 3 », n° 4) : le numéro au bout de la rue passe dans son champ, au serveur et à l'écran ; les suggestions mêlaient l'ancien numéro et l'ancien NPA ; une liste arrivée après la sortie du champ restait ouverte ; le message de NPA inconnu tenait sur cinq lignes ; un vide sous « Pays ». Tous corrigés. Contrôle de compatibilité : un premier essai avec `vendor` en lien symbolique chargeait le nouveau `src` sous les anciens tests (faux rouge) ; refait avec une copie, l'ancienne version passe.
+- 2026-11-14 : lot 6b fait (QR-facture). Essai de placement dans dompdf avant le code : position fixe hors des marges possible ; hauteur d'une cellule de tableau ignorée (bloc de hauteur fixe à la place) ; détecteur d'OpenCV capricieux à côté des filets (recadrage et second détecteur dans la mesure). Tests écrits avant le code. Trouvé par les tests : deux tests faux (apostrophe échappée dans la page, nom du client présent aussi dans l'en-tête). Trouvé à la mesure du PDF : la marge basse du dernier paragraphe traversait le bloc du récépissé et descendait le montant de 2,5 mm. Trouvé aux captures : la section débordait de la feuille, puis défilait en cachant sa colonne de droite. Trouvé en écrivant les mutations : aucun test ne prouvait le niveau de correction M ; test ajouté, la mutation tombe. Tous corrigés.
 
 ## Preuves
 
@@ -219,3 +227,46 @@ $ swisstopo, à la main : « Rue de la Gare 4 2800 » ne rend que la Place de la
 ```
 
 Captures relues : `captures-18/201-entreprise.png`, `202-suggestions.png`, `204-introuvable.png`, `206-npa-faux.png`, `207b-fiche-tapee.png`.
+
+Lot 6b, QR-facture (2026-11-14) :
+
+```
+$ php -m | grep bcmath
+bcmath
+$ composer require "sprain/swiss-qr-bill:^5.3.1" ; composer require "symfony/validator:7.4.*" "symfony/intl:7.4.*" -W
+  - Installing sprain/swiss-qr-bill (v5.3.1)
+  - Downgrading symfony/intl (v8.1.10 => v7.4.22)
+  - Downgrading symfony/validator (v8.1.11 => v7.4.23)
+$ composer audit
+No security vulnerability advisories found.
+$ vendor/bin/phpunit
+OK (389 tests, 2343 assertions)
+$ vendor/bin/phpstan analyse
+ [OK] No errors
+$ muter.py mutations-qr.json
+détectée : QR-IBAN avec une référence RF
+détectée : référence non figée à l'émission
+détectée : facture émise lue avec l'IBAN des réglages
+détectée : client refusé par la norme : section perdue
+détectée : section pour un montant nul
+détectée : section toujours au bas de la page 1
+détectée : niveau de correction L
+détectée : adresse de l'artisan sans NPA non signalée
+$ qr-pdfs.php (base de test, émission par l'écran) puis mesurer-qr.py (OpenCV, 300 dpi)
+courte      page 1 : code lu à x=67.2 y=209.6 mm, côté 46.1 mm ; « À détacher » 188.2 ; Récépissé (5.0, 196.5) ; Section (67.3, 196.5) ; Point de dépôt 273.7
+longue      pages 1-2 : lignes ; page 3 : code lu à x=67.2 y=209.8 mm, côté 46.0 mm ; Point de dépôt 274.0
+sans-client page 1 : code lu à x=67.2 y=209.6 mm, côté 46.1 mm ; « Payable par (nom/adresse) » et cadres à quatre coins
+contenu décodé (courte) : SPC / 0200 / 1 / CH9300762011623852957 / S / Peinture Morel Sàrl / Rue de l'Exemple / 12 / 2800 / Delémont / CH / 7 lignes vides / 250.00 / CHF / S / Client a / Rue a / 1 / 2800 / Delémont / CH / SCOR / RF602026001 / Facture n° 2026-001 / EPD
+$ node parcours-18-qr.js (démo remise à zéro, 390 px)
+  sans IBAN : alertes « Sans IBAN, la facture n'a pas de section de paiement : compléter dans les réglages. » ; section : false
+  IBAN : « CH93 0076 2011 6238 5295 7 » ; « Enregistré »
+  avec IBAN : alertes « aucune » ; « Payable jusqu'au 14.12.2026 avec la section de paiement ci-dessous. »
+  390 px : largeur de la page 390 pour 390
+  émise : « Facture 2026-001 émise » ; PDF : 200, 2 pages, page 2 : code lu à x=67.2 y=209.8 mm, côté 46.1 mm
+  erreurs : favicon.ico (connu)
+$ node mesure-apercu.js (aperçu à l'écran, après la réduction à l'échelle)
+390 px  : {"page":390,"paper":358,"defilement":358,"doc":326,"section":326}
+1280 px : {"page":1280,"paper":448,"defilement":448,"doc":416,"section":416}
+```
+
+Captures relues : `captures-18/210-sans-iban.png`, `212-section-telephone.png` (avant correction : colonne de droite coupée), `213-apercu-bureau.png` (avant : section plus large que la feuille), `214-section-390.png` et `214-section-1280.png` (après) ; rendus PDF `lot6b-courte-p1.png`, `lot6b-sans-client-p1.png`, `lot6b-longue-p2.png`, `lot6b-courte-page.png`.

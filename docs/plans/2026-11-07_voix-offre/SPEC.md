@@ -2,7 +2,7 @@
 
 Chantier ouvert le 2026-11-07. Tâche Origin 315. Réponses de Xavier du 2026-11-07 intégrées. Périmètre validé par Xavier le 2026-11-07 (« c'est bon »), production pilote ajoutée ensuite (point 16).
 
-Hébergement : serveur Cloud Infomaniak. Site de test : `esay-offre.xtradev.ch` (Xavier, 2026-11-07 ; orthographe « esay » à confirmer).
+Hébergement : serveur Cloud Infomaniak. Site de test : `easy-offre.xtradev.ch` (Xavier, 2026-11-07 ; orthographe confirmée le 2026-11-14).
 
 ## Problème
 
