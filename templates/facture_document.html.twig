@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{# Aperçu de la facture, dans le modèle et la couleur de l'offre (Xavier, 2026-11-12). Brouillon : « Émettre et
+   PDF » la fige ; émise ou annulée : le PDF gardé à l'émission. #}
+{% block entete_html %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
+{% block titre %}Facture {{ f.numero }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/factures/{{ f.id }}">Facture</a>{% endblock %}
+{% block entete %}Facture {{ f.numero }}{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  {% if f.statut == 'annulee' %}<p class="alerte bad">Facture annulée le {{ f.annulee_le|jour }}. Son numéro n'est pas repris.</p>{% endif %}
+  {% if modifiable %}
+    {% if manque > 0 %}<p class="alerte bad">{{ manque }} ligne{{ manque > 1 ? 's' : '' }} sans prix&nbsp;: à compléter avant d'émettre la facture.</p>{% endif %}
+    {% if r.adresse.estVide %}<p class="alerte warn">Votre adresse manque en tête de la facture&nbsp;: <a href="/reglages/entreprise">la compléter dans les réglages</a>.</p>{% endif %}
+    {% if qr_raison %}<p class="alerte warn">{{ qr_raison }}{% if qr_lien %}&nbsp;: <a href="/reglages/entreprise">compléter dans les réglages</a>{% endif %}.</p>{% endif %}
+  {% endif %}
+  <article class="paper">{% include '_document.html.twig' %}</article>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    {% if modifiable %}
+      <a class="btn" href="/factures/{{ f.id }}">Modifier</a>
+      <a class="btn primary" href="/factures/{{ f.id }}/emettre">Émettre et PDF</a>
+    {% else %}
+      {% if f.statut == 'emise' %}<a class="btn" href="/factures/{{ f.id }}/annuler">Annuler la facture</a>{% endif %}
+      <a class="btn primary" href="/factures/{{ f.id }}/pdf" target="_blank" rel="noopener">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>PDF</a>
+    {% endif %}
+  </div>
+{% endblock %}

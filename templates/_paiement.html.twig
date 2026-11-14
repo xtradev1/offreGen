@@ -1,0 +1,54 @@
+{# Section de paiement de la QR-facture (norme SIX 2.3, intitulés français officiels) : récépissé de 62 mm, section
+   paiement de 148 mm, 105 mm de haut ; consigne « À détacher » au-dessus du trait (document envoyé en PDF).
+   qr : SectionPaiement. pdf : images en data: (dompdf) ; à l'écran, SVG en ligne (la CSP refuse les images en data:).
+   qr_place : null à l'écran ; « bas » (bas de la page 1) ou « apart » (page à part) dans le PDF. #}
+{% macro lignes(liste) %}{% for l in liste %}{{ l }}{% if not loop.last %}<br>{% endif %}{% endfor %}{% endmacro %}
+{% macro image(svg, donnees, pdf, classe) %}{% if pdf %}<img class="{{ classe }}" src="{{ donnees }}" alt="">{% else %}<span class="{{ classe }}">{{ svg|raw }}</span>{% endif %}{% endmacro %}
+{% set place = qr_place ?? null %}
+{% if place == 'apart' %}<div class="qr-espace"></div>{% endif %}
+<div class="qr-section{% if place %} qr-{{ place }}{% endif %}">
+  <p class="qr-detacher">À détacher avant le versement</p>
+  <table class="qr-feuille"><tr>
+    <td class="qr-recu">
+      <div class="qr-recu-infos">
+        <p class="qr-titre">Récépissé</p>
+        <p class="qr-e">Compte / Payable à</p>
+        <p class="qr-v">{{ qr.compte }}<br>{{ _self.lignes(qr.creancier) }}</p>
+        {% if qr.reference %}<p class="qr-e">Référence</p><p class="qr-v">{{ qr.reference }}</p>{% endif %}
+        {% if qr.debiteur %}
+          <p class="qr-e">Payable par</p><p class="qr-v">{{ _self.lignes(qr.debiteur) }}</p>
+        {% else %}
+          <p class="qr-e">Payable par (nom/adresse)</p>{{ _self.image(qr.cadre('recu'), qr.cadre('recu', true), pdf, 'qr-cadre-recu') }}
+        {% endif %}
+      </div>
+      <table class="qr-montant"><tr>
+        <td class="qr-monnaie"><p class="qr-e">Monnaie</p><p class="qr-v">{{ qr.monnaie }}</p></td>
+        <td><p class="qr-e">Montant</p><p class="qr-v">{{ qr.montant }}</p></td>
+      </tr></table>
+      <p class="qr-depot">Point de dépôt</p>
+    </td>
+    <td class="qr-paiement">
+      <table class="qr-colonnes"><tr>
+        <td class="qr-gauche">
+          <p class="qr-titre">Section paiement</p>
+          <div class="qr-code-boite">{{ _self.image(qr.svg, qr.svgEnDonnees, pdf, 'qr-code') }}</div>
+          <table class="qr-montant"><tr>
+            <td class="qr-monnaie"><p class="qr-e">Monnaie</p><p class="qr-v">{{ qr.monnaie }}</p></td>
+            <td><p class="qr-e">Montant</p><p class="qr-v">{{ qr.montant }}</p></td>
+          </tr></table>
+        </td>
+        <td class="qr-droite">
+          <p class="qr-e">Compte / Payable à</p>
+          <p class="qr-v">{{ qr.compte }}<br>{{ _self.lignes(qr.creancier) }}</p>
+          {% if qr.reference %}<p class="qr-e">Référence</p><p class="qr-v">{{ qr.reference }}</p>{% endif %}
+          <p class="qr-e">Informations supplémentaires</p><p class="qr-v">{{ qr.informations }}</p>
+          {% if qr.debiteur %}
+            <p class="qr-e">Payable par</p><p class="qr-v">{{ _self.lignes(qr.debiteur) }}</p>
+          {% else %}
+            <p class="qr-e">Payable par (nom/adresse)</p>{{ _self.image(qr.cadre('paiement'), qr.cadre('paiement', true), pdf, 'qr-cadre-paiement') }}
+          {% endif %}
+        </td>
+      </tr></table>
+    </td>
+  </tr></table>
+</div>

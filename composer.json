@@ -1,0 +1,56 @@
+{
+    "name": "xtradev/offregen",
+    "description": "Offres vocales pour artisans",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.5",
+        "ext-fileinfo": "*",
+        "ext-intl": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "doctrine/migrations": "^3.9",
+        "dompdf/dompdf": "^3.1",
+        "monolog/monolog": "^3.9",
+        "sprain/swiss-qr-bill": "^5.3.1",
+        "symfony/clock": "7.4.*",
+        "symfony/console": "7.4.*",
+        "symfony/dotenv": "7.4.*",
+        "symfony/http-client": "7.4.*",
+        "symfony/http-foundation": "7.4.*",
+        "symfony/intl": "7.4.*",
+        "symfony/mime": "7.4.*",
+        "symfony/password-hasher": "7.4.*",
+        "symfony/routing": "7.4.*",
+        "symfony/security-core": "7.4.*",
+        "symfony/security-csrf": "7.4.*",
+        "symfony/stopwatch": "7.4.*",
+        "symfony/string": "7.4.*",
+        "symfony/validator": "7.4.*",
+        "symfony/var-exporter": "7.4.*",
+        "twig/twig": "^3.21"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.0",
+        "phpstan/phpstan": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "OffreGen\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OffreGen\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {},
+        "platform-check": true
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse --memory-limit=512M"
+    }
+}

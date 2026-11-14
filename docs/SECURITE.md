@@ -43,7 +43,7 @@ Sans objet seulement pour une application à client unique, avec la raison écri
 - [ ] Journal des connexions et journal des modifications, séparés et exportables.
 - [ ] Données sensibles chiffrées au repos quand elles le justifient. Clés hors de la base.
 - [ ] Sauvegardes chiffrées, sur un support hors de l'hébergement, restauration testée et chronométrée.
-- [ ] Données réelles uniquement en production. Le développement et le test utilisent des données fictives.
+- [ ] Données réelles uniquement en production. Le développement et le test utilisent des données fictives. Exception : le banc de mesure du chantier « de la voix à l'offre » (entorse du 2026-11-07 au roadmap), aux conditions écrites dans `docs/plans/2026-11-07_voix-offre/SPEC.md`.
 - [ ] Fichiers audio importés : type vérifié sur le contenu et non sur le nom, taille plafonnée, stockés hors de `public/`, supprimés selon une durée de conservation écrite.
 
 ## 6. Modèles de langue
@@ -53,6 +53,13 @@ Sans objet si l'application n'appelle aucun modèle.
 - [ ] Une action irréversible ou sortante demande une confirmation humaine. Supprimer une ligne d'offre se rattrape : une annulation peut remplacer la confirmation, selon les tests d'utilisation. Envoyer une offre au client est sortant : confirmation.
 - [ ] Le texte libre (voix, documents, courriels) peut contenir des instructions : il ne donne jamais de droit.
 - [ ] Fournisseur, lieu de traitement, conservation et entraînement vérifiés dans ses conditions, puis écrits ici.
+
+## 6 bis. Registre des adresses (swisstopo)
+- [x] Choix de Xavier du 2026-11-13 (variante B) : les adresses tapées partent vers le service de recherche de geo.admin.ch (swisstopo, Confédération), pour proposer et vérifier une adresse.
+- [x] Notre serveur fait l'appel, jamais le navigateur : swisstopo reçoit le texte de l'adresse, sans le nom du client ni l'adresse IP de l'artisan. Rien n'est gardé ni journalisé chez nous (`RegistreSwisstopo`).
+- [x] Au plus 20 appels par session et par minute (`AdresseControleur::APPELS_PAR_MINUTE`), testé.
+- [x] Les tests n'appellent jamais swisstopo, même si le `.env` le demande (`BaseDeTest::env`, testé).
+- [ ] Le mentionner dans la politique de confidentialité, avant la mise en production (décision et texte de Xavier).
 
 ## 7. Preuve automatique
 - [ ] `scripts/securite/sonde-exposition.sh` tourne à chaque déploiement avec ses fichiers témoins. Une sonde rouge bloque la suite.

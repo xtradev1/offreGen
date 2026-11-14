@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+  <meta charset="utf-8">
+  <title>{% if f is defined %}Facture {{ f.numero }}{% else %}Offre {{ offre.numero }}{% endif %}, {{ r.entreprise }}</title>
+  <style>{{ css|raw }}</style>
+  {# Premier rendu d'une facture : 110 mm gardés en bas (section de paiement et consigne « À détacher »). #}
+  {% if (qr_place ?? null) == 'essai' %}<style>@page { margin-bottom: 110mm; }</style>{% endif %}
+</head>
+<body class="pdf">
+  {% include '_document.html.twig' %}
+</body>
+</html>

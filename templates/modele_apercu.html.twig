@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{# « Voir en grand » (Xavier, 2026-11-12) : un modèle d'offre, en vrai, avec le logo et la couleur de l'artisan.
+   Rien n'est enregistré tant qu'on ne touche pas « Choisir ce modèle ». #}
+{% block entete_html %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
+{% block titre %}Modèle {{ modeles[modele] }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="{{ retour }}">Ma marque</a>{% endblock %}
+{% block entete %}Modèle {{ modeles[modele] }}{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  <nav class="fchips modeles-nav" aria-label="Modèles">
+    {% for cle, nom in modeles %}
+      <a href="/reglages/modeles/{{ cle }}{{ depuis }}"{% if cle == modele %} aria-current="true"{% endif %}><span>{{ nom }}</span></a>
+    {% endfor %}
+  </nav>
+  <article class="paper">{% include '_document.html.twig' %}</article>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    {% if modele == choisi %}
+      <a class="btn" href="{{ retour }}">C'est votre modèle actuel</a>
+    {% else %}
+      <form class="choisir" method="post" action="/reglages">
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <input type="hidden" name="modele" value="{{ modele }}">
+        <input type="hidden" name="retour" value="{{ retour }}">
+        <button class="btn primary" type="submit">Choisir ce modèle</button>
+      </form>
+    {% endif %}
+  </div>
+{% endblock %}

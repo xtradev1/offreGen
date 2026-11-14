@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{# Fiche d'un client, seule ou dans la fenêtre qui monte sur la liste. Une fiche existante s'enregistre au fil
+   de la saisie (app.js, data-auto) ; une nouvelle attend « Ajouter », pour ne pas naître à la première lettre.
+   offre : la fiche créée devient le client de cette offre. #}
+{% import '_reglages_macros.html.twig' as f %}
+{% set titre = k ? k.nom : 'Nouveau client' %}
+{% block titre %}{{ titre }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="{{ offre ? '/offres/' ~ offre.id : '/clients' }}">{{ offre ? 'Offre' : 'Clients' }}</a>{% endblock %}
+{% block entete %}{{ titre }}{% endblock %}
+
+{% block contenu %}
+  {% if erreurs is not empty and not k %}<p class="alerte bad" role="alert">La fiche n'est pas créée&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  <form id="client" method="post" action="{{ k ? '/clients/' ~ k.id : '/clients' }}"{% if k %} data-auto{% endif %}>
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    {% if offre %}<input type="hidden" name="offre" value="{{ offre.id }}">{% endif %}
+    {% if k %}<p class="auto-etat" data-auto-etat aria-live="polite"></p>{% endif %}
+    <div class="champ">
+      <label for="nom">Nom</label>
+      <input id="nom" name="nom" value="{{ champs.nom }}" maxlength="190" required autocomplete="off"{% if not k %} data-premier{% endif %}{{ f.invalide(erreurs, 'nom') }}>
+      {{ f.erreur(erreurs, 'nom') }}
+    </div>
+    {% include '_adresse.html.twig' with {p: 'adresse_', manque: false, ancienne: champs.adresse_ancienne ?? ''} %}
+    <div class="duo">
+      <div class="champ">
+        <label for="telephone">Téléphone</label>
+        <input id="telephone" name="telephone" value="{{ champs.telephone }}" inputmode="tel" autocomplete="off"{{ f.invalide(erreurs, 'telephone') }}>
+        {{ f.erreur(erreurs, 'telephone') }}
+      </div>
+      <div class="champ">
+        <label for="courriel">Courriel</label>
+        <input id="courriel" name="courriel" type="email" value="{{ champs.courriel }}" inputmode="email" autocomplete="off"{{ f.invalide(erreurs, 'courriel') }}>
+        {{ f.erreur(erreurs, 'courriel') }}
+      </div>
+    </div>
+  </form>
+
+  {% if k %}
+    <h3 class="sous-titre">Ses offres</h3>
+    {% for o in offres %}
+      <a class="omini" href="/offres/{{ o.id }}" data-sortir>
+        <span>N°&nbsp;{{ o.numero }} · {{ o.titre }}</span><b>{{ o.total|chf }}</b>
+        <small>Faite le {{ o.cree_le|jour }}{% if o.archivee_le %} · archivée{% endif %}</small>
+      </a>
+    {% else %}
+      <p class="vide">Aucune offre pour ce client.</p>
+    {% endfor %}
+    {% if offres is empty %}
+      <form method="post" action="/clients/{{ k.id }}/supprimer" class="supprimer-fiche">
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <button class="btn danger-texte" type="submit">Supprimer ce client</button>
+      </form>
+    {% else %}
+      <p class="muted petit">Ce client a des offres&nbsp;: sa fiche reste, pour que son nom reste sur elles.</p>
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    {% if k %}
+      <button class="btn primary" type="submit" form="client" data-sans-auto>Enregistrer</button>
+    {% else %}
+      <a class="btn" href="{{ offre ? '/offres/' ~ offre.id : '/clients' }}">Annuler</a>
+      <button class="btn primary" type="submit" form="client">Ajouter</button>
+    {% endif %}
+  </div>
+{% endblock %}

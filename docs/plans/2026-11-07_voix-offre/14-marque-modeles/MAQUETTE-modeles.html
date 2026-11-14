@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marque et modèles · offreGen</title>
+<style>
+:root {
+  --ink: #1B1F24; --muted: #69717C; --line: #E4E7EB; --surface: #FFFFFF; --bg: #F3F4F6; --chip: #EFF1F4;
+  --accent: #2457C5; --accent-soft: #E8EEFB; --on-accent: #fff; --ok: #1E7F4F; --bad: #B42318;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--accent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ink: #E7EAEE; --muted: #9BA3AE; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #8AACF2; --accent-soft: #1F2C47; --on-accent: #0E1524; }
+}
+:root[data-theme="dark"] { --ink: #E7EAEE; --muted: #9BA3AE; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #8AACF2; --accent-soft: #1F2C47; --on-accent: #0E1524; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 26px; margin: 18px 0 6px; }
+h2 { font-size: 21px; margin: 40px 0 8px; padding-top: 8px; }
+h3 { font-size: 17px; margin: 0 0 4px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 760px; }
+.carte { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 12px 0; }
+.note { font-size: 14px; color: var(--muted); }
+.regle { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; margin: 10px 0; font-size: 14px; }
+
+/* Essai en trois touchers */
+.essai { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 820px) { .essai { grid-template-columns: minmax(0, 1fr); } }
+.tel { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 14px; }
+.tel h4 { margin: 4px 0 10px; font-size: 16px; }
+.etape { border-top: 1px solid var(--line); padding: 12px 0; }
+.etape b.n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 13px; margin-right: 6px; }
+.rangee { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.puce { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; min-height: 44px; cursor: pointer; transition: scale .12s; }
+.puce:active { scale: .96; }
+.puce[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--accent-soft); }
+.puce img { height: 26px; display: block; }
+.teinte { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line); cursor: pointer; padding: 0; transition: scale .12s; }
+.teinte[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
+.teinte:active { scale: .9; }
+.auto { font-size: 13px; color: var(--muted); margin-top: 6px; min-height: 20px; }
+.modeles-choix { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.modeles-choix .puce { text-align: left; }
+.modeles-choix small { display: block; color: var(--muted); font-size: 12px; }
+.bascule { display: inline-flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.bascule button { font: inherit; font-size: 14px; border: 0; background: var(--surface); color: var(--ink); padding: 8px 16px; min-height: 44px; cursor: pointer; }
+.bascule button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.fichier { font-size: 14px; }
+.apercu { background: #d9dde3; border-radius: 14px; padding: 14px; overflow: hidden; }
+.apercu .cadre { width: 794px; transform-origin: 0 0; }
+
+/* Planche des modèles */
+.planche { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.modele { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.modele .paire { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+.modele figure { margin: 0; }
+.modele img { width: 100%; display: block; border: 1px solid var(--line); border-radius: 4px; cursor: zoom-in; }
+.modele figcaption { font-size: 12px; color: var(--muted); text-align: center; }
+.pour { font-size: 13px; color: var(--muted); }
+
+/* Réponses sous chaque proposition */
+.reponse { border-top: 1px dashed var(--line); margin-top: 10px; padding-top: 10px; }
+.reponse .boutons { display: flex; gap: 8px; flex-wrap: wrap; }
+.reponse button { font: inherit; font-size: 14px; min-height: 44px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.reponse button[aria-pressed="true"][data-v="oui"] { background: var(--ok); border-color: var(--ok); color: #fff; }
+.reponse button[aria-pressed="true"][data-v="non"] { background: var(--bad); border-color: var(--bad); color: #fff; }
+.reponse textarea { width: 100%; margin-top: 8px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: var(--surface); color: var(--ink); min-height: 44px; }
+.regle-ok { margin: 0; font-size: 14px; font-weight: 600; color: var(--ok); }
+.recap textarea { width: 100%; min-height: 160px; font: 13px/1.4 ui-monospace, Consolas, monospace; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface); color: var(--ink); }
+.recap button { font: inherit; min-height: 44px; padding: 8px 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+
+/* Mode capture (#rendu=) : seulement la feuille, pour fabriquer les images de la planche. */
+body.rendu { background: #fff; }
+body.rendu main > *:not(#rendu) { display: none !important; }
+body.rendu main { padding: 0; max-width: none; }
+
+/* ===== Le document A4. Seulement ce que dompdf rend : tableaux, flottants, bordures, couleurs. ===== */
+.a4 { width: 794px; min-height: 1123px; background: #fff; color: #1d1d1f; font: 12.5px/1.45 "DejaVu Sans", Arial, sans-serif; padding: 56px 60px 48px; position: relative; text-align: left; }
+.a4 table { border-collapse: collapse; width: 100%; }
+.a4 .ent td { vertical-align: top; }
+.a4 .logo { max-height: 64px; max-width: 220px; }
+.a4 .coord { text-align: right; font-size: 11.5px; color: #4a4f57; }
+.a4 .coord b { color: #1d1d1f; font-size: 13px; }
+.a4 .client { margin: 36px 0 26px 55%; font-size: 12.5px; }
+.a4 .titre { font-size: 20px; font-weight: bold; margin: 0 0 2px; }
+.a4 .objet { color: #4a4f57; margin: 0 0 18px; }
+.a4 .lignes th { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; text-align: left; padding: 7px 6px; }
+.a4 .lignes td { padding: 6px; border-bottom: 1px solid #e6e8eb; vertical-align: top; }
+.a4 .lignes .n { text-align: right; white-space: nowrap; }
+.a4 .lignes .grp td { font-weight: bold; padding-top: 12px; border-bottom: 0; }
+.a4 .lignes .st td { font-style: italic; color: #4a4f57; border-bottom: 0; }
+.a4 .totaux { width: 46%; margin: 14px 0 0 54%; }
+.a4 .totaux td { padding: 4px 6px; }
+.a4 .totaux .n { text-align: right; }
+.a4 .totaux .total td { font-weight: bold; font-size: 15px; padding-top: 8px; }
+.a4 .cond { margin-top: 26px; font-size: 11.5px; color: #33373d; }
+.a4 .sign { margin-top: 30px; }
+.a4 .sign td { width: 50%; padding-top: 36px; font-size: 11px; color: #4a4f57; }
+.a4 .sign span { display: block; border-top: 1px solid #9aa0a8; width: 85%; padding-top: 4px; }
+.a4 .pied { position: absolute; left: 60px; right: 60px; bottom: 26px; font-size: 10px; color: #7a8089; text-align: center; border-top: 1px solid #e6e8eb; padding-top: 6px; }
+.a4 .ref { font-size: 11.5px; color: #4a4f57; }
+
+/* 1 Sobre */
+.m-sobre .regle-c { height: 3px; margin: 18px 0 0; }
+.m-sobre .lignes th { border-bottom: 2px solid; }
+.m-sobre .totaux .total td { border-top: 2px solid; }
+
+/* 2 Bandeau */
+.m-bandeau { padding-top: 0; }
+.m-bandeau .bande { margin: 0 -60px 0; padding: 26px 60px 22px; color: #fff; }
+.m-bandeau .bande .coord, .m-bandeau .bande .coord b { color: #fff; }
+.m-bandeau .bande .boite { background: #fff; padding: 8px 10px; display: inline-block; border-radius: 4px; }
+.m-bandeau .lignes th { color: #fff; }
+.m-bandeau .totaux .total td { color: #fff; }
+.m-bandeau .titre { font-size: 24px; text-transform: uppercase; letter-spacing: .02em; }
+
+/* 3 Atelier */
+.m-atelier { font-family: "DejaVu Serif", Georgia, serif; padding: 64px 76px 48px; }
+.m-atelier .centre { text-align: center; }
+.m-atelier .coord { text-align: center; margin-top: 8px; }
+.m-atelier .double { border-top: 3px double; margin: 20px 0 0; }
+.m-atelier .client { margin-left: 0; }
+.m-atelier .titre { font-weight: normal; font-size: 24px; letter-spacing: .04em; }
+.m-atelier .lignes th { font-weight: normal; font-style: italic; text-transform: none; font-size: 12px; border-bottom: 1px solid; }
+.m-atelier .lignes td { border-bottom: 1px dotted #c9cdd2; }
+.m-atelier .totaux .total td { border-top: 3px double; font-weight: normal; font-size: 17px; }
+.m-atelier .pied { left: 76px; right: 76px; }
+
+/* 4 Technique */
+.m-technique { padding-left: 72px; font-size: 11.5px; }
+.m-technique .barre { position: absolute; left: 0; top: 0; bottom: 0; width: 14px; }
+.m-technique .lignes th, .m-technique .lignes td { border: 1px solid #cfd3d8; padding: 5px 6px; }
+.m-technique .lignes th { background: #f1f3f5; text-transform: none; font-size: 11px; }
+.m-technique .lignes .grp td { background: #fafbfc; }
+.m-technique .pos { width: 34px; color: #4a4f57; }
+.m-technique .titre { font-size: 17px; }
+.m-technique .totaux td { border: 1px solid #cfd3d8; }
+
+/* 5 Moderne : grand titre en couleur, bandeau d'informations teinté, lignes alternées */
+.m-moderne .coord-g { font-size: 11px; color: #4a4f57; margin-top: 10px; line-height: 1.4; }
+.m-moderne .coord-g b { color: #1d1d1f; }
+.m-moderne .grand-titre { text-align: right; vertical-align: top; font-size: 40px; font-weight: bold; letter-spacing: .06em; line-height: 1.05; }
+.m-moderne .grand-titre span { display: block; font-size: 14px; font-weight: normal; letter-spacing: 0; color: #4a4f57; margin-top: 6px; }
+.m-moderne .infos { margin: 28px 0 14px; }
+.m-moderne .infos td { width: 33%; padding: 12px 14px; vertical-align: top; font-size: 12px; }
+.m-moderne .infos small { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: #5d636b; margin-bottom: 3px; }
+.m-moderne .lignes th { border-bottom: 2px solid #1d1d1f; }
+.m-moderne .lignes td { border-bottom: 0; }
+.m-moderne .lignes .grp td { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.m-moderne .lignes .st td { border-top: 1px solid #e6e8eb; }
+.m-moderne .totaux .total td { font-size: 16px; padding: 9px 8px; }
+
+/* 6 Épuré */
+.m-epure { padding: 72px 76px 48px; }
+.m-epure .lignes th { color: #7a8089; font-weight: normal; border-bottom: 1px solid #e6e8eb; }
+.m-epure .lignes td { border-bottom: 0; padding: 7px 6px; }
+.m-epure .lignes .grp td { display: none; }
+.m-epure .grand { font-size: 30px; font-weight: bold; text-align: right; margin-top: 18px; }
+.m-epure .trait { width: 60px; height: 4px; margin: 0 0 22px; }
+.m-epure .pied { left: 76px; right: 76px; }
+
+/* QR-facture : section paiement suisse, 105 mm de haut, en bas de page */
+/* La facture tient sur une page au-dessus du bulletin : mise en page resserrée. Plus longue, le bulletin
+   passe sur une page à part (règle suisse : il ne se coupe pas). */
+.a4.facture { height: 1123px; min-height: 0; padding-top: 34px; padding-bottom: 420px; font-size: 11.5px; line-height: 1.3; overflow: hidden; }
+.a4.facture .logo { max-height: 46px; }
+.a4.facture .coord { font-size: 10.5px; line-height: 1.35; }
+.a4.facture .client { margin: 12px 0 10px 55%; }
+.a4.facture .titre { font-size: 17px; }
+.a4.facture .objet { margin-bottom: 8px; }
+.a4.facture .ref { margin: 0 0 4px; }
+.a4.facture .lignes th { padding: 4px 6px; }
+.a4.facture .lignes td { padding: 3px 6px; }
+.a4.facture .lignes .grp td { padding-top: 6px; }
+.a4.facture .totaux { margin-top: 6px; }
+.a4.facture .totaux td { padding: 2px 6px; }
+.a4.facture .totaux .total td { font-size: 13px; padding-top: 4px; }
+.a4.facture .cond { margin-top: 8px; }
+.a4.facture .pied { bottom: 404px; }
+.a4.facture.m-bandeau { padding-top: 0; }
+.a4.facture.m-bandeau .bande { padding: 14px 60px 12px; }
+.a4.facture.m-bandeau .titre { font-size: 19px; }
+.a4.facture.m-atelier { padding-top: 34px; }
+.a4.facture.m-atelier .double { margin-top: 8px; }
+.a4.facture.m-atelier .titre { font-size: 19px; }
+.a4.facture.m-moderne .grand-titre { font-size: 30px; }
+.a4.facture.m-moderne .infos { margin: 12px 0 8px; }
+.a4.facture.m-moderne .infos td { padding: 7px 12px; }
+.a4.facture.m-epure { padding-top: 34px; }
+.a4.facture.m-epure .grand { font-size: 22px; margin-top: 4px; }
+.a4.facture.m-epure .trait { margin-bottom: 8px; }
+.qr { position: absolute; left: 0; right: 0; bottom: 0; height: 397px; border-top: 1px dashed #000; font: 10px/1.35 "DejaVu Sans", Arial, sans-serif; color: #000; }
+.qr table { width: 100%; height: 100%; border-collapse: collapse; }
+.qr td { vertical-align: top; padding: 18px 18px; }
+.qr .recu { width: 234px; border-right: 1px dashed #000; }
+.qr h5 { font-size: 13px; margin: 0 0 10px; }
+.qr .t { font-weight: bold; font-size: 8px; margin-top: 6px; }
+.qr .code { width: 174px; height: 174px; margin: 6px 0 10px; }
+.qr .cols td { padding: 0; }
+.qr .exemple { position: absolute; right: 18px; bottom: 10px; font-size: 9px; color: #b42318; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav id="mk-toc"></nav>
+
+<h1>Ta marque sur tes offres et tes factures</h1>
+<p class="chapeau">Ton logo, ta couleur et un modèle de document, réglés en trois touchers dans Réglages. Six modèles, chacun en offre et en facture. Reprise du 2026-11-12&nbsp;: tes réponses sont reportées&nbsp;; «&nbsp;Par poste&nbsp;» est remplacé par «&nbsp;Moderne&nbsp;», le seul point encore ouvert. Ta réponse sous son image ; tout en bas, «&nbsp;Copier le texte&nbsp;» rassemble tes réponses pour me les coller.</p>
+<p class="regle">Les documents ci-dessous n'utilisent que ce que le générateur de PDF de l'application sait dessiner (tableaux, bordures, couleurs). Ce que tu choisis ici sortira tel quel en PDF. Données inventées&nbsp;: entreprise, client, IBAN.</p>
+
+<h2 id="essai" data-toc="Essai">Essaie en trois touchers</h2>
+<div class="essai">
+  <div class="tel" aria-label="Réglages, Ma marque">
+    <h4>Réglages · Ma marque</h4>
+    <div class="etape">
+      <b class="n">1</b><b>Ton logo</b>
+      <div class="rangee" id="logos"></div>
+      <p class="fichier" style="margin-top:8px"><label>Ou essaie avec le tien&nbsp;: <input type="file" id="mon-logo" accept="image/png,image/jpeg,image/svg+xml"></label></p>
+    </div>
+    <div class="etape">
+      <b class="n">2</b><b>Ta couleur</b>
+      <div class="rangee" id="teintes"></div>
+      <p class="auto" id="auto"></p>
+    </div>
+    <div class="etape">
+      <b class="n">3</b><b>Ton modèle</b>
+      <div class="modeles-choix" id="choix-modele"></div>
+    </div>
+    <div class="etape">
+      <div class="bascule" role="group" aria-label="Document"><button type="button" data-type="offre" aria-pressed="true">Offre</button><button type="button" data-type="facture" aria-pressed="false">Facture</button></div>
+    </div>
+  </div>
+  <div>
+    <div class="apercu" id="apercu"><div class="cadre" id="cadre"></div></div>
+    <p class="note">Aperçu en direct. Sur le téléphone, l'application montre la même feuille, réduite, avec «&nbsp;PDF&nbsp;» pour l'agrandir.</p>
+  </div>
+</div>
+<div class="carte">
+  <h3>Le parcours</h3>
+  <p>Trois touchers dans Réglages&nbsp;: (1) le logo, pris en photo ou choisi dans les fichiers&nbsp;; (2) la couleur, proposée d'office depuis le logo, modifiable&nbsp;; (3) le modèle. Toutes les offres et factures suivent, les anciennes aussi au prochain PDF.</p>
+  <div class="reponse" data-decision="parcours" data-titre="Parcours Ma marque en trois touchers" data-choix="Valider|Pas valider"></div>
+</div>
+
+<h2 id="modeles" data-toc="Modèles">Les six modèles</h2>
+<p class="chapeau">Chaque modèle en offre et en facture, avec la couleur de Peinture Morel. Clique une image pour la lire en grand. «&nbsp;Moderne&nbsp;», le nouveau, prend la place de «&nbsp;Par poste&nbsp;».</p>
+<div class="planche" id="planche"></div>
+
+<h2 id="facture" data-toc="Facture">La facture</h2>
+<div class="carte">
+  <h3>Elle naît de l'offre</h3>
+  <p>Sur une offre acceptée, un bouton «&nbsp;Facturer&nbsp;» crée la facture avec les mêmes lignes, que tu corriges au besoin (travaux en plus, quantités réelles). Elle porte son propre numéro (Facture 1, 2, 3…), la date d'échéance et la référence de l'offre.</p>
+  <div class="reponse" data-decision="facturer" data-titre="Facture créée depuis l'offre par « Facturer »" data-choix="Valider|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>La QR-facture en bas</h3>
+  <p>Le bulletin suisse (section paiement et récépissé), avec ton IBAN saisi une fois dans Réglages et le montant. Le client paie en scannant le code avec l'application de sa banque. Visible sur chaque image «&nbsp;facture&nbsp;» de la planche.</p>
+  <div class="reponse" data-decision="qr" data-titre="QR-facture en bas de la facture" data-choix="Valider|Pas valider"></div>
+</div>
+
+<h2 id="cout" data-toc="Ce que ça demande">Ce que ça demande</h2>
+<div class="carte">
+  <p><b>Logo&nbsp;:</b> l'image envoyée est contrôlée (type réel, taille, dimensions), réduite, stockée hors du site public et propre à ton compte. Pas de SVG envoyé par l'artisan&nbsp;: un SVG peut contenir du code. PNG et JPEG seulement.</p>
+  <p><b>Facture&nbsp;:</b> nouveau document avec sa numérotation, ses mentions (TVA, échéance) et la QR-facture&nbsp;: une bibliothèque de plus pour le code QR suisse, à choisir et verrouiller comme dompdf.</p>
+  <p><b>Ordre proposé&nbsp;:</b> logo, couleur et modèles d'abord (sur l'offre), la facture ensuite.</p>
+</div>
+
+<h2 id="recap" data-toc="Copier">Tes réponses</h2>
+<div class="recap carte">
+  <textarea id="texte-recap" readonly></textarea>
+  <p style="margin-top:8px"><button type="button" id="copier">Copier le texte</button> <span class="note" id="copie"></span></p>
+</div>
+
+<div id="rendu"></div>
+</main>
+
+<script>
+'use strict';
+// Données inventées.
+const ENTREPRISE = { nom: 'Peinture Morel Sàrl', adresse: ['Rue de l\'Exemple 12', '2800 Delémont'], tel: '032 000 00 00', mail: 'info@peinture-morel.example', ide: 'CHE-123.456.789 TVA', iban: 'CH00 0000 0000 0000 0000 0' };
+const CLIENT = ['Famille Exemple', 'Chemin des Essais 4', '1700 Fribourg'];
+const LIGNES = [
+  ['Préparation', 'Protection des sols et des meubles', 1, 'forfait', 180],
+  ['Préparation', 'Rebouchage et ponçage des murs', 42, 'm²', 9],
+  ['Peinture intérieure', 'Peinture des murs, 2 couches', 42, 'm²', 28],
+  ['Peinture intérieure', 'Peinture des plafonds, 2 couches', 24, 'm²', 32],
+  ['Peinture intérieure', 'Laquage des plinthes', 26, 'm', 12],
+  ['Divers', 'Déplacement', 1, 'forfait', 60],
+];
+const MODELES = [
+  ['sobre', 'Sobre', 'Tous métiers'],
+  ['bandeau', 'Bandeau', 'Façades, maçonnerie, gros œuvre'],
+  ['atelier', 'Atelier', 'Menuiserie, ébénisterie, cuisines'],
+  ['technique', 'Technique', 'Sanitaire, chauffage, électricité'],
+  ['moderne', 'Moderne', ''],
+  ['epure', 'Épuré', 'Indépendant, petits travaux'],
+];
+const svgLogo = (fond, initiales, nom, forme) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="80" viewBox="0 0 300 80">${forme(fond)}<text x="40" y="51" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="26" fill="#fff">${initiales}</text><text x="88" y="38" font-family="Arial" font-weight="bold" font-size="22" fill="${fond}">${nom[0]}</text><text x="88" y="62" font-family="Arial" font-size="15" fill="#555">${nom[1]}</text></svg>`);
+const LOGOS = [
+  { nom: 'Peinture Morel', couleur: '#1D4E89', src: svgLogo('#1D4E89', 'PM', ['MOREL', 'Peinture Sàrl'], (c) => `<rect x="4" y="8" width="72" height="64" rx="14" fill="${c}"/>`) },
+  { nom: 'Menuiserie Aubry', couleur: '#8A5A2B', src: svgLogo('#8A5A2B', 'MA', ['AUBRY', 'Menuiserie'], (c) => `<polygon points="40,4 78,74 2,74" fill="${c}"/>`) },
+  { nom: 'Sanitaire Rossel', couleur: '#0F7C8C', src: svgLogo('#0F7C8C', 'SR', ['ROSSEL', 'Sanitaire Chauffage'], (c) => `<circle cx="40" cy="40" r="36" fill="${c}"/>`) },
+];
+const TEINTES = ['#1D4E89', '#2E7D32', '#B23A2E', '#8A5A2B', '#0F7C8C', '#3B3F46'];
+
+const chf = (n) => { const [e, d] = Math.abs(n).toFixed(2).split('.'); return (n < 0 ? '-' : '') + e.replace(/\B(?=(\d{3})+(?!\d))/g, '’') + '.' + d; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clair = (hex, a) => { const n = parseInt(hex.slice(1), 16); const m = (v) => Math.round(v + (255 - v) * a); return `rgb(${m(n >> 16)},${m((n >> 8) & 255)},${m(n & 255)})`; };
+
+function totaux() {
+  const ht = LIGNES.reduce((s, l) => s + Math.round(l[2] * l[4] * 100), 0);
+  const tva = Math.round(ht * 0.081);
+  const brut = ht + tva;
+  const ttc = Math.round(brut / 5) * 5;
+  return { ht, tva, arrondi: ttc - brut, ttc };
+}
+function groupes() {
+  const g = [];
+  LIGNES.forEach((l) => { let x = g.find((y) => y.nom === l[0]); if (!x) g.push(x = { nom: l[0], lignes: [] }); x.lignes.push(l); });
+  return g;
+}
+
+// Un document complet. Aucune grille ni flexbox à l'intérieur : dompdf ne les rend pas.
+function documentHtml(modele, type, couleur, logo) {
+  const fac = type === 'facture';
+  const t = totaux();
+  const c = couleur;
+  const titre = fac ? 'Facture n° 1' : 'Offre n° 2';
+  const date = fac ? 'Delémont, le 12.11.2026' : 'Delémont, le 10.11.2026';
+  const coord = `<b>${esc(ENTREPRISE.nom)}</b><br>${ENTREPRISE.adresse.map(esc).join('<br>')}<br>${ENTREPRISE.tel}<br>${ENTREPRISE.mail}`;
+  const imgLogo = `<img class="logo" src="${logo}" alt="Logo" data-no-zoom>`;
+  const client = `<div class="client">${CLIENT.map(esc).join('<br>')}</div>`;
+  const ref = fac ? `<p class="ref">Selon offre n° 2 du 10.11.2026 · Échéance&nbsp;: 12.12.2026</p>` : '';
+  const objet = `<p class="objet">Objet&nbsp;: Rafraîchissement du séjour</p>`;
+  const tech = modele === 'technique';
+  let rang = 0;
+  const thead = `<tr>${tech ? '<th class="pos">Pos.</th>' : ''}<th>Désignation</th><th class="n">Qté</th><th>Unité</th><th class="n">Prix</th><th class="n">Montant</th></tr>`;
+  const head = modele === 'bandeau' ? thead.replace(/<th/g, `<th style="background:${c}"`) : modele === 'sobre' ? thead.replace(/<th/g, `<th style="border-color:${c};color:${c}"`) : thead;
+  let corps = '';
+  const epure = modele === 'epure';
+  const moderne = modele === 'moderne';
+  groupes().forEach((g, gi) => {
+    const nc = tech ? 6 : 5;
+    // Épuré : une seule liste, sans titres ni sous-totaux de groupe.
+    if (epure) {
+      g.lignes.forEach((l) => { corps += `<tr><td>${esc(l[1])}</td><td class="n">${l[2]}</td><td>${esc(l[3])}</td><td class="n">${chf(l[4])}</td><td class="n">${chf(Math.round(l[2] * l[4] * 100) / 100)}</td></tr>`; });
+      return;
+    }
+    const couleurGroupe = modele === 'atelier' || moderne ? ` style="color:${c}"` : '';
+    corps += `<tr class="grp"><td colspan="${nc}"${couleurGroupe}>${tech ? (gi + 1) + '&nbsp;&nbsp;' : ''}${esc(g.nom)}</td></tr>`;
+    let st = 0;
+    g.lignes.forEach((l, li) => {
+      const m = Math.round(l[2] * l[4] * 100); st += m; rang++;
+      // Moderne : une ligne sur deux teintée de la couleur, très claire.
+      const zebre = moderne && li % 2 === 0 ? ` style="background:${clair(c, 0.92)}"` : '';
+      corps += `<tr${zebre}>${tech ? `<td class="pos">${gi + 1}.${li + 1}</td>` : ''}<td>${esc(l[1])}</td><td class="n">${l[2]}</td><td>${esc(l[3])}</td><td class="n">${chf(l[4])}</td><td class="n">${chf(m / 100)}</td></tr>`;
+    });
+    if (g.lignes.length > 1) corps += `<tr class="st"><td colspan="${nc - 1}" class="n">Sous-total ${esc(g.nom)}</td><td class="n">${chf(st / 100)}</td></tr>`;
+  });
+  const lignes = `<table class="lignes"><thead>${head}</thead><tbody>${corps}</tbody></table>`;
+  const totalStyle = modele === 'bandeau' ? ` style="background:${c}"` : modele === 'sobre' ? ` style="border-color:${c}"` : modele === 'atelier' ? ` style="border-color:${c};color:${c}"`
+    : moderne ? ` style="background:${clair(c, 0.85)};color:${c}"` : '';
+  const ligneTotal = epure ? '' : `<tr class="total"${totalStyle}><td>Total CHF</td><td class="n">${chf(t.ttc / 100)}</td></tr>`;
+  const tot = `<table class="totaux"><tr><td>Sous-total</td><td class="n">${chf(t.ht / 100)}</td></tr><tr><td>TVA 8,1&nbsp;%</td><td class="n">${chf(t.tva / 100)}</td></tr><tr><td>Arrondi</td><td class="n">${chf(t.arrondi / 100)}</td></tr>${ligneTotal}</table>`;
+  const cond = fac
+    ? `<div class="cond">Paiement&nbsp;: net à 30 jours, au plus tard le 12.12.2026, avec la QR-facture ci-dessous.</div>`
+    : `<div class="cond">Paiement&nbsp;: à 30 jours dès la fin des travaux.<br>Offre valable jusqu'au 10.12.2026. Prix en francs suisses, TVA comprise dans le total.</div>
+       <table class="sign"><tr><td><span>Lieu, date et signature du client</span></td><td><span>${esc(ENTREPRISE.nom)}</span></td></tr></table>`;
+  const pied = `<div class="pied">${esc(ENTREPRISE.nom)} · ${ENTREPRISE.adresse.map(esc).join(', ')} · ${ENTREPRISE.ide}</div>`;
+  const qr = fac ? qrFacture(t.ttc / 100) : '';
+  let haut;
+  switch (modele) {
+    case 'bandeau':
+      haut = `<div class="bande" style="background:${c}"><table class="ent"><tr><td><span class="boite">${imgLogo}</span></td><td class="coord">${coord}</td></tr></table></div>${client}<p class="titre" style="color:${c}">${titre}</p>`;
+      break;
+    case 'atelier':
+      haut = `<div class="centre">${imgLogo}</div><div class="coord">${coord.replace(/<br>/g, ' · ')}</div><div class="double" style="border-color:${c}"></div>${client}<p class="titre" style="color:${c}">${titre}</p>`;
+      break;
+    case 'technique':
+      haut = `<div class="barre" style="background:${c}"></div><table class="ent"><tr><td>${imgLogo}</td><td class="coord">${coord}</td></tr></table>${client}<p class="titre">${titre} <span style="color:${c}">· Rafraîchissement du séjour</span></p>`;
+      break;
+    case 'moderne': {
+      // Grand titre dans la couleur, puis un bandeau teinté : date, client, échéance ou validité.
+      const jour = fac ? '12.11.2026' : '10.11.2026';
+      const limite = fac ? ['Échéance', '12.12.2026'] : ['Valable jusqu\'au', '10.12.2026'];
+      haut = `<table class="ent"><tr><td>${imgLogo}<div class="coord-g">${coord}</div></td><td class="grand-titre" style="color:${c}">${fac ? 'FACTURE' : 'OFFRE'}<span>n° ${fac ? 1 : 2}${fac ? ' · selon offre n° 2' : ''}</span></td></tr></table>
+        <table class="infos" style="background:${clair(c, 0.9)}"><tr><td><small>Date</small>${jour}</td><td><small>Client</small>${CLIENT.map(esc).join('<br>')}</td><td><small>${limite[0]}</small>${limite[1]}</td></tr></table>${objet}`;
+      break;
+    }
+    case 'epure':
+      haut = `<table class="ent"><tr><td>${imgLogo}</td><td class="coord">${coord}</td></tr></table>${client}<div class="trait" style="background:${c}"></div><p class="titre">${titre}</p>`;
+      break;
+    default:
+      haut = `<table class="ent"><tr><td>${imgLogo}</td><td class="coord">${coord}</td></tr></table><div class="regle-c" style="background:${c}"></div>${client}<p class="titre" style="color:${c}">${titre}</p>`;
+  }
+  const date_ = moderne ? '' : `<p class="ref">${date}</p>${ref}`;
+  const obj = moderne || modele === 'technique' ? '' : objet;
+  const grand = epure ? `<div class="grand" style="color:${c}">Total CHF ${chf(t.ttc / 100)}</div>` : '';
+  return `<div class="a4 m-${modele}${fac ? ' facture' : ''}">${haut}${date_}${obj}${lignes}${tot}${grand}${cond}${pied}${qr}</div>`;
+}
+
+// QR-facture de démonstration : le dessin du code est un motif, pas un vrai code de paiement.
+function qrFacture(montant) {
+  let cases = '';
+  let graine = 7;
+  for (let y = 0; y < 29; y++) for (let x = 0; x < 29; x++) {
+    graine = (graine * 1103515245 + 12345) & 0x7fffffff;
+    const coin = (x < 8 && y < 8) || (x > 20 && y < 8) || (x < 8 && y > 20);
+    if (coin) continue;
+    if (graine % 3 === 0) cases += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+  }
+  const oeil = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7" fill="none" stroke="#000" stroke-width="1"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3"/>`;
+  const code = `<svg class="code" viewBox="-1 -1 31 31" xmlns="http://www.w3.org/2000/svg"><g fill="#000">${cases}${oeil(0, 0)}${oeil(22, 0)}${oeil(0, 22)}</g><rect x="12" y="12" width="5" height="5" fill="#000"/><rect x="13.1" y="14.1" width="2.8" height=".8" fill="#fff"/><rect x="14.1" y="13.1" width=".8" height="2.8" fill="#fff"/></svg>`;
+  const ben = `${esc(ENTREPRISE.iban)}<br>${esc(ENTREPRISE.nom)}<br>${ENTREPRISE.adresse.map(esc).join('<br>')}`;
+  const pay = CLIENT.map(esc).join('<br>');
+  return `<div class="qr"><table><tr>
+    <td class="recu"><h5>Récépissé</h5><div class="t">Compte / Payable à</div>${ben}<div class="t">Payable par</div>${pay}<div class="t">Monnaie&nbsp;&nbsp;&nbsp;Montant</div>CHF&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${chf(montant)}</td>
+    <td><h5>Section paiement</h5><table class="cols"><tr><td style="width:200px">${code}<div class="t">Monnaie&nbsp;&nbsp;&nbsp;Montant</div>CHF&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${chf(montant)}</td>
+      <td><div class="t">Compte / Payable à</div>${ben}<div class="t">Informations supplémentaires</div>Facture n° 1<div class="t">Payable par</div>${pay}</td></tr></table></td>
+  </tr></table><span class="exemple">Exemple&nbsp;: code et IBAN inventés</span></div>`;
+}
+
+// Essai en trois touchers.
+const etat = { logo: LOGOS[0].src, couleur: LOGOS[0].couleur, modele: 'sobre', type: 'offre', auto: LOGOS[0].couleur };
+const cadre = document.getElementById('cadre');
+function dessiner() {
+  cadre.innerHTML = documentHtml(etat.modele, etat.type, etat.couleur, etat.logo);
+  const w = document.getElementById('apercu').clientWidth - 28;
+  const k = Math.min(1, w / 794);
+  cadre.style.transform = `scale(${k})`;
+  document.getElementById('apercu').style.height = Math.ceil(1123 * k + 28) + 'px';
+}
+function marquer(sel, test) { document.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(test(b)))); }
+function teintes() {
+  const box = document.getElementById('teintes');
+  const liste = [etat.auto, ...TEINTES.filter((x) => x.toLowerCase() !== etat.auto.toLowerCase())].slice(0, 7);
+  box.innerHTML = liste.map((x, i) => `<button type="button" class="teinte" style="background:${x}" data-c="${x}" aria-label="${i === 0 ? 'Couleur du logo ' : 'Couleur '}${x}" aria-pressed="${x === etat.couleur}"></button>`).join('')
+    + `<label class="puce" style="display:inline-flex;align-items:center;gap:6px">Autre <input type="color" id="autre" value="${etat.couleur}" style="width:32px;height:28px;border:0;padding:0;background:none"></label>`;
+  box.querySelectorAll('.teinte').forEach((b) => b.addEventListener('click', () => { etat.couleur = b.dataset.c; marquer('.teinte', (x) => x.dataset.c === etat.couleur); dessiner(); }));
+  document.getElementById('autre').addEventListener('input', (e) => { etat.couleur = e.target.value; marquer('.teinte', () => false); dessiner(); });
+  document.getElementById('auto').textContent = 'Première pastille : couleur trouvée dans ton logo, choisie d’office.';
+}
+document.getElementById('logos').innerHTML = LOGOS.map((l, i) => `<button type="button" class="puce" data-i="${i}" aria-pressed="${i === 0}"><img src="${l.src}" alt="${esc(l.nom)}" data-no-zoom></button>`).join('');
+document.querySelectorAll('#logos .puce').forEach((b) => b.addEventListener('click', () => {
+  const l = LOGOS[b.dataset.i];
+  etat.logo = l.src; etat.auto = l.couleur; etat.couleur = l.couleur;
+  marquer('#logos .puce', (x) => x === b); teintes(); dessiner();
+}));
+// Couleur du logo : la teinte la plus fréquente parmi les pixels colorés (ni blancs, ni gris, ni transparents).
+function couleurDominante(img) {
+  const k = document.createElement('canvas'); const n = 64; k.width = n; k.height = n;
+  const g = k.getContext('2d'); g.drawImage(img, 0, 0, n, n);
+  const d = g.getImageData(0, 0, n, n).data; const cases = {};
+  for (let i = 0; i < d.length; i += 4) {
+    const [r, v, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+    if (a < 128) continue;
+    const max = Math.max(r, v, b), min = Math.min(r, v, b);
+    if (max - min < 40 || max > 240) continue;
+    const cle = (r >> 4) + ',' + (v >> 4) + ',' + (b >> 4);
+    (cases[cle] = cases[cle] || { n: 0, r: 0, v: 0, b: 0 }); cases[cle].n++; cases[cle].r += r; cases[cle].v += v; cases[cle].b += b;
+  }
+  const best = Object.values(cases).sort((x, y) => y.n - x.n)[0];
+  if (!best) return '#3B3F46';
+  const h = (x) => Math.round(x / best.n).toString(16).padStart(2, '0');
+  return '#' + h(best.r) + h(best.v) + h(best.b);
+}
+document.getElementById('mon-logo').addEventListener('change', (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const lecteur = new FileReader();
+  lecteur.onload = () => {
+    const img = new Image();
+    img.onload = () => { etat.logo = lecteur.result; etat.auto = couleurDominante(img); etat.couleur = etat.auto; marquer('#logos .puce', () => false); teintes(); dessiner(); };
+    img.src = lecteur.result;
+  };
+  lecteur.readAsDataURL(f);
+});
+document.getElementById('choix-modele').innerHTML = MODELES.map(([id, nom]) => `<button type="button" class="puce" data-m="${id}" aria-pressed="${id === etat.modele}">${nom}</button>`).join('');
+document.querySelectorAll('#choix-modele .puce').forEach((b) => b.addEventListener('click', () => { etat.modele = b.dataset.m; marquer('#choix-modele .puce', (x) => x === b); dessiner(); }));
+document.querySelectorAll('.bascule button').forEach((b) => b.addEventListener('click', () => { etat.type = b.dataset.type; marquer('.bascule button', (x) => x === b); dessiner(); }));
+
+// Planche : images fabriquées depuis cette page (mode #rendu), à côté du fichier.
+document.getElementById('planche').innerHTML = MODELES.map(([id, nom]) => `<div class="modele" id="m-${id}"><h3>${nom}</h3>
+  <div class="paire"><figure><img src="MAQUETTE-modeles-img/${id}-offre.jpg" alt="Modèle ${nom}, offre" loading="lazy"><figcaption>Offre</figcaption></figure>
+  <figure><img src="MAQUETTE-modeles-img/${id}-facture.jpg" alt="Modèle ${nom}, facture avec QR-facture" loading="lazy"><figcaption>Facture</figcaption></figure></div>
+  <div class="reponse" data-decision="modele-${id}" data-titre="Modèle ${nom}" data-choix="Garder|Écarter"></div></div>`).join('');
+
+// Réponses, gardées dans ce navigateur.
+const CLE = 'offregen-maquette-modeles-v1';
+let reponses = {};
+try { reponses = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { reponses = {}; }
+const sauver = () => { try { localStorage.setItem(CLE, JSON.stringify(reponses)); } catch (e) { /* navigation privée */ } recap(); };
+function recap() {
+  const lignes = [...document.querySelectorAll('.reponse')].map((r) => {
+    const x = reponses[r.dataset.decision] || {};
+    return `- ${r.dataset.titre} : ${x.choix || '(sans réponse)'}${x.texte ? ' (' + x.texte.trim() + ')' : ''}`;
+  });
+  document.getElementById('texte-recap').value = 'Maquette marque et modèles, mes réponses :\n' + lignes.join('\n');
+}
+// Réponses de Xavier du 2026-11-12 : réglé, plus de boutons. Seul ce qui reste ouvert se demande.
+const TRANCHE = {
+  parcours: 'Valider',
+  'modele-sobre': 'Garder', 'modele-bandeau': 'Garder', 'modele-atelier': 'Garder', 'modele-technique': 'Garder', 'modele-epure': 'Garder',
+  facturer: 'Valider, avec la possibilité de mettre soi-même le numéro',
+  qr: 'Valider',
+};
+document.querySelectorAll('.reponse').forEach((r) => {
+  const id = r.dataset.decision; const x = reponses[id] || {};
+  if (TRANCHE[id]) {
+    r.innerHTML = `<p class="regle-ok">Réglé, ta réponse&nbsp;: ${esc(TRANCHE[id])}</p>`;
+    reponses[id] = { choix: TRANCHE[id] };
+    return;
+  }
+  const [oui, non] = r.dataset.choix.split('|');
+  r.innerHTML = `<div class="boutons"><button type="button" data-v="oui" aria-pressed="${x.choix === oui}">${oui}</button><button type="button" data-v="non" aria-pressed="${x.choix === non}">${non}</button></div><textarea placeholder="Ton commentaire (facultatif)" aria-label="Commentaire, ${esc(r.dataset.titre)}">${esc(x.texte || '')}</textarea>`;
+  r.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    reponses[id] = { ...(reponses[id] || {}), choix: b.dataset.v === 'oui' ? oui : non };
+    r.querySelectorAll('button').forEach((y) => y.setAttribute('aria-pressed', String(y === b))); sauver();
+  }));
+  r.querySelector('textarea').addEventListener('input', (e) => { reponses[id] = { ...(reponses[id] || {}), texte: e.target.value }; sauver(); });
+});
+document.getElementById('copier').addEventListener('click', () => {
+  const t = document.getElementById('texte-recap');
+  (navigator.clipboard ? navigator.clipboard.writeText(t.value) : Promise.reject()).then(() => { document.getElementById('copie').textContent = 'Copié.'; })
+    .catch(() => { t.select(); document.execCommand('copy'); document.getElementById('copie').textContent = 'Copié.'; });
+});
+
+// Mode capture : #rendu=<modèle>,<offre|facture>
+const rendu = location.hash.match(/^#rendu=(\w+),(\w+)$/);
+if (rendu) {
+  document.body.classList.add('rendu');
+  document.getElementById('rendu').innerHTML = documentHtml(rendu[1], rendu[2], LOGOS[0].couleur, LOGOS[0].src);
+} else {
+  teintes(); dessiner(); recap();
+  window.addEventListener('resize', dessiner);
+}
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

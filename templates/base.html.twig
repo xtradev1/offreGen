@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  {% block entete_html %}{% endblock %}
+  <title>{% block titre %}offreGen{% endblock %}</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/js/app.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <header class="bar">{% block retour %}{% endblock %}<h1>{% block entete %}offreGen{% endblock %}</h1></header>
+    <main class="screen{% block ecran_classe %}{% endblock %}">{% block contenu %}{% endblock %}</main>
+    {% set msg = messages() %}
+    {% for texte in msg.info ?? [] %}<div class="snack" role="status"><span>{{ texte }}</span></div>{% endfor %}
+    {% for texte in msg.erreur ?? [] %}<div class="snack bad" role="alert"><span>{{ texte }}</span></div>{% endfor %}
+    {# « Annuler » : une ligne supprimée (offre, ligne, designation) ou une offre rangée (action, texte). #}
+    {% for a in msg.annuler ?? [] %}
+      <form class="snack" role="status" method="post" action="{{ a.action ?? ('/offres/' ~ a.offre ~ '/lignes/' ~ a.ligne ~ '/restaurer') }}" data-disparait>
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <span>{% if a.texte is defined %}{{ a.texte }}{% else %}«&nbsp;{{ a.designation }}&nbsp;» supprimée{% endif %}</span><button type="submit">Annuler</button>
+      </form>
+    {% endfor %}
+    {% for id in msg.focus ?? [] %}<span hidden data-focus-ligne="{{ id }}"></span>{% endfor %}
+    <div class="bas">
+      {% block actions %}{% endblock %}
+      {% block onglets %}{% endblock %}
+    </div>
+  </div>
+</body>
+</html>

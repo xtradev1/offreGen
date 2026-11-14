@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}{{ titre }} · offreGen{% endblock %}
+{% block entete %}{{ titre }}{% endblock %}
+
+{% block contenu %}
+  <p class="erreur-code">{{ code }}</p>
+  <p class="muted">{{ titre }}.</p>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><a class="btn" href="/">Retour à l'accueil</a></div>
+{% endblock %}

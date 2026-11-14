@@ -14,12 +14,18 @@ répétées ici.
 - Environnement d'exécution local : WSL, Ubuntu 24.04, copie de travail dans `~/offreGen`. PHP 8.5.12 (dépôt ppa:ondrej/php), Composer 2.11.1 (installeur officiel, signature vérifiée), MariaDB 10.11.14. Installé et vérifié le 2026-11-07. MariaDB se démarre par `sudo service mariadb start`.
 
 ## Organisation des fichiers
-- (à préciser : arborescence, où vont les modèles, les contrôleurs, les vues, les scripts)
+- Arborescence (Xavier, 2026-11-07) :
+  - `public/index.php` : seul fichier PHP exécutable depuis le web ;
+  - `src/Offre/`, `src/Audio/`, `src/Catalogue/`, `src/Compte/` : règles métier, un dossier par domaine ;
+  - `src/Http/` : contrôleurs et routes ;
+  - `src/Donnees/` : seule couche qui parle à la base, elle exige l'identifiant de l'artisan ;
+  - `templates/` : pages Twig ; `migrations/`, `tests/`, `config/` ; `bin/` : commandes et scripts lancés par cron ;
+  - `var/` : audios importés, journaux, cache, hors de `public/` et ignoré par git.
 - Un fichier, une responsabilité. Pas de fonction dupliquée : chercher l'existant avant d'écrire (`grep`).
 
 ## Style
 - Encodage UTF-8 sans BOM, fins de ligne LF.
-- Nommage : (à préciser : langue des identifiants, casse)
+- Nommage (Xavier, 2026-11-07) : le métier en français (`Offre`, `Ligne`, `Acompte`, `Artisan`), le technique de Symfony garde ses noms (`Request`, `Response`). Classes `CommeCeci`, méthodes et variables `commeCeci`, tables et colonnes `comme_ceci`. PSR-12.
 - Pas de code mort, pas de commentaire qui paraphrase le code.
 - Textes visibles en français, typographie française, pas de tiret long.
 
@@ -41,7 +47,7 @@ répétées ici.
 - **Droits refusés par défaut :** une route sans droit déclaré répond 403, et un test parcourt toutes les routes.
 - **Accès aux données en un seul endroit :** cette couche exige l'identifiant du client, et un contrôle automatique rejette tout SQL écrit ailleurs.
 - **Isolation testée :** le client A tente d'atteindre chaque donnée du client B, route par route, fichiers et exports compris.
-- Sessions et CSRF : (à préciser au moment d'écrire la connexion).
+- CSRF : jeton sur chaque formulaire et chaque requête qui écrit, dès le squelette (`symfony/security-csrf`). Connexion par courriel et mot de passe dès le squelette (Xavier, 2026-11-07). Réglages de session (cookie, durée, régénération) fixés avec la connexion.
 
 ## Tests et preuve
 - Un changement de logique s'accompagne d'un test qui échoue avant et passe après.

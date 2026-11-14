@@ -1,0 +1,33 @@
+{% import '_reglages_macros.html.twig' as f %}
+<div class="card">
+  <div class="champ">
+    <label for="entreprise">Nom</label>
+    <input id="entreprise" name="entreprise" value="{{ champs.entreprise }}" maxlength="190" required autocomplete="organization"{{ f.invalide(erreurs, 'entreprise') }}>
+    {{ f.erreur(erreurs, 'entreprise') }}
+  </div>
+  {% include '_adresse.html.twig' with {p: 'adresse_', manque: true, ancienne: champs.adresse_ancienne ?? ''} %}
+  <p class="muted petit">En tête de chaque offre et de chaque facture, pour la date «&nbsp;Delémont, le…&nbsp;» et dans la section de paiement.</p>
+  <div class="duo">
+    <div class="champ">
+      <label for="telephone">Téléphone</label>
+      <input id="telephone" name="telephone" value="{{ champs.telephone }}" inputmode="tel" autocomplete="tel"{{ f.invalide(erreurs, 'telephone') }}>
+      {{ f.erreur(erreurs, 'telephone') }}
+    </div>
+    <div class="champ">
+      <label for="ide">Numéro IDE{% if not champs.ide and champs.tva != '0' %} <span class="badge manque">à compléter</span>{% endif %}</label>
+      <input id="ide" name="ide" value="{{ champs.ide }}" placeholder="CHE-123.456.789" autocomplete="off"{% if not champs.ide and champs.tva != '0' %} class="manque"{% endif %}{{ f.invalide(erreurs, 'ide') }}>
+      {{ f.erreur(erreurs, 'ide') }}
+    </div>
+  </div>
+  <div class="champ">
+    <label for="iban">IBAN{% if not champs.iban %} <span class="badge manque">à compléter</span>{% endif %}</label>
+    <input id="iban" name="iban" value="{{ champs.iban }}" placeholder="CH93 0076 2011 6238 5295 7" autocomplete="off" spellcheck="false"{% if not champs.iban %} class="manque"{% endif %}{{ f.invalide(erreurs, 'iban') }}>
+    <span class="muted petit">Pour la section de paiement de vos factures (QR-facture). Un IBAN suisse ou liechtensteinois.</span>
+    {{ f.erreur(erreurs, 'iban') }}
+  </div>
+  <div class="champ">
+    <label for="courriel_contact">Courriel pour les clients</label>
+    <input id="courriel_contact" name="courriel_contact" type="email" value="{{ champs.courriel_contact }}" inputmode="email" autocomplete="email"{{ f.invalide(erreurs, 'courriel_contact') }}>
+    {{ f.erreur(erreurs, 'courriel_contact') }}
+  </div>
+</div>

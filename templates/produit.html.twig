@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% set titre = p ? 'Modifier le produit' : 'Nouveau produit' %}
+{% block titre %}{{ titre }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/catalogue{% if p %}#p{{ p.id }}{% endif %}">Catalogue</a>{% endblock %}
+{% block entete %}{{ titre }}{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% if erreurs is not empty %}<p class="alerte bad" role="alert">Le produit n'est pas enregistré&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  <form id="produit" method="post" action="{{ p ? '/catalogue/' ~ p.id : '/catalogue' }}">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="designation">Désignation</label>
+      <input id="designation" name="designation" value="{{ champs.designation }}" maxlength="255" required{% if not p %} data-premier{% endif %}{{ f.invalide(erreurs, 'designation') }}>
+      {{ f.erreur(erreurs, 'designation') }}
+    </div>
+    <div class="duo">
+      <div class="champ">
+        <label for="unite">Unité</label>
+        <select id="unite" name="unite"{{ f.invalide(erreurs, 'unite') }}>
+          {% for u in unites %}<option{% if u == champs.unite %} selected{% endif %}>{{ u }}</option>{% endfor %}
+        </select>
+        {{ f.erreur(erreurs, 'unite') }}
+      </div>
+      <div class="champ">
+        <label for="prix">Prix (CHF)</label>
+        <input id="prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?"{{ f.invalide(erreurs, 'prix') }}>
+        {{ f.erreur(erreurs, 'prix') }}
+      </div>
+    </div>
+    <div class="champ">
+      <label for="categorie">Catégorie</label>
+      <select id="categorie" name="categorie"{{ f.invalide(erreurs, 'categorie') }}>
+        {% if categories is empty %}<option value="">(aucune pour l'instant)</option>{% endif %}
+        {% for c in categories %}<option{% if c == champs.categorie %} selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+      {{ f.erreur(erreurs, 'categorie') }}
+    </div>
+    {# Le plus souvent, quatre champs suffisent : le reste se déplie. Ouvert d'office quand il sert. #}
+    <details class="plus"{% if categories is empty or champs.nouvelle_categorie != '' or erreurs.synonymes is defined or erreurs.categorie is defined %} open{% endif %}>
+      <summary>Nouvelle catégorie, mots de la dictée</summary>
+      <div class="champ">
+        <label for="nouvelle_categorie">Ou une nouvelle catégorie</label>
+        <input id="nouvelle_categorie" name="nouvelle_categorie" value="{{ champs.nouvelle_categorie }}" maxlength="100" placeholder="Par exemple&nbsp;: Cuisine">
+      </div>
+      <div class="champ">
+        <label for="synonymes">Mots reconnus dans la dictée, séparés par des virgules</label>
+        <input id="synonymes" name="synonymes" value="{{ champs.synonymes }}"{{ f.invalide(erreurs, 'synonymes') }}>
+        {{ f.erreur(erreurs, 'synonymes') }}
+        <span class="muted petit">L'IA s'en sert pour reconnaître ce produit quand vous le dites autrement.</span>
+      </div>
+    </details>
+  </form>
+  {% if p %}
+    <p class="pied"><a class="lien" href="/catalogue/{{ p.id }}/supprimer">Supprimer ce produit du catalogue</a></p>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/catalogue{% if p %}#p{{ p.id }}{% endif %}">Annuler</a>
+    <button class="btn primary" type="submit" form="produit">Enregistrer</button>
+  </div>
+{% endblock %}

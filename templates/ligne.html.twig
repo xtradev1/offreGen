@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Ligne · offreGen{% endblock %}
+{% block retour %}<a class="back" href="{{ cible.base }}#l{{ l.id }}">{{ cible.retour }}</a>{% endblock %}
+{% block entete %}Ligne{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% if erreurs is not empty %}<p class="alerte bad" role="alert">La ligne n'est pas modifiée&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  <form id="ligne" method="post" action="{{ cible.base }}/lignes/{{ l.id }}">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="designation">Désignation, telle qu'elle paraîtra sur {{ cible.document }}</label>
+      <input id="designation" name="designation" value="{{ champs.designation }}" maxlength="255" required{{ f.invalide(erreurs, 'designation') }}>
+      {{ f.erreur(erreurs, 'designation') }}
+    </div>
+    <div class="duo">
+      <div class="champ">
+        <label for="quantite">Quantité</label>
+        <input id="quantite" name="quantite" value="{{ champs.quantite }}" inputmode="decimal" autocomplete="off" required{{ f.invalide(erreurs, 'quantite') }}>
+        {{ f.erreur(erreurs, 'quantite') }}
+      </div>
+      <div class="champ">
+        <label for="unite">Unité</label>
+        <select id="unite" name="unite"{{ f.invalide(erreurs, 'unite') }}>
+          {% for u in unites %}<option{% if u == champs.unite %} selected{% endif %}>{{ u }}</option>{% endfor %}
+        </select>
+        {{ f.erreur(erreurs, 'unite') }}
+      </div>
+    </div>
+    <div class="champ">
+      <label for="prix">Prix unitaire (CHF)</label>
+      <input id="prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?"{{ f.invalide(erreurs, 'prix') }}>
+      {{ f.erreur(erreurs, 'prix') }}
+    </div>
+    {% if l.produit_id is null %}
+      <div class="card">
+        <label class="check"><input type="checkbox" name="garder" value="1"{% if erreurs.categorie is defined %} checked{% endif %}>
+          <span>Garder aussi dans le catalogue<small>L'IA la reconnaîtra dans les prochaines dictées.</small></span></label>
+        <div class="champ">
+          <label for="categorie">Catégorie</label>
+          <select id="categorie" name="categorie">
+            {% for c in categories %}<option{% if c == champs.categorie %} selected{% endif %}>{{ c }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="champ">
+          <label for="nouvelle_categorie">Ou une nouvelle catégorie</label>
+          <input id="nouvelle_categorie" name="nouvelle_categorie" value="{{ champs.nouvelle_categorie }}" maxlength="100"{{ f.invalide(erreurs, 'categorie') }}>
+          {{ f.erreur(erreurs, 'categorie') }}
+        </div>
+      </div>
+    {% else %}
+      <p class="muted petit">Corriger ici change {{ cible.ce }} seulement. Le prix du catalogue se change dans l'onglet Catalogue.</p>
+    {% endif %}
+  </form>
+  <form class="pied" method="post" action="{{ cible.base }}/lignes/{{ l.id }}/supprimer">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <button class="lien" type="submit">Supprimer la ligne</button>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="{{ cible.base }}#l{{ l.id }}">Annuler</a>
+    <button class="btn primary" type="submit" form="ligne">Enregistrer</button>
+  </div>
+{% endblock %}

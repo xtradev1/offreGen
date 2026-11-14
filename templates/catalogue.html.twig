@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Mon catalogue · offreGen{% endblock %}
+{% block entete %}Mon catalogue{% endblock %}
+
+{% block contenu %}
+  <form class="search" method="get" action="/catalogue" role="search">
+    {% if cat %}<input type="hidden" name="cat" value="{{ cat }}">{% endif %}
+    <div class="box">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="cq" name="q" type="search" value="{{ q }}" placeholder="Chercher parmi {{ nombre }} produits" autocomplete="off" aria-label="Chercher dans le catalogue" data-filtre="#clist">
+    </div>
+  </form>
+  <nav class="fchips" aria-label="Catégories">
+    <a href="/catalogue{% if q %}?q={{ q|url_encode }}{% endif %}"{% if cat == '' %} aria-current="true"{% endif %}><span>Tout</span></a>
+    {% for c, produits in groupes %}
+      <a href="/catalogue?cat={{ c|url_encode }}{% if q %}&amp;q={{ q|url_encode }}{% endif %}"{% if cat == c %} aria-current="true"{% endif %}><span>{{ c }}</span></a>
+    {% endfor %}
+  </nav>
+
+  <div id="clist">
+    {% for c, produits in groupes %}
+      {% set visibles = produits|filter(p => p.visible)|length %}
+      <div class="ccat" data-groupe{% if visibles == 0 %} hidden{% endif %}><h5>{{ c }}</h5><span data-compte>{{ visibles }}</span></div>
+      {% for p in produits %}
+        <a class="crow{% if p.prix_centimes == 0 %} sansprix{% endif %}" id="p{{ p.id }}" href="/catalogue/{{ p.id }}" data-en-feuille data-texte="{{ p.texte }}"{% if cat and cat != c %} data-hors-cat{% endif %}{% if not p.visible %} hidden{% endif %}>
+          <span class="nm">{{ p.designation }}{% if p.synonymes %}<small>{{ p.synonymes }}</small>{% endif %}</span>
+          <span class="num{% if p.prix_centimes == 0 %} manque{% endif %}"><i>{% if p.prix_centimes == 0 %}Prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %}</i></span>
+          <span class="u">/&nbsp;{{ p.unite }}</span>
+        </a>
+      {% endfor %}
+    {% else %}
+      <p class="vide">Le catalogue est vide. «&nbsp;Nouveau produit&nbsp;», en bas, ajoute le premier.</p>
+    {% endfor %}
+    <p class="vide" data-aucun{% if trouves > 0 or nombre == 0 %} hidden{% endif %}>Aucun produit ne correspond.
+      <a class="lien" href="/catalogue/nouveau?q={{ q|url_encode }}" data-en-feuille data-creer>Créer ce produit</a></p>
+  </div>
+{% endblock %}
+
+{% block actions %}
+  {# Fiche d'un produit, nouveau ou existant, par-dessus la liste. app.js y charge la page du lien ;
+     sans JavaScript, le lien ouvre cette page seule. #}
+  <div class="feuille-fond" data-feuille-page hidden>
+    <div class="feuille cadre" role="dialog" aria-modal="true" aria-labelledby="titre-fiche" tabindex="-1">
+      <div class="poignee" aria-hidden="true"></div>
+      <div class="sh-h"><h2 id="titre-fiche" data-feuille-titre></h2>
+        <button class="x" type="button" data-fermer aria-label="Fermer"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="sh-corps" data-feuille-corps></div>
+      <div class="sh-pied" data-feuille-pied></div>
+    </div>
+  </div>
+  <div class="actionbar"><a class="btn primary" href="/catalogue/nouveau{% if cat %}?cat={{ cat|url_encode }}{% endif %}" data-en-feuille>
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nouveau produit</a></div>
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'catalogue'} %}{% endblock %}

@@ -1,0 +1,48 @@
+{# Les lignes d'une offre ou d'une facture, rangées par catégorie. « base » : /offres/ID ou /factures/ID.
+   « modifiable » : faux pour une facture émise ou annulée, qui ne montre plus aucun champ.
+   « libre » : faux sur une facture, où l'étiquette « Ligne libre » n'apprend rien au lecteur. #}
+<div class="rows une{% if not modifiable %} figees{% endif %}">
+  {% for g in groupes %}
+    <div class="cat"><h5>{{ g.nom }}</h5><span class="ch">Qté</span><span class="ch">Prix</span><span class="ch">Total</span><span></span></div>
+    {% for r in g.lignes %}
+      {% set l = r.l %}
+      {% set lien = base ~ '/lignes/' ~ l.id %}
+      {% set manque = l.prix_centimes == 0 %}
+      <div class="row{% if manque %} miss{% elseif l.a_verifier %} flag{% endif %}" id="l{{ l.id }}">
+        {% if modifiable %}
+          <a class="nm" href="{{ lien }}">{{ l.designation }}{% if l.produit_id is null and (libre ?? true) %}<small><span class="tag">Ligne libre</span></small>{% endif %}</a>
+          <form class="q" method="post" action="{{ lien }}">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <input class="saisie" name="quantite" value="{{ l.quantite_milliemes|saisie_quantite }}" inputmode="decimal" autocomplete="off" required aria-label="Quantité, {{ l.designation }}" data-envoi-change>
+            <span class="u">{{ l.unite }}</span>
+          </form>
+          <form class="p" method="post" action="{{ lien }}">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <input class="saisie{% if manque %} manque{% endif %}" name="prix" value="{{ l.prix_centimes|saisie_prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?" aria-label="Prix unitaire en francs, {{ l.designation }}" data-envoi-change>
+          </form>
+          <div class="tt">{% if not manque %}{{ r.total|montant }}{% endif %}</div>
+          <form method="post" action="{{ lien }}/supprimer">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <button class="del" type="submit" aria-label="Supprimer la ligne {{ l.designation }}"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>
+          </form>
+        {% else %}
+          <span class="nm">{{ l.designation }}</span>
+          <span class="q fige">{{ l.quantite_milliemes|quantite }}&nbsp;<span class="u">{{ l.unite }}</span></span>
+          <span class="p fige">{{ l.prix_centimes|montant }}</span>
+          <div class="tt">{{ r.total|montant }}</div>
+          <span></span>
+        {% endif %}
+        {% if manque %}
+          <div class="note bad"><span>Prix manquant</span></div>
+        {% elseif l.a_verifier %}
+          <form class="note warn" method="post" action="{{ lien }}/juste">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <span>À vérifier</span><button class="okbtn" type="submit"><span>C'est juste</span></button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="vide">{{ vide }}</p>
+  {% endfor %}
+</div>

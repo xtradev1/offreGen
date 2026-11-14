@@ -1,0 +1,2 @@
+{% macro erreur(erreurs, champ) %}<span class="err" id="err-{{ champ }}" data-erreur="{{ champ }}"{% if erreurs[champ] is not defined %} hidden{% endif %}>{{ erreurs[champ] ?? '' }}</span>{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true"{% endif %} aria-describedby="err-{{ champ }}"{% endmacro %}

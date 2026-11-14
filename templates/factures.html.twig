@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{# Onglet Factures (Xavier, 2026-11-13, choix C2) : de la plus récente à la plus ancienne ; recherche par numéro,
+   client, localité ou objet ; chaque ligne dit le montant à payer et l'état. Une facture naît d'une offre. #}
+{% block titre %}Factures · offreGen{% endblock %}
+{% block entete %}Factures{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  <form class="search" method="get" action="/factures" role="search">
+    <div class="box">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="fq" name="q" type="search" placeholder="Chercher un numéro, un client" autocomplete="off" aria-label="Chercher une facture" data-filtre="#flist">
+    </div>
+  </form>
+  <p class="compteur">{{ factures|length }} facture{{ factures|length > 1 ? 's' : '' }}</p>
+
+  <div id="flist">
+    {% for x in factures %}
+      <a class="frow{% if x.statut == 'annulee' %} annulee{% endif %}" id="f{{ x.id }}" href="/factures/{{ x.id }}" data-texte="{{ x.texte }}">
+        <span class="corps"><b>{{ x.numero }} · {{ x.client_nom }}</b>
+          <small>{% if x.localite %}{{ x.localite }} · {% endif %}{{ x.date_facture|jour }} · {{ x.titre }}</small>
+          <span class="status {{ x.etat.classe }}">{{ x.etat.texte }}</span></span>
+        <span class="montant">{{ x.a_payer_vue|montant }}</span>
+      </a>
+    {% else %}
+      <p class="vide">Aucune facture pour l'instant. Une facture naît d'une offre&nbsp;: «&nbsp;Facturer&nbsp;», à côté de «&nbsp;PDF&nbsp;».</p>
+    {% endfor %}
+    <p class="vide" data-aucun hidden>Aucune facture ne correspond.</p>
+  </div>
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'factures'} %}{% endblock %}

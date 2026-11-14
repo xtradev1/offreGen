@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Nouvelle offre · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
+{% block entete %}Nouvelle offre{% endblock %}
+
+{% block contenu %}
+  {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+  {% include '_nouvelle_offre.html.twig' %}
+  <p class="muted petit centre">Fichiers acceptés&nbsp;: {{ formats }}, {{ taille_max_mo }}&nbsp;Mo au plus.</p>
+{% endblock %}

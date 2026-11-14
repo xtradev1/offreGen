@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Ajouter à {{ cible.document }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="{{ cible.base }}">{{ cible.retour }}</a>{% endblock %}
+{% block entete %}Ajouter à {{ cible.document }}{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% if erreurs is empty %}
+    <form class="search" method="get" action="{{ cible.base }}/ajouter" role="search">
+      <div class="box">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="cherche" name="q" type="search" value="{{ q }}" placeholder="Chercher dans le catalogue" autocomplete="off" aria-label="Chercher dans le catalogue" data-filtre="#res" data-copie="#libre-designation">
+      </div>
+    </form>
+    <div id="res" class="res">
+      {% for p in produits %}
+        <form method="post" action="{{ cible.base }}/lignes" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
+          <input type="hidden" name="_csrf" value="{{ csrf() }}">
+          <button class="pick" type="submit" name="produit" value="{{ p.id }}"><b class="pn">{{ p.designation }}<small>{{ p.categorie }}</small></b>
+            <span>{% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %} /&nbsp;{{ p.unite }}</span></button>
+        </form>
+      {% endfor %}
+      <p class="vide" data-aucun{% if trouves > 0 %} hidden{% endif %}>Rien dans le catalogue pour cette recherche. Ajoutez-la en ligne libre, ci-dessous.</p>
+    </div>
+  {% else %}
+    <p class="alerte bad" role="alert">La ligne n'est pas ajoutée&nbsp;: corrigez les champs signalés.</p>
+  {% endif %}
+
+  <h2 class="sub" id="libre">Ligne libre</h2>
+  <p class="muted petit">Pour une offre de fournisseur ou un travail ponctuel. Elle reste dans {{ cible.ce }}&nbsp;; le catalogue ne change que si vous cochez la case.</p>
+  <form id="ajout-libre" method="post" action="{{ cible.base }}/lignes">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="libre-designation">Désignation</label>
+      <input id="libre-designation" name="designation" value="{{ champs.designation }}" maxlength="255" required{{ f.invalide(erreurs, 'designation') }}>
+      {{ f.erreur(erreurs, 'designation') }}
+    </div>
+    <div class="duo">
+      <div class="champ">
+        <label for="libre-quantite">Quantité</label>
+        <input id="libre-quantite" name="quantite" value="{{ champs.quantite }}" inputmode="decimal" autocomplete="off" required{{ f.invalide(erreurs, 'quantite') }}>
+        {{ f.erreur(erreurs, 'quantite') }}
+      </div>
+      <div class="champ">
+        <label for="libre-unite">Unité</label>
+        <select id="libre-unite" name="unite"{{ f.invalide(erreurs, 'unite') }}>
+          {% for u in unites %}<option{% if u == champs.unite %} selected{% endif %}>{{ u }}</option>{% endfor %}
+        </select>
+        {{ f.erreur(erreurs, 'unite') }}
+      </div>
+    </div>
+    <div class="champ">
+      <label for="libre-prix">Prix unitaire (CHF)</label>
+      <input id="libre-prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?"{{ f.invalide(erreurs, 'prix') }}>
+      {{ f.erreur(erreurs, 'prix') }}
+    </div>
+    <div class="card">
+      <label class="check"><input type="checkbox" name="garder" value="1"{% if erreurs.categorie is defined %} checked{% endif %}>
+        <span>Garder aussi dans le catalogue<small>L'IA la reconnaîtra dans les prochaines dictées.</small></span></label>
+      <div class="champ">
+        <label for="libre-categorie">Catégorie</label>
+        <select id="libre-categorie" name="categorie">
+          {% for c in categories %}<option{% if c == champs.categorie %} selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="champ">
+        <label for="libre-nouvelle">Ou une nouvelle catégorie</label>
+        <input id="libre-nouvelle" name="nouvelle_categorie" value="{{ champs.nouvelle_categorie }}" maxlength="100"{{ f.invalide(erreurs, 'categorie') }}>
+        {{ f.erreur(erreurs, 'categorie') }}
+      </div>
+    </div>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="{{ cible.base }}">Annuler</a>
+    <button class="btn primary" type="submit" form="ajout-libre">Ajouter la ligne libre</button>
+  </div>
+{% endblock %}

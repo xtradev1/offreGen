@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{# Nouvelle facture (maquette 18, validée par Xavier le 2026-11-13) : le numéro suivant, modifiable ; la date ;
+   l'échéance tirée des conditions ; le client de l'offre ; l'acompte suivant ou la facture finale. #}
+{% block titre %}Nouvelle facture · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}/document">Offre</a>{% endblock %}
+{% block entete %}Nouvelle facture{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% if offre.client_id is null %}
+    <p class="alerte warn" role="alert">Confirmez d'abord le client de l'offre&nbsp;: il sera copié sur la facture.
+      <a href="/offres/{{ offre.id }}/client">Choisir le client</a></p>
+  {% elseif choix is empty %}
+    <p class="alerte info">Cette offre est facturée en entier.</p>
+  {% else %}
+    {% if erreurs is not empty %}<p class="alerte bad" role="alert">La facture n'est pas créée&nbsp;: corrigez les champs signalés.</p>{% endif %}
+    <form id="facturer" method="post" action="/offres/{{ offre.id }}/facturer">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <div class="card">
+        {% for c in choix %}
+          <label class="radio"><input type="radio" name="genre" value="{{ c.genre }}"{% if c.genre == champs.genre %} checked{% endif %}>
+            <span><b>{{ c.titre }}</b>
+              <small>{% if c.genre == 'acompte' %}{{ c.ht|chf }} hors TVA{% elseif deja > 0 %}{{ nb_lignes }} ligne{{ nb_lignes > 1 ? 's' : '' }} de l'offre, moins les acomptes émis ({{ deja|chf }}){% else %}{{ nb_lignes }} ligne{{ nb_lignes > 1 ? 's' : '' }} de l'offre, {{ c.ht|chf }} hors TVA{% endif %}</small></span></label>
+        {% endfor %}
+        {{ f.erreur(erreurs, 'genre') }}
+      </div>
+      <div class="champ">
+        <label for="numero">Numéro</label>
+        <input id="numero" name="numero" value="{{ champs.numero }}" maxlength="20" required autocomplete="off" spellcheck="false"{{ f.invalide(erreurs, 'numero') }}>
+        <span class="muted petit">Le suivant de votre dernière facture&nbsp;; vous pouvez le changer.</span>
+        {{ f.erreur(erreurs, 'numero') }}
+      </div>
+      <div class="duo">
+        <div class="champ">
+          <label for="date">Date</label>
+          <input id="date" name="date" type="date" value="{{ champs.date }}" required{{ f.invalide(erreurs, 'date') }}>
+          {{ f.erreur(erreurs, 'date') }}
+        </div>
+        <div class="champ">
+          <label for="echeance">Échéance</label>
+          <input id="echeance" name="echeance" type="date" value="{{ champs.echeance }}" required{{ f.invalide(erreurs, 'echeance') }}>
+          {{ f.erreur(erreurs, 'echeance') }}
+        </div>
+      </div>
+      <div class="card client-facture">
+        <span class="muted petit">Client, copié sur la facture</span>
+        <b>{{ offre.client_nom }}</b>{% if offre.client_adresse %}<span>{{ offre.client_adresse|replace({"\n": ', '}) }}</span>{% endif %}
+      </div>
+    </form>
+  {% endif %}
+  {% if factures is not empty %}
+    <h2 class="sub">Déjà facturé sur cette offre</h2>
+    <ul class="liste-factures">
+      {% for x in factures %}<li><a href="/factures/{{ x.id }}"{% if x.statut == 'annulee' %} class="annulee"{% endif %}>Facture {{ x.numero }}</a> <span class="muted">{{ x.genre == 'acompte' ? 'acompte ' ~ x.acompte_rang : 'finale' }}{% if x.statut == 'brouillon' %}, brouillon{% elseif x.statut == 'annulee' %}, annulée{% endif %}</span></li>{% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/offres/{{ offre.id }}/document">Annuler</a>
+    {% if offre.client_id is not null and choix is not empty %}<button class="btn primary" type="submit" form="facturer">Créer la facture</button>{% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,31 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Remet un compte de démonstration à zéro : offres, enregistrements et audio effacés, deux offres d'exemple,
+// catalogue fictif du métier choisi. Refuse un compte qui n'est pas de démonstration.
+// Usage : bin/reinitialiser-demo <courriel> <peintre|menuisier|sanitaire>
+
+use OffreGen\Catalogue\CatalogueFictif;
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+if (count($argv) !== 3) {
+    fwrite(STDERR, 'Usage : bin/reinitialiser-demo <courriel> <' . implode('|', CatalogueFictif::metiers()) . ">\n");
+    exit(2);
+}
+
+try {
+    $c = Conteneur::depuisEnvironnement(dirname(__DIR__));
+    $fichiers = $c->comptes()->reinitialiserDemo($argv[1], $argv[2]);
+} catch (\InvalidArgumentException $e) {
+    fwrite(STDERR, $e->getMessage() . "\n");
+    exit(1);
+}
+
+echo "Compte {$argv[1]} remis à zéro : catalogue {$argv[2]} (" . count(CatalogueFictif::produits($argv[2])) . " produits), $fichiers fichier(s) audio supprimé(s).\n";
