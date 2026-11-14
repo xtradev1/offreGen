@@ -96,7 +96,7 @@ le préfixe d'adresse et le parent. Les gabarits `ligne` et `ajout` prennent le 
    libre par un découpage proposé, à vérifier ; dépendances verrouillées, `QrFacture`, section de paiement à
    l'écran et au PDF, placement en deux rendus. Preuve : charge utile sans
    violation, code relu par OpenCV sur le PDF, mesuré à 46 mm.
-7. **Démo et recette** : remise à zéro de la démo (factures effacées avant les offres), parcours cliqué
+7. **Démo et recette** (fait le 2026-11-14) : remise à zéro de la démo (factures effacées avant les offres), parcours cliqué
    (Playwright), captures relues, `DEPLOIEMENT.md` (bcmath, dépendances), `RECETTE.md`.
 
 ## Vérification par lot

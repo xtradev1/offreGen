@@ -1,18 +1,19 @@
 ---
 chantier: De la voix à l'offre, 18 facture
 slug: 2026-11-07_voix-offre/18-facture
-phase: 5
-statut: en_cours
-gate_attendu: null
+phase: 8
+statut: gate_ouvert
+gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
 
 ## Prochaine action
 
-Lot 7 du `PLAN.md` : démo et recette (parcours cliqué complet, `RECETTE.md`). Puis commit du lot 6b et du lot 7 sur l'accord de Xavier.
+Recette de Xavier : `RECETTE.md` (14 gestes, dont le scan du code par son application bancaire). Ses retours, puis le sous-chantier 02 (site de test).
 
 ## En attente de toi
 
+- Jouer `RECETTE.md` sur ton PC et dire ce qui gêne.
 - Scanner avec ton application bancaire le code d'une facture de la démo (sans payer) : OpenCV le lit, une banque est la vraie preuve.
 - Avant la mise en production : une phrase dans la politique de confidentialité sur l'envoi des adresses tapées à swisstopo (`docs/SECURITE.md`, 6 bis).
 - L'adresse de la démo, « Rue de la Gare 4, 2800 Delémont », n'existe pas au registre (Delémont n'a qu'une « Place de la Gare ») : l'écran dit « introuvable ». La garder (elle montre le message) ou en prendre une vraie ?
@@ -71,6 +72,7 @@ Lot 7 du `PLAN.md` : démo et recette (parcours cliqué complet, `RECETTE.md`).
 - 2026-11-13 : lots 1 à 5 commités (5de18b4) et poussés sur `chantier-voix-offre`, accord de Xavier.
 - 2026-11-13 : lot 6a fait (adresses). `Adresse`, `SaisieAdresse`, `Localites` (3 190 NPA, `outils/localites.php` les refait), migration 10 jouée sur dev et test, défaite puis rejouée ; réglages, assistant et fiche client en champs séparés (`_adresse.html.twig`) ; `RegistreSwisstopo` (délai 3 s, rien de gardé) et `RegistreFactice` (tests et développement) ; `AdresseControleur` (localités d'un NPA, suggestions, vérification ; 20 appels par minute et par session) ; app.js : suggestions pendant la frappe, NPA qui remplit la localité, « trouvée ou pas » en quittant l'adresse, enregistrement automatique qui attend qu'on quitte l'adresse. Trouvé par les tests : le `.env` local (`ADRESSES=swisstopo`) aurait fait appeler swisstopo par les tests ; `BaseDeTest::env` l'écarte, test à l'appui. Trouvé au parcours : rue et numéro tapés ensemble restaient dans la rue (« Bundesplatz 3 », n° 4) : le numéro au bout de la rue passe dans son champ, au serveur et à l'écran ; les suggestions mêlaient l'ancien numéro et l'ancien NPA ; une liste arrivée après la sortie du champ restait ouverte ; le message de NPA inconnu tenait sur cinq lignes ; un vide sous « Pays ». Tous corrigés. Contrôle de compatibilité : un premier essai avec `vendor` en lien symbolique chargeait le nouveau `src` sous les anciens tests (faux rouge) ; refait avec une copie, l'ancienne version passe.
 - 2026-11-14 : lot 6b fait (QR-facture). Essai de placement dans dompdf avant le code : position fixe hors des marges possible ; hauteur d'une cellule de tableau ignorée (bloc de hauteur fixe à la place) ; détecteur d'OpenCV capricieux à côté des filets (recadrage et second détecteur dans la mesure). Tests écrits avant le code. Trouvé par les tests : deux tests faux (apostrophe échappée dans la page, nom du client présent aussi dans l'en-tête). Trouvé à la mesure du PDF : la marge basse du dernier paragraphe traversait le bloc du récépissé et descendait le montant de 2,5 mm. Trouvé aux captures : la section débordait de la feuille, puis défilait en cachant sa colonne de droite. Trouvé en écrivant les mutations : aucun test ne prouvait le niveau de correction M ; test ajouté, la mutation tombe. Tous corrigés.
+- 2026-11-14 : lot 7 fait (démo et recette). Parcours complet en cliquant sur la démo remise à zéro : IBAN, acompte au numéro choisi, aperçu, émission et PDF, facture finale qui déduit l'acompte, annuler et refaire, liste, liens depuis l'offre, bureau en thème sombre. Rien de cassé. Une fausse alerte : texte de la section bleuté sur la capture du bureau sombre, couleur calculée noire (lissage de la capture). `DEPLOIEMENT.md` avait déjà bcmath et les dépendances (lot 6b). `RECETTE.md` écrite.
 
 ## Preuves
 
@@ -270,3 +272,34 @@ $ node mesure-apercu.js (aperçu à l'écran, après la réduction à l'échelle
 ```
 
 Captures relues : `captures-18/210-sans-iban.png`, `212-section-telephone.png` (avant correction : colonne de droite coupée), `213-apercu-bureau.png` (avant : section plus large que la feuille), `214-section-390.png` et `214-section-1280.png` (après) ; rendus PDF `lot6b-courte-p1.png`, `lot6b-sans-client-p1.png`, `lot6b-longue-p2.png`, `lot6b-courte-page.png`.
+
+Lot 7, démo et recette (2026-11-14) :
+
+```
+$ php bin/reinitialiser-demo demo-peintre@exemple.ch peintre
+Compte demo-peintre@exemple.ch remis à zéro : catalogue peintre (12 produits), 0 fichier(s) audio supprimé(s).
+$ node parcours-18-complet.js (390 px, en cliquant)
+  1 IBAN : « CH93 0076 2011 6238 5295 7 » ; « Enregistré »
+  2 offre /offres/117 ; aperçu, boutons : Modifier / Facturer / PDF
+    choix : acompte = Acompte 1 sur 3 (30 %) CHF 862.20 hors TVA | finale = Facture finale 6 lignes de l'offre, CHF 2'874.00 hors TVA ; numéro proposé « 2026-001 » ; échéance 2026-12-14
+  3 acompte créé : /factures/9 ; « Facture 2026-050 créée » ; Brouillon ; Total TTC CHF 932.05
+    aperçu : FACTURE N° 2026-050 | alertes : aucune | section : true | largeur 390/390
+    émise : « Facture 2026-050 émise » ; PDF : 200 application/pdf 62140 octets
+  4 refacturer : acompte = Acompte 2 sur 3 (30 %) | finale = 6 lignes de l'offre, moins les acomptes émis (CHF 932.05) ; numéro proposé « 2026-051 »
+    finale : Total TTC CHF 3'106.80 ; Acomptes déjà facturés − CHF 932.05 ; À payer CHF 2'174.75 ; section, montant : 2 174.75
+    émise ; PDF : 200 70833 octets
+  5 refaite : /factures/11 ; « Facture 2026-051 annulée ; corrigez la nouvelle, puis émettez-la » ; Facture 2026-052 ; Brouillon
+  6 liste : 2026-052 Brouillon 2'174.75 | 2026-051 Annulée 2'174.75 | 2026-050 Émise, payable jusqu'au 14.12.2026 932.05 ; largeur 390/390
+    offre, liens : Facture 2026-050 → /factures/9 / 2026-051 → /factures/10 / 2026-052 → /factures/11
+  7 bureau sombre : largeur 1280/1280
+  erreurs : 404 de l'icône du site seulement (aucune autre réponse en erreur)
+$ python mesurer-qr.py (OpenCV, 300 dpi)
+facture-1 (acompte) page 1 : code lu à x=67.2 y=209.6 mm, côté 46.1 mm ; Point de dépôt 273.7
+facture-2 (finale)  page 1 : lignes ; page 2 : code lu à x=67.2 y=209.8 mm, côté 46.1 mm ; Point de dépôt 274.0
+$ pymupdf, texte des conditions
+facture-1 1 page(s) : « … avec la section de paiement ci-dessous. »
+facture-2 2 page(s) : « … avec la section de paiement de la page suivante. »
+$ sombre-qr.js : couleur calculée des textes de la section, thèmes sombre et clair : rgb(0, 0, 0)
+```
+
+Captures relues : `captures-18-lot7/303-refacturer.png`, `304-apercu-finale.png`, `307-liste.png`, `309-bureau-sombre.png`, `310-section-dark.png` (teinte bleutée de la capture réduite : lissage, le texte est noir).
