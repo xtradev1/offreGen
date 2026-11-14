@@ -273,6 +273,15 @@ final class TraiteurTest extends TestCase
         self::assertSame(['client_id' => $rossi, 'client_dicte' => 'Madame Rossi', 'lieu_dicte' => 'Delémont'], $this->clientDeLOffre());
     }
 
+    /** Règle de Xavier (2026-11-14) : même nom, autre localité que celle dictée (Delémont), pas de rattachement. */
+    public function testUneFicheDUneAutreLocaliteNEstPasRattachee(): void
+    {
+        (new DepotClients(new Base(BaseDeTest::pdo()), new Portee($this->jeu->a)))
+            ->creer(['nom' => 'Mme Rossi', 'adresse' => new Adresse('Rue du Marché', '1', '1630', 'Bulle'), 'telephone' => null, 'courriel' => null], new \DateTimeImmutable('2026-11-01'));
+        self::assertSame(Statut::PRET, $this->traiteur(x: $this->dicteeAvecClient('Madame Rossi'))->avancer(self::UUID));
+        self::assertSame(['client_id' => null, 'client_dicte' => 'Madame Rossi', 'lieu_dicte' => 'Delémont'], $this->clientDeLOffre());
+    }
+
     /** Sinon le nom dicté reste une proposition : aucune fiche ne naît sans l'artisan. */
     public function testUnClientInconnuResteAConfirmer(): void
     {

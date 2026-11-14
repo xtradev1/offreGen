@@ -51,16 +51,20 @@ final class Rapprochement
     }
 
     /**
-     * La fiche à rattacher d'office : plus de 80 % de ressemblance, et seule en tête.
+     * La fiche à rattacher d'office : plus de 80 % de ressemblance, seule en tête, et dans la localité dictée
+     * quand la dictée en nomme une.
      *
-     * @param list<array{id: int, nom: string}> $clients
+     * @param list<array{id: int, nom: string, npa?: string|null, localite?: string|null}> $clients
      */
-    public static function meilleur(string $nom, array $clients): ?int
+    public static function meilleur(string $nom, array $clients, ?string $lieu = null): ?int
     {
         $meilleur = null;
         $score = 0.0;
         $egalite = false;
         foreach ($clients as $c) {
+            if (!self::memeLocalite($lieu, $c['npa'] ?? null, $c['localite'] ?? null)) {
+                continue;
+            }
             $s = self::ressemblance($nom, $c['nom']);
             if ($s > $score) {
                 [$meilleur, $score, $egalite] = [$c['id'], $s, false];
@@ -72,16 +76,58 @@ final class Rapprochement
     }
 
     /**
+     * Le lieu dicté désigne-t-il la localité de la fiche ? Règle de Xavier (2026-11-14) : « si c'est pas la
+     * même localité ça ne doit pas marcher ». Oui quand le lieu contient le NPA de la fiche, ou sa localité
+     * en mots entiers (sans accents, article de tête ignoré : « au Locle » pour « Le Locle », « St » pour
+     * « Saint »). Sans lieu dicté, ou sans localité ni NPA sur la fiche, rien ne se contredit : oui.
+     * Conséquence voulue : un chantier dicté ailleurs que chez le client n'est pas rattaché d'office,
+     * l'artisan choisit la fiche.
+     */
+    public static function memeLocalite(?string $lieu, ?string $npa, ?string $localite): bool
+    {
+        $dicte = self::mots((string) $lieu);
+        $mots = self::mots((string) $localite);
+        if (count($mots) > 1 && in_array($mots[0], ['le', 'la', 'les', 'l'], true)) {
+            array_shift($mots);
+        }
+        $npa = trim((string) $npa);
+        if ($dicte === [] || ($mots === [] && $npa === '')) {
+            return true;
+        }
+        if ($npa !== '' && in_array($npa, $dicte, true)) {
+            return true;
+        }
+        $n = count($mots);
+        for ($i = 0; $n > 0 && $i + $n <= count($dicte); $i++) {
+            if (array_slice($dicte, $i, $n) === $mots) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @return list<string> mots en minuscules sans accents, « st » et « ste » écrits en entier */
+    private static function mots(string $texte): array
+    {
+        $mots = preg_split('/[^a-z0-9]+/', self::plat($texte), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        return array_map(static fn (string $m): string => ['st' => 'saint', 'ste' => 'sainte'][$m] ?? $m, $mots);
+    }
+
+    private static function plat(string $texte): string
+    {
+        static $ascii = null;
+        $ascii ??= \Transliterator::create('Any-Latin; Latin-ASCII; Lower()');
+        return $ascii instanceof \Transliterator ? (string) $ascii->transliterate($texte) : mb_strtolower($texte);
+    }
+
+    /**
      * Minuscules sans accents, mots séparés, civilités de tête retirées.
      *
      * @return array{string, list<string>} genre (f, h ou vide) et mots du nom
      */
     private static function decomposer(string $nom): array
     {
-        static $ascii = null;
-        $ascii ??= \Transliterator::create('Any-Latin; Latin-ASCII; Lower()');
-        $plat = $ascii instanceof \Transliterator ? (string) $ascii->transliterate($nom) : mb_strtolower($nom);
-        $mots = preg_split('/[^a-z0-9]+/', $plat, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $mots = preg_split('/[^a-z0-9]+/', self::plat($nom), -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $genres = [];
         while ($mots !== [] && array_key_exists($mots[0], self::CIVILITES)) {
             $genres[self::CIVILITES[array_shift($mots)]] = true;

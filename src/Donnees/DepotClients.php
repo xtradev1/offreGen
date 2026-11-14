@@ -51,8 +51,8 @@ final class DepotClients
     /** @return list<array{id: int, nom: string}> */
     public function pourRapprochement(): array
     {
-        /** @var list<array{id: int, nom: string}> */
-        return $this->base->lire('SELECT id, nom FROM client WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
+        /** @var list<array{id: int, nom: string, npa: string|null, localite: string|null}> */
+        return $this->base->lire('SELECT id, nom, npa, localite FROM client WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
     }
 
     /** @return Client|null */

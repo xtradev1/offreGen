@@ -50,6 +50,54 @@ final class RapprochementTest extends TestCase
         self::assertSame(2, Rapprochement::meilleur('monsieur schaller', $clients));
     }
 
+    /** @return array<string, array{string|null, string|null, string|null, bool}> lieu dicté, NPA et localité de la fiche, même localité */
+    public static function localites(): array
+    {
+        return [
+            'la localité seule' => ['Bulle', '1630', 'Bulle', true],
+            'avec une préposition' => ['à Bulle', '1630', 'Bulle', true],
+            'adresse complète' => ['Chemin des Essais 4, 1700 Fribourg', '1700', 'Fribourg', true],
+            'le NPA seul' => ['NPA 1630', '1630', 'Bulle', true],
+            'accents' => ['Delemont', '2800', 'Delémont', true],
+            'article contracté' => ['au Locle', '2400', 'Le Locle', true],
+            'saint abrégé' => ['St-Imier', '2610', 'Saint-Imier', true],
+            'autre localité' => ['Bulle', '1700', 'Fribourg', false],
+            'autre localité, NPA de la fiche absent' => ['Bulle', null, 'Fribourg', false],
+            'un mot plus long' => ['Bullet', '1630', 'Bulle', false],
+            'rien de dicté' => ['', '1700', 'Fribourg', true],
+            'lieu inconnu' => [null, '1700', 'Fribourg', true],
+            'fiche sans localité' => ['Bulle', null, null, true],
+            'fiche à localité vide' => ['Bulle', '', '', true],
+        ];
+    }
+
+    /** Règle de Xavier (2026-11-14) : « si c'est pas la même localité ça ne doit pas marcher ». */
+    #[DataProvider('localites')]
+    public function testMemeLocalite(?string $lieu, ?string $npa, ?string $localite, bool $attendu): void
+    {
+        self::assertSame($attendu, Rapprochement::memeLocalite($lieu, $npa, $localite), "$lieu / $npa $localite");
+    }
+
+    /** Relevé du 2026-11-14 : « Madame Exemple, à Bulle » rattachée à « Famille Exemple, 1700 Fribourg ». */
+    public function testUneAutreLocaliteNeRattacheRien(): void
+    {
+        $clients = [['id' => 1, 'nom' => 'Famille Exemple', 'npa' => '1700', 'localite' => 'Fribourg']];
+        self::assertNull(Rapprochement::meilleur('Madame Exemple', $clients, 'Bulle'));
+        self::assertSame(1, Rapprochement::meilleur('Madame Exemple', $clients, 'Fribourg'));
+        self::assertSame(1, Rapprochement::meilleur('Madame Exemple', $clients, null));
+    }
+
+    /** Deux fiches du même nom : la localité dictée désigne la bonne, au lieu d'une égalité qui ne rattache rien. */
+    public function testLaLocaliteDepartageDeuxHomonymes(): void
+    {
+        $clients = [
+            ['id' => 1, 'nom' => 'Mme Rossi', 'npa' => '1700', 'localite' => 'Fribourg'],
+            ['id' => 2, 'nom' => 'Mme Rossi', 'npa' => '1630', 'localite' => 'Bulle'],
+        ];
+        self::assertSame(2, Rapprochement::meilleur('Madame Rossi', $clients, 'à Bulle'));
+        self::assertNull(Rapprochement::meilleur('Madame Rossi', $clients, null), 'sans lieu, égalité : rien');
+    }
+
     public function testA80PourCentOuMoinsRienNEstRattache(): void
     {
         self::assertNull(Rapprochement::meilleur('Rossé', [['id' => 1, 'nom' => 'Rossi']]), '80 % tout juste : pas « plus de 80 % »');

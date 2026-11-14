@@ -138,7 +138,7 @@ final class Traiteur
         $titre = $resultat->titre ?? 'Visite du ' . $maintenant->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y');
         // Plus de 80 % de ressemblance avec une fiche : l'offre la désigne. Sinon le nom dicté reste une
         // proposition, que l'artisan confirme ou remplace (règle de Xavier du 2026-11-12).
-        $clientId = $resultat->client === null ? null : Rapprochement::meilleur($resultat->client, (new DepotClients($this->base, $portee))->pourRapprochement());
+        $clientId = $resultat->client === null ? null : Rapprochement::meilleur($resultat->client, (new DepotClients($this->base, $portee))->pourRapprochement(), $resultat->lieu);
 
         return $this->base->transaction(function () use ($offres, $e, $jeton, $titre, $lignes, $maintenant, $resultat, $clientId): int {
             $offreId = $offres->idParEnregistrement($e['id'])
