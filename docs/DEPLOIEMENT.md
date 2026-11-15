@@ -51,7 +51,8 @@ Jamais pour la production.
 
 - Hébergement du serveur Cloud d'Infomaniak, utilisateur SSH `3p81e5_easytest` (hôte `3p81e5.ftp.infomaniak.com`, port 22), limité à cet hébergement. Clé de Claude : `~/.ssh/offregen_test` dans WSL.
 - Disposition : `~/offregen/releases/<commit>/` ; `~/offregen/current` pointe sur la version en service ; `~/offregen/partage/` garde le `.env` (droits 600) et les données (`var/audio`, `logos`, `log`, `sessions`, `courriels`), reliés dans chaque version. Le cache (`var/cache`) reste propre à chaque version : partagé, il servirait des gabarits périmés.
-- Dossier racine du site, dans le Manager : `offregen/current/public`.
+- Dossier racine du site, dans le Manager : `sites/easy-offres.xtradev.ch/public`. Le Manager n'accepte qu'un dossier sous `sites/` : ce `public` est un lien vers `~/offregen/current/public`, et l'application reste hors du web.
+- Droits : `offregen` et `releases` en 711, chaque version en 755, `partage` en 700 et le `.env` en 600. Apache tourne sous un autre utilisateur et doit traverser ces dossiers (403 du 2026-11-15 avec `offregen` en 700) ; les autres hébergements du serveur sont arrêtés au dossier de l'hébergement (`group:ldapusers:---`). PHP tourne sous l'utilisateur de l'hébergement et lit `partage`.
 - PHP 8.5 (`php-8.5` en ligne de commande, la commande `php` est en 8.4). Base MariaDB 10.11 `3p81e5_easy_offre_test`, utilisateurs `3p81e5_app` (données) et `3p81e5_struct` (structure).
 - Cron : `bin/traiter-file` chaque minute, posé par le script. **Pas de `bin/purger-audio`** : Xavier garde toutes les voix et tous les textes pour l'instant (2026-11-14).
 - ffmpeg statique 7.0.2 (johnvansickle.com), dans `~/outils/ffmpeg`, sha256 de l'archive `abda8d77ce8309141f83ab8edf0596834087c52467f6badf376a6a2a4c87cf67`. Version d'août 2024, sans les correctifs parus depuis : acceptable sur le test, à remplacer avant la production.

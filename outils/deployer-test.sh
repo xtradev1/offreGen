@@ -52,6 +52,11 @@ echo "$(du -sh "$construction" | cut -f1), $(find "$construction" -type f | wc -
 etape "Envoi"
 "${SSH[@]}" "mkdir -p offregen/releases/$commit"
 rsync -a --delete -e "ssh -i $CLE -o IdentitiesOnly=yes -o BatchMode=yes -p $PORT" "$construction/" "$CIBLE:offregen/releases/$commit/"
+# Apache tourne sous un autre utilisateur : il doit traverser offregen/ et releases/ pour servir public/
+# (403 du 2026-11-15 sinon). Les autres hébergements du serveur sont arrêtés plus haut, au dossier de
+# l'hébergement (group:ldapusers:---). partage/ (.env, voix, journaux) reste fermé : seul PHP, qui tourne
+# sous l'utilisateur de l'hébergement, le lit.
+"${SSH[@]}" "chmod 711 offregen offregen/releases && chmod 755 offregen/releases/$commit && chmod 700 offregen/partage"
 echo "offregen/releases/$commit"
 
 etape "Liens, migrations, bascule, cron"
@@ -74,6 +79,9 @@ for d in audio logos log sessions courriels; do rm -rf "$r/var/$d"; ln -sfn "../
 ( cd "$r" && "$php" vendor/bin/doctrine-migrations migrate --no-interaction --allow-no-migration >&2 )
 precedent="$(readlink current 2>/dev/null || true)"
 ln -sfn "$r" current.nouveau && mv -Tf current.nouveau current
+# Le Manager n'accepte qu'un dossier racine sous sites/ : sites/easy-offres.xtradev.ch/public est un lien vers current/public.
+lien="$HOME/sites/easy-offres.xtradev.ch/public"
+[ "$(readlink "$lien" 2>/dev/null)" = "$HOME/offregen/current/public" ] || echo "ALERTE : $lien ne pointe pas sur offregen/current/public" >&2
 # Garde les dernières versions pour le retour arrière ; jamais celle en service.
 for v in $(ls -1dt releases/*/ | sed 's#/$##' | tail -n +"$((garder + 1))"); do
   if [ "$v" != "$r" ]; then rm -rf "$v"; fi
