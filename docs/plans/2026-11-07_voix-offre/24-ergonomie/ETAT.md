@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 6 du `PLAN.md` : « Envoyer » par le partage du téléphone (offre notée « envoyée ») et « Facturer » dans une feuille (montant modifiable, D9).
+Lot 7 du `PLAN.md` : TVA de l'entreprise (8,1, 2,6, 3,8 ou 0 %), taux d'exception par ligne et par produit, document détaillé par taux.
 
 ## En attente de toi
 
@@ -49,6 +49,8 @@ Lot 6 du `PLAN.md` : « Envoyer » par le partage du téléphone (offre noté
 - 2026-11-15 : lot 4 fait. Ligne hors catalogue d'une offre : « Créer le produit » (désignation, unité, prix de la ligne, catégorie « Divers ») et « Rattacher à un produit » (recherche partie du premier mot de la ligne ; la ligne prend désignation, unité et prix du catalogue, garde sa quantité). Décision de mise en œuvre : le synonyme ajouté est le nom que l'IA a donné à la ligne, pas la phrase entendue entière, qui brouillerait la recherche ; seulement si la ligne était hors catalogue. Rattacher marche aussi pour une ligne déjà au catalogue (corriger un mauvais produit de l'IA), sans synonyme. Trouvé aux captures : message « Rien pour… » resté après une autre recherche, corrigé.
 
 - 2026-11-15 : lot 5 fait. « Générer l'offre » (offre et fin de relecture) mène à `/offres/{id}/apercu` : le vrai PDF dessiné par PDF.js 6.5.438, livré avec l'application (intégrité npm vérifiée, empreintes dans `DEPLOIEMENT.md`), sur fond gris ; en bas Modifier, Facturer, PDF (téléchargement), 64 px. Sans JavaScript ou en cas d'échec : un lien ouvre le PDF. La page HTML `/document` reste pour les liens existants.
+
+- 2026-11-15 : lot 6 fait. « Envoyer » (aperçu PDF de l'offre et d'une facture émise) : partage du téléphone, PDF joint ; partage réussi : offre notée envoyée (migration additive `offre.envoyee_le`), pastille « Envoyée le … », action principale « Facturer » ; partage annulé : rien ; sans partage : le PDF se télécharge, rien n'est noté. « Facturer » en un écran : pourcentage de l'acompte modifiable (montant précis ou remise : « Vérifier avant d'émettre » puis la ligne), « Émettre et envoyer » (créée, émise, PDF prêt à partager ; si l'émission est empêchée, le brouillon reste et la facture dit pourquoi) ou « Vérifier avant d'émettre ». L'émission passe par une seule méthode pour les deux chemins. Trouvé au parcours : champ du pourcentage visible pour une facture finale, corrigé ; le partage de Windows existe dans Chrome sans affichage et ne s'ouvre jamais (le test « sans partage » le retire).
 
 ## Preuves
 
@@ -105,4 +107,15 @@ $ phpunit : OK (437 tests) ; phpstan : [OK] No errors
 $ node parcours-lot5.js
   tel : 1 page(s) dessinée(s) en 539 ms, largeur 358px (écran 390), points sombres échantillonnés 70 ; « Pincer pour agrandir » ; Modifier 64 px / Facturer 64 px / PDF 64 px
   pc : 1 page(s) dessinée(s) en 523 ms, largeur 448px ; erreurs : aucune (au téléphone, seule l'icône du site en 404)
+```
+
+Lot 6, envoyer et facturer (2026-11-15) :
+
+```
+$ phpunit : OK (441 tests, 2655 assertions) ; phpstan : [OK] No errors ; migration jouée (test et développement)
+$ node parcours-lot6.js (390 px, démo remise à zéro)
+  sans partage : téléchargement « Offre-2.pdf » ; pastille « Prête » ; action « Générer l'offre »
+  partage (simulé, réussi) : « Offre 2 envoyée » ; pastille « Envoyée le 15.11.2026 » ; action « Facturer »
+  facturer : Acompte 1 sur 3 (30 %) / Facture finale ; pourcentage 30 ; Vérifier avant d'émettre 71 px / Émettre et envoyer 71 px
+  émise : « Facture 2026-001 émise » ; 1 page ; partagée : Facture-2026-001.pdf application/pdf 62306 octets ; erreurs JS : aucune
 ```

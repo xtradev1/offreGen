@@ -13,7 +13,7 @@
     {% if factures is not empty %}<span class="factures-offre">{% for f in factures %}<a class="etiquette facture{% if f.statut == 'annulee' %} annulee{% endif %}" href="/factures/{{ f.id }}">Facture {{ f.numero }}</a>{% endfor %}</span>{% endif %}
     {% set a_relire = 0 %}
     {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or r.l.prix_centimes == 0 %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
-    <span class="meta"><span class="status pret">{{ a_relire > 0 ? 'À relire' : 'Prête' }}</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span></span>
+    <span class="meta"><span class="status pret">{% if a_relire > 0 %}À relire{% elseif offre.envoyee_le %}Envoyée le {{ offre.envoyee_le|date_locale|slice(0, 10) }}{% else %}Prête{% endif %}</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span></span>
   </div>
 
   {% include '_lignes.html.twig' with {base: '/offres/' ~ offre.id, modifiable: true, ranger: true, vide:"Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un."} %}
@@ -40,6 +40,10 @@
     {% if a_relire > 0 %}
       <a class="btn primary grand" href="/offres/{{ offre.id }}/relire">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Relire {{ a_relire }} ligne{{ a_relire > 1 ? 's' : '' }}</a>
+    {% elseif offre.envoyee_le %}
+      {# Envoyée : le geste suivant est de facturer (décision D3). L'aperçu reste un toucher plus loin. #}
+      <a class="btn primary grand" href="/offres/{{ offre.id }}/facturer">Facturer
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
     {% else %}
       <a class="btn primary grand" href="/offres/{{ offre.id }}/apercu">Générer l'offre
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>

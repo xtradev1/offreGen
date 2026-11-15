@@ -1025,6 +1025,13 @@ function montantRelu() {
   p.addEventListener('input', maj);
 }
 
+// Facturer (D9) : le pourcentage ne se montre que pour un acompte.
+function pourcentDAcompte() {
+  const champ = document.querySelector('[data-si-acompte]');
+  if (!champ) return;
+  document.querySelectorAll('input[name="genre"]').forEach((r) => r.addEventListener('change', () => { champ.hidden = r.value !== 'acompte' || !r.checked; }));
+}
+
 // Un message qui commente la recherche de départ disparaît dès qu'on en tape une autre.
 function messagesDeRecherche() {
   const messages = document.querySelectorAll('[data-cache-si-recherche]');
@@ -1034,6 +1041,7 @@ function messagesDeRecherche() {
 
 document.addEventListener('DOMContentLoaded', () => {
   messagesDeRecherche();
+  pourcentDAcompte();
   modelesEnGrand();
   glisserLignes();
   montantRelu();

@@ -28,6 +28,15 @@
         {% endfor %}
         {{ f.erreur(erreurs, 'genre') }}
       </div>
+      {# Décision D9 (2026-11-15) : le pourcentage d'un acompte se change ici ; un montant précis, dans le brouillon. #}
+      {% if champs.pourcent != '' %}
+        <div class="champ" data-si-acompte{% if champs.genre != 'acompte' %} hidden{% endif %}>
+          <label for="pourcent">Pourcentage de l'acompte</label>
+          <input id="pourcent" name="pourcent" value="{{ champs.pourcent }}" maxlength="3" inputmode="numeric" autocomplete="off"{{ f.invalide(erreurs, 'pourcent') }}>
+          <span class="muted petit">Pour un montant précis ou une remise&nbsp;: «&nbsp;Vérifier avant d'émettre&nbsp;», puis corrigez la ligne.</span>
+          {{ f.erreur(erreurs, 'pourcent') }}
+        </div>
+      {% endif %}
       <div class="champ">
         <label for="numero">Numéro</label>
         <input id="numero" name="numero" value="{{ champs.numero }}" maxlength="20" required autocomplete="off" spellcheck="false"{{ f.invalide(erreurs, 'numero') }}>
@@ -61,8 +70,15 @@
 {% endblock %}
 
 {% block actions %}
+  {# Décision D9 : « Émettre et envoyer » crée, émet et ouvre le PDF prêt à partager ; « Vérifier avant d'émettre » crée
+     le brouillon, comme avant. #}
   <div class="actionbar">
-    <a class="btn" href="/offres/{{ offre.id }}/document">Annuler</a>
-    {% if offre.client_id is not null and choix is not empty %}<button class="btn primary" type="submit" form="facturer">Créer la facture</button>{% endif %}
+    {% if offre.client_id is not null and choix is not empty %}
+      <button class="btn grand" type="submit" form="facturer" name="suite" value="verifier">Vérifier avant d'émettre</button>
+      <button class="btn primary grand" type="submit" form="facturer" name="suite" value="emettre">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>Émettre et envoyer</button>
+    {% else %}
+      <a class="btn grand" href="/offres/{{ offre.id }}">Revenir à l'offre</a>
+    {% endif %}
   </div>
 {% endblock %}

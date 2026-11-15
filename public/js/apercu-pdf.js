@@ -27,6 +27,43 @@ if (zone) {
     etat.textContent = doc.numPages > 1 ? doc.numPages + ' pages · pincer pour agrandir' : 'Pincer pour agrandir';
     zone.appendChild(etat);
   };
+  // « Envoyer » (décision D8) : le partage du téléphone, le PDF joint. Partage réussi : l'offre est notée envoyée
+  // (formulaire data-apres-partage). Partage annulé : rien. Pas de partage de fichier (certains navigateurs de PC) : le
+  // lien garde son effet, le PDF se télécharge, rien n'est noté.
+  document.querySelectorAll('[data-partager]').forEach((lien) => {
+    lien.addEventListener('click', async (e) => {
+      if (!navigator.canShare) return;
+      e.preventDefault();
+      let fichier;
+      try {
+        const reponse = await fetch(lien.href, { credentials: 'same-origin' });
+        if (!reponse.ok) throw new Error('PDF ' + reponse.status);
+        fichier = new File([await reponse.blob()], lien.getAttribute('download') || 'document.pdf', { type: 'application/pdf' });
+      } catch (erreur) {
+        window.location.assign(lien.href);
+        return;
+      }
+      if (!navigator.canShare({ files: [fichier] })) {
+        const url = URL.createObjectURL(fichier);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fichier.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        return;
+      }
+      try {
+        await navigator.share({ files: [fichier], title: lien.dataset.titre || fichier.name });
+      } catch (erreur) {
+        return; // partage annulé : rien n'est envoyé
+      }
+      const marque = document.querySelector('form[data-apres-partage]');
+      if (marque) marque.submit();
+    });
+  });
+
   dessiner().catch(() => {
     etat.innerHTML = '';
     const lien = document.createElement('a');

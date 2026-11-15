@@ -14,14 +14,14 @@ use OffreGen\Offre\LigneExtraite;
  * Le client d'une offre : sa fiche (client_id), sinon le nom et le lieu dictés, proposition à confirmer.
  * client_nom et client_adresse donnent l'un ou l'autre, pour l'écran et le document.
  *
- * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null}
+ * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null}
  * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null}
  */
 final class DepotOffres implements SupportLignes
 {
     private const SELECT_OFFRE = 'SELECT o.id, o.numero, o.enregistrement_id, o.titre, o.client_id,
             COALESCE(c.nom, o.client_dicte) AS client_nom, CASE WHEN c.id IS NULL THEN o.lieu_dicte ELSE c.adresse END AS client_adresse,
-            o.client_dicte, o.lieu_dicte, o.cree_le, o.modifiee_le
+            o.client_dicte, o.lieu_dicte, o.cree_le, o.modifiee_le, o.envoyee_le
          FROM offre o LEFT JOIN client c ON c.id = o.client_id AND c.artisan_id = o.artisan_id';
 
     /** Colonnes d'une ligne ; la catégorie vient du produit du catalogue, s'il existe encore. */
@@ -166,6 +166,15 @@ final class DepotOffres implements SupportLignes
     }
 
     /** Toute correction d'une ligne date l'offre : la liste la remonte et l'affiche « modifiée le ». */
+    /** L'offre est partie chez le client (décision D8, 2026-11-15) : le partage du téléphone a réussi. */
+    public function marquerEnvoyee(int $id, \DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire(
+            'UPDATE offre SET envoyee_le = :q WHERE id = :id AND artisan_id = :a',
+            ['q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+    }
+
     public function marquerModifiee(int $id, \DateTimeImmutable $quand): void
     {
         $this->base->ecrire(

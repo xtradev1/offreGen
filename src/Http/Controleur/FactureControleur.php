@@ -72,7 +72,9 @@ final class FactureControleur
         $possibles = $this->possibles($requete, $offre);
         $date = $this->aujourdhui();
         $genre = $possibles[0]['genre'] ?? 'finale';
+        $acompte = array_values(array_filter($possibles, static fn (array $p): bool => $p['genre'] === 'acompte'))[0] ?? null;
         $champs = [
+            'pourcent' => $acompte === null ? '' : (string) $acompte['pourcent'],
             'genre' => $genre,
             'numero' => $this->numeroPropose($requete),
             'date' => $date->format('Y-m-d'),
@@ -94,7 +96,8 @@ final class FactureControleur
             throw new Conflit('Cette offre est déjà facturée en entier.');
         }
         $r = $requete->request;
-        $champs = ['genre' => $r->getString('genre'), 'numero' => $r->getString('numero'), 'date' => $r->getString('date'), 'echeance' => $r->getString('echeance')];
+        $champs = ['genre' => $r->getString('genre'), 'numero' => $r->getString('numero'), 'date' => $r->getString('date'), 'echeance' => $r->getString('echeance'),
+                   'pourcent' => $r->getString('pourcent')];
         [$entete, $erreurs] = $this->lireEntete($requete, $champs, null);
         $choisi = null;
         foreach ($possibles as $p) {
@@ -104,6 +107,14 @@ final class FactureControleur
         }
         if ($choisi === null) {
             $erreurs['genre'] = 'Choisissez la facture à faire.';
+        }
+        // Décision D9 (2026-11-15) : le pourcentage d'un acompte se change avant de facturer.
+        if ($choisi !== null && $choisi['genre'] === 'acompte' && trim($champs['pourcent']) !== '') {
+            if (preg_match('/^\d{1,3}$/', trim($champs['pourcent'])) !== 1 || (int) $champs['pourcent'] < 1 || (int) $champs['pourcent'] > 100) {
+                $erreurs['pourcent'] = 'Pourcentage entier, de 1 à 100.';
+            } else {
+                $choisi['pourcent'] = (int) $champs['pourcent'];
+            }
         }
         if ($entete === null || $choisi === null || $erreurs !== []) {
             return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, $erreurs, 422);
@@ -140,6 +151,18 @@ final class FactureControleur
                 throw $e;
             }
             return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, ['numero' => 'Ce numéro est déjà pris par une autre facture.'], 422);
+        }
+        // « Émettre et envoyer » (D9) : émise tout de suite, puis son PDF prêt à partager. Si quelque chose l'empêche
+        // (IBAN manquant, montant nul), le brouillon reste et la facture dit pourquoi.
+        if ($r->getString('suite') === 'emettre') {
+            $f = $this->c->factures($portee)->parId($id) ?? throw new PageIntrouvable();
+            $raison = $this->emettreFacture($requete, $f);
+            if ($raison === null) {
+                Flash::dire($requete, 'info', 'Facture ' . $entete['numero'] . ' émise');
+                return new RedirectResponse('/factures/' . $id . '/apercu', 303);
+            }
+            Flash::dire($requete, 'erreur', 'Facture ' . $entete['numero'] . ' créée, pas émise : ' . $raison);
+            return new RedirectResponse('/factures/' . $id, 303);
         }
         Flash::dire($requete, 'info', 'Facture ' . $entete['numero'] . ' créée');
         return new RedirectResponse('/factures/' . $id, 303);
@@ -182,12 +205,53 @@ final class FactureControleur
      */
     public function emettre(Request $requete, array $parametres): Response
     {
-        $portee = $this->portee($requete);
         $f = $this->brouillon($requete, $parametres);
+        $raison = $this->emettreFacture($requete, $f);
+        if ($raison !== null) {
+            throw new Conflit($raison);
+        }
+        Flash::dire($requete, 'info', 'Facture ' . $f['numero'] . ' émise');
+        return new RedirectResponse('/factures/' . $f['id'] . '/document', 303);
+    }
+
+    /**
+     * Une facture émise : son PDF dans l'application, avec « Envoyer » (décisions D7 A et D8, 2026-11-15). Un brouillon
+     * n'a pas de PDF : retour à la facture.
+     *
+     * @param array<string, string> $parametres
+     */
+    public function apercu(Request $requete, array $parametres): Response
+    {
+        $f = $this->facture($requete, $parametres);
+        $base = '/factures/' . $f['id'];
+        if ($f['statut'] !== DepotFactures::EMISE) {
+            return new RedirectResponse($base, 303);
+        }
+        return new Response($this->c->twig()->render('apercu_pdf.html.twig', [
+            'pdfjs' => OffreControleur::PDFJS,
+            'titre' => 'Facture ' . $f['numero'],
+            'retour' => ['href' => $base, 'texte' => 'Facture'],
+            'pdf' => $base . '/pdf',
+            'fichier' => 'Facture-' . preg_replace('/[^A-Za-z0-9._-]/', '-', $f['numero']) . '.pdf',
+            'partage' => 'Facture n° ' . $f['numero'] . ' · ' . $f['titre'],
+            'marquer' => null,
+            'modifier' => null,
+            'facturer' => null,
+        ]));
+    }
+
+    /**
+     * Fige et émet un brouillon : rend null, ou la raison qui l'en empêche (rien n'est alors écrit).
+     *
+     * @param Facture $f
+     */
+    private function emettreFacture(Request $requete, array $f): ?string
+    {
+        $portee = $this->portee($requete);
         $d = $this->donnees($requete, $f);
         $raisons = self::raisonsDeNePasEmettre($d);
         if ($raisons !== []) {
-            throw new Conflit($raisons[0]);
+            return $raisons[0];
         }
         /** @var array{ht: int, tva: int, arrondi: int, ttc: int, taux: int, deja: int, a_payer: int} $montants */
         $montants = $d['montants'];
@@ -204,10 +268,9 @@ final class FactureControleur
         $emise = array_merge($f, $fige, ['statut' => DepotFactures::EMISE, 'emise_le' => $quand->format('Y-m-d H:i:s')]);
         $pdf = $this->rendrePdf($this->vueDocument($requete, $emise));
         if (!$this->c->factures($portee)->emettre($f['id'], $fige, $pdf, $quand)) {
-            throw new Conflit('Cette facture est déjà émise.');
+            return 'Cette facture est déjà émise.';
         }
-        Flash::dire($requete, 'info', 'Facture ' . $f['numero'] . ' émise');
-        return new RedirectResponse('/factures/' . $f['id'] . '/document', 303);
+        return null;
     }
 
     /**

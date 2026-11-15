@@ -79,7 +79,32 @@ final class OffreControleur
     public function apercu(Request $requete, array $parametres): Response
     {
         $offre = $this->offre($requete, $parametres);
-        return new Response($this->c->twig()->render('apercu_pdf.html.twig', ['offre' => $offre, 'pdfjs' => self::PDFJS]));
+        $base = '/offres/' . $offre['id'];
+        return new Response($this->c->twig()->render('apercu_pdf.html.twig', [
+            'pdfjs' => self::PDFJS,
+            'titre' => 'Offre ' . $offre['numero'],
+            'retour' => ['href' => $base, 'texte' => 'Offre'],
+            'pdf' => $base . '/pdf',
+            'fichier' => 'Offre-' . $offre['numero'] . '.pdf',
+            'partage' => 'Offre n° ' . $offre['numero'] . ' · ' . $offre['titre'],
+            'marquer' => $base . '/envoyee',
+            'modifier' => $base,
+            'facturer' => $base . '/facturer',
+        ]));
+    }
+
+    /**
+     * Le partage du téléphone a réussi (décision D8, 2026-11-15) : l'offre est notée envoyée. Le navigateur l'annonce
+     * après le partage ; sans partage possible, le PDF se télécharge et rien n'est noté.
+     *
+     * @param array<string, string> $parametres
+     */
+    public function envoyee(Request $requete, array $parametres): Response
+    {
+        $offre = $this->offre($requete, $parametres);
+        $this->offres($requete)->marquerEnvoyee($offre['id'], $this->c->horloge()->now());
+        Flash::dire($requete, 'info', 'Offre ' . $offre['numero'] . ' envoyée');
+        return new RedirectResponse('/offres/' . $offre['id'], 303);
     }
 
     /** Dossier de PDF.js dans public/js/vendor (version verrouillée, empreinte vérifiée : docs/DEPLOIEMENT.md). */
