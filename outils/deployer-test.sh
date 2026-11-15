@@ -102,6 +102,17 @@ DISTANT
 )"
 echo "en service : releases/$commit ; précédente : ${precedent:-aucune}"
 
+etape "Attente de la nouvelle version"
+# PHP garde quelque temps le chemin résolu de current (cache des chemins) : juste après la bascule, /sante
+# peut encore annoncer l'ancien commit, et la sonde déclencherait un retour arrière à tort (2026-11-15).
+"${SSH[@]}" bash -s -- "$URL" "$commit" <<'DISTANT' || echo "ALERTE : /sante n'annonce pas encore $commit, la sonde tranchera"
+for i in $(seq 1 30); do
+  curl -s -m 10 "$1/sante" | grep -q "\"commit\":\"$2\"" && { echo "/sante annonce $2 après $((i * 5 - 5)) s"; exit 0; }
+  sleep 5
+done
+exit 1
+DISTANT
+
 etape "Sonde d'exposition"
 if sonde "$commit"; then
   echo; echo "DÉPLOYÉ : $commit sur $URL"
