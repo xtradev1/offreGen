@@ -280,6 +280,37 @@ final class EcransTest extends TestCase
         self::assertSame(1, substr_count($import, 'data-etat="enregistrement"'));
     }
 
+    /**
+     * Décision D3 (maquette 24, 2026-11-15) : le total TTC reste en bas, l'action principale suit l'état de l'offre :
+     * « Relire N lignes » tant qu'une ligne est à vérifier ou sans prix, puis « Générer l'offre ». « + » ajoute.
+     */
+    public function testLOffreGardeSonTotalEnBasEtUneActionSelonSonEtat(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 1 WHERE id = {$this->ligne}");
+        $o = $this->jeu->offre['a'];
+        BaseDeTest::pdo()->exec("INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier) VALUES ({$this->jeu->a}, $o, 9, 'Crépi', 18000, 'm²', 0, 0)");
+        $page = $this->page($this->offre);
+        self::assertMatchesRegularExpression('#<div class="totalbar" data-total-fixe><span>Total TTC</span><b>CHF\x{00A0}[0-9\'’.]+</b></div>#u', $page);
+        self::assertMatchesRegularExpression("#<a class=\"btn carre\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\">#", $page);
+        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/relire\">.*Relire 2 lignes</a>#s", $page);
+        self::assertStringNotContainsString("href=\"{$this->offre}/document\"", $page, 'pas de génération tant que des lignes attendent');
+
+        BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 0, prix_centimes = 1500 WHERE offre_id = $o");
+        $page = $this->page($this->offre);
+        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/document\">Générer l'offre#", $page);
+        self::assertStringNotContainsString('/relire"', $page);
+    }
+
+    /** Le client et l'objet en cartes de 60 px (D3) ; la corbeille reste, écartée du montant (D4 A), et la ligne se glisse (D4 B). */
+    public function testLEnTeteEnCartesEtLesLignesSeGlissent(): void
+    {
+        $page = $this->page($this->offre);
+        self::assertMatchesRegularExpression('#<a class="who carte-lien" href="/offres/\d+/client" data-en-feuille>#', $page);
+        self::assertMatchesRegularExpression('#<a class="t carte-lien" href="/offres/\d+/modifier">#', $page);
+        self::assertMatchesRegularExpression("#<div class=\"row\" id=\"l{$this->ligne}\" data-glisse-ligne>#", $page);
+        self::assertStringContainsString('aria-label="Supprimer la ligne Peinture murale a"', $page);
+    }
+
     /** Décision D2 (2026-11-15) : Catalogue et Réglages sortent de la barre, dans « Plus », avec l'import et la déconnexion. */
     public function testPlusRegroupeCatalogueReglagesImportEtDeconnexion(): void
     {

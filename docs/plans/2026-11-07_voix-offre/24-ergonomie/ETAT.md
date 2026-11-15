@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 2 du `PLAN.md` : offre (cartes client et objet, total fixé, action principale selon l'état, corbeille de 48 px et glisser).
+Lot 4 du `PLAN.md` : ligne hors catalogue (« Créer le produit », « Rattacher à un produit », mot entendu en synonyme).
 
 ## En attente de toi
 
@@ -44,6 +44,8 @@ Lot 2 du `PLAN.md` : offre (cartes client et objet, total fixé, action princip
 - 2026-11-15 : « voir en grand » d'un modèle dans la page (grandes images tirées du vrai PDF, flèches, « Choisir ce modèle ») ; règle D10 dans `CODING_RULES.md` ; rappel de la dictée permis en relecture et hors catalogue (D5, D6), écart à la règle du 06.11 signalé à Xavier. Commit 0c1fc43, déployé.
 - 2026-11-15 : PLAN.md écrit (9 lots). Lot 1 fait : barre Offres, Clients, micro de 72 px au centre, Factures, Plus ; la feuille de dictée vient avec la barre (une par écran) ; page Plus (Catalogue, Réglages, Importer, Se déconnecter) ; « Terminer et créer l'offre » descendu sous le pouce (72 px) ; micro refusé ou absent : la feuille propose l'import. Tests écrits avant, vus rouges. Trouvé aux captures : « Terminer » au milieu de l'écran avec un grand vide dessous, corrigé.
 
+- 2026-11-15 : lots 2 et 3 faits. Offre : client et objet en cartes de 60 px, total TTC fixé en bas, action principale selon l'état (« Relire N lignes » tant qu'une ligne est à vérifier ou sans prix, puis « Générer l'offre »), « + » de 64 px, champs de 48 px, corbeille de 48 px écartée du montant, glisser une ligne à gauche la retire avec le même « Annuler ». Relecture `/offres/{id}/relire` : une ligne à la fois dans l'ordre de l'écran, rappel de la dictée, quantité et prix modifiables, prix exigé pour une ligne sans prix, « Toutes les lignes sont relues » puis « Générer l'offre ». Décision de mise en œuvre : champs gardés dans la ligne (moins de touchers que la maquette B). Trouvé aux captures et au parcours : règles CSS du 24 écrasées par les anciennes (placées avant elles, puis `.ohead a.who` plus précise), pastille « Prête à relire » figée, montant tapé avec l'apostrophe droite ; un faux échec du glissé venait du test (ligne sous la barre du bas, diagnostiqué par les événements reçus). Tous corrigés.
+
 ## Preuves
 
 ```
@@ -65,4 +67,17 @@ $ node parcours-lot1.js (390 px, faux micro de Chromium)
   depuis Clients : enregistrement ouvert ; Plus : Catalogue / Réglages / Importer un enregistrement, onglet actif « Plus »
   Importer : sélecteur de fichier ouvert sans changer de page ; Catalogue : onglet actif « Plus »
   micro refusé : « Le micro est refusé ou absent… » et « Importer un fichier » ; largeur 390/390 ; erreurs : aucune
+```
+
+Lots 2 et 3, offre et relecture (2026-11-15) :
+
+```
+$ phpunit : OK (430 tests, 2532 assertions) ; phpstan : [OK] No errors
+$ node parcours-lot23.js (390 px, dictée de test transcrite et extraite par Infomaniak)
+  total en bas : « Total TTC CHF 2’672.25 » ; action : « Relire 3 lignes » 286x64 ; « + » 64x64 ; corbeille 48x48
+  glissé « Déplacement » : 5 lignes au lieu de 6 ; bandeau « « Déplacement » supprimée Annuler » ; Annuler : 6 lignes
+  boutons : Corriger 175x64 à 10 px du bas, C'est juste 175x64 à 10 px du bas ; montant recalculé à la frappe
+  1. Encore 3 à relire · « Peinture des murs, 2 couches » · Entendu : « Les murs du salon, environ 42 mètres carrés… »
+  2. Encore 2 à relire · « Peinture des plafonds, 2 couches » ; 3. Encore 1 à relire · « Peinture anti-moisissure » (sans prix → 38)
+  fin : « Toutes les lignes sont relues » ; boutons : Revenir à l'offre / Générer l'offre ; retour à l'offre : « Générer l'offre » ; largeur 390/390 ; erreurs JS : aucune
 ```

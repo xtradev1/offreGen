@@ -959,8 +959,76 @@ function modelesEnGrand() {
   });
 }
 
+// Lignes d'une offre ou d'un brouillon de facture : glisser vers la gauche retire la ligne (décision D4 B,
+// 2026-11-15), par le même envoi que la corbeille, donc avec le même « Annuler ». Un défilement vertical reste
+// un défilement ; un glissé qui part d'un champ ou d'un bouton ne fait rien.
+function glisserLignes() {
+  const SEUIL = 110;
+  document.querySelectorAll('[data-glisse-ligne]').forEach((row) => {
+    const suppr = row.querySelector('form[action$="/supprimer"]');
+    if (!suppr) return;
+    let x0 = null;
+    let y0 = 0;
+    let dx = 0;
+    let glisse = false;
+    row.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || e.target.closest('input, button, select, textarea')) return;
+      x0 = e.clientX;
+      y0 = e.clientY;
+      dx = 0;
+      glisse = false;
+    });
+    row.addEventListener('pointermove', (e) => {
+      if (x0 === null) return;
+      const mx = e.clientX - x0;
+      if (!glisse) {
+        if (Math.abs(mx) < 10) return;
+        if (Math.abs(e.clientY - y0) > Math.abs(mx) || mx > 0) { x0 = null; return; }
+        glisse = true;
+        row.classList.add('tire');
+        row.setPointerCapture(e.pointerId);
+      }
+      dx = Math.min(0, mx);
+      row.style.setProperty('--dx', dx + 'px');
+      row.classList.toggle('assez', dx <= -SEUIL);
+    });
+    const fin = () => {
+      if (x0 === null) return;
+      x0 = null;
+      if (glisse && dx <= -SEUIL) { suppr.submit(); return; }
+      row.classList.remove('tire', 'assez');
+      row.style.removeProperty('--dx');
+    };
+    row.addEventListener('pointerup', fin);
+    row.addEventListener('pointercancel', fin);
+    // Le nom de la ligne est un lien : sans cela, le navigateur le glisse lui-même et interrompt le geste.
+    row.addEventListener('dragstart', (e) => e.preventDefault());
+    // La fin d'un glissé envoie un clic : il n'ouvre pas la ligne.
+    row.addEventListener('click', (e) => { if (glisse) { e.preventDefault(); e.stopPropagation(); glisse = false; } }, true);
+  });
+}
+
+// Relecture (D5) : le montant suit la quantité et le prix pendant la frappe. Le serveur refait le calcul.
+function montantRelu() {
+  const q = document.querySelector('[data-relu-quantite]');
+  const p = document.querySelector('[data-relu-prix]');
+  const sortie = document.querySelector('[data-relu-montant]');
+  if (!q || !p || !sortie) return;
+  const nombre = (v) => parseFloat(String(v).replace(/[\s'’]/g, '').replace(',', '.'));
+  const maj = () => {
+    const centimes = Math.round(nombre(q.value) * nombre(p.value) * 100);
+    sortie.textContent = Number.isFinite(centimes) && centimes > 0
+      ? 'CHF ' + (centimes / 100).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/'/g, '’')
+      : '?';
+  };
+  q.addEventListener('input', maj);
+  p.addEventListener('input', maj);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   modelesEnGrand();
+  glisserLignes();
+  montantRelu();
   adresses();
   enregistrementsAutomatiques();
   envoisAutomatiques();

@@ -8,7 +8,7 @@
       {% set l = r.l %}
       {% set lien = base ~ '/lignes/' ~ l.id %}
       {% set manque = l.prix_centimes == 0 %}
-      <div class="row{% if manque %} miss{% elseif l.a_verifier %} flag{% endif %}" id="l{{ l.id }}">
+      <div class="row{% if manque %} miss{% elseif l.a_verifier %} flag{% endif %}" id="l{{ l.id }}"{% if modifiable %} data-glisse-ligne{% endif %}>
         {% if modifiable %}
           <a class="nm" href="{{ lien }}">{{ l.designation }}{% if l.produit_id is null and (libre ?? true) %}<small><span class="tag">Ligne libre</span></small>{% endif %}</a>
           <form class="q" method="post" action="{{ lien }}">

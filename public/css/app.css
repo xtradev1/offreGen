@@ -475,3 +475,50 @@ fieldset.adresse legend { font-size: 14px; font-weight: 600; padding: 0; margin:
 .adresse-etat:empty { display: none; }
 .adresse-etat.ok { color: var(--ok); }
 .adresse-etat.warn { color: var(--warn); }
+
+/* Sous-chantier 24 (2026-11-15) : en fin de fichier, pour passer après les règles de base qu'il remplace. */
+/* Offre (décisions D3 et D4, 2026-11-15) : total en bas, action principale de 64 px, « + » carré. */
+.totalbar { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 16px 0; background: var(--surface); border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.totalbar span { color: var(--muted); font-size: 15px; }
+.totalbar b { font-size: 21px; }
+.totalbar + .actionbar { border-top: 0; padding-top: 8px; }
+.actionbar .btn.grand { min-height: 64px; font-size: 17px; flex: 1; }
+.actionbar .btn.carre { flex: 0 0 64px; min-height: 64px; padding: 0; }
+.actionbar .btn.carre svg.i { width: 26px; height: 26px; }
+.ohead a.carte-lien { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 14px; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: 15px; font-weight: 400; color: var(--ink); }
+.ohead .carte-lien > span { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.ohead .carte-lien small { color: var(--muted); font-size: 14px; }
+.ohead .carte-lien .etiquette { align-self: flex-start; margin-top: 4px; }
+.ohead .carte-lien::after { content: '›'; color: var(--muted); font-size: 24px; line-height: 1; }
+.ohead a.t.carte-lien b { font-size: 17px; font-weight: 700; }
+.ohead a.who.carte-lien b { font-size: 16px; }
+/* Lignes : champs de 48 px, corbeille de 48 px écartée du montant (D4 A) ; glisser à gauche retire (D4 B). */
+.rows { --cols: minmax(0, 1fr) 62px 60px 66px 48px; }
+.rows.une .row { min-height: 60px; }
+.saisie { min-height: 48px; }
+.del { width: 48px; min-height: 48px; margin-left: 4px; }
+.del svg.i { width: 20px; height: 20px; }
+.row[data-glisse-ligne] { position: relative; touch-action: pan-y; }
+.row.tire { background: var(--bad-soft); }
+.row.tire > * { transform: translateX(var(--dx, 0)); }
+.row.tire::after { content: 'Retirer'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--bad); font-weight: 700; font-size: 15px; }
+.row.tire.assez::after { content: 'Lâcher pour retirer'; }
+/* Relecture (D5) : la ligne descend vers les boutons, sous le pouce. */
+.btn.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+.screen.relecture { display: flex; flex-direction: column; }
+.relu-reste { color: var(--muted); font-size: 15px; margin: 4px 0 auto; }
+.relu-carte { padding-top: 24px; }
+.relu-cat { color: var(--muted); font-size: 14px; margin: 0; }
+.relu-nom { font-size: 24px; line-height: 1.2; margin: 4px 0 10px; overflow-wrap: anywhere; }
+.relu-entendu { background: var(--chip); border-radius: 12px; padding: 10px 12px; color: var(--muted); font-size: 15px; margin: 0 0 12px; }
+.relu-champs { display: flex; gap: 10px; margin: 0 0 10px; }
+.relu-champ { flex: 1; min-width: 0; display: flex; flex-direction: column; border: 2px solid var(--line); border-radius: 14px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+.relu-champ small { font-size: 13px; }
+.relu-champ input { border: 0; background: transparent; font: inherit; font-size: 26px; font-weight: 700; color: var(--ink); padding: 2px 0; width: 100%; min-height: 44px; }
+.relu-champ input:focus { outline: none; }
+.relu-champ:focus-within { border-color: var(--accent); }
+.relu-champ.faux { border-color: var(--bad); }
+.relu-montant { display: flex; justify-content: space-between; align-items: baseline; font-size: 18px; margin: 4px 0 8px; font-variant-numeric: tabular-nums; }
+.relu-fin { text-align: center; margin: auto 0; }
+.relu-fin svg.i { width: 56px; height: 56px; color: var(--ok); }
+.relu-fin h2 { margin: 8px 0 4px; }

@@ -159,7 +159,8 @@ final class ClientsEcranTest extends TestCase
     {
         BaseDeTest::pdo()->exec("UPDATE offre SET client_dicte = 'Madame Rossi', lieu_dicte = 'Delémont' WHERE id = {$this->jeu->offre['a']}");
         $rossi = $this->fiche('Mme Rossi', "Rue du Stand 3\n2800 Delémont");
-        self::assertStringContainsString('<b>Madame Rossi</b>, Delémont <span class="etiquette nouveau">nouveau client, à confirmer</span>', $this->page($this->offreA()));
+        // En-tête en cartes (décision D3, 2026-11-15) : le nom, puis le lieu dicté dessous.
+        self::assertStringContainsString('<b>Madame Rossi</b><small>Delémont</small><span class="etiquette nouveau">nouveau client, à confirmer</span>', $this->page($this->offreA()));
 
         $choix = $this->page($this->offreA() . '/client');
         self::assertStringContainsString("Créer la fiche «&nbsp;Madame Rossi&nbsp;»", $choix);
@@ -169,7 +170,7 @@ final class ClientsEcranTest extends TestCase
         self::assertSame($this->offreA(), $this->a->post($this->offreA() . '/client', ['client' => (string) $rossi])->headers->get('Location'));
         self::assertSame($rossi, $this->clientDeLOffre()['client_id']);
         $offre = $this->page($this->offreA());
-        self::assertStringContainsString('<b>Mme Rossi</b>, Rue du Stand 3, 2800 Delémont', $offre);
+        self::assertStringContainsString('<b>Mme Rossi</b><small>Rue du Stand 3, 2800 Delémont</small>', $offre);
         self::assertStringNotContainsString('à confirmer', $offre);
 
         // Ou confirmer le nom dicté : la fiche naît à ce moment-là, avec le lieu dicté pour adresse, découpé

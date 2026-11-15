@@ -17,6 +17,7 @@ use OffreGen\Http\Controleur\FactureControleur;
 use OffreGen\Http\Controleur\ImportControleur;
 use OffreGen\Http\Controleur\OffreControleur;
 use OffreGen\Http\Controleur\RangementControleur;
+use OffreGen\Http\Controleur\RelectureControleur;
 use OffreGen\Http\Controleur\SanteControleur;
 use OffreGen\Http\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -71,6 +72,9 @@ return static function (Conteneur $c): array {
         new Route('offre_entete_enregistrer', '/offres/{id}/modifier', ['POST'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->modifierEntete($r, $p), Route::ARTISAN),
         new Route('offre_document', '/offres/{id}/document', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->document($r, $p), Route::ARTISAN),
         new Route('offre_pdf', '/offres/{id}/pdf', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->pdf($r, $p), Route::ARTISAN),
+        // Relecture au pouce, une ligne à la fois (décision D5, 2026-11-15).
+        new Route('offre_relire', '/offres/{id}/relire', ['GET'], static fn (Request $r, array $p): Response => (new RelectureControleur($c))->afficher($r, $p), Route::ARTISAN),
+        new Route('offre_relire_valider', '/offres/{id}/relire/{ligne}', ['POST'], static fn (Request $r, array $p): Response => (new RelectureControleur($c))->valider($r, $p), Route::ARTISAN),
         new Route('offre_ajout', '/offres/{id}/ajouter', ['GET'], static fn (Request $r, array $p): Response => $ligne()->pageAjout($r, $p), Route::ARTISAN),
         new Route('ligne_ajouter', '/offres/{id}/lignes', ['POST'], static fn (Request $r, array $p): Response => $ligne()->ajouter($r, $p), Route::ARTISAN),
         new Route('ligne', '/offres/{id}/lignes/{ligne}', ['GET'], static fn (Request $r, array $p): Response => $ligne()->page($r, $p), Route::ARTISAN),
