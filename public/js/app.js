@@ -1150,7 +1150,7 @@ function brancherFacturer(form) {
     retour.textContent = 'Retour';
     const note = document.createElement('span');
     note.className = 'muted petit';
-    note.textContent = 'Aperçu : rien n’est encore créé';
+    note.textContent = 'Aperçu : rien n’est encore créé';
     barre.append(retour, note);
     const corps = document.createElement('div');
     corps.className = 'apercu-grand-corps';

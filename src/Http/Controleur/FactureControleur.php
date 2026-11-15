@@ -137,7 +137,7 @@ final class FactureControleur
         }
         [$pret, $erreurs] = $this->lireFacturer($requete, $offre, $possibles, $champs);
         if ($pret !== null && $corriger && $pret['choisi']['genre'] !== 'finale') {
-            $erreurs['genre'] = "Seule la facture finale se corrige ligne par ligne : un acompte se crée tel quel.";
+            $erreurs['genre'] = "Seule la facture finale se corrige ligne par ligne : un acompte se crée tel quel.";
         }
         if ($pret === null || $erreurs !== []) {
             return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, $erreurs, 422);
@@ -162,14 +162,14 @@ final class FactureControleur
             return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, ['numero' => 'Ce numéro est déjà pris par une autre facture.'], 422);
         }
         if ($corriger) {
-            Flash::dire($requete, 'info', 'Corrigez les lignes, puis « Créer la facture »');
+            Flash::dire($requete, 'info', 'Corrigez les lignes, puis « Créer la facture »');
             return new RedirectResponse('/factures/' . $id, 303);
         }
         $f = $this->c->factures($portee)->parId($id) ?? throw new PageIntrouvable();
         $raison = $this->emettreFacture($requete, $f);
         if ($raison !== null) {
             $this->c->factures($portee)->supprimerBrouillon($id);
-            return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, ['creation' => 'La facture n\'est pas créée : ' . $raison], 422);
+            return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, ['creation' => 'La facture n\'est pas créée : ' . $raison], 422);
         }
         Flash::dire($requete, 'info', 'Facture ' . $entete['numero'] . ' créée');
         return new RedirectResponse('/factures/' . $id . '/apercu', 303);
@@ -357,7 +357,7 @@ final class FactureControleur
         $f = $this->brouillon($requete, $parametres);
         $raison = $this->emettreFacture($requete, $f);
         if ($raison !== null) {
-            Flash::dire($requete, 'erreur', 'La facture n\'est pas créée : ' . $raison);
+            Flash::dire($requete, 'erreur', 'La facture n\'est pas créée : ' . $raison);
             return new RedirectResponse('/factures/' . $f['id'], 303);
         }
         $emise = $this->c->factures($this->portee($requete))->parId($f['id']) ?? throw new PageIntrouvable();
@@ -438,7 +438,7 @@ final class FactureControleur
             if (($e->errorInfo[1] ?? null) !== 1062) {
                 throw $e;
             }
-            return 'Le numéro ' . $numero . ' vient d\'être pris par une autre facture : réessayez.';
+            return 'Le numéro ' . $numero . ' vient d\'être pris par une autre facture : réessayez.';
         }
         return null;
     }
@@ -501,7 +501,7 @@ final class FactureControleur
             'titre' => $f['titre'], 'client_nom' => $f['client_nom'], 'client_adresse' => $f['client_adresse'],
             'client_postale' => Adresse::depuisBase($f, 'client_'), 'refaite_depuis' => $f['id'],
         ], $lignes, $quand);
-        Flash::dire($requete, 'info', 'Facture ' . $f['numero'] . ' annulée ; corrigez la nouvelle, puis « Créer la facture »');
+        Flash::dire($requete, 'info', 'Facture ' . $f['numero'] . ' annulée ; corrigez la nouvelle, puis « Créer la facture »');
         return new RedirectResponse('/factures/' . $id, 303);
     }
 

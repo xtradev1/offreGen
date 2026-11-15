@@ -19,7 +19,7 @@
   </div>
   {% if manque > 0 %}<p class="alerte bad">{{ manque }} ligne{{ manque > 1 ? 's' : '' }} sans prix&nbsp;: à compléter avant de créer la facture.</p>{% endif %}
 
-  {% include '_lignes.html.twig' with {base: '/factures/' ~ f.id, modifiable: true, libre: false, vide: "Aucune ligne. « + », en bas, en ajoute une."} %}
+  {% include '_lignes.html.twig' with {base: '/factures/' ~ f.id, modifiable: true, libre: false, vide: "Aucune ligne. « + », en bas, en ajoute une."} %}
 
   <div class="totals">
     {% set avec_tva = montants.par_taux|filter(g => g.taux > 0)|length > 0 %}

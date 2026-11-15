@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 6 du `PLAN.md` : le client confirmé à « Générer l'offre » (E6).
+Lot 7 du `PLAN.md` : Ajouter (sobre, E7) et petits écrans sur PC (menu partout, fenêtres au milieu).
 
 ## En attente de toi
 
@@ -53,6 +53,8 @@ Lot 6 du `PLAN.md` : le client confirmé à « Générer l'offre » (E6).
   - Brouillon : lignes, « + », « Créer la facture », montant et numéro prévu dans la phrase ; sur PC le document à côté, d'office.
   - Corrigés en passant : la feuille dans une fenêtre perdait le bouton touché (`FormData` sans le bouton : « Corriger » devenait « Créer ») ; GET `/facturer` en 500 avec un QR-IBAN (référence calculée sur l'identifiant 0 de l'aperçu, identifiant provisoire désormais) ; « Annuler et refaire » ne recopiait pas le taux de TVA des lignes (lot 7 du 24) ; les bandeaux recouvraient les boutons quand une phrase les suit (hauteur du bas mesurée, `--bas`) ; « Pour / Famille Exemple / , Chemin… » éclaté (classe `client-facture` déjà prise).
   - Vu aux captures et laissé au lot 7 : sur PC, le PDF de la facture n'a pas le menu et reste dans la colonne de 640 px, la page du PDF ne fait que 264 px de large.
+- 2026-11-15, lots 4 et 5 déployés sur le test (eb8cad2), sonde verte.
+- 2026-11-15, lot 6 (Origin 419, E6) : étiquette orange « à confirmer » et loupe sur la carte du client ; sans client confirmé, « Générer l'offre » ouvre « Pour qui est cette offre ? » dans la feuille (`/offres/{id}/client?suite=apercu`) ; choisir une fiche, créer celle du nom dicté ou une nouvelle fiche mène au PDF de l'offre (seule la valeur `apercu` est suivie). Défaut trouvé par un ancien test : ma réécriture de `offre_client.html.twig` avait perdu l'espace insécable de « 100 % » ; relecture de tous mes textes visibles du jour, cinq autres corrigés (« : », « ; », « ? », « « … » »).
 
 ## Preuves
 
@@ -87,6 +89,15 @@ $ node lot4-facturer.js lot4-390 390   (démo remise à zéro ; idem à 1440)
   brouillon : /factures/18 · Facture finale, brouillon N° 2026-002 à la création
   débordement horizontal : 0 ; erreurs : aucune
   (CHF 1000 : bouton « Créer la facture · CHF 1'000.00 », vu à la capture 03-feuille-chf)
+# lot 6
+$ phpunit --filter testGenererLOffreFaitDAbordConfirmerLeClient (avant le code) : Failures: 1
+$ phpunit : OK (467 tests, 2849 assertions) ; phpstan : [OK] No errors
+$ node lot6-client.js lot6-390 390 143   (idem à 1440)
+  étiquette : Famille Dubois Porrentruy à confirmer
+  feuille : Pour qui est cette offre ?
+  après le choix : /offres/143/apercu · touchers jusqu'au PDF : 2 · Envoyer : true
+  client confirmé : Famille Dubois 2900 Porrentruy · Générer : /offres/143/apercu
+  débordement horizontal : 0 ; erreurs : aucune
 ```
 
 ```

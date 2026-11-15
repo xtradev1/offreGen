@@ -11,9 +11,11 @@
 
 {% block contenu %}
   {% if erreurs is not empty and not k %}<p class="alerte bad" role="alert">La fiche n'est pas créée&nbsp;: corrigez les champs signalés.</p>{% endif %}
-  <form id="client" method="post" action="{{ k ? '/clients/' ~ k.id : '/clients' }}"{% if k %} data-auto{% endif %}>
+  {# Depuis « Générer l'offre » (suite=apercu, E6) : la fiche créée mène au PDF de l'offre. #}
+  <form id="client" method="post" action="{{ k ? '/clients/' ~ k.id : '/clients' }}"{% if k %} data-auto{% endif %}{% if suite ?? null %} data-sortir{% endif %}>
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     {% if offre %}<input type="hidden" name="offre" value="{{ offre.id }}">{% endif %}
+    {% if suite ?? null %}<input type="hidden" name="suite" value="{{ suite }}">{% endif %}
     {% if k %}<p class="auto-etat" data-auto-etat aria-live="polite"></p>{% endif %}
     <div class="champ">
       <label for="nom">Nom</label>

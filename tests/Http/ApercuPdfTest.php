@@ -30,6 +30,8 @@ final class ApercuPdfTest extends TestCase
 
     public function testGenererLOffreMeneAuPdfDansLApplication(): void
     {
+        // Client confirmé : « Générer l'offre » mène droit au PDF (sinon, d'abord « Pour qui est cette offre ? », E6).
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = {$this->jeu->client['a']} WHERE id = {$this->jeu->offre['a']}");
         $offre = (string) $this->a->get($this->offre)->getContent();
         self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/apercu\">Générer l'offre#", $offre);
 

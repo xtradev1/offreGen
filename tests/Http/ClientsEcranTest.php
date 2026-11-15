@@ -160,7 +160,7 @@ final class ClientsEcranTest extends TestCase
         BaseDeTest::pdo()->exec("UPDATE offre SET client_dicte = 'Madame Rossi', lieu_dicte = 'Delémont' WHERE id = {$this->jeu->offre['a']}");
         $rossi = $this->fiche('Mme Rossi', "Rue du Stand 3\n2800 Delémont");
         // En-tête en cartes (décision D3, 2026-11-15) : le nom, puis le lieu dicté dessous.
-        self::assertStringContainsString('<b>Madame Rossi</b><small>Delémont</small><span class="etiquette nouveau">nouveau client, à confirmer</span>', $this->page($this->offreA()));
+        self::assertStringContainsString('<b>Madame Rossi</b><small>Delémont</small><span class="etiquette nouveau">à confirmer</span>', $this->page($this->offreA()));
 
         $choix = $this->page($this->offreA() . '/client');
         self::assertStringContainsString("Créer la fiche «&nbsp;Madame Rossi&nbsp;»", $choix);
@@ -196,5 +196,42 @@ final class ClientsEcranTest extends TestCase
         $this->page($this->offreA() . '/client');
         self::assertSame(404, $this->a->post($this->offreA() . '/client', ['client' => (string) $this->jeu->client['b']])->getStatusCode());
         self::assertNull($this->clientDeLOffre()['client_id']);
+    }
+
+    /**
+     * E6 (maquette 25, Xavier, 2026-11-15) : un client dicté reste « à confirmer », en orange ; « Générer l'offre » le
+     * fait confirmer d'abord (« Pour qui est cette offre ? »), puis ouvre le PDF. Plus jamais au moment de facturer.
+     */
+    public function testGenererLOffreFaitDAbordConfirmerLeClient(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL, client_dicte = 'Mme Dictée' WHERE id = {$this->jeu->offre['a']}");
+        $offre = $this->page($this->offreA());
+        self::assertStringContainsString('<span class="etiquette nouveau">à confirmer</span>', $offre);
+        self::assertStringContainsString('<a class="btn primary grand" href="' . $this->offreA() . '/client?suite=apercu" data-en-feuille>Générer l\'offre', $offre);
+
+        $choix = $this->page($this->offreA() . '/client?suite=apercu');
+        self::assertStringContainsString("Pour qui est cette offre\u{00A0}?", $choix);
+        self::assertStringContainsString('<form method="post" action="' . $this->offreA() . '/client" class="kchoix-f" data-sortir>', $choix);
+        self::assertStringContainsString('<input type="hidden" name="suite" value="apercu">', $choix);
+        self::assertStringContainsString('href="/clients/nouveau?offre=' . $this->jeu->offre['a'] . '&amp;suite=apercu"', $choix);
+
+        // Une fiche choisie : le PDF de l'offre suit.
+        $r = $this->a->post($this->offreA() . '/client', ['client' => (string) $this->jeu->client['a'], 'suite' => 'apercu']);
+        self::assertSame($this->offreA() . '/apercu', $r->headers->get('Location'));
+        self::assertStringContainsString('<a class="btn primary grand" href="' . $this->offreA() . '/apercu">Générer l\'offre', $this->page($this->offreA()), 'Client confirmé : le PDF directement.');
+
+        // La fiche du nom dicté, ou une nouvelle fiche : pareil.
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL WHERE id = {$this->jeu->offre['a']}");
+        $this->page($this->offreA() . '/client?suite=apercu');
+        self::assertSame($this->offreA() . '/apercu', $this->a->post($this->offreA() . '/client', ['creer' => '1', 'suite' => 'apercu'])->headers->get('Location'));
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL WHERE id = {$this->jeu->offre['a']}");
+        $page = $this->page('/clients/nouveau?offre=' . $this->jeu->offre['a'] . '&suite=apercu');
+        self::assertStringContainsString('<input type="hidden" name="suite" value="apercu">', $page);
+        $r = $this->a->post('/clients', ['nom' => 'Famille Chappuis', 'adresse' => '', 'telephone' => '', 'courriel' => '', 'offre' => (string) $this->jeu->offre['a'], 'suite' => 'apercu']);
+        self::assertSame($this->offreA() . '/apercu', $r->headers->get('Location'));
+
+        // Une autre valeur ne mène nulle part ailleurs que l'offre.
+        $this->page($this->offreA() . '/client');
+        self::assertSame($this->offreA(), $this->a->post($this->offreA() . '/client', ['client' => (string) $this->jeu->client['a'], 'suite' => 'https://ailleurs.example'])->headers->get('Location'));
     }
 }

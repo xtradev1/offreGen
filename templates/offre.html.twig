@@ -8,9 +8,11 @@
 
 {% block contenu %}
   {# Le client ouvre « Client de l'offre » par-dessus l'offre ; l'objet ouvre son écran. #}
-  {# Client et objet en cartes de 60 px, touchées pour les changer (décision D3, 2026-11-15). #}
+  {# Client et objet en cartes de 60 px, touchées pour les changer (décision D3, 2026-11-15). Le client dicté reste
+     « à confirmer », en orange ; la loupe dit qu'on y cherche une fiche (maquette 25, E6). #}
   <div class="ohead">
-    <a class="who carte-lien" href="/offres/{{ offre.id }}/client" data-en-feuille><span>{% if offre.client_nom %}<b>{{ offre.client_nom }}</b>{% if offre.client_adresse %}<small>{{ offre.client_adresse|replace({"\n": ', '}) }}</small>{% endif %}{% if offre.client_id is null %}<span class="etiquette nouveau">nouveau client, à confirmer</span>{% endif %}{% else %}<span class="manque-client">Choisir le client</span>{% endif %}</span></a>
+    <a class="who carte-lien" href="/offres/{{ offre.id }}/client" data-en-feuille aria-label="Client de l'offre : chercher ou changer"><span>{% if offre.client_nom %}<b>{{ offre.client_nom }}</b>{% if offre.client_adresse %}<small>{{ offre.client_adresse|replace({"\n": ', '}) }}</small>{% endif %}{% if offre.client_id is null %}<span class="etiquette nouveau">à confirmer</span>{% endif %}{% else %}<span class="manque-client">Choisir le client</span>{% endif %}</span>
+      <svg class="i loupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
     <a class="t carte-lien" href="/offres/{{ offre.id }}/modifier"><span><b>{{ offre.titre }}</b><small>Objet de l'offre</small></span></a>
     {% if factures is not empty %}<span class="factures-offre">{% for f in factures %}<a class="etiquette facture{% if f.statut == 'annulee' %} annulee{% endif %}" href="/factures/{{ f.id }}{{ f.statut != 'brouillon' ? '/apercu' }}">{{ f.numero ? 'Facture ' ~ f.numero : 'Brouillon de facture' }}</a>{% endfor %}</span>{% endif %}
     {% set a_relire = 0 %}
@@ -51,6 +53,10 @@
     {% elseif offre.envoyee_le %}
       {# Envoyée : le geste suivant est de facturer (décision D3), dans une feuille par-dessus l'offre (maquette 25, E1). #}
       <a class="btn primary grand" href="/offres/{{ offre.id }}/facturer" data-en-feuille>Facturer
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    {% elseif offre.client_id is null %}
+      {# E6 : le client se confirme avant le PDF (« Pour qui est cette offre ? »), plus jamais au moment de facturer. #}
+      <a class="btn primary grand" href="/offres/{{ offre.id }}/client?suite=apercu" data-en-feuille>Générer l'offre
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
     {% else %}
       <a class="btn primary grand" href="/offres/{{ offre.id }}/apercu">Générer l'offre

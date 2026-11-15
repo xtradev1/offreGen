@@ -59,6 +59,23 @@ final class ClientControleur
         return $this->fiche($requete, null, $champs, [], 200, $offre);
     }
 
+    /**
+     * Où mène le client choisi pour une offre : son PDF quand on venait de « Générer l'offre » (suite=apercu, maquette
+     * 25, E6), sinon l'offre. Aucune autre valeur n'est suivie.
+     *
+     * @param array{id: int} $offre
+     */
+    private static function apresChoix(Request $requete, array $offre): string
+    {
+        return '/offres/' . $offre['id'] . (self::suite($requete) === 'apercu' ? '/apercu' : '');
+    }
+
+    /** suite=apercu, gardée d'une page à l'autre ; rien d'autre. */
+    private static function suite(Request $requete): ?string
+    {
+        return $requete->request->getString('suite', $requete->query->getString('suite')) === 'apercu' ? 'apercu' : null;
+    }
+
     public function creer(Request $requete): Response
     {
         $offre = $this->offreDemandee($requete, $requete->request->getString('offre'));
@@ -73,7 +90,7 @@ final class ClientControleur
         if ($offre !== null) {
             $this->offres($requete)->rattacherClient($offre['id'], $id, $maintenant);
             Flash::dire($requete, 'info', 'Fiche ' . Flash::cite($f['nom']) . ' créée pour cette offre');
-            return new RedirectResponse('/offres/' . $offre['id'], 303);
+            return new RedirectResponse(self::apresChoix($requete, $offre), 303);
         }
         Flash::dire($requete, 'info', 'Fiche ' . Flash::cite($f['nom']) . ' créée');
         return new RedirectResponse('/clients#k' . $id, 303);
@@ -150,6 +167,7 @@ final class ClientControleur
         }
         return new Response($this->c->twig()->render('offre_client.html.twig', [
             'offre' => $offre,
+            'suite' => self::suite($requete),
             'proches' => $proches,
             'clients' => array_map(static fn (array $k): array => $k + [
                 'localite' => self::localiteDe($k),
@@ -179,13 +197,13 @@ final class ClientControleur
             $id = $this->clients($requete)->creer($f, $maintenant);
             $this->offres($requete)->rattacherClient($offre['id'], $id, $maintenant);
             Flash::dire($requete, 'info', 'Fiche ' . Flash::cite($f['nom']) . ' créée');
-            return new RedirectResponse('/offres/' . $offre['id'], 303);
+            return new RedirectResponse(self::apresChoix($requete, $offre), 303);
         }
         $clientId = Parametres::id(['client' => $requete->request->getString('client')], 'client');
         $k = $this->clients($requete)->parId($clientId) ?? throw new PageIntrouvable();
         $this->offres($requete)->rattacherClient($offre['id'], $k['id'], $maintenant);
         Flash::dire($requete, 'info', 'Client de l\'offre' . "\u{00A0}: " . $k['nom']);
-        return new RedirectResponse('/offres/' . $offre['id'], 303);
+        return new RedirectResponse(self::apresChoix($requete, $offre), 303);
     }
 
     /**
@@ -211,6 +229,7 @@ final class ClientControleur
             'erreurs' => $erreurs,
             'offres' => $offres,
             'offre' => $offre,
+            'suite' => $offre === null ? null : self::suite($requete),
         ]), $code);
     }
 

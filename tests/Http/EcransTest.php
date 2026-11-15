@@ -299,6 +299,10 @@ final class EcransTest extends TestCase
 
         BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 0, prix_centimes = 1500 WHERE offre_id = $o");
         $page = $this->page($this->offre);
+        // Sans client confirmé, « Générer l'offre » le fait confirmer d'abord (maquette 25, E6) ; avec, le PDF.
+        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/client\?suite=apercu\" data-en-feuille>Générer l'offre#", $page);
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = {$this->jeu->client['a']} WHERE id = $o");
+        $page = $this->page($this->offre);
         self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/apercu\">Générer l'offre#", $page);
         self::assertStringNotContainsString('/relire"', $page);
     }
@@ -307,7 +311,7 @@ final class EcransTest extends TestCase
     public function testLEnTeteEnCartesEtLesLignesSeGlissent(): void
     {
         $page = $this->page($this->offre);
-        self::assertMatchesRegularExpression('#<a class="who carte-lien" href="/offres/\d+/client" data-en-feuille>#', $page);
+        self::assertMatchesRegularExpression('#<a class="who carte-lien" href="/offres/\d+/client" data-en-feuille aria-label="Client de l\'offre : chercher ou changer">#', $page);
         self::assertMatchesRegularExpression('#<a class="t carte-lien" href="/offres/\d+/modifier">#', $page);
         self::assertMatchesRegularExpression("#<div class=\"row\" id=\"l{$this->ligne}\" data-glisse-ligne>#", $page);
         self::assertStringContainsString('aria-label="Supprimer la ligne Peinture murale a"', $page);
