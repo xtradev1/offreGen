@@ -9,12 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 7 du `PLAN.md` : TVA de l'entreprise (8,1, 2,6, 3,8 ou 0 %), taux d'exception par ligne et par produit, document détaillé par taux.
+Lot 8 du `PLAN.md` : version PC à partir de 1024 px (menu à gauche avec « Dicter une offre », touche D, et « Importer » ; liste au milieu ; offre à droite, document à côté des lignes ; clavier).
 
 ## En attente de toi
 
-- D10 sans réponse : tailles 64 / 56 / 48 px écrites dans `CODING_RULES.md`, ou garder la règle actuelle de 44 px ?
-- D9 : pour baisser une facture (moins de travail que prévu), confirmer la proposition : montant ou pourcentage modifiable dans la feuille, et « Vérifier avant d'émettre » pour changer les quantités ou ajouter une ligne de remise.
+Rien : D10 acceptée (« D10 tu peux oui »), D9 réponse donnée, lots 1 à 9 validés (« oui tu peux tout faire je te valide les ajouts et modifs »).
 
 ## Suivi Origin
 
@@ -26,7 +25,8 @@ Lot 7 du `PLAN.md` : TVA de l'entreprise (8,1, 2,6, 3,8 ou 0 %), taux d'excepti
 
 - 2026-11-15, réponses de Xavier à la maquette (copiées telles quelles) : D1 micro au centre de la barre, sur tous les écrans : Valider (remplace la variante B du 2026-11-12) ; D2 Catalogue et Réglages rangés dans « Plus » : Valider ; D3 total fixé en bas et action principale qui change selon l'état : Valider ; D4 retirer une ligne : « A · corbeille gardée, 48 px, écartée du montant · fais A et B » (corbeille de 48 px et glisser vers la gauche) ; D5 relecture ligne par ligne : Valider ; D6 « Créer le produit » et « Rattacher », mot entendu ajouté aux synonymes : Valider ; D7 PDF dans l'application avec PDF.js : A ; D8 envoyer par le partage du téléphone : Valider, « ça veut dire quoi envoyer avec le téléphone ? ça envoie comment ? » ; D9 facturer dans une seule feuille : Valider, « si on veut changer la valeur de l'acompte ou de la facture finale, par exemple une réduction car il y a eu moins à faire que prévu ? » ; D10 : pas de réponse ; D11 écrans de la TVA : Valider ; D12 PC en trois colonnes : Valider ; D13 document à côté des lignes sur PC : Valider, « où est le micro sur PC ? car cela doit aussi fonctionner sur PC ! ».
 - 2026-11-15 : micro sur PC : « Dicter une offre » en premier bouton du menu de gauche, « Importer un fichier » dessous, touche D ; l'enregistrement dans le navigateur marche déjà sur PC (sous-chantier 11), avec le micro du portable ou d'un casque. Écran PC de la maquette mis à jour.
-- 2026-11-15 : TVA (Xavier) : un taux pour l'entreprise (8,1, 2,6, 3,8 ou 0 %), une ligne peut en avoir un autre ; le document détaille la TVA par taux dès qu'il y en a plusieurs.
+- 2026-11-15 : TVA (Xavier) : un taux pour l'entreprise (8,1, 2,6, 3,8 ou 0 %), une ligne peut en avoir un autre ; le document détaille la TVA par taux dès qu'il y en a plusieurs.
+- 2026-11-15, mise en œuvre de la TVA (décisions prises seul) : une ligne sans exception garde un taux nul (celui de son produit, sinon de l'entreprise) ; la facture finale copie le taux effectif de chaque ligne, produit compris, et le taux de l'entreprise se fige à l'émission comme avant ; un acompte sur une offre à plusieurs taux fait une ligne par taux (« …, prestations à 2,6 % »), un seul taux garde une seule ligne ; avec plusieurs taux, le document marque chaque ligne qui n'est pas au taux de l'entreprise (LTVA, art. 26) ; le choix du taux d'une ligne se cache quand l'entreprise n'est pas assujettie.
 
 ## Demandes de Xavier (2026-11-15)
 
@@ -51,6 +51,8 @@ Lot 7 du `PLAN.md` : TVA de l'entreprise (8,1, 2,6, 3,8 ou 0 %), taux d'excepti
 - 2026-11-15 : lot 5 fait. « Générer l'offre » (offre et fin de relecture) mène à `/offres/{id}/apercu` : le vrai PDF dessiné par PDF.js 6.5.438, livré avec l'application (intégrité npm vérifiée, empreintes dans `DEPLOIEMENT.md`), sur fond gris ; en bas Modifier, Facturer, PDF (téléchargement), 64 px. Sans JavaScript ou en cas d'échec : un lien ouvre le PDF. La page HTML `/document` reste pour les liens existants.
 
 - 2026-11-15 : lot 6 fait. « Envoyer » (aperçu PDF de l'offre et d'une facture émise) : partage du téléphone, PDF joint ; partage réussi : offre notée envoyée (migration additive `offre.envoyee_le`), pastille « Envoyée le … », action principale « Facturer » ; partage annulé : rien ; sans partage : le PDF se télécharge, rien n'est noté. « Facturer » en un écran : pourcentage de l'acompte modifiable (montant précis ou remise : « Vérifier avant d'émettre » puis la ligne), « Émettre et envoyer » (créée, émise, PDF prêt à partager ; si l'émission est empêchée, le brouillon reste et la facture dit pourquoi) ou « Vérifier avant d'émettre ». L'émission passe par une seule méthode pour les deux chemins. Trouvé au parcours : champ du pourcentage visible pour une facture finale, corrigé ; le partage de Windows existe dans Chrome sans affichage et ne s'ouvre jamais (le test « sans partage » le retire).
+
+- 2026-11-15 : lot 7 fait. Réglages : quatre taux (8,1 normal, 2,6 réduit, 3,8 hébergement, non assujetti). Fiche d'une ligne (offre et facture en brouillon) : « Taux de l'entreprise » ou « du produit », ou un des quatre taux. Fiche produit : taux dans la partie repliée. Offre, facture, document et PDF : une ligne « TVA x % sur … » par taux dès qu'il y en a deux, sinon la ligne d'avant ; HT et TTC suivent les taux réels. Migration additive `Version20261115000002` (colonnes nullables sur `ligne`, `facture_ligne`, `produit`). Trouvé au contrôle : le document ne disait pas quelle ligne portait l'autre taux (exigé par la LTVA), corrigé ; mon test attendait 810 sur une ligne de finale sans exception, alors que le taux nul est voulu (figé à l'émission), test corrigé.
 
 ## Preuves
 
@@ -118,4 +120,18 @@ $ node parcours-lot6.js (390 px, démo remise à zéro)
   partage (simulé, réussi) : « Offre 2 envoyée » ; pastille « Envoyée le 15.11.2026 » ; action « Facturer »
   facturer : Acompte 1 sur 3 (30 %) / Facture finale ; pourcentage 30 ; Vérifier avant d'émettre 71 px / Émettre et envoyer 71 px
   émise : « Facture 2026-001 émise » ; 1 page ; partagée : Facture-2026-001.pdf application/pdf 62306 octets ; erreurs JS : aucune
+```
+
+Lot 7, TVA (2026-11-15) :
+
+```
+$ phpunit : OK (450 tests, 2703 assertions) ; phpstan : [OK] No errors ; migration jouée (test et développement)
+$ node parcours-lot7.js (390 px, démo)
+  réglages : 810* 260 380 0
+  offre avant : Sous-total HT CHF 2'874.00 TVA 8,1 % CHF 232.79 Arrondi CHF 0.01 Total TTC CHF 3'106.80
+  ligne : * 810 260 380 0 ; premier choix « Taux de l'entreprise (8,1 %) »
+  offre après (ligne de 180.00 à 2,6 %) : TVA 8,1 % sur CHF 2'694.00 CHF 218.21 ; TVA 2,6 % sur CHF 180.00 CHF 4.68 ; Arrondi CHF 0.01 ; Total TTC CHF 3'096.90
+  document : TVA 8,1 % sur 2'694.00 218.21 ; TVA 2,6 % sur 180.00 4.68 ; Total TTC CHF 3'096.90
+  offre remise : Total TTC CHF 3'106.80 ; produit : * 810 260 380 0 ; erreurs JS : aucune
+$ node parcours-lot7b.js : dernière ligne des totaux à 566 px, barre fixe à 655 px (rien de caché) ; PDF A4 vérifié à l'image
 ```
