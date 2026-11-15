@@ -5,8 +5,14 @@
 # sous-chantier 02, Claude déploie le test par SSH, avec les mêmes étapes que ce workflow. Le test ne contient
 # que des données inventées : ni mode maintenance ni sauvegarde avant les migrations. Jamais pour la production.
 #
+# Disposition, dans le dossier du site comme Infomaniak le prévoit (Xavier, 2026-11-15) :
+#   sites/easy-offres.xtradev.ch/public   -> current/public   (racine web réglée dans le Manager, seul dossier servi)
+#   sites/easy-offres.xtradev.ch/current  -> releases/<commit>
+#   sites/easy-offres.xtradev.ch/releases/<commit>/
+#   sites/easy-offres.xtradev.ch/partage/ (.env, voix, logos, journaux, sessions ; fermé)
+#
 # Étapes : arbre propre et commit poussé ; tests et analyse ; construction (git archive, composer sans dev) ;
-# envoi dans releases/<commit>/ ; liens vers partage/ (.env et données) ; migrations par l'utilisateur de
+# envoi dans releases/<commit>/ ; liens vers partage/ ; lecture du .env ; migrations par l'utilisateur de
 # structure ; bascule de current ; tâche cron du traitement ; sonde d'exposition avec le commit attendu.
 # Sonde rouge : retour à la version précédente s'il y en a une.
 #
@@ -17,6 +23,7 @@ CIBLE="3p81e5_easytest@3p81e5.ftp.infomaniak.com"
 PORT=22
 CLE="$HOME/.ssh/offregen_test"
 URL="https://easy-offres.xtradev.ch"
+APP="sites/easy-offres.xtradev.ch"
 PHP_DISTANT="php-8.5"
 GARDER=5
 TEMOINS="/.sonde-temoin /sonde-temoin.php /sonde-temoin.bin /sonde-temoin.sql"
@@ -50,20 +57,19 @@ mkdir -p "$construction/var/cache"
 echo "$(du -sh "$construction" | cut -f1), $(find "$construction" -type f | wc -l) fichiers"
 
 etape "Envoi"
-"${SSH[@]}" "mkdir -p offregen/releases/$commit"
-rsync -a --delete -e "ssh -i $CLE -o IdentitiesOnly=yes -o BatchMode=yes -p $PORT" "$construction/" "$CIBLE:offregen/releases/$commit/"
-# Apache tourne sous un autre utilisateur : il doit traverser offregen/ et releases/ pour servir public/
-# (403 du 2026-11-15 sinon). Les autres hébergements du serveur sont arrêtés plus haut, au dossier de
-# l'hébergement (group:ldapusers:---). partage/ (.env, voix, journaux) reste fermé : seul PHP, qui tourne
-# sous l'utilisateur de l'hébergement, le lit.
-"${SSH[@]}" "chmod 711 offregen offregen/releases && chmod 755 offregen/releases/$commit && chmod 700 offregen/partage"
-echo "offregen/releases/$commit"
+"${SSH[@]}" "mkdir -p $APP/releases/$commit"
+rsync -a --delete -e "ssh -i $CLE -o IdentitiesOnly=yes -o BatchMode=yes -p $PORT" "$construction/" "$CIBLE:$APP/releases/$commit/"
+# Apache tourne sous un autre utilisateur : il doit traverser releases/ et la version pour servir public/
+# (403 du 2026-11-15 sinon). Les autres hébergements du serveur sont arrêtés au dossier de l'hébergement
+# (group:ldapusers:---). partage/ reste fermé : seul PHP, qui tourne sous l'utilisateur de l'hébergement, le lit.
+"${SSH[@]}" "chmod 711 $APP/releases && chmod 755 $APP/releases/$commit && chmod 700 $APP/partage"
+echo "$APP/releases/$commit"
 
 etape "Liens, migrations, bascule, cron"
-precedent="$("${SSH[@]}" bash -s -- "$commit" "$PHP_DISTANT" "$GARDER" <<'DISTANT'
+precedent="$("${SSH[@]}" bash -s -- "$APP" "$commit" "$PHP_DISTANT" "$GARDER" <<'DISTANT'
 set -euo pipefail
-commit="$1"; php="$2"; garder="$3"
-cd "$HOME/offregen"
+app="$1"; commit="$2"; php="$3"; garder="$4"
+cd "$HOME/$app"
 r="releases/$commit"
 ln -sfn ../../partage/.env "$r/.env"
 for d in audio logos log sessions courriels; do rm -rf "$r/var/$d"; ln -sfn "../../../partage/var/$d" "$r/var/$d"; done
@@ -79,14 +85,13 @@ for d in audio logos log sessions courriels; do rm -rf "$r/var/$d"; ln -sfn "../
 ( cd "$r" && "$php" vendor/bin/doctrine-migrations migrate --no-interaction --allow-no-migration >&2 )
 precedent="$(readlink current 2>/dev/null || true)"
 ln -sfn "$r" current.nouveau && mv -Tf current.nouveau current
-# Le Manager n'accepte qu'un dossier racine sous sites/ : sites/easy-offres.xtradev.ch/public est un lien vers current/public.
-lien="$HOME/sites/easy-offres.xtradev.ch/public"
-[ "$(readlink "$lien" 2>/dev/null)" = "$HOME/offregen/current/public" ] || echo "ALERTE : $lien ne pointe pas sur offregen/current/public" >&2
+# Racine web du Manager : public, lien vers current/public.
+[ "$(readlink public 2>/dev/null)" = "current/public" ] || echo "ALERTE : $app/public ne pointe pas sur current/public" >&2
 # Garde les dernières versions pour le retour arrière ; jamais celle en service.
 for v in $(ls -1dt releases/*/ | sed 's#/$##' | tail -n +"$((garder + 1))"); do
   if [ "$v" != "$r" ]; then rm -rf "$v"; fi
 done
-ligne="* * * * * cd \$HOME/offregen/current && $php bin/traiter-file --silencieux >> \$HOME/offregen/partage/var/log/cron.log 2>&1"
+ligne="* * * * * cd \$HOME/$app/current && $php bin/traiter-file --silencieux >> \$HOME/$app/partage/var/log/cron.log 2>&1"
 ( crontab -l 2>/dev/null | grep -v 'bin/traiter-file' || true; echo "$ligne" ) | crontab -
 echo "$precedent"
 DISTANT
@@ -100,7 +105,7 @@ if SONDE_TEMOINS="$TEMOINS" bash scripts/securite/sonde-exposition.sh "$URL" "$c
 fi
 if [ -n "$precedent" ] && [ "$precedent" != "releases/$commit" ]; then
   etape "Sonde rouge : retour à $precedent"
-  "${SSH[@]}" "cd offregen && ln -sfn '$precedent' current.nouveau && mv -Tf current.nouveau current"
+  "${SSH[@]}" "cd $APP && ln -sfn '$precedent' current.nouveau && mv -Tf current.nouveau current"
   SONDE_TEMOINS="$TEMOINS" bash scripts/securite/sonde-exposition.sh "$URL" "$(basename "$precedent")" || echo "ALERTE : la version précédente est rouge elle aussi."
 else
   echo "Sonde rouge, aucune version précédente : rien à rétablir."
