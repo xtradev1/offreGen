@@ -17,6 +17,7 @@ use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\SaisieRefusee;
+use OffreGen\Offre\Tva;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Aucune ne coûte d'appel au modèle (CODING_RULES, Ergonomie). Une facture émise ou annulée répond 409.
  *
  * @phpstan-type Cible array{id: int, base: string, retour: string, document: string, ce: string}
- * @phpstan-type LigneVue array{id: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, produit_id: int|null, categorie: string|null}
+ * @phpstan-type LigneVue array{id: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null}
  */
 final class LigneControleur
 {
@@ -44,7 +45,8 @@ final class LigneControleur
     {
         [$cible, $l] = $this->ligne($requete, $parametres);
         $champs = ['designation' => $l['designation'], 'quantite' => Formats::saisieQuantite($l['quantite_milliemes']), 'unite' => $l['unite'],
-                   'prix' => Formats::saisiePrix($l['prix_centimes']), 'categorie' => '', 'nouvelle_categorie' => ''];
+                   'prix' => Formats::saisiePrix($l['prix_centimes']), 'categorie' => '', 'nouvelle_categorie' => '',
+                   'tva' => $l['tva_ligne'] === null ? '' : (string) $l['tva_ligne']];
         return $this->formulaire($requete, $cible, $l, $champs, [], 200);
     }
 
@@ -76,16 +78,22 @@ final class LigneControleur
         if ($prix === null) {
             $erreurs['prix'] = 'Prix en francs, par exemple 28 ou 28.50.';
         }
+        // Le taux, depuis la page seulement (D11) ; absent, il ne change pas.
+        $tva = $r->has('tva') ? Tva::lire($r->getString('tva')) : $l['tva_ligne'];
+        if ($tva === false) {
+            $erreurs['tva'] = 'Choisissez un taux de TVA.';
+        }
         $produit = null;
         if ($depuisPage && $l['produit_id'] === null && $r->getString('garder') === '1' && $erreurs === []) {
             try {
                 $produit = SaisieProduit::lire(['designation' => (string) $designation, 'unite' => (string) $unite, 'prix' => $r->getString('prix'),
-                    'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie'), 'synonymes' => '']);
+                    'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie'), 'synonymes' => '',
+                    'tva' => $r->getString('tva')]);
             } catch (SaisieRefusee $e) {
                 $erreurs += $e->erreurs;
             }
         }
-        if ($designation === null || $quantite === null || $unite === null || $prix === null || $erreurs !== []) {
+        if ($designation === null || $quantite === null || $unite === null || $prix === null || $tva === false || $erreurs !== []) {
             if ($depuisPage) {
                 return $this->formulaire($requete, $cible, $l, self::champs($requete), $erreurs, 422);
             }
@@ -95,6 +103,9 @@ final class LigneControleur
 
         $support = $this->support($requete);
         $support->corrigerLigne($cible['id'], $l['id'], $designation, $quantite, $unite, $prix);
+        if ($tva !== $l['tva_ligne']) {
+            $support->changerTauxLigne($cible['id'], $l['id'], $tva);
+        }
         if ($produit !== null) {
             $support->rattacherProduit($cible['id'], $l['id'], $this->c->produits($this->portee($requete))->creer($produit));
             Flash::dire($requete, 'info', Flash::cite($produit['designation']) . ' ajouté au catalogue');
@@ -140,7 +151,7 @@ final class LigneControleur
     {
         $cible = $this->cible($requete, $parametres);
         $q = mb_substr($requete->query->getString('q'), 0, 100);
-        $champs = ['designation' => $q, 'quantite' => '1', 'unite' => 'forfait', 'prix' => '', 'categorie' => '', 'nouvelle_categorie' => ''];
+        $champs = ['designation' => $q, 'quantite' => '1', 'unite' => 'forfait', 'prix' => '', 'categorie' => '', 'nouvelle_categorie' => '', 'tva' => ''];
         return $this->pageAjoutAvec($requete, $cible, $q, $champs, [], 200);
     }
 
@@ -256,12 +267,13 @@ final class LigneControleur
         return new RedirectResponse($cible['base'] . '#l' . $ligneId, 303);
     }
 
-    /** @return array{designation: string, quantite: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string} */
+    /** @return array{designation: string, quantite: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, tva: string} */
     private static function champs(Request $requete): array
     {
         $r = $requete->request;
         return ['designation' => $r->getString('designation'), 'quantite' => $r->getString('quantite'), 'unite' => $r->getString('unite'),
-                'prix' => $r->getString('prix'), 'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie')];
+                'prix' => $r->getString('prix'), 'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie'),
+                'tva' => $r->getString('tva')];
     }
 
     /**
@@ -283,7 +295,32 @@ final class LigneControleur
             'erreurs' => $erreurs,
             'unites' => $unites,
             'categories' => $this->c->produits($this->portee($requete))->categories(),
+            'taux_tva' => Tva::TAUX,
+            'tva_habituelle' => $this->tvaHabituelle($requete, $l),
         ]), $code);
+    }
+
+    /**
+     * Ce que la ligne prend sans exception (D11) : le taux de son produit s'il en a un (offre seulement : une ligne de
+     * facture a copié le sien), sinon celui de l'entreprise ; null si l'entreprise n'est pas assujettie et que la ligne
+     * n'a pas d'exception : la question ne se pose pas.
+     *
+     * @param LigneVue $l
+     * @return array{taux: int, de: string}|null
+     */
+    private function tvaHabituelle(Request $requete, array $l): ?array
+    {
+        $entreprise = $this->c->reglages($this->portee($requete))->lire()->tvaPourDixMille;
+        if ($entreprise === 0 && $l['tva_ligne'] === null) {
+            return null;
+        }
+        if ($this->genre === self::OFFRE && $l['produit_id'] !== null) {
+            $taux = $this->c->produits($this->portee($requete))->parId($l['produit_id'])['tva_pour_dix_mille'] ?? null;
+            if ($taux !== null) {
+                return ['taux' => $taux, 'de' => 'du produit'];
+            }
+        }
+        return ['taux' => $entreprise, 'de' => "de l'entreprise"];
     }
 
     /**

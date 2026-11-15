@@ -18,6 +18,7 @@ use OffreGen\Facture\SectionPaiement;
 use OffreGen\Http\Conflit;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Flash;
+use OffreGen\Http\Formats;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
 use OffreGen\Offre\Totaux;
@@ -122,17 +123,21 @@ final class FactureControleur
 
         $lignesOffre = $this->c->offres($portee)->lignes($offre['id']);
         if ($choisi['genre'] === 'acompte') {
-            $reglages = $this->c->reglages($portee)->lire();
-            $ht = Totaux::calculer($lignesOffre, $reglages->tvaPourDixMille, $reglages->arrondiCinqCentimes)['ht'];
-            $lignes = [[
-                'designation' => PlanAcomptes::designation((int) $choisi['rang'], (int) $choisi['nombre'], (int) $choisi['pourcent'], $offre['numero']),
-                'quantite_milliemes' => 1000, 'unite' => 'forfait', 'prix_centimes' => PlanAcomptes::montant($ht, (int) $choisi['pourcent']),
+            // Une ligne par taux de TVA de l'offre (D11) ; une seule, comme avant, quand l'offre n'en a qu'un.
+            $tauxEntreprise = $this->c->reglages($portee)->lire()->tvaPourDixMille;
+            $parts = PlanAcomptes::parts(Totaux::parTaux($lignesOffre, $tauxEntreprise), (int) $choisi['pourcent'], $tauxEntreprise);
+            $designation = PlanAcomptes::designation((int) $choisi['rang'], (int) $choisi['nombre'], (int) $choisi['pourcent'], $offre['numero']);
+            $lignes = array_map(static fn (array $p): array => [
+                'designation' => $designation . (count($parts) > 1 ? ', prestations à ' . Formats::taux((int) $p['taux']) : ''),
+                'quantite_milliemes' => 1000, 'unite' => 'forfait', 'prix_centimes' => $p['ht'], 'tva_pour_dix_mille' => $p['taux'],
                 'categorie' => null, 'produit_id' => null,
-            ]];
+            ], $parts);
         } else {
+            // La finale copie le taux de chaque ligne, celui du produit compris : changer le catalogue ensuite ne la change pas.
             $lignes = array_map(static fn (array $l): array => [
                 'designation' => $l['designation'], 'quantite_milliemes' => $l['quantite_milliemes'], 'unite' => $l['unite'],
-                'prix_centimes' => $l['prix_centimes'], 'categorie' => $l['categorie'], 'produit_id' => $l['produit_id'],
+                'prix_centimes' => $l['prix_centimes'], 'tva_pour_dix_mille' => $l['tva_pour_dix_mille'],
+                'categorie' => $l['categorie'], 'produit_id' => $l['produit_id'],
             ], $lignesOffre);
         }
         // L'adresse du client en champs, pour la section de paiement ; vide pour une fiche d'avant les champs séparés.
@@ -642,12 +647,15 @@ final class FactureControleur
     {
         $portee = $this->portee($requete);
         $r = $this->c->reglages($portee)->lire();
-        $ht = Totaux::calculer($this->c->offres($portee)->lignes($offre['id']), $r->tvaPourDixMille, $r->arrondiCinqCentimes)['ht'];
+        $lignesOffre = $this->c->offres($portee)->lignes($offre['id']);
+        $ht = Totaux::calculer($lignesOffre, $r->tvaPourDixMille, $r->arrondiCinqCentimes)['ht'];
+        $parTaux = Totaux::parTaux($lignesOffre, $r->tvaPourDixMille);
         $choix = [];
         foreach ($possibles as $p) {
             $choix[] = $p + ['titre' => $p['genre'] === 'acompte'
                 ? sprintf("Acompte %d sur %d (%d\u{00A0}%%)", $p['rang'], $p['nombre'], $p['pourcent'])
-                : 'Facture finale', 'ht' => $p['genre'] === 'acompte' ? PlanAcomptes::montant($ht, (int) $p['pourcent']) : $ht];
+                : 'Facture finale', 'ht' => $p['genre'] === 'acompte'
+                ? array_sum(array_column(PlanAcomptes::parts($parTaux, (int) $p['pourcent'], $r->tvaPourDixMille), 'ht')) : $ht];
         }
         return new Response($this->c->twig()->render('facturer.html.twig', [
             'offre' => $offre,

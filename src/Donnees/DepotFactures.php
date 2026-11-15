@@ -19,8 +19,8 @@ use OffreGen\Adresse\Adresse;
  * (client_rue… client_pays, pour la section de paiement).
  *
  * @phpstan-type Facture array{id: int, offre_id: int, offre_numero: int, offre_cree_le: string, numero: string, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, statut: string, date_facture: string, echeance: string, titre: string, client_nom: string, client_adresse: string|null, client_rue: string|null, client_numero: string|null, client_npa: string|null, client_localite: string|null, client_pays: string|null, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, iban: string|null, reference: string|null, ht: int|null, tva: int|null, arrondi: int|null, ttc: int|null, deja_facture: int|null, a_payer: int|null, cree_le: string, modifiee_le: string|null, emise_le: string|null, annulee_le: string|null, refaite_depuis: int|null}
- * @phpstan-type FactureLigne array{id: int, facture_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: int|null, categorie: string|null}
- * @phpstan-type LigneACopier array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, categorie: string|null, produit_id: int|null}
+ * @phpstan-type FactureLigne array{id: int, facture_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null}
+ * @phpstan-type LigneACopier array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, categorie: string|null, produit_id: int|null, tva_pour_dix_mille?: int|null}
  * @phpstan-type Entete array{offre_id: int, numero: string, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, date_facture: \DateTimeImmutable, echeance: \DateTimeImmutable, titre: string, client_nom: string, client_adresse: string|null, client_postale: Adresse, refaite_depuis?: int|null}
  */
 final class DepotFactures implements SupportLignes
@@ -36,7 +36,7 @@ final class DepotFactures implements SupportLignes
          FROM facture f JOIN offre o ON o.id = f.offre_id AND o.artisan_id = f.artisan_id';
 
     private const COLONNES_LIGNE = 'l.id, l.facture_id, l.rang, l.designation, l.quantite_milliemes, l.unite, l.prix_centimes,
-            0 AS a_verifier, NULL AS entendu, l.produit_id, l.categorie
+            0 AS a_verifier, NULL AS entendu, l.produit_id, l.categorie, l.tva_pour_dix_mille, l.tva_pour_dix_mille AS tva_ligne
          FROM facture_ligne l';
 
     /** Jointure qui ne laisse passer que la ligne d'un brouillon de l'artisan. */
@@ -76,10 +76,10 @@ final class DepotFactures implements SupportLignes
             $id = $this->base->dernierId();
             foreach ($lignes as $rang => $l) {
                 $this->base->ecrire(
-                    'INSERT INTO facture_ligne (artisan_id, facture_id, rang, designation, quantite_milliemes, unite, prix_centimes, categorie, produit_id)
-                     VALUES (:a, :f, :r, :d, :q, :u, :p, :c, :pr)',
+                    'INSERT INTO facture_ligne (artisan_id, facture_id, rang, designation, quantite_milliemes, unite, prix_centimes, tva_pour_dix_mille, categorie, produit_id)
+                     VALUES (:a, :f, :r, :d, :q, :u, :p, :t, :c, :pr)',
                     ['a' => $this->portee->artisanId, 'f' => $id, 'r' => $rang + 1, 'd' => mb_substr($l['designation'], 0, 255),
-                     'q' => $l['quantite_milliemes'], 'u' => mb_substr($l['unite'], 0, 20), 'p' => $l['prix_centimes'],
+                     'q' => $l['quantite_milliemes'], 'u' => mb_substr($l['unite'], 0, 20), 'p' => $l['prix_centimes'], 't' => $l['tva_pour_dix_mille'] ?? null,
                      'c' => $l['categorie'] === null ? null : mb_substr($l['categorie'], 0, 100),
                      'pr' => $this->produitDeLArtisan($l['produit_id'])],
                 );
@@ -330,15 +330,26 @@ final class DepotFactures implements SupportLignes
                 ['f' => $factureId, 'a' => $this->portee->artisanId],
             );
             $ajoutees = $this->base->ecrire(
-                "INSERT INTO facture_ligne (artisan_id, facture_id, rang, designation, quantite_milliemes, unite, prix_centimes, categorie, produit_id)
-                 SELECT :a, f.id, :r, :d, :q, :u, :p, (SELECT categorie FROM produit WHERE id = :pr1 AND artisan_id = :a3), :pr2
+                "INSERT INTO facture_ligne (artisan_id, facture_id, rang, designation, quantite_milliemes, unite, prix_centimes, tva_pour_dix_mille, categorie, produit_id)
+                 SELECT :a, f.id, :r, :d, :q, :u, :p, (SELECT tva_pour_dix_mille FROM produit WHERE id = :pr3 AND artisan_id = :a4),
+                        (SELECT categorie FROM produit WHERE id = :pr1 AND artisan_id = :a3), :pr2
                  FROM facture f WHERE f.id = :f AND f.artisan_id = :a2 AND f.statut = 'brouillon'",
-                ['a' => $this->portee->artisanId, 'a2' => $this->portee->artisanId, 'a3' => $this->portee->artisanId, 'f' => $factureId,
+                ['a' => $this->portee->artisanId, 'a2' => $this->portee->artisanId, 'a3' => $this->portee->artisanId, 'a4' => $this->portee->artisanId, 'f' => $factureId,
                  'r' => $rang, 'd' => mb_substr($designation, 0, 255), 'q' => $quantiteMilliemes, 'u' => mb_substr($unite, 0, 20),
-                 'p' => $prixCentimes, 'pr1' => $produit, 'pr2' => $produit],
+                 'p' => $prixCentimes, 'pr1' => $produit, 'pr2' => $produit, 'pr3' => $produit],
             );
             return $ajoutees === 1 ? $this->base->dernierId() : 0;
         });
+    }
+
+    /** Le taux d'exception d'une ligne d'un brouillon (D11) ; null : celui de l'entreprise. */
+    public function changerTauxLigne(int $factureId, int $ligneId, ?int $tauxPourDixMille): bool
+    {
+        return $this->base->ecrire(
+            "UPDATE facture_ligne l JOIN facture f ON f.id = l.facture_id AND f.artisan_id = l.artisan_id AND f.statut = 'brouillon'
+             SET l.tva_pour_dix_mille = :t WHERE l.id = :l AND l.facture_id = :f AND l.artisan_id = :a AND l.supprimee_le IS NULL",
+            ['t' => $tauxPourDixMille, 'l' => $ligneId, 'f' => $factureId, 'a' => $this->portee->artisanId],
+        ) === 1 || $this->ligne($factureId, $ligneId) !== null;
     }
 
     /** Une ligne libre gardée au catalogue devient la ligne de ce produit, et prend sa catégorie. */

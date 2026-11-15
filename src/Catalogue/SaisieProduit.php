@@ -6,6 +6,7 @@ namespace OffreGen\Catalogue;
 
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\SaisieRefusee;
+use OffreGen\Offre\Tva;
 
 /**
  * Le formulaire d'un produit du catalogue, contrôlé champ par champ.
@@ -17,8 +18,8 @@ final class SaisieProduit
     public const SYNONYMES_MAX = 1000;
 
     /**
-     * @param array{designation: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, synonymes: string} $champs
-     * @return ProduitNeuf
+     * @param array{designation: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, synonymes: string, tva?: string} $champs
+     * @return array{categorie: string, designation: string, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, synonymes: string|null} un ProduitNeuf complet
      */
     public static function lire(array $champs, ?string $uniteActuelle = null): array
     {
@@ -44,10 +45,15 @@ final class SaisieProduit
         if (mb_strlen($synonymes) > self::SYNONYMES_MAX) {
             $erreurs['synonymes'] = 'Trop de mots (' . self::SYNONYMES_MAX . ' caractères au plus).';
         }
-        if ($designation === null || $unite === null || $prix === null || $categorie === null || $erreurs !== []) {
+        // Vide : le produit suit le taux de l'entreprise (D11).
+        $tva = Tva::lire($champs['tva'] ?? '');
+        if ($tva === false) {
+            $erreurs['tva'] = 'Choisissez un taux de TVA.';
+        }
+        if ($designation === null || $unite === null || $prix === null || $categorie === null || $tva === false || $erreurs !== []) {
             throw new SaisieRefusee($erreurs);
         }
-        return ['categorie' => $categorie, 'designation' => $designation, 'unite' => $unite, 'prix_centimes' => $prix,
+        return ['categorie' => $categorie, 'designation' => $designation, 'unite' => $unite, 'prix_centimes' => $prix, 'tva_pour_dix_mille' => $tva,
                 'synonymes' => $synonymes === '' ? null : $synonymes];
     }
 

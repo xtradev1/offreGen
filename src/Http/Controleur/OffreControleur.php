@@ -171,7 +171,7 @@ final class OffreControleur
      * Tout ce que montrent l'écran de l'offre et son document.
      *
      * @param array<string, string> $parametres
-     * @return array{m: Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     * @return array{m: Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
      */
     private function donnees(Request $requete, array $parametres): array
     {
@@ -185,7 +185,7 @@ final class OffreControleur
      *
      * @param Offre $offre
      * @param list<Ligne> $lignes
-     * @return array{m: Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     * @return array{m: Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
      */
     public function vueDocument(Portee $portee, array $offre, array $lignes, Marque $m): array
     {

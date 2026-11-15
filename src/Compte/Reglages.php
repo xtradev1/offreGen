@@ -16,8 +16,8 @@ use OffreGen\Offre\SaisieRefusee;
  */
 final readonly class Reglages
 {
-    /** Taux proposés à l'écran, en dix-millièmes : 8,1 % (taux normal suisse) ou non assujetti. */
-    public const TAUX_PERMIS = [810, 0];
+    /** Taux proposés à l'écran, en dix-millièmes : les taux suisses (Offre\Tva::TAUX), ou non assujetti. */
+    public const TAUX_PERMIS = [810, 260, 380, 0];
 
     /**
      * Durées de validité proposées d'un toucher ; « Autre » ouvre un nombre de 1 à 365 jours. Une offre sans

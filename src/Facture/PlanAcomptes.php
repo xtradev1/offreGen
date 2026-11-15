@@ -45,6 +45,21 @@ final class PlanAcomptes
         return Totaux::arrondir($htOffre * $pourcent, 100);
     }
 
+    /**
+     * L'acompte réparti par taux de TVA (D11, 2026-11-15) : le pourcentage du HT de chaque taux, au centime, pour que
+     * l'acompte porte la TVA de ce qu'il paie. Un seul taux, celui de l'entreprise, garde un taux nul, comme avant.
+     *
+     * @param list<array{taux: int, ht: int, tva: int}> $parTaux Totaux::parTaux des lignes de l'offre
+     * @return list<array{taux: int|null, ht: int}>
+     */
+    public static function parts(array $parTaux, int $pourcent, int $tauxEntreprise): array
+    {
+        if (count($parTaux) === 1 && $parTaux[0]['taux'] === $tauxEntreprise) {
+            return [['taux' => null, 'ht' => self::montant($parTaux[0]['ht'], $pourcent)]];
+        }
+        return array_map(static fn (array $g): array => ['taux' => $g['taux'], 'ht' => self::montant($g['ht'], $pourcent)], $parTaux);
+    }
+
     /** La ligne unique d'une facture d'acompte. */
     public static function designation(int $rang, int $nombre, int $pourcent, int $numeroOffre): string
     {

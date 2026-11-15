@@ -340,7 +340,7 @@ final class EcransTest extends TestCase
         $fiche = $this->page('/catalogue/nouveau');
         self::assertStringContainsString('<h1>Nouveau produit</h1>', $fiche);
         self::assertStringContainsString('data-premier', $fiche);
-        self::assertMatchesRegularExpression('#<details class="plus">\s*<summary>Nouvelle catégorie, mots de la dictée</summary>#', $fiche);
+        self::assertMatchesRegularExpression('#<details class="plus">\s*<summary>Nouvelle catégorie, mots de la dictée, TVA</summary>#', $fiche);
         self::assertStringContainsString('<h1>Modifier le produit</h1>', $this->page('/catalogue/' . $this->jeu->produit['a']));
     }
 

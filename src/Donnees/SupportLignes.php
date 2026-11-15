@@ -10,7 +10,7 @@ namespace OffreGen\Donnees;
  */
 interface SupportLignes
 {
-    /** @return array{id: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, produit_id: int|null, categorie: string|null}|null */
+    /** @return array{id: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null}|null */
     public function ligne(int $parentId, int $ligneId): ?array;
 
     public function corrigerLigne(int $parentId, int $ligneId, string $designation, int $quantiteMilliemes, string $unite, int $prixCentimes): bool;
@@ -25,6 +25,9 @@ interface SupportLignes
     public function ajouterLigne(int $parentId, string $designation, int $quantiteMilliemes, string $unite, int $prixCentimes, ?int $produitId): int;
 
     public function rattacherProduit(int $parentId, int $ligneId, int $produitId): void;
+
+    /** Le taux d'exception de la ligne, en dix-millièmes ; null : le taux par défaut (D11, 2026-11-15). */
+    public function changerTauxLigne(int $parentId, int $ligneId, ?int $tauxPourDixMille): bool;
 
     public function marquerModifiee(int $parentId, \DateTimeImmutable $quand): void;
 }

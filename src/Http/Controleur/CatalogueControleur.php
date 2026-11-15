@@ -6,6 +6,7 @@ namespace OffreGen\Http\Controleur;
 
 use OffreGen\Catalogue\Recherche;
 use OffreGen\Catalogue\SaisieProduit;
+use OffreGen\Offre\Tva;
 use OffreGen\Donnees\DepotProduits;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Conteneur;
@@ -79,7 +80,8 @@ final class CatalogueControleur
     {
         $p = $this->produit($requete, $parametres);
         $champs = ['designation' => $p['designation'], 'unite' => $p['unite'], 'prix' => Formats::saisiePrix($p['prix_centimes']),
-                   'categorie' => $p['categorie'], 'nouvelle_categorie' => '', 'synonymes' => $p['synonymes'] ?? ''];
+                   'categorie' => $p['categorie'], 'nouvelle_categorie' => '', 'synonymes' => $p['synonymes'] ?? '',
+                   'tva' => $p['tva_pour_dix_mille'] === null ? '' : (string) $p['tva_pour_dix_mille']];
         return $this->formulaire($requete, $p, $champs, [], 200);
     }
 
@@ -127,19 +129,19 @@ final class CatalogueControleur
         return $this->depot($requete)->parId(Parametres::id($parametres, 'id')) ?? throw new PageIntrouvable();
     }
 
-    /** @return array{designation: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, synonymes: string} */
+    /** @return array{designation: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, synonymes: string, tva: string} */
     private static function champs(Request $requete): array
     {
         $r = $requete->request;
         return ['designation' => $r->getString('designation'), 'unite' => $r->getString('unite'), 'prix' => $r->getString('prix'),
                 'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie'),
-                'synonymes' => $r->getString('synonymes')];
+                'synonymes' => $r->getString('synonymes'), 'tva' => $r->getString('tva')];
     }
 
-    /** @return array{designation: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, synonymes: string} */
+    /** @return array{designation: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, synonymes: string, tva: string} */
     private static function vide(): array
     {
-        return ['designation' => '', 'unite' => 'pce', 'prix' => '', 'categorie' => '', 'nouvelle_categorie' => '', 'synonymes' => ''];
+        return ['designation' => '', 'unite' => 'pce', 'prix' => '', 'categorie' => '', 'nouvelle_categorie' => '', 'synonymes' => '', 'tva' => ''];
     }
 
     /**
@@ -160,6 +162,8 @@ final class CatalogueControleur
             'erreurs' => $erreurs,
             'categories' => $categories,
             'unites' => $unites,
+            'taux_tva' => Tva::TAUX,
+            'tva_entreprise' => $this->c->reglages(new Portee($requete->attributes->getInt('_artisan')))->lire()->tvaPourDixMille,
         ]), $code);
     }
 }

@@ -1,0 +1,10 @@
+{# Le taux d'une ligne ou d'un produit (décision D11) : le taux habituel (valeur vide), ou un des taux suisses.
+   Paramètres : actuel ('' ou le taux en texte), habituel (libellé du premier choix), taux_tva (Tva::TAUX), erreurs. #}
+<fieldset class="groupe">
+  <legend>TVA</legend>
+  <label class="radio"><input type="radio" name="tva" value=""{% if actuel == '' %} checked{% endif %}><span>{{ habituel }}</span></label>
+  {% for t, nom in taux_tva %}
+    <label class="radio"><input type="radio" name="tva" value="{{ t }}"{% if actuel == t ~ '' %} checked{% endif %}><span>{{ t|taux }}, {{ nom }}</span></label>
+  {% endfor %}
+  {% if erreurs.tva is defined %}<span class="err" id="err-tva">{{ erreurs.tva }}</span>{% endif %}
+</fieldset>

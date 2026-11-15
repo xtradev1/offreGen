@@ -16,9 +16,9 @@ final class Montants
 {
     /**
      * @param array{statut: string, genre: string, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, deja_facture: int|null} $facture
-     * @param list<array{quantite_milliemes: int, prix_centimes: int}> $lignes
+     * @param list<array{quantite_milliemes: int, prix_centimes: int, tva_pour_dix_mille?: int|null}> $lignes
      * @param int $dejaFactureVivant le TTC des acomptes émis de l'offre aujourd'hui (DepotFactures::dejaFacture)
-     * @return array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, taux: int, deja: int, a_payer: int}
+     * @return array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>, taux: int, deja: int, a_payer: int}
      */
     public static function de(array $facture, array $lignes, Reglages $r, int $dejaFactureVivant): array
     {

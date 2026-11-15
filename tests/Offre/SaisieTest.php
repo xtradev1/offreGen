@@ -89,7 +89,21 @@ final class SaisieTest extends TestCase
     {
         $p = SaisieProduit::lire(['designation' => 'Crépi', 'unite' => 'm²', 'prix' => '34,50', 'categorie' => 'Façade',
             'nouvelle_categorie' => '', 'synonymes' => 'crépi, Crépi ,  rustique,,']);
-        self::assertSame(['categorie' => 'Façade', 'designation' => 'Crépi', 'unite' => 'm²', 'prix_centimes' => 3450, 'synonymes' => 'crépi, rustique'], $p);
+        self::assertSame(['categorie' => 'Façade', 'designation' => 'Crépi', 'unite' => 'm²', 'prix_centimes' => 3450, 'tva_pour_dix_mille' => null, 'synonymes' => 'crépi, rustique'], $p);
+    }
+
+    public function testLeTauxDUnProduitEstUnTauxSuisseOuVide(): void
+    {
+        $champs = ['designation' => 'Nuitée', 'unite' => 'pce', 'prix' => '120', 'categorie' => 'Hébergement', 'nouvelle_categorie' => '', 'synonymes' => ''];
+        self::assertSame(380, SaisieProduit::lire($champs + ['tva' => '380'])['tva_pour_dix_mille']);
+        self::assertSame(0, SaisieProduit::lire($champs + ['tva' => '0'])['tva_pour_dix_mille']);
+        self::assertNull(SaisieProduit::lire($champs + ['tva' => ''])['tva_pour_dix_mille']);
+        try {
+            SaisieProduit::lire($champs + ['tva' => '770']);
+            self::fail('7,7 % n\'est plus un taux suisse.');
+        } catch (SaisieRefusee $e) {
+            self::assertArrayHasKey('tva', $e->erreurs);
+        }
     }
 
     public function testNouvelleCategorieLEmporte(): void

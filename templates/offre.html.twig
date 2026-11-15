@@ -18,11 +18,13 @@
 
   {% include '_lignes.html.twig' with {base: '/offres/' ~ offre.id, modifiable: true, ranger: true, vide:"Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un."} %}
 
+  {# La TVA par taux dès que l'offre en a plusieurs (D11, 2026-11-15). #}
+  {% set avec_tva = totaux.par_taux|filter(g => g.taux > 0)|length > 0 %}
   <div class="totals">
-    <div class="r"><span>Sous-total{% if tva > 0 %} HT{% endif %}</span><span>{{ totaux.ht|chf }}</span></div>
-    {% if tva > 0 %}<div class="r"><span>TVA {{ tva|taux }}</span><span>{{ totaux.tva|chf }}</span></div>{% endif %}
+    <div class="r"><span>Sous-total{% if avec_tva %} HT{% endif %}</span><span>{{ totaux.ht|chf }}</span></div>
+    {% if totaux.par_taux|length > 1 %}{% for g in totaux.par_taux %}<div class="r"><span>TVA {{ g.taux|taux }} sur {{ g.ht|chf }}</span><span>{{ g.tva|chf }}</span></div>{% endfor %}{% elseif avec_tva %}<div class="r"><span>TVA {{ totaux.par_taux[0].taux|taux }}</span><span>{{ totaux.tva|chf }}</span></div>{% endif %}
     {% if totaux.arrondi != 0 %}<div class="r"><span>Arrondi</span><span>{{ totaux.arrondi|chf }}</span></div>{% endif %}
-    <div class="r grand"><span>Total{% if tva > 0 %} TTC{% endif %}</span><span>{{ totaux.ttc|chf }}</span></div>
+    <div class="r grand"><span>Total{% if avec_tva %} TTC{% endif %}</span><span>{{ totaux.ttc|chf }}</span></div>
   </div>
   <p class="muted petit">Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.</p>
 {% endblock %}
@@ -33,7 +35,8 @@
      Une ligne à vérifier ou sans prix demande d'abord la relecture, une à la fois (D5). #}
   {% set a_relire = 0 %}
   {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or r.l.prix_centimes == 0 %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
-  <div class="totalbar" data-total-fixe><span>Total{% if tva > 0 %} TTC{% endif %}</span><b>{{ totaux.ttc|chf }}</b></div>
+  {% set avec_tva = totaux.par_taux|filter(g => g.taux > 0)|length > 0 %}
+  <div class="totalbar" data-total-fixe><span>Total{% if avec_tva %} TTC{% endif %}</span><b>{{ totaux.ttc|chf }}</b></div>
   <div class="actionbar">
     <a class="btn carre" href="/offres/{{ offre.id }}/ajouter" aria-label="Ajouter une ligne">
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>

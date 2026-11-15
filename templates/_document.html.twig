@@ -16,6 +16,8 @@
 {% set doc_client_adresse = facture ? f.client_adresse : offre.client_adresse %}
 {% set doc_ref %}{% if facture %}selon offre n°&nbsp;{{ f.offre_numero }} du {{ f.offre_cree_le|jour }}{% endif %}{% endset %}
 {% set t = facture ? montants : totaux|merge({taux: tva, deja: 0, a_payer: totaux.ttc}) %}
+{# La TVA par taux dès que le document en a plusieurs (D11, 2026-11-15). #}
+{% set avec_tva = t.par_taux|filter(g => g.taux > 0)|length > 0 %}
 {% set date_offre = facture ? f.date_facture|jour : (offre.modifiee_le ?? offre.cree_le)|jour %}
 {% set adresse = r.adresse.lignes|split("\n")|filter(l => l != '') %}
 {% set coord %}<b>{{ r.entreprise }}</b>{% for ligne in adresse %}<br>{{ ligne }}{% endfor %}{% if r.telephone %}<br>{{ r.telephone }}{% endif %}{% if r.courrielContact %}<br>{{ r.courrielContact }}{% endif %}{% endset %}
@@ -71,7 +73,8 @@
         {% for x in g.lignes %}
           <tr{% if moderne and loop.index0 is even %} class="c-teinte"{% endif %}>
             {% if tech %}<td class="pos">{{ gi }}.{{ loop.index }}</td>{% endif %}
-            <td>{{ x.l.designation }}</td>
+            {# Plusieurs taux : la ligne à un autre taux que l'entreprise le dit (LTVA, art. 26 ; D11). #}
+            <td>{{ x.l.designation }}{% if t.par_taux|length > 1 and (x.l.tva_pour_dix_mille ?? t.taux) != t.taux %}<span class="doc-tva"> · TVA {{ x.l.tva_pour_dix_mille|taux }}</span>{% endif %}</td>
             <td class="n">{{ x.l.quantite_milliemes|quantite }}&nbsp;{{ x.l.unite }}</td>
             <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.l.prix_centimes|montant }}{% endif %}</td>
             <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.total|montant }}{% endif %}</td>
@@ -83,22 +86,22 @@
   </table>
 
   <table class="doc-totaux">
-    <tr><td>Sous-total{% if t.taux > 0 %} HT{% endif %}</td><td class="n">{{ t.ht|montant }}</td></tr>
-    {% if t.taux > 0 %}<tr><td>TVA {{ t.taux|taux }}</td><td class="n">{{ t.tva|montant }}</td></tr>{% endif %}
+    <tr><td>Sous-total{% if avec_tva %} HT{% endif %}</td><td class="n">{{ t.ht|montant }}</td></tr>
+    {% if t.par_taux|length > 1 %}{% for g in t.par_taux %}<tr><td>TVA {{ g.taux|taux }} sur {{ g.ht|montant }}</td><td class="n">{{ g.tva|montant }}</td></tr>{% endfor %}{% elseif avec_tva %}<tr><td>TVA {{ t.par_taux[0].taux|taux }}</td><td class="n">{{ t.tva|montant }}</td></tr>{% endif %}
     {% if t.arrondi != 0 %}<tr><td>Arrondi</td><td class="n">{{ t.arrondi|montant }}</td></tr>{% endif %}
     {% if t.deja > 0 %}
-      <tr><td>Total{% if t.taux > 0 %} TTC{% endif %}</td><td class="n">{{ t.ttc|montant }}</td></tr>
+      <tr><td>Total{% if avec_tva %} TTC{% endif %}</td><td class="n">{{ t.ttc|montant }}</td></tr>
       <tr><td>Acomptes déjà facturés</td><td class="n">−&nbsp;{{ t.deja|montant }}</td></tr>
       {% if not epure %}<tr class="doc-g"><td class="{{ total_classe }}">À payer</td><td class="n {{ total_classe }}">{{ t.a_payer|chf }}</td></tr>{% endif %}
-    {% elseif not epure %}<tr class="doc-g"><td class="{{ total_classe }}">Total{% if t.taux > 0 %} TTC{% endif %}</td><td class="n {{ total_classe }}">{{ t.ttc|chf }}</td></tr>{% endif %}
+    {% elseif not epure %}<tr class="doc-g"><td class="{{ total_classe }}">Total{% if avec_tva %} TTC{% endif %}</td><td class="n {{ total_classe }}">{{ t.ttc|chf }}</td></tr>{% endif %}
   </table>
-  {% if epure %}<p class="doc-grand-total c-texte">{% if t.deja > 0 %}À payer {{ t.a_payer|chf }}{% else %}Total{% if t.taux > 0 %} TTC{% endif %} {{ t.ttc|chf }}{% endif %}</p>{% endif %}
+  {% if epure %}<p class="doc-grand-total c-texte">{% if t.deja > 0 %}À payer {{ t.a_payer|chf }}{% else %}Total{% if avec_tva %} TTC{% endif %} {{ t.ttc|chf }}{% endif %}</p>{% endif %}
 
   {% if facture %}
   <div class="doc-cond">
     <ul>
       <li>Payable jusqu'au {{ f.echeance|jour }}{% if qr %} avec la section de paiement {{ qr_place == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}. Merci de votre confiance.</li>
-      <li>Montants en francs suisses{% if t.taux > 0 %}, TVA comprise dans le total{% endif %}.</li>
+      <li>Montants en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.</li>
     </ul>
   </div>
   {% else %}
@@ -106,14 +109,14 @@
       <b>Conditions</b>
       <ul>
         <li>Paiement&nbsp;: {{ r.conditionsPaiement }}</li>
-        <li>Offre valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if t.taux > 0 %}, TVA comprise dans le total{% endif %}.</li>
+        <li>Offre valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.</li>
       </ul>
     </div>
 
     <table class="doc-signature"><tr><td>Lieu et date</td><td>Bon pour accord, signature du client</td></tr></table>
   {% endif %}
 
-  <div class="doc-pied">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if t.taux > 0 %} TVA{% endif %}{% endif %}</div>
+  <div class="doc-pied">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if avec_tva %} TVA{% endif %}{% endif %}</div>
 </div>
 {# Section de paiement (lot 6b) : hors de .doc, qui porte la marge et la barre du modèle Technique. Absente du premier
    rendu PDF (« essai »), qui ne sert qu'à compter les pages. #}
