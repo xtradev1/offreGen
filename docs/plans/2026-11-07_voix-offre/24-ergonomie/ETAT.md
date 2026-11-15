@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 9 du `PLAN.md` : revue du diff du sous-chantier, `RECETTE.md`, démo remise à zéro.
+Lot 9 du `PLAN.md` (revue, `RECETTE.md`, démo remise à zéro), après le sous-chantier 25 : sa recette porterait sur des écrans de facturation qui changent (décision du 2026-11-15).
 
 ## En attente de toi
 

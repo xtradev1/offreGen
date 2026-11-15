@@ -93,4 +93,25 @@ final class VersionPcTest extends TestCase
         // Le document que la colonne reprend porte son article.
         self::assertStringContainsString('<article class="paper">', $this->page("/offres/$id/document"));
     }
+
+    /**
+     * Xavier, 2026-11-15 : une tablette reçoit la vue du téléphone. La largeur seule ne suffit pas (un iPad en paysage
+     * fait 1180 px) : la version PC demande aussi une souris ou un pavé tactile. Chaque requête de largeur de app.css
+     * et de app.js porte donc la condition de pointeur, et le téléphone prend tout ce qui n'est pas « PC ».
+     */
+    public function testLaVersionPcDemandeUnPointeurFin(): void
+    {
+        $racine = dirname(__DIR__, 2) . '/public';
+        $css = (string) file_get_contents($racine . '/css/app.css');
+        $js = (string) file_get_contents($racine . '/js/app.js');
+        $pointeur = 'and (hover: hover) and (pointer: fine)';
+        self::assertSame(1, substr_count($css, "@media (min-width: 1024px) $pointeur {"), 'bloc PC de app.css');
+        self::assertSame(1, substr_count($css, "@media not all and (min-width: 1024px) $pointeur {"), 'bloc téléphone de app.css');
+        self::assertDoesNotMatchRegularExpression('/@media \((?:max|min)-width: 10[0-9]{2}(?:\.98)?px\) \{/', $css, 'une largeur seule');
+        preg_match_all("/matchMedia\\('([^']+)'\\)/", $js, $m);
+        self::assertNotEmpty($m[1]);
+        foreach ($m[1] as $requete) {
+            self::assertStringEndsWith($pointeur, $requete, $requete);
+        }
+    }
 }

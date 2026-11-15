@@ -1078,7 +1078,7 @@ function clavierPc() {
   });
   // Retour sur l'offre après « c'est juste » ou une correction (#l12) : sur PC, le curseur revient dans la ligne.
   const ancre = /^#l(\d+)$/.exec(window.location.hash);
-  if (ancre && window.matchMedia('(min-width: 1024px)').matches) {
+  if (ancre && window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches) {
     const champ = document.querySelector('#l' + ancre[1] + ' input[data-envoi-change]');
     // Après les autres branchements (le focus sélectionne alors le contenu du champ, comme au clic).
     if (champ) setTimeout(() => champ.focus(), 0);
@@ -1134,7 +1134,7 @@ function documentACote() {
   let garde = false;
   try { garde = window.localStorage.getItem('offregen-doc-a-cote') === '1'; } catch (err) { /* idem */ }
   // Le document à côté demande 1280 px (app.css) ; plus étroit, le choix reste gardé pour un plus grand écran.
-  if (garde && window.matchMedia('(min-width: 1280px)').matches) montrer(true);
+  if (garde && window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) montrer(true);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

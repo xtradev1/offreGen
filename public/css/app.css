@@ -535,13 +535,15 @@ fieldset.adresse legend { font-size: 14px; font-weight: 600; padding: 0; margin:
 
 /* Version PC (décisions D12 et D13, 2026-11-15). Sous 1024 px, rien ne change : les éléments du PC sont cachés.
    À partir de 1024 px : la barre du bas devient le menu de gauche ; l'écran d'une offre garde la liste des offres
-   dans une colonne ; « Document à côté » remplace la liste par le document, qui suit chaque correction. */
+   dans une colonne ; « Document à côté » remplace la liste par le document, qui suit chaque correction.
+   Une tablette garde la vue du téléphone (Xavier, 2026-11-15) : la version PC demande aussi une souris ou un pavé
+   tactile, un iPad en paysage (1180 px) reste au pouce. */
 kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 2px 5px; background: var(--chip); color: var(--ink); }
 .colonne-liste, .colonne-doc { display: none; }
-@media (max-width: 1023.98px) {
+@media not all and (min-width: 1024px) and (hover: hover) and (pointer: fine) {
   .pc-seul { display: none !important; }
 }
-@media (min-width: 1024px) {
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
   body { --menu: 232px; --liste: 340px; --doc: min(42vw, 680px); }
   .mobile-seul { display: none !important; }
 
