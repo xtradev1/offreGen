@@ -71,6 +71,21 @@ final class OffreControleur
     }
 
     /**
+     * « Générer l'offre » montre le PDF, tel que le client le recevra (Xavier, 2026-11-15, décision D7 A) : dessiné dans
+     * l'application par PDF.js, livré avec elle, les boutons restent en bas.
+     *
+     * @param array<string, string> $parametres
+     */
+    public function apercu(Request $requete, array $parametres): Response
+    {
+        $offre = $this->offre($requete, $parametres);
+        return new Response($this->c->twig()->render('apercu_pdf.html.twig', ['offre' => $offre, 'pdfjs' => self::PDFJS]));
+    }
+
+    /** Dossier de PDF.js dans public/js/vendor (version verrouillée, empreinte vérifiée : docs/DEPLOIEMENT.md). */
+    public const PDFJS = '/js/vendor/pdfjs-6.5.438';
+
+    /**
      * Le PDF du même document, prêt à envoyer ou à imprimer.
      *
      * @param array<string, string> $parametres

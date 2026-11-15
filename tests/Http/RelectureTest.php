@@ -81,7 +81,7 @@ final class RelectureTest extends TestCase
         $this->a->post("{$this->offre}/relire/$deuxieme", ['quantite' => '24', 'prix' => '32']);
         $fin = $this->page($this->offre . '/relire');
         self::assertStringContainsString('Toutes les lignes sont relues', $fin);
-        self::assertStringContainsString("href=\"{$this->offre}/document\"", $fin, 'le geste suivant : générer l\'offre');
+        self::assertStringContainsString("href=\"{$this->offre}/apercu\"", $fin, 'le geste suivant : générer l\'offre');
     }
 
     public function testUneLigneSansPrixDemandeUnPrix(): void

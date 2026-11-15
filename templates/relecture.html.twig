@@ -39,7 +39,7 @@
   <div class="actionbar">
     {% if l is null %}
       <a class="btn grand" href="/offres/{{ offre.id }}">Revenir à l'offre</a>
-      <a class="btn primary grand" href="/offres/{{ offre.id }}/document">Générer l'offre</a>
+      <a class="btn primary grand" href="/offres/{{ offre.id }}/apercu">Générer l'offre</a>
     {% else %}
       <a class="btn grand" href="/offres/{{ offre.id }}/lignes/{{ l.id }}">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></svg>Corriger</a>

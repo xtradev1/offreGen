@@ -77,6 +77,8 @@ return static function (Conteneur $c): array {
         new Route('ligne_creer_produit', '/offres/{id}/lignes/{ligne}/produit', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->creerProduit($r, $p), Route::ARTISAN),
         new Route('ligne_rattacher_choix', '/offres/{id}/lignes/{ligne}/rattacher', ['GET'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->choix($r, $p), Route::ARTISAN),
         new Route('ligne_rattacher', '/offres/{id}/lignes/{ligne}/rattacher', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->rattacher($r, $p), Route::ARTISAN),
+        // « Générer l'offre » : le PDF dans l'application (décision D7 A, 2026-11-15). Lecture seule.
+        new Route('offre_apercu', '/offres/{id}/apercu', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->apercu($r, $p), Route::ARTISAN),
         // Relecture au pouce, une ligne à la fois (décision D5, 2026-11-15).
         new Route('offre_relire', '/offres/{id}/relire', ['GET'], static fn (Request $r, array $p): Response => (new RelectureControleur($c))->afficher($r, $p), Route::ARTISAN),
         new Route('offre_relire_valider', '/offres/{id}/relire/{ligne}', ['POST'], static fn (Request $r, array $p): Response => (new RelectureControleur($c))->valider($r, $p), Route::ARTISAN),

@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 5 du `PLAN.md` : « Générer l'offre » affiche le PDF dans l'application (PDF.js livré avec l'application).
+Lot 6 du `PLAN.md` : « Envoyer » par le partage du téléphone (offre notée « envoyée ») et « Facturer » dans une feuille (montant modifiable, D9).
 
 ## En attente de toi
 
@@ -47,6 +47,8 @@ Lot 5 du `PLAN.md` : « Générer l'offre » affiche le PDF dans l'applicatio
 - 2026-11-15 : lots 2 et 3 faits. Offre : client et objet en cartes de 60 px, total TTC fixé en bas, action principale selon l'état (« Relire N lignes » tant qu'une ligne est à vérifier ou sans prix, puis « Générer l'offre »), « + » de 64 px, champs de 48 px, corbeille de 48 px écartée du montant, glisser une ligne à gauche la retire avec le même « Annuler ». Relecture `/offres/{id}/relire` : une ligne à la fois dans l'ordre de l'écran, rappel de la dictée, quantité et prix modifiables, prix exigé pour une ligne sans prix, « Toutes les lignes sont relues » puis « Générer l'offre ». Décision de mise en œuvre : champs gardés dans la ligne (moins de touchers que la maquette B). Trouvé aux captures et au parcours : règles CSS du 24 écrasées par les anciennes (placées avant elles, puis `.ohead a.who` plus précise), pastille « Prête à relire » figée, montant tapé avec l'apostrophe droite ; un faux échec du glissé venait du test (ligne sous la barre du bas, diagnostiqué par les événements reçus). Tous corrigés.
 
 - 2026-11-15 : lot 4 fait. Ligne hors catalogue d'une offre : « Créer le produit » (désignation, unité, prix de la ligne, catégorie « Divers ») et « Rattacher à un produit » (recherche partie du premier mot de la ligne ; la ligne prend désignation, unité et prix du catalogue, garde sa quantité). Décision de mise en œuvre : le synonyme ajouté est le nom que l'IA a donné à la ligne, pas la phrase entendue entière, qui brouillerait la recherche ; seulement si la ligne était hors catalogue. Rattacher marche aussi pour une ligne déjà au catalogue (corriger un mauvais produit de l'IA), sans synonyme. Trouvé aux captures : message « Rien pour… » resté après une autre recherche, corrigé.
+
+- 2026-11-15 : lot 5 fait. « Générer l'offre » (offre et fin de relecture) mène à `/offres/{id}/apercu` : le vrai PDF dessiné par PDF.js 6.5.438, livré avec l'application (intégrité npm vérifiée, empreintes dans `DEPLOIEMENT.md`), sur fond gris ; en bas Modifier, Facturer, PDF (téléchargement), 64 px. Sans JavaScript ou en cas d'échec : un lien ouvre le PDF. La page HTML `/document` reste pour les liens existants.
 
 ## Preuves
 
@@ -94,4 +96,13 @@ $ node parcours-lot4.js (390 px)
   rattachée : message « Ligne rattachée à « … » » ; la ligne prend le nom du produit ; boutons de rangement : 0
   fiche du produit : synonymes « échafaudage, Crépi de soubassement »
   « Créer le produit » : message « « Nettoyage haute pression » ajouté au catalogue » ; boutons restants : 0 ; largeur 390/390 ; erreurs JS : aucune
+```
+
+Lot 5, PDF dans l'application (2026-11-15) :
+
+```
+$ phpunit : OK (437 tests) ; phpstan : [OK] No errors
+$ node parcours-lot5.js
+  tel : 1 page(s) dessinée(s) en 539 ms, largeur 358px (écran 390), points sombres échantillonnés 70 ; « Pincer pour agrandir » ; Modifier 64 px / Facturer 64 px / PDF 64 px
+  pc : 1 page(s) dessinée(s) en 523 ms, largeur 448px ; erreurs : aucune (au téléphone, seule l'icône du site en 404)
 ```

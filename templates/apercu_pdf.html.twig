@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{# « Générer l'offre » : le PDF tel que le client le recevra (Xavier, 2026-11-15 ; décision D7 A). PDF.js le dessine page
+   par page ; pincer pour agrandir. Les gestes suivants restent en bas. #}
+{% block titre %}Offre {{ offre.numero }} · PDF · offreGen{% endblock %}
+{% block entete_html %}<script type="module" src="/js/apercu-pdf.js"></script>{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}Offre {{ offre.numero }} · PDF{% endblock %}
+{% block ecran_classe %} apercu-pdf{% endblock %}
+
+{% block contenu %}
+  <div class="pdf-pages" data-pdf="/offres/{{ offre.id }}/pdf" data-worker="{{ pdfjs }}/pdf.worker.min.js">
+    <p class="pdf-attente" data-pdf-etat>Préparation du PDF…</p>
+  </div>
+  <noscript><p><a href="/offres/{{ offre.id }}/pdf">Ouvrir le PDF</a></p></noscript>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn grand" href="/offres/{{ offre.id }}">Modifier</a>
+    <a class="btn grand" href="/offres/{{ offre.id }}/facturer">Facturer</a>
+    <a class="btn primary grand" href="/offres/{{ offre.id }}/pdf" download>
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>PDF</a>
+  </div>
+{% endblock %}

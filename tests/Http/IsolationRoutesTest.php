@@ -84,6 +84,7 @@ final class IsolationRoutesTest extends TestCase
             'offre_document' => ['/offres/' . $this->jeu->offre['a'] . '/document', '/offres/' . $this->jeu->offre['b'] . '/document'],
             'offre_pdf' => ['/offres/' . $this->jeu->offre['a'] . '/pdf', '/offres/' . $this->jeu->offre['b'] . '/pdf'],
             'offre_ajout' => ['/offres/' . $this->jeu->offre['a'] . '/ajouter', '/offres/' . $this->jeu->offre['b'] . '/ajouter'],
+            'offre_apercu' => ['/offres/' . $this->jeu->offre['a'] . '/apercu', '/offres/' . $this->jeu->offre['b'] . '/apercu'],
             'offre_relire' => ['/offres/' . $this->jeu->offre['a'] . '/relire', '/offres/' . $this->jeu->offre['b'] . '/relire'],
             'ligne' => [$this->cheminLigne('a'), $this->cheminLigne('b')],
             'ligne_rattacher_choix' => [$this->cheminLigne('a', '/rattacher'), $this->cheminLigne('b', '/rattacher')],

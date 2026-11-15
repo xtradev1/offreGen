@@ -58,6 +58,13 @@ Jamais pour la production.
 - ffmpeg statique 7.0.2 (johnvansickle.com), dans `~/outils/ffmpeg`, sha256 de l'archive `abda8d77ce8309141f83ab8edf0596834087c52467f6badf376a6a2a4c87cf67`. Version d'août 2024, sans les correctifs parus depuis : acceptable sur le test, à remplacer avant la production.
 - `GET /sante` rend le commit (fichier `REVISION` posé à la construction), l'état de la base et des migrations ; la sonde le lit avec le commit attendu.
 
+## PDF.js (sous-chantier 24, lot 5)
+
+- PDF.js 6.5.438 (pdfjs-dist, licence Apache 2.0), publiée le 2026-11-01, dans `public/js/vendor/pdfjs-6.5.438/` : `pdf.min.js` et `pdf.worker.min.js` (copies de `build/pdf.min.mjs` et `build/pdf.worker.min.mjs`, renommées en `.js` pour le type MIME d'Apache).
+- Intégrité de l'archive npm vérifiée le 2026-11-15 : `sha512-vg8Pw1x+AFKy4AMDvhuWl5cOYV8d698UoEANoFFhc79hqXDnZQqnOXoxw3HG907WHOg1JYOvLhP756boddFxpA==`. sha256 des fichiers livrés : `pdf.min.js` 3a88402882cfa3e7e72c2c9b5149f52f0f88baf1c5b62aa11a41abdbc2072440, `pdf.worker.min.js` 1e64c8240e54735ec5913b37acd5134747799cb8c6bb3777c70adbc01232d2aa.
+- Servi par le site lui-même : la CSP (`default-src 'self'`) ne change pas ; `isEvalSupported` est coupé, la CSP interdit eval. Polices standard de PDF.js non livrées : la section de paiement (Helvetica) s'affiche dans la police sans empattement de l'appareil, à l'écran seulement.
+- Mise à jour : nouvelle version dans un nouveau dossier, constante `OffreControleur::PDFJS` et import de `public/js/apercu-pdf.js`, empreintes notées ici.
+
 ## Adresses (sous-chantier 18)
 
 - `.env` de production : `ADRESSES=swisstopo`. Sans cette ligne, le registre factice répond : aucune suggestion, aucune vérification, la saisie marche quand même.

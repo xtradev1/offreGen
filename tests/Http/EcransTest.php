@@ -293,11 +293,11 @@ final class EcransTest extends TestCase
         self::assertMatchesRegularExpression('#<div class="totalbar" data-total-fixe><span>Total TTC</span><b>CHF\x{00A0}[0-9\'’.]+</b></div>#u', $page);
         self::assertMatchesRegularExpression("#<a class=\"btn carre\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\">#", $page);
         self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/relire\">.*Relire 2 lignes</a>#s", $page);
-        self::assertStringNotContainsString("href=\"{$this->offre}/document\"", $page, 'pas de génération tant que des lignes attendent');
+        self::assertStringNotContainsString("href=\"{$this->offre}/apercu\"", $page, 'pas de génération tant que des lignes attendent');
 
         BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 0, prix_centimes = 1500 WHERE offre_id = $o");
         $page = $this->page($this->offre);
-        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/document\">Générer l'offre#", $page);
+        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/apercu\">Générer l'offre#", $page);
         self::assertStringNotContainsString('/relire"', $page);
     }
 
