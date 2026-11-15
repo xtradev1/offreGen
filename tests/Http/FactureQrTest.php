@@ -74,15 +74,21 @@ final class FactureQrTest extends TestCase
 
     public function testLApercuMontreLaSectionDePaiement(): void
     {
+        // L'aperçu de la feuille Facturer (rien de créé) n'a rien à scanner.
+        $feuille = $this->page('/offres/' . $this->jeu->offre['a'] . '/facturer/apercu?genre=finale&numero=2026-002&date=2026-11-07&echeance=2026-12-07');
+        self::assertStringContainsString('attribuée à la création', $feuille);
         $page = $this->page('/factures/' . $this->creer() . '/document');
         self::assertStringContainsString('Récépissé', $page);
         self::assertStringContainsString('Section paiement', $page);
         self::assertStringContainsString('CH93 0076 2011 6238 5295 7', $page);
-        self::assertMatchesRegularExpression('#RF\d\d 2026 001#', $page, 'Référence RF bâtie sur le numéro.');
+        // Brouillon sans numéro (revue du 25) : le cadre, sans code ni référence à scanner ; la vraie à la création.
+        self::assertDoesNotMatchRegularExpression('#RF\d\d 2026 001#', $page);
+        self::assertStringContainsString('attribuée à la création', $page);
+        self::assertStringContainsString('<text x="87" y="100" font-size="13" text-anchor="middle" fill="#69717C">à la création</text>', $page);
         self::assertStringContainsString('Facture n° 2026-001', $page);
         self::assertStringContainsString('<p class="qr-e">Payable par</p><p class="qr-v">Client a<br>Rue a 1<br>2800 Delémont</p>', $page, '« Payable par » : le client de la facture.');
         self::assertStringContainsString("250.00", $page);
-        self::assertStringContainsString('<svg xmlns="http://www.w3.org/2000/svg" width="174"', $page, 'Le code en ligne : la CSP refuse les images en data:.');
+        self::assertStringContainsString('<svg xmlns="http://www.w3.org/2000/svg" width="174"', $page, 'Le cadre en ligne : la CSP refuse les images en data:.');
         self::assertStringNotContainsString('data:image', $page);
         self::assertStringContainsString('avec la section de paiement ci-dessous', $page);
         self::assertStringNotContainsString(QrFacture::SANS_IBAN, $page);

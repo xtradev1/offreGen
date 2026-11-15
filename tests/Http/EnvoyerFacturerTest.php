@@ -82,7 +82,7 @@ final class EnvoyerFacturerTest extends TestCase
         }
         self::assertMatchesRegularExpression('#<input id="montant" name="montant"[^>]*inputmode="decimal"#', $page);
         // 30 % de 231.25 HT = 69.38, TVA 5.62, 75.00 TTC.
-        self::assertStringContainsString("<button class=\"btn primary grand\" type=\"submit\" form=\"facturer\" name=\"suite\" value=\"creer\" data-bouton-creer>Créer la facture · CHF\u{00A0}75.00</button>", $page);
+        self::assertStringContainsString("<button class=\"btn primary grand\" type=\"submit\" form=\"facturer\" name=\"suite\" value=\"creer\" data-bouton-creer data-attente=\"Création…\">Créer la facture · CHF\u{00A0}75.00</button>", $page);
         self::assertStringContainsString('data-apercu-mini', $page);
         self::assertStringContainsString('Aperçu', $page);
         self::assertStringNotContainsString('Vérifier avant', $page);
@@ -172,6 +172,47 @@ final class EnvoyerFacturerTest extends TestCase
         BaseDeTest::pdo()->exec('DELETE FROM facture');
         $this->facturer(['genre' => 'finale', 'numero' => 'F-7', 'suite' => 'corriger']);
         self::assertSame('F-7', BaseDeTest::ligne('SELECT numero FROM facture')['numero']);
+    }
+
+    /** Revue du 25 : un double toucher (ou un réseau lent qui renvoie) ne crée qu'une facture. */
+    public function testUnDoubleEnvoiNeCreeQuUneFacture(): void
+    {
+        $page = $this->page($this->offre . '/facturer');
+        self::assertSame(1, preg_match('#<input type="hidden" name="jeton" value="([a-f0-9]{32})">#', $page, $m), 'La feuille porte un jeton.');
+        $champs = ['genre' => 'acompte', 'pourcent' => '30', 'numero' => '2026-050', 'date' => '2026-11-07', 'echeance' => '2026-12-07', 'suite' => 'creer', 'jeton' => $m[1] ?? ''];
+        $premier = $this->a->post($this->offre . '/facturer', $champs);
+        $this->page($this->offre . '/facturer'); // le jeton CSRF du navigateur de test ; le jeton de la feuille reste le premier
+        $second = $this->a->post($this->offre . '/facturer', ['numero' => '2026-051'] + $champs);
+        self::assertSame(1, BaseDeTest::compter('facture'));
+        self::assertSame($premier->headers->get('Location'), $second->headers->get('Location'), 'Le second envoi retrouve la facture du premier.');
+        self::assertMatchesRegularExpression('#<button class="btn primary grand" type="submit" form="facturer" name="suite" value="creer" data-bouton-creer data-attente="Création…">#', $page);
+    }
+
+    /**
+     * Revue du 25 : un acompte refait (« Annuler et refaire ») qui attend en brouillon ne serait pas déduit par la
+     * finale ; la finale ne s'émet donc pas tant qu'il attend, et un acompte ne s'émet plus après la finale émise.
+     */
+    public function testUnAcompteEnBrouillonEtLaFinaleNeSeCroisentPas(): void
+    {
+        [, $vers] = $this->facturer([]);
+        $acompte = (int) BaseDeTest::ligne("SELECT id FROM facture WHERE numero = '2026-050'")['id'];
+        $this->page("/factures/$acompte/annuler");
+        $this->a->post("/factures/$acompte/annuler", ['refaire' => '1']);
+        $refait = (int) BaseDeTest::ligne("SELECT id FROM facture WHERE genre = 'acompte' AND statut = 'brouillon'")['id'];
+        [$code, $page] = $this->facturer(['genre' => 'finale', 'numero' => '']);
+        self::assertSame(422, $code);
+        self::assertStringContainsString('attend en brouillon', $page);
+        self::assertSame(0, BaseDeTest::compter('facture', "genre = 'finale'"));
+
+        // Finale émise par la base (cas d'avant ce contrôle) : l'acompte refait ne s'émet plus.
+        $artisan = $this->jeu->a;
+        BaseDeTest::pdo()->exec("INSERT INTO facture (artisan_id, offre_id, numero, genre, statut, date_facture, echeance, titre, client_nom, tva_pour_dix_mille, arrondi_cinq, ht, tva, arrondi, ttc, deja_facture, a_payer, cree_le, emise_le)
+            VALUES ($artisan, {$this->jeu->offre['a']}, '2026-099', 'finale', 'emise', '2026-11-07', '2026-12-07', 'Offre a', 'Client a', 810, 1, 23125, 1873, 2, 25000, 0, 25000, NOW(), NOW())");
+        $this->page("/factures/$refait");
+        $r = $this->a->post("/factures/$refait/emettre", []);
+        self::assertSame("/factures/$refait", $r->headers->get('Location'));
+        self::assertSame(1, BaseDeTest::compter('facture', "id = $refait AND statut = 'brouillon'"));
+        self::assertStringContainsString('finale', $this->page("/factures/$refait"));
     }
 
     /** E1 : si l'émission est empêchée (ligne sans prix), rien ne reste en base ; la feuille dit pourquoi. */

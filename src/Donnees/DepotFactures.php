@@ -146,6 +146,15 @@ final class DepotFactures implements SupportLignes
         );
     }
 
+    /** Vrai si un acompte de l'offre attend en brouillon (« Annuler et refaire ») : la finale ne le déduirait pas. */
+    public function acompteEnBrouillon(int $offreId): bool
+    {
+        return $this->base->valeur(
+            "SELECT id FROM facture WHERE offre_id = :o AND artisan_id = :a AND genre = 'acompte' AND statut = 'brouillon' LIMIT 1",
+            ['o' => $offreId, 'a' => $this->portee->artisanId],
+        ) !== false;
+    }
+
     public function finaleFaite(int $offreId): bool
     {
         return $this->base->valeur(

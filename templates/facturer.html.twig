@@ -30,6 +30,8 @@
     {% endif %}
     <form id="facturer" method="post" action="/offres/{{ offre.id }}/facturer" data-facturer data-apercu="/offres/{{ offre.id }}/facturer/apercu" data-sortir>
       <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      {# Un double toucher ne crée qu'une facture (revue du 25) : le second envoi retrouve celle du premier. #}
+      <input type="hidden" name="jeton" value="{{ jeton }}">
       <div class="facturer" data-feuille-large>
         <div class="facturer-reglages">
           {% if choix|length > 1 %}
@@ -83,7 +85,7 @@
               </div>
               <div class="champ">
                 <label for="echeance">Échéance</label>
-                <input id="echeance" name="echeance" type="date" value="{{ champs.echeance }}" required{{ f.invalide(erreurs, 'echeance') }}>
+                <input id="echeance" name="echeance" type="date" value="{{ champs.echeance }}" data-acompte="{{ echeances.acompte }}" data-finale="{{ echeances.finale }}" required{{ f.invalide(erreurs, 'echeance') }}>
                 {{ f.erreur(erreurs, 'echeance') }}
               </div>
             </div>
@@ -111,7 +113,7 @@
 {% block actions %}
   <div class="actionbar avec-phrase">
     {% if offre.client_id is not null and choix is not empty %}
-      <button class="btn primary grand" type="submit" form="facturer" name="suite" value="creer" data-bouton-creer>Créer la facture{% if apercu %} · {{ apercu.montants.a_payer|chf }}{% endif %}</button>
+      <button class="btn primary grand" type="submit" form="facturer" name="suite" value="creer" data-bouton-creer data-attente="Création…">Créer la facture{% if apercu %} · {{ apercu.montants.a_payer|chf }}{% endif %}</button>
       <p class="phrase">Elle devient définitive et numérotée&nbsp;; son PDF s'ouvre, prêt à envoyer.</p>
     {% else %}
       <a class="btn grand" href="/offres/{{ offre.id }}">Revenir à l'offre</a>

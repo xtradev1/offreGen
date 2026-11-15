@@ -1098,7 +1098,7 @@ function brancherFacturer(form) {
   const recharger = () => {
     const ce = ++numero;
     // « CHF » choisi, rien de tapé encore : une consigne plutôt qu'une erreur.
-    if (valeur('pourcent') === 'chf' && valeur('montant').trim() === '') {
+    if (valeur('genre') === 'acompte' && valeur('pourcent') === 'chf' && valeur('montant').trim() === '') {
       const consigne = document.createElement('p');
       consigne.className = 'alerte info';
       consigne.textContent = 'Tapez le montant que le client paiera, TVA comprise.';
@@ -1135,11 +1135,21 @@ function brancherFacturer(form) {
       const champ = form.querySelector('#montant');
       if (champ) champ.focus();
     }
+    // L'échéance proposée suit le genre (acompte à 30 jours, finale selon les conditions), tant que l'artisan ne l'a
+    // pas changée lui-même (revue du 25).
+    const echeance = form.querySelector('#echeance');
+    if (e.target.matches('input[name="genre"]') && echeance) {
+      const genre = valeur('genre');
+      const autre = genre === 'acompte' ? 'finale' : 'acompte';
+      if (echeance.value === echeance.dataset[autre] && echeance.dataset[genre]) echeance.value = echeance.dataset[genre];
+    }
     recharger();
   });
   form.addEventListener('input', (e) => { if (e.target.matches('#montant, #numero')) plusTard(); });
   form.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target.matches('input:not([type="radio"])')) {
+    // Entrée, même sur un bouton radio, recalcule : elle ne crée rien et n'envoie pas « Corriger des lignes », premier
+    // bouton du formulaire (revue du 25).
+    if (e.key === 'Enter' && e.target.matches('input')) {
       e.preventDefault();
       recharger();
     }

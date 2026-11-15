@@ -61,6 +61,7 @@ Lot 8 du `PLAN.md` : revue du diff du sous-chantier (correction, sécurité des 
   - Menu de gauche sur tous les écrans du PC (`base.html.twig`, `pc-seul` au téléphone), rubrique allumée par écran ; ni sur la connexion ni sur l'erreur. Défaut attrapé par un test existant : la page Import aurait porté deux dictées (deux `id="audio"`) ; le menu y vient sans la sienne.
   - Le PDF de la facture sur PC passe de 264 px de large à la colonne entière (menu présent).
   - Le serveur PHP local s'était arrêté avec la session précédente ; relancé par PowerShell (Git Bash réécrit le chemin `/mnt/c/...`).
+- 2026-11-15 : lot 7 déployé sur le test (3cc8d01), sonde verte. Lot 8 commencé : deux revues indépendantes lancées (correction, sécurité), `RECETTE.md` écrite (à compléter après la revue).
 
 ## Preuves
 

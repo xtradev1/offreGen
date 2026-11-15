@@ -82,6 +82,15 @@ final class PlanAcomptesTest extends TestCase
         self::assertEqualsWithDelta(2.0, $parts[0]['ht'] / $parts[1]['ht'], 0.001);
     }
 
+    /** Revue du 25 : un taux minuscule dans l'offre ne donne pas une ligne à 0.00, refusée ensuite comme « sans prix ». */
+    public function testUnePartNulleNeFaitPasDeLigne(): void
+    {
+        $offre = [['taux' => 810, 'ht' => 1000000, 'tva' => 81000], ['taux' => 260, 'ht' => 50, 'tva' => 1]];
+        $parts = PlanAcomptes::partsPourMontant($offre, 10000, 810, false);
+        self::assertSame([810], array_column($parts, 'taux'));
+        self::assertSame(10000, self::ttc($parts, 810, false));
+    }
+
     /** @param list<array{taux: int|null, ht: int}> $parts */
     private static function ttc(array $parts, int $taux, bool $cinq): int
     {

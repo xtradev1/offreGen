@@ -10,6 +10,7 @@ use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotFactures;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
+use OffreGen\Facture\EmissionRefusee;
 use OffreGen\Facture\Montants;
 use OffreGen\Facture\Numerotation;
 use OffreGen\Facture\PlanAcomptes;
@@ -39,6 +40,9 @@ use Symfony\Component\HttpFoundation\Response;
 final class FactureControleur
 {
     private const FUSEAU = 'Europe/Zurich';
+
+    /** L'emplacement du code QR dans l'aperçu d'une facture pas encore créée : rien à scanner. */
+    private const SANS_CODE = '<svg xmlns="http://www.w3.org/2000/svg" width="174" height="174" viewBox="0 0 174 174"><rect x="1" y="1" width="172" height="172" fill="#F3F4F6" stroke="#9BA3AE" stroke-dasharray="6 4"/><text x="87" y="82" font-size="13" text-anchor="middle" fill="#69717C">Code QR</text><text x="87" y="100" font-size="13" text-anchor="middle" fill="#69717C">à la création</text></svg>';
 
     public function __construct(private readonly Conteneur $c)
     {
@@ -123,11 +127,15 @@ final class FactureControleur
         if ($offre['client_id'] === null) {
             throw new Conflit("Choisissez le client de l'offre avant de la facturer.");
         }
-        $possibles = $this->possibles($requete, $offre);
-        if ($possibles === []) {
-            throw new Conflit('Cette offre est déjà facturée en entier.');
-        }
         $r = $requete->request;
+        // Un double toucher, ou un réseau lent qui renvoie, ne crée qu'une facture : la feuille porte un jeton à usage
+        // unique ; le second envoi retrouve la facture du premier (revue du sous-chantier 25).
+        $jeton = preg_match('/^[a-f0-9]{32}$/', $r->getString('jeton')) === 1 ? 'facturer.' . $r->getString('jeton') : null;
+        $session = $requete->hasSession() ? $requete->getSession() : null;
+        $deja = $jeton !== null && $session !== null ? $session->get($jeton) : null;
+        if (is_int($deja) && ($f = $this->c->factures($portee)->parId($deja)) !== null) {
+            return new RedirectResponse('/factures/' . $deja . ($f['statut'] === DepotFactures::BROUILLON ? '' : '/apercu'), 303);
+        }
         $champs = ['genre' => $r->getString('genre'), 'pourcent' => $r->getString('pourcent'), 'montant' => $r->getString('montant'),
                    'numero' => $r->getString('numero'), 'date' => $r->getString('date'), 'echeance' => $r->getString('echeance')];
         $corriger = $r->getString('suite') === 'corriger';
@@ -135,44 +143,67 @@ final class FactureControleur
             // Numéro laissé vide : le suivant, comme le propose la feuille.
             $champs['numero'] = $this->numeroPropose($requete);
         }
-        [$pret, $erreurs] = $this->lireFacturer($requete, $offre, $possibles, $champs);
-        if ($pret !== null && $corriger && $pret['choisi']['genre'] !== 'finale') {
-            $erreurs['genre'] = "Seule la facture finale se corrige ligne par ligne : un acompte se crée tel quel.";
-        }
-        if ($pret === null || $erreurs !== []) {
-            return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, $erreurs, 422);
-        }
-        $choisi = $pret['choisi'];
-        $entete = $pret['entete'];
-        // Le brouillon attend son numéro (E5), sauf si l'artisan en a tapé un autre que celui proposé.
-        $numero = $corriger && $entete['numero'] === $this->numeroPropose($requete) ? null : $entete['numero'];
+        // Tout dans une transaction, l'offre verrouillée : deux facturations de la même offre se suivent, et une
+        // émission empêchée ou en panne n'écrit rien (revue du sous-chantier 25).
+        $possibles = [];
         try {
-            $id = $this->c->factures($portee)->creer([
-                'offre_id' => $offre['id'], 'numero' => $numero, 'genre' => $choisi['genre'],
-                'acompte_rang' => $choisi['rang'], 'acompte_nombre' => $choisi['nombre'], 'acompte_pourcent' => $choisi['pourcent'],
-                'date_facture' => $entete['date'], 'echeance' => $entete['echeance'],
-                'titre' => $offre['titre'], 'client_nom' => (string) $offre['client_nom'], 'client_adresse' => $offre['client_adresse'],
-                'client_postale' => $this->adresseClient($requete, $offre),
-            ], $pret['lignes'], $this->c->horloge()->now());
-        } catch (\PDOException $e) {
-            // Deux factures créées au même instant avec le même numéro : l'index unique tranche.
-            if (($e->errorInfo[1] ?? null) !== 1062) {
-                throw $e;
-            }
-            return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, ['numero' => 'Ce numéro est déjà pris par une autre facture.'], 422);
+            $resultat = $this->c->base()->transaction(function () use ($requete, $portee, $offre, $champs, $corriger, &$possibles): Response|int {
+                $this->c->offres($portee)->verrouiller($offre['id']);
+                $possibles = $this->possibles($requete, $offre);
+                if ($possibles === []) {
+                    throw new Conflit('Cette offre est déjà facturée en entier.');
+                }
+                [$pret, $erreurs] = $this->lireFacturer($requete, $offre, $possibles, $champs);
+                if ($pret !== null && $corriger && $pret['choisi']['genre'] !== 'finale') {
+                    $erreurs['genre'] = "Seule la facture finale se corrige ligne par ligne\u{00A0}: un acompte se crée tel quel.";
+                }
+                if ($pret === null || $erreurs !== []) {
+                    return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, $erreurs, 422);
+                }
+                $choisi = $pret['choisi'];
+                $entete = $pret['entete'];
+                // Le brouillon attend son numéro (E5), sauf si l'artisan en a tapé un autre que celui proposé.
+                $numero = $corriger && $entete['numero'] === $this->numeroPropose($requete) ? null : $entete['numero'];
+                try {
+                    $id = $this->c->factures($portee)->creer([
+                        'offre_id' => $offre['id'], 'numero' => $numero, 'genre' => $choisi['genre'],
+                        'acompte_rang' => $choisi['rang'], 'acompte_nombre' => $choisi['nombre'], 'acompte_pourcent' => $choisi['pourcent'],
+                        'date_facture' => $entete['date'], 'echeance' => $entete['echeance'],
+                        'titre' => $offre['titre'], 'client_nom' => (string) $offre['client_nom'], 'client_adresse' => $offre['client_adresse'],
+                        'client_postale' => $this->adresseClient($requete, $offre),
+                    ], $pret['lignes'], $this->c->horloge()->now());
+                } catch (\PDOException $e) {
+                    // Deux factures créées au même instant avec le même numéro : l'index unique tranche.
+                    if (($e->errorInfo[1] ?? null) !== 1062) {
+                        throw $e;
+                    }
+                    return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, ['numero' => 'Ce numéro est déjà pris par une autre facture.'], 422);
+                }
+                if (!$corriger) {
+                    $f = $this->c->factures($portee)->parId($id) ?? throw new PageIntrouvable();
+                    $raison = $this->emettreFacture($requete, $f);
+                    if ($raison !== null) {
+                        throw new EmissionRefusee($raison);
+                    }
+                }
+                return $id;
+            });
+        } catch (EmissionRefusee $e) {
+            return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, ['creation' => "La facture n'est pas créée\u{00A0}: " . $e->getMessage()], 422);
+        }
+        if ($resultat instanceof Response) {
+            return $resultat;
+        }
+        if ($jeton !== null && $session !== null) {
+            $session->set($jeton, $resultat);
         }
         if ($corriger) {
-            Flash::dire($requete, 'info', 'Corrigez les lignes, puis « Créer la facture »');
-            return new RedirectResponse('/factures/' . $id, 303);
+            Flash::dire($requete, 'info', "Corrigez les lignes, puis «\u{00A0}Créer la facture\u{00A0}»");
+            return new RedirectResponse('/factures/' . $resultat, 303);
         }
-        $f = $this->c->factures($portee)->parId($id) ?? throw new PageIntrouvable();
-        $raison = $this->emettreFacture($requete, $f);
-        if ($raison !== null) {
-            $this->c->factures($portee)->supprimerBrouillon($id);
-            return $this->formulaireNouvelle($requete, $offre, $possibles, $champs, ['creation' => 'La facture n\'est pas créée : ' . $raison], 422);
-        }
-        Flash::dire($requete, 'info', 'Facture ' . $entete['numero'] . ' créée');
-        return new RedirectResponse('/factures/' . $id . '/apercu', 303);
+        $emise = $this->c->factures($portee)->parId($resultat) ?? throw new PageIntrouvable();
+        Flash::dire($requete, 'info', 'Facture ' . $emise['numero'] . ' créée');
+        return new RedirectResponse('/factures/' . $resultat . '/apercu', 303);
     }
 
     /**
@@ -235,6 +266,15 @@ final class FactureControleur
                     return [null, $erreurs];
                 }
                 $parts = PlanAcomptes::partsPourMontant($parTaux, $montant, $r->tvaPourDixMille, $r->arrondiCinqCentimes);
+                // Certains TTC ne s'atteignent par aucun HT (TVA arrondie au centime) : le plus proche peut dépasser d'un
+                // centime. Un montant tapé dans le reste à facturer n'est pas refusé pour ça (revue du 25) : on vise
+                // un centime plus bas, deux au plus.
+                /** @param list<array{taux: int|null, ht: int}> $ps */
+                $ttcDe = static fn (array $ps): int => Totaux::calculer(array_values(array_map(static fn (array $p): array => ['quantite_milliemes' => 1000,
+                    'prix_centimes' => $p['ht'], 'tva_pour_dix_mille' => $p['taux']], $ps)), $r->tvaPourDixMille, $r->arrondiCinqCentimes)['ttc'];
+                for ($k = 1; $k <= 2 && $montant <= $reste && $ttcDe($parts) > $reste; $k++) {
+                    $parts = PlanAcomptes::partsPourMontant($parTaux, $montant - $k, $r->tvaPourDixMille, $r->arrondiCinqCentimes);
+                }
                 $choisi['pourcent'] = null;
                 $choisi['nombre'] = null;
             } else {
@@ -415,6 +455,15 @@ final class FactureControleur
         $raisons = self::raisonsDeNePasEmettre($d);
         if ($raisons !== []) {
             return $raisons[0];
+        }
+        // Un acompte refait qui attend en brouillon ne serait pas déduit par la finale ; un acompte émis après la finale
+        // ne le serait jamais (revue du sous-chantier 25).
+        $depot = $this->c->factures($portee);
+        if ($f['genre'] === 'finale' && $depot->acompteEnBrouillon($f['offre_id'])) {
+            return "un acompte de cette offre attend en brouillon\u{00A0}: créez-le ou supprimez-le d'abord, la finale le déduira.";
+        }
+        if ($f['genre'] === 'acompte' && $depot->finaleEmise($f['offre_id'])) {
+            return "la facture finale de cette offre est émise\u{00A0}: cet acompte ne se crée plus. Supprimez ce brouillon, ou annulez d'abord la finale.";
         }
         /** @var array{ht: int, tva: int, arrondi: int, ttc: int, taux: int, deja: int, a_payer: int} $montants */
         $montants = $d['montants'];
@@ -655,6 +704,14 @@ final class FactureControleur
         }
         $numero = $f['numero'] ?? $this->numeroPropose($requete);
         $qr = self::section($f, $numero, $r, $montants['a_payer']);
+        if ($qr instanceof SectionPaiement && ($f['id'] === 0 || $f['numero'] === null)) {
+            // Aperçu d'une facture pas encore créée, ou brouillon sans numéro (revue du 25) : un code scannable porterait
+            // une référence provisoire, et un paiement fait sur une capture se rattacherait à une autre facture. Le cadre
+            // seul, sans code ; le PDF créé a le sien (l'émission pose le numéro avant le rendu).
+            $qr = new SectionPaiement(texte: '', svg: self::SANS_CODE, compte: $qr->compte, creancier: $qr->creancier,
+                reference: "attribuée à la création", informations: $qr->informations, debiteur: $qr->debiteur,
+                monnaie: $qr->monnaie, montant: $qr->montant);
+        }
         return [
             'f' => $f,
             // Le numéro qu'un brouillon sans numéro prendra à la création, s'il était créé maintenant.
@@ -864,6 +921,12 @@ final class FactureControleur
             'erreurs' => $erreurs,
             'apercu' => $apercu,
             'm' => $this->c->reglages($portee)->lireMarque(),
+            'jeton' => bin2hex(random_bytes(16)),
+            // L'échéance proposée suit le genre choisi (revue du 25) : un acompte à 30 jours, la finale selon les conditions.
+            'echeances' => [
+                'acompte' => PlanAcomptes::echeance($r = $this->c->reglages($portee)->lire(), 'acompte', $this->aujourdhui())->format('Y-m-d'),
+                'finale' => PlanAcomptes::echeance($r, 'finale', $this->aujourdhui())->format('Y-m-d'),
+            ],
         ]), $code);
     }
 

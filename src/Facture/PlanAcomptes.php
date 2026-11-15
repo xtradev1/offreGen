@@ -80,6 +80,13 @@ final class PlanAcomptes
         $seul = count($groupes) === 1 && $groupes[0]['taux'] === $tauxEntreprise;
         $taux = array_map(static fn (array $g): ?int => $seul ? null : $g['taux'], $groupes);
         $hts = array_map(static fn (array $g): int => Totaux::arrondir($g['ht'] * $ttcVoulu, $ttcOffre), $groupes);
+        // Un taux minuscule dans l'offre donnerait une ligne à 0.00, refusée ensuite comme « sans prix » (revue du 25).
+        $gardes = array_keys(array_filter($hts, static fn (int $ht): bool => $ht > 0));
+        if ($gardes !== [] && count($gardes) < count($hts)) {
+            $groupes = array_values(array_intersect_key($groupes, array_flip($gardes)));
+            $taux = array_values(array_intersect_key($taux, array_flip($gardes)));
+            $hts = array_values(array_intersect_key($hts, array_flip($gardes)));
+        }
         $ecart = static function (array $hts) use ($taux, $ttcVoulu, $tauxEntreprise, $arrondiCinq): int {
             $lignes = [];
             foreach ($hts as $i => $ht) {
@@ -88,7 +95,7 @@ final class PlanAcomptes
             return $ttcVoulu - Totaux::calculer($lignes, $tauxEntreprise, $arrondiCinq)['ttc'];
         };
         // La plus grande part absorbe l'essentiel de l'écart d'arrondi...
-        $grande = (int) array_search(max($hts), $hts, true);
+        $grande = (int) array_search(max([0, ...$hts]), $hts, true);
         $tauxGrande = $groupes[$grande]['taux'];
         for ($i = 0; $i < 20 && ($e = $ecart($hts)) !== 0; $i++) {
             $pas = Totaux::arrondir($e * 10000, 10000 + $tauxGrande);

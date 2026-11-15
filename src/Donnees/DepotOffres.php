@@ -82,6 +82,15 @@ final class DepotOffres implements SupportLignes
         });
     }
 
+    /**
+     * Verrouille l'offre jusqu'à la fin de la transaction en cours (SELECT … FOR UPDATE) : deux facturations de la même
+     * offre se suivent au lieu de se croiser (revue du sous-chantier 25). Sans transaction, ne retient rien.
+     */
+    public function verrouiller(int $id): void
+    {
+        $this->base->valeur('SELECT id FROM offre WHERE id = :id AND artisan_id = :a FOR UPDATE', ['id' => $id, 'a' => $this->portee->artisanId]);
+    }
+
     /** @return Offre|null l'offre, archivée comprise ; une offre supprimée est introuvable */
     public function parId(int $id): ?array
     {
