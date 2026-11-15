@@ -237,7 +237,7 @@ final class FactureControleur
             'titre' => 'Facture ' . $f['numero'],
             'retour' => ['href' => $base, 'texte' => 'Facture'],
             'pdf' => $base . '/pdf',
-            'fichier' => 'Facture-' . preg_replace('/[^A-Za-z0-9._-]/', '-', $f['numero']) . '.pdf',
+            'fichier' => self::fichier($f),
             'partage' => 'Facture n° ' . $f['numero'] . ' · ' . $f['titre'],
             'marquer' => null,
             'modifier' => null,
@@ -253,6 +253,9 @@ final class FactureControleur
     private function emettreFacture(Request $requete, array $f): ?string
     {
         $portee = $this->portee($requete);
+        // Un brouillon sans numéro prend le suivant au moment où il devient une facture (E5, 2026-11-15).
+        $numero = $f['numero'] ?? $this->numeroPropose($requete);
+        $f['numero'] = $numero;
         $d = $this->donnees($requete, $f);
         $raisons = self::raisonsDeNePasEmettre($d);
         if ($raisons !== []) {
@@ -262,9 +265,9 @@ final class FactureControleur
         $montants = $d['montants'];
         $r = $this->c->reglages($portee)->lire();
         $fige = [
-            'tva_pour_dix_mille' => $montants['taux'], 'arrondi_cinq' => $r->arrondiCinqCentimes ? 1 : 0,
+            'numero' => $numero, 'tva_pour_dix_mille' => $montants['taux'], 'arrondi_cinq' => $r->arrondiCinqCentimes ? 1 : 0,
             'iban' => $r->iban === '' ? null : $r->iban,
-            'reference' => $r->iban === '' ? null : QrFacture::reference($r->iban, $f['id'], $f['numero']),
+            'reference' => $r->iban === '' ? null : QrFacture::reference($r->iban, $f['id'], $numero),
             'ht' => $montants['ht'], 'tva' => $montants['tva'], 'arrondi' => $montants['arrondi'], 'ttc' => $montants['ttc'],
             'deja_facture' => $montants['deja'], 'a_payer' => $montants['a_payer'],
         ];
@@ -272,8 +275,16 @@ final class FactureControleur
         // Le PDF se rend avec les valeurs figées, exactement comme on le relira.
         $emise = array_merge($f, $fige, ['statut' => DepotFactures::EMISE, 'emise_le' => $quand->format('Y-m-d H:i:s')]);
         $pdf = $this->rendrePdf($this->vueDocument($requete, $emise));
-        if (!$this->c->factures($portee)->emettre($f['id'], $fige, $pdf, $quand)) {
-            return 'Cette facture est déjà émise.';
+        try {
+            if (!$this->c->factures($portee)->emettre($f['id'], $fige, $pdf, $quand)) {
+                return 'Cette facture est déjà émise.';
+            }
+        } catch (\PDOException $e) {
+            // Une autre facture a pris ce numéro entre-temps : l'index unique tranche, rien n'est écrit.
+            if (($e->errorInfo[1] ?? null) !== 1062) {
+                throw $e;
+            }
+            return 'Le numéro ' . $numero . ' vient d\'être pris par une autre facture : réessayez.';
         }
         return null;
     }
@@ -292,7 +303,7 @@ final class FactureControleur
         }
         return new Response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="Facture-' . preg_replace('/[^A-Za-z0-9._-]/', '-', $f['numero']) . '.pdf"',
+            'Content-Disposition' => 'inline; filename="' . self::fichier($f) . '"',
             'Cache-Control' => 'private, no-store',
         ]);
     }
@@ -359,14 +370,16 @@ final class FactureControleur
      * La section de paiement, ou la raison de son absence. Brouillon : IBAN des réglages, référence calculée comme elle
      * le sera à l'émission ; facture émise ou annulée : IBAN et référence figés à l'émission.
      *
+     * Un brouillon sans numéro montre celui qu'il prendra ($numero).
+     *
      * @param Facture $f
      */
-    private static function section(array $f, Reglages $r, int $aPayer): SectionPaiement|string
+    private static function section(array $f, string $numero, Reglages $r, int $aPayer): SectionPaiement|string
     {
         $brouillon = $f['statut'] === DepotFactures::BROUILLON;
         $iban = $brouillon ? $r->iban : (string) $f['iban'];
-        $reference = $brouillon ? ($iban === '' ? null : QrFacture::reference($iban, $f['id'], $f['numero'])) : $f['reference'];
-        return QrFacture::section($r->entreprise, $r->adresse, $iban, $reference, $f['numero'], $aPayer, $f['client_nom'], Adresse::depuisBase($f, 'client_'));
+        $reference = $brouillon ? ($iban === '' ? null : QrFacture::reference($iban, $f['id'], $numero)) : $f['reference'];
+        return QrFacture::section($r->entreprise, $r->adresse, $iban, $reference, $numero, $aPayer, $f['client_nom'], Adresse::depuisBase($f, 'client_'));
     }
 
     /**
@@ -411,7 +424,7 @@ final class FactureControleur
     public function entete(Request $requete, array $parametres): Response
     {
         $f = $this->brouillon($requete, $parametres);
-        $champs = ['numero' => $f['numero'], 'date' => $f['date_facture'], 'echeance' => $f['echeance']];
+        $champs = ['numero' => $f['numero'] ?? '', 'date' => $f['date_facture'], 'echeance' => $f['echeance']];
         return $this->formulaireEntete($f, $champs, [], 200);
     }
 
@@ -469,9 +482,12 @@ final class FactureControleur
                 $groupes[$i]['nom'] = $g['nom'] === OffreControleur::HORS_CATALOGUE ? 'Acompte' : $g['nom'];
             }
         }
-        $qr = self::section($f, $r, $montants['a_payer']);
+        $numero = $f['numero'] ?? $this->numeroPropose($requete);
+        $qr = self::section($f, $numero, $r, $montants['a_payer']);
         return [
             'f' => $f,
+            // Le numéro qu'un brouillon sans numéro prendra à la création, s'il était créé maintenant.
+            'numero_prevu' => $numero,
             'groupes' => $groupes,
             'montants' => $montants,
             'r' => $r,
@@ -513,6 +529,16 @@ final class FactureControleur
     {
         $lignes = $adresse === null || $adresse === '' ? [] : explode("\n", $adresse);
         return trim((string) preg_replace('/^(CH-)?\d{4}\s+/', '', trim((string) end($lignes))));
+    }
+
+    /**
+     * Le nom du PDF d'une facture émise (« Facture-2026-001.pdf »).
+     *
+     * @param Facture $f
+     */
+    private static function fichier(array $f): string
+    {
+        return 'Facture-' . preg_replace('/[^A-Za-z0-9._-]/', '-', $f['numero'] ?? 'brouillon') . '.pdf';
     }
 
     private function portee(Request $requete): Portee

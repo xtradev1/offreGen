@@ -18,10 +18,10 @@ use OffreGen\Adresse\Adresse;
  * L'adresse du client est copiée à la création, en texte (client_adresse, pour le document) et en champs
  * (client_rue… client_pays, pour la section de paiement).
  *
- * @phpstan-type Facture array{id: int, offre_id: int, offre_numero: int, offre_cree_le: string, numero: string, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, statut: string, date_facture: string, echeance: string, titre: string, client_nom: string, client_adresse: string|null, client_rue: string|null, client_numero: string|null, client_npa: string|null, client_localite: string|null, client_pays: string|null, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, iban: string|null, reference: string|null, ht: int|null, tva: int|null, arrondi: int|null, ttc: int|null, deja_facture: int|null, a_payer: int|null, cree_le: string, modifiee_le: string|null, emise_le: string|null, annulee_le: string|null, refaite_depuis: int|null}
+ * @phpstan-type Facture array{id: int, offre_id: int, offre_numero: int, offre_cree_le: string, numero: string|null, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, statut: string, date_facture: string, echeance: string, titre: string, client_nom: string, client_adresse: string|null, client_rue: string|null, client_numero: string|null, client_npa: string|null, client_localite: string|null, client_pays: string|null, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, iban: string|null, reference: string|null, ht: int|null, tva: int|null, arrondi: int|null, ttc: int|null, deja_facture: int|null, a_payer: int|null, cree_le: string, modifiee_le: string|null, emise_le: string|null, annulee_le: string|null, refaite_depuis: int|null}
  * @phpstan-type FactureLigne array{id: int, facture_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null}
  * @phpstan-type LigneACopier array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, categorie: string|null, produit_id: int|null, tva_pour_dix_mille?: int|null}
- * @phpstan-type Entete array{offre_id: int, numero: string, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, date_facture: \DateTimeImmutable, echeance: \DateTimeImmutable, titre: string, client_nom: string, client_adresse: string|null, client_postale: Adresse, refaite_depuis?: int|null}
+ * @phpstan-type Entete array{offre_id: int, numero: string|null, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, date_facture: \DateTimeImmutable, echeance: \DateTimeImmutable, titre: string, client_nom: string, client_adresse: string|null, client_postale: Adresse, refaite_depuis?: int|null}
  */
 final class DepotFactures implements SupportLignes
 {
@@ -115,10 +115,16 @@ final class DepotFactures implements SupportLignes
         );
     }
 
-    /** Le numéro de la dernière facture créée, d'où part le suivant ; null s'il n'y en a aucune. */
+    /**
+     * Le numéro de la dernière facture numérotée, d'où part le suivant ; null s'il n'y en a aucune. Un brouillon reçoit
+     * son numéro à l'émission : on range donc par date d'émission, sinon de création (brouillon numéroté à la main).
+     */
     public function dernierNumero(): ?string
     {
-        $n = $this->base->valeur('SELECT numero FROM facture WHERE artisan_id = :a ORDER BY cree_le DESC, id DESC LIMIT 1', ['a' => $this->portee->artisanId]);
+        $n = $this->base->valeur(
+            'SELECT numero FROM facture WHERE artisan_id = :a AND numero IS NOT NULL ORDER BY COALESCE(emise_le, cree_le) DESC, id DESC LIMIT 1',
+            ['a' => $this->portee->artisanId],
+        );
         return $n === false ? null : (string) $n;
     }
 
@@ -158,19 +164,20 @@ final class DepotFactures implements SupportLignes
     }
 
     /**
-     * Émet le brouillon : fige ce qui fait le montant et garde le PDF, dans une transaction. Faux si la facture n'est
-     * pas (ou plus) un brouillon de l'artisan : rien n'est écrit.
+     * Émet le brouillon : lui donne son numéro (E5 : un brouillon n'en a pas toujours), fige ce qui fait le montant et
+     * garde le PDF, dans une transaction. Faux si la facture n'est pas (ou plus) un brouillon de l'artisan : rien n'est
+     * écrit. PDOException si le numéro est pris (index unique) : rien n'est écrit non plus.
      *
-     * @param array{tva_pour_dix_mille: int, arrondi_cinq: int, iban: string|null, reference: string|null, ht: int, tva: int, arrondi: int, ttc: int, deja_facture: int, a_payer: int} $fige
+     * @param array{numero: string, tva_pour_dix_mille: int, arrondi_cinq: int, iban: string|null, reference: string|null, ht: int, tva: int, arrondi: int, ttc: int, deja_facture: int, a_payer: int} $fige
      */
     public function emettre(int $id, array $fige, string $pdf, \DateTimeImmutable $quand): bool
     {
         return $this->base->transaction(function () use ($id, $fige, $pdf, $quand): bool {
             $emise = $this->base->ecrire(
-                "UPDATE facture SET statut = 'emise', emise_le = :q, tva_pour_dix_mille = :tx, arrondi_cinq = :ar5, iban = :ib, reference = :ref,
+                "UPDATE facture SET statut = 'emise', numero = :n, emise_le = :q, tva_pour_dix_mille = :tx, arrondi_cinq = :ar5, iban = :ib, reference = :ref,
                      ht = :ht, tva = :tva, arrondi = :arr, ttc = :ttc, deja_facture = :deja, a_payer = :ap
                  WHERE id = :id AND artisan_id = :a AND statut = 'brouillon'",
-                ['q' => Dates::versBase($quand), 'tx' => $fige['tva_pour_dix_mille'], 'ar5' => $fige['arrondi_cinq'], 'ib' => $fige['iban'],
+                ['n' => $fige['numero'], 'q' => Dates::versBase($quand), 'tx' => $fige['tva_pour_dix_mille'], 'ar5' => $fige['arrondi_cinq'], 'ib' => $fige['iban'],
                  'ref' => $fige['reference'], 'ht' => $fige['ht'], 'tva' => $fige['tva'], 'arr' => $fige['arrondi'], 'ttc' => $fige['ttc'],
                  'deja' => $fige['deja_facture'], 'ap' => $fige['a_payer'], 'id' => $id, 'a' => $this->portee->artisanId],
             ) === 1;

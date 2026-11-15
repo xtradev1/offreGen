@@ -30,7 +30,7 @@ final class DepotFacturesTest extends TestCase
     }
 
     /** @param array<string, mixed> $autre */
-    private function creer(DepotFactures $depot, string $qui, string $numero = '2026-001', array $autre = []): int
+    private function creer(DepotFactures $depot, string $qui, ?string $numero = '2026-001', array $autre = []): int
     {
         $offres = new DepotOffres($this->jeu->base, new Portee($qui === 'a' ? $this->jeu->a : $this->jeu->b));
         $lignes = array_map(static fn (array $l): array => [
@@ -102,6 +102,61 @@ final class DepotFacturesTest extends TestCase
         $this->creer($this->a, 'a', '2026-009');
         $this->creer($this->a, 'a', '2026-003');
         self::assertSame('2026-003', $this->a->dernierNumero());
+    }
+
+    /** E5 (Xavier, 2026-11-15) : un brouillon prend son numéro à la création ; abandonné, il ne laisse pas de trou. */
+    public function testUnBrouillonPeutAttendreSonNumero(): void
+    {
+        $x = $this->creer($this->a, 'a', null);
+        $y = $this->creer($this->a, 'a', null);
+        self::assertSame([null, 'brouillon'], $this->numeroEtStatut($this->a, $x));
+        self::assertSame([null, 'brouillon'], $this->numeroEtStatut($this->a, $y), 'Deux brouillons sans numéro ne se gênent pas.');
+        self::assertNull($this->a->dernierNumero(), 'Un brouillon sans numéro ne compte pas dans la suite.');
+    }
+
+    /** @return array{string|null, string} le numéro et le statut lus en base ; échoue si la facture n'est pas trouvée */
+    private function numeroEtStatut(DepotFactures $depot, int $id): array
+    {
+        $f = $depot->parId($id);
+        self::assertNotNull($f, "facture $id introuvable");
+        return [$f['numero'], $f['statut']];
+    }
+
+    /** @return array{numero: string, tva_pour_dix_mille: int, arrondi_cinq: int, iban: null, reference: null, ht: int, tva: int, arrondi: int, ttc: int, deja_facture: int, a_payer: int} */
+    private static function fige(string $numero): array
+    {
+        return ['numero' => $numero, 'tva_pour_dix_mille' => 810, 'arrondi_cinq' => 1, 'iban' => null, 'reference' => null,
+                'ht' => 1000, 'tva' => 81, 'arrondi' => -1, 'ttc' => 1080, 'deja_facture' => 0, 'a_payer' => 1080];
+    }
+
+    /** L'émission écrit le numéro dans la même requête : un brouillon n'est jamais numéroté sans être émis. */
+    public function testLEmissionDonneSonNumeroAuBrouillon(): void
+    {
+        $this->creer($this->a, 'a', '2026-004');
+        $x = $this->creer($this->a, 'a', null);
+        try {
+            $this->a->emettre($x, self::fige('2026-004'), '%PDF', $this->jeu->maintenant);
+            self::fail('Numéro déjà pris : refusé.');
+        } catch (\PDOException) {
+        }
+        self::assertSame([null, 'brouillon'], $this->numeroEtStatut($this->a, $x));
+        self::assertNull($this->a->pdf($x), 'Rien de gardé quand l\'émission échoue.');
+        self::assertTrue($this->a->emettre($x, self::fige('2026-005'), '%PDF', $this->jeu->maintenant));
+        self::assertSame(['2026-005', 'emise'], $this->numeroEtStatut($this->a, $x));
+        self::assertFalse($this->a->emettre($x, self::fige('2026-099'), '%PDF', $this->jeu->maintenant), 'Une facture émise garde son numéro.');
+        self::assertSame(['2026-005', 'emise'], $this->numeroEtStatut($this->a, $x));
+        $y = $this->creer($this->b, 'b', null);
+        self::assertFalse($this->a->emettre($y, self::fige('2026-006'), '%PDF', $this->jeu->maintenant), 'A n\'émet pas un brouillon de B.');
+        self::assertSame([null, 'brouillon'], $this->numeroEtStatut($this->b, $y));
+    }
+
+    /** Le numéro suivant part de la dernière facture numérotée : un vieux brouillon émis aujourd'hui compte aujourd'hui. */
+    public function testLeDernierNumeroSuitLaDerniereEmise(): void
+    {
+        $vieux = $this->creer($this->a, 'a', null);
+        $this->creer($this->a, 'a', '2026-007');
+        $this->a->emettre($vieux, self::fige('2026-008'), '%PDF', $this->jeu->maintenant->modify('+1 day'));
+        self::assertSame('2026-008', $this->a->dernierNumero());
     }
 
     public function testBNeVoitNiNeToucheLesFacturesDeA(): void
