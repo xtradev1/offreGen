@@ -86,14 +86,14 @@ DISTANT
 echo "en service : releases/$commit ; précédente : ${precedent:-aucune}"
 
 etape "Sonde d'exposition"
-if SONDE_TEMOINS="$TEMOINS" scripts/securite/sonde-exposition.sh "$URL" "$commit"; then
+if SONDE_TEMOINS="$TEMOINS" bash scripts/securite/sonde-exposition.sh "$URL" "$commit"; then
   echo; echo "DÉPLOYÉ : $commit sur $URL"
   exit 0
 fi
 if [ -n "$precedent" ] && [ "$precedent" != "releases/$commit" ]; then
   etape "Sonde rouge : retour à $precedent"
   "${SSH[@]}" "cd offregen && ln -sfn '$precedent' current.nouveau && mv -Tf current.nouveau current"
-  SONDE_TEMOINS="$TEMOINS" scripts/securite/sonde-exposition.sh "$URL" "$(basename "$precedent")" || echo "ALERTE : la version précédente est rouge elle aussi."
+  SONDE_TEMOINS="$TEMOINS" bash scripts/securite/sonde-exposition.sh "$URL" "$(basename "$precedent")" || echo "ALERTE : la version précédente est rouge elle aussi."
 else
   echo "Sonde rouge, aucune version précédente : rien à rétablir."
 fi
