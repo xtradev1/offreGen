@@ -35,6 +35,7 @@ Lot 8 du `PLAN.md` : revue du diff du sous-chantier (correction, sécurité des 
   - E6 Valider : client à confirmer en orange, confirmé au moment de « Générer l'offre ».
   - E7 Valider, avec la remarque « à améliorer pour que ce soit plus simple et sobre ».
   - E8 Valider : sur PC, menu partout, Facturer en deux volets, facture en PDF avec son panneau, petites fenêtres au milieu.
+- 2026-11-15, Xavier : « il faut un vrai responsive pour la tablette. » Constat : depuis le lot 1, une tablette recevait l'écran du téléphone dans une colonne de 480 px, deux bandes vides de chaque côté. Question posée, réponse : **au doigt, toute la largeur** (barre du bas et micro au centre comme au téléphone ; le contenu prend la largeur ; en paysage, la liste des offres à gauche et l'offre à droite ; Facturer en deux volets ; cibles de 48 px et plus), plutôt que la vue PC au doigt. Lot 7 b ajouté au plan.
 - 2026-11-15, E7 « plus simple et sobre » : je le traduis à l'implémentation sans nouvelle maquette : un seul champ de recherche, la liste des résultats sans cadre ni badge, pas de bandeau de confirmation (la ligne ajoutée apparaît dans le tableau, c'est la preuve), pas de bouton « Ligne libre » séparé (la dernière suggestion est « Ajouter « texte tapé » »). Les captures de la recette le montreront ; si Xavier trouve encore lourd, on reprend.
 
 ## Journal
@@ -62,6 +63,8 @@ Lot 8 du `PLAN.md` : revue du diff du sous-chantier (correction, sécurité des 
   - Le PDF de la facture sur PC passe de 264 px de large à la colonne entière (menu présent).
   - Le serveur PHP local s'était arrêté avec la session précédente ; relancé par PowerShell (Git Bash réécrit le chemin `/mnt/c/...`).
 - 2026-11-15 : lot 7 déployé sur le test (3cc8d01), sonde verte. Lot 8 commencé : deux revues indépendantes lancées (correction, sécurité), `RECETTE.md` écrite (à compléter après la revue).
+- 2026-11-15, revue (`REVUE.md`, accfaa7) : 3 défauts à corriger (acompte refait contre finale, brouillon laissé par une émission en panne, double envoi) et 7 mineurs ou bas, tous traités sauf S3 ; QR de l'aperçu remplacé par un cadre sans code. Les deux relecteurs étaient sur Opus : rien à porter au compteur de délégation.
+- 2026-11-15, lot 7 b (tablette) : `@media (min-width: 700px) and (pointer: coarse)` (toute la largeur, barre du bas, fenêtres au milieu) et `@media (min-width: 1024px) and (pointer: coarse)` (liste des offres à gauche, Facturer en deux volets, panneau du PDF à droite). Les styles de la liste des offres sortent du bloc PC. Mesuré en émulation iPad : contenu 820 px en portrait, liste + 860 px en paysage, volets 437 / 503 px, aucune erreur, aucun débordement.
 
 ## Preuves
 
@@ -120,6 +123,16 @@ $ node lot7-ajouter.js lot7-1440 1440
   /offres/N/ajouter, /offres/N/facturer, /clients/nouveau : menu true · colonne 1040
   débordement horizontal : 0 ; erreurs : aucune
 $ node lot4-facturer.js lot7b-1440 1440 : CHF 1000 : Créer la facture · CHF 1'000.00 ; touchers jusqu'à Envoyer : 3 ; PDF de facture sur toute la colonne (capture 05)
+# revue : voir REVUE.md, Preuves
+# lot 7 b
+$ phpunit --filter testLaTabletteAUneMiseEnPageASaTaille (avant) : Failures: 1 ; (après) suite complète OK (473 tests, 2929 assertions)
+$ node tablette.js tab-portrait 820 1180
+  pointeur grossier : true · PC : false
+  offre : {"app":820,"liste":"none","barreBas":"flex"}
+  feuille Facturer : largeur 760 · volets none ; PDF de la facture : page 764 px ; erreurs : aucune
+$ node tablette.js tab-paysage 1180 820
+  offre : {"app":860,"liste":"block","barreBas":"flex"}
+  feuille Facturer : largeur 1000 · volets 437.203px 502.781px ; PDF : page 804 px, panneau à droite ; erreurs : aucune
 ```
 
 ```

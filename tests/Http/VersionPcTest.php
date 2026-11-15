@@ -95,6 +95,24 @@ final class VersionPcTest extends TestCase
     }
 
     /**
+     * Xavier, 2026-11-15 : « il faut un vrai responsive pour la tablette », au doigt et sur toute la largeur. Les écrans
+     * tactiles d'au moins 700 px quittent la colonne du téléphone ; dès 1024 px (paysage), la liste des offres à gauche.
+     * La mise en page est en CSS : ce test vérifie que les deux blocs existent et qu'ils ne visent que le tactile ; les
+     * captures de la recette montrent le rendu.
+     */
+    public function testLaTabletteAUneMiseEnPageASaTaille(): void
+    {
+        $css = (string) file_get_contents(dirname(__DIR__, 2) . '/public/css/app.css');
+        self::assertSame(1, substr_count($css, '@media (min-width: 700px) and (pointer: coarse) {'), 'bloc tablette');
+        self::assertSame(1, substr_count($css, '@media (min-width: 1024px) and (pointer: coarse) {'), 'bloc tablette en paysage');
+        self::assertSame(1, preg_match('#@media \(min-width: 700px\) and \(pointer: coarse\) \{\s*\.app \{ max-width: none; \}#', $css), 'toute la largeur');
+        // La liste des offres, montrée à côté de l'offre en paysage, a ses styles hors du seul bloc PC.
+        self::assertSame(1, preg_match('#^\.lcard \{#m', $css));
+        $o = '/offres/' . $this->jeu->offre['a'];
+        self::assertStringContainsString('<aside class="colonne-liste"', $this->page($o));
+    }
+
+    /**
      * E8 (maquette 25, Xavier, 2026-11-15) : sur PC, le menu reste sur tous les écrans, petits compris ; au téléphone,
      * ces écrans gardent leur seule barre d'actions (le menu y est « pc-seul »). La rubrique de l'écran est allumée.
      * Sans compte (connexion), pas de menu.

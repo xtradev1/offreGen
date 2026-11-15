@@ -43,11 +43,14 @@ Préalables, faits par Claude avant de te passer la main :
 | 6 | « Créer la facture » | le PDF en grand, le panneau à droite (montant, état, client, offre, « Annuler la facture »), « Télécharger » et « Envoyer » en bas |
 | 7 | Ouvre « Ajouter », « Nouveau client », « Facturer » en pages seules (barre d'adresse) | le menu de gauche reste partout |
 
-## C. Sur une tablette, si tu en as une
+## C. Sur une tablette, si tu en as une (ta demande : « un vrai responsive pour la tablette »)
 
 | # | Geste | Attendu |
 |---|---|---|
-| 1 | Une offre, en paysage | les écrans du téléphone (barre du bas, micro au centre), pas le menu de gauche |
+| 1 | Une offre, en portrait | toute la largeur, sans bandes vides ; la barre du bas et le micro au centre ; les cases des lignes plus larges |
+| 2 | Tourne la tablette en paysage | la liste des offres à gauche, l'offre à droite, la barre du bas sous l'offre |
+| 3 | « Facturer » | une fenêtre au milieu : en paysage, réglages à gauche et facture à droite ; en portrait, l'un sous l'autre |
+| 4 | « Créer la facture » | le PDF sur la largeur ; en paysage, le panneau à droite ; en portrait, dessous |
 
 Dis-moi ce qui gêne encore : un geste de trop, un mot, la sobriété d'Ajouter (ta remarque sur E7).
 
@@ -58,7 +61,9 @@ Si quelque chose casse : `var/log/app.log` du site, la console du navigateur (PC
 - Le partage « Envoyer » sur PC dépend du navigateur : Chrome ouvre le partage de Windows quand il le peut, sinon le PDF se télécharge. Non vérifiable par Claude (partage sans affichage).
 - L'aperçu avant création est le document HTML (même gabarit que le PDF), marqué « Aperçu » ; la facture créée, elle, se voit toujours en PDF. Si tu veux aussi le PDF à ce moment-là, c'est une seconde d'attente par choix (décision fragile du `PLAN.md`).
 - Un montant tapé sur une offre à plusieurs taux de TVA se répartit au prorata du HT de chaque taux ; aucun comptable ne l'a encore relu.
-- La référence QR de l'aperçu, avec un QR-IBAN, est provisoire (sous le filigrane) ; la vraie se fige à la création.
+- Avant la création (aperçu, brouillon sans numéro), la section de paiement montre un cadre « Code QR à la création » : rien à scanner tant que la référence n'est pas fixée (revue).
+- Sans arrondi aux 5 ct, un montant tapé au centime peut tomber à 1 ct près (environ 7 % des cas) : le bouton annonce le montant exact avant la création.
+- Tablette : vérifiée en émulation (iPad 820 × 1180, au doigt), pas sur un appareil réel ; la règle vise les écrans tactiles d'au moins 700 px.
 - La vue PC plus belle : notée pour plus tard, à ta demande.
 - Le lot 9 du sous-chantier 24 (revue et recette du 24) suit cette recette.
 
@@ -67,7 +72,7 @@ Si quelque chose casse : `var/log/app.log` du site, la console du navigateur (PC
 | Vérification | Résultat | Preuve |
 |---|---|---|
 | Analyse statique | PHPStan : aucune erreur | `ETAT.md`, Preuves |
-| Suite de tests | 469 tests, 2900 assertions, verts | `ETAT.md`, Preuves |
-| Parcours cliqués | 390 et 1440 px, démo locale, aucune erreur JS, aucun débordement | `ETAT.md`, Preuves (lots 1, 4 à 7) |
-| Revue | en cours | `REVUE.md` |
-| Déploiement test | à compléter | sonde |
+| Suite de tests | 473 tests, 2929 assertions, verts | `ETAT.md`, Preuves |
+| Parcours cliqués | 390, 1440 px et tablette 820 × 1180 / 1180 × 820, démo locale, aucune erreur JS, aucun débordement | `ETAT.md`, Preuves |
+| Revue | correction et sécurité : 3 défauts à corriger, 7 mineurs ou bas, tous traités sauf S3 (sans effet hors de l'artisan) | `REVUE.md` |
+| Déploiement test | voir `ETAT.md`, Preuves | sonde |

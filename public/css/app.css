@@ -610,6 +610,14 @@ fieldset.adresse legend { font-size: 14px; font-weight: 600; padding: 0; margin:
    tactile, un iPad en paysage (1180 px) reste au pouce. */
 kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 2px 5px; background: var(--chip); color: var(--ink); }
 .colonne-liste, .colonne-doc { display: none; }
+/* Les cartes de la colonne des offres (PC, tablette en paysage). */
+.lcard { display: block; padding: 10px 12px; margin: 4px 0; border-radius: 12px; color: var(--ink); text-decoration: none; }
+.lcard .l1 { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.lcard b { font-size: 15px; font-weight: 650; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lcard .montant { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lcard small { display: block; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lcard[aria-current="page"] { background: var(--accent-soft); }
+.lcard:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 @media not all and (min-width: 1024px) and (hover: hover) and (pointer: fine) {
   .pc-seul { display: none !important; }
 }
@@ -659,13 +667,6 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
     .colonne-liste { display: block; position: fixed; top: 0; bottom: 0; left: var(--menu); width: var(--liste); z-index: 4; overflow-y: auto; padding: 12px; background: var(--surface); border-right: 1px solid var(--line); }
     /* Au-delà de 1000 px, l'œil perd le lien entre la désignation et ses montants. */
     body:has(.colonne-liste) .app { margin-left: calc(var(--menu) + var(--liste)); max-width: 1000px; }
-    .lcard { display: block; padding: 10px 12px; margin: 4px 0; border-radius: 12px; color: var(--ink); text-decoration: none; }
-    .lcard .l1 { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
-    .lcard b { font-size: 15px; font-weight: 650; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .lcard .montant { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .lcard small { display: block; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .lcard[aria-current="page"] { background: var(--accent-soft); }
-    .lcard:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
     @media (hover: hover) { .lcard:not([aria-current="page"]):hover { background: var(--chip); } }
 
     /* Le document à côté des lignes (D13) */
@@ -692,4 +693,40 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
     /* Le brouillon d'une facture n'a pas de colonne des offres : le document prend la droite. */
     body.doc-a-cote:not(:has(.colonne-liste)) .app { margin-right: var(--doc); }
   }
+}
+
+/* Tablette (Xavier, 2026-11-15 : « il faut un vrai responsive pour la tablette »), au doigt et sur toute la largeur :
+   les écrans du téléphone (barre du bas, micro au centre, cibles de 48 px et plus) prennent la largeur ; les fenêtres
+   s'ouvrent au milieu. Écran tactile seulement (pointer: coarse) : un PC à la souris a sa version, et la fenêtre
+   étroite d'un PC garde la colonne du téléphone. */
+@media (min-width: 700px) and (pointer: coarse) {
+  .app { max-width: none; }
+  .bar { min-height: 60px; padding: 8px 28px; }
+  .screen { padding: 20px 28px 32px; }
+  .actionbar { padding: 12px 28px; justify-content: flex-end; }
+  .actionbar .btn { flex: 0 1 auto; min-width: 160px; }
+  .actionbar .btn.grand { flex: 0 1 420px; }
+  .actionbar .phrase { text-align: right; }
+  .totalbar { padding: 10px 28px 0; }
+  .tabs a { font-size: 13px; }
+  .rows { --cols: minmax(0, 1fr) 96px 104px 112px 52px; }
+  .feuille-fond { align-items: center; }
+  .feuille { max-width: 640px; border-radius: 18px; max-height: 90%; }
+  .feuille.large { max-width: 760px; }
+  .facture-mini { height: 360px; }
+  .facture-mini [data-apercu-mini] > .apercu-facture { width: 200%; transform: scale(.5); }
+  .snack { width: min(560px, calc(100% - 48px)); }
+}
+/* Tablette en paysage : la liste des offres à gauche, l'offre à droite ; Facturer en deux volets ; le panneau du PDF
+   d'une facture à droite. */
+@media (min-width: 1024px) and (pointer: coarse) {
+  body { --liste: 320px; }
+  .colonne-liste { display: block; position: fixed; top: 0; bottom: 0; left: 0; width: var(--liste); z-index: 4; overflow-y: auto; padding: 12px; background: var(--surface); border-right: 1px solid var(--line); }
+  .lcard { padding: 14px 12px; }
+  body:has(.colonne-liste) .app { margin-left: var(--liste); }
+  .feuille.large { max-width: 1000px; }
+  .facturer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 24px; align-items: start; }
+  .facture-mini { height: 460px; }
+  .pdf-zone:has(.panneau-facture) { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+  .panneau-facture { position: sticky; top: 16px; margin: 0; }
 }
