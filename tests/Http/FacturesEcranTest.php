@@ -83,7 +83,8 @@ final class FacturesEcranTest extends TestCase
         self::assertStringContainsString('name="echeance" type="date" value="2026-11-17"', $page, 'Net à 10 jours.');
         self::assertStringContainsString('Client a', $page);
         self::assertStringContainsString('value="finale" checked', $page);
-        self::assertStringNotContainsString('value="acompte"', $page, 'Pas d\'acomptes dans les conditions.');
+        // E4 (2026-11-15) : sans plan d'acomptes, la finale est proposée d'abord ; un acompte reste possible.
+        self::assertStringContainsString('value="acompte"', $page);
     }
 
     public function testLaFactureFinaleCopieLesLignesDeLOffre(): void
@@ -128,7 +129,7 @@ final class FacturesEcranTest extends TestCase
     public function testUnGenreQuiNEstPasProposeEstRefuse(): void
     {
         $this->page($this->facturer());
-        $r = $this->a->post($this->facturer(), ['genre' => 'acompte', 'numero' => '2026-001', 'date' => '2026-11-07', 'echeance' => '2026-12-07']);
+        $r = $this->a->post($this->facturer(), ['genre' => 'avoir', 'numero' => '2026-001', 'date' => '2026-11-07', 'echeance' => '2026-12-07']);
         self::assertSame(422, $r->getStatusCode());
         self::assertSame(0, BaseDeTest::compter('facture'));
     }

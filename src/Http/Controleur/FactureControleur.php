@@ -113,8 +113,10 @@ final class FactureControleur
         if ($choisi !== null && $choisi['genre'] === 'acompte' && trim($champs['pourcent']) !== '') {
             if (preg_match('/^\d{1,3}$/', trim($champs['pourcent'])) !== 1 || (int) $champs['pourcent'] < 1 || (int) $champs['pourcent'] > 100) {
                 $erreurs['pourcent'] = 'Pourcentage entier, de 1 à 100.';
-            } else {
+            } elseif ((int) $champs['pourcent'] !== $choisi['pourcent']) {
+                // Hors du plan des conditions : plus de « sur N » dans la désignation.
                 $choisi['pourcent'] = (int) $champs['pourcent'];
+                $choisi['nombre'] = null;
             }
         }
         if ($entete === null || $choisi === null || $erreurs !== []) {
@@ -126,7 +128,7 @@ final class FactureControleur
             // Une ligne par taux de TVA de l'offre (D11) ; une seule, comme avant, quand l'offre n'en a qu'un.
             $tauxEntreprise = $this->c->reglages($portee)->lire()->tvaPourDixMille;
             $parts = PlanAcomptes::parts(Totaux::parTaux($lignesOffre, $tauxEntreprise), (int) $choisi['pourcent'], $tauxEntreprise);
-            $designation = PlanAcomptes::designation((int) $choisi['rang'], (int) $choisi['nombre'], (int) $choisi['pourcent'], $offre['numero']);
+            $designation = PlanAcomptes::designation((int) $choisi['rang'], $choisi['nombre'], $choisi['pourcent'], $offre['numero']);
             $lignes = array_map(static fn (array $p): array => [
                 'designation' => $designation . (count($parts) > 1 ? ', prestations à ' . Formats::taux((int) $p['taux']) : ''),
                 'quantite_milliemes' => 1000, 'unite' => 'forfait', 'prix_centimes' => $p['ht'], 'tva_pour_dix_mille' => $p['taux'],
