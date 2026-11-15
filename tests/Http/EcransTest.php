@@ -253,23 +253,45 @@ final class EcransTest extends TestCase
         self::assertSame('Peinture murale a', $this->ligneEnBase()['designation']);
     }
 
-    public function testNouvelleOffreEstDeuxBoutonsRondsParlerEtImporter(): void
+    /**
+     * Décision D1 de Xavier (maquette 24, 2026-11-15), qui remplace la variante B du 2026-11-12 : le micro au centre
+     * de la barre du bas, sur chaque écran qui a la barre ; Offres, Clients, micro, Factures, Plus (D2).
+     */
+    public function testLeMicroEstAuCentreDeLaBarreSurChaqueEcran(): void
     {
+        foreach (['/', '/clients', '/factures', '/catalogue', '/reglages', $this->offre] as $chemin) {
+            $page = $this->page($chemin);
+            self::assertMatchesRegularExpression('#<nav class="tabs" aria-label="Sections">\s*<a href="/"[^>]*>.*Offres</a>\s*<a href="/clients"[^>]*>.*Clients</a>\s*'
+                . '<button class="micro-central" type="button" aria-label="Dicter une offre" data-enregistrer>.*</button>\s*<a href="/factures"[^>]*>.*Factures</a>\s*<a href="/plus"[^>]*>.*Plus</a>\s*</nav>#s', $page, $chemin);
+            // Une seule feuille de dictée et un seul formulaire d'envoi par écran.
+            self::assertSame(1, substr_count($page, 'data-etat="enregistrement"'), $chemin);
+            self::assertSame(1, substr_count($page, 'id="import"'), $chemin);
+            self::assertStringNotContainsString('class="fab-zone"', $page, $chemin);
+        }
         $accueil = $this->page('/');
-        // Variante B, choisie par Xavier : pas de « + », le micro à gauche puis l'import, sans texte.
-        self::assertStringNotContainsString('data-fab', $accueil);
-        self::assertMatchesRegularExpression('#<button class="pastille micro" type="button" aria-label="Parler" data-enregistrer hidden>.*</button>\s*<a class="pastille" href="/import" aria-label="Importer un fichier" data-importer>#s', $accueil);
         // Rappel de l'accord du client retiré de l'écran à la demande de Xavier (2026-11-12).
         self::assertStringNotContainsString('demandez son accord', $accueil);
         self::assertStringContainsString('<div class="feuille-fond" data-feuille hidden>', $accueil);
-        // Chaque état n'existe qu'une fois, et le formulaire de repli n'apparaît pas sur l'accueil.
-        self::assertSame(1, substr_count($accueil, 'data-etat="enregistrement"'));
         self::assertStringNotContainsString('<noscript>', $accueil);
         // Sans JavaScript, l'import mène à la page d'import, qui marche seule.
         $import = $this->page('/import');
         self::assertStringContainsString('<noscript>', $import);
         self::assertStringContainsString('<label class="rond" for="audio">', $import);
         self::assertSame(1, substr_count($import, 'data-etat="enregistrement"'));
+    }
+
+    /** Décision D2 (2026-11-15) : Catalogue et Réglages sortent de la barre, dans « Plus », avec l'import et la déconnexion. */
+    public function testPlusRegroupeCatalogueReglagesImportEtDeconnexion(): void
+    {
+        $plus = $this->page('/plus');
+        self::assertStringContainsString('href="/catalogue"', $plus);
+        self::assertStringContainsString('href="/reglages"', $plus);
+        self::assertMatchesRegularExpression('#<a [^>]*href="/import"[^>]*data-importer#', $plus);
+        self::assertStringContainsString('action="/deconnexion"', $plus);
+        foreach (['/plus', '/catalogue', '/reglages', '/reglages/entreprise'] as $chemin) {
+            self::assertStringContainsString('<a href="/plus" aria-current="page">', $this->page($chemin), $chemin);
+        }
+        self::assertStringNotContainsString('<a href="/plus" aria-current="page">', $this->page('/'));
     }
 
     public function testLaFicheProduitSOuvreParDessusLaListe(): void

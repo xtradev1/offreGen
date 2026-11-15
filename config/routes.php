@@ -47,6 +47,8 @@ return static function (Conteneur $c): array {
         new Route('connexion_envoi', '/connexion', ['POST'], static fn (Request $r): Response => $connexion()->soumettre($r), Route::PUBLIC),
         new Route('deconnexion', '/deconnexion', ['POST'], static fn (Request $r): Response => $connexion()->deconnecter($r), Route::ARTISAN),
         new Route('accueil', '/', ['GET'], static fn (Request $r): Response => $accueil()->liste($r), Route::ARTISAN),
+        // « Plus » (décision D2, 2026-11-15) : catalogue, réglages, import, déconnexion. Lecture seule.
+        new Route('plus', '/plus', ['GET'], static fn (): Response => new Response($c->twig()->render('plus.html.twig')), Route::ARTISAN),
         new Route('import', '/import', ['GET'], static fn (Request $r): Response => $import()->afficher($r), Route::ARTISAN),
         new Route('import_envoi', '/import', ['POST'], static fn (Request $r): Response => $import()->envoyer($r), Route::ARTISAN),
         new Route('enregistrement', '/enregistrements/{uuid}', ['GET'], static fn (Request $r, array $p): Response => (new EnregistrementControleur($c))->afficher($r, $p), Route::ARTISAN),

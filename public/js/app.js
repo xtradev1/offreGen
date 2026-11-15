@@ -225,11 +225,15 @@ function nouvelleOffre() {
   const entree = el('[data-envoi-fichier]');
   const feuille = el('[data-feuille]');
   const fermerX = el('[data-fermer]');
-  const importer = el('[data-importer]');
-  const micro = el('[data-enregistrer]');
+  // Le micro est au centre de la barre (décision D1, 2026-11-15) et l'import aussi dans « Plus » : hors de la zone.
+  const importers = [...document.querySelectorAll('[data-importer]')];
+  const micros = [...document.querySelectorAll('[data-enregistrer]')];
+  const avis = el('[data-sans-micro]');
   const possible = window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder;
-  micro.hidden = !possible;
-  el('[data-sans-micro]').hidden = !!possible;
+  // Page /import : le bouton Parler n'apparaît que si le micro est possible. Le micro de la barre reste : sans
+  // micro, il ouvre la feuille qui propose l'import.
+  micros.forEach((m) => { if (!m.classList.contains('micro-central')) m.hidden = !possible; });
+  if (!feuille) avis.hidden = !!possible;
 
   let etatCourant = 'choix';
   let occupe = false;
@@ -246,7 +250,7 @@ function nouvelleOffre() {
     // Pendant l'enregistrement et l'envoi, le retour ne ferme rien ; après un échec, il demande.
     retenir: () => {
       // Après l'envoi, le traitement continue au serveur : la fenêtre peut se fermer.
-      if (etatCourant === 'choix' || etatCourant === 'suivi' || etatCourant === 'court') return false;
+      if (['choix', 'suivi', 'court', 'refus'].includes(etatCourant)) return false;
       if (etatCourant === 'echec') return !perteAcceptee();
       return true;
     },
@@ -255,7 +259,7 @@ function nouvelleOffre() {
   const montrer = (etat) => {
     etatCourant = etat;
     zone.querySelectorAll('[data-etat]').forEach((s) => { s.hidden = s.dataset.etat !== etat; });
-    if (fermerX) fermerX.hidden = etat !== 'echec' && etat !== 'court';
+    if (fermerX) fermerX.hidden = !['echec', 'court', 'refus'].includes(etat);
     if (!fenetre) return;
     feuille.classList.toggle('pleine', etat === 'enregistrement');
     if (etat === 'choix') { calques.fermer(fenetre); return; }
@@ -263,7 +267,7 @@ function nouvelleOffre() {
   };
 
   // Importer : avec JavaScript, le choix du fichier s'ouvre sur place ; sans, le lien mène à /import.
-  if (importer) importer.addEventListener('click', (e) => { e.preventDefault(); entree.click(); });
+  importers.forEach((i) => i.addEventListener('click', (e) => { e.preventDefault(); entree.click(); }));
   // Onde au toucher des boutons ronds.
   zone.addEventListener('pointerdown', (e) => {
     const b = e.target.closest('.pastille');
@@ -353,13 +357,16 @@ function nouvelleOffre() {
     veille = null;
   };
   const TYPES = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/webm'];
-  micro.addEventListener('click', async () => {
+  const refus = (texte) => {
+    if (texte) avis.textContent = texte;
+    if (feuille) montrer('refus'); else avis.hidden = false;
+  };
+  const demarrer = async () => {
+    if (!possible) { refus(); return; }
     try {
       flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
     } catch (e) {
-      const avis = el('[data-sans-micro]');
-      avis.textContent = 'Le micro est refusé ou absent. Autorisez-le pour ce site dans les réglages du navigateur, ou enregistrez avec le téléphone puis « Importer ».';
-      avis.hidden = false;
+      refus('Le micro est refusé ou absent. Autorisez-le pour ce site dans les réglages du navigateur, ou enregistrez avec le téléphone puis « Importer ».');
       return;
     }
     const type = TYPES.find((t) => MediaRecorder.isTypeSupported(t)) || '';
@@ -380,7 +387,8 @@ function nouvelleOffre() {
     }, 500);
     if (navigator.wakeLock) navigator.wakeLock.request('screen').then((v) => { veille = v; }).catch(() => {});
     montrer('enregistrement');
-  });
+  };
+  micros.forEach((m) => m.addEventListener('click', demarrer));
 
   el('[data-terminer]').addEventListener('click', () => {
     if (!enregistreur) return;
@@ -409,7 +417,7 @@ function nouvelleOffre() {
   });
 
   // Trop court : on recommence tout de suite, le micro se rouvre.
-  el('[data-recommencer]').addEventListener('click', () => micro.click());
+  el('[data-recommencer]').addEventListener('click', demarrer);
 
   el('[data-abandonner]').addEventListener('click', () => {
     if (!window.confirm('Abandonner l’enregistrement ? Il ne sera pas gardé.')) return;

@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{# « Plus » (décision D2 de Xavier, 2026-11-15) : ce qui sert rarement sort de la barre du bas. #}
+{% block titre %}Plus · offreGen{% endblock %}
+{% block entete %}Plus{% endblock %}
+
+{% block contenu %}
+  <nav class="plus" aria-label="Plus">
+    <a class="plus-ligne" href="/catalogue">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>
+      <span><b>Catalogue</b><small>Produits, prix et synonymes</small></span></a>
+    <a class="plus-ligne" href="/reglages">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+      <span><b>Réglages</b><small>Entreprise, marque, conditions, TVA</small></span></a>
+    <a class="plus-ligne" href="/import" data-importer>
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
+      <span><b>Importer un enregistrement</b><small>Un fichier audio du téléphone</small></span></a>
+  </nav>
+  <form class="compte" method="post" action="/deconnexion">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <button class="btn large" type="submit">Se déconnecter</button>
+  </form>
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'plus'} %}{% endblock %}

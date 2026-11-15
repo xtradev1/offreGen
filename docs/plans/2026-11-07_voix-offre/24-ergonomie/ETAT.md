@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-SPEC et PLAN à partir des décisions ci-dessous ; premier lot : navigation (micro au centre, Plus) et offre (total fixé, action principale).
+Lot 2 du `PLAN.md` : offre (cartes client et objet, total fixé, action principale selon l'état, corbeille de 48 px et glisser).
 
 ## En attente de toi
 
@@ -41,6 +41,9 @@ SPEC et PLAN à partir des décisions ci-dessous ; premier lot : navigation (m
 - 2026-11-15 : mesure de l'existant (`audit-ux.js`, démo locale, 15 écrans en 390 et 1280 px) : 184 cibles, 8 sous 44 px, toutes dans l'offre (liens client et titre, 27 et 29 px ; six corbeilles de 40 px) ; actions dans le tiers haut sur 14 écrans ; total de l'offre sous le pli ; facturer un acompte : 7 touchers plus l'envoi hors de l'application ; pas de version PC (colonne de téléphone centrée). Premier relevé faux (étiquettes de champs comptées comme cibles) : corrigé avant d'écrire la maquette.
 - 2026-11-15 : maquette écrite (14 écrans proposés, prototype cliquable avec compteur). Trouvé au contrôle : page qui défilait de côté en 390 px (prototype et tableau), total faux sur un écran PC (3'197.55 au lieu de 3'197.60, recalculé : 2'958.00 HT, TVA 239.60, arrondi aux 5 centimes). Corrigés.
 
+- 2026-11-15 : « voir en grand » d'un modèle dans la page (grandes images tirées du vrai PDF, flèches, « Choisir ce modèle ») ; règle D10 dans `CODING_RULES.md` ; rappel de la dictée permis en relecture et hors catalogue (D5, D6), écart à la règle du 06.11 signalé à Xavier. Commit 0c1fc43, déployé.
+- 2026-11-15 : PLAN.md écrit (9 lots). Lot 1 fait : barre Offres, Clients, micro de 72 px au centre, Factures, Plus ; la feuille de dictée vient avec la barre (une par écran) ; page Plus (Catalogue, Réglages, Importer, Se déconnecter) ; « Terminer et créer l'offre » descendu sous le pouce (72 px) ; micro refusé ou absent : la feuille propose l'import. Tests écrits avant, vus rouges. Trouvé aux captures : « Terminer » au milieu de l'écran avec un grand vide dessous, corrigé.
+
 ## Preuves
 
 ```
@@ -50,4 +53,16 @@ telephone : largeur 390/390, images 21, cassées 0, kit oui
 OK.
 $ essai-proto.js (prototype joué en 1280 et 390 px)
 total après correction CHF 3'197.60 ; PDF chargé 900 px ; « Offre envoyée par WhatsApp » ; « Facture 2026-001 émise et envoyée » ; touchers 13 ; erreurs JS : aucune
+```
+
+Lot 1, navigation (2026-11-15) :
+
+```
+$ phpunit : OK (424 tests, 2463 assertions) ; phpstan : [OK] No errors
+$ node parcours-lot1.js (390 px, faux micro de Chromium)
+  accueil : micro 72x72 px, centre à 195 px (écran 390), 18 px du bas ; onglets : Offres / Clients / Dicter une offre / Factures / Plus
+  « Terminer et créer l'offre » : 72 px de haut, 84 px du bas ; abandon : feuille fermée
+  depuis Clients : enregistrement ouvert ; Plus : Catalogue / Réglages / Importer un enregistrement, onglet actif « Plus »
+  Importer : sélecteur de fichier ouvert sans changer de page ; Catalogue : onglet actif « Plus »
+  micro refusé : « Le micro est refusé ou absent… » et « Importer un fichier » ; largeur 390/390 ; erreurs : aucune
 ```

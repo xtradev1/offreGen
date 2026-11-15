@@ -33,6 +33,18 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .tabs a { flex: 1; font-size: 12px; color: var(--muted); text-decoration: none; padding: 7px 4px 9px; min-height: 56px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .tabs a[aria-current="page"] { color: var(--accent); font-weight: 600; }
 .tabs a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* Micro au centre de la barre, sur chaque écran (décision D1, 2026-11-15) : 72 px, au-dessus de la barre. */
+.tabs .micro-central { flex: 1.15; position: relative; border: 0; background: none; padding: 0; min-height: 56px; cursor: pointer; font: inherit; }
+.tabs .micro-central > span { position: absolute; left: 50%; top: -24px; transform: translateX(-50%); width: 72px; height: 72px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; border: 5px solid var(--surface); box-shadow: 0 6px 16px rgba(36, 87, 197, .4); }
+.tabs .micro-central svg { width: 30px; height: 30px; }
+.tabs .micro-central:focus-visible { outline: none; }
+.tabs .micro-central:focus-visible > span { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btn > svg:not(.i) { width: 22px; height: 22px; flex: none; }
+/* « Plus » (D2) : ce qui sert rarement, en lignes de 64 px. */
+.plus { display: grid; gap: 10px; margin: 4px 0 24px; }
+.plus-ligne { display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.plus-ligne span { display: flex; flex-direction: column; }
+.plus-ligne small { color: var(--muted); font-size: 14px; }
 
 .btn { font: inherit; font-size: 15px; font-weight: 550; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 14px; min-height: 48px; cursor: pointer; text-align: center; text-decoration: none; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
@@ -64,7 +76,10 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .feuille-fond.ouvert { opacity: 1; }
 .feuille { position: relative; background: var(--surface); width: 100%; max-width: 480px; border-radius: 18px 18px 0 0; padding: 0 16px calc(16px + env(safe-area-inset-bottom)); max-height: 92%; overflow-y: auto; transform: translateY(100%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); box-shadow: 0 -6px 24px rgba(0, 0, 0, .18); }
 .feuille-fond.ouvert .feuille { transform: none; }
-.feuille-fond.pleine .feuille { min-height: 70%; }
+.feuille-fond.pleine .feuille { min-height: 70%; display: flex; flex-direction: column; }
+/* Pendant l'enregistrement, « Terminer » descend sous le pouce (écran F de la maquette 24). */
+.feuille-fond.pleine .rec:not([hidden]) { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.feuille-fond.pleine .rec [data-terminer] { margin-top: auto; width: 100%; min-height: 72px; font-size: 19px; }
 .feuille:focus { outline: none; }
 .poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 8px auto 2px; }
 .x.coin { position: absolute; top: 4px; right: 14px; }

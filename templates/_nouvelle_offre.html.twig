@@ -13,7 +13,7 @@
     <div class="dot on" aria-hidden="true"></div>
     <p>Parlez, pièce par pièce.</p>
     <button class="btn danger large" type="button" data-terminer>
-      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>Terminer</button>
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>Terminer et créer l'offre</button>
     <button class="lien" type="button" data-abandonner>Abandonner sans envoyer</button>
   </div>
 
@@ -48,16 +48,16 @@
   </form>
 
   {% if rond %}
-    {# Choix de Xavier du 2026-11-12 (variante B) : le micro à gauche, l'import à droite, posés d'emblée. #}
-    <div class="fab-zone">
-      <p class="dial-note" data-sans-micro hidden>{{ sans_micro }}</p>
-      <button class="pastille micro" type="button" aria-label="Parler" data-enregistrer hidden>{{ icone_micro }}</button>
-      <a class="pastille" href="/import" aria-label="Importer un fichier" data-importer>{{ icone_import }}</a>
-    </div>
+    {# Le micro est au centre de la barre d'onglets (_onglets.html.twig, décision D1 du 2026-11-15) ; ici, la feuille
+       qui monte : enregistrement, envoi, suivi, et l'import quand le micro manque ou est refusé. #}
     <div class="feuille-fond" data-feuille hidden>
       <div class="feuille" role="dialog" aria-modal="true" aria-label="Nouvelle offre">
         <div class="poignee" aria-hidden="true"></div>
         <button class="x coin" type="button" data-fermer aria-label="Fermer" hidden><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <div data-etat="refus" hidden>
+          <p class="alerte warn" role="alert" data-sans-micro>{{ sans_micro }}</p>
+          <a class="btn primary large" href="/import" data-importer>{{ icone_import }}Importer un fichier</a>
+        </div>
         {{ etats }}
       </div>
     </div>
