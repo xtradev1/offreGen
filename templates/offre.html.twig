@@ -13,7 +13,7 @@
   <div class="ohead">
     <a class="who carte-lien" href="/offres/{{ offre.id }}/client" data-en-feuille aria-label="Client de l'offre : chercher ou changer"><span>{% if offre.client_nom %}<b>{{ offre.client_nom }}</b>{% if offre.client_adresse %}<small>{{ offre.client_adresse|replace({"\n": ', '}) }}</small>{% endif %}{% if offre.client_id is null %}<span class="etiquette nouveau">à confirmer</span>{% endif %}{% else %}<span class="manque-client">Choisir le client</span>{% endif %}</span>
       <svg class="i loupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
-    <a class="t carte-lien" href="/offres/{{ offre.id }}/modifier"><span><b>{{ offre.titre }}</b><small>Objet de l'offre</small></span></a>
+    <a class="t carte-lien" href="/offres/{{ offre.id }}/modifier" data-en-feuille-pc><span><b>{{ offre.titre }}</b><small>Objet de l'offre</small></span></a>
     {% if factures is not empty %}<span class="factures-offre">{% for f in factures %}<a class="etiquette facture{% if f.statut == 'annulee' %} annulee{% endif %}" href="/factures/{{ f.id }}{{ f.statut != 'brouillon' ? '/apercu' }}">{{ f.numero ? 'Facture ' ~ f.numero : 'Brouillon de facture' }}</a>{% endfor %}</span>{% endif %}
     {% set a_relire = 0 %}
     {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or r.l.prix_centimes == 0 %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
@@ -23,6 +23,7 @@
   </div>
 
   {% include '_lignes.html.twig' with {base: '/offres/' ~ offre.id, modifiable: true, ranger: true, vide:"Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un."} %}
+  {% include '_ajout_pc.html.twig' with {base: '/offres/' ~ offre.id} %}
 
   {# La TVA par taux dès que l'offre en a plusieurs (D11, 2026-11-15). #}
   {% set avec_tva = totaux.par_taux|filter(g => g.taux > 0)|length > 0 %}
@@ -37,7 +38,8 @@
 {% endblock %}
 
 {% block actions %}
-  {% include '_feuille.html.twig' with {options: {rafraichir: '.ohead'}} %}
+  {# recharger : une fenêtre qui a changé l'offre (lignes ajoutées, ligne ou objet corrigés) la recharge en se fermant. #}
+  {% include '_feuille.html.twig' with {options: {rafraichir: '.ohead', recharger: '1'}} %}
   {# Décision D3 (2026-11-15) : le total reste visible en bas ; l'action principale suit l'état de l'offre.
      Une ligne à vérifier ou sans prix demande d'abord la relecture, une à la fois (D5). #}
   {% set a_relire = 0 %}
@@ -45,7 +47,7 @@
   {% set avec_tva = totaux.par_taux|filter(g => g.taux > 0)|length > 0 %}
   <div class="totalbar" data-total-fixe><span>Total{% if avec_tva %} TTC{% endif %}</span><b>{{ totaux.ttc|chf }}</b></div>
   <div class="actionbar">
-    <a class="btn carre" href="/offres/{{ offre.id }}/ajouter" aria-label="Ajouter une ligne">
+    <a class="btn carre" href="/offres/{{ offre.id }}/ajouter" aria-label="Ajouter une ligne" data-en-feuille>
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
     {% if a_relire > 0 %}
       <a class="btn primary grand" href="/offres/{{ offre.id }}/relire">

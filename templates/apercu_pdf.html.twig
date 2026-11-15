@@ -1,4 +1,5 @@
 {% extends 'base.html.twig' %}
+{% set onglet = (facture ?? null) ? 'factures' : 'offres' %}
 
 {# Le PDF tel que le client le recevra, offre ou facture émise (Xavier, 2026-11-15 ; décisions D7 A et D8). PDF.js le
    dessine page par page ; pincer pour agrandir. « Envoyer » passe par le partage du téléphone, le PDF joint ; sans

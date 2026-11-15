@@ -28,7 +28,10 @@
     {% for id in msg.focus ?? [] %}<span hidden data-focus-ligne="{{ id }}"></span>{% endfor %}
     <div class="bas">
       {% block actions %}{% endblock %}
-      {% block onglets %}{% endblock %}
+      {# Sur PC, le menu reste sur tous les écrans (maquette 25, E8) ; au téléphone, un écran sans onglets garde sa
+         seule barre d'actions (pc_seul). « onglet » : la rubrique allumée ; « sans_menu » : connexion, inscription,
+         erreur. Les écrans à onglets remplacent ce bloc. #}
+      {% block onglets %}{% if not (sans_menu ?? false) %}{% include '_onglets.html.twig' with {actif: onglet ?? 'offres', pc_seul: true} %}{% endif %}{% endblock %}
     </div>
   </div>
 </body>

@@ -41,7 +41,7 @@ final class VersionPcTest extends TestCase
     /** Le menu de la barre, entre <nav class="tabs" et </nav>. */
     private static function menu(string $page): string
     {
-        self::assertSame(1, preg_match('#<nav class="tabs".*?</nav>#s', $page, $m));
+        self::assertSame(1, preg_match('#<nav class="tabs[ "].*?</nav>#s', $page, $m));
         return $m[0] ?? '';
     }
 
@@ -92,6 +92,32 @@ final class VersionPcTest extends TestCase
         }
         // Le document que la colonne reprend porte son article.
         self::assertStringContainsString('<article class="paper">', $this->page("/offres/$id/document"));
+    }
+
+    /**
+     * E8 (maquette 25, Xavier, 2026-11-15) : sur PC, le menu reste sur tous les écrans, petits compris ; au téléphone,
+     * ces écrans gardent leur seule barre d'actions (le menu y est « pc-seul »). La rubrique de l'écran est allumée.
+     * Sans compte (connexion), pas de menu.
+     */
+    public function testLeMenuEstSurTousLesEcransDuPc(): void
+    {
+        $o = '/offres/' . $this->jeu->offre['a'];
+        $ligne = (int) \OffreGen\Tests\Outils\BaseDeTest::ligne("SELECT id FROM ligne WHERE offre_id = {$this->jeu->offre['a']}")['id'];
+        $petits = [
+            "$o/ajouter" => 'offres', "$o/lignes/$ligne" => 'offres', "$o/modifier" => 'offres', "$o/client" => 'offres',
+            "$o/facturer" => 'offres', "$o/apercu" => 'offres', "$o/document" => 'offres', '/clients/nouveau' => 'clients',
+        ];
+        foreach ($petits as $chemin => $actif) {
+            $menu = self::menu($this->page($chemin));
+            self::assertStringStartsWith('<nav class="tabs pc-seul"', $menu, $chemin);
+            $href = $actif === 'offres' ? '/' : '/' . $actif;
+            self::assertStringContainsString('<a href="' . $href . '" aria-current="page">', $menu, "$chemin : rubrique $actif");
+        }
+        // Les écrans à onglets les gardent au téléphone.
+        self::assertStringStartsWith('<nav class="tabs" aria-label', self::menu($this->page($o)));
+        // Sans compte : aucun menu.
+        $anonyme = new Navigateur(Monde::conteneur());
+        self::assertStringNotContainsString('<nav class="tabs', (string) $anonyme->get('/connexion')->getContent());
     }
 
     /**

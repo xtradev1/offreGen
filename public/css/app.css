@@ -304,6 +304,22 @@ a.nm:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .pick span { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pick .pn { font-weight: 400; }
 .pick small { display: block; font-size: 12px; color: var(--muted); }
+/* Ajouter, sobre (maquette 25, E7) : la ligne entrée en une phrase, le texte tapé proposé en ligne libre, le détail
+   replié ; sur PC, une ligne de recherche au bas du tableau. */
+.ajoutee { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--ok); }
+.pick-libre .pick .pn { color: var(--accent); font-weight: 600; }
+.libre-detail { margin: 18px 0 8px; }
+.libre-detail summary { list-style: none; display: flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 600; color: var(--accent); cursor: pointer; }
+.libre-detail summary::-webkit-details-marker { display: none; }
+.libre-detail[open] summary { margin-bottom: 6px; }
+.libre-detail form > .btn { width: 100%; min-height: 48px; }
+.ajout-pc { position: relative; display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 0 12px; min-height: 48px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); }
+.ajout-pc:focus-within { border-style: solid; border-color: var(--accent); }
+.ajout-pc input { flex: 1; min-height: 46px; border: 0; background: none; font: inherit; font-size: 15px; color: var(--ink); outline: none; }
+.ajout-pc-liste { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 8; margin: 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, .14); }
+.ajout-pc-liste li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: 8px; font-size: 14.5px; color: var(--ink); cursor: pointer; }
+.ajout-pc-liste li small { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ajout-pc-liste li[aria-selected="true"] { background: var(--accent-soft); }
 
 /* Réglages. */
 .card { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 10px 0; background: var(--surface); }

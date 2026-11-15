@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 7 du `PLAN.md` : Ajouter (sobre, E7) et petits écrans sur PC (menu partout, fenêtres au milieu).
+Lot 8 du `PLAN.md` : revue du diff du sous-chantier (correction, sécurité des routes et CSRF), démo remise à zéro, `RECETTE.md`.
 
 ## En attente de toi
 
@@ -55,6 +55,12 @@ Lot 7 du `PLAN.md` : Ajouter (sobre, E7) et petits écrans sur PC (menu partout,
   - Vu aux captures et laissé au lot 7 : sur PC, le PDF de la facture n'a pas le menu et reste dans la colonne de 640 px, la page du PDF ne fait que 264 px de large.
 - 2026-11-15, lots 4 et 5 déployés sur le test (eb8cad2), sonde verte.
 - 2026-11-15, lot 6 (Origin 419, E6) : étiquette orange « à confirmer » et loupe sur la carte du client ; sans client confirmé, « Générer l'offre » ouvre « Pour qui est cette offre ? » dans la feuille (`/offres/{id}/client?suite=apercu`) ; choisir une fiche, créer celle du nom dicté ou une nouvelle fiche mène au PDF de l'offre (seule la valeur `apercu` est suivie). Défaut trouvé par un ancien test : ma réécriture de `offre_client.html.twig` avait perdu l'espace insécable de « 100 % » ; relecture de tous mes textes visibles du jour, cinq autres corrigés (« : », « ; », « ? », « « … » »).
+- 2026-11-15, lot 7 (Origin 420, E7 et E8) :
+  - Ajouter, sobre : « + » ouvre la feuille ; un champ, la liste nue du catalogue ; un ajout y revient (`reste=1`) avec une seule ligne « « X » ajoutée » ; rien trouvé : « Ajouter « texte » » en ligne libre (quantité 1, forfait, prix à compléter) ; la ligne libre détaillée repliée ; « Terminé ». L'offre se recharge à la fermeture d'une fenêtre qui l'a changée (`data-recharger`).
+  - Sur PC : ligne de recherche au bas du tableau de l'offre et du brouillon (sans JavaScript, elle mène à Ajouter) ; Entrée ajoute le premier produit proposé ou la ligne libre, la page revient curseur dans la quantité. La ligne et l'objet s'ouvrent en fenêtre au milieu (`data-en-feuille-pc`).
+  - Menu de gauche sur tous les écrans du PC (`base.html.twig`, `pc-seul` au téléphone), rubrique allumée par écran ; ni sur la connexion ni sur l'erreur. Défaut attrapé par un test existant : la page Import aurait porté deux dictées (deux `id="audio"`) ; le menu y vient sans la sienne.
+  - Le PDF de la facture sur PC passe de 264 px de large à la colonne entière (menu présent).
+  - Le serveur PHP local s'était arrêté avec la session précédente ; relancé par PowerShell (Git Bash réécrit le chemin `/mnt/c/...`).
 
 ## Preuves
 
@@ -98,6 +104,21 @@ $ node lot6-client.js lot6-390 390 143   (idem à 1440)
   après le choix : /offres/143/apercu · touchers jusqu'au PDF : 2 · Envoyer : true
   client confirmé : Famille Dubois 2900 Porrentruy · Générer : /offres/143/apercu
   débordement horizontal : 0 ; erreurs : aucune
+# lot 7
+$ phpunit --filter 'testLeMenuEstSurTousLesEcransDuPc|testAjouterGardeLaFeuilleOuverteEtProposeLeTexteTape' (avant le code) : Failures: 2
+$ phpunit : OK (469 tests, 2900 assertions) ; phpstan : [OK] No errors
+$ node lot7-ajouter.js lot7-390 390
+  focus dans la recherche : cherche
+  après un produit : « Échafaudage, montage et location » ajoutée · feuille ouverte : true
+  proposition libre : Ajouter « Nettoyage final » · visible : true
+  après Terminé, lignes : 8 (attendu 8) ; erreurs : aucune
+$ node lot7-ajouter.js lot7-1440 1440
+  après Entrée : /offres/150#l664 · focus : quantite dans l664 · lignes : 7
+  ligne libre : true · lignes : 8
+  ligne en fenêtre : Ligne · url inchangée
+  /offres/N/ajouter, /offres/N/facturer, /clients/nouveau : menu true · colonne 1040
+  débordement horizontal : 0 ; erreurs : aucune
+$ node lot4-facturer.js lot7b-1440 1440 : CHF 1000 : Créer la facture · CHF 1'000.00 ; touchers jusqu'à Envoyer : 3 ; PDF de facture sur toute la colonne (capture 05)
 ```
 
 ```

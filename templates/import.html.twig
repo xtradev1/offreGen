@@ -9,3 +9,5 @@
   {% include '_nouvelle_offre.html.twig' %}
   <p class="muted petit centre">Fichiers acceptés&nbsp;: {{ formats }}, {{ taille_max_mo }}&nbsp;Mo au plus.</p>
 {% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'offres', pc_seul: true, sans_dictee: true} %}{% endblock %}

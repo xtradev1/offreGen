@@ -123,6 +123,10 @@ function brancherFiltre(champ) {
     if (creer) creer.href = (creer.dataset.creer || '/catalogue/nouveau?q=') + encodeURIComponent(champ.value.trim());
     const copie = champ.dataset.copie && document.querySelector(champ.dataset.copie);
     if (copie && trouves === 0) copie.value = champ.value.trim();
+    // Le texte tapé, repris dans « Ajouter « … » » (Ajouter, E7) ; rien de tapé : la proposition se cache.
+    const texte = champ.dataset.copieTexte && document.querySelector(champ.dataset.copieTexte);
+    if (texte) texte.textContent = champ.value.trim();
+    if (aucun && champ.value.trim() === '') aucun.hidden = true;
   };
   champ.addEventListener('input', appliquer);
   // La liste est déjà filtrée : Entrée ne recharge pas la page.
@@ -457,9 +461,16 @@ function fichesEnFenetre() {
   const recherche = fond.dataset.recherche || '#cq';
   let declencheur = null;
   let enregistreSeul = null;
+  // Une fenêtre qui a changé l'offre (lignes ajoutées, ligne ou objet corrigés) la recharge en se fermant
+  // (data-recharger) : les champs des lignes se rebranchent avec la page.
+  let aChange = false;
   const calque = {
     montrer: () => apparaitre(fond),
     cacher: () => {
+      if (aChange && fond.dataset.recharger) {
+        window.location.reload();
+        return;
+      }
       disparaitre(fond);
       if (declencheur && declencheur.isConnected) declencheur.focus({ preventScroll: true });
       // Une fiche enregistrée au fil de la saisie : la liste derrière se met à jour.
@@ -546,7 +557,8 @@ function fichesEnFenetre() {
       if (u.pathname === ici) fermer(); else charger(u.href);
       return;
     }
-    if (a.hasAttribute('data-en-feuille')) {
+    // data-en-feuille-pc : une fenêtre au milieu sur PC seulement (la ligne, l'objet, E8) ; au téléphone, la page.
+    if (a.hasAttribute('data-en-feuille') || (a.hasAttribute('data-en-feuille-pc') && window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches)) {
       e.preventDefault();
       declencheur = a;
       charger(a.href);
@@ -569,6 +581,7 @@ function fichesEnFenetre() {
     if (e.submitter && e.submitter.name) donnees.set(e.submitter.name, e.submitter.value);
     fetch(form.action, { method: 'POST', body: donnees, credentials: 'same-origin' })
       .then((r) => r.text().then((html) => {
+        if (r.ok && r.redirected) aChange = true;
         if (r.ok && r.redirected && new URL(r.url).pathname === ici) {
           fermer();
           return rafraichir(html, avant, modifie);
@@ -1195,6 +1208,75 @@ function feuillesFacturer() {
   document.querySelectorAll('form[data-facturer]').forEach(brancherFacturer);
 }
 
+// Ajouter sur PC (maquette 25, E7) : la ligne de recherche au bas du tableau. Les produits se proposent pendant la
+// frappe ; Entrée ajoute le premier (ou celui choisi aux flèches) ; un texte sans produit devient une ligne libre.
+// La page revient sur la ligne ajoutée, curseur dans sa quantité (clavierPc). Échap vide le champ.
+function ajoutPc() {
+  document.querySelectorAll('form[data-ajout-pc]').forEach((form) => {
+    const champ = form.querySelector('input[name="q"]');
+    const liste = form.querySelector('[role="listbox"]');
+    const produits = [...liste.querySelectorAll('li[data-id]')];
+    const libre = liste.querySelector('li[data-libre]');
+    const libreTexte = libre.querySelector('[data-libre-texte]');
+    let actif = -1;
+    const visibles = () => [...liste.querySelectorAll('li:not([hidden])')];
+    const marquer = (i) => {
+      const v = visibles();
+      actif = v.length ? (i + v.length) % v.length : -1;
+      v.forEach((li, j) => li.setAttribute('aria-selected', String(j === actif)));
+    };
+    const filtrer = () => {
+      const texte = champ.value.trim();
+      const mots = normaliser(texte).split(' ').filter(Boolean);
+      let n = 0;
+      produits.forEach((li) => {
+        const garde = mots.length > 0 && n < 6 && mots.every((m) => li.dataset.texte.includes(m));
+        li.hidden = !garde;
+        if (garde) n++;
+      });
+      libre.hidden = texte === '';
+      libreTexte.textContent = '« ' + texte + ' »';
+      liste.hidden = texte === '';
+      champ.setAttribute('aria-expanded', String(!liste.hidden));
+      marquer(0);
+    };
+    const envoyer = (li) => {
+      const texte = champ.value.trim();
+      if (!texte) return;
+      const poste = document.createElement('form');
+      poste.method = 'post';
+      poste.action = form.dataset.poste;
+      poste.hidden = true;
+      const champs = { _csrf: form.dataset.csrf };
+      if (li && li.dataset.id) champs.produit = li.dataset.id;
+      else Object.assign(champs, { designation: texte, quantite: '1', unite: 'forfait', prix: '' });
+      Object.entries(champs).forEach(([nom, valeur]) => {
+        const entree = document.createElement('input');
+        entree.type = 'hidden';
+        entree.name = nom;
+        entree.value = valeur;
+        poste.append(entree);
+      });
+      document.body.append(poste);
+      poste.submit();
+    };
+    champ.addEventListener('input', filtrer);
+    champ.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); marquer(actif + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); marquer(actif - 1); }
+      else if (e.key === 'Enter') { e.preventDefault(); envoyer(visibles()[actif] || null); }
+      else if (e.key === 'Escape') { champ.value = ''; filtrer(); }
+    });
+    // mousedown plutôt que click : le champ ne perd pas la main avant le choix.
+    liste.addEventListener('mousedown', (e) => {
+      const li = e.target.closest('li');
+      if (li) { e.preventDefault(); envoyer(li); }
+    });
+    champ.addEventListener('blur', () => setTimeout(() => { liste.hidden = true; champ.setAttribute('aria-expanded', 'false'); }, 150));
+    champ.addEventListener('focus', () => { if (champ.value.trim()) filtrer(); });
+  });
+}
+
 // La hauteur du bas de l'écran (boutons, phrase, onglets) : les bandeaux se posent au-dessus (--bas, app.css). Constaté
 // le 2026-11-15 : à hauteur fixe, le bandeau recouvrait « Créer la facture » quand une phrase suit le bouton.
 function hauteurDuBas() {
@@ -1302,6 +1384,7 @@ document.addEventListener('DOMContentLoaded', () => {
   messagesDeRecherche();
   feuillesFacturer();
   hauteurDuBas();
+  ajoutPc();
   modelesEnGrand();
   glisserLignes();
   montantRelu();

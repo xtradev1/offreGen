@@ -47,6 +47,8 @@ final class OffreControleur
         }
         return new Response($this->c->twig()->render('offre.html.twig', $this->avecFactures($requete, $this->donnees($requete, $parametres)) + [
             'liste_pc' => ['offres' => $offres, 'totaux' => $totaux, 'a_relire' => $aRelire, 'textes' => $textes],
+            // La ligne de recherche au bas du tableau, sur PC (maquette 25, E7).
+            'catalogue' => LigneControleur::catalogue($this->c, $portee),
         ]));
     }
 

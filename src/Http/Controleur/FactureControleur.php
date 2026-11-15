@@ -327,7 +327,8 @@ final class FactureControleur
             return new RedirectResponse('/factures/' . $f['id'] . '/apercu', 303);
         }
         $d = $this->donnees($requete, $f);
-        return new Response($this->c->twig()->render('facture.html.twig', $d + ['raisons' => self::raisonsDeNePasEmettre($d)]));
+        return new Response($this->c->twig()->render('facture.html.twig', $d + ['raisons' => self::raisonsDeNePasEmettre($d),
+            'catalogue' => LigneControleur::catalogue($this->c, $this->portee($requete))]));
     }
 
     /**

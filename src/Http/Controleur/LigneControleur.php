@@ -172,6 +172,9 @@ final class LigneControleur
             $p = $produits->parId(Parametres::id(['p' => $r->getString('produit')], 'p')) ?? throw new PageIntrouvable();
             $id = $support->ajouterLigne($cible['id'], $p['designation'], 1000, $p['unite'], $p['prix_centimes'], $p['id']);
             $this->modifiee($requete, $cible['id']);
+            if ($r->getString('reste') === '1') {
+                return self::resterSurAjouter($cible, $id);
+            }
             Flash::dire($requete, 'focus', $id);
             return $this->versLaLigne($cible, $id);
         }
@@ -210,6 +213,9 @@ final class LigneControleur
         $this->modifiee($requete, $cible['id']);
         if ($produit !== null) {
             Flash::dire($requete, 'info', Flash::cite($produit['designation']) . ' ajouté à ' . $cible['document'] . ' et au catalogue');
+        }
+        if ($r->getString('reste') === '1') {
+            return self::resterSurAjouter($cible, $id);
         }
         return $this->versLaLigne($cible, $id);
     }
@@ -259,6 +265,28 @@ final class LigneControleur
     private function modifiee(Request $requete, int $id): void
     {
         $this->support($requete)->marquerModifiee($id, $this->c->horloge()->now());
+    }
+
+    /**
+     * Ajouter dans la feuille (E7, maquette 25) : la feuille reste ouverte pour la ligne suivante, et dit laquelle vient
+     * d'entrer.
+     *
+     * @param Cible $cible
+     */
+    private static function resterSurAjouter(array $cible, int $ligneId): RedirectResponse
+    {
+        return new RedirectResponse($cible['base'] . '/ajouter?ajoutee=' . $ligneId, 303);
+    }
+
+    /**
+     * Le catalogue pour la ligne de recherche au bas du tableau, sur PC (E7) : chaque produit et son texte cherché.
+     *
+     * @return list<array{id: int, designation: string, unite: string, prix_centimes: int, texte: string}>
+     */
+    public static function catalogue(Conteneur $c, Portee $portee): array
+    {
+        return array_map(static fn (array $p): array => ['id' => $p['id'], 'designation' => $p['designation'], 'unite' => $p['unite'],
+            'prix_centimes' => $p['prix_centimes'], 'texte' => Recherche::texte($p)], $c->produits($portee)->tous());
     }
 
     /** @param Cible $cible */
@@ -337,8 +365,12 @@ final class LigneControleur
         foreach ($tous as $p) {
             $produits[] = $p + ['texte' => Recherche::texte($p), 'visible' => isset($gardes[$p['id']])];
         }
+        // La ligne qui vient d'entrer, annoncée dans la feuille ; une ligne d'ailleurs ne s'annonce pas.
+        $ajoutee = $requete->query->getInt('ajoutee');
+        $ligne = $ajoutee > 0 ? $this->support($requete)->ligne($cible['id'], $ajoutee) : null;
         return new Response($this->c->twig()->render('ajout.html.twig', [
             'cible' => $cible,
+            'ajoutee' => $ligne === null ? null : $ligne['designation'],
             'q' => $q,
             'produits' => $produits,
             'trouves' => count($gardes),

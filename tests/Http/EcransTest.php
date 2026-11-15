@@ -212,6 +212,35 @@ final class EcransTest extends TestCase
         self::assertStringContainsString("data-focus-ligne=\"$nouvelle\"", $this->page($this->offre));
     }
 
+    /**
+     * E7 (maquette 25, Xavier, 2026-11-15, « plus simple et sobre ») : au téléphone, « + » ouvre Ajouter dans une feuille
+     * qui reste ouverte après chaque ajout ; une recherche sans résultat propose d'ajouter le texte tapé en ligne libre ;
+     * sur PC, une ligne de recherche au bas du tableau.
+     */
+    public function testAjouterGardeLaFeuilleOuverteEtProposeLeTexteTape(): void
+    {
+        $offre = $this->page($this->offre);
+        self::assertMatchesRegularExpression("#<a class=\"btn carre\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\" data-en-feuille>#", $offre);
+        self::assertMatchesRegularExpression("#<form class=\"ajout-pc pc-seul\" method=\"get\" action=\"{$this->offre}/ajouter\" role=\"search\" data-ajout-pc data-poste=\"{$this->offre}/lignes\" data-csrf=\"[^\"]+\">#", $offre);
+        self::assertStringContainsString('<li role="option" data-id="' . $this->jeu->produit['a'] . '" data-texte="peinture murale a peinture', $offre);
+
+        $page = $this->page("{$this->offre}/ajouter");
+        self::assertStringContainsString('<input type="hidden" name="reste" value="1">', $page);
+        self::assertStringContainsString('<form class="pick-libre" method="post" action="' . $this->offre . '/lignes" data-aucun', $page);
+        $r = $this->a->post("{$this->offre}/lignes", ['produit' => (string) $this->jeu->produit['a'], 'reste' => '1']);
+        $nouvelle = (int) BaseDeTest::ligne("SELECT MAX(id) AS id FROM ligne WHERE offre_id = {$this->jeu->offre['a']}")['id'];
+        self::assertSame("{$this->offre}/ajouter?ajoutee=$nouvelle", $r->headers->get('Location'), 'La feuille reste ouverte.');
+        self::assertStringContainsString('«&nbsp;Peinture murale a&nbsp;» ajoutée', $this->page("{$this->offre}/ajouter?ajoutee=$nouvelle"));
+
+        // Le texte tapé, en ligne libre, prix à compléter dans l'offre.
+        $r = $this->a->post("{$this->offre}/lignes", ['designation' => 'Nettoyage final', 'quantite' => '1', 'unite' => 'forfait', 'prix' => '', 'reste' => '1']);
+        $libre = BaseDeTest::ligne("SELECT id, produit_id, prix_centimes, quantite_milliemes FROM ligne WHERE designation = 'Nettoyage final'");
+        self::assertSame([null, 0, 1000], [$libre['produit_id'], $libre['prix_centimes'], $libre['quantite_milliemes']]);
+        self::assertSame("{$this->offre}/ajouter?ajoutee={$libre['id']}", $r->headers->get('Location'));
+        // Une ligne d'une autre offre ne s'annonce pas.
+        self::assertStringNotContainsString('ajoutée', $this->page("{$this->offre}/ajouter?ajoutee=999999"));
+    }
+
     public function testLigneLibreGardeeAuCatalogue(): void
     {
         $this->page("{$this->offre}/ajouter");
@@ -293,7 +322,7 @@ final class EcransTest extends TestCase
         BaseDeTest::pdo()->exec("INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier) VALUES ({$this->jeu->a}, $o, 9, 'Crépi', 18000, 'm²', 0, 0)");
         $page = $this->page($this->offre);
         self::assertMatchesRegularExpression('#<div class="totalbar" data-total-fixe><span>Total TTC</span><b>CHF\x{00A0}[0-9\'’.]+</b></div>#u', $page);
-        self::assertMatchesRegularExpression("#<a class=\"btn carre\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\">#", $page);
+        self::assertMatchesRegularExpression("#<a class=\"btn carre\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\" data-en-feuille>#", $page);
         self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/relire\">.*Relire 2 lignes</a>#s", $page);
         self::assertStringNotContainsString("href=\"{$this->offre}/apercu\"", $page, 'pas de génération tant que des lignes attendent');
 
@@ -312,7 +341,7 @@ final class EcransTest extends TestCase
     {
         $page = $this->page($this->offre);
         self::assertMatchesRegularExpression('#<a class="who carte-lien" href="/offres/\d+/client" data-en-feuille aria-label="Client de l\'offre : chercher ou changer">#', $page);
-        self::assertMatchesRegularExpression('#<a class="t carte-lien" href="/offres/\d+/modifier">#', $page);
+        self::assertMatchesRegularExpression('#<a class="t carte-lien" href="/offres/\d+/modifier" data-en-feuille-pc>#', $page);
         self::assertMatchesRegularExpression("#<div class=\"row\" id=\"l{$this->ligne}\" data-glisse-ligne>#", $page);
         self::assertStringContainsString('aria-label="Supprimer la ligne Peinture murale a"', $page);
     }
