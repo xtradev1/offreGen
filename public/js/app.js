@@ -30,7 +30,8 @@ function corrections() {
       const enCours = [...document.querySelectorAll('input[data-envoi-change]')]
         .filter((c) => c.value !== c.defaultValue)
         .map((c) => [c.closest('.row').id, c.name, c.value]);
-      ['.rows', '.totals', '[data-sauvegarde]'].forEach((s) => {
+      // Le total fixé en bas (D3) suit aussi : il restait à l'ancien montant jusqu'au lot 8 (constaté le 2026-11-15).
+      ['.rows', '.totals', '[data-sauvegarde]', '[data-total-fixe]', '.lcard[aria-current="page"]'].forEach((s) => {
         const neuf = page.querySelector(s);
         const vieux = document.querySelector(s);
         if (neuf && vieux) vieux.replaceWith(neuf);
@@ -45,6 +46,8 @@ function corrections() {
         if (retrouve) { retrouve.focus(); try { retrouve.setSelectionRange(garde[2], garde[3]); } catch (e) { /* champ sans sélection */ } }
       }
       if (!r.ok && etat()) etat().textContent = 'Non enregistré, réessayez';
+      // Le document à côté des lignes (PC, D13) se met à jour.
+      if (r.ok) document.dispatchEvent(new Event('offre-modifiee'));
     })).catch(() => {
       if (etat()) etat().textContent = 'Non enregistré : pas de connexion';
       if (ligne) ligne.classList.add('miss');
@@ -55,7 +58,14 @@ function corrections() {
   document.addEventListener('change', (e) => { if (e.target.matches('input[data-envoi-change]')) envoyer(e.target); });
   document.addEventListener('keydown', (e) => {
     if (!e.target.matches('input[data-envoi-change]')) return;
-    if (e.key === 'Enter') { e.preventDefault(); envoyer(e.target); e.target.select(); }
+    // Entrée : enregistre, puis le même champ de la ligne suivante (PC, D12) ; sur la dernière ligne, on reste.
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      envoyer(e.target);
+      const memes = [...document.querySelectorAll('input[data-envoi-change][name=' + e.target.name + ']')];
+      const suivant = memes[memes.indexOf(e.target) + 1];
+      if (suivant) suivant.focus(); else e.target.select();
+    }
     if (e.key === 'Escape') { e.target.value = e.target.defaultValue; e.target.blur(); }
   });
   document.addEventListener('focusin', (e) => { if (e.target.matches('input[data-envoi-change]')) e.target.select(); });
@@ -1039,7 +1049,97 @@ function messagesDeRecherche() {
   document.querySelectorAll('[data-filtre]').forEach((champ) => champ.addEventListener('input', () => messages.forEach((m) => { m.hidden = true; }), { once: true }));
 }
 
+// Clavier du PC (D12, D13, 2026-11-15). D : dicter une offre, hors d'un champ de saisie. Sur une ligne de l'offre :
+// J dit « c'est juste » (aussi depuis la quantité ou le prix, où la lettre n'a pas de sens), Suppr la retire hors d'un
+// champ (avec « Annuler », comme la corbeille). Aucune touche ne joue avec Ctrl, Alt ou Cmd, ni fenêtre ouverte.
+function clavierPc() {
+  const saisie = (el) => el.matches('input, textarea, select, [contenteditable="true"]');
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || document.body.classList.contains('calque-ouvert')) return;
+    const cible = e.target instanceof Element ? e.target : document.body;
+    const touche = e.key.toLowerCase();
+    if (touche === 'd' && !saisie(cible)) {
+      const micro = document.querySelector('.micro-central[data-enregistrer]');
+      if (micro) { e.preventDefault(); micro.click(); }
+      return;
+    }
+    const ligne = cible.closest('.row');
+    if (!ligne) return;
+    if (touche === 'j' && (!saisie(cible) || cible.matches('input[data-envoi-change]'))) {
+      const juste = ligne.querySelector('form.note.warn');
+      e.preventDefault();
+      if (juste) juste.requestSubmit();
+      return;
+    }
+    if (e.key === 'Delete' && !saisie(cible)) {
+      const retirer = ligne.querySelector('form[action$="/supprimer"]');
+      if (retirer) { e.preventDefault(); retirer.requestSubmit(); }
+    }
+  });
+  // Retour sur l'offre après « c'est juste » ou une correction (#l12) : sur PC, le curseur revient dans la ligne.
+  const ancre = /^#l(\d+)$/.exec(window.location.hash);
+  if (ancre && window.matchMedia('(min-width: 1024px)').matches) {
+    const champ = document.querySelector('#l' + ancre[1] + ' input[data-envoi-change]');
+    // Après les autres branchements (le focus sélectionne alors le contenu du champ, comme au clic).
+    if (champ) setTimeout(() => champ.focus(), 0);
+  }
+}
+
+// « Document à côté » (PC, D13) : le document de l'offre remplace la colonne des offres et se recharge après chaque
+// correction. Le choix est gardé dans ce navigateur. Le document vient de /offres/{id}/document, avec ses feuilles
+// de style (document.css et la couleur de l'artisan).
+function documentACote() {
+  const bouton = document.querySelector('[data-doc-cote]');
+  if (!bouton) return;
+  bouton.hidden = false;
+  let colonne = null;
+  let numero = 0;
+  const charger = () => {
+    const ce = ++numero;
+    fetch(bouton.dataset.docCote, { credentials: 'same-origin' })
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+      .then((html) => {
+        if (ce !== numero || !colonne) return; // une réponse plus récente est attendue
+        const page = new DOMParser().parseFromString(html, 'text/html');
+        page.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+          const href = l.getAttribute('href');
+          if (![...document.querySelectorAll('link[rel="stylesheet"]')].some((x) => x.getAttribute('href') === href)) {
+            const lien = document.createElement('link');
+            lien.rel = 'stylesheet';
+            lien.href = href;
+            document.head.append(lien);
+          }
+        });
+        const papier = page.querySelector('article.paper');
+        if (papier) colonne.replaceChildren(document.importNode(papier, true));
+      })
+      .catch(() => { if (ce === numero && colonne) colonne.textContent = 'Le document ne s’affiche pas : rechargez la page.'; });
+  };
+  const montrer = (oui) => {
+    document.body.classList.toggle('doc-a-cote', oui);
+    bouton.setAttribute('aria-pressed', String(oui));
+    bouton.textContent = oui ? 'Revenir à la liste' : 'Document à côté';
+    if (oui && !colonne) {
+      colonne = document.createElement('aside');
+      colonne.className = 'colonne-doc';
+      colonne.setAttribute('aria-label', 'Document de l’offre');
+      document.body.append(colonne);
+    }
+    if (colonne) colonne.hidden = !oui;
+    if (oui) charger();
+    try { window.localStorage.setItem('offregen-doc-a-cote', oui ? '1' : '0'); } catch (err) { /* stockage refusé : le choix ne se garde pas */ }
+  };
+  bouton.addEventListener('click', () => montrer(!document.body.classList.contains('doc-a-cote')));
+  document.addEventListener('offre-modifiee', () => { if (document.body.classList.contains('doc-a-cote')) charger(); });
+  let garde = false;
+  try { garde = window.localStorage.getItem('offregen-doc-a-cote') === '1'; } catch (err) { /* idem */ }
+  // Le document à côté demande 1280 px (app.css) ; plus étroit, le choix reste gardé pour un plus grand écran.
+  if (garde && window.matchMedia('(min-width: 1280px)').matches) montrer(true);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  clavierPc();
+  documentACote();
   messagesDeRecherche();
   pourcentDAcompte();
   modelesEnGrand();

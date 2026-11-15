@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 8 du `PLAN.md` : version PC à partir de 1024 px (menu à gauche avec « Dicter une offre », touche D, et « Importer » ; liste au milieu ; offre à droite, document à côté des lignes ; clavier).
+Lot 9 du `PLAN.md` : revue du diff du sous-chantier, `RECETTE.md`, démo remise à zéro.
 
 ## En attente de toi
 
@@ -27,6 +27,7 @@ Rien : D10 acceptée (« D10 tu peux oui »), D9 réponse donnée, lots 1 à 
 - 2026-11-15 : micro sur PC : « Dicter une offre » en premier bouton du menu de gauche, « Importer un fichier » dessous, touche D ; l'enregistrement dans le navigateur marche déjà sur PC (sous-chantier 11), avec le micro du portable ou d'un casque. Écran PC de la maquette mis à jour.
 - 2026-11-15 : TVA (Xavier) : un taux pour l'entreprise (8,1, 2,6, 3,8 ou 0 %), une ligne peut en avoir un autre ; le document détaille la TVA par taux dès qu'il y en a plusieurs.
 - 2026-11-15, mise en œuvre de la TVA (décisions prises seul) : une ligne sans exception garde un taux nul (celui de son produit, sinon de l'entreprise) ; la facture finale copie le taux effectif de chaque ligne, produit compris, et le taux de l'entreprise se fige à l'émission comme avant ; un acompte sur une offre à plusieurs taux fait une ligne par taux (« …, prestations à 2,6 % »), un seul taux garde une seule ligne ; avec plusieurs taux, le document marque chaque ligne qui n'est pas au taux de l'entreprise (LTVA, art. 26) ; le choix du taux d'une ligne se cache quand l'entreprise n'est pas assujettie.
+- 2026-11-15, version PC (décisions prises seul) : menu à gauche dès 1024 px ; la colonne des offres et le « Document à côté » à partir de 1280 px seulement (à 1024 px, la désignation n'aurait plus que 30 px) ; D12 et D13 se partagent la même place : le bouton « Document à côté » remplace la colonne des offres par le document, choix gardé dans le navigateur ; l'offre plafonnée à 1000 px de large ; touches : Entrée passe au même champ de la ligne suivante, J dit « c'est juste » (aussi depuis la quantité ou le prix), Suppr retire la ligne hors d'un champ, D ouvre la dictée hors d'un champ ; la recherche de la colonne filtre titre, client et numéro.
 
 ## Demandes de Xavier (2026-11-15)
 
@@ -53,6 +54,8 @@ Rien : D10 acceptée (« D10 tu peux oui »), D9 réponse donnée, lots 1 à 
 - 2026-11-15 : lot 6 fait. « Envoyer » (aperçu PDF de l'offre et d'une facture émise) : partage du téléphone, PDF joint ; partage réussi : offre notée envoyée (migration additive `offre.envoyee_le`), pastille « Envoyée le … », action principale « Facturer » ; partage annulé : rien ; sans partage : le PDF se télécharge, rien n'est noté. « Facturer » en un écran : pourcentage de l'acompte modifiable (montant précis ou remise : « Vérifier avant d'émettre » puis la ligne), « Émettre et envoyer » (créée, émise, PDF prêt à partager ; si l'émission est empêchée, le brouillon reste et la facture dit pourquoi) ou « Vérifier avant d'émettre ». L'émission passe par une seule méthode pour les deux chemins. Trouvé au parcours : champ du pourcentage visible pour une facture finale, corrigé ; le partage de Windows existe dans Chrome sans affichage et ne s'ouvre jamais (le test « sans partage » le retire).
 
 - 2026-11-15 : lot 7 fait. Réglages : quatre taux (8,1 normal, 2,6 réduit, 3,8 hébergement, non assujetti). Fiche d'une ligne (offre et facture en brouillon) : « Taux de l'entreprise » ou « du produit », ou un des quatre taux. Fiche produit : taux dans la partie repliée. Offre, facture, document et PDF : une ligne « TVA x % sur … » par taux dès qu'il y en a deux, sinon la ligne d'avant ; HT et TTC suivent les taux réels. Migration additive `Version20261115000002` (colonnes nullables sur `ligne`, `facture_ligne`, `produit`). Trouvé au contrôle : le document ne disait pas quelle ligne portait l'autre taux (exigé par la LTVA), corrigé ; mon test attendait 810 sur une ligne de finale sans exception, alors que le taux nul est voulu (figé à l'émission), test corrigé.
+
+- 2026-11-15 : lot 8 fait. Menu de gauche (même barre, rangée par le CSS : Offres, Clients, Factures, Catalogue, Réglages, « Dicter une offre » touche D, « Importer un fichier ») ; fenêtres au milieu de l'écran ; colonne des offres à côté de l'offre avec recherche ; « Document à côté » qui suit chaque correction sans recharger ; aide des touches sous les lignes. Au téléphone, rien ne change (contrôlé à 390 px). Trouvé aux captures : désignation écrasée lettre par lettre avec le document à côté (colonnes du PC trop larges), corrigé ; colonne des offres intenable à 1024 px, repoussée à 1280 px ; offre étirée sur 1350 px à 1920 px, plafonnée ; et un défaut du lot 2 : le total fixé en bas ne suivait pas une correction faite dans la ligne (téléphone compris), corrigé.
 
 ## Preuves
 
@@ -134,4 +137,24 @@ $ node parcours-lot7.js (390 px, démo)
   document : TVA 8,1 % sur 2'694.00 218.21 ; TVA 2,6 % sur 180.00 4.68 ; Total TTC CHF 3'096.90
   offre remise : Total TTC CHF 3'106.80 ; produit : * 810 260 380 0 ; erreurs JS : aucune
 $ node parcours-lot7b.js : dernière ligne des totaux à 566 px, barre fixe à 655 px (rien de caché) ; PDF A4 vérifié à l'image
+```
+
+Lot 8, version PC (2026-11-15) :
+
+```
+$ phpunit : OK (453 tests, 2733 assertions) ; phpstan : [OK] No errors
+$ node parcours-lot8.js (1280 px puis 390 px, démo locale)
+  menu : x 0, largeur 232 ; entrées Offres / Clients / Dicter une offre / Factures / Catalogue / Réglages / Importer un fichier
+  offre : liste x 232, largeur 340 ; offre x 572, largeur 708 ; courante « Rafraîchissement du séjour 3'106.80 Famille Exemple · 1 à vérifier »
+  Entrée : de l575 à l576 (champ quantite)
+  document à côté : x 742, largeur 538 ; liste visible : false ; bouton « Revenir à la liste »
+  correction 180 → 280 : document « Total TTC CHF 3'106.80 » → « Total TTC CHF 3'214.90 » ; rechargée : document toujours à côté
+  Suppr : 6 → 5 lignes ; bandeau « « Protection des sols et des meubles » supprimée Annuler » ; Annuler : 6 lignes
+  J : ligne l576 encore à vérifier : 0 ; curseur dans l576
+  D : feuille au milieu, 560 px de large
+  tel : barre en bas ; entrées Offres / Clients / Dicter une offre / Factures / Plus ; liste et bouton document cachés ; largeur 390
+  erreurs JS : aucune
+$ node parcours-lot8b.js
+  1024 px : désignation 356 px, liste non, bouton document non ; 1280 px : 272 px, liste oui ; 1920 px : 564 px, liste oui
+  390 px : total fixé CHF 3'106.80 → CHF 3'214.90 après correction du prix, remis à CHF 3'106.80
 ```

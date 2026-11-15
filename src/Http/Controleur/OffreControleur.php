@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Catalogue\Recherche;
 use OffreGen\Compte\Marque;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
@@ -36,7 +37,17 @@ final class OffreControleur
     /** @param array<string, string> $parametres */
     public function afficher(Request $requete, array $parametres): Response
     {
-        return new Response($this->c->twig()->render('offre.html.twig', $this->avecFactures($requete, $this->donnees($requete, $parametres))));
+        // Sur PC, la liste des offres en cours reste dans sa colonne (D12) ; le téléphone la cache.
+        $portee = new Portee($requete->attributes->getInt('_artisan'));
+        $offres = $this->c->offres($portee)->liste();
+        [$totaux, $aRelire] = AccueilControleur::totauxEtARelire($this->c, $portee, $offres);
+        $textes = [];
+        foreach ($offres as $o) {
+            $textes[$o['id']] = Recherche::normaliser($o['titre'] . ' ' . $o['client_nom'] . ' ' . $o['numero']);
+        }
+        return new Response($this->c->twig()->render('offre.html.twig', $this->avecFactures($requete, $this->donnees($requete, $parametres)) + [
+            'liste_pc' => ['offres' => $offres, 'totaux' => $totaux, 'a_relire' => $aRelire, 'textes' => $textes],
+        ]));
     }
 
     /**

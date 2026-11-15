@@ -261,8 +261,10 @@ final class EcransTest extends TestCase
     {
         foreach (['/', '/clients', '/factures', '/catalogue', '/reglages', $this->offre] as $chemin) {
             $page = $this->page($chemin);
-            self::assertMatchesRegularExpression('#<nav class="tabs" aria-label="Sections">\s*<a href="/"[^>]*>.*Offres</a>\s*<a href="/clients"[^>]*>.*Clients</a>\s*'
-                . '<button class="micro-central" type="button" aria-label="Dicter une offre" data-enregistrer>.*</button>\s*<a href="/factures"[^>]*>.*Factures</a>\s*<a href="/plus"[^>]*>.*Plus</a>\s*</nav>#s', $page, $chemin);
+            // Au téléphone, les entrées pc-seul sont cachées : restent Offres, Clients, micro, Factures, Plus (D1, D2, D12).
+            self::assertMatchesRegularExpression('#<nav class="tabs" aria-label="Sections">\s*<span class="marque-pc pc-seul">offreGen</span>\s*<a href="/"[^>]*>.*Offres</a>\s*<a href="/clients"[^>]*>.*Clients</a>\s*'
+                . '<button class="micro-central" type="button" aria-label="Dicter une offre" aria-keyshortcuts="D" data-enregistrer>.*</button>\s*<a href="/factures"[^>]*>.*Factures</a>\s*'
+                . '(?:<a class="pc-seul"[^>]*>.*?</a>\s*)*<a class="mobile-seul" href="/plus"[^>]*>.*Plus</a>\s*(?:<(a|small) class="pc-seul[^"]*"[^>]*>.*?</\1>\s*)*</nav>#s', $page, $chemin);
             // Une seule feuille de dictée et un seul formulaire d'envoi par écran.
             self::assertSame(1, substr_count($page, 'data-etat="enregistrement"'), $chemin);
             self::assertSame(1, substr_count($page, 'id="import"'), $chemin);
@@ -320,9 +322,9 @@ final class EcransTest extends TestCase
         self::assertMatchesRegularExpression('#<a [^>]*href="/import"[^>]*data-importer#', $plus);
         self::assertStringContainsString('action="/deconnexion"', $plus);
         foreach (['/plus', '/catalogue', '/reglages', '/reglages/entreprise'] as $chemin) {
-            self::assertStringContainsString('<a href="/plus" aria-current="page">', $this->page($chemin), $chemin);
+            self::assertStringContainsString('<a class="mobile-seul" href="/plus" aria-current="page">', $this->page($chemin), $chemin);
         }
-        self::assertStringNotContainsString('<a href="/plus" aria-current="page">', $this->page('/'));
+        self::assertStringNotContainsString('href="/plus" aria-current="page">', $this->page('/'));
     }
 
     public function testLaFicheProduitSOuvreParDessusLaListe(): void

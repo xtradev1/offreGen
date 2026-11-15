@@ -4,6 +4,8 @@
 {% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
 {% block entete %}Offre {{ offre.numero }}{% endblock %}
 
+{% block colonne %}{% include '_liste_offres_pc.html.twig' with {liste: liste_pc, courante: offre.id} %}{% endblock %}
+
 {% block contenu %}
   {# Le client ouvre « Client de l'offre » par-dessus l'offre ; l'objet ouvre son écran. #}
   {# Client et objet en cartes de 60 px, touchées pour les changer (décision D3, 2026-11-15). #}
@@ -13,7 +15,9 @@
     {% if factures is not empty %}<span class="factures-offre">{% for f in factures %}<a class="etiquette facture{% if f.statut == 'annulee' %} annulee{% endif %}" href="/factures/{{ f.id }}">Facture {{ f.numero }}</a>{% endfor %}</span>{% endif %}
     {% set a_relire = 0 %}
     {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or r.l.prix_centimes == 0 %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
-    <span class="meta"><span class="status pret">{% if a_relire > 0 %}À relire{% elseif offre.envoyee_le %}Envoyée le {{ offre.envoyee_le|date_locale|slice(0, 10) }}{% else %}Prête{% endif %}</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span></span>
+    <span class="meta"><span class="status pret">{% if a_relire > 0 %}À relire{% elseif offre.envoyee_le %}Envoyée le {{ offre.envoyee_le|date_locale|slice(0, 10) }}{% else %}Prête{% endif %}</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span>
+      {# Sur PC, le document à côté des lignes, qui suit chaque correction (D13). Sans JavaScript, le bouton reste caché. #}
+      <button class="btn pc-seul doc-cote" type="button" data-doc-cote="/offres/{{ offre.id }}/document" aria-pressed="false" hidden>Document à côté</button></span>
   </div>
 
   {% include '_lignes.html.twig' with {base: '/offres/' ~ offre.id, modifiable: true, ranger: true, vide:"Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un."} %}
@@ -26,7 +30,8 @@
     {% if totaux.arrondi != 0 %}<div class="r"><span>Arrondi</span><span>{{ totaux.arrondi|chf }}</span></div>{% endif %}
     <div class="r grand"><span>Total{% if avec_tva %} TTC{% endif %}</span><span>{{ totaux.ttc|chf }}</span></div>
   </div>
-  <p class="muted petit">Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.</p>
+  <p class="muted petit mobile-seul">Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.</p>
+  <p class="aide-clavier pc-seul"><kbd>Tab</kbd> champ suivant · <kbd>Entrée</kbd> ligne suivante · <kbd>J</kbd> c'est juste · <kbd>Suppr</kbd> retirer la ligne (avec Annuler) · <kbd>D</kbd> dicter une offre</p>
 {% endblock %}
 
 {% block actions %}

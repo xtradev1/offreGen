@@ -39,15 +39,7 @@ final class AccueilControleur
         $depot = $this->c->offres($portee);
         $offres = $depot->liste();
         $archives = $depot->archives();
-        $lignes = $depot->lignesDe(array_merge(array_column($offres, 'id'), array_column($archives, 'id')));
-        $r = $this->c->reglages($portee)->lire();
-        $totaux = [];
-        $aRelire = [];
-        foreach ([...$offres, ...$archives] as $o) {
-            $lesLignes = $lignes[$o['id']] ?? [];
-            $totaux[$o['id']] = Totaux::calculer($lesLignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes)['ttc'];
-            $aRelire[$o['id']] = count(array_filter($lesLignes, static fn (array $l): bool => $l['a_verifier'] === 1));
-        }
+        [$totaux, $aRelire] = self::totauxEtARelire($this->c, $portee, [...$offres, ...$archives]);
         $tri = $requete->query->getString('tri');
         $tri = array_key_exists($tri, self::TRIS) ? $tri : 'recent';
 
@@ -65,6 +57,27 @@ final class AccueilControleur
             'tris' => self::TRIS,
             'du_mois' => $depot->creeesDepuis($this->debutDuMois()),
         ]));
+    }
+
+    /**
+     * Le total TTC et le nombre de lignes à vérifier de chaque offre, comme la liste les montre. Sert aussi à la
+     * colonne des offres de l'écran d'une offre sur PC (D12).
+     *
+     * @param list<Offre> $offres
+     * @return array{array<int, int>, array<int, int>}
+     */
+    public static function totauxEtARelire(Conteneur $c, Portee $portee, array $offres): array
+    {
+        $lignes = $c->offres($portee)->lignesDe(array_column($offres, 'id'));
+        $r = $c->reglages($portee)->lire();
+        $totaux = [];
+        $aRelire = [];
+        foreach ($offres as $o) {
+            $lesLignes = $lignes[$o['id']] ?? [];
+            $totaux[$o['id']] = Totaux::calculer($lesLignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes)['ttc'];
+            $aRelire[$o['id']] = count(array_filter($lesLignes, static fn (array $l): bool => $l['a_verifier'] === 1));
+        }
+        return [$totaux, $aRelire];
     }
 
     /**

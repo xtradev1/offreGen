@@ -10,6 +10,8 @@
   <script src="/js/app.js" defer></script>
 </head>
 <body>
+  {# Sur PC, une colonne à côté de l'écran (la liste des offres, D12) ; le téléphone ne la montre pas. #}
+  {% block colonne %}{% endblock %}
   <div class="app">
     <header class="bar">{% block retour %}{% endblock %}<h1>{% block entete %}offreGen{% endblock %}</h1></header>
     <main class="screen{% block ecran_classe %}{% endblock %}">{% block contenu %}{% endblock %}</main>
