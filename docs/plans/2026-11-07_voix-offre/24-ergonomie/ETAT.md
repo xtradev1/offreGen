@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 4 du `PLAN.md` : ligne hors catalogue (« Créer le produit », « Rattacher à un produit », mot entendu en synonyme).
+Lot 5 du `PLAN.md` : « Générer l'offre » affiche le PDF dans l'application (PDF.js livré avec l'application).
 
 ## En attente de toi
 
@@ -46,6 +46,8 @@ Lot 4 du `PLAN.md` : ligne hors catalogue (« Créer le produit », « Ratta
 
 - 2026-11-15 : lots 2 et 3 faits. Offre : client et objet en cartes de 60 px, total TTC fixé en bas, action principale selon l'état (« Relire N lignes » tant qu'une ligne est à vérifier ou sans prix, puis « Générer l'offre »), « + » de 64 px, champs de 48 px, corbeille de 48 px écartée du montant, glisser une ligne à gauche la retire avec le même « Annuler ». Relecture `/offres/{id}/relire` : une ligne à la fois dans l'ordre de l'écran, rappel de la dictée, quantité et prix modifiables, prix exigé pour une ligne sans prix, « Toutes les lignes sont relues » puis « Générer l'offre ». Décision de mise en œuvre : champs gardés dans la ligne (moins de touchers que la maquette B). Trouvé aux captures et au parcours : règles CSS du 24 écrasées par les anciennes (placées avant elles, puis `.ohead a.who` plus précise), pastille « Prête à relire » figée, montant tapé avec l'apostrophe droite ; un faux échec du glissé venait du test (ligne sous la barre du bas, diagnostiqué par les événements reçus). Tous corrigés.
 
+- 2026-11-15 : lot 4 fait. Ligne hors catalogue d'une offre : « Créer le produit » (désignation, unité, prix de la ligne, catégorie « Divers ») et « Rattacher à un produit » (recherche partie du premier mot de la ligne ; la ligne prend désignation, unité et prix du catalogue, garde sa quantité). Décision de mise en œuvre : le synonyme ajouté est le nom que l'IA a donné à la ligne, pas la phrase entendue entière, qui brouillerait la recherche ; seulement si la ligne était hors catalogue. Rattacher marche aussi pour une ligne déjà au catalogue (corriger un mauvais produit de l'IA), sans synonyme. Trouvé aux captures : message « Rien pour… » resté après une autre recherche, corrigé.
+
 ## Preuves
 
 ```
@@ -80,4 +82,16 @@ $ node parcours-lot23.js (390 px, dictée de test transcrite et extraite par Inf
   1. Encore 3 à relire · « Peinture des murs, 2 couches » · Entendu : « Les murs du salon, environ 42 mètres carrés… »
   2. Encore 2 à relire · « Peinture des plafonds, 2 couches » ; 3. Encore 1 à relire · « Peinture anti-moisissure » (sans prix → 38)
   fin : « Toutes les lignes sont relues » ; boutons : Revenir à l'offre / Générer l'offre ; retour à l'offre : « Générer l'offre » ; largeur 390/390 ; erreurs JS : aucune
+```
+
+Lot 4, ligne hors catalogue (2026-11-15) :
+
+```
+$ phpunit : OK (434 tests, 2593 assertions) ; phpstan : [OK] No errors
+$ node parcours-lot4.js (390 px)
+  ligne libre ajoutée : boutons « Créer le produit 48 px / Rattacher à un produit 48 px »
+  page Rattacher : recherche « Crépi » (rien au catalogue : tout le catalogue montré)
+  rattachée : message « Ligne rattachée à « … » » ; la ligne prend le nom du produit ; boutons de rangement : 0
+  fiche du produit : synonymes « échafaudage, Crépi de soubassement »
+  « Créer le produit » : message « « Nettoyage haute pression » ajouté au catalogue » ; boutons restants : 0 ; largeur 390/390 ; erreurs JS : aucune
 ```

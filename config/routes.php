@@ -9,6 +9,7 @@ use OffreGen\Http\Controleur\AccueilControleur;
 use OffreGen\Http\Controleur\AdresseControleur;
 use OffreGen\Http\Controleur\CatalogueControleur;
 use OffreGen\Http\Controleur\ClientControleur;
+use OffreGen\Http\Controleur\LigneCatalogueControleur;
 use OffreGen\Http\Controleur\LigneControleur;
 use OffreGen\Http\Controleur\ReglagesControleur;
 use OffreGen\Http\Controleur\ConnexionControleur;
@@ -72,6 +73,10 @@ return static function (Conteneur $c): array {
         new Route('offre_entete_enregistrer', '/offres/{id}/modifier', ['POST'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->modifierEntete($r, $p), Route::ARTISAN),
         new Route('offre_document', '/offres/{id}/document', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->document($r, $p), Route::ARTISAN),
         new Route('offre_pdf', '/offres/{id}/pdf', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->pdf($r, $p), Route::ARTISAN),
+        // Ligne et catalogue : créer le produit, rattacher à un produit (décision D6, 2026-11-15).
+        new Route('ligne_creer_produit', '/offres/{id}/lignes/{ligne}/produit', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->creerProduit($r, $p), Route::ARTISAN),
+        new Route('ligne_rattacher_choix', '/offres/{id}/lignes/{ligne}/rattacher', ['GET'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->choix($r, $p), Route::ARTISAN),
+        new Route('ligne_rattacher', '/offres/{id}/lignes/{ligne}/rattacher', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->rattacher($r, $p), Route::ARTISAN),
         // Relecture au pouce, une ligne à la fois (décision D5, 2026-11-15).
         new Route('offre_relire', '/offres/{id}/relire', ['GET'], static fn (Request $r, array $p): Response => (new RelectureControleur($c))->afficher($r, $p), Route::ARTISAN),
         new Route('offre_relire_valider', '/offres/{id}/relire/{ligne}', ['POST'], static fn (Request $r, array $p): Response => (new RelectureControleur($c))->valider($r, $p), Route::ARTISAN),

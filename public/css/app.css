@@ -522,3 +522,8 @@ fieldset.adresse legend { font-size: 14px; font-weight: 600; padding: 0; margin:
 .relu-fin { text-align: center; margin: auto 0; }
 .relu-fin svg.i { width: 56px; height: 56px; color: var(--ok); }
 .relu-fin h2 { margin: 8px 0 4px; }
+/* Ligne hors catalogue (D6) : la ranger d'un toucher, deux boutons de 48 px sous la ligne. */
+.ranger-ligne { grid-column: 1 / -1; display: flex; gap: 8px; padding: 0 0 10px; }
+.ranger-ligne .ranger { display: contents; }
+.ranger-ligne .btn { flex: 1; min-height: 48px; font-size: 14px; padding: 6px 8px; }
+.rattacher-ligne { font-size: 18px; font-weight: 600; margin: 4px 0 10px; }

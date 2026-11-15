@@ -1025,7 +1025,15 @@ function montantRelu() {
   p.addEventListener('input', maj);
 }
 
+// Un message qui commente la recherche de départ disparaît dès qu'on en tape une autre.
+function messagesDeRecherche() {
+  const messages = document.querySelectorAll('[data-cache-si-recherche]');
+  if (!messages.length) return;
+  document.querySelectorAll('[data-filtre]').forEach((champ) => champ.addEventListener('input', () => messages.forEach((m) => { m.hidden = true; }), { once: true }));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  messagesDeRecherche();
   modelesEnGrand();
   glisserLignes();
   montantRelu();

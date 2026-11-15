@@ -32,6 +32,16 @@
           <div class="tt">{{ r.total|montant }}</div>
           <span></span>
         {% endif %}
+        {# Ligne hors catalogue d'une offre : la ranger en un toucher (décision D6, 2026-11-15). #}
+        {% if modifiable and (ranger ?? false) and l.produit_id is null %}
+          <div class="ranger-ligne">
+            <form class="ranger" method="post" action="{{ lien }}/produit">
+              <input type="hidden" name="_csrf" value="{{ csrf() }}">
+              <button class="btn" type="submit">Créer le produit</button>
+            </form>
+            <a class="btn" href="{{ lien }}/rattacher">Rattacher à un produit</a>
+          </div>
+        {% endif %}
         {% if manque %}
           <div class="note bad"><span>Prix manquant</span></div>
         {% elseif l.a_verifier %}
