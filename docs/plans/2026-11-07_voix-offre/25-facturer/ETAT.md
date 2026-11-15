@@ -1,19 +1,20 @@
 ---
 chantier: De la voix à l'offre, 25 facturer en trois touchers
 slug: 2026-11-07_voix-offre/25-facturer
-phase: 5
-statut: en_cours
-gate_attendu: aucun
+phase: 8
+statut: gate_ouvert
+gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
 
 ## Prochaine action
 
-Lot 8 du `PLAN.md` : revue du diff du sous-chantier (correction, sécurité des routes et CSRF), démo remise à zéro, `RECETTE.md`.
+Attendre le retour de Xavier sur `RECETTE.md`. Défauts remontés : retour en phase 5. Recette validée : `statut: termine`, `/roadmap-sync`, puis lot 9 du sous-chantier 24.
 
 ## En attente de toi
 
-- Rien pour l'instant.
+- Dérouler `RECETTE.md` sur https://easy-offres.xtradev.ch : partie A au téléphone, B sur le PC, C sur une tablette si tu en as une.
+- Me dire ce qui casse ou gêne, geste par geste (numéro de la ligne), en particulier la sobriété d'Ajouter (ta remarque sur E7) et la tablette.
 
 ## Suivi Origin
 
@@ -65,6 +66,7 @@ Lot 8 du `PLAN.md` : revue du diff du sous-chantier (correction, sécurité des 
 - 2026-11-15 : lot 7 déployé sur le test (3cc8d01), sonde verte. Lot 8 commencé : deux revues indépendantes lancées (correction, sécurité), `RECETTE.md` écrite (à compléter après la revue).
 - 2026-11-15, revue (`REVUE.md`, accfaa7) : 3 défauts à corriger (acompte refait contre finale, brouillon laissé par une émission en panne, double envoi) et 7 mineurs ou bas, tous traités sauf S3 ; QR de l'aperçu remplacé par un cadre sans code. Les deux relecteurs étaient sur Opus : rien à porter au compteur de délégation.
 - 2026-11-15, lot 7 b (tablette) : `@media (min-width: 700px) and (pointer: coarse)` (toute la largeur, barre du bas, fenêtres au milieu) et `@media (min-width: 1024px) and (pointer: coarse)` (liste des offres à gauche, Facturer en deux volets, panneau du PDF à droite). Les styles de la liste des offres sortent du bloc PC. Mesuré en émulation iPad : contenu 820 px en portrait, liste + 860 px en paysage, volets 437 / 503 px, aucune erreur, aucun débordement.
+- 2026-11-15 : d8e55a1 déployé sur le test, sonde verte, migrations à jour ; démo du test remise à zéro (`code=0` ; elle a aussi supprimé 3 enregistrements audio du compte démo, sans doute les essais de Xavier). Gate prod ouvert : `RECETTE.md`.
 
 ## Preuves
 
