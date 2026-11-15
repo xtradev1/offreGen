@@ -217,7 +217,7 @@ final class DepotFactures implements SupportLignes
     }
 
     /** Numéro, date et échéance d'un brouillon. Faux si la facture n'est pas un brouillon de l'artisan. */
-    public function modifierEntete(int $id, string $numero, \DateTimeImmutable $date, \DateTimeImmutable $echeance, \DateTimeImmutable $quand): bool
+    public function modifierEntete(int $id, ?string $numero, \DateTimeImmutable $date, \DateTimeImmutable $echeance, \DateTimeImmutable $quand): bool
     {
         return $this->base->ecrire(
             "UPDATE facture SET numero = :n, date_facture = :d, echeance = :e, modifiee_le = :q WHERE id = :id AND artisan_id = :a AND statut = 'brouillon'",

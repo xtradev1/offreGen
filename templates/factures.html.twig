@@ -17,8 +17,8 @@
 
   <div id="flist">
     {% for x in factures %}
-      <a class="frow{% if x.statut == 'annulee' %} annulee{% endif %}" id="f{{ x.id }}" href="/factures/{{ x.id }}" data-texte="{{ x.texte }}">
-        <span class="corps"><b>{{ x.numero }} · {{ x.client_nom }}</b>
+      <a class="frow{% if x.statut == 'annulee' %} annulee{% endif %}" id="f{{ x.id }}" href="/factures/{{ x.id }}{{ x.statut != 'brouillon' ? '/apercu' }}" data-texte="{{ x.texte }}">
+        <span class="corps"><b>{{ x.numero ?? 'Brouillon' }} · {{ x.client_nom }}</b>
           <small>{% if x.localite %}{{ x.localite }} · {% endif %}{{ x.date_facture|jour }} · {{ x.titre }}</small>
           <span class="status {{ x.etat.classe }}">{{ x.etat.texte }}</span></span>
         <span class="montant">{{ x.a_payer_vue|montant }}</span>

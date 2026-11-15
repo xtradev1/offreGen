@@ -1,82 +1,118 @@
 {% extends 'base.html.twig' %}
 
-{# Nouvelle facture (maquette 18, validée par Xavier le 2026-11-13) : le numéro suivant, modifiable ; la date ;
-   l'échéance tirée des conditions ; le client de l'offre ; l'acompte suivant ou la facture finale. #}
-{% block titre %}Nouvelle facture · offreGen{% endblock %}
-{% block retour %}<a class="back" href="/offres/{{ offre.id }}/document">Offre</a>{% endblock %}
-{% block entete %}Nouvelle facture{% endblock %}
+{# Facturer (maquette 25, réponses de Xavier du 2026-11-15) : dans une feuille par-dessus l'offre, ou seule sans
+   JavaScript. E1 : l'aperçu suit chaque choix, rien n'est créé avant « Créer la facture ». E2 : ce mot. E3 : pas de
+   page de confirmation, la phrase sous le bouton suffit. E4 : 20 / 30 / 40 / 50 % ou un montant en CHF, TVA comprise.
+   E5 : « Corriger des lignes » (finale seulement) ouvre un brouillon qui prendra son numéro à la création. Sur PC (E8) :
+   réglages à gauche, facture à droite (data-feuille-large). #}
+{% block entete_html %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
+{% block titre %}Facturer l'offre {{ offre.numero }} · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}Facturer l'offre {{ offre.numero }}{% endblock %}
 
 {% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
 {% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
 
 {% block contenu %}
   {% import _self as f %}
+  {% set avec_acompte = choix|filter(c => c.genre == 'acompte')|length > 0 %}
+  {% set avec_finale = choix|filter(c => c.genre == 'finale')|length > 0 %}
   {% if offre.client_id is null %}
     <p class="alerte warn" role="alert">Confirmez d'abord le client de l'offre&nbsp;: il sera copié sur la facture.
       <a href="/offres/{{ offre.id }}/client">Choisir le client</a></p>
   {% elseif choix is empty %}
     <p class="alerte info">Cette offre est facturée en entier.</p>
   {% else %}
-    {% if erreurs is not empty %}<p class="alerte bad" role="alert">La facture n'est pas créée&nbsp;: corrigez les champs signalés.</p>{% endif %}
-    <form id="facturer" method="post" action="/offres/{{ offre.id }}/facturer">
+    {% if erreurs.creation is defined %}
+      <p class="alerte bad" role="alert">{{ erreurs.creation }}</p>
+    {% elseif erreurs is not empty %}
+      <p class="alerte bad" role="alert">La facture n'est pas créée&nbsp;: corrigez ce qui est signalé.</p>
+    {% endif %}
+    <form id="facturer" method="post" action="/offres/{{ offre.id }}/facturer" data-facturer data-apercu="/offres/{{ offre.id }}/facturer/apercu" data-sortir>
       <input type="hidden" name="_csrf" value="{{ csrf() }}">
-      <div class="card">
-        {% for c in choix %}
-          <label class="radio"><input type="radio" name="genre" value="{{ c.genre }}"{% if c.genre == champs.genre %} checked{% endif %}>
-            <span><b>{{ c.titre }}</b>
-              <small>{% if c.genre == 'acompte' %}{{ c.ht|chf }} hors TVA{% elseif deja > 0 %}{{ nb_lignes }} ligne{{ nb_lignes > 1 ? 's' : '' }} de l'offre, moins les acomptes émis ({{ deja|chf }}){% else %}{{ nb_lignes }} ligne{{ nb_lignes > 1 ? 's' : '' }} de l'offre, {{ c.ht|chf }} hors TVA{% endif %}</small></span></label>
-        {% endfor %}
-        {{ f.erreur(erreurs, 'genre') }}
-      </div>
-      {# Décision D9 (2026-11-15) : le pourcentage d'un acompte se change ici ; un montant précis, dans le brouillon. #}
-      {% if champs.pourcent != '' %}
-        <div class="champ" data-si-acompte{% if champs.genre != 'acompte' %} hidden{% endif %}>
-          <label for="pourcent">Pourcentage de l'acompte</label>
-          <input id="pourcent" name="pourcent" value="{{ champs.pourcent }}" maxlength="3" inputmode="numeric" autocomplete="off"{{ f.invalide(erreurs, 'pourcent') }}>
-          <span class="muted petit">Pour un montant précis ou une remise&nbsp;: «&nbsp;Vérifier avant d'émettre&nbsp;», puis corrigez la ligne.</span>
-          {{ f.erreur(erreurs, 'pourcent') }}
+      <div class="facturer" data-feuille-large>
+        <div class="facturer-reglages">
+          {% if choix|length > 1 %}
+            <fieldset class="segments">
+              <legend class="sr">Facture à faire</legend>
+              {% for c in choix %}<label><input type="radio" name="genre" value="{{ c.genre }}"{% if c.genre == champs.genre %} checked{% endif %}><span>{{ c.titre }}</span></label>{% endfor %}
+            </fieldset>
+          {% else %}
+            <input type="hidden" name="genre" value="{{ choix[0].genre }}">
+            <p class="genre-seul"><b>{{ choix[0].titre }}</b></p>
+          {% endif %}
+          {{ f.erreur(erreurs, 'genre') }}
+
+          {% if avec_acompte %}
+            <div class="champ" data-si-acompte{% if champs.genre != 'acompte' %} hidden{% endif %}>
+              <span class="etiquette-champ" id="part-titre">Part de l'offre</span>
+              <div class="puces-part" role="radiogroup" aria-labelledby="part-titre">
+                {% for p in pourcentages %}<label class="part"><input type="radio" name="pourcent" value="{{ p }}"{% if champs.pourcent == p ~ '' %} checked{% endif %}><span>{{ p }}&nbsp;%</span></label>{% endfor %}
+                <label class="part"><input type="radio" name="pourcent" value="chf"{% if champs.pourcent == 'chf' %} checked{% endif %}><span>CHF</span></label>
+              </div>
+              {{ f.erreur(erreurs, 'pourcent') }}
+              <div class="champ montant-chf" data-si-chf{% if champs.pourcent != 'chf' %} hidden{% endif %}>
+                <label for="montant">Montant, TVA comprise (CHF)</label>
+                <input id="montant" name="montant" value="{{ champs.montant }}" inputmode="decimal" autocomplete="off" placeholder="1500"{{ f.invalide(erreurs, 'montant') }}>
+                {{ f.erreur(erreurs, 'montant') }}
+              </div>
+            </div>
+          {% endif %}
+
+          {% if avec_finale %}
+            <div class="finale" data-si-finale{% if champs.genre != 'finale' %} hidden{% endif %}>
+              <p class="muted petit">Toutes les lignes de l'offre{% if deja > 0 %}, moins les acomptes déjà facturés ({{ deja|chf }}){% endif %}.</p>
+              <button class="btn" type="submit" name="suite" value="corriger">Corriger des lignes d'abord</button>
+              <p class="muted petit">Quantités réelles, travaux en plus&nbsp;: la facture prendra son numéro à la création.</p>
+            </div>
+          {% endif %}
+
+          <details class="entete-facture"{% if erreurs.numero is defined or erreurs.date is defined or erreurs.echeance is defined %} open{% endif %}>
+            <summary><span>N°&nbsp;{{ champs.numero }} · {{ champs.date|jour }} · échéance {{ champs.echeance|jour }}</span><span class="lien">Modifier</span></summary>
+            <div class="champ">
+              <label for="numero">Numéro</label>
+              <input id="numero" name="numero" value="{{ champs.numero }}" maxlength="20" required autocomplete="off" spellcheck="false"{{ f.invalide(erreurs, 'numero') }}>
+              <span class="muted petit">Le suivant de votre dernière facture&nbsp;; vous pouvez le changer.</span>
+              {{ f.erreur(erreurs, 'numero') }}
+            </div>
+            <div class="duo">
+              <div class="champ">
+                <label for="date">Date</label>
+                <input id="date" name="date" type="date" value="{{ champs.date }}" required{{ f.invalide(erreurs, 'date') }}>
+                {{ f.erreur(erreurs, 'date') }}
+              </div>
+              <div class="champ">
+                <label for="echeance">Échéance</label>
+                <input id="echeance" name="echeance" type="date" value="{{ champs.echeance }}" required{{ f.invalide(erreurs, 'echeance') }}>
+                {{ f.erreur(erreurs, 'echeance') }}
+              </div>
+            </div>
+          </details>
+          <p class="muted petit pour-client">Pour <b>{{ offre.client_nom }}</b>{% if offre.client_adresse %}, {{ offre.client_adresse|replace({"\n": ', '}) }}{% endif %}</p>
         </div>
-      {% endif %}
-      <div class="champ">
-        <label for="numero">Numéro</label>
-        <input id="numero" name="numero" value="{{ champs.numero }}" maxlength="20" required autocomplete="off" spellcheck="false"{{ f.invalide(erreurs, 'numero') }}>
-        <span class="muted petit">Le suivant de votre dernière facture&nbsp;; vous pouvez le changer.</span>
-        {{ f.erreur(erreurs, 'numero') }}
-      </div>
-      <div class="duo">
-        <div class="champ">
-          <label for="date">Date</label>
-          <input id="date" name="date" type="date" value="{{ champs.date }}" required{{ f.invalide(erreurs, 'date') }}>
-          {{ f.erreur(erreurs, 'date') }}
+
+        <div class="facturer-apercu">
+          <div class="facture-mini" role="button" tabindex="0" data-apercu-ouvrir aria-label="Voir la facture en grand">
+            <div data-apercu-mini>{% if apercu %}{% include '_apercu_facture.html.twig' with apercu only %}{% endif %}</div>
+          </div>
+          <p class="muted petit legende">Aperçu&nbsp;: rien n'est encore créé.<span class="mobile-seul"> Touchez la facture pour la voir en grand.</span></p>
         </div>
-        <div class="champ">
-          <label for="echeance">Échéance</label>
-          <input id="echeance" name="echeance" type="date" value="{{ champs.echeance }}" required{{ f.invalide(erreurs, 'echeance') }}>
-          {{ f.erreur(erreurs, 'echeance') }}
-        </div>
-      </div>
-      <div class="card client-facture">
-        <span class="muted petit">Client, copié sur la facture</span>
-        <b>{{ offre.client_nom }}</b>{% if offre.client_adresse %}<span>{{ offre.client_adresse|replace({"\n": ', '}) }}</span>{% endif %}
       </div>
     </form>
   {% endif %}
   {% if factures is not empty %}
     <h2 class="sub">Déjà facturé sur cette offre</h2>
     <ul class="liste-factures">
-      {% for x in factures %}<li><a href="/factures/{{ x.id }}"{% if x.statut == 'annulee' %} class="annulee"{% endif %}>Facture {{ x.numero }}</a> <span class="muted">{{ x.genre == 'acompte' ? 'acompte ' ~ x.acompte_rang : 'finale' }}{% if x.statut == 'brouillon' %}, brouillon{% elseif x.statut == 'annulee' %}, annulée{% endif %}</span></li>{% endfor %}
+      {% for x in factures %}<li><a href="/factures/{{ x.id }}" data-sortir{% if x.statut == 'annulee' %} class="annulee"{% endif %}>Facture {{ x.numero ?? '(brouillon)' }}</a> <span class="muted">{{ x.genre == 'acompte' ? 'acompte ' ~ x.acompte_rang : 'finale' }}{% if x.statut == 'brouillon' %}, brouillon{% elseif x.statut == 'annulee' %}, annulée{% endif %}</span></li>{% endfor %}
     </ul>
   {% endif %}
 {% endblock %}
 
 {% block actions %}
-  {# Décision D9 : « Émettre et envoyer » crée, émet et ouvre le PDF prêt à partager ; « Vérifier avant d'émettre » crée
-     le brouillon, comme avant. #}
-  <div class="actionbar">
+  <div class="actionbar avec-phrase">
     {% if offre.client_id is not null and choix is not empty %}
-      <button class="btn grand" type="submit" form="facturer" name="suite" value="verifier">Vérifier avant d'émettre</button>
-      <button class="btn primary grand" type="submit" form="facturer" name="suite" value="emettre">
-        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>Émettre et envoyer</button>
+      <button class="btn primary grand" type="submit" form="facturer" name="suite" value="creer" data-bouton-creer>Créer la facture{% if apercu %} · {{ apercu.montants.a_payer|chf }}{% endif %}</button>
+      <p class="phrase">Elle devient définitive et numérotée&nbsp;; son PDF s'ouvre, prêt à envoyer.</p>
     {% else %}
       <a class="btn grand" href="/offres/{{ offre.id }}">Revenir à l'offre</a>
     {% endif %}

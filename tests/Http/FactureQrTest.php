@@ -48,20 +48,22 @@ final class FactureQrTest extends TestCase
         return (string) $r->getContent();
     }
 
-    private function creer(string $numero = '2026-001'): int
+    /** Le brouillon d'une facture finale (« Corriger des lignes », E5) : il prendra le numéro suivant à la création. */
+    private function creer(): int
     {
         $chemin = '/offres/' . $this->jeu->offre['a'] . '/facturer';
         $this->page($chemin);
-        $r = $this->a->post($chemin, ['genre' => 'finale', 'numero' => $numero, 'date' => '2026-11-07', 'echeance' => '2026-12-07']);
+        $r = $this->a->post($chemin, ['genre' => 'finale', 'numero' => '', 'date' => '2026-11-07', 'echeance' => '2026-12-07', 'suite' => 'corriger']);
         self::assertSame(303, $r->getStatusCode(), (string) $r->getContent());
         return (int) BaseDeTest::ligne('SELECT MAX(id) AS id FROM facture')['id'];
     }
 
+    /** « Créer la facture » depuis le brouillon : sans page de confirmation (E3), puis son PDF. */
     private function emettre(int $id): string
     {
-        $this->page("/factures/$id/emettre");
+        $this->page("/factures/$id");
         $r = $this->a->post("/factures/$id/emettre", []);
-        self::assertSame("/factures/$id/document", $r->headers->get('Location'), (string) $r->getContent());
+        self::assertSame("/factures/$id/apercu", $r->headers->get('Location'), (string) $r->getContent());
         return (string) BaseDeTest::ligne("SELECT contenu FROM facture_pdf WHERE facture_id = $id")['contenu'];
     }
 
@@ -114,10 +116,11 @@ final class FactureQrTest extends TestCase
         $f = BaseDeTest::ligne("SELECT iban, reference FROM facture WHERE id = $id");
         self::assertSame(self::IBAN, $f['iban']);
         self::assertSame(QrFacture::reference(self::IBAN, $id, '2026-001'), $f['reference']);
+        $pdf = (string) $this->a->get("/factures/$id/pdf")->getContent();
         $this->artisan('CH5604835012345678009');
-        $page = $this->page("/factures/$id/document");
-        self::assertStringContainsString('CH93 0076 2011 6238 5295 7', $page, 'L\'aperçu d\'une facture émise garde l\'IBAN de l\'émission.');
-        self::assertStringNotContainsString('CH56 0483', $page);
+        self::assertSame($pdf, (string) $this->a->get("/factures/$id/pdf")->getContent(), 'Une facture émise garde le PDF de l\'émission, IBAN compris.');
+        self::assertSame(self::IBAN, BaseDeTest::ligne("SELECT iban FROM facture WHERE id = $id")['iban']);
+        self::assertSame(303, $this->a->get("/factures/$id/document")->getStatusCode(), 'Émise : plus de version HTML, son PDF (E5).');
     }
 
     public function testUnQrIbanDonneUneReferenceQr(): void
@@ -145,7 +148,7 @@ final class FactureQrTest extends TestCase
     /** Une facture de 41 lignes émise, avec ou sans IBAN ; la précédente est annulée (une seule finale par offre). */
     private function longue(string $numero, string $iban): string
     {
-        $id = $this->creer($numero);
+        $id = $this->creer();
         $lignes = [];
         for ($i = 2; $i <= 41; $i++) {
             $lignes[] = "({$this->jeu->a}, $id, $i, 'Poste de travail $i', 1000, 'h', 100, 'Travaux')";

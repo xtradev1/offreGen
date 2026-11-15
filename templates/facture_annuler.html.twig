@@ -1,9 +1,9 @@
 {% extends 'base.html.twig' %}
 
 {# Annuler une facture émise : elle reste, barrée, son numéro n'est jamais repris. « Annuler et refaire » crée
-   aussitôt un brouillon copié, au numéro suivant (sous-chantier 18). #}
+   aussitôt un brouillon copié, qui prendra son numéro à la création (sous-chantier 18, E5 du 25). #}
 {% block titre %}Annuler la facture · offreGen{% endblock %}
-{% block retour %}<a class="back" href="/factures/{{ f.id }}/document">Facture</a>{% endblock %}
+{% block retour %}<a class="back" href="/factures/{{ f.id }}/apercu">Facture</a>{% endblock %}
 {% block entete %}Annuler la facture{% endblock %}
 
 {% block contenu %}
@@ -21,7 +21,7 @@
 
 {% block actions %}
   <div class="actionbar">
-    <a class="btn" href="/factures/{{ f.id }}/document">Garder</a>
+    <a class="btn" href="/factures/{{ f.id }}/apercu">Garder</a>
     <button class="btn primary" type="submit" form="refaire">Annuler et refaire</button>
   </div>
 {% endblock %}

@@ -1,9 +1,9 @@
 {% extends 'base.html.twig' %}
 
 {# Numéro, date et échéance d'un brouillon ; sa suppression, qui libère le numéro. #}
-{% block titre %}Facture {{ f.numero }} · offreGen{% endblock %}
+{% block titre %}Brouillon de facture · offreGen{% endblock %}
 {% block retour %}<a class="back" href="/factures/{{ f.id }}">Facture</a>{% endblock %}
-{% block entete %}Facture {{ f.numero }}{% endblock %}
+{% block entete %}Brouillon de facture{% endblock %}
 
 {% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
 {% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
@@ -15,7 +15,7 @@
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     <div class="champ">
       <label for="numero">Numéro</label>
-      <input id="numero" name="numero" value="{{ champs.numero }}" maxlength="20" required autocomplete="off" spellcheck="false"{{ x.invalide(erreurs, 'numero') }}>
+      <input id="numero" name="numero" value="{{ champs.numero }}" maxlength="20" placeholder="Le suivant, à la création" autocomplete="off" spellcheck="false"{{ x.invalide(erreurs, 'numero') }}>
       {{ x.erreur(erreurs, 'numero') }}
     </div>
     <div class="duo">

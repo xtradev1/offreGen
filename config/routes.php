@@ -111,10 +111,11 @@ return static function (Conteneur $c): array {
         // Factures (sous-chantier 18). Les lignes d'un brouillon passent par LigneControleur, comme celles de l'offre.
         new Route('factures', '/factures', ['GET'], static fn (Request $r): Response => $facture()->liste($r), Route::ARTISAN),
         new Route('offre_facturer', '/offres/{id}/facturer', ['GET'], static fn (Request $r, array $p): Response => $facture()->nouvelle($r, $p), Route::ARTISAN),
+        // L'aperçu de la facture que « Créer la facture » créerait (maquette 25, E1) : rien n'est écrit.
+        new Route('offre_facturer_apercu', '/offres/{id}/facturer/apercu', ['GET'], static fn (Request $r, array $p): Response => $facture()->apercuNouvelle($r, $p), Route::ARTISAN),
         new Route('offre_facturer_creer', '/offres/{id}/facturer', ['POST'], static fn (Request $r, array $p): Response => $facture()->creer($r, $p), Route::ARTISAN),
         new Route('facture', '/factures/{id}', ['GET'], static fn (Request $r, array $p): Response => $facture()->afficher($r, $p), Route::ARTISAN),
         new Route('facture_document', '/factures/{id}/document', ['GET'], static fn (Request $r, array $p): Response => $facture()->document($r, $p), Route::ARTISAN),
-        new Route('facture_emission', '/factures/{id}/emettre', ['GET'], static fn (Request $r, array $p): Response => $facture()->confirmationEmission($r, $p), Route::ARTISAN),
         new Route('facture_emettre', '/factures/{id}/emettre', ['POST'], static fn (Request $r, array $p): Response => $facture()->emettre($r, $p), Route::ARTISAN),
         new Route('facture_pdf', '/factures/{id}/pdf', ['GET'], static fn (Request $r, array $p): Response => $facture()->pdf($r, $p), Route::ARTISAN),
         new Route('facture_annulation', '/factures/{id}/annuler', ['GET'], static fn (Request $r, array $p): Response => $facture()->confirmationAnnulation($r, $p), Route::ARTISAN),

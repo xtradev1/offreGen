@@ -478,13 +478,18 @@ function fichesEnFenetre() {
     if (!contenu) return false;
     const h1 = page.querySelector('header.bar h1');
     titre.textContent = h1 ? h1.textContent.trim() : '';
+    // Les feuilles de style de la page chargée (le document de la facture, la couleur de l'artisan).
+    importerStyles(page);
     corps.replaceChildren(...contenu.childNodes);
     const barre = page.querySelector('.bas .actionbar');
     pied.replaceChildren(...(barre ? [barre] : []));
     corps.scrollTop = 0;
+    // Facturer s'ouvre en deux volets sur PC (maquette 25, E8) : la feuille s'élargit.
+    boite.classList.toggle('large', !!corps.querySelector('[data-feuille-large]'));
     corps.querySelectorAll('fieldset[data-adresse]').forEach(brancherAdresse);
     corps.querySelectorAll('form[data-auto]').forEach(brancherAuto);
     corps.querySelectorAll('input[data-filtre]').forEach(brancherFiltre);
+    corps.querySelectorAll('form[data-facturer]').forEach(brancherFacturer);
     const dejaOuverte = calques.ouvert() === calque;
     if (!dejaOuverte) calques.ouvrir(calque);
     // Nouveau produit : la désignation s'ouvre au clavier. Champ refusé : il reçoit le focus.
@@ -559,11 +564,19 @@ function fichesEnFenetre() {
     boutons.forEach((b) => { b.disabled = true; });
     const avant = new Set([...document.querySelectorAll(lignes)].map((r) => r.id));
     const modifie = (form.getAttribute('action').match(new RegExp('^' + ici + '/(\\d+)$')) || [])[1] || null;
-    fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' })
+    // Le bouton touché compte (« Corriger des lignes » contre « Créer la facture ») : FormData seul l'oublie.
+    const donnees = new FormData(form);
+    if (e.submitter && e.submitter.name) donnees.set(e.submitter.name, e.submitter.value);
+    fetch(form.action, { method: 'POST', body: donnees, credentials: 'same-origin' })
       .then((r) => r.text().then((html) => {
         if (r.ok && r.redirected && new URL(r.url).pathname === ici) {
           fermer();
           return rafraichir(html, avant, modifie);
+        }
+        // Une fiche qui mène ailleurs une fois envoyée (la facture créée, son PDF) : on y va.
+        if (r.ok && r.redirected && form.hasAttribute('data-sortir')) {
+          window.location.assign(r.url);
+          return null;
         }
         // Champ refusé (422) ou page de confirmation : elle remplace la fiche.
         if (!afficher(html)) throw new Error('réponse sans contenu');
@@ -1035,11 +1048,161 @@ function montantRelu() {
   p.addEventListener('input', maj);
 }
 
-// Facturer (D9) : le pourcentage ne se montre que pour un acompte.
-function pourcentDAcompte() {
-  const champ = document.querySelector('[data-si-acompte]');
-  if (!champ) return;
-  document.querySelectorAll('input[name="genre"]').forEach((r) => r.addEventListener('change', () => { champ.hidden = r.value !== 'acompte' || !r.checked; }));
+// Les feuilles de style d'une page chargée à côté (document de facture, couleur de l'artisan) : ajoutées une fois.
+function importerStyles(page) {
+  page.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+    const href = l.getAttribute('href');
+    if (![...document.querySelectorAll('link[rel="stylesheet"]')].some((x) => x.getAttribute('href') === href)) {
+      const lien = document.createElement('link');
+      lien.rel = 'stylesheet';
+      lien.href = href;
+      document.head.append(lien);
+    }
+  });
+}
+
+// Facturer (maquette 25, E1 à E4) : chaque choix recharge l'aperçu de la facture (rien n'est écrit) et le montant du
+// bouton ; Entrée dans un champ recalcule au lieu de créer (une facture créée est définitive) ; toucher la miniature
+// l'ouvre en grand, avec « Créer la facture » en bas. Dans la feuille par-dessus l'offre, ou sur la page seule.
+function brancherFacturer(form) {
+  if (form.dataset.branche) return;
+  form.dataset.branche = '1';
+  const mini = form.querySelector('[data-apercu-mini]');
+  const ouvrir = form.querySelector('[data-apercu-ouvrir]');
+  const bouton = () => document.querySelector('[data-bouton-creer]');
+  const blocs = { acompte: form.querySelector('[data-si-acompte]'), finale: form.querySelector('[data-si-finale]'), chf: form.querySelector('[data-si-chf]') };
+  const valeur = (nom) => {
+    const champ = form.querySelector(`input[type="radio"][name="${nom}"]:checked`) || form.querySelector(`[name="${nom}"]:not([type="radio"])`);
+    return champ ? champ.value : '';
+  };
+  const montrer = () => {
+    const genre = valeur('genre');
+    if (blocs.acompte) blocs.acompte.hidden = genre !== 'acompte';
+    if (blocs.finale) blocs.finale.hidden = genre !== 'finale';
+    if (blocs.chf) blocs.chf.hidden = valeur('pourcent') !== 'chf';
+  };
+  let numero = 0;
+  const recharger = () => {
+    const ce = ++numero;
+    // « CHF » choisi, rien de tapé encore : une consigne plutôt qu'une erreur.
+    if (valeur('pourcent') === 'chf' && valeur('montant').trim() === '') {
+      const consigne = document.createElement('p');
+      consigne.className = 'alerte info';
+      consigne.textContent = 'Tapez le montant que le client paiera, TVA comprise.';
+      mini.replaceChildren(consigne);
+      const b = bouton();
+      if (b) b.textContent = 'Créer la facture';
+      return;
+    }
+    const params = new URLSearchParams();
+    ['genre', 'pourcent', 'montant', 'numero', 'date', 'echeance'].forEach((n) => params.set(n, valeur(n)));
+    fetch(form.dataset.apercu + '?' + params, { credentials: 'same-origin' })
+      .then((r) => r.text())
+      .then((html) => {
+        if (ce !== numero) return; // une réponse plus récente est attendue
+        const page = new DOMParser().parseFromString(html, 'text/html');
+        const doc = page.querySelector('.apercu-facture');
+        const refus = page.querySelector('[data-apercu-erreur]');
+        const b = bouton();
+        if (doc) {
+          mini.replaceChildren(document.importNode(doc, true));
+          if (b) b.textContent = doc.dataset.bouton;
+        } else if (refus) {
+          mini.replaceChildren(document.importNode(refus, true));
+          if (b) b.textContent = 'Créer la facture';
+        }
+      })
+      .catch(() => { /* sans réseau, l'aperçu reste le dernier ; la création dira l'erreur */ });
+  };
+  let minuterie = null;
+  const plusTard = () => { clearTimeout(minuterie); minuterie = setTimeout(recharger, 300); };
+  form.addEventListener('change', (e) => {
+    montrer();
+    if (e.target.matches('input[name="pourcent"][value="chf"]')) {
+      const champ = form.querySelector('#montant');
+      if (champ) champ.focus();
+    }
+    recharger();
+  });
+  form.addEventListener('input', (e) => { if (e.target.matches('#montant, #numero')) plusTard(); });
+  form.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.matches('input:not([type="radio"])')) {
+      e.preventDefault();
+      recharger();
+    }
+  });
+
+  // La facture en grand, par-dessus tout, avec « Retour » et « Créer la facture ».
+  const enGrand = () => {
+    const doc = mini.querySelector('.apercu-facture');
+    if (!doc) return;
+    const fond = document.createElement('div');
+    fond.className = 'apercu-grand';
+    fond.setAttribute('role', 'dialog');
+    fond.setAttribute('aria-modal', 'true');
+    fond.setAttribute('aria-label', 'Aperçu de la facture');
+    fond.tabIndex = -1;
+    const barre = document.createElement('div');
+    barre.className = 'apercu-grand-barre';
+    const retour = document.createElement('button');
+    retour.type = 'button';
+    retour.className = 'btn';
+    retour.textContent = 'Retour';
+    const note = document.createElement('span');
+    note.className = 'muted petit';
+    note.textContent = 'Aperçu : rien n’est encore créé';
+    barre.append(retour, note);
+    const corps = document.createElement('div');
+    corps.className = 'apercu-grand-corps';
+    corps.append(doc.cloneNode(true));
+    const pied = document.createElement('div');
+    pied.className = 'apercu-grand-pied';
+    const creer = document.createElement('button');
+    creer.type = 'submit';
+    creer.setAttribute('form', form.id);
+    creer.name = 'suite';
+    creer.value = 'creer';
+    creer.className = 'btn primary grand';
+    const b = bouton();
+    creer.textContent = b ? b.textContent : 'Créer la facture';
+    pied.append(creer);
+    fond.append(barre, corps, pied);
+    const echap = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      fermer();
+    };
+    const fermer = () => {
+      fond.remove();
+      document.removeEventListener('keydown', echap, true);
+      if (ouvrir) ouvrir.focus({ preventScroll: true });
+    };
+    retour.addEventListener('click', fermer);
+    creer.addEventListener('click', () => setTimeout(() => { fond.remove(); document.removeEventListener('keydown', echap, true); }, 0));
+    document.addEventListener('keydown', echap, true);
+    document.body.append(fond);
+    fond.focus();
+  };
+  if (ouvrir) {
+    ouvrir.addEventListener('click', enGrand);
+    ouvrir.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enGrand(); } });
+  }
+  montrer();
+}
+
+function feuillesFacturer() {
+  document.querySelectorAll('form[data-facturer]').forEach(brancherFacturer);
+}
+
+// La hauteur du bas de l'écran (boutons, phrase, onglets) : les bandeaux se posent au-dessus (--bas, app.css). Constaté
+// le 2026-11-15 : à hauteur fixe, le bandeau recouvrait « Créer la facture » quand une phrase suit le bouton.
+function hauteurDuBas() {
+  const bas = document.querySelector('.app > .bas');
+  if (!bas) return;
+  const poser = () => document.documentElement.style.setProperty('--bas', Math.round(bas.getBoundingClientRect().height) + 'px');
+  poser();
+  if ('ResizeObserver' in window) new ResizeObserver(poser).observe(bas);
 }
 
 // Un message qui commente la recherche de départ disparaît dès qu'on en tape une autre.
@@ -1101,24 +1264,19 @@ function documentACote() {
       .then((html) => {
         if (ce !== numero || !colonne) return; // une réponse plus récente est attendue
         const page = new DOMParser().parseFromString(html, 'text/html');
-        page.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
-          const href = l.getAttribute('href');
-          if (![...document.querySelectorAll('link[rel="stylesheet"]')].some((x) => x.getAttribute('href') === href)) {
-            const lien = document.createElement('link');
-            lien.rel = 'stylesheet';
-            lien.href = href;
-            document.head.append(lien);
-          }
-        });
-        const papier = page.querySelector('article.paper');
+        importerStyles(page);
+        // Un brouillon de facture vient avec son filigrane « Aperçu ».
+        const papier = page.querySelector('.apercu-facture') || page.querySelector('article.paper');
         if (papier) colonne.replaceChildren(document.importNode(papier, true));
       })
       .catch(() => { if (ce === numero && colonne) colonne.textContent = 'Le document ne s’affiche pas : rechargez la page.'; });
   };
+  // Le brouillon d'une facture (maquette 25, E8) montre son document d'office, sans toucher au choix gardé pour l'offre.
+  const toujours = bouton.hasAttribute('data-doc-cote-toujours');
   const montrer = (oui) => {
     document.body.classList.toggle('doc-a-cote', oui);
     bouton.setAttribute('aria-pressed', String(oui));
-    bouton.textContent = oui ? 'Revenir à la liste' : 'Document à côté';
+    bouton.textContent = oui ? (toujours ? 'Cacher le document' : 'Revenir à la liste') : 'Document à côté';
     if (oui && !colonne) {
       colonne = document.createElement('aside');
       colonne.className = 'colonne-doc';
@@ -1127,6 +1285,7 @@ function documentACote() {
     }
     if (colonne) colonne.hidden = !oui;
     if (oui) charger();
+    if (toujours) return;
     try { window.localStorage.setItem('offregen-doc-a-cote', oui ? '1' : '0'); } catch (err) { /* stockage refusé : le choix ne se garde pas */ }
   };
   bouton.addEventListener('click', () => montrer(!document.body.classList.contains('doc-a-cote')));
@@ -1134,14 +1293,15 @@ function documentACote() {
   let garde = false;
   try { garde = window.localStorage.getItem('offregen-doc-a-cote') === '1'; } catch (err) { /* idem */ }
   // Le document à côté demande 1280 px (app.css) ; plus étroit, le choix reste gardé pour un plus grand écran.
-  if (garde && window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) montrer(true);
+  if ((garde || toujours) && window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) montrer(true);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   clavierPc();
   documentACote();
   messagesDeRecherche();
-  pourcentDAcompte();
+  feuillesFacturer();
+  hauteurDuBas();
   modelesEnGrand();
   glisserLignes();
   montantRelu();

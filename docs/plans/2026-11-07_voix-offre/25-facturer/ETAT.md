@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 2 du `PLAN.md` : numéro de facture donné à la création (migration `numero NULL`, `DepotFactures`).
+Lot 6 du `PLAN.md` : le client confirmé à « Générer l'offre » (E6).
 
 ## En attente de toi
 
@@ -44,6 +44,15 @@ Lot 2 du `PLAN.md` : numéro de facture donné à la création (migration `numer
 
 - 2026-11-15 : `PLAN.md` écrit (contrat technique, signatures, trois décisions fragiles, 8 lots). Phase 4 terminée.
 - 2026-11-15, lot 1 (Origin 416) : la version PC demande `(hover: hover) and (pointer: fine)` en plus de la largeur, dans app.css (bloc PC, bloc téléphone en `not all and …`) et dans les deux `matchMedia` de app.js. Test `VersionPcTest::testLaVersionPcDemandeUnPointeurFin` vu rouge puis vert. Un premier passage de la suite complète a donné 1 échec, non reproduit en quatre passages suivants : test instable à surveiller, cause non trouvée.
+- 2026-11-15, lot 2 (7d66af0) : migration `Version20261115000003` (`facture.numero` NULL). Écart au plan, décidé en écrivant le test : pas de méthode `numeroter` ; c'est `DepotFactures::emettre` qui écrit le numéro dans la même requête que le reste, un brouillon n'est donc jamais numéroté sans être émis. `dernierNumero` ignore les NULL et range par `COALESCE(emise_le, cree_le)`. Le contrôleur donne au brouillon sans numéro le suivant au moment de l'émission ; numéro pris entre-temps : message, rien d'écrit. Mes premiers tests lisaient `['numero'] ?? 'absent'`, qui ne pouvait jamais valoir NULL : réécrits avant de conclure. Déployé sur le test, sonde verte.
+- 2026-11-15, lot 3 (c5f72a4) : `PlanAcomptes` : acompte possible sans plan (la finale proposée d'abord), puces 20/30/40/50 % (plus celui des conditions), montant TTC réparti au prorata du HT des taux et ajusté au centime (recherche de ±2 ct par part quand la TVA arrondie fait sauter le total). Deux tests de l'écran actuel encodaient l'ancienne règle « pas d'acompte sans plan » : mis à jour. Défaut corrigé en relisant : `(int) $choisi['nombre']` aurait écrit « Acompte 1 sur 0 ».
+- 2026-11-15, lots 4 et 5 ensemble (écart au plan) : les tests de l'ancien parcours passaient par le brouillon et la page de confirmation ; les mettre à jour deux fois aurait doublé le travail. Fait :
+  - Feuille Facturer : genre en deux segments, puces 20/30/40/50 % et CHF, montant TTC, aperçu qui suit chaque choix (`GET /offres/{id}/facturer/apercu`, rien d'écrit), numéro, date, échéance repliés sous « Modifier », « Créer la facture · CHF … », phrase dessous. « Vérifier avant d'émettre » retiré. Entrée recalcule, ne crée rien. La miniature s'ouvre en grand (Échap ou « Retour » la ferment, la feuille reste).
+  - Création : créée et émise d'un coup ; si l'émission est empêchée, le brouillon est effacé et la feuille dit pourquoi. « Corriger des lignes d'abord » (finale seulement) : brouillon sans numéro.
+  - Une facture émise ou annulée se voit en PDF : `/factures/{id}` et `/document` y redirigent ; panneau (montant, état, client, date, offre, « Annuler la facture ») sous le PDF au téléphone, à droite sur PC ; « Télécharger » sur PC. Page de confirmation d'émission retirée (GET `/emettre` : 405).
+  - Brouillon : lignes, « + », « Créer la facture », montant et numéro prévu dans la phrase ; sur PC le document à côté, d'office.
+  - Corrigés en passant : la feuille dans une fenêtre perdait le bouton touché (`FormData` sans le bouton : « Corriger » devenait « Créer ») ; GET `/facturer` en 500 avec un QR-IBAN (référence calculée sur l'identifiant 0 de l'aperçu, identifiant provisoire désormais) ; « Annuler et refaire » ne recopiait pas le taux de TVA des lignes (lot 7 du 24) ; les bandeaux recouvraient les boutons quand une phrase les suit (hauteur du bas mesurée, `--bas`) ; « Pour / Famille Exemple / , Chemin… » éclaté (classe `client-facture` déjà prise).
+  - Vu aux captures et laissé au lot 7 : sur PC, le PDF de la facture n'a pas le menu et reste dans la colonne de 640 px, la page du PDF ne fait que 264 px de large.
 
 ## Preuves
 
@@ -57,6 +66,27 @@ $ vendor/bin/phpstan analyse --no-progress
 $ node lot1-tablette.js lot1   (démo locale)
   tablette-1180 {"pointeurFin":false,"menuGauche":"static","colonne":"none","plus":"flex"} erreurs : aucune
   pc-1440 {"pointeurFin":true,"menuGauche":"fixed","colonne":"block","plus":"none"} erreurs : aucune
+# lot 2
+$ phpunit tests/Donnees/DepotFacturesTest.php (avant) : Tests: 17, Errors: 3 ; (après) OK (17 tests, 98 assertions)
+$ doctrine-migrations migrations:status (test et développement) : Current Version20261115000003
+$ phpunit : OK (457 tests, 2757 assertions) ; phpstan : [OK] No errors
+$ outils/deployer-test.sh : SONDE VERTE, DÉPLOYÉ : 7d66af07f52578aeade3c5f13fbde4b741844e52, migrations à jour
+# lot 3
+$ phpunit tests/Facture/PlanAcomptesTest.php (avant) : Errors: 6, Failures: 1 ; (après) OK (12 tests, 38 assertions)
+$ phpunit : OK (461 tests, 2778 assertions) ; phpstan : [OK] No errors
+# lots 4 et 5
+$ phpunit tests/Http/EnvoyerFacturerTest.php (avant le code) : Tests: 9, Failures: 8
+$ phpunit : OK (466 tests, 2829 assertions) ; phpstan : [OK] No errors
+$ node lot4-facturer.js lot4-390 390   (démo remise à zéro ; idem à 1440)
+  feuille ouverte, url : /offres/140/apercu · bouton : Créer la facture · CHF 932.05
+  40 % : Créer la facture · CHF 1'242.70
+  après Entrée, toujours sur la feuille : true
+  Échap ferme l'aperçu : true · la feuille reste : true
+  après Créer : /factures/17/apercu · pages dessinées : 1
+  Envoyer présent : true · touchers jusqu'à Envoyer compris : 3
+  brouillon : /factures/18 · Facture finale, brouillon N° 2026-002 à la création
+  débordement horizontal : 0 ; erreurs : aucune
+  (CHF 1000 : bouton « Créer la facture · CHF 1'000.00 », vu à la capture 03-feuille-chf)
 ```
 
 ```

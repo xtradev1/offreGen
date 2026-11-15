@@ -3,7 +3,9 @@
 {# Le PDF tel que le client le recevra, offre ou facture émise (Xavier, 2026-11-15 ; décisions D7 A et D8). PDF.js le
    dessine page par page ; pincer pour agrandir. « Envoyer » passe par le partage du téléphone, le PDF joint ; sans
    partage possible, le PDF se télécharge. Variables : titre, retour {href, texte}, pdf, fichier, partage, marquer (ou
-   null), modifier (ou null), facturer (ou null). #}
+   null), modifier (ou null), facturer (ou null), facture (pour une facture : {f, etat, annuler}, sinon absent).
+   Une facture a son panneau (maquette 25, E8) : montant, état, échéance, client, offre, « Annuler la facture » ; sous
+   le PDF au téléphone, à côté sur PC. #}
 {% block titre %}{{ titre }} · PDF · offreGen{% endblock %}
 {% block entete_html %}<script type="module" src="/js/apercu-pdf.js"></script>{% endblock %}
 {% block retour %}<a class="back" href="{{ retour.href }}">{{ retour.texte }}</a>{% endblock %}
@@ -11,8 +13,24 @@
 {% block ecran_classe %} apercu-pdf{% endblock %}
 
 {% block contenu %}
-  <div class="pdf-pages" data-pdf="{{ pdf }}" data-worker="{{ pdfjs }}/pdf.worker.min.js">
-    <p class="pdf-attente" data-pdf-etat>Préparation du PDF…</p>
+  {% set fac = facture ?? null %}
+  {% if fac and fac.f.statut == 'annulee' %}<p class="alerte bad">Facture annulée le {{ fac.f.annulee_le|jour }}. Son numéro n'est pas repris.</p>{% endif %}
+  <div class="pdf-zone">
+    <div class="pdf-pages" data-pdf="{{ pdf }}" data-worker="{{ pdfjs }}/pdf.worker.min.js">
+      <p class="pdf-attente" data-pdf-etat>Préparation du PDF…</p>
+    </div>
+    {% if fac %}
+      <aside class="panneau-facture" aria-label="La facture">
+        <p class="pf-montant">{{ fac.f.a_payer|chf }}</p>
+        <p><span class="status {{ fac.etat.classe }}">{{ fac.etat.texte }}</span></p>
+        <dl>
+          <dt>Client</dt><dd>{{ fac.f.client_nom }}{% if fac.f.client_adresse %}<br><small>{{ fac.f.client_adresse|replace({"\n": ', '}) }}</small>{% endif %}</dd>
+          <dt>Datée du</dt><dd>{{ fac.f.date_facture|jour }}</dd>
+          <dt>Offre</dt><dd><a href="/offres/{{ fac.f.offre_id }}">n°&nbsp;{{ fac.f.offre_numero }}, {{ fac.f.titre }}</a></dd>
+        </dl>
+        {% if fac.annuler %}<a class="lien-discret" href="{{ fac.annuler }}">Annuler la facture</a>{% endif %}
+      </aside>
+    {% endif %}
   </div>
   <noscript><p><a href="{{ pdf }}">Ouvrir le PDF</a></p></noscript>
   {% if marquer %}<form method="post" action="{{ marquer }}" data-apres-partage><input type="hidden" name="_csrf" value="{{ csrf() }}"></form>{% endif %}
@@ -20,8 +38,10 @@
 
 {% block actions %}
   <div class="actionbar">
+    {% if facture ?? null %}<a class="btn grand pc-seul" href="{{ pdf }}" download="{{ fichier }}">Télécharger</a>{% endif %}
     {% if modifier %}<a class="btn grand" href="{{ modifier }}">Modifier</a>{% endif %}
-    {% if facturer %}<a class="btn grand" href="{{ facturer }}">Facturer</a>{% endif %}
+    {# « Facturer » s'ouvre dans une feuille par-dessus le PDF de l'offre (maquette 25, E1). #}
+    {% if facturer %}<a class="btn grand" href="{{ facturer }}" data-en-feuille>Facturer</a>{% include '_feuille.html.twig' %}{% endif %}
     <a class="btn primary grand" href="{{ pdf }}" download="{{ fichier }}" data-partager data-titre="{{ partage }}">
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>Envoyer</a>
   </div>

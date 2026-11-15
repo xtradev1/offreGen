@@ -40,7 +40,7 @@ final class ApercuPdfTest extends TestCase
         self::assertMatchesRegularExpression('#<script type="module" src="/js/apercu-pdf\.js"></script>#', $page);
         // Les gestes suivants restent en bas : Modifier, Facturer, et le PDF à télécharger.
         self::assertStringContainsString("<a class=\"btn grand\" href=\"{$this->offre}\">Modifier</a>", $page);
-        self::assertStringContainsString("<a class=\"btn grand\" href=\"{$this->offre}/facturer\">Facturer</a>", $page);
+        self::assertStringContainsString("<a class=\"btn grand\" href=\"{$this->offre}/facturer\" data-en-feuille>Facturer</a>", $page);
         // « Envoyer » (lot 6, D8) : le lien du PDF, que le partage du téléphone prend en charge.
         self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/pdf\" download=\"Offre-\d+\.pdf\" data-partager#", $page);
         // Sans JavaScript, un lien ouvre le PDF.

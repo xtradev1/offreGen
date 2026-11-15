@@ -102,15 +102,15 @@ final class TvaTest extends TestCase
         $this->page('/reglages');
         $this->a->post('/reglages', ['paiement_type' => 'acomptes', 'paiement_acomptes_choix' => '30/30/40', 'retour' => '/reglages']);
         $this->page($this->offre . '/facturer');
-        $this->a->post($this->offre . '/facturer', ['genre' => 'acompte', 'pourcent' => '30', 'numero' => '2026-060', 'date' => '2026-11-07', 'echeance' => '2026-12-07', 'suite' => 'verifier']);
+        $this->a->post($this->offre . '/facturer', ['genre' => 'acompte', 'pourcent' => '30', 'numero' => '2026-060', 'date' => '2026-11-07', 'echeance' => '2026-12-07', 'suite' => 'creer']);
         $acompte = (int) BaseDeTest::ligne("SELECT id FROM facture WHERE numero = '2026-060'")['id'];
         // 30 % de 231.25 = 69.375 → 69.38 à 8,1 % ; 30 % de 100.00 = 30.00 à 2,6 %.
         $lignes = self::lignesDe($acompte);
         self::assertSame([[6938, 810], [3000, 260]], array_map(static fn (array $l): array => [$l['prix'], $l['tva']], $lignes));
 
         $this->page($this->offre . '/facturer');
-        $this->a->post($this->offre . '/facturer', ['genre' => 'finale', 'numero' => '2026-061', 'date' => '2026-11-07', 'echeance' => '2026-12-07', 'suite' => 'verifier']);
-        $finale = (int) BaseDeTest::ligne("SELECT id FROM facture WHERE numero = '2026-061'")['id'];
+        $this->a->post($this->offre . '/facturer', ['genre' => 'finale', 'numero' => '', 'date' => '2026-11-07', 'echeance' => '2026-12-07', 'suite' => 'corriger']);
+        $finale = (int) BaseDeTest::ligne("SELECT id FROM facture WHERE genre = 'finale'")['id'];
                 // Sans exception, la ligne garde un taux nul : celui de l'entreprise, figé à l'émission avec la facture.
         self::assertSame([null, 260], array_column(self::lignesDe($finale), 'tva'));
         self::assertMatchesRegularExpression('#TVA 2,6\x{00A0}% sur 100\.00#u', $this->page("/factures/$finale/document"));
