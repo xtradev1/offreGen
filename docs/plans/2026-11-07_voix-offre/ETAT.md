@@ -85,6 +85,7 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | 21 | Liste des offres : en préparation, échecs hors quota, tri, archives | `21-liste-offres/` | 15 | livré en code, recette de Xavier attendue |
 | 22 | Réglages mieux rangés : sommaire, assistant, enregistrement | `22-reglages/` | 16 | livré en code (sommaire, assistant, enregistrement automatique), essai de Xavier attendu |
 | 23 | Tout garder pour l'entraînement : audio, transcription, réponse du modèle, offre avant et après corrections, durées ; statistiques ; réécouter et rejouer (demande de Xavier du 2026-11-14) | `23-garder-rejouer/` (à ouvrir) | 10, 15 | réponses de Xavier reçues, maquette à faire |
+| 24 | Ergonomie au pouce, version PC et TVA : micro au centre, relecture ligne par ligne, PDF dans l'application, envoyer et facturer en une feuille, ligne hors catalogue rangée en un toucher, TVA de l'entreprise et par ligne (demandes de Xavier du 2026-11-15) | `24-ergonomie/` | 11, 18 | maquette validée (D1 à D13), SPEC et PLAN à faire |
 
 ## Décisions
 
