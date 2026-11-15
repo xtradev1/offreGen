@@ -899,7 +899,60 @@ function brancherAdresse(groupe) {
   groupe.addEventListener('input', () => { if (etat.classList.contains('ok')) dire(''); });
 }
 
+// « Voir en grand » sur un modèle (Xavier, 2026-11-15) : l'image s'agrandit dans la page, sans en ouvrir
+// une autre. Flèches pour passer d'un modèle à l'autre, « Choisir ce modèle » coche et ferme (un toucher de
+// moins). Sans JavaScript, le lien mène à la page d'aperçu.
+function modelesEnGrand() {
+  const liens = [...document.querySelectorAll('a.voir[data-grand]')];
+  if (!liens.length) return;
+  const vue = document.createElement('div');
+  vue.className = 'agrandi';
+  vue.hidden = true;
+  vue.setAttribute('role', 'dialog');
+  vue.setAttribute('aria-modal', 'true');
+  vue.innerHTML = '<div class="agrandi-haut"><b data-titre></b><button type="button" class="agrandi-x" data-fermer aria-label="Fermer">×</button></div>'
+    + '<div class="agrandi-image" data-fond><img alt=""></div>'
+    + '<div class="agrandi-bas"><button type="button" class="btn" data-pas="-1" aria-label="Modèle précédent">‹</button>'
+    + '<button type="button" class="btn primary" data-choisir>Choisir ce modèle</button>'
+    + '<button type="button" class="btn" data-pas="1" aria-label="Modèle suivant">›</button></div>';
+  document.body.appendChild(vue);
+  const img = vue.querySelector('img');
+  let rang = 0;
+  const montrer = (i) => {
+    rang = (i + liens.length) % liens.length;
+    const l = liens[rang];
+    img.src = l.dataset.grand;
+    img.alt = 'Modèle ' + l.dataset.nom + ', en grand';
+    vue.querySelector('[data-titre]').textContent = 'Modèle ' + l.dataset.nom;
+    const radio = document.querySelector('input[name="modele"][value="' + l.dataset.cle + '"]');
+    vue.querySelector('[data-choisir]').textContent = radio && radio.checked ? 'Modèle choisi' : 'Choisir ce modèle';
+  };
+  const calque = {
+    montrer() { vue.hidden = false; document.body.classList.add('agrandi-ouvert'); vue.querySelector('[data-choisir]').focus(); },
+    cacher() { vue.hidden = true; document.body.classList.remove('agrandi-ouvert'); liens[rang].focus(); },
+  };
+  const fermer = () => calques.fermer(calque);
+  liens.forEach((l, i) => l.addEventListener('click', (e) => { e.preventDefault(); montrer(i); calques.ouvrir(calque); }));
+  vue.addEventListener('click', (e) => {
+    if (e.target.closest('[data-fermer]') || e.target.matches('[data-fond]')) { fermer(); return; }
+    const pas = e.target.closest('[data-pas]');
+    if (pas) { montrer(rang + Number(pas.dataset.pas)); return; }
+    if (e.target.closest('[data-choisir]')) {
+      const radio = document.querySelector('input[name="modele"][value="' + liens[rang].dataset.cle + '"]');
+      if (radio && !radio.checked) { radio.checked = true; radio.dispatchEvent(new Event('change', { bubbles: true })); }
+      fermer();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (calques.ouvert() !== calque) return;
+    if (e.key === 'Escape') fermer();
+    else if (e.key === 'ArrowLeft') montrer(rang - 1);
+    else if (e.key === 'ArrowRight') montrer(rang + 1);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  modelesEnGrand();
   adresses();
   enregistrementsAutomatiques();
   envoisAutomatiques();

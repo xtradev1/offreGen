@@ -164,6 +164,22 @@ final class MarqueEcranTest extends TestCase
         self::assertSame(404, $this->a->get('/reglages/modeles/inconnu')->getStatusCode());
     }
 
+    /**
+     * Xavier, 2026-11-15 : « voir plus grand » agrandit l'image dans la page, sans ouvrir une autre page.
+     * Chaque modèle a sa grande image (tirée du vrai PDF), le lien la désigne ; sans JavaScript, il mène à l'aperçu.
+     */
+    public function testVoirEnGrandDesigneUneGrandeImageParModele(): void
+    {
+        $marque = $this->page('/reglages/marque');
+        foreach (array_keys(\OffreGen\Compte\Marque::MODELES) as $cle) {
+            self::assertFileExists(dirname(__DIR__, 2) . "/public/img/modeles/grand/$cle.jpg");
+            self::assertMatchesRegularExpression("#<a class=\"voir\" href=\"/reglages/modeles/$cle\"[^>]*data-grand=\"/img/modeles/grand/$cle\.jpg\"#", $marque);
+        }
+        $taille = getimagesize(dirname(__DIR__, 2) . '/public/img/modeles/grand/sobre.jpg');
+        self::assertIsArray($taille);
+        self::assertGreaterThanOrEqual(900, $taille[0], 'assez grande pour un écran de PC');
+    }
+
     public function testSansChampsDeMarqueLesReglagesGardentLaMarque(): void
     {
         BaseDeTest::pdo()->exec("UPDATE artisan SET modele = 'atelier', couleur = '#8A5A2B' WHERE id = {$this->jeu->a}");

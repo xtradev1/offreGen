@@ -21,7 +21,7 @@ répétées ici.
   - `src/Donnees/` : seule couche qui parle à la base, elle exige l'identifiant de l'artisan ;
   - `templates/` : pages Twig ; `migrations/`, `tests/`, `config/` ; `bin/` : commandes et scripts lancés par cron ;
   - `var/` : audios importés, journaux, cache, hors de `public/` et ignoré par git.
-- Un fichier, une responsabilité. Pas de fonction dupliquée : chercher l'existant avant d'écrire (`grep`).
+- Un fichier, une responsabilité. Pas de fonction dupliquée : chercher l'existant avant d'écrire (`grep`).
 
 ## Style
 - Encodage UTF-8 sans BOM, fins de ligne LF.
@@ -30,18 +30,18 @@ répétées ici.
 - Textes visibles en français, typographie française, pas de tiret long.
 
 ## Ergonomie
-- L'application s'utilise sur un téléphone, sur un chantier : grandes zones de toucher, lisible en plein jour.
+- L'application s'utilise sur un téléphone, sur un chantier : grandes zones de toucher, lisible en plein jour.
 - Une action fréquente se fait en un clic.
-- Utilisable au pouce, d'une main : les actions principales sont dans le tiers bas de l'écran, les confirmations s'ouvrent en bas, chaque cible mesure 44 px au moins. Le haut de l'écran ne porte que des informations et des actions secondaires.
+- Utilisable au pouce, d'une main : les actions principales sont dans le tiers bas de l'écran, les confirmations s'ouvrent en bas. Tailles (Xavier, 2026-11-15, décision D10 de la maquette 24) : 64 px pour l'action principale d'un écran, 56 px pour les autres boutons, 48 px pour toute autre cible, 8 px au moins entre deux cibles. Le haut de l'écran ne porte que des informations et des actions secondaires ; le micro est au centre de la barre du bas, sur tous les écrans (D1).
 - Supprimer une ligne d'offre : un clic, puis « Annuler » reste visible quelques secondes. Choix de Xavier sur la maquette du 2026-11-06, à confirmer par les tests avec des artisans.
-- Une ligne incertaine s'affiche « À vérifier », sans pourcentage de confiance et sans rappel de la dictée (choix de Xavier, 2026-11-06).
+- Une ligne incertaine s'affiche « À vérifier », sans pourcentage de confiance (choix de Xavier, 2026-11-06). Le rappel de la dictée (« Entendu : … ») se montre seulement en relecture d'une ligne et sur une ligne hors catalogue : écrans D5 et D6 de la maquette 24, validés par Xavier le 2026-11-15 ; la liste des lignes reste sans rappel.
 - Le document envoyé au client ne montre ni la marge, ni le fournisseur d'une ligne libre, ni le motif ou le pourcentage d'une majoration : la ligne garde son nom, à son nouveau prix (Xavier, 2026-11-06).
 - Une confirmation est toujours demandée pour ce qui ne se rattrape pas : envoyer une offre au client, supprimer une offre entière.
 - L'audio arrive de deux façons : un fichier enregistré avec l'application du téléphone puis importé (prioritaire), ou un enregistrement dans l'application. Le traitement est asynchrone : l'artisan est prévenu quand l'offre est prête.
 - Toute correction vocale a son équivalent à l'écran, qui ne coûte aucun appel au modèle.
 
 ## Données et sécurité
-- `docs/SECURITE.md` est opposable : à lire avant toute tâche touchant aux accès, aux données, aux dépendances ou au déploiement.
+- `docs/SECURITE.md` est opposable : à lire avant toute tâche touchant aux accès, aux données, aux dépendances ou au déploiement.
 - Aucun secret dans le code. Fichiers `*.local.*` et `.env` ignorés par git.
 - Toute entrée utilisateur est validée côté serveur. Requêtes préparées.
 - **Droits refusés par défaut :** une route sans droit déclaré répond 403, et un test parcourt toutes les routes.
@@ -51,15 +51,15 @@ répétées ici.
 
 ## Tests et preuve
 - Un changement de logique s'accompagne d'un test qui échoue avant et passe après.
-- « Ça marche » = commande exécutée, sortie collée. Pas de claim sans evidence.
+- « Ça marche » = commande exécutée, sortie collée. Pas de claim sans evidence.
 - Recette d'interface à la souris (Playwright), pas par appel direct à l'API.
 
 ## Migrations et déploiement
-- `docs/DEPLOIEMENT.md` est opposable : parcours, migrations additives, contrôles et retour arrière.
+- `docs/DEPLOIEMENT.md` est opposable : parcours, migrations additives, contrôles et retour arrière.
 - Migrations : `vendor/bin/doctrine-migrations migrations:migrate`, vérification par `migrations:up-to-date`. Commandes à prouver à la première installation.
-- Un `ADD COLUMN IF NOT EXISTS` n'élargit pas une colonne existante ; élargir = `MODIFY`.
+- Un `ADD COLUMN IF NOT EXISTS` n'élargit pas une colonne existante ; élargir = `MODIFY`.
 
 ## Documentation vivante
-- `PROJECT_ROADMAP.md` : décisions et prochains pas. Mis à jour par `/roadmap-sync` après tout travail significatif.
-- `docs/plans/<date>_<slug>/` : plans et ETAT.md des chantiers. Journaux de mémoire dans `docs/plans/_memoire-archivee/`.
-- Mémoire de session : voir la section « Mémoire » du CLAUDE.md global.
+- `PROJECT_ROADMAP.md` : décisions et prochains pas. Mis à jour par `/roadmap-sync` après tout travail significatif.
+- `docs/plans/<date>_<slug>/` : plans et ETAT.md des chantiers. Journaux de mémoire dans `docs/plans/_memoire-archivee/`.
+- Mémoire de session : voir la section « Mémoire » du CLAUDE.md global.

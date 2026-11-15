@@ -377,6 +377,19 @@ a.rubrique .fl { flex: none; font-size: 22px; line-height: 1; color: var(--muted
 .modele-case { display: grid; align-content: start; }
 .voir { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px; font-size: 12.5px; color: var(--accent); text-decoration: none; }
 .voir svg.i { width: 14px; height: 14px; }
+/* « Voir en grand » : l'image du modèle par-dessus la page, les boutons sous le pouce (2026-11-15). */
+.agrandi { position: fixed; inset: 0; z-index: 70; background: #0E1014; display: flex; flex-direction: column; color: #fff; }
+.agrandi[hidden] { display: none; }
+body.agrandi-ouvert { overflow: hidden; }
+.agrandi-haut { display: flex; align-items: center; gap: 12px; padding: 6px 8px 6px 16px; min-height: 56px; }
+.agrandi-haut b { flex: 1; font-size: 17px; }
+.agrandi-x { width: 48px; height: 48px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, .12); color: #fff; font-size: 28px; line-height: 1; cursor: pointer; }
+.agrandi-image { flex: 1; min-height: 0; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 0 12px; }
+.agrandi-image img { width: 100%; max-width: 640px; height: auto; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .5); }
+.agrandi-bas { display: flex; gap: 8px; padding: 10px 12px 14px; max-width: 664px; width: 100%; margin: 0 auto; }
+.agrandi-bas .btn { min-height: 56px; font-size: 17px; }
+.agrandi-bas [data-pas] { flex: 0 0 56px; font-size: 26px; }
+.agrandi-bas [data-choisir] { flex: 1; min-height: 64px; }
 .modeles-nav { margin: 0 0 12px; }
 .actionbar .choisir { flex: 1; display: flex; margin: 0; }
 /* Clients (sous-chantier 17) : liste, fiche, « Client de l'offre ». */
