@@ -32,6 +32,10 @@ SSH=(ssh -i "$CLE" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -
 racine="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$racine"
 etape() { printf '\n== %s\n' "$1"; }
+# La sonde part du serveur de test vers l'adresse publique du site (même proxy qu'un visiteur). Depuis WSL,
+# des requêtes se perdent avant Apache (2026-11-15 : 2 à 5 sur 20, aucune depuis Windows ni absentes du
+# journal du serveur) : une sonde lancée de WSL serait rouge sans raison et déclencherait un retour arrière.
+sonde() { "${SSH[@]}" "SONDE_TEMOINS='$TEMOINS' bash -s -- '$URL' '$1'" < scripts/securite/sonde-exposition.sh; }
 
 etape "Contrôles du dépôt"
 git diff --quiet && git diff --cached --quiet || { echo "REFUS : modifications non commitées."; exit 1; }
@@ -99,14 +103,14 @@ DISTANT
 echo "en service : releases/$commit ; précédente : ${precedent:-aucune}"
 
 etape "Sonde d'exposition"
-if SONDE_TEMOINS="$TEMOINS" bash scripts/securite/sonde-exposition.sh "$URL" "$commit"; then
+if sonde "$commit"; then
   echo; echo "DÉPLOYÉ : $commit sur $URL"
   exit 0
 fi
 if [ -n "$precedent" ] && [ "$precedent" != "releases/$commit" ]; then
   etape "Sonde rouge : retour à $precedent"
   "${SSH[@]}" "cd $APP && ln -sfn '$precedent' current.nouveau && mv -Tf current.nouveau current"
-  SONDE_TEMOINS="$TEMOINS" bash scripts/securite/sonde-exposition.sh "$URL" "$(basename "$precedent")" || echo "ALERTE : la version précédente est rouge elle aussi."
+  sonde "$(basename "$precedent")" || echo "ALERTE : la version précédente est rouge elle aussi."
 else
   echo "Sonde rouge, aucune version précédente : rien à rétablir."
 fi
