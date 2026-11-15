@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OffreGen\Audio;
 
+use OffreGen\Systeme\Commande;
+
 /**
  * Rend un audio acceptable par la transcription d'Infomaniak (documentation lue le 2026-11-12) :
  * formats de FORMATS_ACCEPTES, 50 000 Ko au plus. Sinon, conversion en Opus 32 kbit/s mono par ffmpeg :
@@ -15,10 +17,14 @@ final class PreparationAudio
     /** Un peu sous les 50 000 Ko annoncés, pour la marge de l'envoi multipart. */
     public const TAILLE_MAX = 49 * 1024 * 1024;
 
+    private readonly Commande $commande;
+
     public function __construct(
         private readonly string $ffmpeg = 'ffmpeg',
         private readonly int $tailleMax = self::TAILLE_MAX,
+        ?Commande $commande = null,
     ) {
+        $this->commande = $commande ?? new Commande();
     }
 
     public function preparer(string $chemin): FichierPrepare
@@ -39,33 +45,20 @@ final class PreparationAudio
         unlink($sortie);
         $sortie .= '.ogg';
         $commande = [$this->ffmpeg, '-nostdin', '-v', 'error', '-y', '-i', $chemin, '-vn', '-ac', '1', '-c:a', 'libopus', '-b:a', '32k', $sortie];
-        $erreur = '';
-        $code = $this->executer($commande, $erreur);
-        if ($code !== 0 || !is_file($sortie)) {
+        $r = $this->commande->lancer($commande);
+        if ($r->code !== 0 || !is_file($sortie)) {
             @unlink($sortie);
-            throw new \RuntimeException($code === 127
-                ? 'Conversion impossible : ffmpeg est absent de ce serveur.'
-                : 'Conversion de l\'audio échouée (code ' . $code . ') : ' . mb_substr(trim($erreur), 0, 200));
+            throw new \RuntimeException(match ($r->code) {
+                // Site web chez Infomaniak : le traitement de fond (cron, en ligne de commande) la refera.
+                Commande::IMPOSSIBLE => 'Conversion remise au traitement de fond : le serveur web ne peut pas lancer ffmpeg.',
+                Commande::ABSENT => 'Conversion impossible : ffmpeg est absent de ce serveur.',
+                default => 'Conversion de l\'audio échouée (code ' . $r->code . ') : ' . mb_substr(trim($r->erreur), 0, 200),
+            });
         }
         if ((int) filesize($sortie) > $this->tailleMax) {
             unlink($sortie);
             throw new \RuntimeException('Audio trop long pour la transcription, même compressé.');
         }
         return new FichierPrepare($sortie, true);
-    }
-
-    /** @param list<string> $commande sans passer par un shell : aucun nom de fichier n'est interprété */
-    private function executer(array $commande, string &$erreur): int
-    {
-        $tubes = [];
-        $processus = @proc_open($commande, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $tubes);
-        if (!is_resource($processus)) {
-            return 127;
-        }
-        stream_get_contents($tubes[1]);
-        $erreur = (string) stream_get_contents($tubes[2]);
-        fclose($tubes[1]);
-        fclose($tubes[2]);
-        return proc_close($processus);
     }
 }

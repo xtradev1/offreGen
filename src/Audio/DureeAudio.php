@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace OffreGen\Audio;
 
+use OffreGen\Systeme\Commande;
+
 /**
  * Durée d'un audio, lue par ffprobe (livré avec ffmpeg). Sert à refuser un enregistrement trop court.
  */
 final class DureeAudio
 {
-    public function __construct(private readonly string $ffprobe = 'ffprobe')
+    private readonly Commande $commande;
+
+    public function __construct(private readonly string $ffprobe = 'ffprobe', ?Commande $commande = null)
     {
+        $this->commande = $commande ?? new Commande();
     }
 
     /** En secondes ; null si ffprobe manque ou ne sait pas lire le fichier : l'import ne doit pas en dépendre. */
@@ -38,17 +43,8 @@ final class DureeAudio
     /** @param list<string> $arguments */
     private function sonder(array $arguments): ?string
     {
-        $tubes = [];
-        // Sans shell : aucun nom de fichier n'est interprété.
-        $processus = @proc_open([$this->ffprobe, '-v', 'error', '-of', 'csv=p=0', ...$arguments],
-            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $tubes);
-        if (!is_resource($processus)) {
-            return null;
-        }
-        $sortie = trim((string) stream_get_contents($tubes[1]));
-        stream_get_contents($tubes[2]);
-        fclose($tubes[1]);
-        fclose($tubes[2]);
-        return proc_close($processus) === 0 ? $sortie : null;
+        // ffprobe absent, ou proc_open désactivée (site web chez Infomaniak) : durée inconnue, l'import continue.
+        $r = $this->commande->lancer([$this->ffprobe, '-v', 'error', '-of', 'csv=p=0', ...$arguments]);
+        return $r->code === 0 ? trim($r->sortie) : null;
     }
 }
