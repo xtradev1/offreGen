@@ -49,7 +49,7 @@ Taux = justes / (attendues + en trop). Corrections par offre = fausses + en trop
 ## Réglages à comparer en premier
 
 1. En service : 27B sans raisonnement, consigne du 2026-11-17.
-2. 27B avec raisonnement (7 sur 7 trois fois sur la dictée de Luigi ; 15 à 30 s et 1,3 à 2,7 ct de plus par offre ; durée sur 30 min de dictée à mesurer, délai de 300 s).
+2. 27B avec raisonnement (7 sur 7 trois fois sur la dictée de Luigi ; 14 à 28 s et 1,3 à 2,7 ct par offre, au lieu de 3 s et 0,24 ct ; durée sur 30 min de dictée à mesurer, délai de 300 s).
 3. L'extraction optimisée du sous-chantier 20, quand elle existera.
 
 ## Ce qui reste dans l'application
