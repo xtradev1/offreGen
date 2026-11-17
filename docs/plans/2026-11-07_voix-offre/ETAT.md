@@ -89,7 +89,7 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | 23 | Tout garder pour l'entraînement : audio, transcription, réponse du modèle, offre avant et après corrections, durées ; statistiques ; réécouter et rejouer (demande de Xavier du 2026-11-14) | `23-garder-rejouer/` (à ouvrir) | 10, 15 | réponses de Xavier reçues, maquette à faire |
 | 24 | Ergonomie au pouce, version PC et TVA : micro au centre, relecture ligne par ligne, PDF dans l'application, envoyer et facturer en une feuille, ligne hors catalogue rangée en un toucher, TVA de l'entreprise et par ligne (demandes de Xavier du 2026-11-15) | `24-ergonomie/` | 11, 18 | maquette validée (D1 à D13), SPEC et PLAN à faire |
 | 25 | Facturer en trois touchers : feuille Facturer avec aperçu, acompte en % ou en CHF, facture toujours en PDF, client confirmé avant l'offre, Ajouter et petits écrans pensés pour le PC, tablette en vue téléphone (retours de Xavier du 2026-11-15) | `25-facturer/` | 18, 24 | maquette envoyée, réponses de Xavier attendues |
-| 26 | Coût de l'IA, statistiques d'exploitation : coût exact de chaque extraction, relevé quotidien de la consommation Infomaniak, écran réservé au droit administrateur (demande de Xavier du 2026-11-17) | `26-couts-ia/` | 10, 25 | maquette envoyée, réponses de Xavier attendues |
+| 26 | Partie administration séparée : coût de l'IA, artisans, offres (analyse anonyme), rentabilité plus tard ; statistiques d'exploitation : coût exact de chaque extraction, relevé quotidien de la consommation Infomaniak, écran réservé au droit administrateur (demande de Xavier du 2026-11-17) | `26-couts-ia/` | 10, 25 | maquette envoyée, réponses de Xavier attendues |
 
 ## Décisions
 
