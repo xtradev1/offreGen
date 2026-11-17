@@ -9,11 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Écrire `SPEC.md` : format du corpus (audio, transcription, offre attendue), barème par ligne, partage réglage / contrôle, rapport du banc. Puis demander à Xavier les premières dictées réelles.
+Quand les premières dictées sont dans `OffreGen/corpus/audio/` : transcrire, écrire les offres attendues, les faire valider par Xavier, puis écrire `outils/banc-corpus.php` (SPEC, « Ce qui reste dans l'application »).
 
 ## En attente de toi
 
-- Enregistrer des dictées réalistes (ton appartement, d'autres chantiers inventés ou réels avec accord), de 2 à 15 minutes, avec et sans prix dits. Une vingtaine pour commencer.
+- Déposer des dictées dans `OffreGen/corpus/audio/` sur le Synology (`NN-court-titre.m4a`, une vingtaine pour commencer, liste de ce qu'il faut couvrir dans `SPEC.md`).
 
 ## Suivi Origin
 
