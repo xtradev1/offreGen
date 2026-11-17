@@ -32,6 +32,7 @@ Attendre les réponses de Xavier à `MAQUETTE-couts.html` (F2 et l'écran), puis
 ## Journal
 
 - 2026-11-17 : relevé `GET /1/ai/357/consumptions` lu, coût de Qwen vérifié égal à jetons × tarif ; projection donnée à Xavier (pire offre observée CHF 0.0020 avec le 27B, 50 offres par mois au prix × 10 : CHF 1.00). Il n'existe que deux droits d'accès (public, artisan) : la manière de réserver l'écran à l'exploitant est la décision F1.
+- 2026-11-17, question de Xavier sur « 19 643 / 4 175 » : la colonne « Consommation » mêlait jetons envoyés, jetons reçus et temps de calcul, illisible. Maquette corrigée : trois colonnes nommées, une ligne d'explication d'un jeton, totaux (27 379 et 5 645 jetons, 19 s). L'écran réel suivra ces colonnes.
 
 ## Preuves
 

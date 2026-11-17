@@ -133,19 +133,20 @@ html.mk-lb-open { overflow: hidden; }
       <div class="carte"><span>50 offres par mois</span><b>CHF 0.07</b><small>au coût moyen</small></div>
     </div>
     <h4>Par modèle, selon la facture d'Infomaniak</h4>
+    <p class="note">Un jeton : un morceau de mot, environ quatre lettres. Envoyés : ce que le modèle lit (consigne, catalogue, dictée), CHF 0.40 le million pour Qwen 27B. Reçus : ce qu'il écrit (titre et lignes de l'offre), CHF 3.00 le million. Whisper se facture au temps de calcul.</p>
     <div class="tab"><table>
-      <tr><th>Modèle</th><th class="n">Requêtes</th><th class="n">Consommation</th><th class="n">Coût (CHF)</th></tr>
-      <tr><td>Qwen3.8 27B (extraction)</td><td class="n">18</td><td class="n">19'643 / 4'175 jetons</td><td class="n">0.0204</td></tr>
-      <tr><td>Qwen3.5 397B (banc du 17.11)</td><td class="n">6</td><td class="n">7'400 / 1'373 jetons</td><td class="n">0.0109</td></tr>
-      <tr><td>Whisper (transcription)</td><td class="n">10</td><td class="n">19 s de calcul</td><td class="n">0.0019</td></tr>
-      <tr><td>Ministral 14B (essai du 14.11)</td><td class="n">3</td><td class="n">336 / 97 jetons</td><td class="n">0.0001</td></tr>
-      <tr class="total"><td>Total</td><td class="n">37</td><td class="n"></td><td class="n">0.0333</td></tr>
+      <tr><th>Modèle</th><th class="n">Requêtes</th><th class="n">Jetons envoyés</th><th class="n">Jetons reçus</th><th class="n">Temps de calcul</th><th class="n">Coût (CHF)</th></tr>
+      <tr><td>Qwen3.8 27B (extraction)</td><td class="n">18</td><td class="n">19'643</td><td class="n">4'175</td><td class="n"></td><td class="n">0.0204</td></tr>
+      <tr><td>Qwen3.5 397B (banc du 17.11)</td><td class="n">6</td><td class="n">7'400</td><td class="n">1'373</td><td class="n"></td><td class="n">0.0109</td></tr>
+      <tr><td>Whisper (transcription)</td><td class="n">10</td><td class="n"></td><td class="n"></td><td class="n">19 s</td><td class="n">0.0019</td></tr>
+      <tr><td>Ministral 14B (essai du 14.11)</td><td class="n">3</td><td class="n">336</td><td class="n">97</td><td class="n"></td><td class="n">0.0001</td></tr>
+      <tr class="total"><td>Total</td><td class="n">37</td><td class="n">27'379</td><td class="n">5'645</td><td class="n">19 s</td><td class="n">0.0333</td></tr>
     </table></div>
     <h4>Par artisan, selon nos chiffres <span class="exemple">exemple</span></h4>
     <div class="tab"><table>
-      <tr><th>Artisan</th><th class="n">Offres</th><th class="n">Audio</th><th class="n">Jetons</th><th class="n">Extraction (CHF)</th><th class="n">Par offre</th></tr>
-      <tr><td>Peinture Morel Sàrl (démo)</td><td class="n">5</td><td class="n">1 min 40</td><td class="n">6'200 / 1'300</td><td class="n">0.0064</td><td class="n">0,13 ct</td></tr>
-      <tr><td>Menuiserie Exemple (démo)</td><td class="n">2</td><td class="n">0 min 50</td><td class="n">2'500 / 480</td><td class="n">0.0024</td><td class="n">0,12 ct</td></tr>
+      <tr><th>Artisan</th><th class="n">Offres</th><th class="n">Audio</th><th class="n">Jetons envoyés</th><th class="n">Jetons reçus</th><th class="n">Extraction (CHF)</th><th class="n">Par offre</th></tr>
+      <tr><td>Peinture Morel Sàrl (démo)</td><td class="n">5</td><td class="n">1 min 40</td><td class="n">6'200</td><td class="n">1'300</td><td class="n">0.0064</td><td class="n">0,13 ct</td></tr>
+      <tr><td>Menuiserie Exemple (démo)</td><td class="n">2</td><td class="n">0 min 50</td><td class="n">2'500</td><td class="n">480</td><td class="n">0.0024</td><td class="n">0,12 ct</td></tr>
     </table></div>
     <h4>Écart entre nos chiffres et la facture</h4>
     <p class="note">Nos extractions : CHF 0.0088 ; facturé : CHF 0.0333. L'écart, CHF 0.0245 : la transcription (Whisper, CHF 0.0019), le banc des deux modèles (CHF 0.0179) et les essais hors offre (développement). Chaque ligne d'écart dit d'où elle vient quand on le sait.</p>
