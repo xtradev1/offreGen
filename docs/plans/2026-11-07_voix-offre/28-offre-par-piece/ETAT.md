@@ -2,8 +2,8 @@
 chantier: De la voix à l'offre, 28 offre par pièce
 slug: 2026-11-07_voix-offre/28-offre-par-piece
 phase: 3
-statut: en_cours
-gate_attendu: aucun
+statut: gate_ouvert
+gate_attendu: visuel
 profil: .claude/atoz-profile.md
 ---
 
@@ -13,7 +13,7 @@ Maquette (`MAQUETTE-pieces.html`) : l'offre groupée par pièce à l'écran et 
 
 ## En attente de toi
 
-Rien pour l'instant.
+- Répondre aux décisions P1 à P5 de `MAQUETTE-pieces.html` (bouton « Copier le texte » en bas de la page).
 
 ## Suivi Origin
 
@@ -28,6 +28,8 @@ Rien pour l'instant.
 
 - 2026-11-17 : faisabilité mesurée (détail dans `26-couts-ia/ETAT.md`) : champ « piece » par ligne et une phrase de consigne ; pièce juste sur 100 % des lignes justes (27/27 à 10 min, 88/88 à 30 min, 85/85 avec la pièce annoncée une seule fois). Dictées inventées : à remesurer sur le corpus réel du sous-chantier 29. Aujourd'hui l'offre groupe ses lignes par catégorie du catalogue.
 - Le cadrage (section 5) prévoit déjà la pièce dans l'extraction optimisée (sous-chantier 20).
+
+- 2026-11-17 : maquette faite (`MAQUETTE-pieces.html`) : offre par pièce avant / après, PDF avec sous-total par pièce, ajout d'une ligne avec choix de la pièce, renommer et déplacer. Décisions P1 à P5. Contrôle `check.js` vert (bureau 1440, téléphone 390), captures relues.
 
 ## Preuves
 
