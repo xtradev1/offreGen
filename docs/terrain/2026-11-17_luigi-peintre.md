@@ -24,6 +24,22 @@ Notes de Xavier, mises au propre par Claude. Les réponses reprennent ce que Xav
 - **Lignes par offre.** Ses 30 à 40 lignes rejoignent le devis réel de rénovation trouvé par la recherche du 17 novembre (Clichy, 37 postes). L'application garde jusqu'à 300 lignes par dictée depuis le même jour (banc : 300 postes dictés en 30 minutes, 2 oubliés) : la marge dont parle Luigi existe.
 - **Prix.** Le coût de l'IA d'une offre va de 1 à 8 centimes (banc du 17 novembre, de 10 minutes à l'offre la plus dense de 30 minutes). Il pèse peu : 20 offres coûtent au plus CHF 1.60 d'IA.
 
+## Ce que l'application a compris de sa dictée
+
+Second essai (enregistrement 6, offre 10), relu par Claude le 17 novembre : sept postes dictés avec leur prix.
+
+| Dicté | Dans l'offre | Pourquoi |
+|---|---|---|
+| Protection du sol, 15 m² à 8 francs | 1 forfait à 180 francs | Produit du catalogue choisi, son unité et son prix gagnent : quantité et prix dictés perdus |
+| Démontage des lames, 45 m² à 15 francs | 45 « forfait », sans prix | Erreur du modèle : unité et prix oubliés |
+| Évacuation des lames […]. « Bloc » 500 francs | deux lignes : l'évacuation sans prix, « Bloc » à 500 francs | Erreur du modèle : le prix « en bloc » appartient à l'évacuation (la transcription a mis un point avant) |
+| Après remise en état du plafond, deux couches de plâtre, 45 m² à 40 francs | une ligne « Remise en état du plafond » sans prix, puis le plâtre juste | Une précision prise pour un poste |
+| Couche de fond, 30 m² à 10 francs | 30 m² à 5 francs | Règle du code : le prix du catalogue gagne |
+| Crépi, 40 m² à 25 francs | juste | |
+| Deux couches de peinture, 45 m² à 15 francs | 45 m² à 28 francs | Règle du code : le prix du catalogue gagne |
+
+Les quantités sont justes partout sauf la protection. Deux causes distinctes : une règle voulue (le prix du catalogue l'emporte sur un prix dicté) et trois vraies erreurs de compréhension du modèle.
+
 ## Suites
 
 | Action | Qui | Suivi |
