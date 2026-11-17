@@ -32,7 +32,7 @@ final class CommandesTest extends TestCase
     public function testLesCommandesSansArgumentRepondentSansAvertissement(): void
     {
         $racine = dirname(__DIR__, 2);
-        foreach (['creer-compte' => 2, 'reinitialiser-demo' => 2] as $commande => $codeAttendu) {
+        foreach (['creer-compte' => 2, 'reinitialiser-demo' => 2, 'offres-essai' => 2] as $commande => $codeAttendu) {
             $sortie = [];
             exec(PHP_BINARY . ' ' . escapeshellarg("$racine/bin/$commande") . ' 2>&1', $sortie, $code);
             $texte = implode("\n", $sortie);

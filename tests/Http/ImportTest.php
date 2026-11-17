@@ -140,6 +140,43 @@ final class ImportTest extends TestCase
         self::assertSame(303, $reponse->getStatusCode());
     }
 
+    public function testCompteDEssaiAuPlafondTotal429SansRienGarder(): void
+    {
+        // Décision de Xavier (2026-11-17) : un compte d'essai a un nombre d'offres fixe, tous jours confondus.
+        // Le jeu a déjà un enregistrement pour A ; un compte qui n'est pas de démonstration est plafonné aussi.
+        BaseDeTest::pdo()->exec("UPDATE artisan SET offres_max = 1 WHERE id = {$this->jeu->a}");
+        $n = $this->navigateurConnecte();
+        $avant = BaseDeTest::compter('enregistrement');
+        $reponse = $n->post('/import', [], ['audio' => $this->dossiers->envoi('visite.mp3')]);
+        self::assertSame(429, $reponse->getStatusCode());
+        self::assertStringContainsString('Ce compte d&#039;essai a utilisé sa seule offre.', (string) $reponse->getContent());
+        self::assertSame($avant, BaseDeTest::compter('enregistrement'));
+    }
+
+    public function testCompteDEssaiEpuiseLeMicroPrevientAvantDeParler(): void
+    {
+        // Prévenir avant la dictée : refuser à l'envoi ferait perdre 30 minutes de parole.
+        BaseDeTest::pdo()->exec("UPDATE artisan SET offres_max = 1 WHERE id = {$this->jeu->a}");
+        $page = (string) $this->navigateurConnecte()->get('/')->getContent();
+        self::assertStringContainsString('data-epuise="Ce compte d&#039;essai a utilisé sa seule offre.', $page);
+    }
+
+    public function testCompteDEssaiSousLePlafondAccepteEtCompteCeQuiReste(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET offres_max = 3 WHERE id = {$this->jeu->a}");
+        $n = $this->navigateurConnecte();
+        self::assertStringContainsString("Compte d&#039;essai\u{00A0}: 2 offres restantes", (string) $n->get('/')->getContent());
+        self::assertSame(303, $n->post('/import', [], ['audio' => $this->dossiers->envoi('visite.mp3')])->getStatusCode());
+        self::assertStringContainsString("Compte d&#039;essai\u{00A0}: 1 offre restante", (string) $n->get('/')->getContent());
+    }
+
+    public function testCompteSansPlafondNeMontreRien(): void
+    {
+        $page = (string) $this->navigateurConnecte()->get('/')->getContent();
+        self::assertStringNotContainsString('data-epuise', $page);
+        self::assertStringNotContainsString('Compte d&#039;essai', $page);
+    }
+
     public function testImportSansConnexionRedirige(): void
     {
         $n = new Navigateur(Monde::conteneur(env: $this->dossiers->env()));

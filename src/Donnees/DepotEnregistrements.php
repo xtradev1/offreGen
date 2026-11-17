@@ -73,6 +73,12 @@ final class DepotEnregistrements
         ) > 0;
     }
 
+    /** Tous les imports reçus du compte : ce que compte le plafond d'un compte d'essai. */
+    public function recus(): int
+    {
+        return (int) $this->base->valeur('SELECT COUNT(*) FROM enregistrement WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
+    }
+
     /** Imports reçus depuis $depuis : c'est ce qui coûte (transcription, modèle), donc ce que le plafond démo compte. */
     public function recusDepuis(\DateTimeImmutable $depuis): int
     {

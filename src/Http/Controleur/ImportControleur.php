@@ -38,6 +38,10 @@ final class ImportControleur
             && $enregistrements->recusDepuis($this->debutDuJour()) >= $artisan['plafond_jour']) {
             return $this->page("Ce compte de démonstration a atteint ses {$artisan['plafond_jour']} imports du jour. Réessayez demain.", 429);
         }
+        $essai = $this->c->plafondEssai($portee->artisanId);
+        if ($essai !== null && $essai->epuise()) {
+            return $this->page($essai->refus(), 429);
+        }
 
         $fichier = $requete->files->get('audio');
         if (!$fichier instanceof UploadedFile) {

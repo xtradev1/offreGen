@@ -4,8 +4,9 @@
 declare(strict_types=1);
 
 // Crée un compte et affiche son mot de passe, une seule fois.
-// Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N]
+// Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N]
 // Un compte démo a un plafond quotidien d'imports (10 par défaut).
+// Un compte d'essai (--offres=N) a N offres en tout, tous jours confondus ; bin/offres-essai les change ensuite.
 
 use OffreGen\Http\Conteneur;
 
@@ -17,17 +18,20 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 $positionnels = [];
 $demo = false;
 $plafond = null;
+$offres = null;
 foreach (array_slice($argv, 1) as $arg) {
     if ($arg === '--demo') {
         $demo = true;
     } elseif (preg_match('/^--plafond=(\d+)$/', $arg, $m) === 1) {
         $plafond = (int) $m[1];
+    } elseif (preg_match('/^--offres=(\d+)$/', $arg, $m) === 1) {
+        $offres = (int) $m[1];
     } else {
         $positionnels[] = $arg;
     }
 }
 if (count($positionnels) !== 2) {
-    fwrite(STDERR, "Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N]\n");
+    fwrite(STDERR, "Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N]\n");
     exit(2);
 }
 if ($demo && $plafond === null) {
@@ -36,11 +40,11 @@ if ($demo && $plafond === null) {
 
 try {
     $c = Conteneur::depuisEnvironnement(dirname(__DIR__));
-    $motDePasse = $c->comptes()->creer($positionnels[0], $positionnels[1], $demo, $plafond);
+    $motDePasse = $c->comptes()->creer($positionnels[0], $positionnels[1], $demo, $plafond, $offres);
 } catch (\InvalidArgumentException $e) {
     fwrite(STDERR, $e->getMessage() . "\n");
     exit(1);
 }
 
-echo "Compte créé : {$positionnels[0]}" . ($demo ? " (démo, $plafond imports par jour)" : '') . "\n";
-echo "Mot de passe, affiché une seule fois : $motDePasse\n";
+echo "Compte créé : {$positionnels[0]}" . ($demo ? " (démo, $plafond imports par jour)" : '') . ($offres !== null ? " (essai, $offres offres)" : '') . "\n";
+echo "Mot de passe, affiché une seule fois : $motDePasse\n";

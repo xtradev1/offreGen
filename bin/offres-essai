@@ -1,0 +1,32 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Change le nombre d'offres d'un compte d'essai (le total, déjà faites comprises), ou lève le plafond.
+// Usage : bin/offres-essai <courriel> <N|aucun>
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+if (count($argv) !== 3 || preg_match('/^(\d+|aucun)$/', $argv[2]) !== 1) {
+    fwrite(STDERR, "Usage : bin/offres-essai <courriel> <N|aucun>\n");
+    exit(2);
+}
+$offres = $argv[2] === 'aucun' ? null : (int) $argv[2];
+
+try {
+    $c = Conteneur::depuisEnvironnement(dirname(__DIR__));
+    $c->comptes()->changerOffresMax($argv[1], $offres);
+    $artisan = $c->artisans()->parCourriel($argv[1]);
+    $essai = $artisan === null ? null : $c->plafondEssai($artisan['id']);
+} catch (\InvalidArgumentException $e) {
+    fwrite(STDERR, $e->getMessage() . "\n");
+    exit(1);
+}
+
+echo $essai === null ? "{$argv[1]} : aucun plafond.\n" : "{$argv[1]} : {$essai->offresMax} offres en tout, {$essai->restantes} restantes.\n";

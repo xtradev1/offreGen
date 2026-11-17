@@ -40,7 +40,7 @@ final class Comptes
     /**
      * @return string le mot de passe généré, à transmettre une fois à l'artisan ; il n'est gardé nulle part en clair
      */
-    public function creer(string $courriel, string $entreprise, bool $demo, ?int $plafond): string
+    public function creer(string $courriel, string $entreprise, bool $demo, ?int $plafond, ?int $offresMax = null): string
     {
         $courriel = DepotArtisans::normaliser($courriel);
         if (filter_var($courriel, FILTER_VALIDATE_EMAIL) === false) {
@@ -55,9 +55,25 @@ final class Comptes
         if ($plafond !== null && $plafond < 1) {
             throw new \InvalidArgumentException('Le plafond quotidien doit valoir au moins 1.');
         }
+        self::verifierOffresMax($offresMax);
         $motDePasse = self::genererMotDePasse();
-        $this->artisans->creer($courriel, $this->hacheur->hash($motDePasse), trim($entreprise), $demo, $plafond, $this->horloge->now());
+        $this->artisans->creer($courriel, $this->hacheur->hash($motDePasse), trim($entreprise), $demo, $plafond, $this->horloge->now(), $offresMax);
         return $motDePasse;
+    }
+
+    /** Donne plus d'offres à un compte d'essai, ou lève son plafond (null). */
+    public function changerOffresMax(string $courriel, ?int $offresMax): void
+    {
+        self::verifierOffresMax($offresMax);
+        $artisan = $this->artisans->parCourriel($courriel) ?? throw new \InvalidArgumentException("Aucun compte pour $courriel.");
+        $this->artisans->changerOffresMax($artisan['id'], $offresMax);
+    }
+
+    private static function verifierOffresMax(?int $offresMax): void
+    {
+        if ($offresMax !== null && $offresMax < 1) {
+            throw new \InvalidArgumentException('Le nombre d\'offres d\'un compte d\'essai doit valoir au moins 1.');
+        }
     }
 
     /**

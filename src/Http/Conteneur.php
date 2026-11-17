@@ -12,6 +12,7 @@ use OffreGen\Adresse\RegistreAdresses;
 use OffreGen\Adresse\RegistreFactice;
 use OffreGen\Adresse\RegistreSwisstopo;
 use OffreGen\Audio\DureeAudio;
+use OffreGen\Compte\PlafondEssai;
 use OffreGen\Compte\TraitementLogo;
 use OffreGen\Audio\PreparationAudio;
 use OffreGen\Audio\Purge;
@@ -193,6 +194,13 @@ final class Conteneur
         return new DepotEnregistrements($this->base(), $p);
     }
 
+    /** Plafond total d'un compte d'essai, avec ce qu'il reste ; null pour un compte sans plafond. */
+    public function plafondEssai(int $artisanId): ?PlafondEssai
+    {
+        $offresMax = $this->artisans()->parId($artisanId)['offres_max'] ?? null;
+        return $offresMax === null ? null : PlafondEssai::de($offresMax, $this->enregistrements(new Portee($artisanId))->recus());
+    }
+
     public function offres(Portee $p): DepotOffres
     {
         return new DepotOffres($this->base(), $p);
@@ -273,6 +281,10 @@ final class Conteneur
             $twig->addExtension(new Formats());
             $twig->addGlobal('pays_adresse', Adresse::PAYS);
             $twig->addGlobal('duree_max_secondes', $this->dureeMaxSecondes());
+            $twig->addFunction(new TwigFunction('essai', function (): ?PlafondEssai {
+                $id = $this->garde()->artisanCourant();
+                return $id === null ? null : $this->plafondEssai($id);
+            }));
             return $twig;
         });
     }

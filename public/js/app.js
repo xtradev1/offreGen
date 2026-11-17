@@ -248,6 +248,22 @@ function nouvelleOffre() {
   // micro, il ouvre la feuille qui propose l'import.
   micros.forEach((m) => { if (!m.classList.contains('micro-central')) m.hidden = !possible; });
   if (!feuille) avis.hidden = !!possible;
+  // Compte d'essai au bout de ses offres (Xavier, 2026-11-17) : prévenir avant de parler, une dictée refusée à l'envoi
+  // serait perdue. Ni micro ni import ; le serveur refuse de toute façon (429).
+  const epuise = zone.dataset.epuise || '';
+  if (epuise && !feuille) {
+    avis.textContent = epuise;
+    avis.hidden = false;
+    zone.querySelectorAll('.choix2').forEach((c) => { c.hidden = true; });
+  }
+  const bloquer = (e) => {
+    if (!epuise) return false;
+    if (e) e.preventDefault();
+    avis.textContent = epuise;
+    zone.querySelectorAll('[data-etat="refus"] [data-importer]').forEach((b) => { b.hidden = true; });
+    if (feuille) montrer('refus'); else avis.hidden = false;
+    return true;
+  };
 
   let etatCourant = 'choix';
   let occupe = false;
@@ -281,7 +297,7 @@ function nouvelleOffre() {
   };
 
   // Importer : avec JavaScript, le choix du fichier s'ouvre sur place ; sans, le lien mène à /import.
-  importers.forEach((i) => i.addEventListener('click', (e) => { e.preventDefault(); entree.click(); }));
+  importers.forEach((i) => i.addEventListener('click', (e) => { if (bloquer(e)) return; e.preventDefault(); entree.click(); }));
   // Onde au toucher des boutons ronds.
   zone.addEventListener('pointerdown', (e) => {
     const b = e.target.closest('.pastille');
@@ -348,6 +364,7 @@ function nouvelleOffre() {
   entree.addEventListener('change', (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
+    if (bloquer()) { entree.value = ''; return; }
     fichier = f;
     duMicro = false;
     el('[data-garder]').hidden = true;
@@ -379,6 +396,7 @@ function nouvelleOffre() {
     if (feuille) montrer('refus'); else avis.hidden = false;
   };
   const demarrer = async () => {
+    if (bloquer()) return;
     if (!possible) { refus(); return; }
     try {
       flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });

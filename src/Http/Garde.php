@@ -42,6 +42,13 @@ final class Garde
         $this->pile->pop();
     }
 
+    /** Artisan de la requête en cours, posé par le noyau sur les routes réservées ; null ailleurs. */
+    public function artisanCourant(): ?int
+    {
+        $id = $this->pile->getCurrentRequest()?->attributes->get('_artisan');
+        return is_int($id) ? $id : null;
+    }
+
     public function jetonValide(Request $requete): bool
     {
         $valeur = $requete->request->get('_csrf');
