@@ -31,14 +31,16 @@ Second essai (enregistrement 6, offre 10), relu par Claude le 17 novembre : sep
 | Dicté | Dans l'offre | Pourquoi |
 |---|---|---|
 | Protection du sol, 15 m² à 8 francs | 1 forfait à 180 francs | Produit du catalogue choisi, son unité et son prix gagnent : quantité et prix dictés perdus |
-| Démontage des lames, 45 m² à 15 francs | 45 « forfait », sans prix | Erreur du modèle : unité et prix oubliés |
+| Démontage des lames, 45 m² à 15 francs | 45 « forfait », sans prix | Règle du code : produit 26 du catalogue, créé par Luigi après son premier essai, au forfait et à 0 franc (corrigé le 17 novembre : d'abord compté à tort comme une erreur du modèle) |
 | Évacuation des lames […]. « Bloc » 500 francs | deux lignes : l'évacuation sans prix, « Bloc » à 500 francs | Erreur du modèle : le prix « en bloc » appartient à l'évacuation (la transcription a mis un point avant) |
 | Après remise en état du plafond, deux couches de plâtre, 45 m² à 40 francs | une ligne « Remise en état du plafond » sans prix, puis le plâtre juste | Une précision prise pour un poste |
 | Couche de fond, 30 m² à 10 francs | 30 m² à 5 francs | Règle du code : le prix du catalogue gagne |
 | Crépi, 40 m² à 25 francs | juste | |
 | Deux couches de peinture, 45 m² à 15 francs | 45 m² à 28 francs | Règle du code : le prix du catalogue gagne |
 
-Les quantités sont justes partout sauf la protection. Deux causes distinctes : une règle voulue (le prix du catalogue l'emporte sur un prix dicté) et trois vraies erreurs de compréhension du modèle.
+Les quantités sont justes partout sauf la protection. Deux causes distinctes : une règle voulue (le prix et l'unité du catalogue l'emportent sur ce qui est dicté), sur quatre lignes, et deux vraies erreurs de compréhension du modèle (le prix « en bloc » détaché de son poste, une précision prise pour un poste).
+
+Décisions de Xavier (17 novembre) : le catalogue reste par défaut ; une petite note « prix dicté » sous la ligne, un bouton pour le prendre, puis la question « changer le catalogue ? oui, non » ; le compte de Luigi part d'un catalogue vide, qu'il construit.
 
 ## Suites
 
