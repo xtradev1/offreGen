@@ -30,6 +30,8 @@ profil: .claude/atoz-profile.md
 - 2026-11-17 : phase 1 (spec) et phase 3 (maquette) présentées ensemble, une seule attente : le chantier est petit et les décisions ouvertes tiennent dans la maquette.
 - 2026-11-17, Xavier, sur la maquette du coût : « je préférerais franchement un écran admin vraiment séparé », « une partie dédiée » avec statistiques et autres éléments ; choisir le mois, l'année, ou une date de début et de fin ; objectif 1000 utilisateurs : pas tous les artisans, les 10 ou 20 plus gros, triés par nombre d'offres et par offres les plus chères ; analyser de façon anonyme pourquoi une offre coûte plus (produits, lignes, prix par ligne) ; écran validé, téléphone compris ; F2 = A, prorata (« on sait que c'est une estimation, il faut qu'on affine avec les données ») ; un produit Infomaniak séparé, autre jeton, possible ; plus tard, dans l'administration : la rentabilité (abonnements, frais, coût de l'IA, résultat), le mois passé, en direct et à l'avance.
 - 2026-11-17 : la spec devient « partie administration, coût de l'IA et rentabilité ». Sous-tâches Origin à ajuster quand le plan sera écrit (estimation de 9 h trop basse pour cinq sections).
+- 2026-11-17, Xavier : « on va limiter du coup à 30 minutes » ; plus tard, peut-être une limite plus longue pour les gros abonnements seulement. Fait : `DUREE_MAX_SECONDES` à 1800 par défaut, `LIGNES_MAX` de 200 à 300 (banc : 300 postes en 30 min extraits avec 2 oublis).
+- 2026-11-17, Xavier : le téléphone garde l'enregistrement jusqu'à ce que le serveur l'ait reçu et que l'offre soit traitée ; ensuite il peut être supprimé. À cadrer (lot à part, voir Prochaine action).
 - 2026-11-17, Xavier, maquette d'administration : G1 à G5 « Valider » (partie séparée et son menu ; période mois, année ou deux dates avec raccourcis ; artisans top 10 ou 20, tris, recherche, signal ; offres en analyse anonyme ; rentabilité plus tard, en direct et en projection). Gate visuel franchi.
 
 ## Journal
@@ -45,6 +47,8 @@ profil: .claude/atoz-profile.md
 - 2026-11-17 : `ExtracteurApi::LIGNES_MAX = 200` jette sans prévenir toute ligne au-delà de la 200e. Recherche lancée (trois agents Sonnet) sur le nombre de lignes des offres réelles et la taille des catalogues avant de trancher.
 - 2026-11-17, résultat de la recherche (détail et sources : `scratchpad/recherche-lignes/{metiers,extremes,catalogue}.md`, non versionnés) : aucun devis d'artisan trouvé au-delà de 200 lignes ; un corps de métier plafonne vers 100 (appel d'offres sanitaire d'une piscine : 101 positions) ; rénovation de maison publiée à 132 (Saint-Gobain, compte de l'outil) ; descriptifs allemands par lot entre 34 et 143 ; Stripe plafonne une facture à 250 postes ; aucune limite publiée chez Bexio, Sorba, Obat et autres. Contrôlé par Claude : le devis réel de Clichy (Monsieur Peinture, 37 postes, 11 lots) met la cuisine et l'électricité en une ligne forfaitaire chacune, ce qui confirme l'intuition de Xavier ; Obat annonce 30 000 ouvrages dans sa bibliothèque. Aucun chiffre trouvé sur la part d'un catalogue réellement utilisée, ni sur la marge suisse des fournitures externes : questions pour les artisans.
 - 2026-11-17 : seule l'extraction est plafonnée à 200 lignes ; l'ajout à la main ne l'est pas (grep de `LIGNES_MAX` sur src et templates).
+- 2026-11-17, banc dense demandé par Xavier (30 min, un poste toutes les 10 s puis toutes les 6 s ; `--postes=` ajouté au banc, validation par tranches pour mesurer au-delà du plafond). Les « manquantes » du banc mêlaient deux choses : `apparier.php` sépare les vrais oublis des variantes voisines (quantité juste, extrait juste, mauvais produit du catalogue). Vrais oublis : 10 min 1 sur 30 ; 30 min 0 sur 90 ; 30 min dense 5 sur 180 et 2 sur 300 ; 60 min 20 sur 180. Les oublis suivent la longueur de la dictée, pas le nombre de postes. Variantes confondues : 0 à 13 par dictée, dues au catalogue inventé (5 surfaces × 5 options presque identiques). Une seule passe par cas : l'écart 89 % / 96 % entre les deux dictées denses est du bruit. 300 postes en 30 min supposent 215 mots par minute, plus vite qu'un débit normal (150).
+- 2026-11-17 : limite à 30 min et plafond à 300 lignes livrés (commit 22fe2d7), déployés sur le test. Le `.env` du test ne fixe pas `DUREE_MAX_SECONDES` (constaté par SSH) : le défaut 1800 s'y applique.
 
 ## Preuves
 
@@ -60,4 +64,11 @@ $ php banc-longues.php 10 30 60 (Qwen3.8-27B) :
 === 30 min : 4503 mots, 90 lignes attendues, 90 proposées (90 gardées) ; justes 88 (98 %), quantité fausse 0, manquantes 2, en trop 2 ; 22637 jetons envoyés, 4963 reçus, 20 s, CHF 0.0239
 === 60 min : 9003 mots, 180 lignes attendues, 160 proposées (160 gardées) ; justes 151 (84 %), quantité fausse 0, manquantes 29, en trop 9 ; 28910 jetons envoyés, 10278 reçus, 39 s, CHF 0.0424
 position des manquantes à 60 min (% du texte) : 0, 5, 5, 13, 14, 14, 18, 19, 23, 23, 25, 26, 26, 32, 40, 51, 52, 56, 66, 70, 72, 75, 76, 79, 81, 91, 92, 98, 98
+$ php banc-longues.php 30 --postes=6 ; php banc-longues.php 30 --postes=10
+=== 30 min, 6 postes/min : 4506 mots, 180 lignes attendues, 175 proposées ; justes 160 (89 %), quantité fausse 2, manquantes 18, en trop 13 ; 22832 envoyés, 9764 reçus, 49 s, CHF 0.0384
+=== 30 min, 10 postes/min : 6441 mots, 300 lignes attendues, 299 proposées ; justes 287 (96 %), quantité fausse 1, manquantes 12, en trop 11 ; 26120 envoyés, 16639 reçus, 65 s, CHF 0.0604
+$ php apparier.php manquantes-{10,30,60,30-p6,30-p10}.txt
+10 min : 1 = 0 variante + 1 oubli ; 30 min : 2 = 2 + 0 ; 60 min : 29 = 9 + 20 ; 30 min dense 180 : 18 = 13 + 5 ; 30 min dense 300 : 12 = 10 + 2
+$ phpunit (30 min, 300 lignes) : OK (476 tests, 2938 assertions) ; phpstan : No errors ; tests nouveaux rouges avant le code (« actual size 200 matches expected size 300 »)
+$ deployer-test.sh : SONDE VERTE, DÉPLOYÉ 22fe2d7
 ```
