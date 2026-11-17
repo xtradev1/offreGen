@@ -48,6 +48,7 @@ profil: .claude/atoz-profile.md
 - 2026-11-17, résultat de la recherche (détail et sources : `scratchpad/recherche-lignes/{metiers,extremes,catalogue}.md`, non versionnés) : aucun devis d'artisan trouvé au-delà de 200 lignes ; un corps de métier plafonne vers 100 (appel d'offres sanitaire d'une piscine : 101 positions) ; rénovation de maison publiée à 132 (Saint-Gobain, compte de l'outil) ; descriptifs allemands par lot entre 34 et 143 ; Stripe plafonne une facture à 250 postes ; aucune limite publiée chez Bexio, Sorba, Obat et autres. Contrôlé par Claude : le devis réel de Clichy (Monsieur Peinture, 37 postes, 11 lots) met la cuisine et l'électricité en une ligne forfaitaire chacune, ce qui confirme l'intuition de Xavier ; Obat annonce 30 000 ouvrages dans sa bibliothèque. Aucun chiffre trouvé sur la part d'un catalogue réellement utilisée, ni sur la marge suisse des fournitures externes : questions pour les artisans.
 - 2026-11-17 : seule l'extraction est plafonnée à 200 lignes ; l'ajout à la main ne l'est pas (grep de `LIGNES_MAX` sur src et templates).
 - 2026-11-17, banc dense demandé par Xavier (30 min, un poste toutes les 10 s puis toutes les 6 s ; `--postes=` ajouté au banc, validation par tranches pour mesurer au-delà du plafond). Les « manquantes » du banc mêlaient deux choses : `apparier.php` sépare les vrais oublis des variantes voisines (quantité juste, extrait juste, mauvais produit du catalogue). Vrais oublis : 10 min 1 sur 30 ; 30 min 0 sur 90 ; 30 min dense 5 sur 180 et 2 sur 300 ; 60 min 20 sur 180. Les oublis suivent la longueur de la dictée, pas le nombre de postes. Variantes confondues : 0 à 13 par dictée, dues au catalogue inventé (5 surfaces × 5 options presque identiques). Une seule passe par cas : l'écart 89 % / 96 % entre les deux dictées denses est du bruit. 300 postes en 30 min supposent 215 mots par minute, plus vite qu'un débit normal (150).
+- 2026-11-17, Xavier : après chaque appel à Whisper ou Qwen, relire le relevé de consommation et faire le delta, pour suivre le coût et le temps. Vérifié (`delta.php`) : la ligne du jour bouge moins de 15 s après la réponse. Qwen : delta égal au calcul sur `usage` (21 / 50 jetons, CHF 0.0001584), donc redondant. Whisper : seule source par appel, 27,9 s d'audio facturées 3 s (CHF 0.0003), alors que 19,2 s l'avaient été 1 s : le rapport de 1:20 ne tient pas, compter 1:9 à 1:20. Attente du résultat Whisper pour le même fichier : 301 s puis 47 s (envoi 0,2 s) ; c'est la file d'Infomaniak, non facturée. Limite du delta : deux appels simultanés (deux artisans) ne se séparent plus ; on ne l'attribue que si le relevé compte un seul appel de plus, sinon prorata (F2). À mettre au plan, lot du journal des appels (Origin 424).
 - 2026-11-17 : limite à 30 min et plafond à 300 lignes livrés (commit 22fe2d7), déployés sur le test. Le `.env` du test ne fixe pas `DUREE_MAX_SECONDES` (constaté par SSH) : le défaut 1800 s'y applique.
 
 ## Preuves
@@ -71,4 +72,11 @@ $ php apparier.php manquantes-{10,30,60,30-p6,30-p10}.txt
 10 min : 1 = 0 variante + 1 oubli ; 30 min : 2 = 2 + 0 ; 60 min : 29 = 9 + 20 ; 30 min dense 180 : 18 = 13 + 5 ; 30 min dense 300 : 12 = 10 + 2
 $ phpunit (30 min, 300 lignes) : OK (476 tests, 2938 assertions) ; phpstan : No errors ; tests nouveaux rouges avant le code (« actual size 200 matches expected size 300 »)
 $ deployer-test.sh : SONDE VERTE, DÉPLOYÉ 22fe2d7
+$ php delta.php qwen ; php delta.php whisper
+appel qwen : 21 jetons envoyés, 50 reçus ; attendu CHF 0.0001584
+relevé changé 15 s après la réponse : +1 appel(s), CHF +0.0001584 ; Qwen3.8-27B 126406/47660 -> 126427/47710
+appel whisper : audio 27,9 s, résultat en 301.2 s (370 caractères)
+relevé changé 15 s après la réponse : +1 appel(s), CHF +0.0003000 ; whisper {"duration":"00:00:03"}
+$ php whisper-temps.php
+envoi : 0.2 s ; relecture 24 à 47 s : prêt ; attente du résultat : 47.2 s
 ```
