@@ -517,6 +517,20 @@ fieldset.adresse legend { font-size: 14px; font-weight: 600; padding: 0; margin:
 .saisie { min-height: 48px; }
 .del { width: 48px; min-height: 48px; margin-left: 4px; }
 .del svg.i { width: 20px; height: 20px; }
+/* Téléphone (décision L1 de Xavier, 2026-11-17, bug vu par Luigi) : sur une rangée, « forfait » et son champ
+   (environ 87 px) débordaient de la colonne de 62 px sur la désignation, et la désignation se coupait au milieu
+   des mots. Sous 420 px, la désignation prend toute la largeur ; quantité, prix et total passent dessous, alignés à
+   gauche ; la corbeille reste à droite. Colonnes fixes : chaque ligne est sa propre grille, l'en-tête doit suivre. */
+@media (max-width: 419px) {
+  .rows { --cols: 86px 60px 68px minmax(48px, 1fr); }
+  .rows.une .row { row-gap: 4px; }
+  .rows.une .row > .nm { grid-column: 1 / -1; padding: 10px 0 0; min-height: 0; }
+  .rows.une .cat h5 { grid-column: 1 / -1; }
+  .rows.une .cat .ch { text-align: left; }
+  .rows.une .row .q { justify-content: flex-start; }
+  .rows.une .row .tt, .rows.une .cat .ch:nth-child(4) { text-align: left; padding-left: 8px; }
+  .rows.une .row .del { justify-self: end; margin-left: 0; }
+}
 .row[data-glisse-ligne] { position: relative; touch-action: pan-y; }
 .row.tire { background: var(--bad-soft); }
 .row.tire > * { transform: translateX(var(--dx, 0)); }
