@@ -16,6 +16,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ImportControleur
 {
+    /** Le navigateur s'arrête pile à la limite ; le fichier qu'il produit peut la dépasser d'une fraction de seconde. */
+    public const TOLERANCE_DUREE_SECONDES = 5;
+
     public function __construct(private readonly Conteneur $c)
     {
     }
@@ -52,6 +55,8 @@ final class ImportControleur
             $this->c->journal()->warning('offreGen, import : durée illisible par ffprobe, minimum non vérifié.');
         } elseif ($duree < $minimum) {
             return $this->page("Enregistrement non pris en compte : $minimum secondes au minimum.", 422);
+        } elseif ($duree > $this->c->dureeMaxSecondes() + self::TOLERANCE_DUREE_SECONDES) {
+            return $this->page('Enregistrement trop long : ' . self::enClair($this->c->dureeMaxSecondes()) . ' au maximum.', 422);
         }
 
         $uuid = Uuid::v4();
@@ -67,6 +72,17 @@ final class ImportControleur
 
         $this->c->programmerTraitement($uuid);
         return new RedirectResponse('/enregistrements/' . $uuid, 303);
+    }
+
+    /** 3600 : « 1 heure » ; 1800 : « 30 minutes » ; 5 : « 5 secondes ». */
+    public static function enClair(int $secondes): string
+    {
+        [$n, $unite] = match (true) {
+            $secondes % 3600 === 0 => [intdiv($secondes, 3600), 'heure'],
+            $secondes % 60 === 0 => [intdiv($secondes, 60), 'minute'],
+            default => [$secondes, 'seconde'],
+        };
+        return $n . ' ' . $unite . ($n > 1 ? 's' : '');
     }
 
     /** Minuit à Zurich, exprimé en UTC : le plafond démo se compte par jour suisse. */

@@ -272,6 +272,7 @@ final class Conteneur
             $twig->addFunction(new TwigFunction('messages', fn (): array => $this->garde()->messages()));
             $twig->addExtension(new Formats());
             $twig->addGlobal('pays_adresse', Adresse::PAYS);
+            $twig->addGlobal('duree_max_secondes', $this->dureeMaxSecondes());
             return $twig;
         });
     }
@@ -285,6 +286,12 @@ final class Conteneur
     public function dossierLogos(): string
     {
         return $this->parametre('LOGOS_DOSSIER', $this->racine . '/var/logos');
+    }
+
+    /** Règle de Xavier (2026-11-17) : une dictée dure une heure au plus. Le navigateur s'arrête là, le serveur refuse au-delà. */
+    public function dureeMaxSecondes(): int
+    {
+        return max(1, (int) $this->parametre('DUREE_MAX_SECONDES', '3600'));
     }
 
     public function dureeAudio(): DureeAudio

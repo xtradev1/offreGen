@@ -81,6 +81,31 @@ final class ImportTest extends TestCase
         self::assertSame($avant + 1, BaseDeTest::compter('enregistrement'));
     }
 
+    public function testEnregistrementTropLongRefuse(): void
+    {
+        // Règle de Xavier (2026-11-17) : une heure au plus. Ici le maximum est ramené à 5 secondes pour un fichier de test.
+        $n = new Navigateur(Monde::conteneur(env: $this->dossiers->env() + ['TRAITEMENT_IMMEDIAT' => '0', 'DUREE_MAX_SECONDES' => '5']));
+        $n->connecter('a@exemple.ch');
+        $n->get('/import');
+        $avant = BaseDeTest::compter('enregistrement');
+
+        $long = $n->post('/import', [], ['audio' => $this->dossiers->envoi('dictee-peintre.ogg')]);
+        self::assertSame(422, $long->getStatusCode());
+        self::assertStringContainsString('Enregistrement trop long : 5 secondes au maximum.', (string) $long->getContent());
+        self::assertSame($avant, BaseDeTest::compter('enregistrement'));
+        self::assertSame([], glob($this->dossiers->env()['AUDIO_DOSSIER'] . '/*/*') ?: []);
+    }
+
+    public function testLimiteParDefautUneHeure(): void
+    {
+        $n = new Navigateur(Monde::conteneur(env: $this->dossiers->env() + ['TRAITEMENT_IMMEDIAT' => '0']));
+        $n->connecter('a@exemple.ch');
+        $n->get('/import');
+        self::assertSame(303, $n->post('/import', [], ['audio' => $this->dossiers->envoi('dictee-peintre.ogg')])->getStatusCode());
+        // La page porte la limite que le navigateur applique à l'enregistrement.
+        self::assertStringContainsString('data-duree-max="3600"', (string) $n->get('/import')->getContent());
+    }
+
     public function testFauxAudioRefuse422SansRienGarder(): void
     {
         $n = $this->navigateurConnecte();

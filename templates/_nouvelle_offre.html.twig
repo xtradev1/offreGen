@@ -11,7 +11,7 @@
   <div class="rec" data-etat="enregistrement" hidden>
     <div class="timer" data-minuteur>00:00</div>
     <div class="dot on" aria-hidden="true"></div>
-    <p>Parlez, pièce par pièce.</p>
+    <p data-consigne>Parlez, pièce par pièce.</p>
     <button class="btn danger large" type="button" data-terminer>
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>Terminer et créer l'offre</button>
     <button class="lien" type="button" data-abandonner>Abandonner sans envoyer</button>
@@ -40,7 +40,7 @@
   </div>
 {% endset %}
 
-<div class="nouvelle" data-nouvelle>
+<div class="nouvelle" data-nouvelle data-duree-max="{{ duree_max_secondes }}">
   <form id="import" method="post" action="/import" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     <input class="cache" id="audio" name="audio" type="file" accept="audio/*,.m4a,.mp3,.ogg,.opus,.wav,.amr,.3gp,.webm" required data-envoi-fichier>

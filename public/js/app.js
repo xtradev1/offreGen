@@ -363,6 +363,9 @@ function nouvelleOffre() {
   let debut = 0;
   // Règle de Xavier (2026-11-12) : moins de 5 secondes, l'enregistrement n'est pas envoyé.
   const DUREE_MIN_MS = 5000;
+  // Règle de Xavier (2026-11-17) : une heure au plus. Prévenu 5 minutes avant, l'enregistrement s'arrête et part seul.
+  const DUREE_MAX_S = Number(zone.dataset.dureeMax) || 3600;
+  const PREAVIS_S = Math.min(300, Math.floor(DUREE_MAX_S / 6));
   const libererMicro = () => {
     clearInterval(minuteur);
     if (flux) flux.getTracks().forEach((t) => t.stop());
@@ -394,10 +397,19 @@ function nouvelleOffre() {
     const affichage = el('[data-minuteur]');
     const deux = (n) => String(n).padStart(2, '0');
     affichage.textContent = '00:00';
+    const consigne = el('[data-consigne]');
+    consigne.textContent = 'Parlez, pièce par pièce.';
     minuteur = setInterval(() => {
       const s = Math.floor((Date.now() - debut) / 1000);
       const h = Math.floor(s / 3600);
       affichage.textContent = (h ? h + ':' : '') + deux(Math.floor(s / 60) % 60) + ':' + deux(s % 60);
+      if (s >= DUREE_MAX_S) {
+        clearInterval(minuteur);
+        el('[data-terminer]').click();
+      } else if (s >= DUREE_MAX_S - PREAVIS_S) {
+        const reste = Math.ceil((DUREE_MAX_S - s) / 60);
+        consigne.textContent = 'Encore ' + reste + ' min, puis l’enregistrement s’arrête et part.';
+      }
     }, 500);
     if (navigator.wakeLock) navigator.wakeLock.request('screen').then((v) => { veille = v; }).catch(() => {});
     montrer('enregistrement');
