@@ -363,8 +363,8 @@ function nouvelleOffre() {
   let debut = 0;
   // Règle de Xavier (2026-11-12) : moins de 5 secondes, l'enregistrement n'est pas envoyé.
   const DUREE_MIN_MS = 5000;
-  // Règle de Xavier (2026-11-17) : une heure au plus. Prévenu 5 minutes avant, l'enregistrement s'arrête et part seul.
-  const DUREE_MAX_S = Number(zone.dataset.dureeMax) || 3600;
+  // Règle de Xavier (2026-11-17) : 30 minutes au plus. Prévenu 5 minutes avant, l'enregistrement s'arrête et part seul.
+  const DUREE_MAX_S = Number(zone.dataset.dureeMax) || 1800;
   const PREAVIS_S = Math.min(300, Math.floor(DUREE_MAX_S / 6));
   const libererMicro = () => {
     clearInterval(minuteur);

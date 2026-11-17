@@ -214,4 +214,13 @@ final class ExtracteurApiTest extends TestCase
         self::assertSame(90, mb_strlen((string) $e->valider(['titre' => str_repeat('é', 200), 'lignes' => []], self::CATALOGUE)->titre));
         self::assertNull($e->valider(['titre' => '  ', 'lignes' => []], self::CATALOGUE)->titre);
     }
+
+    public function testTroisCentsLignesGardeesPasUneDePlus(): void
+    {
+        // Banc du 2026-11-17 : 300 postes dictés en 30 minutes, 299 rendus par le 27B. Le plafond ne doit pas les couper.
+        $lignes = array_map(fn (int $i) => ['produit_id' => null, 'designation' => "Poste $i", 'quantite' => 1, 'certitude' => 'sure'], range(1, 301));
+        $r = (new ExtracteurApi(new MockHttpClient(), 'x', '', 'm', new NullLogger()))->valider(['lignes' => $lignes], self::CATALOGUE);
+        self::assertCount(300, $r->lignes);
+        self::assertSame('Poste 300', $r->lignes[299]->designation);
+    }
 }

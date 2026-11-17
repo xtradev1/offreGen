@@ -16,7 +16,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final class ExtracteurApi implements Extracteur
 {
-    public const LIGNES_MAX = 200;
+    /** Banc du 2026-11-17 : 300 postes dictés en 30 minutes (un toutes les 6 s), 96 % justes. Au-delà, coupé. */
+    public const LIGNES_MAX = 300;
 
     private const CONSIGNE = <<<'TXT'
         Tu prépares le brouillon d'une offre pour un artisan suisse, à partir de la dictée de sa visite chez le client.

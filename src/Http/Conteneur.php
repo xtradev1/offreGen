@@ -288,10 +288,10 @@ final class Conteneur
         return $this->parametre('LOGOS_DOSSIER', $this->racine . '/var/logos');
     }
 
-    /** Règle de Xavier (2026-11-17) : une dictée dure une heure au plus. Le navigateur s'arrête là, le serveur refuse au-delà. */
+    /** Règle de Xavier (2026-11-17) : une dictée dure 30 minutes au plus (banc : au-delà, des postes sont oubliés). Le navigateur s'arrête là, le serveur refuse au-delà. */
     public function dureeMaxSecondes(): int
     {
-        return max(1, (int) $this->parametre('DUREE_MAX_SECONDES', '3600'));
+        return max(1, (int) $this->parametre('DUREE_MAX_SECONDES', '1800'));
     }
 
     public function dureeAudio(): DureeAudio
