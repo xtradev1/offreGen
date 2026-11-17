@@ -24,6 +24,7 @@ final class ExtracteurApi implements Extracteur
         - Une ligne par travail dicté. N'invente aucun travail qui n'est pas dicté.
         - Quand le travail correspond à un produit du catalogue (désignation ou synonymes), donne son identifiant et une quantité dans l'unité du catalogue.
         - Quand il n'y est pas, produit_id vaut null : écris la désignation et l'unité ; donne prix_unitaire seulement si un prix en francs est dicté.
+        - Chaque travail ou frais dicté devient une ligne, même sans quantité ni prix : quantité 1 et unité « forfait » quand aucune quantité n'est dictée.
         - certitude « a_verifier » dès que la quantité est approximative (environ, à peu près, une douzaine), déduite ou mal comprise ; sinon « sure ».
         - extrait : les mots exacts de la dictée d'où vient la ligne.
         - titre : court, la nature des travaux et le lieu, sans prix.
@@ -106,12 +107,15 @@ final class ExtracteurApi implements Extracteur
             }
             $quantite = $brute['quantite'] ?? null;
             $milliemes = is_int($quantite) || is_float($quantite) ? (int) round($quantite * 1000) : 0;
-            if ($milliemes <= 0) {
-                $this->journal->warning("offreGen, extraction : ligne $rang sans quantité valable, écartée.");
-                continue;
+            $devinee = $milliemes <= 0;
+            if ($devinee) {
+                // Un poste dicté ne se perd jamais pour sa quantité (essai de Xavier du 2026-11-16 : « des frais de
+                // nettoyage », rendus par Qwen 27B avec une quantité null, avaient disparu de l'offre) : 1, à vérifier.
+                $this->journal->info("offreGen, extraction : ligne $rang sans quantité valable, gardée à 1, à vérifier.");
+                $milliemes = 1000;
             }
             $entendu = is_string($brute['extrait'] ?? null) ? mb_substr(self::texte($brute['extrait']), 0, 500) : null;
-            $doute = ($brute['certitude'] ?? '') !== 'sure';
+            $doute = $devinee || ($brute['certitude'] ?? '') !== 'sure';
             $id = $brute['produit_id'] ?? null;
             if (is_int($id) && isset($parId[$id])) {
                 $p = $parId[$id];

@@ -133,7 +133,12 @@ final class ExtracteurApiTest extends TestCase
         self::assertSame(['forfait', 0, true], [$r->lignes[1]->unite, $r->lignes[1]->prixCentimes, $r->lignes[1]->aVerifier]);
     }
 
-    public function testLignesInvalidesEcartees(): void
+    /**
+     * Un poste dicté ne se perd jamais pour une quantité manquante ou fausse (essai de Xavier du 2026-11-16 : « des frais
+     * de nettoyage », rendus par Qwen 27B avec une quantité null, avaient disparu de l'offre) : 1, à vérifier. Seule une
+     * ligne sans désignation ni produit connu est écartée, faute de rien à montrer.
+     */
+    public function testUnPosteSansQuantiteValableResteAUnAVerifier(): void
     {
         $r = (new ExtracteurApi(new MockHttpClient(), 'x', '', 'm', new NullLogger()))->valider(['lignes' => [
             ['produit_id' => 4, 'quantite' => 0, 'certitude' => 'sure'],
@@ -142,9 +147,11 @@ final class ExtracteurApiTest extends TestCase
             ['produit_id' => null, 'quantite' => 2, 'certitude' => 'sure'],
             'pas une ligne',
             ['produit_id' => 4, 'quantite' => 12.3456, 'certitude' => 'sure'],
+            ['produit_id' => null, 'designation' => 'Frais de nettoyage', 'quantite' => null, 'unite' => 'forfait', 'certitude' => 'sure', 'extrait' => 'et des frais de nettoyage'],
         ]], self::CATALOGUE);
-        self::assertCount(1, $r->lignes);
-        self::assertSame(12346, $r->lignes[0]->quantiteMilliemes);
+        self::assertSame([1000, 1000, 1000, 12346, 1000], array_map(static fn ($l): int => $l->quantiteMilliemes, $r->lignes));
+        self::assertSame([true, true, true, false, true], array_map(static fn ($l): bool => $l->aVerifier, $r->lignes), 'Une quantité devinée est toujours à vérifier.');
+        self::assertSame(['Frais de nettoyage', 'forfait', 0, null], [$r->lignes[4]->designation, $r->lignes[4]->unite, $r->lignes[4]->prixCentimes, $r->lignes[4]->produitId]);
     }
 
     public function testSansAppelDOutilUneOffreVide(): void
