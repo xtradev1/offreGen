@@ -15,6 +15,22 @@
 {% block contenu %}
   {% import _self as f %}
   {% if ajoutee %}<p class="ajoutee" role="status">«&nbsp;{{ ajoutee }}&nbsp;» ajoutée</p>{% endif %}
+  {# Offre rangée par pièce (sous-chantier 28, P4) : la pièce de la ligne. Des liens et un petit formulaire : sans
+     JavaScript ; la pièce choisie part avec chaque ajout, en champ caché. #}
+  {% if pieces is not empty %}
+    <nav class="pieces-ajout" aria-label="Pièce de la ligne">
+      <span class="lbl">Pièce</span>
+      <div class="puces-liens">
+        {% for nom in [''] | merge(pieces) %}
+          <a class="puce-lien" href="{{ cible.base }}/ajouter?piece={{ nom|url_encode }}"{% if nom == piece_choisie %} aria-current="true"{% endif %}>{{ nom == '' ? 'Général' : nom }}</a>
+        {% endfor %}
+      </div>
+      <form class="piece-autre" method="get" action="{{ cible.base }}/ajouter">
+        <input name="piece" placeholder="Autre pièce" aria-label="Autre pièce" maxlength="80" autocomplete="off">
+        <button class="btn" type="submit">Choisir</button>
+      </form>
+    </nav>
+  {% endif %}
   {% if erreurs is empty %}
     <form class="search" method="get" action="{{ cible.base }}/ajouter" role="search">
       <div class="box">
@@ -26,7 +42,7 @@
       {% for p in produits %}
         <form method="post" action="{{ cible.base }}/lignes" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
           <input type="hidden" name="_csrf" value="{{ csrf() }}">
-          <input type="hidden" name="reste" value="1">
+          <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}
           <button class="pick" type="submit" name="produit" value="{{ p.id }}"><b class="pn">{{ p.designation }}</b>
             <span>{% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %} /&nbsp;{{ p.unite }}</span></button>
         </form>
@@ -34,7 +50,7 @@
       {# Rien ne correspond : le texte tapé devient une ligne libre (quantité 1, forfait, prix à compléter). #}
       <form class="pick-libre" method="post" action="{{ cible.base }}/lignes" data-aucun{% if trouves > 0 or q == '' %} hidden{% endif %}>
         <input type="hidden" name="_csrf" value="{{ csrf() }}">
-        <input type="hidden" name="reste" value="1">
+        <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}
         <input type="hidden" id="rapide-designation" name="designation" value="{{ q }}">
         <input type="hidden" name="quantite" value="1">
         <input type="hidden" name="unite" value="forfait">
@@ -51,7 +67,7 @@
     <p class="muted petit">Pour une offre de fournisseur ou un travail ponctuel. Elle reste dans {{ cible.ce }}&nbsp;; le catalogue ne change que si vous cochez la case.</p>
     <form id="ajout-libre" method="post" action="{{ cible.base }}/lignes">
       <input type="hidden" name="_csrf" value="{{ csrf() }}">
-      <input type="hidden" name="reste" value="1">
+      <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}
       <div class="champ">
         <label for="libre-designation">Désignation</label>
         <input id="libre-designation" name="designation" value="{{ champs.designation }}" maxlength="255" required{{ f.invalide(erreurs, 'designation') }}>

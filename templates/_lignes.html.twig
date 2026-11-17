@@ -3,7 +3,8 @@
    « libre » : faux sur une facture, où l'étiquette « Ligne libre » n'apprend rien au lecteur. #}
 <div class="rows une{% if not modifiable %} figees{% endif %}">
   {% for g in groupes %}
-    <div class="cat"><h5>{{ g.nom }}</h5><span class="ch">Qté</span><span class="ch">Prix</span><span class="ch">Total</span><span></span></div>
+    {# Par pièce (sous-chantier 28) : le sous-total au titre, « Renommer » pour une pièce (P5), pas pour « Général ». #}
+    <div class="cat"><h5>{{ g.nom }}{% if g.par_piece ?? false %} <span class="st">{{ g.total|montant }}</span>{% if modifiable and g.piece is not null %} <a class="renommer" href="{{ base }}/pieces?nom={{ g.piece|url_encode }}">Renommer</a>{% endif %}{% endif %}</h5><span class="ch">Qté</span><span class="ch">Prix</span><span class="ch">Total</span><span></span></div>
     {% for r in g.lignes %}
       {% set l = r.l %}
       {% set lien = base ~ '/lignes/' ~ l.id %}

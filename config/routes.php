@@ -17,6 +17,7 @@ use OffreGen\Http\Controleur\EnregistrementControleur;
 use OffreGen\Http\Controleur\FactureControleur;
 use OffreGen\Http\Controleur\ImportControleur;
 use OffreGen\Http\Controleur\OffreControleur;
+use OffreGen\Http\Controleur\PieceControleur;
 use OffreGen\Http\Controleur\RangementControleur;
 use OffreGen\Http\Controleur\RelectureControleur;
 use OffreGen\Http\Controleur\SanteControleur;
@@ -71,6 +72,9 @@ return static function (Conteneur $c): array {
         new Route('offre', '/offres/{id}', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->afficher($r, $p), Route::ARTISAN),
         new Route('offre_entete', '/offres/{id}/modifier', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->entete($r, $p), Route::ARTISAN),
         new Route('offre_entete_enregistrer', '/offres/{id}/modifier', ['POST'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->modifierEntete($r, $p), Route::ARTISAN),
+        // Renommer une pièce de l'offre (sous-chantier 28, P5).
+        new Route('offre_piece', '/offres/{id}/pieces', ['GET'], static fn (Request $r, array $p): Response => (new PieceControleur($c))->page($r, $p), Route::ARTISAN),
+        new Route('offre_piece_renommer', '/offres/{id}/pieces', ['POST'], static fn (Request $r, array $p): Response => (new PieceControleur($c))->renommer($r, $p), Route::ARTISAN),
         new Route('offre_document', '/offres/{id}/document', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->document($r, $p), Route::ARTISAN),
         new Route('offre_pdf', '/offres/{id}/pdf', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->pdf($r, $p), Route::ARTISAN),
         // Ligne et catalogue : créer le produit, rattacher à un produit (décision D6, 2026-11-15).

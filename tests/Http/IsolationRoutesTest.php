@@ -36,6 +36,8 @@ final class IsolationRoutesTest extends TestCase
         $this->jeu = new Jeu();
         foreach (['a', 'b'] as $nom) {
             $this->ligne[$nom] = (int) BaseDeTest::ligne("SELECT id FROM ligne WHERE offre_id = {$this->jeu->offre[$nom]}")['id'];
+            // Une pièce, pour les routes de renommage (sous-chantier 28).
+            BaseDeTest::pdo()->exec("UPDATE ligne SET piece = 'Salon' WHERE id = {$this->ligne[$nom]}");
             // Un brouillon de facture par artisan, avec la ligne de son offre (sous-chantier 18).
             $this->facture[$nom] = (new DepotFactures($this->jeu->base, new Portee($nom === 'a' ? $this->jeu->a : $this->jeu->b)))->creer([
                 'offre_id' => $this->jeu->offre[$nom], 'numero' => '2026-001', 'genre' => 'finale', 'acompte_rang' => null, 'acompte_nombre' => null,
@@ -81,6 +83,7 @@ final class IsolationRoutesTest extends TestCase
             'enregistrement_etat' => ['/enregistrements/' . $this->jeu->uuid['a'] . '/etat', '/enregistrements/' . $this->jeu->uuid['b'] . '/etat'],
             'offre' => ['/offres/' . $this->jeu->offre['a'], '/offres/' . $this->jeu->offre['b']],
             'offre_entete' => ['/offres/' . $this->jeu->offre['a'] . '/modifier', '/offres/' . $this->jeu->offre['b'] . '/modifier'],
+            'offre_piece' => ['/offres/' . $this->jeu->offre['a'] . '/pieces?nom=Salon', '/offres/' . $this->jeu->offre['b'] . '/pieces?nom=Salon'],
             'offre_document' => ['/offres/' . $this->jeu->offre['a'] . '/document', '/offres/' . $this->jeu->offre['b'] . '/document'],
             'offre_pdf' => ['/offres/' . $this->jeu->offre['a'] . '/pdf', '/offres/' . $this->jeu->offre['b'] . '/pdf'],
             'offre_ajout' => ['/offres/' . $this->jeu->offre['a'] . '/ajouter', '/offres/' . $this->jeu->offre['b'] . '/ajouter'],
@@ -116,6 +119,7 @@ final class IsolationRoutesTest extends TestCase
         $produit = ['designation' => 'Volé', 'unite' => 'pce', 'prix' => '1', 'categorie' => 'X', 'nouvelle_categorie' => '', 'synonymes' => ''];
         return [
             'offre_entete_enregistrer' => ['/offres/' . $this->jeu->offre['b'] . '/modifier', ['titre' => 'Volée']],
+            'offre_piece_renommer' => ['/offres/' . $this->jeu->offre['b'] . '/pieces', ['ancienne' => 'Salon', 'nouvelle' => 'Volée']],
             'client_modifier' => ['/clients/' . $this->jeu->client['b'], ['nom' => 'Volé']],
             'client_supprimer' => ['/clients/' . $this->jeu->client['b'] . '/supprimer', []],
             'offre_client_choisir' => ['/offres/' . $this->jeu->offre['b'] . '/client', ['client' => (string) $this->jeu->client['a']]],

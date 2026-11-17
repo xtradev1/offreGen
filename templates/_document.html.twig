@@ -80,7 +80,8 @@
             <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.total|montant }}{% endif %}</td>
           </tr>
         {% endfor %}
-        {% if g.lignes|length > 1 and not epure %}<tr class="doc-st"><td colspan="{{ colonnes - 1 }}">Total {{ g.nom|lower }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endif %}
+        {# « Général » n'a pas de sous-total : « Total général » se confondrait avec le total de l'offre (sous-chantier 28). #}
+        {% if g.lignes|length > 1 and not epure and not ((g.par_piece ?? false) and g.piece is null) %}<tr class="doc-st"><td colspan="{{ colonnes - 1 }}">Total {{ g.nom|lower }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endif %}
       {% endfor %}
     </tbody>
   </table>

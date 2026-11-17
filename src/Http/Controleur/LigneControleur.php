@@ -15,6 +15,7 @@ use OffreGen\Http\Flash;
 use OffreGen\Http\Formats;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
+use OffreGen\Offre\Piece;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\SaisieRefusee;
 use OffreGen\Offre\Tva;
@@ -46,7 +47,9 @@ final class LigneControleur
         [$cible, $l] = $this->ligne($requete, $parametres);
         $champs = ['designation' => $l['designation'], 'quantite' => Formats::saisieQuantite($l['quantite_milliemes']), 'unite' => $l['unite'],
                    'prix' => Formats::saisiePrix($l['prix_centimes']), 'categorie' => '', 'nouvelle_categorie' => '',
-                   'tva' => $l['tva_ligne'] === null ? '' : (string) $l['tva_ligne']];
+                   'tva' => $l['tva_ligne'] === null ? '' : (string) $l['tva_ligne'],
+                   // Une ligne de facture n'a pas de pièce ; celle d'une offre se lit dans le dépôt des offres.
+                   'piece' => $this->genre === self::OFFRE ? ($this->c->offres($this->portee($requete))->ligne($cible['id'], $l['id'])['piece'] ?? '') : ''];
         return $this->formulaire($requete, $cible, $l, $champs, [], 200);
     }
 
@@ -105,6 +108,10 @@ final class LigneControleur
         $support->corrigerLigne($cible['id'], $l['id'], $designation, $quantite, $unite, $prix);
         if ($tva !== $l['tva_ligne']) {
             $support->changerTauxLigne($cible['id'], $l['id'], $tva);
+        }
+        // Déplacer une ligne d'offre dans une autre pièce (sous-chantier 28, P5), depuis sa fiche.
+        if ($this->genre === self::OFFRE && $r->has('piece')) {
+            $this->c->offres($this->portee($requete))->changerPiece($cible['id'], $l['id'], Piece::lire($r->getString('piece')));
         }
         if ($produit !== null) {
             $support->rattacherProduit($cible['id'], $l['id'], $this->c->produits($this->portee($requete))->creer($produit));
@@ -167,13 +174,19 @@ final class LigneControleur
         $r = $requete->request;
         $support = $this->support($requete);
         $produits = $this->c->produits($this->portee($requete));
+        // Sous-chantier 28 (P4) : la pièce choisie dans la feuille ; sans pièce dite (ajout rapide au clavier), celle de
+        // la dernière ligne. Rien pour une facture.
+        $piece = $this->genre !== self::OFFRE ? null
+            : ($r->has('piece') ? Piece::lire($r->getString('piece')) : $this->piecesDeLOffre($requete, $cible['id'])['derniere']);
+        $suite = $r->has('piece') ? '&piece=' . rawurlencode($r->getString('piece')) : '';
 
         if ($r->has('produit')) {
             $p = $produits->parId(Parametres::id(['p' => $r->getString('produit')], 'p')) ?? throw new PageIntrouvable();
             $id = $support->ajouterLigne($cible['id'], $p['designation'], 1000, $p['unite'], $p['prix_centimes'], $p['id']);
+            $this->rangerDansLaPiece($requete, $cible['id'], $id, $piece);
             $this->modifiee($requete, $cible['id']);
             if ($r->getString('reste') === '1') {
-                return self::resterSurAjouter($cible, $id);
+                return self::resterSurAjouter($cible, $id, $suite);
             }
             Flash::dire($requete, 'focus', $id);
             return $this->versLaLigne($cible, $id);
@@ -210,14 +223,41 @@ final class LigneControleur
         }
         $produitId = $produit === null ? null : $produits->creer($produit);
         $id = $support->ajouterLigne($cible['id'], $designation, $quantite, $unite, $prix, $produitId);
+        $this->rangerDansLaPiece($requete, $cible['id'], $id, $piece);
         $this->modifiee($requete, $cible['id']);
         if ($produit !== null) {
             Flash::dire($requete, 'info', Flash::cite($produit['designation']) . ' ajouté à ' . $cible['document'] . ' et au catalogue');
         }
         if ($r->getString('reste') === '1') {
-            return self::resterSurAjouter($cible, $id);
+            return self::resterSurAjouter($cible, $id, $suite);
         }
         return $this->versLaLigne($cible, $id);
+    }
+
+    private function rangerDansLaPiece(Request $requete, int $offreId, int $ligneId, ?string $piece): void
+    {
+        if ($this->genre === self::OFFRE && $piece !== null) {
+            $this->c->offres($this->portee($requete))->changerPiece($offreId, $ligneId, $piece);
+        }
+    }
+
+    /**
+     * Les pièces d'une offre, dans l'ordre de leur première ligne, sous leur premier nom (« chambre » est « Chambre »),
+     * et la pièce de la dernière ligne (null : « Général »). Liste vide : l'offre n'est pas rangée par pièce.
+     *
+     * @return array{pieces: list<string>, derniere: string|null}
+     */
+    private function piecesDeLOffre(Request $requete, int $offreId): array
+    {
+        $pieces = [];
+        $derniere = null;
+        foreach ($this->c->offres($this->portee($requete))->lignes($offreId) as $l) {
+            $derniere = $l['piece'];
+            if ($l['piece'] !== null) {
+                $pieces[Piece::cle($l['piece'])] ??= $l['piece'];
+            }
+        }
+        return ['pieces' => array_values($pieces), 'derniere' => $derniere === null ? null : $pieces[Piece::cle($derniere)]];
     }
 
     private function portee(Request $requete): Portee
@@ -273,9 +313,9 @@ final class LigneControleur
      *
      * @param Cible $cible
      */
-    private static function resterSurAjouter(array $cible, int $ligneId): RedirectResponse
+    private static function resterSurAjouter(array $cible, int $ligneId, string $suite = ''): RedirectResponse
     {
-        return new RedirectResponse($cible['base'] . '/ajouter?ajoutee=' . $ligneId, 303);
+        return new RedirectResponse($cible['base'] . '/ajouter?ajoutee=' . $ligneId . $suite, 303);
     }
 
     /**
@@ -295,13 +335,13 @@ final class LigneControleur
         return new RedirectResponse($cible['base'] . '#l' . $ligneId, 303);
     }
 
-    /** @return array{designation: string, quantite: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, tva: string} */
+    /** @return array{designation: string, quantite: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, tva: string, piece: string} */
     private static function champs(Request $requete): array
     {
         $r = $requete->request;
         return ['designation' => $r->getString('designation'), 'quantite' => $r->getString('quantite'), 'unite' => $r->getString('unite'),
                 'prix' => $r->getString('prix'), 'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie'),
-                'tva' => $r->getString('tva')];
+                'tva' => $r->getString('tva'), 'piece' => $r->getString('piece')];
     }
 
     /**
@@ -325,6 +365,7 @@ final class LigneControleur
             'categories' => $this->c->produits($this->portee($requete))->categories(),
             'taux_tva' => Tva::TAUX,
             'tva_habituelle' => $this->tvaHabituelle($requete, $l),
+            'pieces' => $this->genre === self::OFFRE ? $this->piecesDeLOffre($requete, $cible['id'])['pieces'] : [],
         ]), $code);
     }
 
@@ -367,6 +408,18 @@ final class LigneControleur
         }
         // La ligne qui vient d'entrer, annoncée dans la feuille ; une ligne d'ailleurs ne s'annonce pas.
         $ajoutee = $requete->query->getInt('ajoutee');
+        // Sous-chantier 28 (P4) : une offre rangée par pièce propose ses pièces, « Général » et une autre pièce ; la
+        // pièce de la dernière ligne est choisie d'avance. Des liens : la page marche sans JavaScript.
+        $pieces = [];
+        $choisie = '';
+        if ($this->genre === self::OFFRE) {
+            $p = $this->piecesDeLOffre($requete, $cible['id']);
+            $pieces = $p['pieces'];
+            $choisie = $requete->query->has('piece') ? (Piece::lire($requete->query->getString('piece')) ?? '') : ($p['derniere'] ?? '');
+            if ($choisie !== '' && !in_array(Piece::cle($choisie), array_map(Piece::cle(...), $pieces), true)) {
+                $pieces[] = $choisie;
+            }
+        }
         $ligne = $ajoutee > 0 ? $this->support($requete)->ligne($cible['id'], $ajoutee) : null;
         return new Response($this->c->twig()->render('ajout.html.twig', [
             'cible' => $cible,
@@ -378,6 +431,8 @@ final class LigneControleur
             'erreurs' => $erreurs,
             'unites' => Saisie::UNITES,
             'categories' => $depot->categories(),
+            'pieces' => $pieces,
+            'piece_choisie' => $choisie,
         ]), $code);
     }
 }

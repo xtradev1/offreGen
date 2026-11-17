@@ -238,6 +238,9 @@ body.calque-ouvert { overflow: hidden; }
 .cat.liste { display: flex; justify-content: space-between; align-items: baseline; }
 .rows.une .cat { display: grid; grid-template-columns: var(--cols); column-gap: 4px; align-items: end; }
 .cat h5, .ccat h5 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+/* Offre par pièce (sous-chantier 28) : le sous-total de la pièce et « Renommer », hors des majuscules du titre. */
+.cat h5 .st { margin-left: 6px; letter-spacing: 0; text-transform: none; color: var(--ink); font-weight: 600; font-size: 12.5px; }
+.cat h5 .renommer { display: inline-block; margin-left: 6px; padding: 12px 6px; letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--accent); text-decoration: none; }
 .cat .ch { font-size: 11px; color: var(--muted); text-align: right; }
 .row { border-bottom: 1px solid var(--line); }
 .rows.une .row { display: grid; grid-template-columns: var(--cols); column-gap: 4px; align-items: center; min-height: 52px; scroll-margin: 90px 0 160px; }
@@ -334,6 +337,14 @@ a.nm:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .regle { margin: 0; padding-left: 18px; font-size: 14px; }
 /* Propositions d'un toucher : elles remplissent le champ qui suit. */
 .puces { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Pièce d'une ligne ajoutée (sous-chantier 28, P4) : des liens en puces, la pièce choisie en plein. */
+.pieces-ajout { margin: 0 0 12px; }
+.pieces-ajout .lbl { display: block; font-weight: 600; font-size: 14px; margin: 0 0 6px; }
+.puces-liens { display: flex; flex-wrap: wrap; gap: 8px; }
+.puce-lien { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: 14px; }
+.puce-lien[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.piece-autre { display: flex; gap: 8px; margin: 8px 0 0; }
+.piece-autre input { flex: 1; min-width: 0; font: inherit; font-size: 16px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); }
 .puce { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; min-height: 44px; cursor: pointer; transition: background .15s ease, color .15s ease, scale .12s ease; -webkit-tap-highlight-color: transparent; }
 .puces.trois, .puces.quatre, .puces.cinq { display: grid; gap: 6px; }
 .puces.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }

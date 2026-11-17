@@ -231,6 +231,65 @@ final class ExtracteurApiTest extends TestCase
         self::assertSame([null, false], [$r->lignes[2]->prixDicteCentimes, $r->lignes[2]->aVerifier]);
     }
 
+    public function testLaPieceDicteeEstGardeeEtNettoyee(): void
+    {
+        // Sous-chantier 28 (Xavier, 2026-11-17) : les lignes se rangent par pièce ; « général » vaut pour tout le chantier.
+        $r = (new ExtracteurApi(new MockHttpClient(), 'x', '', 'm', new NullLogger()))->valider(['lignes' => [
+            ['produit_id' => 4, 'quantite' => 38, 'certitude' => 'sure', 'piece' => '  salon du deuxième   étage '],
+            ['produit_id' => 1, 'quantite' => 1, 'certitude' => 'sure', 'piece' => 'Général'],
+            ['produit_id' => 4, 'quantite' => 12, 'certitude' => 'sure', 'piece' => 'tout le chantier'],
+            ['produit_id' => 4, 'quantite' => 12, 'certitude' => 'sure'],
+            ['produit_id' => null, 'designation' => 'Toile de verre', 'quantite' => 22, 'unite' => 'm²', 'certitude' => 'sure', 'piece' => str_repeat('é', 120)],
+        ]], self::CATALOGUE);
+        self::assertSame(['Salon du deuxième étage', null, null, null], array_map(fn ($l) => $l->piece, array_slice($r->lignes, 0, 4)));
+        self::assertSame(80, mb_strlen((string) $r->lignes[4]->piece));
+    }
+
+    public function testLesPiecesViennentDUnSecondAppelSansCatalogue(): void
+    {
+        // Sous-chantier 28 : l'appel principal ne demande pas la pièce (mesuré le 2026-11-17, il perdait des prix) ;
+        // un second appel range les lignes trouvées.
+        $pieces = new MockResponse((string) json_encode(['choices' => [['message' => ['role' => 'assistant', 'content' => '', 'tool_calls' => [
+            ['id' => 'appel-2', 'type' => 'function', 'function' => ['name' => 'ranger_par_piece', 'arguments' => '{"pieces":[{"ligne":1,"piece":"général"},{"ligne":2,"piece":"salon"}]}']],
+        ]]]]]), ['http_code' => 200]);
+        $reponses = [self::reponseOutil(self::ARGUMENTS_REELS), $pieces];
+        $http = new MockHttpClient(function (string $methode, string $url, array $options) use (&$reponses): MockResponse {
+            $this->requetes[] = ['url' => $url, 'options' => $options];
+            return array_shift($reponses) ?? throw new \LogicException('Appel en trop.');
+        });
+        $r = (new ExtracteurApi($http, 'https://api.exemple.test/v1', 'jeton', 'qwen-test', new NullLogger()))->extraire('Dictée.', self::CATALOGUE);
+        self::assertSame([null, 'Salon'], [$r->lignes[0]->piece, $r->lignes[1]->piece]);
+        self::assertSame([42000, 2800], [$r->lignes[1]->quantiteMilliemes, $r->lignes[1]->prixCentimes], 'le reste de la ligne ne bouge pas');
+        self::assertCount(2, $this->requetes);
+        $premier = json_decode((string) $this->requetes[0]['options']['body'], true);
+        self::assertArrayNotHasKey('piece', $premier['tools'][0]['function']['parameters']['properties']['lignes']['items']['properties']);
+        $second = json_decode((string) $this->requetes[1]['options']['body'], true);
+        self::assertSame('ranger_par_piece', $second['tool_choice']['function']['name']);
+        self::assertStringNotContainsString('Catalogue', $second['messages'][1]['content'], 'le catalogue ne repart pas');
+        self::assertStringContainsString('2. Peinture des murs, 2 couches (« Les murs du salon', $second['messages'][1]['content']);
+    }
+
+    public function testSansSecondAppelLOffreSortEntiereSansPieces(): void
+    {
+        $reponses = [self::reponseOutil(self::ARGUMENTS_REELS), new MockResponse('{"erreur":"surcharge"}', ['http_code' => 503])];
+        $http = new MockHttpClient(function () use (&$reponses): MockResponse {
+            return array_shift($reponses) ?? throw new \LogicException('Appel en trop.');
+        });
+        $journal = new class extends AbstractLogger {
+            /** @var list<string> */
+            public array $lignes = [];
+
+            public function log($level, string|\Stringable $message, array $context = []): void
+            {
+                $this->lignes[] = $level . ' ' . $message;
+            }
+        };
+        $r = (new ExtracteurApi($http, 'https://api.exemple.test/v1', 'jeton', 'qwen-test', $journal))->extraire('Dictée.', self::CATALOGUE);
+        self::assertCount(2, $r->lignes);
+        self::assertSame([null, null], [$r->lignes[0]->piece, $r->lignes[1]->piece]);
+        self::assertStringContainsString('warning offreGen, pièces : second appel en échec', implode("\n", $journal->lignes));
+    }
+
     public function testLaConsigneDemandeLePrixDitPourToutesLesLignes(): void
     {
         $this->extracteur(self::reponseOutil(self::ARGUMENTS_REELS))->extraire('Dictée.', self::CATALOGUE);

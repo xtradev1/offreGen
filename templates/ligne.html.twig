@@ -36,6 +36,14 @@
       <input id="prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?"{{ f.invalide(erreurs, 'prix') }}>
       {{ f.erreur(erreurs, 'prix') }}
     </div>
+    {# Offre rangée par pièce (sous-chantier 28, P5) : la ligne se déplace d'une pièce à l'autre ; vide, « Général ». #}
+    {% if pieces is not empty %}
+      <div class="champ">
+        <label for="piece">Pièce</label>
+        <input id="piece" name="piece" value="{{ champs.piece ?? '' }}" maxlength="80" list="pieces-offre" autocomplete="off" placeholder="Général">
+        <datalist id="pieces-offre">{% for p in pieces %}<option value="{{ p }}">{% endfor %}</datalist>
+      </div>
+    {% endif %}
     {% if tva_habituelle %}
       {% include '_tva_exception.html.twig' with {actuel: champs.tva ?? '', habituel: 'Taux ' ~ tva_habituelle.de ~ ' (' ~ tva_habituelle.taux|taux ~ ')'} %}
     {% endif %}

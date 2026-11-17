@@ -36,6 +36,20 @@ final class ExtracteurApi implements Extracteur
         - Jamais de tiret long : une virgule à la place.
         TXT;
 
+    /**
+     * Second appel (sous-chantier 28) : ranger les lignes trouvées dans leurs pièces. À part, parce que demander la pièce
+     * dans l'appel principal faisait perdre des prix dictés sur la dictée de Luigi (2026-11-17 : 4 à 6 lignes justes sur
+     * 7, contre 6 à 7 sans) ; ici, l'extraction reste celle qui a été mesurée.
+     */
+    private const CONSIGNE_PIECES = <<<'TXT'
+        Tu ranges les lignes d'une offre d'artisan dans les pièces où se font les travaux, d'après la dictée de sa visite.
+        Règles :
+        - L'artisan dicte pièce par pièce : une pièce annoncée vaut pour les postes qui suivent, jusqu'à la suivante.
+        - Pour chaque ligne, donne son numéro et la pièce telle qu'elle est dite (avec l'étage s'il est dit).
+        - « général » pour une ligne qui vaut pour tout le chantier, ou quand aucune pièce n'est dite.
+        - Jamais de tiret long : une virgule à la place.
+        TXT;
+
     public function __construct(
         private readonly HttpClientInterface $http,
         private readonly string $url,
@@ -70,15 +84,66 @@ final class ExtracteurApi implements Extracteur
             'timeout' => 300,
         ]);
         $donnees = ReponseApi::lire($reponse, 'Extraction');
-        $this->noterJetons($donnees);
-        $proposition = self::argumentsDeLOutil($donnees);
+        $this->noterJetons($donnees, 'extraction');
+        $proposition = self::argumentsDeLOutil($donnees, 'proposer_offre');
         if ($proposition === null) {
             // Règle de Xavier (2026-11-12) : rien d'utile dit, offre vide. Avec une température à 0, réessayer
             // donnait cinq fois la même réponse, puis un échec.
             $this->journal->warning('offreGen, extraction : le modèle n\'a proposé aucune ligne, offre vide.');
             return new ResultatExtraction(null, []);
         }
-        return $this->valider($proposition, $catalogue);
+        $resultat = $this->valider($proposition, $catalogue);
+        return $resultat->lignes === [] ? $resultat : $this->rangerParPiece($transcription, $resultat);
+    }
+
+    /**
+     * Range les lignes dans leurs pièces par un second appel, sans le catalogue (de quelques dixièmes de centime). Un
+     * échec ne coûte que les pièces : l'offre sort comme avant, rangée par catégorie.
+     */
+    private function rangerParPiece(string $transcription, ResultatExtraction $resultat): ResultatExtraction
+    {
+        $liste = [];
+        foreach ($resultat->lignes as $i => $l) {
+            $liste[] = ($i + 1) . '. ' . $l->designation . ($l->entendu === null ? '' : ' (« ' . $l->entendu . ' »)');
+        }
+        $corps = [
+            'model' => $this->modele,
+            'temperature' => 0,
+            'messages' => [
+                ['role' => 'system', 'content' => self::CONSIGNE_PIECES],
+                ['role' => 'user', 'content' => "Dictée :\n" . $transcription . "\n\nLignes :\n" . implode("\n", $liste)],
+            ],
+            'tools' => [self::outilPieces()],
+            'tool_choice' => ['type' => 'function', 'function' => ['name' => 'ranger_par_piece']],
+        ];
+        if ($this->sansRaisonnement) {
+            $corps['reasoning_effort'] = 'none';
+        }
+        try {
+            $reponse = $this->http->request('POST', rtrim($this->url, '/') . '/chat/completions', [
+                'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
+                'json' => $corps,
+                'timeout' => 120,
+            ]);
+            $donnees = ReponseApi::lire($reponse, 'Pièces');
+            $this->noterJetons($donnees, 'pièces');
+            $arguments = self::argumentsDeLOutil($donnees, 'ranger_par_piece');
+        } catch (\Throwable $e) {
+            $this->journal->warning('offreGen, pièces : second appel en échec, offre sans pièces (' . $e::class . ').');
+            return $resultat;
+        }
+        $pieces = [];
+        foreach (is_array($arguments['pieces'] ?? null) ? $arguments['pieces'] : [] as $p) {
+            if (is_array($p) && is_int($p['ligne'] ?? null)) {
+                $pieces[$p['ligne'] - 1] = Piece::lire($p['piece'] ?? null);
+            }
+        }
+        $lignes = [];
+        foreach ($resultat->lignes as $i => $l) {
+            $lignes[] = new LigneExtraite($l->designation, $l->quantiteMilliemes, $l->unite, $l->prixCentimes, $l->aVerifier, $l->produitId,
+                $l->entendu, $l->prixDicteCentimes, $pieces[$i] ?? null);
+        }
+        return new ResultatExtraction($resultat->titre, $lignes, $resultat->client, $resultat->lieu);
     }
 
     /**
@@ -87,13 +152,13 @@ final class ExtracteurApi implements Extracteur
      *
      * @param array<string, mixed> $donnees
      */
-    private function noterJetons(array $donnees): void
+    private function noterJetons(array $donnees, string $appel): void
     {
         $usage = $donnees['usage'] ?? null;
         if (!is_array($usage) || !is_int($usage['prompt_tokens'] ?? null) || !is_int($usage['completion_tokens'] ?? null)) {
             return;
         }
-        $this->journal->info(sprintf('offreGen, extraction : %d jetons envoyés, %d reçus, modèle %s.', $usage['prompt_tokens'], $usage['completion_tokens'], $this->modele));
+        $this->journal->info(sprintf('offreGen, %s : %d jetons envoyés, %d reçus, modèle %s.', $appel, $usage['prompt_tokens'], $usage['completion_tokens'], $this->modele));
     }
 
     /**
@@ -121,6 +186,7 @@ final class ExtracteurApi implements Extracteur
             $entendu = is_string($brute['extrait'] ?? null) ? mb_substr(self::texte($brute['extrait']), 0, 500) : null;
             $doute = $devinee || ($brute['certitude'] ?? '') !== 'sure';
             $id = $brute['produit_id'] ?? null;
+            $piece = Piece::lire($brute['piece'] ?? null);
             $dicte = $brute['prix_unitaire'] ?? null;
             $dicteCentimes = (is_int($dicte) || is_float($dicte)) && $dicte > 0 ? (int) round($dicte * 100) : null;
             if (is_int($id) && isset($parId[$id])) {
@@ -128,7 +194,7 @@ final class ExtracteurApi implements Extracteur
                 // Le prix du catalogue reste celui de la ligne ; un autre prix dicté est gardé à côté et la ligne
                 // passe à vérifier (Xavier, 2026-11-17 : « catalogue par défaut », une note « prix dicté »).
                 $autre = $dicteCentimes !== null && $dicteCentimes !== $p['prix_centimes'] ? $dicteCentimes : null;
-                $lignes[] = new LigneExtraite($p['designation'], $milliemes, $p['unite'], $p['prix_centimes'], $doute || $p['prix_centimes'] === 0 || $autre !== null, $p['id'], $entendu, $autre);
+                $lignes[] = new LigneExtraite($p['designation'], $milliemes, $p['unite'], $p['prix_centimes'], $doute || $p['prix_centimes'] === 0 || $autre !== null, $p['id'], $entendu, $autre, $piece);
                 continue;
             }
             // Ligne libre, ou produit inconnu du catalogue de cet artisan : toujours à vérifier.
@@ -138,7 +204,7 @@ final class ExtracteurApi implements Extracteur
                 continue;
             }
             $unite = is_string($brute['unite'] ?? null) && trim($brute['unite']) !== '' ? mb_substr(trim($brute['unite']), 0, 20) : 'forfait';
-            $lignes[] = new LigneExtraite($designation, $milliemes, $unite, $dicteCentimes ?? 0, true, null, $entendu);
+            $lignes[] = new LigneExtraite($designation, $milliemes, $unite, $dicteCentimes ?? 0, true, null, $entendu, null, $piece);
         }
         $titre = is_string($proposition['titre'] ?? null) ? mb_substr(self::texte($proposition['titre']), 0, 90) : '';
         $client = is_string($proposition['client'] ?? null) ? mb_substr(self::texte($proposition['client']), 0, 190) : '';
@@ -162,7 +228,7 @@ final class ExtracteurApi implements Extracteur
      * @param array<string, mixed> $donnees
      * @return array<string, mixed>|null
      */
-    private static function argumentsDeLOutil(array $donnees): ?array
+    private static function argumentsDeLOutil(array $donnees, string $nom): ?array
     {
         $choix = is_array($donnees['choices'] ?? null) ? $donnees['choices'] : [];
         $message = is_array($choix[0] ?? null) && is_array($choix[0]['message'] ?? null) ? $choix[0]['message'] : null;
@@ -172,7 +238,7 @@ final class ExtracteurApi implements Extracteur
         $appels = is_array($message['tool_calls'] ?? null) ? $message['tool_calls'] : [];
         foreach ($appels as $appel) {
             $fonction = is_array($appel) && is_array($appel['function'] ?? null) ? $appel['function'] : [];
-            if (($fonction['name'] ?? null) !== 'proposer_offre') {
+            if (($fonction['name'] ?? null) !== $nom) {
                 continue;
             }
             $arguments = $fonction['arguments'] ?? null;
@@ -195,6 +261,29 @@ final class ExtracteurApi implements Extracteur
             $lignes[] = implode('|', [$p['id'], $p['categorie'], $p['designation'], $p['unite'], $prix, (string) $p['synonymes']]);
         }
         return implode("\n", $lignes);
+    }
+
+    /** @return array<string, mixed> */
+    private static function outilPieces(): array
+    {
+        return ['type' => 'function', 'function' => [
+            'name' => 'ranger_par_piece',
+            'description' => 'Donne la pièce de chaque ligne de l\'offre.',
+            'parameters' => [
+                'type' => 'object',
+                'required' => ['pieces'],
+                'properties' => [
+                    'pieces' => ['type' => 'array', 'items' => [
+                        'type' => 'object',
+                        'required' => ['ligne', 'piece'],
+                        'properties' => [
+                            'ligne' => ['type' => 'integer', 'description' => 'Numéro de la ligne'],
+                            'piece' => ['type' => 'string', 'description' => 'Pièce dite, ou « général »'],
+                        ],
+                    ]],
+                ],
+            ],
+        ]];
     }
 
     /** @return array<string, mixed> */

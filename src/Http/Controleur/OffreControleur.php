@@ -12,6 +12,7 @@ use OffreGen\Http\Conteneur;
 use OffreGen\Http\Flash;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
+use OffreGen\Offre\Piece;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\Totaux;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -19,7 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * L'écran d'une offre (lignes rangées par catégorie, totaux), son en-tête (titre, client),
+ * L'écran d'une offre (lignes rangées par pièce ou par catégorie, totaux), son en-tête (titre, client),
  * et le document qu'on remet au client : aperçu à l'écran et PDF.
  *
  * @phpstan-import-type Offre from DepotOffres
@@ -223,23 +224,42 @@ final class OffreControleur
 
     /**
      * Groupes dans l'ordre où leur première ligne paraît dans l'offre, donc dans l'ordre de la dictée.
-     * Sert aussi aux lignes d'une facture, qui ont la même forme.
+     * Par pièce dès qu'une ligne en a une, « Général » en tête ; sinon par catégorie du catalogue (sous-chantier 28,
+     * décisions P1 A et P2 A de Xavier, 2026-11-17). Sert aussi aux lignes d'une facture, qui n'ont pas de pièce.
      *
-     * @template T of array{categorie: string|null}
+     * @template T of array{categorie: string|null, piece?: string|null}
      * @param list<T> $lignes
      * @param list<int> $totauxLignes total de chaque ligne, dans le même ordre
-     * @return list<array{nom: string, lignes: list<array{l: T, total: int}>, total: int}>
+     * @return list<array{nom: string, lignes: list<array{l: T, total: int}>, total: int, piece: string|null, par_piece: bool}>
      */
     public static function grouper(array $lignes, array $totauxLignes): array
     {
+        $parPiece = false;
+        $general = false;
+        foreach ($lignes as $l) {
+            $piece = $l['piece'] ?? null;
+            $parPiece = $parPiece || $piece !== null;
+            $general = $general || $piece === null;
+        }
         $groupes = [];
+        if ($parPiece && $general) {
+            $groupes[''] = ['nom' => Piece::GENERAL, 'lignes' => [], 'total' => 0, 'piece' => null, 'par_piece' => true];
+        }
         foreach ($lignes as $i => $l) {
-            // Lire la catégorie à part : un « ?? » sur $l resserrerait son type et perdrait T.
-            $categorie = $l['categorie'];
-            $nom = $categorie ?? self::HORS_CATALOGUE;
-            $groupes[$nom] ??= ['nom' => $nom, 'lignes' => [], 'total' => 0];
-            $groupes[$nom]['lignes'][] = ['l' => $l, 'total' => $totauxLignes[$i] ?? 0];
-            $groupes[$nom]['total'] += $totauxLignes[$i] ?? 0;
+            if ($parPiece) {
+                $piece = $l['piece'] ?? null;
+                $cle = $piece === null ? '' : 'p:' . Piece::cle($piece);
+                $nom = $piece ?? Piece::GENERAL;
+            } else {
+                // Lire la catégorie à part : un « ?? » sur $l resserrerait son type et perdrait T.
+                $categorie = $l['categorie'];
+                $nom = $categorie ?? self::HORS_CATALOGUE;
+                $cle = 'c:' . $nom;
+                $piece = null;
+            }
+            $groupes[$cle] ??= ['nom' => $nom, 'lignes' => [], 'total' => 0, 'piece' => $piece, 'par_piece' => $parPiece];
+            $groupes[$cle]['lignes'][] = ['l' => $l, 'total' => $totauxLignes[$i] ?? 0];
+            $groupes[$cle]['total'] += $totauxLignes[$i] ?? 0;
         }
         return array_values($groupes);
     }

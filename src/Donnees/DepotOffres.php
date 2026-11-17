@@ -15,7 +15,7 @@ use OffreGen\Offre\LigneExtraite;
  * client_nom et client_adresse donnent l'un ou l'autre, pour l'écran et le document.
  *
  * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null}
- * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null, prix_dicte_centimes: int|null, prix_catalogue: int|null}
+ * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null, prix_dicte_centimes: int|null, prix_catalogue: int|null, piece: string|null}
  */
 final class DepotOffres implements SupportLignes
 {
@@ -27,7 +27,7 @@ final class DepotOffres implements SupportLignes
     /** Colonnes d'une ligne ; la catégorie vient du produit du catalogue, s'il existe encore. */
     private const COLONNES_LIGNE = 'l.id, l.offre_id, l.rang, l.designation, l.quantite_milliemes, l.unite, l.prix_centimes, l.a_verifier, l.entendu, l.produit_id, p.categorie,
             COALESCE(l.tva_pour_dix_mille, p.tva_pour_dix_mille) AS tva_pour_dix_mille, l.tva_pour_dix_mille AS tva_ligne,
-            l.prix_dicte_centimes, p.prix_centimes AS prix_catalogue
+            l.prix_dicte_centimes, p.prix_centimes AS prix_catalogue, l.piece
          FROM ligne l LEFT JOIN produit p ON p.id = l.produit_id AND p.artisan_id = l.artisan_id';
 
     public function __construct(private readonly Base $base, private readonly Portee $portee)
@@ -71,12 +71,12 @@ final class DepotOffres implements SupportLignes
             $offreId = $this->base->dernierId();
             foreach ($lignes as $rang => $l) {
                 $this->base->ecrire(
-                    'INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier, entendu, produit_id, prix_dicte_centimes)
-                     VALUES (:a, :o, :r, :d, :q, :u, :p, :v, :e, :pr, :pd)',
+                    'INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier, entendu, produit_id, prix_dicte_centimes, piece)
+                     VALUES (:a, :o, :r, :d, :q, :u, :p, :v, :e, :pr, :pd, :pi)',
                     ['a' => $this->portee->artisanId, 'o' => $offreId, 'r' => $rang + 1, 'd' => mb_substr($l->designation, 0, 255),
                      'q' => $l->quantiteMilliemes, 'u' => mb_substr($l->unite, 0, 20), 'p' => $l->prixCentimes, 'v' => $l->aVerifier ? 1 : 0,
                      'e' => $l->entendu === null ? null : mb_substr($l->entendu, 0, 500),
-                     'pr' => $this->produitDeLArtisan($l->produitId), 'pd' => $l->prixDicteCentimes],
+                     'pr' => $this->produitDeLArtisan($l->produitId), 'pd' => $l->prixDicteCentimes, 'pi' => $l->piece],
                 );
             }
             return $offreId;
@@ -320,6 +320,27 @@ final class DepotOffres implements SupportLignes
         $this->base->ecrire(
             'UPDATE ligne SET prix_dicte_centimes = NULL WHERE id = :l AND offre_id = :o AND artisan_id = :a',
             ['l' => $ligneId, 'o' => $offreId, 'a' => $this->portee->artisanId],
+        );
+    }
+
+    /** Déplace une ligne dans une pièce (P5) ; null : « Général ». */
+    public function changerPiece(int $offreId, int $ligneId, ?string $piece): void
+    {
+        $this->base->ecrire(
+            'UPDATE ligne SET piece = :p WHERE id = :l AND offre_id = :o AND artisan_id = :a AND supprimee_le IS NULL',
+            ['p' => $piece, 'l' => $ligneId, 'o' => $offreId, 'a' => $this->portee->artisanId],
+        );
+    }
+
+    /**
+     * Renomme une pièce de l'offre (P5) : toutes ses lignes, sans tenir compte de la casse (« chambre » est
+     * « Chambre »). Rend le nombre de lignes touchées.
+     */
+    public function renommerPiece(int $offreId, string $ancienne, string $nouvelle): int
+    {
+        return $this->base->ecrire(
+            'UPDATE ligne SET piece = :n WHERE offre_id = :o AND artisan_id = :a AND LOWER(piece) = LOWER(:v)',
+            ['n' => $nouvelle, 'v' => $ancienne, 'o' => $offreId, 'a' => $this->portee->artisanId],
         );
     }
 
