@@ -6,7 +6,7 @@
 
 {% block contenu %}
   <p class="muted ent">{{ entreprise }}{% if demo %} (compte de démonstration){% endif %}</p>
-  {% set essai_compte = essai() %}{% if essai_compte %}<p class="muted">{{ essai_compte.reste }}</p>{% endif %}
+  {% set essai_compte = essai() %}{% if essai_compte %}<p class="muted ent">{{ essai_compte.reste }}</p>{% endif %}
   {# Archivées et supprimées comprises ; un échec n'a pas donné d'offre et ne compte pas. #}
   <p class="compteur">{{ du_mois }} offre{% if du_mois > 1 %}s{% endif %} ce mois</p>
 

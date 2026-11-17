@@ -46,5 +46,5 @@ try {
     exit(1);
 }
 
-echo "Compte créé : {$positionnels[0]}" . ($demo ? " (démo, $plafond imports par jour)" : '') . ($offres !== null ? " (essai, $offres offres)" : '') . "\n";
+echo "Compte créé : {$positionnels[0]}" . ($demo ? " (démo, $plafond imports par jour)" : '') . ($offres !== null ? " (essai, $offres offre" . ($offres > 1 ? 's' : '') . ')' : '') . "\n";
 echo "Mot de passe, affiché une seule fois : $motDePasse\n";

@@ -29,4 +29,4 @@ try {
     exit(1);
 }
 
-echo $essai === null ? "{$argv[1]} : aucun plafond.\n" : "{$argv[1]} : {$essai->offresMax} offres en tout, {$essai->restantes} restantes.\n";
+echo $essai === null ? "{$argv[1]} : aucun plafond.\n" : "{$argv[1]} : {$essai->offresMax} en tout, {$essai->reste()}.\n";
