@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Maquette (`MAQUETTE-pieces.html`) : l'offre groupée par pièce à l'écran et dans le PDF, place des catégories du catalogue, ajout d'une ligne dans une pièce, ligne « général ».
+Attendre les réponses de Xavier à la maquette, puis écrire `SPEC.md` et `PLAN.md`.
 
 ## En attente de toi
 
