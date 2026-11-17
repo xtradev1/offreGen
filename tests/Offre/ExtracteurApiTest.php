@@ -269,6 +269,19 @@ final class ExtracteurApiTest extends TestCase
         self::assertStringContainsString('2. Peinture des murs, 2 couches (« Les murs du salon', $second['messages'][1]['content']);
     }
 
+    public function testLeSecondAppelPeutPrendreUnAutreModele(): void
+    {
+        // Question de Xavier (2026-11-17) : un modèle moins cher pour ranger les pièces ?
+        $reponses = [self::reponseOutil(self::ARGUMENTS_REELS), new MockResponse('{}', ['http_code' => 200])];
+        $http = new MockHttpClient(function (string $methode, string $url, array $options) use (&$reponses): MockResponse {
+            $this->requetes[] = ['url' => $url, 'options' => $options];
+            return array_shift($reponses) ?? throw new \LogicException('Appel en trop.');
+        });
+        (new ExtracteurApi($http, 'https://api.exemple.test/v1', 'jeton', 'qwen-test', new NullLogger(), true, 'gemma-test'))->extraire('Dictée.', self::CATALOGUE);
+        $modeles = array_map(fn (array $r) => json_decode((string) $r['options']['body'], true)['model'], $this->requetes);
+        self::assertSame(['qwen-test', 'gemma-test'], $modeles);
+    }
+
     public function testSansSecondAppelLOffreSortEntiereSansPieces(): void
     {
         $reponses = [self::reponseOutil(self::ARGUMENTS_REELS), new MockResponse('{"erreur":"surcharge"}', ['http_code' => 503])];

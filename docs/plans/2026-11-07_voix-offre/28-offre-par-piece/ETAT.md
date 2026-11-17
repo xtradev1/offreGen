@@ -36,6 +36,8 @@ Recette de Xavier sur le site de test : dicter pièce par pièce, puis ajouter,
 - 2026-11-17 : la page d'ajout propose les pièces par des liens (la pièce part en champ caché avec chaque ajout) : elle marche sans JavaScript, chaque produit étant son propre formulaire.
 - Point ouvert : une facture faite depuis une offre rangée par pièce reste rangée par catégorie (les lignes de facture n'ont pas de pièce).
 
+- 2026-11-17, question de Xavier : coût de la seconde passe, et un modèle moins cher ? Mesuré (`scratchpad/pieces-modeles.php`, seconde passe seule, mêmes lignes pour tous, 3 passes) : dictée inventée de 30 min, Qwen 27B 85/85 trois fois, 10 012 + 1 449 jetons, CHF 0.0084, 6 à 9 s ; Gemma 4 31B 85/85 trois fois, CHF 0.0025, 26 à 61 s ; Ministral 14B 69/85 et un dépassement de délai ; Mistral Small 4, 3 à 7/85. Dictée de Luigi : Qwen 7/7 trois fois (CHF 0.0007) ; Gemma 7/7 deux fois, 4/7 une fois (« Mur » pris pour une pièce) ; Ministral 7/7 trois fois ; Mistral Small 1 à 6/7. Qwen reste en service : le plus sûr et le plus rapide ; l'écart de coût est de 0,6 ct par offre de 30 min. `EXTRACTION_MODELE_PIECES` permet d'en changer sans code. Seconde passe avec Qwen : environ un tiers du coût de l'extraction (0,8 ct sur 2,4 ct pour 30 min).
+
 ## Preuves
 
 ```

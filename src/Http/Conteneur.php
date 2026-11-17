@@ -364,6 +364,7 @@ final class Conteneur
                 $this->parametreRequis('EXTRACTION_MODELE'),
                 $this->journal(),
                 $this->parametre('EXTRACTION_SANS_RAISONNEMENT', '1') === '1',
+                $this->parametre('EXTRACTION_MODELE_PIECES') === '' ? null : $this->parametre('EXTRACTION_MODELE_PIECES'),
             );
         });
     }

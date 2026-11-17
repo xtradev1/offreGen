@@ -57,6 +57,8 @@ final class ExtracteurApi implements Extracteur
         private readonly string $modele,
         private readonly LoggerInterface $journal,
         private readonly bool $sansRaisonnement = true,
+        /** Modèle du second appel (pièces) ; null : le même que l'extraction. */
+        private readonly ?string $modelePieces = null,
     ) {
     }
 
@@ -107,7 +109,7 @@ final class ExtracteurApi implements Extracteur
             $liste[] = ($i + 1) . '. ' . $l->designation . ($l->entendu === null ? '' : ' (« ' . $l->entendu . ' »)');
         }
         $corps = [
-            'model' => $this->modele,
+            'model' => $this->modelePieces ?? $this->modele,
             'temperature' => 0,
             'messages' => [
                 ['role' => 'system', 'content' => self::CONSIGNE_PIECES],
