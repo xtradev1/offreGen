@@ -128,6 +128,8 @@ final class IsolationRoutesTest extends TestCase
             'ligne_creer_produit' => [$this->cheminLigne('b', '/produit'), []],
             'ligne_rattacher' => [$this->cheminLigne('b', '/rattacher'), ['produit' => (string) $this->jeu->produit['b']]],
             'ligne_rattacher_produit_de_b' => [$this->cheminLigne('a', '/rattacher'), ['produit' => (string) $this->jeu->produit['b']]],
+            'ligne_prix_dicte' => [$this->cheminLigne('b', '/prix-dicte'), []],
+            'ligne_prix_dicte_catalogue' => [$this->cheminLigne('b', '/prix-dicte/catalogue'), ['choix' => 'oui']],
             'offre_envoyee' => ['/offres/' . $this->jeu->offre['b'] . '/envoyee', []],
             'offre_relire_valider' => ['/offres/' . $this->jeu->offre['b'] . '/relire/' . $this->ligne['b'], ['quantite' => '99', 'prix' => '1']],
             'offre_relire_valider_ligne_de_b' => ['/offres/' . $this->jeu->offre['a'] . '/relire/' . $this->ligne['b'], ['quantite' => '99', 'prix' => '1']],

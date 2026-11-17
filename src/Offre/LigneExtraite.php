@@ -19,6 +19,8 @@ final readonly class LigneExtraite
         public bool $aVerifier,
         public ?int $produitId,
         public ?string $entendu = null,
+        /** Prix dicté pour un produit du catalogue quand il diffère du catalogue (Xavier, 2026-11-17) ; sinon null. */
+        public ?int $prixDicteCentimes = null,
     ) {
         if (trim($designation) === '') {
             throw new \InvalidArgumentException('Ligne sans désignation.');

@@ -86,6 +86,18 @@ final class LigneCatalogueTest extends TestCase
         self::assertSame('ribé, Crépi de soubassement', BaseDeTest::ligne("SELECT synonymes FROM produit WHERE id = $produit")['synonymes']);
     }
 
+    public function testRattacherGardeLeTauxDeTvaDuProduit(): void
+    {
+        // Trouvé le 2026-11-17 : le synonyme ajouté réécrivait le produit sans son taux, remis à NULL.
+        $pdo = BaseDeTest::pdo();
+        $pdo->exec("INSERT INTO produit (artisan_id, categorie, designation, unite, prix_centimes, tva_pour_dix_mille) VALUES ({$this->jeu->a}, 'Façade', 'Crépi rustique', 'm²', 4200, 260)");
+        $produit = (int) $pdo->lastInsertId();
+        $this->page("{$this->offre}/lignes/{$this->libre}/rattacher");
+        self::assertSame(303, $this->a->post("{$this->offre}/lignes/{$this->libre}/rattacher", ['produit' => (string) $produit])->getStatusCode());
+        $p = BaseDeTest::ligne("SELECT tva_pour_dix_mille, synonymes FROM produit WHERE id = $produit");
+        self::assertSame([260, 'Crépi de soubassement'], [(int) $p['tva_pour_dix_mille'], $p['synonymes']]);
+    }
+
     public function testUneLigneDejaAuCatalogueNeSeRangePasDeNouveau(): void
     {
         $ligneCatalogue = (int) BaseDeTest::ligne("SELECT id FROM ligne WHERE offre_id = {$this->jeu->offre['a']} AND produit_id IS NOT NULL")['id'];

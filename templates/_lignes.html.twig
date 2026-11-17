@@ -42,6 +42,22 @@
             <a class="btn" href="{{ lien }}/rattacher">Rattacher à un produit</a>
           </div>
         {% endif %}
+        {# Prix dicté pour un produit du catalogue (Xavier, 2026-11-17) : le catalogue reste par défaut ; « Prendre » met le
+           prix dicté, puis la question du catalogue. Les lignes de facture n'en ont pas. #}
+        {% set dicte = l.prix_dicte_centimes ?? null %}
+        {% if modifiable and dicte is not null and l.produit_id is not null %}
+          {% if l.prix_centimes != dicte %}
+            <form class="note prix-dit" method="post" action="{{ lien }}/prix-dicte">
+              <input type="hidden" name="_csrf" value="{{ csrf() }}">
+              <span>Prix dicté {{ dicte|montant }}, catalogue {{ (l.prix_catalogue ?? l.prix_centimes)|montant }}</span><button class="okbtn" type="submit"><span>Prendre {{ dicte|montant }}</span></button>
+            </form>
+          {% elseif (l.prix_catalogue ?? null) is not null and l.prix_catalogue != dicte %}
+            <form class="note prix-dit" method="post" action="{{ lien }}/prix-dicte/catalogue">
+              <input type="hidden" name="_csrf" value="{{ csrf() }}">
+              <span>Mettre aussi {{ dicte|montant }} au catalogue ?</span><button class="okbtn" type="submit" name="choix" value="oui"><span>Oui</span></button><button class="okbtn" type="submit" name="choix" value="non"><span>Non</span></button>
+            </form>
+          {% endif %}
+        {% endif %}
         {% if manque %}
           <div class="note bad"><span>Prix manquant</span></div>
         {% elseif l.a_verifier %}

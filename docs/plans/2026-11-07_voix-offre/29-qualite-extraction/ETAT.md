@@ -35,6 +35,8 @@ profil: .claude/atoz-profile.md
   - Réserves : une seule dictée de 7 postes ; la consigne corrigée a été écrite en voyant ses erreurs (risque de sur-mesure, d'où la moitié du corpus tenue à part) ; durée avec raisonnement sur une dictée de 30 min non mesurée (délai de 300 s).
 - 2026-11-17 : erreur de Claude corrigée : la ligne « Démontage des lames » de l'offre 10 était le produit 26 du catalogue (créé par Luigi, forfait, 0 franc), pas une erreur du modèle. Vu en vérifiant le barème, avant de conclure.
 
+- 2026-11-17, consigne mise en service avec la tâche 438 (prix dicté) : règles « prix dit pour toute ligne », « en bloc », « une précision n'est pas un poste ». Une quatrième règle mesurée le matin (« relève l'unité dite, même pour un produit du catalogue ») faisait reculer le banc inventé à 10 min : 26 et 27 sur 30 au lieu de 29 et 29 avec l'ancienne consigne (variantes voisines confondues) ; retirée, elle ne servait à rien (le code garde l'unité du catalogue). Consigne livrée, 27B sans raisonnement : dictée de Luigi 7, 7 et 6 sur 7, 0 ligne en trop (ancienne : 5 et 6, 2 en trop) ; banc inventé 10 min 29 et 28 sur 30, 30 min 88 sur 90 (ancienne : 29, 29 ; 88). Le modèle varie d'une passe à l'autre malgré la température 0 : une seule passe ne prouve rien.
+
 ## Preuves
 
 ```

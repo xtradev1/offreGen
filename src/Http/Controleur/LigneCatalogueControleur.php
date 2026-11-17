@@ -27,6 +27,8 @@ use Symfony\Component\HttpFoundation\Response;
  *   le fait), sa quantité reste. Si la ligne était hors catalogue, le nom que l'IA lui avait donné devient un synonyme du
  *   produit : la prochaine dictée le reconnaîtra. Une ligne déjà au catalogue peut changer de produit (l'IA s'est
  *   trompée) sans rien ajouter aux synonymes : son nom est celui d'un autre produit.
+ * - Prix dicté (Xavier, 2026-11-17) : la ligne garde le prix du catalogue ; « Prendre » met le prix dicté, puis
+ *   « Mettre aussi … au catalogue ? » : oui change le produit, non le laisse. Dans les deux cas, la note disparaît.
  *
  * @phpstan-import-type Ligne from DepotOffres
  */
@@ -90,12 +92,44 @@ final class LigneCatalogueControleur
         if ($l['produit_id'] === null && mb_strtolower($l['designation']) !== mb_strtolower($p['designation'])) {
             $synonymes = SaisieProduit::synonymes(($p['synonymes'] ?? '') . ', ' . $l['designation']);
             if (mb_strlen($synonymes) <= SaisieProduit::SYNONYMES_MAX) {
-                $catalogue->modifier($p['id'], ['categorie' => $p['categorie'], 'designation' => $p['designation'], 'unite' => $p['unite'],
-                    'prix_centimes' => $p['prix_centimes'], 'synonymes' => $synonymes]);
+                // Le produit entier repasse, taux de TVA compris : modifier() remet à NULL ce qu'on ne lui donne pas.
+                $catalogue->modifier($p['id'], ['synonymes' => $synonymes] + $p);
             }
         }
         $offres->marquerModifiee($offre['id'], $this->c->horloge()->now());
         Flash::dire($requete, 'info', 'Ligne rattachée à ' . Flash::cite($p['designation']));
+        return new RedirectResponse('/offres/' . $offre['id'] . '#l' . $l['id'], 303);
+    }
+
+    /** @param array<string, string> $parametres */
+    public function prendrePrixDicte(Request $requete, array $parametres): Response
+    {
+        [$offre, $l] = $this->ligne($requete, $parametres);
+        $offres = $this->offres($requete);
+        if ($l['prix_dicte_centimes'] === null || !$offres->prendrePrixDicte($offre['id'], $l['id'])) {
+            throw new Conflit('Aucun prix dicté à prendre sur cette ligne.');
+        }
+        $offres->marquerModifiee($offre['id'], $this->c->horloge()->now());
+        return new RedirectResponse('/offres/' . $offre['id'] . '#l' . $l['id'], 303);
+    }
+
+    /** @param array<string, string> $parametres */
+    public function prixDicteAuCatalogue(Request $requete, array $parametres): Response
+    {
+        [$offre, $l] = $this->ligne($requete, $parametres);
+        if ($l['prix_dicte_centimes'] === null) {
+            throw new Conflit('Aucun prix dicté sur cette ligne.');
+        }
+        if ($requete->request->getString('choix') === 'oui') {
+            $catalogue = $this->c->produits($this->portee($requete));
+            $p = $l['produit_id'] === null ? null : $catalogue->parId($l['produit_id']);
+            if ($p === null) {
+                throw new Conflit('Cette ligne n\'est plus rattachée à un produit du catalogue.');
+            }
+            $catalogue->modifier($p['id'], ['prix_centimes' => $l['prix_dicte_centimes']] + $p);
+            Flash::dire($requete, 'info', Flash::cite($p['designation']) . "\u{00A0}: " . Formats::montant($l['prix_dicte_centimes']) . ' au catalogue');
+        }
+        $this->offres($requete)->oublierPrixDicte($offre['id'], $l['id']);
         return new RedirectResponse('/offres/' . $offre['id'] . '#l' . $l['id'], 303);
     }
 

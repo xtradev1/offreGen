@@ -106,12 +106,14 @@ final class ExtracteurApiTest extends TestCase
         self::assertSame('Les murs du salon, environ quarante-deux mètres carrés, deux couches.', $murs->entendu);
     }
 
-    public function testLePrixDuModeleEstIgnorePourUnProduitDuCatalogue(): void
+    public function testLePrixDuModeleNeRemplaceJamaisLeCatalogue(): void
     {
+        // Le catalogue gagne toujours (nom, unité, prix) ; depuis le 2026-11-17, un autre prix dit est gardé à côté et
+        // la ligne passe à vérifier, pour que l'artisan le voie (décision de Xavier).
         $r = (new ExtracteurApi(new MockHttpClient(), 'x', '', 'm', new NullLogger()))->valider(['lignes' => [
             ['produit_id' => 4, 'quantite' => 10, 'prix_unitaire' => 1, 'designation' => 'Autre nom', 'unite' => 'pce', 'certitude' => 'sure'],
         ]], self::CATALOGUE);
-        self::assertSame(['Peinture des murs, 2 couches', 'm²', 2800, false], [$r->lignes[0]->designation, $r->lignes[0]->unite, $r->lignes[0]->prixCentimes, $r->lignes[0]->aVerifier]);
+        self::assertSame(['Peinture des murs, 2 couches', 'm²', 2800, true, 100], [$r->lignes[0]->designation, $r->lignes[0]->unite, $r->lignes[0]->prixCentimes, $r->lignes[0]->aVerifier, $r->lignes[0]->prixDicteCentimes]);
     }
 
     public function testProduitSansPrixToujoursAVerifier(): void
@@ -213,6 +215,30 @@ final class ExtracteurApiTest extends TestCase
         $e = new ExtracteurApi(new MockHttpClient(), 'x', '', 'm', new NullLogger());
         self::assertSame(90, mb_strlen((string) $e->valider(['titre' => str_repeat('é', 200), 'lignes' => []], self::CATALOGUE)->titre));
         self::assertNull($e->valider(['titre' => '  ', 'lignes' => []], self::CATALOGUE)->titre);
+    }
+
+    public function testPrixDicteDUnProduitDuCatalogueGardeACoteEtAVerifier(): void
+    {
+        // Dictée de Luigi (2026-11-17) : « deux couches de peinture sur les murs, 45 m² à 15 francs », catalogue à 28.
+        $r = (new ExtracteurApi(new MockHttpClient(), 'x', '', 'm', new NullLogger()))->valider(['lignes' => [
+            ['produit_id' => 4, 'quantite' => 45, 'prix_unitaire' => 15, 'certitude' => 'sure', 'extrait' => '45 m² à 15 francs'],
+            ['produit_id' => 4, 'quantite' => 10, 'prix_unitaire' => 28, 'certitude' => 'sure'],
+            ['produit_id' => 4, 'quantite' => 12, 'certitude' => 'sure'],
+        ]], self::CATALOGUE);
+        self::assertSame([2800, 1500, true], [$r->lignes[0]->prixCentimes, $r->lignes[0]->prixDicteCentimes, $r->lignes[0]->aVerifier]);
+        // Prix dicté égal au catalogue, ou pas de prix dit : rien à signaler.
+        self::assertSame([null, false], [$r->lignes[1]->prixDicteCentimes, $r->lignes[1]->aVerifier]);
+        self::assertSame([null, false], [$r->lignes[2]->prixDicteCentimes, $r->lignes[2]->aVerifier]);
+    }
+
+    public function testLaConsigneDemandeLePrixDitPourToutesLesLignes(): void
+    {
+        $this->extracteur(self::reponseOutil(self::ARGUMENTS_REELS))->extraire('Dictée.', self::CATALOGUE);
+        $corps = json_decode((string) $this->requetes[0]['options']['body'], true);
+        // Règles mesurées sur la dictée de Luigi le 2026-11-17 (docs/plans/2026-11-07_voix-offre/29-qualite-extraction).
+        self::assertStringContainsString('catalogue compris', $corps['messages'][0]['content']);
+        self::assertStringContainsString('en bloc', $corps['messages'][0]['content']);
+        self::assertStringContainsString('toute ligne', $corps['tools'][0]['function']['parameters']['properties']['lignes']['items']['properties']['prix_unitaire']['description']);
     }
 
     public function testTroisCentsLignesGardeesPasUneDePlus(): void

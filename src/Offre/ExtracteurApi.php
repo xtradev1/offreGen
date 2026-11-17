@@ -24,7 +24,10 @@ final class ExtracteurApi implements Extracteur
         Règles :
         - Une ligne par travail dicté. N'invente aucun travail qui n'est pas dicté.
         - Quand le travail correspond à un produit du catalogue (désignation ou synonymes), donne son identifiant et une quantité dans l'unité du catalogue.
-        - Quand il n'y est pas, produit_id vaut null : écris la désignation et l'unité ; donne prix_unitaire seulement si un prix en francs est dicté.
+        - Quand il n'y est pas, produit_id vaut null : écris la désignation et l'unité.
+        - Pour chaque ligne, catalogue compris, relève dans prix_unitaire le prix unitaire dicté (« 45 m² à 15 francs » : quantité 45, unité m², prix 15). Si aucun prix n'est dit, ne mets pas prix_unitaire.
+        - Un prix donné seul juste après un poste (« en bloc 500 francs », « bloc 500 francs », « le tout 500 francs ») est le prix forfaitaire de ce poste : ne crée pas de ligne à part.
+        - Une précision sur l'ordre ou l'état des travaux (« après remise en état du plafond ») n'est pas un poste, sauf si une quantité ou un prix lui est donné.
         - Chaque travail ou frais dicté devient une ligne, même sans quantité ni prix : quantité 1 et unité « forfait » quand aucune quantité n'est dictée.
         - certitude « a_verifier » dès que la quantité est approximative (environ, à peu près, une douzaine), déduite ou mal comprise ; sinon « sure ».
         - extrait : les mots exacts de la dictée d'où vient la ligne.
@@ -118,9 +121,14 @@ final class ExtracteurApi implements Extracteur
             $entendu = is_string($brute['extrait'] ?? null) ? mb_substr(self::texte($brute['extrait']), 0, 500) : null;
             $doute = $devinee || ($brute['certitude'] ?? '') !== 'sure';
             $id = $brute['produit_id'] ?? null;
+            $dicte = $brute['prix_unitaire'] ?? null;
+            $dicteCentimes = (is_int($dicte) || is_float($dicte)) && $dicte > 0 ? (int) round($dicte * 100) : null;
             if (is_int($id) && isset($parId[$id])) {
                 $p = $parId[$id];
-                $lignes[] = new LigneExtraite($p['designation'], $milliemes, $p['unite'], $p['prix_centimes'], $doute || $p['prix_centimes'] === 0, $p['id'], $entendu);
+                // Le prix du catalogue reste celui de la ligne ; un autre prix dicté est gardé à côté et la ligne
+                // passe à vérifier (Xavier, 2026-11-17 : « catalogue par défaut », une note « prix dicté »).
+                $autre = $dicteCentimes !== null && $dicteCentimes !== $p['prix_centimes'] ? $dicteCentimes : null;
+                $lignes[] = new LigneExtraite($p['designation'], $milliemes, $p['unite'], $p['prix_centimes'], $doute || $p['prix_centimes'] === 0 || $autre !== null, $p['id'], $entendu, $autre);
                 continue;
             }
             // Ligne libre, ou produit inconnu du catalogue de cet artisan : toujours à vérifier.
@@ -130,9 +138,7 @@ final class ExtracteurApi implements Extracteur
                 continue;
             }
             $unite = is_string($brute['unite'] ?? null) && trim($brute['unite']) !== '' ? mb_substr(trim($brute['unite']), 0, 20) : 'forfait';
-            $prix = $brute['prix_unitaire'] ?? null;
-            $centimes = (is_int($prix) || is_float($prix)) && $prix > 0 ? (int) round($prix * 100) : 0;
-            $lignes[] = new LigneExtraite($designation, $milliemes, $unite, $centimes, true, null, $entendu);
+            $lignes[] = new LigneExtraite($designation, $milliemes, $unite, $dicteCentimes ?? 0, true, null, $entendu);
         }
         $titre = is_string($proposition['titre'] ?? null) ? mb_substr(self::texte($proposition['titre']), 0, 90) : '';
         $client = is_string($proposition['client'] ?? null) ? mb_substr(self::texte($proposition['client']), 0, 190) : '';
@@ -212,7 +218,7 @@ final class ExtracteurApi implements Extracteur
                             'designation' => ['type' => 'string', 'description' => 'Seulement pour une ligne libre'],
                             'quantite' => ['type' => 'number'],
                             'unite' => ['type' => 'string', 'description' => 'Seulement pour une ligne libre'],
-                            'prix_unitaire' => ['type' => 'number', 'description' => 'CHF, seulement pour une ligne libre dont le prix est dicté'],
+                            'prix_unitaire' => ['type' => 'number', 'description' => 'Prix unitaire dicté en CHF, pour toute ligne où un prix est dit'],
                             'certitude' => ['type' => 'string', 'enum' => ['sure', 'a_verifier']],
                             'extrait' => ['type' => 'string'],
                         ],

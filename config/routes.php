@@ -77,6 +77,9 @@ return static function (Conteneur $c): array {
         new Route('ligne_creer_produit', '/offres/{id}/lignes/{ligne}/produit', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->creerProduit($r, $p), Route::ARTISAN),
         new Route('ligne_rattacher_choix', '/offres/{id}/lignes/{ligne}/rattacher', ['GET'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->choix($r, $p), Route::ARTISAN),
         new Route('ligne_rattacher', '/offres/{id}/lignes/{ligne}/rattacher', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->rattacher($r, $p), Route::ARTISAN),
+        // Prix dicté à côté du catalogue (Xavier, 2026-11-17) : « Prendre », puis « Mettre aussi au catalogue ? ».
+        new Route('ligne_prix_dicte', '/offres/{id}/lignes/{ligne}/prix-dicte', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->prendrePrixDicte($r, $p), Route::ARTISAN),
+        new Route('ligne_prix_dicte_catalogue', '/offres/{id}/lignes/{ligne}/prix-dicte/catalogue', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->prixDicteAuCatalogue($r, $p), Route::ARTISAN),
         // « Générer l'offre » : le PDF dans l'application (décision D7 A, 2026-11-15). Lecture seule.
         new Route('offre_apercu', '/offres/{id}/apercu', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->apercu($r, $p), Route::ARTISAN),
         // Le partage du téléphone a réussi : l'offre est notée envoyée (décision D8, 2026-11-15).
