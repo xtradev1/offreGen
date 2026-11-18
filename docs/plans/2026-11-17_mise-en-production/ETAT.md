@@ -13,7 +13,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 
 ## En attente de toi
 
-- Dans `MAQUETTE-dicta-cone.html` : choisir l'orange (O1), le fond de l'en-tête (B1), le mot « offre » ou « devis » (M1), garder ou écarter chaque logo (C1 à C10), coller « Copier le texte ».
+- Dans `MAQUETTE-dicta-parle.html` : choisir l'orange (O2), garder ou écarter chaque logo (K1 à K10), le mot « offre » ou « devis » (M1), coller « Copier le texte ».
 - Jouer la recette regroupée (`RECETTE.md`).
 - Confirmer que la production ira sur `dicta.ch` et créer la boîte `notifications@`.
 
@@ -53,6 +53,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-18, courriels d'accès relus par l'agent XtraDev : « À retoucher » puis « Prêt » au second tour (objet du courriel d'oubli, adresse de connexion donnée, « avec votre adresse électronique », « vous connecter »).
 - 2026-11-18, Xavier, charte « Dicta - Charte graphique.pdf » reçue : nom Dicta validé, `dicta.ch` réservé, bleu encre `#1d3557`, orange `#e76f51`, Archivo ou Barlow, Inter, trois logos retenus. Avis de Claude : slogan « Une phrase, un devis » contraire au produit, contrastes sous les seuils (gris 4,29, bouton 3,09, attention 2,20), orange et rouge d'erreur de même teinte, trois logos. Réponse de Xavier : « fais moi les 2 cote a cote en faisant en sorte que ça passe les rapport. propose des logo aussi je suis pas convaincu ».
 - 2026-11-18, Xavier, sur `MAQUETTE-dicta.html` : « je suis pas convaicu de l'orange ça me convient pas parfaitement prends la couleur de vlc et fais moi des logos avec un cone de chantier qui dit dicta un truc comme ça fais moi 10 tests dew logo et donne des variante du orange et potentiellement test avec l'antracite a la place du bleu mais 2 version fais en plein ». Puis, à l'avertissement sur le logo de VLC : « oui je veux pas copier, m'inspirer ont peu prendre un autre cone ou un cone deformer etc.. ». Le jaune sort de la course ; P1 et L1 à L5 de `MAQUETTE-dicta.html` restent sans réponse.
+- 2026-11-18, Xavier, sur `MAQUETTE-dicta-cone.html` : « il faut que le logo fasse cone qui parle donne des style vraiment différents en terme de logo. anthracite c'est bien mais l'orange est encore trop flachi, il me faut d'autre exemple faire des variantes d'orange 5-6 ». Retenu : en-tête anthracite `#23272D`. Écarté : orange VLC `#FF8800`. O1 et C1 à C10 de cette planche restent sans autre réponse.
 
 ## Journal
 
@@ -72,6 +73,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-18, nuit : accord de Xavier, commit `475ef57` poussé sur `chantier-voix-offre`, déployé sur le test (3 migrations jouées, sonde verte). Le `.env` du test ne règle ni messagerie ni alertes : courriels en fichiers sur le serveur, aucune alerte, purge éteinte. `MAQUETTE-dicta.html` et `docs/terrain/2026-11-18_essai-artisans.txt` laissés hors du commit (autre session).
 - 2026-11-18 : `MAQUETTE-dicta.html` : la charte corrigée (A, bleu `#1D3557` et orange `#FF8419` à libellé foncé, Archivo et Inter) à côté d'anthracite et jaune (B, accent C de la maquette sobre), quatre écrans par paire, états à côté du bouton, cinq logos dans leurs quatre emplois. Le générateur refuse d'écrire la page si un texte est sous 7:1 ou une forme sous 3:1 (19 couples par palette, tous au-dessus). Chiffres à chasse fixe mesurés dans Inter et Plex. `check.js` vert, captures bureau et téléphone relues. Défauts trouvés et corrigés avant livraison : variables de police coupées par des guillemets dans un attribut, logo 1 illisible (redessiné en D tranché), point du i mal posé (recalé sur la mesure de l'encre).
 - 2026-11-18 : `MAQUETTE-dicta-cone.html` : cinq oranges (VLC `#FF8800`, ambre, adouci, rouille à libellé blanc, précédent) sur bleu et sur anthracite ; quatre écrans en orange VLC, bleu contre anthracite ; dix logos au cône, chacun avec sa distance à VLC. Couleur de VLC lue dans le fichier de l'icône (dégradé de `#FFB900` à `#CC5F00`, moyen `#F48200` à 6,82:1 avec un libellé noir). 17 couples mesurés par version, tous au-dessus des seuils. `check.js` vert, captures relues. Corrigé avant livraison : deux logos trop proches de VLC remplacés (demi-cône en D, entonnoir), distance du logo 9 ramenée à « faible », une classe CSS en conflit.
+- 2026-11-18 : `MAQUETTE-dicta-parle.html`, tout sur anthracite : six oranges moins vifs en deux familles (bouton orange désaturé à libellé noir : terre cuite claire, ocre, abricot ; orange profond en accent sur le logo et le micro, boutons anthracite : orange brûlé, terracotta, moutarde), montrés en petit puis sur deux écrans entiers ; dix cônes qui parlent en dix styles, avec un sélecteur qui les habille de chaque orange. 19 couples mesurés par essai (texte 7:1, forme 3:1), tous au-dessus. `check.js` vert, captures relues, parcours cliqué joué (sélecteur d'orange, choix, « Copier le texte »).
 
 ## Preuves
 
