@@ -67,6 +67,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-18 : lots 1 à 6 de `PLAN-completer.md`. Messagerie dans `src/Systeme/` (fichier, SMTP, redirection pour le test) ; droit administrateur (`Route::ADMIN`, `bin/administrateur`) ; liens d'accès (table `jeton_acces`, empreinte seule, 1 h et 7 jours, 3 demandes par heure, session des autres appareils fermée au changement) ; purge éteinte sauf `PURGE_AUDIO=1`, ligne cron posée par `outils/deployer-test.sh` ; alertes du journal par courriel (`ALERTES_A`, une par heure pour la même erreur, 30 par jour) ; postes coupés : 5 tests existants verts. Trois migrations additives. Recette visuelle des pages du lot 3 (390, 1440, sombre) : 0 défaut de disposition après correction d'un lien décalé ; contrastes sous 7:1 tous dus à la palette actuelle (gris 4,94, bleu 6,47), remplacée avec la marque.
 - 2026-11-18 : lot 7, enregistrement à l'abri (sous-chantier 27), livré en code ; parcours cliqué dans Chromium vert (détail et preuves dans l'`ETAT.md` du sous-chantier). `docs/SECURITE.md` : dictée en clair dans le navigateur, liens d'accès. Suite complète : 576 tests, PHPStan sans erreur. Fichier inconnu trouvé dans le dépôt, non créé par Claude, laissé tel quel : `docs/terrain/2026-11-18_essai-artisans.txt`.
 - 2026-11-18, soir : revue des lots par trois relecteurs Opus (connexion, exploitation, dictée à l'abri). 2 défauts hauts et une dizaine de moyens, tous vérifiés puis corrigés avec un test chacun ; détail et restes dans `REVUE.md`. Migration additive `Version20261118000004` (clé de dictée). Parcours cliqué de la dictée à l'abri rejoué, six scénarios verts.
+- 2026-11-18, nuit : accord de Xavier, commit `475ef57` poussé sur `chantier-voix-offre`, déployé sur le test (3 migrations jouées, sonde verte). Le `.env` du test ne règle ni messagerie ni alertes : courriels en fichiers sur le serveur, aucune alerte, purge éteinte. `MAQUETTE-dicta.html` et `docs/terrain/2026-11-18_essai-artisans.txt` laissés hors du commit (autre session).
 
 ## Preuves
 
@@ -149,4 +150,21 @@ E. après le geste retour, autre page : fenêtre fermée ; compte de démonstrat
 F. stockage muet : offre /offres/169 en 1199 ms
 erreurs JS : []
 $ grep -qx 'PURGE_AUDIO=1' (garde cron) : lancée seulement pour la ligne exacte PURGE_AUDIO=1
+```
+
+Déploiement sur le test (2026-11-18, nuit) :
+
+```
+$ bash outils/deployer-test.sh
+OK (588 tests, 3785 assertions) ; analyse statique : sans erreur
+[notice] 3 migrations executed ; Successfully migrated to version: Version20261118000004
+en service : releases/475ef579a2322e17317a13591003eac6dfcbf65c ; précédente : releases/18d49a09443fa53c43516c0e2ba5e64fe93387ab
+LU     /sante : {"commit":"475ef579a2322e17317a13591003eac6dfcbf65c","base":"ok","migrations":"ok"}
+SONDE VERTE
+$ node recette-test.js (Chromium 390 px, site de test, lecture seule)
+connexion 200 ; lien « Mot de passe oublié ? » visible ; oubli -> /mot-de-passe/oubli
+lien inventé 410 Lien expiré ; réglages sans session -> /connexion ; erreurs JS []
+$ crontab -l (serveur de test)
+17 3 * * * grep -qx 'PURGE_AUDIO=1' $HOME/.../partage/.env && cd ... && php-8.5 bin/purger-audio ...
+PURGE_AUDIO=1 dans partage/.env : 0
 ```
