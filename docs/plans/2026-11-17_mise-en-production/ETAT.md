@@ -13,9 +13,9 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 
 ## En attente de toi
 
-- Dans `MAQUETTE-sobre.html` : valider la direction (S1), choisir l'accent (S2), coller « Copier le texte ».
+- Dans `MAQUETTE-dicta.html` : choisir la palette (P1), le mot « offre » ou « devis » (M1), garder ou écarter chaque logo (L1 à L5), coller « Copier le texte ». Ces choix remplacent S1 et S2 de `MAQUETTE-sobre.html`.
 - Jouer la recette regroupée (`RECETTE.md`).
-- Choisir l'orthographe du domaine (`easy-offre.ch` ou `easy-offres.ch`) et créer la boîte `notifications@`.
+- Confirmer que la production ira sur `dicta.ch` et créer la boîte `notifications@`.
 
 ## Suivi Origin
 
@@ -51,6 +51,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-18, Xavier : « l'envoi de courriels et les jetons de mot de passe et d'accès (A3) ; le droit administrateur ; la purge écrite et désactivée (Q1) ; les alertes vers ton adresse (Q3) ; ensuite l'avertissement des postes coupés (A13) et l'enregistrement à l'abri (sous-chantier 27) ». Plan : `PLAN-completer.md`.
 - 2026-11-18, Claude, décisions de mise en œuvre : pages du lot 3 faites avec les composants actuels (parcours P1, P3 B, P4 acceptés, aspect refusé : elles suivront la marque) ; vouvoiement gardé dans les courriels et les pages, comme le reste de l'application, en attendant le ton de la marque ; aucun courriel vers un compte de démonstration ; droit administrateur en 404 pour tout autre compte et sans session (A1) ; 10 caractères au moins pour un mot de passe, sans règle de composition ; `symfony/mailer` et `symfony/event-dispatcher` figés en 7.4 (le second arrivait en 8.1).
 - 2026-11-18, courriels d'accès relus par l'agent XtraDev : « À retoucher » puis « Prêt » au second tour (objet du courriel d'oubli, adresse de connexion donnée, « avec votre adresse électronique », « vous connecter »).
+- 2026-11-18, Xavier, charte « Dicta - Charte graphique.pdf » reçue : nom Dicta validé, `dicta.ch` réservé, bleu encre `#1d3557`, orange `#e76f51`, Archivo ou Barlow, Inter, trois logos retenus. Avis de Claude : slogan « Une phrase, un devis » contraire au produit, contrastes sous les seuils (gris 4,29, bouton 3,09, attention 2,20), orange et rouge d'erreur de même teinte, trois logos. Réponse de Xavier : « fais moi les 2 cote a cote en faisant en sorte que ça passe les rapport. propose des logo aussi je suis pas convaincu ».
 
 ## Journal
 
@@ -68,6 +69,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-18 : lot 7, enregistrement à l'abri (sous-chantier 27), livré en code ; parcours cliqué dans Chromium vert (détail et preuves dans l'`ETAT.md` du sous-chantier). `docs/SECURITE.md` : dictée en clair dans le navigateur, liens d'accès. Suite complète : 576 tests, PHPStan sans erreur. Fichier inconnu trouvé dans le dépôt, non créé par Claude, laissé tel quel : `docs/terrain/2026-11-18_essai-artisans.txt`.
 - 2026-11-18, soir : revue des lots par trois relecteurs Opus (connexion, exploitation, dictée à l'abri). 2 défauts hauts et une dizaine de moyens, tous vérifiés puis corrigés avec un test chacun ; détail et restes dans `REVUE.md`. Migration additive `Version20261118000004` (clé de dictée). Parcours cliqué de la dictée à l'abri rejoué, six scénarios verts.
 - 2026-11-18, nuit : accord de Xavier, commit `475ef57` poussé sur `chantier-voix-offre`, déployé sur le test (3 migrations jouées, sonde verte). Le `.env` du test ne règle ni messagerie ni alertes : courriels en fichiers sur le serveur, aucune alerte, purge éteinte. `MAQUETTE-dicta.html` et `docs/terrain/2026-11-18_essai-artisans.txt` laissés hors du commit (autre session).
+- 2026-11-18 : `MAQUETTE-dicta.html` : la charte corrigée (A, bleu `#1D3557` et orange `#FF8419` à libellé foncé, Archivo et Inter) à côté d'anthracite et jaune (B, accent C de la maquette sobre), quatre écrans par paire, états à côté du bouton, cinq logos dans leurs quatre emplois. Le générateur refuse d'écrire la page si un texte est sous 7:1 ou une forme sous 3:1 (19 couples par palette, tous au-dessus). Chiffres à chasse fixe mesurés dans Inter et Plex. `check.js` vert, captures bureau et téléphone relues. Défauts trouvés et corrigés avant livraison : variables de police coupées par des guillemets dans un attribut, logo 1 illisible (redessiné en D tranché), point du i mal posé (recalé sur la mesure de l'encre).
 
 ## Preuves
 
