@@ -19,6 +19,14 @@ final class ExtracteurApi implements Extracteur
     /** Banc du 2026-11-17 : 300 postes dictés en 30 minutes (un toutes les 6 s), 96 % justes. Au-delà, coupé. */
     public const LIGNES_MAX = 300;
 
+    /**
+     * Jetons de sortie au plus (revue du 2026-11-18 : sans borne, la limite par défaut du service coupait l'offre
+     * sans prévenir). Une ligne en coûte environ 57 (banc du 2026-11-17) : 300 lignes tiennent avec de la marge.
+     */
+    public const JETONS_SORTIE_MAX = 24000;
+
+    private const JETONS_SORTIE_PIECES = 8000;
+
     private const CONSIGNE = <<<'TXT'
         Tu prépares le brouillon d'une offre pour un artisan suisse, à partir de la dictée de sa visite chez le client.
         Règles :
@@ -76,6 +84,7 @@ final class ExtracteurApi implements Extracteur
             ],
             'tools' => [self::outil()],
             'tool_choice' => ['type' => 'function', 'function' => ['name' => 'proposer_offre']],
+            'max_tokens' => self::JETONS_SORTIE_MAX,
         ];
         if ($this->sansRaisonnement) {
             $corps['reasoning_effort'] = 'none';
@@ -117,6 +126,7 @@ final class ExtracteurApi implements Extracteur
             ],
             'tools' => [self::outilPieces()],
             'tool_choice' => ['type' => 'function', 'function' => ['name' => 'ranger_par_piece']],
+            'max_tokens' => self::JETONS_SORTIE_PIECES,
         ];
         if ($this->sansRaisonnement) {
             $corps['reasoning_effort'] = 'none';
@@ -145,7 +155,7 @@ final class ExtracteurApi implements Extracteur
             $lignes[] = new LigneExtraite($l->designation, $l->quantiteMilliemes, $l->unite, $l->prixCentimes, $l->aVerifier, $l->produitId,
                 $l->entendu, $l->prixDicteCentimes, $pieces[$i] ?? null);
         }
-        return new ResultatExtraction($resultat->titre, $lignes, $resultat->client, $resultat->lieu);
+        return new ResultatExtraction($resultat->titre, $lignes, $resultat->client, $resultat->lieu, $resultat->postesCoupes);
     }
 
     /**
@@ -171,13 +181,18 @@ final class ExtracteurApi implements Extracteur
     {
         $parId = array_column($catalogue, null, 'id');
         $lignes = [];
-        $brutes = is_array($proposition['lignes'] ?? null) ? $proposition['lignes'] : [];
+        $brutes = is_array($proposition['lignes'] ?? null) ? array_values($proposition['lignes']) : [];
+        $coupes = max(0, count($brutes) - self::LIGNES_MAX);
+        if ($coupes > 0) {
+            $this->journal->warning("offreGen, extraction : $coupes poste(s) au-delà de " . self::LIGNES_MAX . " lignes, écartés ; l'artisan est averti.");
+        }
         foreach (array_slice($brutes, 0, self::LIGNES_MAX) as $rang => $brute) {
             if (!is_array($brute)) {
                 continue;
             }
             $quantite = $brute['quantite'] ?? null;
-            $milliemes = is_int($quantite) || is_float($quantite) ? (int) round($quantite * 1000) : 0;
+            $milliemes = (is_int($quantite) || is_float($quantite)) && $quantite > 0 && $quantite * 1000 <= Saisie::QUANTITE_MAX_MILLIEMES
+                ? (int) round($quantite * 1000) : 0;
             $devinee = $milliemes <= 0;
             if ($devinee) {
                 // Un poste dicté ne se perd jamais pour sa quantité (essai de Xavier du 2026-11-16 : « des frais de
@@ -188,9 +203,13 @@ final class ExtracteurApi implements Extracteur
             $entendu = is_string($brute['extrait'] ?? null) ? mb_substr(self::texte($brute['extrait']), 0, 500) : null;
             $doute = $devinee || ($brute['certitude'] ?? '') !== 'sure';
             $id = $brute['produit_id'] ?? null;
+            // Qwen rend parfois l'identifiant en texte (« "12" ») : c'est le même produit.
+            $id = is_string($id) && ctype_digit($id) ? (int) $id : $id;
             $piece = Piece::lire($brute['piece'] ?? null);
             $dicte = $brute['prix_unitaire'] ?? null;
-            $dicteCentimes = (is_int($dicte) || is_float($dicte)) && $dicte > 0 ? (int) round($dicte * 100) : null;
+            // Un prix dicté hors des bornes de la saisie à l'écran est un mot mal compris : ignoré.
+            $dicteCentimes = (is_int($dicte) || is_float($dicte)) && $dicte > 0 && $dicte * 100 <= Saisie::PRIX_MAX_CENTIMES
+                ? (int) round($dicte * 100) : null;
             if (is_int($id) && isset($parId[$id])) {
                 $p = $parId[$id];
                 // Le prix du catalogue reste celui de la ligne ; un autre prix dicté est gardé à côté et la ligne
@@ -211,7 +230,7 @@ final class ExtracteurApi implements Extracteur
         $titre = is_string($proposition['titre'] ?? null) ? mb_substr(self::texte($proposition['titre']), 0, 90) : '';
         $client = is_string($proposition['client'] ?? null) ? mb_substr(self::texte($proposition['client']), 0, 190) : '';
         $lieu = is_string($proposition['lieu'] ?? null) ? mb_substr(self::texte($proposition['lieu']), 0, 255) : '';
-        return new ResultatExtraction($titre === '' ? null : $titre, $lignes, $client === '' ? null : $client, $lieu === '' ? null : $lieu);
+        return new ResultatExtraction($titre === '' ? null : $titre, $lignes, $client === '' ? null : $client, $lieu === '' ? null : $lieu, $coupes);
     }
 
     /**
@@ -237,6 +256,10 @@ final class ExtracteurApi implements Extracteur
         if ($message === null) {
             throw new \RuntimeException('Extraction : réponse sans message du modèle.');
         }
+        // Coupée par la limite de jetons : l'offre serait incomplète ou vide. Un échec se réessaie, une offre vide se perd.
+        if (($choix[0]['finish_reason'] ?? null) === 'length') {
+            throw new \RuntimeException('Extraction : réponse coupée par la limite de jetons de sortie.');
+        }
         $appels = is_array($message['tool_calls'] ?? null) ? $message['tool_calls'] : [];
         foreach ($appels as $appel) {
             $fonction = is_array($appel) && is_array($appel['function'] ?? null) ? $appel['function'] : [];
@@ -249,6 +272,7 @@ final class ExtracteurApi implements Extracteur
                 /** @var array<string, mixed> $decode */
                 return $decode;
             }
+            throw new \RuntimeException("Extraction : arguments de $nom illisibles.");
         }
         // Le modèle a répondu sans remplir l'offre : la dictée ne contenait rien d'utile.
         return null;

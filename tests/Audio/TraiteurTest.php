@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Tests\Audio;
 
 use OffreGen\Adresse\Adresse;
+use OffreGen\Audio\DureeAudio;
 use OffreGen\Audio\StockageAudio;
 use OffreGen\Audio\Traiteur;
 use OffreGen\Audio\Transcripteur;
@@ -19,6 +20,7 @@ use OffreGen\Donnees\Statut;
 use OffreGen\Offre\Extracteur;
 use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\ExtracteurFactice;
+use OffreGen\Offre\LigneExtraite;
 use OffreGen\Offre\Messagerie;
 use OffreGen\Offre\MessagerieFichier;
 use OffreGen\Offre\ResultatExtraction;
@@ -52,7 +54,7 @@ final class TraiteurTest extends TestCase
         $this->dossiers->effacer();
     }
 
-    private function traiteur(?Transcripteur $t = null, ?Extracteur $x = null, ?Messagerie $m = null): Traiteur
+    private function traiteur(?Transcripteur $t = null, ?Extracteur $x = null, ?Messagerie $m = null, ?int $dureeMax = null): Traiteur
     {
         return new Traiteur(
             $this->jeu->base,
@@ -65,6 +67,8 @@ final class TraiteurTest extends TestCase
             $this->horloge,
             new NullLogger(),
             'https://exemple.test',
+            $dureeMax === null ? null : new DureeAudio(),
+            $dureeMax ?? 1800,
         );
     }
 
@@ -259,6 +263,61 @@ final class TraiteurTest extends TestCase
     private function clientDeLOffre(): array
     {
         return BaseDeTest::ligne("SELECT o.client_id, o.client_dicte, o.lieu_dicte FROM offre o JOIN enregistrement e ON e.id = o.enregistrement_id WHERE e.uuid = '" . self::UUID . "'");
+    }
+
+    /**
+     * Revue du 2026-11-18 (H1) : chez Infomaniak, le site web ne peut pas lancer ffprobe, la durée n'est pas lue à
+     * l'import. Le traitement de fond la mesure avant tout appel payant ; trop long, échec définitif, sans transcription.
+     */
+    public function testUnEnregistrementTropLongEchoueAvantLaTranscription(): void
+    {
+        $dossier = $this->dossiers->env()['AUDIO_DOSSIER'] . "/{$this->jeu->a}";
+        if (!is_dir($dossier)) {
+            mkdir($dossier, 0700, true);
+        }
+        copy(dirname(__DIR__) . '/fixtures/audio/dictee-peintre.ogg', "$dossier/" . self::UUID . '.m4a');
+        $appele = new class implements Transcripteur {
+            public bool $appele = false;
+
+            public function demarrer(string $chemin): string
+            {
+                $this->appele = true;
+                return 'lot';
+            }
+
+            public function resultat(string $reference): string
+            {
+                return 'texte';
+            }
+        };
+        // 27,9 s de dictée pour 10 s permises (plus la tolérance de 5 s).
+        self::assertSame(Statut::ECHEC, $this->traiteur(t: $appele, dureeMax: 10)->avancer(self::UUID));
+        self::assertFalse($appele->appele);
+        self::assertStringContainsString('trop long', (string) $this->etat()['erreur']);
+    }
+
+    public function testUnEnregistrementDansLaLimitePasse(): void
+    {
+        $dossier = $this->dossiers->env()['AUDIO_DOSSIER'] . "/{$this->jeu->a}";
+        if (!is_dir($dossier)) {
+            mkdir($dossier, 0700, true);
+        }
+        copy(dirname(__DIR__) . '/fixtures/audio/dictee-peintre.ogg', "$dossier/" . self::UUID . '.m4a');
+        self::assertSame(Statut::PRET, $this->traiteur(dureeMax: 1800)->avancer(self::UUID));
+    }
+
+    /** Revue du 2026-11-18 (A13) : les postes au-delà du plafond de l'offre ne disparaissent plus en silence. */
+    public function testLesPostesCoupesSontNotesSurLOffre(): void
+    {
+        $coupe = new class implements Extracteur {
+            public function extraire(string $transcription, array $catalogue): ResultatExtraction
+            {
+                return new ResultatExtraction('Immeuble', [new LigneExtraite('Poste 1', 1000, 'pce', 100, false, null)], null, null, 12);
+            }
+        };
+        self::assertSame(Statut::PRET, $this->traiteur(x: $coupe)->avancer(self::UUID));
+        $offre = BaseDeTest::ligne("SELECT o.postes_coupes FROM offre o JOIN enregistrement e ON e.id = o.enregistrement_id WHERE e.uuid = '" . self::UUID . "'");
+        self::assertSame(12, (int) $offre['postes_coupes']);
     }
 
     /** Règle de Xavier (2026-11-12) : à plus de 80 % de ressemblance, l'offre rejoint la fiche. */

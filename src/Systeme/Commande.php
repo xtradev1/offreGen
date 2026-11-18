@@ -14,8 +14,12 @@ final class Commande
 {
     /** proc_open n'existe pas ici : rien n'a été lancé. */
     public const IMPOSSIBLE = -1;
+    /** Arrêté au bout du délai (revue du 2026-11-18, H2 : un fichier piégé bloquait ffmpeg pour toujours). */
+    public const DEPASSE = -2;
     /** Le programme n'a pas pu démarrer (absent, ou non exécutable). */
     public const ABSENT = 127;
+    /** Délai par défaut, en secondes. */
+    public const DELAI = 120;
 
     private readonly bool $possible;
 
@@ -24,21 +28,59 @@ final class Commande
         $this->possible = $possible ?? function_exists('proc_open');
     }
 
-    /** @param list<string> $commande */
-    public function lancer(array $commande): ResultatCommande
+    /**
+     * Les deux sorties sont lues en même temps : un programme qui remplit d'abord sa sortie d'erreur ne reste pas
+     * bloqué. Au-delà du délai, il est arrêté et le code vaut DEPASSE.
+     *
+     * @param list<string> $commande
+     */
+    public function lancer(array $commande, int $delaiSecondes = self::DELAI): ResultatCommande
     {
         if (!$this->possible) {
             return new ResultatCommande(self::IMPOSSIBLE, '', '');
         }
         $tubes = [];
-        $processus = @proc_open($commande, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $tubes);
+        $processus = @proc_open($commande, [0 => ['file', '/dev/null', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $tubes);
         if (!is_resource($processus)) {
             return new ResultatCommande(self::ABSENT, '', '');
         }
-        $sortie = (string) stream_get_contents($tubes[1]);
-        $erreur = (string) stream_get_contents($tubes[2]);
-        fclose($tubes[1]);
-        fclose($tubes[2]);
-        return new ResultatCommande(proc_close($processus), $sortie, $erreur);
+        stream_set_blocking($tubes[1], false);
+        stream_set_blocking($tubes[2], false);
+        $lu = [1 => '', 2 => ''];
+        $ouverts = [1 => $tubes[1], 2 => $tubes[2]];
+        $limite = microtime(true) + max(1, $delaiSecondes);
+        while ($ouverts !== []) {
+            $reste = $limite - microtime(true);
+            if ($reste <= 0) {
+                proc_terminate($processus, 9);
+                foreach ($ouverts as $tube) {
+                    fclose($tube);
+                }
+                proc_close($processus);
+                return new ResultatCommande(self::DEPASSE, $lu[1], $lu[2]);
+            }
+            $lecture = array_values($ouverts);
+            $rien = null;
+            $prets = @stream_select($lecture, $rien, $rien, (int) $reste, (int) (fmod($reste, 1) * 1_000_000));
+            if ($prets === false) {
+                break;
+            }
+            foreach ($ouverts as $n => $tube) {
+                if (!in_array($tube, $lecture, true)) {
+                    continue;
+                }
+                $morceau = fread($tube, 65536);
+                if ($morceau !== false && $morceau !== '') {
+                    $lu[$n] .= $morceau;
+                } elseif (feof($tube)) {
+                    fclose($tube);
+                    unset($ouverts[$n]);
+                }
+            }
+        }
+        foreach ($ouverts as $tube) {
+            fclose($tube);
+        }
+        return new ResultatCommande(proc_close($processus), $lu[1], $lu[2]);
     }
 }

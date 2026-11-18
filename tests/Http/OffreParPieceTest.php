@@ -164,4 +164,13 @@ final class OffreParPieceTest extends TestCase
         self::assertSame(404, $b->get("{$this->chemin}/pieces?nom=Salon")->getStatusCode());
         self::assertSame('Salon', $this->pieces()[1]);
     }
+
+    /** Revue du 2026-11-18 (A13) : l'artisan voit que des postes dictés manquent, et combien. */
+    public function testLOffreAvertitDesPostesCoupes(): void
+    {
+        self::assertStringNotContainsString('postes de plus', $this->page($this->chemin));
+        BaseDeTest::pdo()->exec("UPDATE offre SET postes_coupes = 12 WHERE id = {$this->offre}");
+        $page = $this->page($this->chemin);
+        self::assertStringContainsString('La dictée comptait 12 postes de plus que les 300', $page);
+    }
 }

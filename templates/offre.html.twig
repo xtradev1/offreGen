@@ -22,6 +22,9 @@
       <button class="btn pc-seul doc-cote" type="button" data-doc-cote="/offres/{{ offre.id }}/document" aria-pressed="false" hidden>Document à côté</button></span>
   </div>
 
+  {# Revue du 2026-11-18 (A13) : des postes dictés au-delà du plafond de l'offre n'y sont pas ; l'artisan le sait. #}
+  {% if offre.postes_coupes > 0 %}<p class="alerte warn" role="alert">La dictée comptait {{ offre.postes_coupes }} poste{{ offre.postes_coupes > 1 ? 's' }} de plus que les 300 d'une offre : ils n'y sont pas. Dictez la suite dans une seconde offre.</p>{% endif %}
+
   {% include '_lignes.html.twig' with {base: '/offres/' ~ offre.id, modifiable: true, ranger: true, vide:"Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un."} %}
   {% include '_ajout_pc.html.twig' with {base: '/offres/' ~ offre.id} %}
 

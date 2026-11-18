@@ -30,6 +30,26 @@ final class CommandeTest extends TestCase
         self::assertSame('bonjour', $r->sortie);
     }
 
+    /**
+     * Revue du 2026-11-18 (H2) : lire la sortie standard jusqu'au bout avant la sortie d'erreur bloquait un programme
+     * qui remplit d'abord la seconde (ffmpeg sur un fichier corrompu). « timeout 5 » borne l'essai si le défaut revient.
+     */
+    public function testLesDeuxSortiesSontLuesEnMemeTemps(): void
+    {
+        $r = (new Commande())->lancer(['timeout', '5', 'sh', '-c', 'head -c 200000 /dev/zero | tr "\000" e >&2; printf fin']);
+        self::assertSame(0, $r->code);
+        self::assertSame('fin', $r->sortie);
+        self::assertSame(200000, strlen($r->erreur));
+    }
+
+    public function testUneCommandeTropLongueEstArretee(): void
+    {
+        $debut = microtime(true);
+        $r = (new Commande())->lancer(['sleep', '10'], 1);
+        self::assertSame(Commande::DEPASSE, $r->code);
+        self::assertLessThan(4, microtime(true) - $debut);
+    }
+
     public function testUnProgrammeAbsentRend127(): void
     {
         self::assertSame(127, (new Commande())->lancer(['/chemin/absent/programme'])->code);

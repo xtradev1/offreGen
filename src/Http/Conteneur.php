@@ -338,7 +338,7 @@ final class Conteneur
             }
             return new TranscripteurApi(
                 $this->http(),
-                new PreparationAudio($this->parametre('FFMPEG', 'ffmpeg')),
+                new PreparationAudio($this->parametre('FFMPEG', 'ffmpeg'), PreparationAudio::TAILLE_MAX, null, $this->dureeMaxSecondes() + DureeAudio::TOLERANCE_SECONDES),
                 $this->parametreRequis('TRANSCRIPTION_URL'),
                 $this->parametre('TRANSCRIPTION_PRODUIT', '0'),
                 $this->parametre('TRANSCRIPTION_CLE'),
@@ -415,6 +415,8 @@ final class Conteneur
             $this->horloge(),
             $this->journal(),
             $this->parametre('APP_URL', 'http://localhost:8000'),
+            $this->dureeAudio(),
+            $this->dureeMaxSecondes(),
         ));
     }
 

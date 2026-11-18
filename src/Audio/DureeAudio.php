@@ -19,6 +19,18 @@ final class DureeAudio
     }
 
     /** En secondes ; null si ffprobe manque ou ne sait pas lire le fichier : l'import ne doit pas en dépendre. */
+    /** Marge au-delà de la durée permise : l'arrêt du navigateur et l'en-tête ne tombent pas à la seconde près. */
+    public const TOLERANCE_SECONDES = 5;
+
+    /**
+     * Durée lue dans les paquets, sans se fier à l'en-tête (revue du 2026-11-18, H1 : un MP3 de 10 h s'annonçait à
+     * 920 s). Plus lente que secondes() : pour le traitement de fond. Null si ffprobe ne tourne pas ici.
+     */
+    public function mesurer(string $chemin): ?float
+    {
+        return $this->finDesPaquets($chemin) ?? $this->secondes($chemin);
+    }
+
     public function secondes(string $chemin): ?float
     {
         $entete = $this->sonder(['-show_entries', 'format=duration', $chemin]);
@@ -26,6 +38,11 @@ final class DureeAudio
             return (float) $entete;
         }
         // Le WebM du navigateur (MediaRecorder) n'annonce pas sa durée : l'instant du dernier paquet la donne.
+        return $this->finDesPaquets($chemin);
+    }
+
+    private function finDesPaquets(string $chemin): ?float
+    {
         $paquets = $this->sonder(['-select_streams', 'a:0', '-show_entries', 'packet=pts_time', $chemin]);
         if ($paquets === null) {
             return null;

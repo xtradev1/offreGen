@@ -320,5 +320,64 @@ final class ExtracteurApiTest extends TestCase
         $r = (new ExtracteurApi(new MockHttpClient(), 'x', '', 'm', new NullLogger()))->valider(['lignes' => $lignes], self::CATALOGUE);
         self::assertCount(300, $r->lignes);
         self::assertSame('Poste 300', $r->lignes[299]->designation);
+        self::assertSame(1, $r->postesCoupes);
+    }
+
+    public function testSousLePlafondAucunPosteCoupe(): void
+    {
+        $r = $this->extracteur(self::reponseOutil(self::ARGUMENTS_REELS))->extraire('Dictée.', self::CATALOGUE);
+        self::assertSame(0, $r->postesCoupes);
+    }
+
+    public function testLaSortieDuModeleEstBornee(): void
+    {
+        // Revue du 2026-11-18 : sans max_tokens, la limite par défaut du service coupait l'offre sans prévenir.
+        $this->extracteur(self::reponseOutil(self::ARGUMENTS_REELS))->extraire('Dictée.', self::CATALOGUE);
+        $corps = json_decode((string) $this->requetes[0]['options']['body'], true);
+        self::assertIsArray($corps);
+        self::assertSame(ExtracteurApi::JETONS_SORTIE_MAX, $corps['max_tokens']);
+        // 300 lignes d'environ 57 jetons (banc du 2026-11-17) doivent tenir.
+        self::assertGreaterThan(300 * 57, ExtracteurApi::JETONS_SORTIE_MAX);
+    }
+
+    public function testUneReponseCoupeeParLaLimiteEstUnEchecPasUneOffreVide(): void
+    {
+        $reponse = new MockResponse((string) json_encode(['choices' => [['finish_reason' => 'length', 'message' => ['role' => 'assistant', 'content' => '', 'tool_calls' => [
+            ['id' => 'appel-1', 'type' => 'function', 'function' => ['name' => 'proposer_offre', 'arguments' => '{"titre":"Offre","lignes":[{"produit_id":4,"quan']],
+        ]]]]]), ['http_code' => 200]);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('coupée');
+        $this->extracteur($reponse)->extraire('Dictée.', self::CATALOGUE);
+    }
+
+    public function testDesArgumentsIllisiblesSontUnEchecPasUneOffreVide(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->extracteur(self::reponseOutil('{"titre":"Offre","lignes":[{"produit_id":4,'))->extraire('Dictée.', self::CATALOGUE);
+    }
+
+    public function testQuantiteEtPrixDictesHorsBornesNeCassentPasLOffre(): void
+    {
+        // Revue du 2026-11-18 : 3 millions de m² donnaient 3 000 000 000 millièmes, refusés par la base après l'appel payé.
+        $r = (new ExtracteurApi(new MockHttpClient(), 'x', '', 'm', new NullLogger()))->valider(['lignes' => [
+            ['produit_id' => 4, 'quantite' => 3e6, 'certitude' => 'sure', 'prix_unitaire' => 5e6],
+            ['produit_id' => null, 'designation' => 'Échafaudage', 'quantite' => 1, 'certitude' => 'sure', 'prix_unitaire' => 9e9],
+        ]], self::CATALOGUE);
+        self::assertCount(2, $r->lignes);
+        self::assertSame(1000, $r->lignes[0]->quantiteMilliemes);
+        self::assertTrue($r->lignes[0]->aVerifier);
+        self::assertNull($r->lignes[0]->prixDicteCentimes);
+        self::assertSame(2800, $r->lignes[0]->prixCentimes);
+        self::assertSame(0, $r->lignes[1]->prixCentimes);
+        self::assertTrue($r->lignes[1]->aVerifier);
+    }
+
+    public function testUnIdentifiantDeProduitEnTexteResteLeProduit(): void
+    {
+        $r = (new ExtracteurApi(new MockHttpClient(), 'x', '', 'm', new NullLogger()))->valider(['lignes' => [
+            ['produit_id' => '4', 'quantite' => 12, 'certitude' => 'sure'],
+        ]], self::CATALOGUE);
+        self::assertSame(4, $r->lignes[0]->produitId);
+        self::assertSame('Peinture des murs, 2 couches', $r->lignes[0]->designation);
     }
 }

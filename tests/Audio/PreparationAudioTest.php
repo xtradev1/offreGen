@@ -62,4 +62,23 @@ final class PreparationAudioTest extends TestCase
         $this->expectExceptionMessage('ffmpeg est absent');
         (new PreparationAudio('/chemin/sans/ffmpeg'))->preparer(self::fixture('visite.amr'));
     }
+
+    /** Revue du 2026-11-18 (M10, B6) : la conversion ne dépasse jamais la durée permise et ne lit que des fichiers. */
+    public function testLaConversionEstBorneeEnDureeEtAuxFichiers(): void
+    {
+        // 27,9 s de dictée sous une extension que la transcription refuse : la conversion a lieu, bornée à 3 s.
+        $source = sys_get_temp_dir() . '/offregen-test-' . bin2hex(random_bytes(4)) . '.3gp';
+        copy(dirname(__DIR__) . '/fixtures/audio/dictee-peintre.ogg', $source);
+        $f = (new PreparationAudio('ffmpeg', PreparationAudio::TAILLE_MAX, null, 3))->preparer($source);
+        try {
+            self::assertTrue($f->temporaire);
+            $sonde = (new \OffreGen\Systeme\Commande())->lancer(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', $f->chemin]);
+            self::assertLessThanOrEqual(3.1, (float) trim($sonde->sortie));
+        } finally {
+            if ($f->temporaire) {
+                @unlink($f->chemin);
+            }
+            @unlink($source);
+        }
+    }
 }

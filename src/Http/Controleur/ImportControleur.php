@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Audio\AudioRefuse;
+use OffreGen\Audio\DureeAudio;
 use OffreGen\Audio\Uuid;
 use OffreGen\Audio\ValidateurAudio;
 use OffreGen\Donnees\Portee;
@@ -17,7 +18,6 @@ use Symfony\Component\HttpFoundation\Response;
 final class ImportControleur
 {
     /** Le navigateur s'arrête pile à la limite ; le fichier qu'il produit peut la dépasser d'une fraction de seconde. */
-    public const TOLERANCE_DUREE_SECONDES = 5;
 
     public function __construct(private readonly Conteneur $c)
     {
@@ -59,7 +59,7 @@ final class ImportControleur
             $this->c->journal()->warning('offreGen, import : durée illisible par ffprobe, minimum non vérifié.');
         } elseif ($duree < $minimum) {
             return $this->page("Enregistrement non pris en compte : $minimum secondes au minimum.", 422);
-        } elseif ($duree > $this->c->dureeMaxSecondes() + self::TOLERANCE_DUREE_SECONDES) {
+        } elseif ($duree > $this->c->dureeMaxSecondes() + DureeAudio::TOLERANCE_SECONDES) {
             return $this->page('Enregistrement trop long : ' . self::enClair($this->c->dureeMaxSecondes()) . ' au maximum.', 422);
         }
 

@@ -47,6 +47,9 @@ final class Traiteur
         private readonly ClockInterface $horloge,
         private readonly LoggerInterface $journal,
         private readonly string $adresseApplication,
+        /** Mesure de la durée avant la transcription ; null : pas de mesure (tests sans fichier). */
+        private readonly ?DureeAudio $duree = null,
+        private readonly int $dureeMaxSecondes = 1800,
     ) {
     }
 
@@ -84,7 +87,8 @@ final class Traiteur
             if ($e instanceof TranscriptionEchouee) {
                 $this->file->transcriptionAReprendre($uuid, $jeton);
             }
-            $statut = $this->file->noterEchec($uuid, $jeton, $e->getMessage(), self::TENTATIVES_MAX,
+            // Trop long : réessayer ne le raccourcira pas, l'échec est immédiat.
+            $statut = $this->file->noterEchec($uuid, $jeton, $e->getMessage(), $e instanceof AudioTropLong ? 1 : self::TENTATIVES_MAX,
                 $this->horloge->now()->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
             $this->journal->error("offreGen, traitement de $uuid ($statut) : " . $e->getMessage());
             return $statut;
@@ -102,7 +106,9 @@ final class Traiteur
                     if ($e['fichier'] === null) {
                         throw new \RuntimeException("Plus d'audio pour cet enregistrement.");
                     }
-                    $reference = $this->transcripteur->demarrer($this->stockage->chemin($e['fichier']));
+                    $chemin = $this->stockage->chemin($e['fichier']);
+                    $this->verifierDuree($chemin);
+                    $reference = $this->transcripteur->demarrer($chemin);
                     $this->file->transcriptionDemarree($uuid, $jeton, $reference, $this->horloge->now());
                     break;
                 case Statut::TRANSCRIPTION:
@@ -126,6 +132,25 @@ final class Traiteur
         }
     }
 
+    /**
+     * Revue du 2026-11-18 (H1) : le site web d'Infomaniak ne peut pas lancer ffprobe, la durée n'est donc pas lue à
+     * l'import. Ici, en ligne de commande, elle l'est, avant tout appel payant.
+     */
+    private function verifierDuree(string $chemin): void
+    {
+        if ($this->duree === null) {
+            return;
+        }
+        $secondes = $this->duree->mesurer($chemin);
+        if ($secondes === null) {
+            $this->journal->warning('offreGen, traitement : durée illisible, transcription sans contrôle de durée.');
+            return;
+        }
+        if ($secondes > $this->dureeMaxSecondes + DureeAudio::TOLERANCE_SECONDES) {
+            throw new AudioTropLong(sprintf('Enregistrement trop long : %d min, %d min au maximum.', (int) ceil($secondes / 60), intdiv($this->dureeMaxSecondes, 60)));
+        }
+    }
+
     /** @param array{id: int, artisan_id: int, uuid: string, transcription: string|null} $e */
     private function creerOffre(array $e, string $jeton): int
     {
@@ -142,7 +167,7 @@ final class Traiteur
 
         return $this->base->transaction(function () use ($offres, $e, $jeton, $titre, $lignes, $maintenant, $resultat, $clientId): int {
             $offreId = $offres->idParEnregistrement($e['id'])
-                ?? $offres->creerDepuisEnregistrement($e['id'], $titre, $lignes, $maintenant, $clientId, $resultat->client, $resultat->lieu);
+                ?? $offres->creerDepuisEnregistrement($e['id'], $titre, $lignes, $maintenant, $clientId, $resultat->client, $resultat->lieu, $resultat->postesCoupes);
             // Si le verrou est perdu ici, VerrouPerdu annule aussi l'offre : jamais d'offre sans statut prêt.
             $this->file->pret($e['uuid'], $jeton, $maintenant, $maintenant->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
             return $offreId;

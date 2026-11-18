@@ -14,14 +14,14 @@ use OffreGen\Offre\LigneExtraite;
  * Le client d'une offre : sa fiche (client_id), sinon le nom et le lieu dictés, proposition à confirmer.
  * client_nom et client_adresse donnent l'un ou l'autre, pour l'écran et le document.
  *
- * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null}
+ * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null, postes_coupes: int}
  * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null, prix_dicte_centimes: int|null, prix_catalogue: int|null, piece: string|null}
  */
 final class DepotOffres implements SupportLignes
 {
     private const SELECT_OFFRE = 'SELECT o.id, o.numero, o.enregistrement_id, o.titre, o.client_id,
             COALESCE(c.nom, o.client_dicte) AS client_nom, CASE WHEN c.id IS NULL THEN o.lieu_dicte ELSE c.adresse END AS client_adresse,
-            o.client_dicte, o.lieu_dicte, o.cree_le, o.modifiee_le, o.envoyee_le
+            o.client_dicte, o.lieu_dicte, o.cree_le, o.modifiee_le, o.envoyee_le, o.postes_coupes
          FROM offre o LEFT JOIN client c ON c.id = o.client_id AND c.artisan_id = o.artisan_id';
 
     /** Colonnes d'une ligne ; la catégorie vient du produit du catalogue, s'il existe encore. */
@@ -41,9 +41,9 @@ final class DepotOffres implements SupportLignes
      *
      * @param list<LigneExtraite> $lignes
      */
-    public function creerDepuisEnregistrement(int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?int $clientId = null, ?string $clientDicte = null, ?string $lieuDicte = null): int
+    public function creerDepuisEnregistrement(int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?int $clientId = null, ?string $clientDicte = null, ?string $lieuDicte = null, int $postesCoupes = 0): int
     {
-        return $this->creer($enregistrementId, $titre, $lignes, $quand, $clientId, $clientDicte, $lieuDicte);
+        return $this->creer($enregistrementId, $titre, $lignes, $quand, $clientId, $clientDicte, $lieuDicte, $postesCoupes);
     }
 
     /**
@@ -57,16 +57,16 @@ final class DepotOffres implements SupportLignes
     }
 
     /** @param list<LigneExtraite> $lignes */
-    private function creer(?int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?int $clientId, ?string $clientDicte, ?string $lieuDicte): int
+    private function creer(?int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?int $clientId, ?string $clientDicte, ?string $lieuDicte, int $postesCoupes = 0): int
     {
-        return $this->base->transaction(function () use ($enregistrementId, $titre, $lignes, $quand, $clientId, $clientDicte, $lieuDicte): int {
+        return $this->base->transaction(function () use ($enregistrementId, $titre, $lignes, $quand, $clientId, $clientDicte, $lieuDicte, $postesCoupes): int {
             $numero = (int) $this->base->valeur('SELECT COALESCE(MAX(numero), 0) + 1 FROM offre WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
             $this->base->ecrire(
-                'INSERT INTO offre (artisan_id, numero, enregistrement_id, titre, client_id, client_dicte, lieu_dicte, cree_le) VALUES (:a, :n, :e, :t, :ci, :cn, :ca, :q)',
+                'INSERT INTO offre (artisan_id, numero, enregistrement_id, titre, client_id, client_dicte, lieu_dicte, cree_le, postes_coupes) VALUES (:a, :n, :e, :t, :ci, :cn, :ca, :q, :pc)',
                 ['a' => $this->portee->artisanId, 'n' => $numero, 'e' => $enregistrementId, 't' => mb_substr($titre, 0, 190),
                  'ci' => $this->clientDeLArtisan($clientId),
                  'cn' => $clientDicte === null ? null : mb_substr($clientDicte, 0, 190), 'ca' => $lieuDicte === null ? null : mb_substr($lieuDicte, 0, 255),
-                 'q' => Dates::versBase($quand)],
+                 'q' => Dates::versBase($quand), 'pc' => min(max(0, $postesCoupes), 65535)],
             );
             $offreId = $this->base->dernierId();
             foreach ($lignes as $rang => $l) {
