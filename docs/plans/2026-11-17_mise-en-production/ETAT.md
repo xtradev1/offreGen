@@ -13,7 +13,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 
 ## En attente de toi
 
-- Dans `MAQUETTE-dicta-huit.html` : dire lequel resterait s'il n'en fallait qu'un (F1), garder ou écarter chacun des huit logos (L5, L6, L8, L9, LA à LD), coller « Copier le texte ».
+- Envoyer la planche des deux logos (`MAQUETTE-dicta-envoi-img/`) et revenir avec le logo retenu, le 1 (ancien 6) ou le 2 (ancien B).
 - Jouer la recette regroupée (`RECETTE.md`).
 - Confirmer que la production ira sur `dicta.ch` et créer la boîte `notifications@`.
 
@@ -56,6 +56,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-18, Xavier, sur `MAQUETTE-dicta-cone.html` : « il faut que le logo fasse cone qui parle donne des style vraiment différents en terme de logo. anthracite c'est bien mais l'orange est encore trop flachi, il me faut d'autre exemple faire des variantes d'orange 5-6 ». Retenu : en-tête anthracite `#23272D`. Écarté : orange VLC `#FF8800`. O1 et C1 à C10 de cette planche restent sans autre réponse.
 - 2026-11-18, Xavier, sur `MAQUETTE-dicta-parle.html` : K6 (le porte-voix) « Garder », les neuf autres logos, O2 et M1 sans réponse. Puis : « fais des variantes k6 on doit bien voir que c'est un cone qui parle et dans ce style fais mois 10 autres exemples ».
 - 2026-11-18, Xavier, sur `MAQUETTE-dicta-portevoix.html` : O2 « 5 · Terracotta » (`#C4552D`, en accent sur le logo et le micro, boutons anthracite) ; M1 « Offre » ; V5, V6 et V8 « Garder », les autres sans réponse. Puis : « fais moi une version avec les 3 plus 3 autres dans ce style » et « avec v9 aussi donc 8 variants au total ».
+- 2026-11-18, Xavier, sur `MAQUETTE-dicta-huit.html` : « 6, B fais juste les que je puisse les envoyer donc tu me fais les maquettes avec ces 2 », « que je puisse envoyer pour départager ». En finale : le logo 6 (le cône et les barres) et le logo B (le cône en tranches et la bulle). Xavier les fait départager par des tiers.
 
 ## Journal
 
@@ -78,6 +79,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-18 : `MAQUETTE-dicta-parle.html`, tout sur anthracite : six oranges moins vifs en deux familles (bouton orange désaturé à libellé noir : terre cuite claire, ocre, abricot ; orange profond en accent sur le logo et le micro, boutons anthracite : orange brûlé, terracotta, moutarde), montrés en petit puis sur deux écrans entiers ; dix cônes qui parlent en dix styles, avec un sélecteur qui les habille de chaque orange. 19 couples mesurés par essai (texte 7:1, forme 3:1), tous au-dessus. `check.js` vert, captures relues, parcours cliqué joué (sélecteur d'orange, choix, « Copier le texte »).
 - 2026-11-18 : `MAQUETTE-dicta-portevoix.html` : dix variantes du logo K6 dans son style (formes pleines, cône couché qui émet du son), avec deux bandes blanches et un socle épais pour qu'on y lise un cône de chantier. Vue d'ensemble puis chaque variante dans cinq emplois (icône en grand, fond clair, en-tête, une couleur, 30 px), sélecteur des six oranges. `check.js` vert, captures relues, parcours cliqué joué. Corrigé avant livraison : variante « la mâchoire » ratée (flèche cassée) remplacée par « le D » (socle et première onde en D), dessins agrandis dans les tuiles.
 - 2026-11-18 : `MAQUETTE-dicta-huit.html` : les quatre logos gardés (5 la bulle, 6 les barres, 8 les tranches, 9 la pastille) et quatre nouveaux dans leur style (A tranches et barres, B tranches et bulle, C la voix dedans, D la pastille à barres), en terracotta sur anthracite. Vue d'ensemble, écran de connexion avec chacun des huit, puis chaque logo dans cinq emplois. 13 couples mesurés (texte 7:1, forme 3:1), tous au-dessus ; terracotta sur anthracite à 3,35:1. `check.js` vert, captures relues, parcours cliqué joué.
+- 2026-11-18 : `MAQUETTE-dicta-envoi.html` et ses exports dans `MAQUETTE-dicta-envoi-img/` (`dicta-deux-logos.png`, `dicta-deux-logos.pdf` d'une page, `dicta-logo-1.png`, `dicta-logo-2.png`) : les deux logos numérotés 1 et 2, chacun en grand, en icône, sur deux écrans, dans un courriel et en noir, avec la question « le 1 ou le 2 ? ». Aucun terme de travail. Texte relu par l'agent XtraDev : « À retoucher » puis « Prêt » au second tour (« l'application rédige l'offre chiffrée », légendes des icônes). `check.js` vert, exports et PDF relus, largeur au téléphone vérifiée.
 
 ## Preuves
 
