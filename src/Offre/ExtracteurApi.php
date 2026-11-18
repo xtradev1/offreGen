@@ -93,9 +93,11 @@ final class ExtracteurApi implements Extracteur
             'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
             'json' => $corps,
             'timeout' => 300,
+            // Durée totale bornée, sous le verrou de 900 s du traitement (revue du 2026-11-18, B2).
+            'max_duration' => 600,
         ]);
         $donnees = ReponseApi::lire($reponse, 'Extraction');
-        $this->noterJetons($donnees, 'extraction');
+        $this->noterJetons($donnees, 'extraction', $this->modele);
         $proposition = self::argumentsDeLOutil($donnees, 'proposer_offre');
         if ($proposition === null) {
             // Règle de Xavier (2026-11-12) : rien d'utile dit, offre vide. Avec une température à 0, réessayer
@@ -136,9 +138,10 @@ final class ExtracteurApi implements Extracteur
                 'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
                 'json' => $corps,
                 'timeout' => 120,
+                'max_duration' => 180,
             ]);
             $donnees = ReponseApi::lire($reponse, 'Pièces');
-            $this->noterJetons($donnees, 'pièces');
+            $this->noterJetons($donnees, 'pièces', $this->modelePieces ?? $this->modele);
             $arguments = self::argumentsDeLOutil($donnees, 'ranger_par_piece');
         } catch (\Throwable $e) {
             $this->journal->warning('offreGen, pièces : second appel en échec, offre sans pièces (' . $e::class . ').');
@@ -164,13 +167,13 @@ final class ExtracteurApi implements Extracteur
      *
      * @param array<string, mixed> $donnees
      */
-    private function noterJetons(array $donnees, string $appel): void
+    private function noterJetons(array $donnees, string $appel, string $modele): void
     {
         $usage = $donnees['usage'] ?? null;
         if (!is_array($usage) || !is_int($usage['prompt_tokens'] ?? null) || !is_int($usage['completion_tokens'] ?? null)) {
             return;
         }
-        $this->journal->info(sprintf('offreGen, %s : %d jetons envoyés, %d reçus, modèle %s.', $appel, $usage['prompt_tokens'], $usage['completion_tokens'], $this->modele));
+        $this->journal->info(sprintf('offreGen, %s : %d jetons envoyés, %d reçus, modèle %s.', $appel, $usage['prompt_tokens'], $usage['completion_tokens'], $modele));
     }
 
     /**

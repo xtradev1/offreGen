@@ -110,6 +110,22 @@ final class Conteneur
         return $env;
     }
 
+    /**
+     * Réglages des migrations : ceux du site, plus .env.structure, où vit sur les serveurs le mot de passe de
+     * l'utilisateur de structure. Le site web ne lit jamais ce fichier (revue du 2026-11-18, M12, docs/SECURITE.md).
+     *
+     * @return array<string, string>
+     */
+    public static function lireEnvironnementMigrations(string $racine): array
+    {
+        $env = self::lireEnvironnement($racine);
+        $fichier = $racine . '/.env.structure';
+        if (is_file($fichier)) {
+            $env = (new Dotenv())->parse((string) file_get_contents($fichier), '.env.structure') + $env;
+        }
+        return $env;
+    }
+
     public function environnement(): string
     {
         return $this->env['APP_ENV'] ?? 'prod';
@@ -253,18 +269,29 @@ final class Conteneur
         if (!is_dir($dossier)) {
             mkdir($dossier, 0700, true);
         }
-        // 14 jours sans revenir : l'artisan sur le chantier ne retape pas son mot de passe chaque matin.
-        return new NativeSessionStorage([
+        return new NativeSessionStorage($this->optionsSession(), new NativeFileSessionHandler($dossier));
+    }
+
+    /**
+     * 14 jours sans revenir : l'artisan sur le chantier ne retape pas son mot de passe chaque matin.
+     * Secure dès que l'adresse de l'application est en https, et par défaut (revue du 2026-11-18, H3 : la valeur
+     * « auto » est ignorée par Symfony hors framework, le cookie partait sans Secure sur le site de test).
+     *
+     * @return array{name: string, cookie_lifetime: int, gc_maxlifetime: int, gc_probability: int, gc_divisor: int, cookie_httponly: bool, cookie_secure: bool, cookie_samesite: string, use_strict_mode: bool}
+     */
+    public function optionsSession(): array
+    {
+        return [
             'name' => 'offregen',
             'cookie_lifetime' => 14 * 86400,
             'gc_maxlifetime' => 14 * 86400,
             'gc_probability' => 1,
             'gc_divisor' => 100,
             'cookie_httponly' => true,
-            'cookie_secure' => 'auto',
+            'cookie_secure' => !str_starts_with($this->parametre('APP_URL', 'https://'), 'http://'),
             'cookie_samesite' => 'lax',
             'use_strict_mode' => true,
-        ], new NativeFileSessionHandler($dossier));
+        ];
     }
 
     public function twig(): Environment
@@ -339,7 +366,7 @@ final class Conteneur
             return new TranscripteurApi(
                 $this->http(),
                 new PreparationAudio($this->parametre('FFMPEG', 'ffmpeg'), PreparationAudio::TAILLE_MAX, null, $this->dureeMaxSecondes() + DureeAudio::TOLERANCE_SECONDES),
-                $this->parametreRequis('TRANSCRIPTION_URL'),
+                $this->adresseService('TRANSCRIPTION_URL'),
                 $this->parametre('TRANSCRIPTION_PRODUIT', '0'),
                 $this->parametre('TRANSCRIPTION_CLE'),
                 $this->parametre('TRANSCRIPTION_MODELE', 'whisper'),
@@ -359,7 +386,7 @@ final class Conteneur
             }
             return new ExtracteurApi(
                 $this->http(),
-                $this->parametreRequis('EXTRACTION_URL'),
+                $this->adresseService('EXTRACTION_URL'),
                 $this->parametre('EXTRACTION_CLE'),
                 $this->parametreRequis('EXTRACTION_MODELE'),
                 $this->journal(),
@@ -383,6 +410,16 @@ final class Conteneur
     public function http(): HttpClientInterface
     {
         return $this->une(HttpClientInterface::class, static fn (): HttpClientInterface => HttpClient::create());
+    }
+
+    /** Adresse d'un service qui reçoit le jeton : https exigé hors développement (revue du 2026-11-18, B4). */
+    private function adresseService(string $cle): string
+    {
+        $adresse = $this->parametreRequis($cle);
+        if ($this->environnement() === 'prod' && !str_starts_with($adresse, 'https://')) {
+            throw new \RuntimeException("Réglage $cle : https exigé en production, le jeton partirait en clair.");
+        }
+        return $adresse;
     }
 
     private function parametreRequis(string $cle): string

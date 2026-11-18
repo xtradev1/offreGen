@@ -54,6 +54,7 @@ final class TranscripteurApi implements Transcripteur
                 'headers' => $this->entetes() + $formulaire->getPreparedHeaders()->toArray() + ['Content-Length' => (string) $longueur],
                 'body' => $formulaire->bodyToIterable(),
                 'timeout' => 300,
+                'max_duration' => 600,
             ]);
             $donnees = ReponseApi::lire($reponse, 'Envoi à la transcription');
         } finally {
@@ -75,6 +76,7 @@ final class TranscripteurApi implements Transcripteur
             $reponse = $this->http->request('GET', $this->base() . '/results/' . $reference, [
                 'headers' => $this->entetes(),
                 'timeout' => 60,
+                'max_duration' => 90,
             ]);
             $donnees = ReponseApi::lire($reponse, 'Résultat de la transcription');
         } catch (ErreurApi $e) {

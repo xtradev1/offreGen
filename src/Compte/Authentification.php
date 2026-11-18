@@ -40,8 +40,9 @@ final class Authentification
         $maintenant = $this->horloge->now();
         $depuis = $maintenant->modify('-' . self::FENETRE_MINUTES . ' minutes');
 
+        // Un essai refusé pendant le blocage n'est pas noté (revue du 2026-11-18, M3) : noté comme un échec, il
+        // prolongeait le blocage, et quiconque connaît le courriel d'un artisan pouvait le tenir dehors.
         if ($this->journal->echecsRecents($courriel, $ip, $depuis) >= self::ESSAIS_MAX) {
-            $this->journal->noter(null, $courriel, $ip, false, $maintenant);
             return ResultatConnexion::TropDEssais;
         }
 
@@ -57,8 +58,9 @@ final class Authentification
         if ($this->hacheur->needsRehash($hache)) {
             $this->artisans->changerMotDePasse($artisan['id'], $this->hacheur->hash($motDePasse));
         }
-        // Nouvel identifiant de session à la connexion : une session posée avant par un tiers ne sert à rien.
-        $requete->getSession()->migrate(true);
+        // Session neuve à la connexion : une session posée avant par un tiers ne sert à rien, et rien de la session
+        // d'avant (message en attente, jeton CSRF) ne passe au compte qui se connecte (revue du 2026-11-18, M5).
+        $requete->getSession()->invalidate();
         $requete->getSession()->set(self::CLE_SESSION, $artisan['id']);
         $this->journal->noter($artisan['id'], $courriel, $ip, true, $maintenant);
         return ResultatConnexion::Reussie;

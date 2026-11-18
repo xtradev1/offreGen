@@ -40,6 +40,30 @@ final class FileTraitement
         ) === 1;
     }
 
+    /**
+     * Verrou expiré sans avoir été rendu : le traitement qui le tenait est mort en route (processus tué, serveur
+     * redémarré). Compte une tentative et libère le verrou ; à la dernière, l'enregistrement passe en échec. Sans
+     * cela, il était repris toutes les quinze minutes, sans fin, et repayé (revue du 2026-11-18, M9).
+     */
+    public function noterAbandon(string $uuid, \DateTimeImmutable $maintenant, int $tentativesMax, \DateTimeImmutable $supprimerApres): void
+    {
+        $abandonne = $this->base->ecrire(
+            'UPDATE enregistrement SET tentatives = tentatives + 1, verrou_jeton = NULL, verrou_jusqu_a = NULL,
+                    erreur = :e
+             WHERE uuid = :u AND verrou_jeton IS NOT NULL AND verrou_jusqu_a < :m AND statut NOT IN (:pret, :echec)',
+            ['e' => 'Traitement interrompu en route, repris.', 'u' => $uuid, 'm' => Dates::versBase($maintenant),
+             'pret' => Statut::PRET, 'echec' => Statut::ECHEC],
+        );
+        if ($abandonne === 1) {
+            $this->base->ecrire(
+                'UPDATE enregistrement SET statut = :echec, supprimer_apres = :sa, erreur = :e
+                 WHERE uuid = :u AND tentatives >= :max AND statut NOT IN (:pret, :echec2)',
+                ['echec' => Statut::ECHEC, 'sa' => Dates::versBase($supprimerApres), 'e' => 'Traitement interrompu trop souvent.',
+                 'u' => $uuid, 'max' => $tentativesMax, 'pret' => Statut::PRET, 'echec2' => Statut::ECHEC],
+            );
+        }
+    }
+
     public function rendreVerrou(string $uuid, string $jeton): void
     {
         $this->base->ecrire(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http;
 
+use Symfony\Component\HttpFoundation\Exception\SuspiciousOperationException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -63,7 +64,12 @@ final class Noyau
 
     public function traiter(Request $requete): Response
     {
-        $reponse = $this->repondre($requete);
+        try {
+            $reponse = $this->repondre($requete);
+        } catch (SuspiciousOperationException) {
+            // En-tête piégé (méthode substituée invalide, hôte faux) : refusé, sans erreur 500 (revue du 2026-11-18, B1).
+            $reponse = $this->erreur(400, 'Requête invalide');
+        }
         foreach (self::ENTETES as $nom => $valeur) {
             $reponse->headers->set($nom, $valeur);
         }

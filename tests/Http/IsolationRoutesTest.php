@@ -259,4 +259,57 @@ final class IsolationRoutesTest extends TestCase
         self::assertStringNotContainsString('visite-b', $page);
         self::assertStringNotContainsString('Entreprise B', $page);
     }
+
+    /** Ce qui, dans une page de A, trahirait une donnée de B. */
+    private const TRACES_DE_B = ['Offre b', 'Peinture murale b', 'Client b', 'Rue b', 'Entreprise B', 'visite-b', '%PDF-b'];
+
+    /**
+     * Revue du 2026-11-18 (M15) : aucune page sans paramètre (listes, réglages, assistant, import, catalogue) n'était
+     * contrôlée. Chaque page GET de A, sans paramètre, est relue : rien de B, quel que soit le code rendu.
+     */
+    public function testAucunePageSansParametreDeANeMontreB(): void
+    {
+        $vues = 0;
+        foreach ($this->a->c->noyau()->routes() as $route) {
+            if ($route->droit !== Route::ARTISAN || str_contains($route->chemin, '{') || !in_array('GET', $route->verbes, true)) {
+                continue;
+            }
+            $page = (string) $this->a->get($route->chemin)->getContent();
+            foreach (self::TRACES_DE_B as $trace) {
+                self::assertStringNotContainsString($trace, $page, "{$route->nom} ({$route->chemin}) montre « $trace »");
+            }
+            $vues++;
+        }
+        // Sans cette borne, un changement du relevé des routes rendrait le test vert sans rien lire.
+        self::assertGreaterThan(20, $vues);
+    }
+
+    /** Revue du 2026-11-18 (M15) : les pages de A elles-mêmes, pas seulement leur code de réponse. */
+    public function testLesPagesDesRessourcesDeANeMontrentRienDeB(): void
+    {
+        foreach ($this->cas() as $nom => [$cheminA]) {
+            $page = (string) $this->a->get($cheminA)->getContent();
+            foreach (self::TRACES_DE_B as $trace) {
+                self::assertStringNotContainsString($trace, $page, "$nom ($cheminA) montre « $trace »");
+            }
+        }
+    }
+
+    /** Revue du 2026-11-18 (M15) : identifiants passés hors du chemin (?offre=, ?ajoutee=, produit d'une facture). */
+    public function testUnIdentifiantDeBHorsDuCheminNeDonneRien(): void
+    {
+        $avant = $this->donneesDeB();
+        $nouveau = (string) $this->a->get('/clients/nouveau?offre=' . $this->jeu->offre['b'])->getContent();
+        $ajout = (string) $this->a->get('/offres/' . $this->jeu->offre['a'] . '/ajouter?ajoutee=' . $this->ligne['b'])->getContent();
+        $ajoutFacture = (string) $this->a->get($this->cheminFacture('a', '/ajouter') . '?ajoutee=' . $this->factureLigne['b'])->getContent();
+        foreach (['client_nouveau' => $nouveau, 'offre_ajout' => $ajout, 'facture_ajout' => $ajoutFacture] as $nom => $page) {
+            foreach (self::TRACES_DE_B as $trace) {
+                self::assertStringNotContainsString($trace, $page, "$nom montre « $trace »");
+            }
+        }
+        $this->a->get($this->cheminFacture('a'));
+        $this->a->post($this->cheminFacture('a', '/lignes'), ['produit' => (string) $this->jeu->produit['b']]);
+        self::assertSame(0, BaseDeTest::compter('facture_ligne', "facture_id = {$this->facture['a']} AND designation = 'Peinture murale b'"), 'produit de B dans la facture de A');
+        self::assertSame($avant, $this->donneesDeB());
+    }
 }

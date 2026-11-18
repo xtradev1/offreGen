@@ -129,4 +129,39 @@ final class ConnexionTest extends TestCase
         BaseDeTest::vider();
         self::assertSame(303, $n->get('/')->getStatusCode());
     }
+
+    /**
+     * Revue du 2026-11-18 (M3) : chaque essai refusé pendant le blocage comptait comme un échec et le prolongeait.
+     * Quiconque connaît le courriel d'un artisan (il est sur ses offres) le tenait dehors.
+     */
+    public function testLesEssaisPendantLeBlocageNeLeProlongentPas(): void
+    {
+        $tiers = $this->navigateur('203.0.113.9');
+        for ($i = 0; $i < 5; $i++) {
+            $tiers->connecter('a@exemple.ch', 'faux');
+        }
+        for ($i = 0; $i < 7; $i++) {
+            $this->horloge->modify('+2 minutes');
+            self::assertSame(429, $tiers->connecter('a@exemple.ch', 'faux')->getStatusCode());
+        }
+        // 16 minutes après les cinq échecs, l'artisan entre, même si le tiers a continué à frapper.
+        $this->horloge->modify('+2 minutes');
+        self::assertSame(303, $this->navigateur('198.51.100.4')->connecter('a@exemple.ch')->getStatusCode());
+    }
+
+    /** Revue du 2026-11-18 (M5) : une connexion part d'une session neuve, sans rien garder de la précédente. */
+    public function testLaConnexionRepartDUneSessionNeuve(): void
+    {
+        $n = $this->navigateur();
+        $n->connecter('a@exemple.ch');
+        $n->session->set('laisse_par_a', 'titre de l\'offre de A');
+        // Connecté, /connexion renvoie aux offres : le jeton vient d'une page de A, il sert au POST qui suit.
+        $n->get('/plus');
+        $jetonAvant = $n->jeton();
+        $n->post('/connexion', ['courriel' => 'b@exemple.ch', 'mot_de_passe' => Jeu::MOT_DE_PASSE]);
+        self::assertFalse($n->session->has('laisse_par_a'));
+        $page = $n->get('/plus');
+        self::assertSame(200, $page->getStatusCode(), (string) $page->headers->get('Location'));
+        self::assertNotSame($jetonAvant, $n->jeton());
+    }
 }

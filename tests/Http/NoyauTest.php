@@ -52,6 +52,13 @@ final class NoyauTest extends TestCase
         self::assertSame(405, $this->noyauDeTest()->traiter(Request::create('/publique', 'POST'))->getStatusCode());
     }
 
+    /** Revue du 2026-11-18 (B1) : un en-tête de changement de méthode piégé levait une exception non rattrapée. */
+    public function testUneMethodeSubstitueeInvalideRend400(): void
+    {
+        $requete = Request::create('/publique', 'POST', server: ['HTTP_X_HTTP_METHOD_OVERRIDE' => 'GET<script>']);
+        self::assertSame(400, $this->noyauDeTest()->traiter($requete)->getStatusCode());
+    }
+
     public function testExceptionRend500SansDetail(): void
     {
         $reponse = $this->noyauDeTest()->traiter(Request::create('/casse'));

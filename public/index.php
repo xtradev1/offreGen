@@ -20,11 +20,23 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 header_remove('X-Powered-By');
+// Jamais d'erreur PHP à l'écran, quel que soit le réglage du serveur : une erreur de lecture du .env en montrait un
+// morceau (revue du 2026-11-18, M13). Elle part au journal du serveur ; le visiteur voit une page d'erreur sobre.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-$conteneur = Conteneur::depuisEnvironnement(dirname(__DIR__));
-$reponse = $conteneur->noyau()->traiter(Request::createFromGlobals());
+try {
+    $conteneur = Conteneur::depuisEnvironnement(dirname(__DIR__));
+    $reponse = $conteneur->noyau()->traiter(Request::createFromGlobals());
+} catch (\Throwable $e) {
+    error_log('offreGen, démarrage : ' . $e::class);
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Le service est momentanément indisponible.\n";
+    exit;
+}
 // Sans fastcgi_finish_request (php -S en développement), le navigateur attendait la fin du traitement
 // avant de recevoir la réponse de l'envoi (constaté le 2026-11-12). Longueur annoncée et connexion
 // fermée : il la tient pour complète dès qu'elle est arrivée.

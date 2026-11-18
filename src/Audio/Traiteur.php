@@ -74,6 +74,8 @@ final class Traiteur
     {
         $jeton = bin2hex(random_bytes(16));
         $maintenant = $this->horloge->now();
+        // Un verrou expiré sans avoir été rendu : le traitement d'avant est mort en route (revue du 2026-11-18, M9).
+        $this->file->noterAbandon($uuid, $maintenant, self::TENTATIVES_MAX, $maintenant->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
         if (!$this->file->prendreVerrou($uuid, $jeton, $maintenant->modify('+' . self::DUREE_VERROU_SECONDES . ' seconds'), $maintenant)) {
             return $this->file->lire($uuid)['statut'] ?? 'inconnu';
         }
@@ -112,7 +114,16 @@ final class Traiteur
                     $this->file->transcriptionDemarree($uuid, $jeton, $reference, $this->horloge->now());
                     break;
                 case Statut::TRANSCRIPTION:
-                    $texte = $this->transcripteur->resultat((string) $e['transcription_ref']);
+                    try {
+                        $texte = $this->transcripteur->resultat((string) $e['transcription_ref']);
+                    } catch (TranscriptionEchouee $perdu) {
+                        throw $perdu;
+                    } catch (\Throwable $passagere) {
+                        // Revue du 2026-11-18 (M8) : une erreur passagère pendant l'attente ne compte pas de tentative ;
+                        // le délai de ATTENTE_TRANSCRIPTION_MAX_HEURES borne l'attente.
+                        $this->journal->warning("offreGen, $uuid : résultat de la transcription pas encore lisible (" . $passagere::class . ').');
+                        $texte = null;
+                    }
                     if ($texte === null) {
                         $depuis = $e['transcription_depuis'] === null ? null : Dates::depuisBase($e['transcription_depuis']);
                         if ($depuis !== null && $depuis->modify('+' . self::ATTENTE_TRANSCRIPTION_MAX_HEURES . ' hours') < $this->horloge->now()) {

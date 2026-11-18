@@ -336,6 +336,9 @@ final class ExtracteurApiTest extends TestCase
         $corps = json_decode((string) $this->requetes[0]['options']['body'], true);
         self::assertIsArray($corps);
         self::assertSame(ExtracteurApi::JETONS_SORTIE_MAX, $corps['max_tokens']);
+        // Revue du 2026-11-18 (B2) : une durée totale bornée, sous le verrou de 900 s du traitement.
+        self::assertLessThan(900, $this->requetes[0]['options']['max_duration']);
+        self::assertGreaterThan(0, $this->requetes[0]['options']['max_duration']);
         // 300 lignes d'environ 57 jetons (banc du 2026-11-17) doivent tenir.
         self::assertGreaterThan(300 * 57, ExtracteurApi::JETONS_SORTIE_MAX);
     }

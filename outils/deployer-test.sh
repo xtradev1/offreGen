@@ -76,6 +76,8 @@ app="$1"; commit="$2"; php="$3"; garder="$4"
 cd "$HOME/$app"
 r="releases/$commit"
 ln -sfn ../../partage/.env "$r/.env"
+# Mot de passe de structure à part, lu par les migrations seules (revue du 2026-11-18, M12).
+[ -f partage/.env.structure ] && ln -sfn ../../partage/.env.structure "$r/.env.structure"
 for d in audio logos log sessions courriels; do rm -rf "$r/var/$d"; ln -sfn "../../../partage/var/$d" "$r/var/$d"; done
 # Le .env doit se lire avant tout. Le message de Dotenv recopie la ligne fautive, mot de passe compris
 # (incident du 2026-11-14) : seul son numéro sort d'ici.

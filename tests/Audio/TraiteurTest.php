@@ -306,6 +306,53 @@ final class TraiteurTest extends TestCase
         self::assertSame(Statut::PRET, $this->traiteur(dureeMax: 1800)->avancer(self::UUID));
     }
 
+    /**
+     * Revue du 2026-11-18 (M8) : pendant l'attente de la transcription, une erreur passagère du service (réseau, 503)
+     * comptait une tentative ; cinq en quinze secondes mettaient l'enregistrement en échec.
+     */
+    public function testUneErreurPassagerePendantLAttenteNeCompteRien(): void
+    {
+        $instable = new class implements Transcripteur {
+            public int $appels = 0;
+
+            public function demarrer(string $chemin): string
+            {
+                return 'lot-1';
+            }
+
+            public function resultat(string $reference): ?string
+            {
+                $this->appels++;
+                throw new \RuntimeException('Résultat de la transcription : 503');
+            }
+        };
+        $traiteur = $this->traiteur(t: $instable);
+        for ($i = 0; $i < 6; $i++) {
+            self::assertSame(Statut::TRANSCRIPTION, $traiteur->avancer(self::UUID));
+        }
+        self::assertSame(6, $instable->appels);
+        self::assertSame(0, (int) $this->etat()['tentatives']);
+    }
+
+    /**
+     * Revue du 2026-11-18 (M9) : un traitement tué en route (processus arrêté, serveur redémarré) laissait son verrou
+     * expirer sans rien compter ; l'enregistrement était repris toutes les quinze minutes, sans fin, et repayé.
+     */
+    public function testUnTraitementMortEnRouteCompteUneTentative(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET verrou_jeton = 'mort', verrou_jusqu_a = '2026-11-07 09:00:00', tentatives = 1 WHERE uuid = '" . self::UUID . "'");
+        self::assertSame(Statut::PRET, $this->traiteur()->avancer(self::UUID));
+        self::assertSame(2, (int) $this->etat()['tentatives']);
+    }
+
+    public function testLeCinquiemeTraitementMortMetEnEchec(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET verrou_jeton = 'mort', verrou_jusqu_a = '2026-11-07 09:00:00', tentatives = 4 WHERE uuid = '" . self::UUID . "'");
+        self::assertSame(Statut::ECHEC, $this->traiteur()->avancer(self::UUID));
+        self::assertSame(0, $this->offresDeLEnregistrement());
+        self::assertNotNull($this->etat()['supprimer_apres']);
+    }
+
     /** Revue du 2026-11-18 (A13) : les postes au-delà du plafond de l'offre ne disparaissent plus en silence. */
     public function testLesPostesCoupesSontNotesSurLOffre(): void
     {

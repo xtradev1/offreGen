@@ -21,7 +21,13 @@ $c = Conteneur::depuisEnvironnement(dirname(__DIR__));
 $debut = time();
 $vus = 0;
 foreach ($c->fileTraitement()->aReprendre($c->horloge()->now(), 20) as $uuid) {
-    $statut = $c->traiteur()->avancer($uuid);
+    // Une erreur sur un enregistrement (base indisponible un instant) n'arrête pas la passe (revue du 2026-11-18, B5).
+    try {
+        $statut = $c->traiteur()->avancer($uuid);
+    } catch (\Throwable $e) {
+        $c->journal()->error("offreGen, traiter-file, $uuid : " . $e::class . ' : ' . $e->getMessage());
+        $statut = 'erreur';
+    }
     $vus++;
     if (!$silencieux) {
         echo "{$uuid} : {$statut}\n";
