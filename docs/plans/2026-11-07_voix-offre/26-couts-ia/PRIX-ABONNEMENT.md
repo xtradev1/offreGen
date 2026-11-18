@@ -63,9 +63,10 @@ Avec la voix :
 | Jottle | Royaume-Uni, anglais | £17 / £29 / £59 | 50 / 200 / 500 devis | anglais |
 | VoxTrade | Royaume-Uni, anglais | £14.99 | devis illimités, 120 min de voix | anglais |
 | Jobber | États-Unis, anglais | $29 à $49 | la voix n'est pas située dans les formules | anglais |
+| Offerto (getofferto.ch, Kaco GmbH, Stäfa) | Suisse, allemand | CHF 39 HT prix fondateur pour 50 entreprises, ensuite 69 (relu le 18.11) | brouillon d'offre depuis un courriel, un texte ou une dictée après le téléphone ; prix appris des anciennes offres ou de bexio ; acceptation en ligne, relances, synchronisation bexio ; données à Zurich | **le concurrent le plus proche, en Suisse** : peintres et plâtriers cités ; part d'une demande de client, pas de la visite dictée pièce par pièce ; pas de français vu (signalé par Xavier le 18.11) |
 | Werkli | Suisse | CHF 50, 40 en annuel | rapport de chantier vocal, pas d'offre dictée | autre usage |
 
-Sans la voix, en Suisse : Magic Heidi CHF 24.90 TTC en annuel ou CHF 39 (relu), offres illimitées ; bexio dès CHF 35 HT en annuel, 45 en mensuel ; Smallinvoice CHF 15 / 30 / 45. Aucun produit suisse en français qui transforme une dictée en offre n'a été trouvé (ce n'est pas une preuve d'absence).
+Sans la voix, en Suisse : Magic Heidi CHF 24.90 TTC en annuel ou CHF 39 (relu), offres illimitées ; bexio dès CHF 35 HT en annuel, 45 en mensuel ; Smallinvoice CHF 15 / 30 / 45. Aucun produit suisse en français qui transforme une dictée en offre n'a été trouvé (ce n'est pas une preuve d'absence). En allemand, Offerto existe (ligne ci-dessus, trouvé le 18.11).
 
 ## Whisper sur un serveur à soi
 

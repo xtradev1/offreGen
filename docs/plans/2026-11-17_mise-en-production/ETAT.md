@@ -45,6 +45,7 @@ Après le choix de marque : appliquer la direction à `public/css/app.css` (tou
 - 2026-11-18, Xavier (questions posées après la maquette) : nom affiché « Easy Offre » ; « Identité propre » pour la marque (distincte de XtraDev) ; P4 refusé pour « Même remarque que P1 » (le parcours lui va, le design non).
 - 2026-11-18, Xavier, sur `MAQUETTE-marque.html` : « C'est un peu trop basique ton truc, ça fait un peu moche », « 3 propositions hyper originales », « commencer par définir quelle valeur on est censé transmettre », puis les couleurs (théorie, Europe, Suisse, confiance). Les trois directions de `MAQUETTE-marque.html` sont écartées.
 - 2026-11-18, Xavier, sur `MAQUETTE-identite.html` : V1 « Pas valider · enlève décontracté on est sur un produit, simple, sobre, efficace, qualité suisse et adapter au métier » ; I1 « aucun on est pas une agence de design plus sobre on est avec des artisants » ; I2 « neutre ». Carnet, Mètre et Raoul écartés ; ton neutre lu comme : ni tutoiement ni vouvoiement, formulations à l'infinitif ou nominales.
+- 2026-11-18, Xavier, sur `MAQUETTE-sobre.html` : « alors pas B, mais j'hésite entre A et C, mais effectivement j'irais plus sur C le nom aussi pas est moyen est-ce que tu as d'autres idée ». B écarté, C pressenti, nom « Easy Offre » remis en question (domaine et boîte `notifications@` en attente du nom).
 
 ## Journal
 
