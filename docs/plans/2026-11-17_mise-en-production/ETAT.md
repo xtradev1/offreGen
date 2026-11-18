@@ -9,14 +9,13 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Attendre les réponses de Xavier sur `MAQUETTE-completer.html`. Ensuite, étape 4 (« Compléter ») : envoi de courriels, mot de passe oublié et changé (avec la déconnexion des autres appareils, M6), administration des comptes d'essai (droit administrateur, F1 du sous-chantier 26), purge selon Q1 (M11), alertes (B9), reprise d'un enregistrement (sous-chantier 27). Chaque morceau avec ses tests, puis recette sur le test.
+Après le choix de marque : appliquer la direction à `public/css/app.css` (toute l'application, mode sombre compris), refaire les écrans refusés (P1, P2, P4, A2, R1) dans cette marque, et les soumettre. En parallèle, ce qui est validé et sans écran : envoi de courriels, jetons de mot de passe et d'accès (A3), droit administrateur, purge écrite et désactivée (Q1), alertes vers l'adresse de Xavier (Q3).
 
 ## En attente de toi
 
-- Répondre sous chaque écran de `MAQUETTE-completer.html` (P1 à P4, A1 à A3, R1, C1) et aux trois questions Q1 à Q3, puis coller « Copier le texte ».
-- Q1 surtout : la durée de conservation des voix et des textes en production (deux décisions se contredisent, 7 et 14 novembre).
+- Choisir la direction de marque dans `MAQUETTE-marque.html` (M1 à M3), puis coller « Copier le texte ».
 - Jouer la recette regroupée (`RECETTE.md`).
-- Choisir l'orthographe du domaine (`easy-offre.ch` ou `easy-offres.ch`) et créer la boîte d'envoi.
+- Choisir l'orthographe du domaine (`easy-offre.ch` ou `easy-offres.ch`) et créer la boîte `notifications@`.
 
 ## Suivi Origin
 
@@ -30,6 +29,20 @@ Attendre les réponses de Xavier sur `MAQUETTE-completer.html`. Ensuite, étape 
 - 2026-11-18, Xavier : « oui va pour fable pour de la relecture ».
 - 2026-11-18, Xavier : domaine envisagé « easy-offre.ch » (le DNS le dit inexistant ce jour, donc probablement libre) ; « j'aimerais bien que le paiement puisse être rapidement mis en place ».
 - 2026-11-18, Xavier : « tu peux faire une tache production ou te coller a une tache qui convient dans offreGen » : sous-tâche 459 retenue.
+- 2026-11-18, Xavier, réponses à `MAQUETTE-completer.html` (texte copié tel quel) :
+  - P1 : Pas valider · je trouve qu'il manque un aspect de marque il gfaut définir la marque pour les couleurs et y'a trop de blanc
+  - P2 : Pas valider · on peut faire plus propre et jolie non ?
+  - P3 : B · et avec le petit oeil emoticione...
+  - P4 : Pas valider
+  - A1 : Valider
+  - A2 : Pas valider · il faut plus travailler l'ui ça doit avoir une super experience
+  - A3 : A
+  - R1 : B · mais il faut que le tesxte soit plus clair
+  - C1 : Valider
+  - Q1 : A : audio effacé 30 jours après l'offre, texte gardé · mais pour l'instant désactivé sera activé en production quand je déciderai
+  - Q2 : notifications@ sur le domaine de production
+  - Q3 : mon adresse habituelle
+- 2026-11-18, Xavier (questions posées après la maquette) : nom affiché « Easy Offre » ; « Identité propre » pour la marque (distincte de XtraDev) ; P4 refusé pour « Même remarque que P1 » (le parcours lui va, le design non).
 
 ## Journal
 
@@ -38,6 +51,8 @@ Attendre les réponses de Xavier sur `MAQUETTE-completer.html`. Ensuite, étape 
 - 2026-11-18 : étape 3 du `PLAN.md`, vérifications automatiques : `.github/workflows/controles.yml` (tests, PHPStan, audit des dépendances, migrations sur une base créée par le job, aucun secret, actions épinglées par SHA). Première exécution verte sur la PR #3. La fusion dans `main` attend la recette et l'accord de Xavier.
 - 2026-11-18 : étape 2, revue indépendante : six relecteurs (cinq Opus, un Fable), synthèse dans `REVUE.md`. Aucune fuite entre artisans, aucun accès sans connexion. Corrigés avec un test chacun : H1 à H5, M1 à M3, M5, M8 à M10, M12 à M15, B1 à B6. M4 écarté par la mesure (le test enregistre les vraies adresses). M7 reporté avec sa raison. M6, M11, B9 vont avec l'étape 5. Déployé sur le test (18d49a0), sonde verte, cookie `secure` vu sur le site.
 - 2026-11-18 : étape 4, phase 3 : maquette `MAQUETTE-completer.html`, écrans dessinés avec la vraie `public/css/app.css` et la structure des pages rendues (demande de Xavier : cohérence visuelle sur tout le site). Défaut trouvé aux captures et corrigé : la liste d'offres copiée de la base de développement contenait le nom et une adresse de Xavier, remplacée par des offres inventées (contrôle : 0 occurrence). `check.js` vert (1440 et 390 px), captures par section relues. Gate visuel ouvert.
+- 2026-11-18 : réponses de Xavier reçues. Validés : A1, A3 (courriel d'accès), C1, Q1 A (purge écrite mais désactivée jusqu'à sa décision), Q2, Q3. Refusés : P1, P2, P4, A2 ; P3 B avec un œil ; R1 B avec un texte plus clair. Constat commun de P1, P2 et A2 : l'application n'a pas d'identité de marque (couleurs, nom, trop de blanc) ; c'est un travail sur toute l'application, pas sur ces seuls écrans. Gate visuel toujours ouvert.
+- 2026-11-18 : maquette `MAQUETTE-marque.html` : trois directions (A Atelier, B Signal, C Sapin) appliquées aux vrais écrans (connexion, liste des offres, une offre) et au courriel, même logo pour les trois. Défaut trouvé aux captures et corrigé : le jaune de B illisible en texte, remplacé par un jaune foncé (couleur calculée vérifiée). Offre de démonstration rendue en local : la colonne PC contenait des données réelles, écartée (contrôle : 0 occurrence). Gate visuel ouvert sur la marque ; les écrans refusés seront refaits dans la direction choisie.
 
 ## Preuves
 
