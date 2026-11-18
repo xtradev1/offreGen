@@ -13,7 +13,7 @@ Après le choix de marque : appliquer la direction à `public/css/app.css` (tou
 
 ## En attente de toi
 
-- Dans `MAQUETTE-identite.html` : valider les valeurs (V1), choisir l'identité (I1) et le ton (I2), coller « Copier le texte ».
+- Dans `MAQUETTE-sobre.html` : valider la direction (S1), choisir l'accent (S2), coller « Copier le texte ».
 - Jouer la recette regroupée (`RECETTE.md`).
 - Choisir l'orthographe du domaine (`easy-offre.ch` ou `easy-offres.ch`) et créer la boîte `notifications@`.
 
@@ -44,6 +44,7 @@ Après le choix de marque : appliquer la direction à `public/css/app.css` (tou
   - Q3 : mon adresse habituelle
 - 2026-11-18, Xavier (questions posées après la maquette) : nom affiché « Easy Offre » ; « Identité propre » pour la marque (distincte de XtraDev) ; P4 refusé pour « Même remarque que P1 » (le parcours lui va, le design non).
 - 2026-11-18, Xavier, sur `MAQUETTE-marque.html` : « C'est un peu trop basique ton truc, ça fait un peu moche », « 3 propositions hyper originales », « commencer par définir quelle valeur on est censé transmettre », puis les couleurs (théorie, Europe, Suisse, confiance). Les trois directions de `MAQUETTE-marque.html` sont écartées.
+- 2026-11-18, Xavier, sur `MAQUETTE-identite.html` : V1 « Pas valider · enlève décontracté on est sur un produit, simple, sobre, efficace, qualité suisse et adapter au métier » ; I1 « aucun on est pas une agence de design plus sobre on est avec des artisants » ; I2 « neutre ». Carnet, Mètre et Raoul écartés ; ton neutre lu comme : ni tutoiement ni vouvoiement, formulations à l'infinitif ou nominales.
 
 ## Journal
 
@@ -55,6 +56,7 @@ Après le choix de marque : appliquer la direction à `public/css/app.css` (tou
 - 2026-11-18 : réponses de Xavier reçues. Validés : A1, A3 (courriel d'accès), C1, Q1 A (purge écrite mais désactivée jusqu'à sa décision), Q2, Q3. Refusés : P1, P2, P4, A2 ; P3 B avec un œil ; R1 B avec un texte plus clair. Constat commun de P1, P2 et A2 : l'application n'a pas d'identité de marque (couleurs, nom, trop de blanc) ; c'est un travail sur toute l'application, pas sur ces seuls écrans. Gate visuel toujours ouvert.
 - 2026-11-18 : maquette `MAQUETTE-marque.html` : trois directions (A Atelier, B Signal, C Sapin) appliquées aux vrais écrans (connexion, liste des offres, une offre) et au courriel, même logo pour les trois. Défaut trouvé aux captures et corrigé : le jaune de B illisible en texte, remplacé par un jaune foncé (couleur calculée vérifiée). Offre de démonstration rendue en local : la colonne PC contenait des données réelles, écartée (contrôle : 0 occurrence). Gate visuel ouvert sur la marque ; les écrans refusés seront refaits dans la direction choisie.
 - 2026-11-18 : `MAQUETTE-identite.html` : cinq valeurs (simple, décontracté, juste, du métier, suisse), ce que disent les sources sur les couleurs (Jonauskaite 2020, Labrecque et Milne 2012, Broeder 2018 et 2019, Poste et CFF ; aucune étude suisse trouvée sur couleur et confiance), six règles qui en découlent, trois identités prototypées (Carnet, Mètre, Raoul) sur connexion, offres, offre, dictée et courriel, contrastes mesurés. Défauts trouvés et corrigés : tirets demi-cadratins des prix ronds, polices non chargées pour les courriels, deux affirmations non vérifiées retirées. `check.js` vert, captures relues.
+- 2026-11-18 : `MAQUETTE-sobre.html` : une seule direction (fond pierre, en-tête de couleur, listes à filets, IBM Plex Sans, marque carré et trois lignes), trois accents à choisir (bleu ardoise, vert sapin, jaune signal), mode sombre montré. Défaut trouvé et corrigé : texte secondaire et étiquettes d'état entre 5,4 et 6,9:1 alors que la page annonce 7:1, couleurs foncées jusqu'à 7:1 partout (mesuré). Chiffres à chasse fixe vérifiés (largeur de 1111.11 = 8888.88). `check.js` vert, captures des trois accents relues.
 
 ## Preuves
 
