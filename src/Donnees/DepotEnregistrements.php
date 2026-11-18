@@ -17,15 +17,26 @@ final class DepotEnregistrements
     {
     }
 
-    public function creer(string $uuid, string $nomOrigine, string $mime, int $taille, string $fichier, \DateTimeImmutable $recuLe): int
+    /** @param string|null $cleClient la clé que le téléphone donne à sa dictée (sous-chantier 27) */
+    public function creer(string $uuid, string $nomOrigine, string $mime, int $taille, string $fichier, \DateTimeImmutable $recuLe, ?string $cleClient = null): int
     {
         $this->base->ecrire(
-            'INSERT INTO enregistrement (artisan_id, uuid, nom_origine, type_mime, taille, fichier, statut, recu_le)
-             VALUES (:a, :u, :n, :m, :t, :f, :s, :r)',
+            'INSERT INTO enregistrement (artisan_id, uuid, nom_origine, type_mime, taille, fichier, statut, recu_le, cle_client)
+             VALUES (:a, :u, :n, :m, :t, :f, :s, :r, :c)',
             ['a' => $this->portee->artisanId, 'u' => $uuid, 'n' => mb_substr($nomOrigine, 0, 255), 'm' => $mime,
-             't' => $taille, 'f' => $fichier, 's' => Statut::RECU, 'r' => Dates::versBase($recuLe)],
+             't' => $taille, 'f' => $fichier, 's' => Statut::RECU, 'r' => Dates::versBase($recuLe), 'c' => $cleClient],
         );
         return $this->base->dernierId();
+    }
+
+    /** L'enregistrement déjà reçu sous cette clé, pour ce compte seulement. */
+    public function uuidParCle(string $cleClient): ?string
+    {
+        $uuid = $this->base->valeur(
+            'SELECT uuid FROM enregistrement WHERE artisan_id = :a AND cle_client = :c',
+            ['a' => $this->portee->artisanId, 'c' => $cleClient],
+        );
+        return is_string($uuid) ? $uuid : null;
     }
 
     /** @return Enregistrement|null */

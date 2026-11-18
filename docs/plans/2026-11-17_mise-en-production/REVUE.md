@@ -58,3 +58,36 @@ Verdicts : **confirmé** (vu dans le code ou mesuré par Claude), **écarté** 
 ## Non vérifié
 
 Réglages PHP du site web chez Infomaniak (`display_errors`, `disable_functions` exacte), version de ffmpeg en production, failles publiées pour dompdf 3.1.6, droits réels de l'utilisateur `3p81e5_app`, plafond de sortie par défaut et limites de débit d'Infomaniak.
+
+## Revue des lots de `PLAN-completer.md` (2026-11-18, soir)
+
+Trois relecteurs Opus indépendants, un angle chacun : authentification et droits, exploitation (messagerie, alertes, purge, déploiement), dictée à l'abri. Défauts vérifiés à la source avant correction (ancien `bin/purger-audio` relu par `git show HEAD:`, `public/index.php` relu). Chaque correction a son test, écrit rouge d'abord.
+
+### Corrigés
+
+| Angle | Défaut | Correction | Preuve |
+|---|---|---|---|
+| Exploitation | Haute : après un retour arrière, la ligne cron de purge lancerait l'ancien `bin/purger-audio`, sans garde (contre Q1) | Garde dans la ligne cron : `grep -qx 'PURGE_AUDIO=1' partage/.env` | essai du `grep` sur six contenus de `.env` |
+| Exploitation | Haute : `ALERTES_A` rempli et messagerie mal réglée, le journal levait, toutes les pages en 500 | Alertes construites à la première erreur, échec vers `error_log` | `testUneMessagerieMalRegleeNeFaitTomberNiLeJournalNiLesPages` |
+| Exploitation | État des alertes non écrit, ni silence ni plafond | Écritures vérifiées sous verrou (`flock`) ; sans état, rien ne part | `testSansEtatEcritRienNePart` |
+| Exploitation | `MESSAGERIE=SMTP` passait en fichiers sans bruit ; `bin/creer-compte` disait « envoyé » | Valeurs `smtp`, `fichier` ou vide, toute autre refusée ; message honnête de la commande | `testUnReglageInconnuRefuseDeDemarrer` |
+| Exploitation | Le test pouvait envoyer de vrais courriels | `deployer-test.sh` refuse `MESSAGERIE=smtp` sans `COURRIELS_REDIRIGER_VERS` | `bash -n` |
+| Exploitation | Alerte envoyée avant l'écriture au journal ; objet avec le détail (adresse dictée) | Ordre des gestionnaires ; objet limité au nom de la panne | `testLObjetNeReprendPasLeDetailDuMessage` |
+| Connexion | Un changement vérifié avant un lien d'oubli écrasait le mot de passe du lien | Écriture conditionnée au numéro de session (`WHERE version_session = :v`) | `testUnChangementEnRetardSurLaSessionNEcrasePasLeLien` |
+| Connexion | Ancien mot de passe devinable sans frein avec une session volée | Même frein que la connexion (5 essais, 15 minutes) | `testLAncienMotDePasseEstFreineCommeLaConnexion` |
+| Connexion | Un visiteur pouvait confisquer le compte de démonstration | Mot de passe fixe pour un compte de démonstration (403, rubrique masquée) | `testUnCompteDeDemonstrationGardeSonMotDePasse` |
+| Connexion | Une page d'administration se trahissait par un 405 | 404 sur une méthode non déclarée d'une page d'administration | `testUneMethodeNonDeclareeRend404EtNon405` |
+| Abri | Haute : l'envoi attendait le stockage du navigateur ; s'il ne répondait pas, rien ne partait | L'envoi part de la mémoire ; ouverture du stockage avec délai, `onblocked`, `onversionchange`, `onclose` | parcours F : stockage muet, offre en 1,2 s |
+| Abri | Réponse perdue puis « Réessayer », ou deux touchers : deux offres | Clé de dictée envoyée au serveur ; une clé déjà reçue renvoie à son enregistrement, avant les plafonds (migration additive `cle_client`) | `tests/Http/ImportCleTest.php` ; parcours B et C : 1 enregistrement sous la clé |
+| Abri | Dictée d'un autre onglet proposée ; tranches orphelines | Signe de vie (`vu`) : rien de proposé si moins de 20 s ; ménage des tranches sans dictée | parcours A |
+| Abri | Règle des 5 s appliquée au nombre de tranches, même à une dictée terminée | Durée réelle (`fin`), règle seulement pour une dictée coupée | parcours A (7 125 ms) |
+| Abri | Page `/import` bloquée par la reprise ; geste retour sans « plus tard » ; compte épuisé ; deux « Terminer » ; enregistreur arrêté seul ; URL d'objets ; message « perdu » faux | Reprise seulement dans la fenêtre du bas ; « plus tard » à toute sortie ; Envoyer masqué si épuisé ; un seul arrêt par enregistrement ; « Terminer » marche après un arrêt seul ; URL libérées ; message selon la copie | parcours D, E |
+
+### Laissés en l'état, avec la raison
+
+- Cookie de session posé avec le 404 d'une page d'administration (déduit du code, non mesuré) : aucune page d'administration n'existe encore.
+- Plafond de 3 demandes par heure non atomique (requêtes simultanées) : au pire quelques courriels de plus vers la même personne.
+- Délai de réponse de « mot de passe oublié » selon l'hébergement, jeton dans le journal d'accès : à mesurer sur le site de test ; lien court et à usage unique.
+- Délai du serveur d'envoi (60 s par défaut) ; plafond du jour mangé par une panne répétée, perte non signalée ; fichiers d'état jamais nettoyés : à revoir avec la production.
+- Dictée à l'abri sur Safari (MP4 coupé, Blob, effacement après 7 jours, téléchargement après une attente) : hypothèses, essai sur iPhone.
+- Une dictée non envoyée n'expire jamais et survit à la déconnexion : à trancher par Xavier.

@@ -31,6 +31,12 @@ final class PurgeTest extends TestCase
         $this->dossiers->effacer();
     }
 
+    /** @return array<string, string> purge allumée, comme en production le jour où Xavier la décide */
+    private function env(): array
+    {
+        return $this->dossiers->env() + ['PURGE_AUDIO' => '1'];
+    }
+
     private function audio(string $uuid): string
     {
         $chemin = $this->dossiers->env()['AUDIO_DOSSIER'] . "/{$this->jeu->a}/$uuid.m4a";
@@ -53,7 +59,7 @@ final class PurgeTest extends TestCase
         $fRecent = $this->audio($recent);
 
         $horloge = new MockClock('2026-12-07 10:00:01', 'UTC');
-        $resultat = Monde::conteneur($horloge, $this->dossiers->env())->purge()->purger();
+        $resultat = Monde::conteneur($horloge, $this->env())->purge()->purger();
 
         self::assertSame(['supprimes' => 1, 'erreurs' => 0], $resultat);
         self::assertFileDoesNotExist($fEchu);
@@ -61,13 +67,26 @@ final class PurgeTest extends TestCase
         self::assertSame(1, BaseDeTest::compter('enregistrement', "uuid = '$echu' AND fichier IS NULL"));
         self::assertSame(1, BaseDeTest::compter('offre', "id = {$this->jeu->offre['a']}"));
         // Deuxième passage : rien de plus.
-        self::assertSame(['supprimes' => 0, 'erreurs' => 0], Monde::conteneur($horloge, $this->dossiers->env())->purge()->purger());
+        self::assertSame(['supprimes' => 0, 'erreurs' => 0], Monde::conteneur($horloge, $this->env())->purge()->purger());
+    }
+
+    /** Décision Q1 de Xavier (2026-11-18) : la purge est écrite, mais rien n'est effacé tant qu'il ne l'a pas allumée. */
+    public function testPurgeEteinteParDefautRienNEstEfface(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'pret', supprimer_apres = '2026-11-01 00:00:00' WHERE uuid = '{$this->jeu->uuid['a']}'");
+        $fichier = $this->audio($this->jeu->uuid['a']);
+        foreach (['', '0', 'oui'] as $valeur) {
+            $env = $this->dossiers->env() + ($valeur === '' ? [] : ['PURGE_AUDIO' => $valeur]);
+            self::assertNull(Monde::conteneur(env: $env)->purge()->purger(), "PURGE_AUDIO=$valeur");
+        }
+        self::assertFileExists($fichier);
+        self::assertSame(0, BaseDeTest::compter('enregistrement', "uuid = '{$this->jeu->uuid['a']}' AND fichier IS NULL"));
     }
 
     public function testFichierDejaAbsentNeBloquePas(): void
     {
         BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'pret', supprimer_apres = '2026-11-01 00:00:00' WHERE uuid = '{$this->jeu->uuid['a']}'");
-        $resultat = Monde::conteneur(env: $this->dossiers->env())->purge()->purger();
+        $resultat = Monde::conteneur(env: $this->env())->purge()->purger();
         self::assertSame(['supprimes' => 1, 'erreurs' => 0], $resultat);
     }
 

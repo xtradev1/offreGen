@@ -27,6 +27,9 @@ final class Noyau
 
     private RouteCollection $collection;
 
+    /** Les mêmes routes sans celles d'administration : sert à ne pas trahir une page d'administration par un 405. */
+    private RouteCollection $collectionHorsAdmin;
+
     /** @var \Closure(string): void */
     private \Closure $journal;
 
@@ -40,12 +43,16 @@ final class Noyau
             error_log($message);
         };
         $this->collection = new RouteCollection();
+        $this->collectionHorsAdmin = new RouteCollection();
         foreach ($routes as $route) {
             if (isset($this->routes[$route->nom])) {
                 throw new \LogicException("Route déclarée deux fois : {$route->nom}");
             }
             $this->routes[$route->nom] = $route;
             $this->collection->add($route->nom, new RouteSymfony($route->chemin, methods: $route->verbes));
+            if ($route->droit !== Route::ADMIN) {
+                $this->collectionHorsAdmin->add($route->nom, new RouteSymfony($route->chemin, methods: $route->verbes));
+            }
         }
     }
 
@@ -87,11 +94,12 @@ final class Noyau
         } catch (ResourceNotFoundException) {
             return $this->erreur(404, 'Page introuvable');
         } catch (MethodNotAllowedException) {
-            return $this->erreur(405, 'Action non permise');
+            // Un 405 dirait qu'une page existe à cette adresse : pour une page d'administration, 404 comme ailleurs.
+            return $this->existeHorsAdmin($requete) ? $this->erreur(405, 'Action non permise') : $this->erreur(404, 'Page introuvable');
         }
 
         $route = $this->routes[(string) $parametres['_route']];
-        if ($route->droit !== Route::PUBLIC && $route->droit !== Route::ARTISAN) {
+        if (!in_array($route->droit, [Route::PUBLIC, Route::ARTISAN, Route::ADMIN], true)) {
             return $this->erreur(403, 'Accès refusé');
         }
 
@@ -101,6 +109,14 @@ final class Noyau
                 $artisan = $this->garde->artisan($requete);
                 if ($artisan === null) {
                     return new RedirectResponse('/connexion', 303);
+                }
+                $requete->attributes->set('_artisan', $artisan);
+            }
+            if ($route->droit === Route::ADMIN) {
+                // 404 et non 403 ni renvoi à la connexion : la page n'existe pour personne d'autre.
+                $artisan = $this->garde->artisan($requete);
+                if ($artisan === null || !$this->garde->administrateur($artisan)) {
+                    return $this->erreur(404, 'Page introuvable');
                 }
                 $requete->attributes->set('_artisan', $artisan);
             }
@@ -125,6 +141,18 @@ final class Noyau
             return $this->erreur(500, 'Erreur du serveur');
         } finally {
             $this->garde->sortir();
+        }
+    }
+
+    private function existeHorsAdmin(Request $requete): bool
+    {
+        try {
+            (new UrlMatcher($this->collectionHorsAdmin, (new RequestContext())->fromRequest($requete)))->match($requete->getPathInfo());
+            return true;
+        } catch (MethodNotAllowedException) {
+            return true;
+        } catch (ResourceNotFoundException) {
+            return false;
         }
     }
 

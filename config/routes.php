@@ -16,6 +16,7 @@ use OffreGen\Http\Controleur\ConnexionControleur;
 use OffreGen\Http\Controleur\EnregistrementControleur;
 use OffreGen\Http\Controleur\FactureControleur;
 use OffreGen\Http\Controleur\ImportControleur;
+use OffreGen\Http\Controleur\MotDePasseControleur;
 use OffreGen\Http\Controleur\OffreControleur;
 use OffreGen\Http\Controleur\PieceControleur;
 use OffreGen\Http\Controleur\RangementControleur;
@@ -25,7 +26,7 @@ use OffreGen\Http\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-// Chaque route déclare son droit : Route::PUBLIC ou Route::ARTISAN. Sans droit, 403.
+// Chaque route déclare son droit : Route::PUBLIC, Route::ARTISAN ou Route::ADMIN. Sans droit, 403.
 // Tout POST passe par le contrôle CSRF du noyau. Une route artisan exige une session.
 // Les tests parcourent cette liste (tests/Http/NoyauTest.php, tests/Http/IsolationRoutesTest.php).
 return static function (Conteneur $c): array {
@@ -38,6 +39,7 @@ return static function (Conteneur $c): array {
     $client = static fn (): ClientControleur => new ClientControleur($c);
     $facture = static fn (): FactureControleur => new FactureControleur($c);
     $ligneFacture = static fn (): LigneControleur => new LigneControleur($c, LigneControleur::FACTURE);
+    $motDePasse = static fn (): MotDePasseControleur => new MotDePasseControleur($c);
 
     $routes = [
         // État pour la sonde d'exposition, après chaque déploiement (docs/DEPLOIEMENT.md). Lecture seule.
@@ -49,6 +51,14 @@ return static function (Conteneur $c): array {
         new Route('connexion', '/connexion', ['GET'], static fn (Request $r): Response => $connexion()->afficher($r), Route::PUBLIC),
         new Route('connexion_envoi', '/connexion', ['POST'], static fn (Request $r): Response => $connexion()->soumettre($r), Route::PUBLIC),
         new Route('deconnexion', '/deconnexion', ['POST'], static fn (Request $r): Response => $connexion()->deconnecter($r), Route::ARTISAN),
+        // Mot de passe oublié et lien d'accès d'un nouveau compte (P1, P3, A3, 2026-11-18). « oubli » avant {jeton}.
+        new Route('mot_de_passe_oubli', '/mot-de-passe/oubli', ['GET'], static fn (Request $r): Response => $motDePasse()->oubli($r), Route::PUBLIC),
+        new Route('mot_de_passe_demander', '/mot-de-passe/oubli', ['POST'], static fn (Request $r): Response => $motDePasse()->demander($r), Route::PUBLIC),
+        new Route('mot_de_passe_lien', '/mot-de-passe/{jeton}', ['GET'], static fn (Request $r, array $p): Response => $motDePasse()->lien($r, $p), Route::PUBLIC),
+        new Route('mot_de_passe_choisir', '/mot-de-passe/{jeton}', ['POST'], static fn (Request $r, array $p): Response => $motDePasse()->choisir($r, $p), Route::PUBLIC),
+        // Changer son mot de passe (P4) : les autres appareils sont déconnectés.
+        new Route('reglages_mot_de_passe', '/reglages/mot-de-passe', ['GET'], static fn (Request $r): Response => $motDePasse()->reglages($r), Route::ARTISAN),
+        new Route('reglages_mot_de_passe_changer', '/reglages/mot-de-passe', ['POST'], static fn (Request $r): Response => $motDePasse()->changer($r), Route::ARTISAN),
         new Route('accueil', '/', ['GET'], static fn (Request $r): Response => $accueil()->liste($r), Route::ARTISAN),
         // « Plus » (décision D2, 2026-11-15) : catalogue, réglages, import, déconnexion. Lecture seule.
         new Route('plus', '/plus', ['GET'], static fn (): Response => new Response($c->twig()->render('plus.html.twig')), Route::ARTISAN),

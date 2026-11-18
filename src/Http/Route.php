@@ -11,6 +11,8 @@ final readonly class Route
 {
     public const PUBLIC = 'public';
     public const ARTISAN = 'artisan';
+    /** Compte connecté avec le droit administrateur ; 404 pour tout autre, avec ou sans session (A1, 2026-11-18). */
+    public const ADMIN = 'administrateur';
 
     /**
      * @param list<string> $verbes

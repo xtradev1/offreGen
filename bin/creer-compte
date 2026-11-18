@@ -3,9 +3,10 @@
 
 declare(strict_types=1);
 
-// Crée un compte et affiche son mot de passe, une seule fois.
-// Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N]
-// Un compte démo a un plafond quotidien d'imports (10 par défaut).
+// Crée un compte. Avec --acces, l'artisan reçoit un courriel et choisit lui-même son mot de passe (lien valable
+// 7 jours, décision A3 de Xavier du 2026-11-18) ; sans --acces, le mot de passe s'affiche une seule fois.
+// Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N] [--acces]
+// Un compte démo a un plafond quotidien d'imports (10 par défaut) et ne reçoit aucun courriel.
 // Un compte d'essai (--offres=N) a N offres en tout, tous jours confondus ; bin/offres-essai les change ensuite.
 
 use OffreGen\Http\Conteneur;
@@ -17,11 +18,14 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 $positionnels = [];
 $demo = false;
+$acces = false;
 $plafond = null;
 $offres = null;
 foreach (array_slice($argv, 1) as $arg) {
     if ($arg === '--demo') {
         $demo = true;
+    } elseif ($arg === '--acces') {
+        $acces = true;
     } elseif (preg_match('/^--plafond=(\d+)$/', $arg, $m) === 1) {
         $plafond = (int) $m[1];
     } elseif (preg_match('/^--offres=(\d+)$/', $arg, $m) === 1) {
@@ -30,8 +34,8 @@ foreach (array_slice($argv, 1) as $arg) {
         $positionnels[] = $arg;
     }
 }
-if (count($positionnels) !== 2) {
-    fwrite(STDERR, "Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N]\n");
+if (count($positionnels) !== 2 || ($demo && $acces)) {
+    fwrite(STDERR, "Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N] [--acces]\n--demo et --acces ne vont pas ensemble.\n");
     exit(2);
 }
 if ($demo && $plafond === null) {
@@ -47,4 +51,17 @@ try {
 }
 
 echo "Compte créé : {$positionnels[0]}" . ($demo ? " (démo, $plafond imports par jour)" : '') . ($offres !== null ? " (essai, $offres offre" . ($offres > 1 ? 's' : '') . ')' : '') . "\n";
-echo "Mot de passe, affiché une seule fois : $motDePasse\n";
+if (!$acces) {
+    echo "Mot de passe, affiché une seule fois : $motDePasse\n";
+    exit(0);
+}
+try {
+    $c->liensAcces()->envoyerAcces($positionnels[0]);
+} catch (\Throwable $e) {
+    // Le compte existe : il suffit de relancer l'envoi par « mot de passe oublié » une fois la messagerie réparée.
+    fwrite(STDERR, "Courriel d'accès non envoyé : {$e->getMessage()}\nLe compte existe : l'artisan peut demander un lien depuis « Mot de passe oublié ».\n");
+    exit(1);
+}
+echo $c->messagerieReelle()
+    ? "Courriel d'accès envoyé (lien valable 7 jours).\n"
+    : "Courriel d'accès écrit dans var/courriels, rien n'est parti : MESSAGERIE n'est pas « smtp » dans le .env.\n";

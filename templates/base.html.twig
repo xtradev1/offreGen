@@ -9,7 +9,9 @@
   <link rel="stylesheet" href="/css/app.css">
   <script src="/js/app.js" defer></script>
 </head>
-<body>
+{# data-compte : le navigateur range les dictées à l'abri sous ce compte (sous-chantier 27). #}
+{% set compte_courant = compte() %}
+<body{% if compte_courant %} data-compte="{{ compte_courant }}"{% endif %}>
   {# Sur PC, une colonne à côté de l'écran (la liste des offres, D12) ; le téléphone ne la montre pas. #}
   {% block colonne %}{% endblock %}
   <div class="app">

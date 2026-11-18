@@ -77,4 +77,9 @@ final class Garde
     {
         return $this->authentification->artisanConnecte($requete);
     }
+
+    public function administrateur(int $artisanId): bool
+    {
+        return $this->authentification->estAdministrateur($artisanId);
+    }
 }

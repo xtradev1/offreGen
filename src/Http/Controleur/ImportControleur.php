@@ -33,6 +33,15 @@ final class ImportControleur
         $portee = new Portee($requete->attributes->getInt('_artisan'));
         $enregistrements = $this->c->enregistrements($portee);
 
+        // Une dictée déjà reçue (réponse du premier envoi perdue en route) : renvoyée à son enregistrement, avant
+        // les plafonds, qui la compteraient deux fois (revue du 2026-11-18, dictée à l'abri).
+        $cle = $requete->request->getString('cle');
+        $cle = preg_match('/^\d{10,16}-[a-z0-9]{1,12}$/', $cle) === 1 ? $cle : null;
+        $deja = $cle === null ? null : $enregistrements->uuidParCle($cle);
+        if ($deja !== null) {
+            return new RedirectResponse('/enregistrements/' . $deja, 303);
+        }
+
         $artisan = $this->c->artisans()->parId($portee->artisanId);
         if ($artisan !== null && $artisan['demo'] === 1 && $artisan['plafond_jour'] !== null
             && $enregistrements->recusDepuis($this->debutDuJour()) >= $artisan['plafond_jour']) {
@@ -67,7 +76,7 @@ final class ImportControleur
         $stockage = $this->c->stockageAudio();
         $relatif = $stockage->ranger($portee->artisanId, $uuid, $audio);
         try {
-            $enregistrements->creer($uuid, $fichier->getClientOriginalName(), $audio->mime, $audio->taille, $relatif, $this->c->horloge()->now());
+            $enregistrements->creer($uuid, $fichier->getClientOriginalName(), $audio->mime, $audio->taille, $relatif, $this->c->horloge()->now(), $cle);
         } catch (\Throwable $e) {
             // Sans ligne en base, le fichier ne serait jamais traité ni purgé.
             $stockage->supprimer($relatif);

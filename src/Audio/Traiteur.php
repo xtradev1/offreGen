@@ -16,7 +16,7 @@ use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\Statut;
 use OffreGen\Donnees\VerrouPerdu;
 use OffreGen\Offre\Extracteur;
-use OffreGen\Offre\Messagerie;
+use OffreGen\Systeme\Messagerie;
 use Symfony\Component\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 
@@ -190,7 +190,8 @@ final class Traiteur
     {
         try {
             $artisan = $this->artisans->parId($artisanId);
-            if ($artisan === null) {
+            // Un compte de démonstration a une adresse inventée : le courriel reviendrait en erreur.
+            if ($artisan === null || $artisan['demo'] === 1) {
                 return;
             }
             $lien = rtrim($this->adresseApplication, '/') . '/offres/' . $offreId;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OffreGen\Offre;
+namespace OffreGen\Systeme;
 
 interface Messagerie
 {

@@ -21,8 +21,8 @@ use OffreGen\Offre\Extracteur;
 use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\ExtracteurFactice;
 use OffreGen\Offre\LigneExtraite;
-use OffreGen\Offre\Messagerie;
-use OffreGen\Offre\MessagerieFichier;
+use OffreGen\Systeme\Messagerie;
+use OffreGen\Systeme\MessagerieFichier;
 use OffreGen\Offre\ResultatExtraction;
 use OffreGen\Tests\Outils\BaseDeTest;
 use OffreGen\Tests\Outils\Dossiers;
@@ -96,6 +96,14 @@ final class TraiteurTest extends TestCase
         $courriels = $this->dossiers->courriels();
         self::assertCount(1, $courriels);
         self::assertStringContainsString('https://exemple.test/offres/', (string) file_get_contents($courriels[0]));
+    }
+
+    /** Un compte de démonstration a une adresse inventée : avec un vrai envoi, le courriel reviendrait en erreur. */
+    public function testUnCompteDeDemonstrationNeRecoitPasDeCourriel(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET demo = 1 WHERE id = {$this->jeu->a}");
+        self::assertSame(Statut::PRET, $this->traiteur()->avancer(self::UUID));
+        self::assertSame([], $this->dossiers->courriels());
     }
 
     public function testUneDicteeSansParoleDonneUneOffreVideSansAppelerLeModele(): void

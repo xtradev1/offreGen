@@ -27,7 +27,7 @@ final class NoyauTest extends TestCase
             new Route('publique', '/publique', ['GET'], $ok, Route::PUBLIC),
             new Route('envoi', '/envoi', ['POST'], $ok, Route::PUBLIC),
             new Route('sans_droit', '/sans-droit', ['GET'], $ok, null),
-            new Route('droit_inconnu', '/droit-inconnu', ['GET'], $ok, 'admin'),
+            new Route('droit_inconnu', '/droit-inconnu', ['GET'], $ok, 'inconnu'),
             new Route('casse', '/casse', ['GET'], static fn (): Response => throw new \RuntimeException('boum'), Route::PUBLIC),
         ], $c->twig(), $c->garde(), $journal);
     }
@@ -97,7 +97,7 @@ final class NoyauTest extends TestCase
         $routes = Monde::conteneur()->noyau()->routes();
         self::assertNotEmpty($routes);
         foreach ($routes as $route) {
-            self::assertContains($route->droit, [Route::PUBLIC, Route::ARTISAN], "Route sans droit : {$route->nom}");
+            self::assertContains($route->droit, [Route::PUBLIC, Route::ARTISAN, Route::ADMIN], "Route sans droit : {$route->nom}");
         }
     }
 }

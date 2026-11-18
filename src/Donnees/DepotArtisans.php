@@ -7,31 +7,29 @@ namespace OffreGen\Donnees;
 /**
  * Les comptes. Hors portée par nature : on cherche un compte avant de savoir qui est connecté.
  * Sert la connexion et les commandes de bin/, jamais une page qui liste des comptes.
+ *
+ * @phpstan-type Artisan array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null, administrateur: int, version_session: int}
  */
 final class DepotArtisans
 {
+    private const COLONNES = 'id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max, administrateur, version_session';
+
     public function __construct(private readonly Base $base)
     {
     }
 
-    /** @return array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null}|null */
+    /** @return Artisan|null */
     public function parCourriel(string $courriel): ?array
     {
-        /** @var array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null}|null */
-        return $this->base->un(
-            'SELECT id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max FROM artisan WHERE courriel = :c',
-            ['c' => self::normaliser($courriel)],
-        );
+        /** @var Artisan|null */
+        return $this->base->un('SELECT ' . self::COLONNES . ' FROM artisan WHERE courriel = :c', ['c' => self::normaliser($courriel)]);
     }
 
-    /** @return array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null}|null */
+    /** @return Artisan|null */
     public function parId(int $id): ?array
     {
-        /** @var array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null}|null */
-        return $this->base->un(
-            'SELECT id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max FROM artisan WHERE id = :id',
-            ['id' => $id],
-        );
+        /** @var Artisan|null */
+        return $this->base->un('SELECT ' . self::COLONNES . ' FROM artisan WHERE id = :id', ['id' => $id]);
     }
 
     public function creer(string $courriel, string $hache, string $entreprise, bool $demo, ?int $plafond, \DateTimeImmutable $quand, ?int $offresMax = null): int
@@ -53,6 +51,33 @@ final class DepotArtisans
     public function changerMotDePasse(int $id, string $hache): void
     {
         $this->base->ecrire('UPDATE artisan SET mot_de_passe = :h WHERE id = :id', ['h' => $hache, 'id' => $id]);
+    }
+
+    /**
+     * Nouveau mot de passe choisi par l'artisan : le numéro de session avance, les sessions ouvertes ailleurs tombent.
+     * $versionAttendue : l'écriture n'a lieu que si le numéro n'a pas bougé entre-temps (un lien d'oubli a servi,
+     * ou un autre changement est passé) ; sans elle (lien d'oubli), elle a toujours lieu.
+     *
+     * @return int|null le nouveau numéro de session ; null si le numéro avait déjà changé
+     */
+    public function remplacerMotDePasse(int $id, string $hache, ?int $versionAttendue = null): ?int
+    {
+        return $this->base->transaction(function () use ($id, $hache, $versionAttendue): ?int {
+            $touchees = $this->base->ecrire(
+                'UPDATE artisan SET mot_de_passe = :h, version_session = version_session + 1 WHERE id = :id'
+                . ($versionAttendue === null ? '' : ' AND version_session = :v'),
+                ['h' => $hache, 'id' => $id] + ($versionAttendue === null ? [] : ['v' => $versionAttendue]),
+            );
+            if ($touchees !== 1) {
+                return null;
+            }
+            return (int) $this->base->valeur('SELECT version_session FROM artisan WHERE id = :id', ['id' => $id]);
+        });
+    }
+
+    public function changerAdministrateur(int $id, bool $administrateur): void
+    {
+        $this->base->ecrire('UPDATE artisan SET administrateur = :a WHERE id = :id', ['a' => $administrateur ? 1 : 0, 'id' => $id]);
     }
 
     public static function normaliser(string $courriel): string

@@ -200,6 +200,121 @@ function marquerEtapes(liste, faites, echec) {
   });
 }
 
+// Dictées à l'abri (sous-chantier 27, Xavier, 2026-11-17) : chaque tranche d'une seconde est rangée dans le
+// navigateur pendant l'enregistrement, et la dictée y reste jusqu'à ce que son offre soit prête. Une coupure de
+// réseau, une fenêtre fermée ou un téléphone éteint ne la perdent plus. Chaque dictée porte le compte qui l'a
+// faite : un autre compte, sur le même appareil, ne la voit pas. Sans stockage (navigation privée, refus du
+// navigateur, stockage qui ne répond pas), rien ne casse et rien n'attend : l'enregistrement part comme avant.
+// États : « enregistrement » (en cours ou coupé), « a_envoyer » (terminé, pas arrivé), « envoye » (au serveur).
+// « fin » : l'heure de la dernière tranche (durée réelle) ; « vu » : le dernier signe de vie de l'onglet qui la tient.
+const abri = (() => {
+  let base = null;
+  const avecDelai = (p, ms) => Promise.race([p, new Promise((_, ko) => setTimeout(() => ko(new Error('délai dépassé')), ms))]);
+  const ouvrir = () => {
+    if (!base) {
+      base = avecDelai(new Promise((ok, ko) => {
+        if (!window.indexedDB) { ko(new Error('sans stockage')); return; }
+        const r = indexedDB.open('offregen-abri', 1);
+        r.onupgradeneeded = () => {
+          const db = r.result;
+          db.createObjectStore('dictees', { keyPath: 'id' }).createIndex('uuid', 'uuid');
+          db.createObjectStore('morceaux', { keyPath: ['id', 'n'] });
+        };
+        r.onsuccess = () => {
+          const db = r.result;
+          // Une version plus récente ouverte dans un autre onglet, ou une connexion perdue (Safari en arrière-plan) :
+          // la suivante rouvre la base.
+          db.onversionchange = () => { db.close(); base = null; };
+          db.onclose = () => { base = null; };
+          ok(db);
+        };
+        r.onerror = () => ko(r.error);
+        r.onblocked = () => ko(new Error('ouverture bloquée'));
+      }), 4000);
+      base.catch(() => { base = null; });
+    }
+    return base;
+  };
+  const resultat = (r) => new Promise((ok, ko) => { r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
+  const fin = (t) => new Promise((ok, ko) => { t.oncomplete = () => ok(); t.onerror = () => ko(t.error); t.onabort = () => ko(t.error); });
+  // Une panne du stockage ne remonte jamais : la dictée continue, seule la copie manque.
+  const sans = (p, defaut) => p.catch(() => defaut);
+  const tranches = (id) => IDBKeyRange.bound([id, 0], [id, Infinity]);
+
+  // seulementSi : les états d'où la modification est permise (une dictée arrivée ne redevient pas « à envoyer »).
+  const modifier = (id, champs, seulementSi) => sans(ouvrir().then((db) => {
+    const t = db.transaction('dictees', 'readwrite');
+    const s = t.objectStore('dictees');
+    const g = s.get(id);
+    g.onsuccess = () => { if (g.result && (!seulementSi || seulementSi.includes(g.result.etat))) s.put(Object.assign(g.result, champs)); };
+    return fin(t);
+  }), null);
+  const supprimer = (id) => sans(ouvrir().then((db) => {
+    const t = db.transaction(['dictees', 'morceaux'], 'readwrite');
+    t.objectStore('dictees').delete(id);
+    t.objectStore('morceaux').delete(tranches(id));
+    return fin(t);
+  }), null);
+
+  return {
+    // id : la clé de la dictée, aussi envoyée au serveur. Rend true si la copie est commencée.
+    commencer: (id, compte, type) => sans(ouvrir().then((db) => {
+      const t = db.transaction('dictees', 'readwrite');
+      const maintenant = Date.now();
+      t.objectStore('dictees').put({ id, compte, type, debut: maintenant, fin: maintenant, vu: maintenant, etat: 'enregistrement', nom: '', uuid: '', tranches: 0 });
+      return fin(t).then(() => true);
+    }), false),
+    ajouter: (id, n, blob) => sans(ouvrir().then((db) => {
+      const t = db.transaction(['dictees', 'morceaux'], 'readwrite');
+      t.objectStore('morceaux').put({ id, n, blob });
+      const s = t.objectStore('dictees');
+      const g = s.get(id);
+      g.onsuccess = () => {
+        if (!g.result) return;
+        g.result.tranches = Math.max(g.result.tranches, n + 1);
+        g.result.fin = Date.now();
+        g.result.vu = g.result.fin;
+        s.put(g.result);
+      };
+      return fin(t);
+    }), null),
+    modifier,
+    supprimer,
+    // L'offre de cet enregistrement est prête : la copie du téléphone n'a plus de raison d'être.
+    oublier: (uuid) => sans(ouvrir()
+      .then((db) => resultat(db.transaction('dictees').objectStore('dictees').index('uuid').getAll(uuid)))
+      .then((liste) => Promise.all(liste.map((d) => supprimer(d.id)))), null),
+    lister: (compte) => sans(ouvrir()
+      .then((db) => resultat(db.transaction('dictees').objectStore('dictees').getAll()))
+      .then((liste) => liste.filter((d) => d.compte === compte)), []),
+    // Tranches sans dictée (écrites après une suppression) : effacées.
+    menage: () => sans(ouvrir().then((db) => {
+      const t = db.transaction(['dictees', 'morceaux'], 'readwrite');
+      const ids = t.objectStore('dictees').getAllKeys();
+      const cles = t.objectStore('morceaux').getAllKeys();
+      cles.onsuccess = () => {
+        const vivantes = new Set(ids.result);
+        cles.result.forEach((k) => { if (!vivantes.has(k[0])) t.objectStore('morceaux').delete(k); });
+      };
+      return fin(t);
+    }), null),
+    // Le fichier de la dictée, ses tranches dans l'ordre. Rejette si le stockage ne répond pas.
+    fichier: (d) => avecDelai(ouvrir()
+      .then((db) => resultat(db.transaction('morceaux').objectStore('morceaux').getAll(tranches(d.id))))
+      .then((liste) => {
+        if (liste.length === 0) throw new Error('aucune tranche');
+        liste.sort((a, b) => a.n - b.n);
+        return new File(liste.map((m) => m.blob), d.nom || nomDictee(d.type, new Date(d.debut)), { type: d.type });
+      }), 8000),
+  };
+})();
+
+function nomDictee(type, d) {
+  const extension = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
+  const p = (n) => String(n).padStart(2, '0');
+  return 'enregistrement-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' + p(d.getHours()) + 'h' + p(d.getMinutes()) + '.' + extension;
+}
+
 // Demande l'état chaque seconde et fait avancer les étapes ; appelle fini(offre) quand l'offre est prête.
 // Rend une fonction qui arrête le suivi.
 function suivreEtapes(liste, uuid, fini) {
@@ -212,7 +327,7 @@ function suivreEtapes(liste, uuid, fini) {
       if (arret) return;
       marquerEtapes(liste, e.faites, e.echec);
       dire(e.echec ? 'La préparation a échoué après plusieurs essais.' : e.essais > 0 ? 'Un souci passager, nouvel essai en cours…' : '');
-      if (e.offre) { arret = true; fini(e.offre); }
+      if (e.offre) { arret = true; abri.oublier(uuid); fini(e.offre); }
       if (e.echec) arret = true;
     })
     .catch(() => dire('Connexion perdue, nouvel essai…'))
@@ -268,28 +383,43 @@ function nouvelleOffre() {
   let etatCourant = 'choix';
   let occupe = false;
   let arreterSuivi = () => {};
-  let duMicro = false; // le fichier en cours vient du micro : le fermer sans l'envoyer le perdrait
-  const perteAcceptee = () => !duMicro || window.confirm('Fermer sans envoyer ? L’enregistrement est perdu s’il n’est pas gardé dans un fichier.');
+  let duMicro = false; // le fichier en cours vient du micro : le fermer sans l'envoyer pourrait le perdre
+  let copieAbri = false; // le fichier en cours est aussi gardé dans le navigateur
+  const perteAcceptee = () => !duMicro || window.confirm(copieAbri
+    ? 'Fermer sans envoyer ? La dictée reste sur ce téléphone et sera proposée à la prochaine ouverture.'
+    : 'Fermer sans envoyer ? L’enregistrement est perdu s’il n’est pas gardé dans un fichier.');
   window.addEventListener('beforeunload', (e) => { if (occupe) e.preventDefault(); });
   // Retour sur une page gardée en mémoire par le navigateur : la liste a changé depuis.
   window.addEventListener('pageshow', (e) => { if (e.persisted) window.location.reload(); });
 
+  // Une dictée proposée puis écartée (croix, geste retour) ne revient pas avant la prochaine ouverture de l'onglet.
+  let repriseCourante = null;
+  const plusTard = (d) => { try { if (d) sessionStorage.setItem('offregen-plus-tard-' + d.id, '1'); } catch (e) { /* sans stockage de session : elle reviendra */ } };
+  const remiseAPlusTard = (d) => { try { return sessionStorage.getItem('offregen-plus-tard-' + d.id) !== null; } catch (e) { return false; } };
+
   const fenetre = feuille && {
     montrer: () => apparaitre(feuille),
-    cacher: () => { disparaitre(feuille); etatCourant = 'choix'; occupe = false; arreterSuivi(); },
+    cacher: () => {
+      if (etatCourant === 'reprise') plusTard(repriseCourante);
+      disparaitre(feuille);
+      etatCourant = 'choix';
+      occupe = false;
+      arreterSuivi();
+    },
     // Pendant l'enregistrement et l'envoi, le retour ne ferme rien ; après un échec, il demande.
     retenir: () => {
       // Après l'envoi, le traitement continue au serveur : la fenêtre peut se fermer.
-      if (['choix', 'suivi', 'court', 'refus'].includes(etatCourant)) return false;
+      if (['choix', 'suivi', 'court', 'refus', 'reprise'].includes(etatCourant)) return false;
       if (etatCourant === 'echec') return !perteAcceptee();
       return true;
     },
   };
 
   const montrer = (etat) => {
+    if (etatCourant === 'reprise' && etat !== 'reprise') plusTard(repriseCourante);
     etatCourant = etat;
     zone.querySelectorAll('[data-etat]').forEach((s) => { s.hidden = s.dataset.etat !== etat; });
-    if (fermerX) fermerX.hidden = !['echec', 'court', 'refus'].includes(etat);
+    if (fermerX) fermerX.hidden = !['echec', 'court', 'refus', 'reprise'].includes(etat);
     if (!fenetre) return;
     feuille.classList.toggle('pleine', etat === 'enregistrement');
     if (etat === 'choix') { calques.fermer(fenetre); return; }
@@ -307,7 +437,10 @@ function nouvelleOffre() {
     b.classList.add('touche');
   });
   zone.addEventListener('animationend', (e) => { if (e.animationName === 'onde') e.target.classList.remove('touche'); });
-  if (fermerX) fermerX.addEventListener('click', () => { if (perteAcceptee()) montrer('choix'); });
+  if (fermerX) fermerX.addEventListener('click', () => {
+    if (etatCourant === 'reprise') { montrer('choix'); return; }
+    if (perteAcceptee()) montrer('choix');
+  });
 
   // Quitter pour la page de préparation. Une entrée d'historique ajoutée par un calque est remplacée :
   // le retour ramène à la liste, pas à une fenêtre fermée.
@@ -317,9 +450,20 @@ function nouvelleOffre() {
   };
 
   let fichier = null;
+  // La clé de la dictée du fichier en cours : envoyée au serveur, qui reconnaît un second envoi de la même dictée
+  // (réponse du premier perdue en route), et nom de sa copie à l'abri. null pour un fichier importé.
+  let cleCourante = null;
   const echec = (texte) => { el('[data-echec-texte]').textContent = texte; montrer('echec'); };
   const liste = el('[data-etapes]');
+  const lienGarder = (f) => {
+    const garder = el('[data-garder]');
+    if (garder.href.startsWith('blob:')) URL.revokeObjectURL(garder.href);
+    garder.href = URL.createObjectURL(f);
+    garder.download = f.name;
+    garder.hidden = false;
+  };
   const envoyer = () => {
+    if (!fichier) return;
     montrer('envoi');
     occupe = true;
     marquerEtapes(liste, 0, false);
@@ -328,12 +472,17 @@ function nouvelleOffre() {
     progression.value = 0;
     progression.hidden = false;
     texte.textContent = '';
+    const cle = cleCourante;
     const donnees = new FormData();
     donnees.append('_csrf', form.querySelector('input[name=_csrf]').value);
+    if (cle) donnees.append('cle', cle);
     donnees.append('audio', fichier, fichier.name);
     const xhr = new XMLHttpRequest();
+    let signe = 0;
     xhr.open('POST', '/import');
     xhr.upload.addEventListener('progress', (e) => {
+      // Signe de vie : un autre onglet ne propose pas une dictée en cours d'envoi.
+      if (cle && Date.now() - signe > 5000) { signe = Date.now(); abri.modifier(cle, { vu: signe }); }
       if (!e.lengthComputable) return;
       progression.value = Math.round((e.loaded / e.total) * 100);
       texte.textContent = (e.loaded / 1048576).toFixed(1) + ' sur ' + (e.total / 1048576).toFixed(1) + ' Mo';
@@ -348,6 +497,8 @@ function nouvelleOffre() {
         texte.textContent = '';
         marquerEtapes(liste, 1, false);
         const uuid = xhr.responseURL.split('/enregistrements/')[1].split(/[/?#]/)[0];
+        // Arrivée au serveur : la copie reste jusqu'à l'offre prête (suivreEtapes, ou au prochain lancement).
+        if (cle) abri.modifier(cle, { etat: 'envoye', uuid, vu: Date.now() });
         arreterSuivi = suivreEtapes(liste, uuid, (offre) => setTimeout(() => { if (etatCourant === 'suivi') partir('/offres/' + offre); }, 900));
         return;
       }
@@ -367,17 +518,21 @@ function nouvelleOffre() {
     if (bloquer()) { entree.value = ''; return; }
     fichier = f;
     duMicro = false;
+    copieAbri = false;
+    cleCourante = null;
     el('[data-garder]').hidden = true;
     envoyer();
   });
 
   // Parler.
   let flux = null;
-  let enregistreur = null;
+  let enregistreur = null; // porte .cle, .copie (promesse : copie commencée) et .arret (« terminer », « abandon »)
   let morceaux = [];
+  const compte = document.body.dataset.compte || '';
   let minuteur = null;
   let veille = null;
   let debut = 0;
+  let finMs = 0; // heure où l'enregistreur s'est arrêté
   // Règle de Xavier (2026-11-12) : moins de 5 secondes, l'enregistrement n'est pas envoyé.
   const DUREE_MIN_MS = 5000;
   // Règle de Xavier (2026-11-17) : 30 minutes au plus. Prévenu 5 minutes avant, l'enregistrement s'arrête et part seul.
@@ -395,9 +550,30 @@ function nouvelleOffre() {
     if (texte) avis.textContent = texte;
     if (feuille) montrer('refus'); else avis.hidden = false;
   };
+  const nouvelleCle = () => Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+
+  // « Terminer » : la dictée part depuis la mémoire, sans attendre le stockage du navigateur.
+  const finir = (rec) => {
+    if ((finMs || Date.now()) - debut < DUREE_MIN_MS) {
+      occupe = false;
+      duMicro = false;
+      rec.copie.then((ok) => ok && abri.supprimer(rec.cle));
+      montrer('court');
+      return;
+    }
+    const type = rec.mimeType || 'audio/webm';
+    fichier = new File(morceaux, nomDictee(type, new Date(debut)), { type });
+    cleCourante = rec.cle;
+    lienGarder(fichier);
+    const nom = fichier.name;
+    rec.copie.then((ok) => ok && abri.modifier(rec.cle, { etat: 'a_envoyer', nom }, ['enregistrement']));
+    envoyer();
+  };
+
   const demarrer = async () => {
     if (bloquer()) return;
     if (!possible) { refus(); return; }
+    if (enregistreur && enregistreur.state !== 'inactive') return;
     try {
       flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
     } catch (e) {
@@ -405,13 +581,35 @@ function nouvelleOffre() {
       return;
     }
     const type = TYPES.find((t) => MediaRecorder.isTypeSupported(t)) || '';
-    enregistreur = new MediaRecorder(flux, type ? { mimeType: type, audioBitsPerSecond: 32000 } : {});
+    const rec = new MediaRecorder(flux, type ? { mimeType: type, audioBitsPerSecond: 32000 } : {});
+    enregistreur = rec;
     morceaux = [];
-    enregistreur.addEventListener('dataavailable', (e) => { if (e.data && e.data.size > 0) morceaux.push(e.data); });
-    enregistreur.start(1000);
+    // Chaque tranche part aussi à l'abri, dans l'ordre : coupé n'importe quand, le début de la dictée reste.
+    rec.cle = nouvelleCle();
+    rec.arret = null;
+    rec.copie = compte ? abri.commencer(rec.cle, compte, type || rec.mimeType || 'audio/webm') : Promise.resolve(false);
+    copieAbri = false;
+    rec.copie.then((ok) => { if (enregistreur === rec) copieAbri = ok; });
+    let rang = 0;
+    rec.addEventListener('dataavailable', (e) => {
+      if (!e.data || e.data.size === 0) return;
+      morceaux.push(e.data);
+      const n = rang++;
+      rec.copie.then((ok) => ok && abri.ajouter(rec.cle, n, e.data));
+    });
+    rec.addEventListener('stop', () => {
+      finMs = Date.now();
+      libererMicro();
+      if (rec.arret === 'terminer') finir(rec);
+      else if (rec.arret === 'abandon') rec.copie.then((ok) => ok && abri.supprimer(rec.cle));
+      // Arrêt sans « Terminer » (appel entrant, autre application sur le micro) : ce qui est enregistré reste.
+      else el('[data-consigne]').textContent = 'L’enregistrement s’est arrêté (appel ou autre application). « Terminer » envoie ce qui est enregistré.';
+    });
+    rec.start(1000);
     occupe = true;
     duMicro = true;
     debut = Date.now();
+    finMs = 0;
     const affichage = el('[data-minuteur]');
     const deux = (n) => String(n).padStart(2, '0');
     affichage.textContent = '00:00';
@@ -426,7 +624,7 @@ function nouvelleOffre() {
         el('[data-terminer]').click();
       } else if (s >= DUREE_MAX_S - PREAVIS_S) {
         const reste = Math.ceil((DUREE_MAX_S - s) / 60);
-        consigne.textContent = 'Encore ' + reste + ' min, puis l’enregistrement s’arrête et part.';
+        consigne.textContent = 'Encore ' + reste + ' min, puis l’enregistrement s’arrête et part.';
       }
     }, 500);
     if (navigator.wakeLock) navigator.wakeLock.request('screen').then((v) => { veille = v; }).catch(() => {});
@@ -434,30 +632,12 @@ function nouvelleOffre() {
   };
   micros.forEach((m) => m.addEventListener('click', demarrer));
 
+  // Un seul « Terminer » compte (deux touchers, ou un toucher pendant l'arrêt automatique des 30 minutes).
   el('[data-terminer]').addEventListener('click', () => {
-    if (!enregistreur) return;
-    const tropCourt = Date.now() - debut < DUREE_MIN_MS;
-    enregistreur.addEventListener('stop', () => {
-      libererMicro();
-      if (tropCourt) {
-        occupe = false;
-        duMicro = false;
-        montrer('court');
-        return;
-      }
-      const type = enregistreur.mimeType || 'audio/webm';
-      const extension = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
-      const d = new Date();
-      const p = (n) => String(n).padStart(2, '0');
-      const nom = 'enregistrement-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' + p(d.getHours()) + 'h' + p(d.getMinutes()) + '.' + extension;
-      fichier = new File(morceaux, nom, { type });
-      const garder = el('[data-garder]');
-      garder.href = URL.createObjectURL(fichier);
-      garder.download = nom;
-      garder.hidden = false;
-      envoyer();
-    }, { once: true });
-    enregistreur.stop();
+    const rec = enregistreur;
+    if (!rec || rec.arret) return;
+    rec.arret = 'terminer';
+    if (rec.state === 'inactive') finir(rec); else rec.stop();
   });
 
   // Trop court : on recommence tout de suite, le micro se rouvre.
@@ -467,10 +647,102 @@ function nouvelleOffre() {
     if (!window.confirm('Abandonner l’enregistrement ? Il ne sera pas gardé.')) return;
     occupe = false;
     duMicro = false;
-    if (enregistreur && enregistreur.state !== 'inactive') enregistreur.stop();
+    const rec = enregistreur;
+    if (rec && !rec.arret) {
+      rec.arret = 'abandon';
+      // Supprimée après la dernière tranche, qui arrive avec l'arrêt.
+      if (rec.state !== 'inactive') rec.stop(); else rec.copie.then((ok) => ok && abri.supprimer(rec.cle));
+    }
     libererMicro();
     montrer('choix');
   });
+
+  // Reprise (R1 B, Xavier, 2026-11-18) : à l'ouverture, une dictée restée sur ce téléphone sans être arrivée au
+  // serveur est proposée dans la fenêtre du bas. Une dictée arrivée est oubliée dès que son offre est prête.
+  const ilYA = (jours) => Date.now() - jours * 86400000;
+  const dureeMs = (d) => (d.fin || d.debut) - d.debut;
+  const decrire = (d) => {
+    const quand = new Date(d.debut);
+    const p = (n) => String(n).padStart(2, '0');
+    const s = Math.round(dureeMs(d) / 1000);
+    const duree = s < 60 ? s + ' s' : Math.round(s / 60) + ' min';
+    return 'La dictée du ' + quand.toLocaleDateString('fr-CH', { day: 'numeric', month: 'long' }) + ' à ' + quand.getHours() + ' h ' + p(quand.getMinutes())
+      + ' (' + duree + ') est restée sur ce téléphone : elle n’est pas arrivée au serveur.';
+  };
+  const reprendre = async () => {
+    // Sans la fenêtre du bas (page /import), rien n'est proposé : la page garde Parler et Importer.
+    if (!compte || !fenetre) return;
+    const dictees = await abri.lister(compte);
+    abri.menage();
+    dictees.forEach((d) => {
+      if (d.etat !== 'envoye') return;
+      // Arrivée au serveur : oubliée quand l'offre est prête, ou quand le serveur ne la connaît plus (retirée).
+      if (d.debut < ilYA(30)) { abri.supprimer(d.id); return; }
+      fetch('/enregistrements/' + d.uuid + '/etat', { credentials: 'same-origin', cache: 'no-store' })
+        .then((r) => (r.status === 404 ? { offre: true } : r.ok ? r.json() : null))
+        .then((e) => { if (e && e.offre) abri.supprimer(d.id); })
+        .catch(() => {});
+    });
+    // Une dictée qu'un autre onglet tient encore (signe de vie depuis moins de 20 s) n'est pas proposée ici.
+    const libres = dictees.filter((d) => d.etat !== 'envoye' && Date.now() - (d.vu || d.debut) > 20000);
+    // Coupée avant 5 secondes : le serveur la refuserait. Une dictée terminée a déjà passé cette règle.
+    const tropCourte = (d) => d.etat === 'enregistrement' && dureeMs(d) < DUREE_MIN_MS;
+    libres.filter(tropCourte).forEach((d) => abri.supprimer(d.id));
+    const d = libres.filter((x) => !tropCourte(x) && !remiseAPlusTard(x)).sort((a, b) => a.debut - b.debut)[0];
+    if (!d || etatCourant !== 'choix') return;
+    repriseCourante = d;
+    // Compte d'essai au bout de ses offres : la dictée ne peut pas partir, elle peut être gardée.
+    el('[data-reprise-envoyer]').hidden = !!epuise;
+    el('[data-reprise-texte]').textContent = decrire(d) + (epuise ? ' ' + epuise + ' Gardez-la dans un fichier.' : ' Envoyez-la maintenant pour en faire une offre.');
+    montrer('reprise');
+  };
+  const relectureImpossible = () => {
+    el('[data-reprise-texte]').textContent += ' Elle n’a pas pu être relue sur ce téléphone.';
+  };
+  let relecture = false; // un seul envoi, même pour deux touchers
+  el('[data-reprise-envoyer]').addEventListener('click', async () => {
+    const d = repriseCourante;
+    if (!d || relecture || bloquer()) return;
+    relecture = true;
+    try {
+      fichier = await abri.fichier(d);
+    } catch (e) {
+      relectureImpossible();
+      return;
+    } finally {
+      relecture = false;
+    }
+    duMicro = true;
+    copieAbri = true;
+    cleCourante = d.id;
+    lienGarder(fichier);
+    envoyer();
+  });
+  el('[data-reprise-garder]').addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (!repriseCourante) return;
+    let f;
+    try {
+      f = await abri.fichier(repriseCourante);
+    } catch (erreur) {
+      relectureImpossible();
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(f);
+    a.download = f.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  });
+  el('[data-reprise-supprimer]').addEventListener('click', async () => {
+    if (!repriseCourante || !window.confirm('Supprimer cette dictée ? Elle ne pourra plus être envoyée.')) return;
+    await abri.supprimer(repriseCourante.id);
+    repriseCourante = null;
+    montrer('choix');
+  });
+  reprendre();
 }
 
 // Catalogue : la fiche d'un produit (nouveau, modification, suppression) monte dans une fenêtre du bas,
@@ -1418,7 +1690,20 @@ function documentACote() {
   if ((garde || toujours) && window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) montrer(true);
 }
 
+// L'œil d'un mot de passe : montre ou masque tous les champs de mot de passe du même formulaire (P3 B).
+function oeilMotDePasse() {
+  document.querySelectorAll('button[data-oeil]').forEach((bouton) => {
+    bouton.addEventListener('click', () => {
+      const montrer = bouton.getAttribute('aria-pressed') !== 'true';
+      bouton.setAttribute('aria-pressed', montrer ? 'true' : 'false');
+      bouton.setAttribute('aria-label', montrer ? 'Masquer le mot de passe' : 'Montrer le mot de passe');
+      (bouton.form || document).querySelectorAll('input[data-oeil-cible]').forEach((c) => { c.type = montrer ? 'text' : 'password'; });
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  oeilMotDePasse();
   clavierPc();
   documentACote();
   messagesDeRecherche();

@@ -78,7 +78,8 @@ r="releases/$commit"
 ln -sfn ../../partage/.env "$r/.env"
 # Mot de passe de structure à part, lu par les migrations seules (revue du 2026-11-18, M12).
 [ -f partage/.env.structure ] && ln -sfn ../../partage/.env.structure "$r/.env.structure"
-for d in audio logos log sessions courriels; do rm -rf "$r/var/$d"; ln -sfn "../../../partage/var/$d" "$r/var/$d"; done
+# alertes : l'état du plafond des courriels d'alerte (2026-11-18), gardé d'une version à l'autre.
+for d in audio logos log sessions courriels alertes; do mkdir -p "partage/var/$d"; rm -rf "$r/var/$d"; ln -sfn "../../../partage/var/$d" "$r/var/$d"; done
 # Le .env doit se lire avant tout. Le message de Dotenv recopie la ligne fautive, mot de passe compris
 # (incident du 2026-11-14) : seul son numéro sort d'ici.
 ( cd "$r" && "$php" -r '
@@ -88,6 +89,11 @@ for d in audio logos log sessions courriels; do rm -rf "$r/var/$d"; ln -sfn "../
     fwrite(STDERR, "REFUS : .env illisible à la ligne " . $e->getContext()->getLineno() . " (valeur avec espace, # ou \$ : la mettre entre apostrophes).\n");
     exit(1);
   }' ) || exit 1
+# Site de test : aucun courriel réel sans redirection vers une seule adresse (docs/SECURITE.md, revue du 2026-11-18).
+if grep -Eq "^MESSAGERIE=['\"]?smtp" partage/.env && ! grep -Eq "^COURRIELS_REDIRIGER_VERS=['\"]?[^'\" ]+@" partage/.env; then
+  echo "REFUS : MESSAGERIE=smtp sans COURRIELS_REDIRIGER_VERS dans partage/.env, le test enverrait de vrais courriels." >&2
+  exit 1
+fi
 ( cd "$r" && "$php" vendor/bin/doctrine-migrations migrate --no-interaction --allow-no-migration >&2 )
 precedent="$(readlink current 2>/dev/null || true)"
 ln -sfn "$r" current.nouveau && mv -Tf current.nouveau current
@@ -98,7 +104,11 @@ for v in $(ls -1dt releases/*/ | sed 's#/$##' | tail -n +"$((garder + 1))"); do
   if [ "$v" != "$r" ]; then rm -rf "$v"; fi
 done
 ligne="* * * * * cd \$HOME/$app/current && $php bin/traiter-file --silencieux >> \$HOME/$app/partage/var/log/cron.log 2>&1"
-( crontab -l 2>/dev/null | grep -v 'bin/traiter-file' || true; echo "$ligne" ) | crontab -
+# Purge des audios chaque nuit à 3 h 17, éteinte tant que le .env ne porte pas la ligne exacte PURGE_AUDIO=1
+# (décision Q1 de Xavier, 2026-11-18). La garde est dans la ligne cron, pas seulement dans le code : après un
+# retour arrière, une version d'avant le 18.11 purgerait sans condition (revue du 2026-11-18).
+purge="17 3 * * * grep -qx 'PURGE_AUDIO=1' \$HOME/$app/partage/.env && cd \$HOME/$app/current && $php bin/purger-audio >> \$HOME/$app/partage/var/log/cron.log 2>&1"
+( crontab -l 2>/dev/null | grep -v -e 'bin/traiter-file' -e 'bin/purger-audio' || true; echo "$ligne"; echo "$purge" ) | crontab -
 echo "$precedent"
 DISTANT
 )"

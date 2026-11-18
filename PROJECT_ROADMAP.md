@@ -48,7 +48,7 @@
 - [x] Inventaire de ce qui manque avant la production, plan en 9 étapes, recette regroupée (`docs/plans/2026-11-17_mise-en-production/`).
 
 ### In progress
-- [ ] Mise en production, étapes 1 à 4 du plan (Xavier, 2026-11-18 : « va jusqu'au 4 », avec un design cohérent sur tout le site) : rangement, revue de la PR #3 (Opus, puis Fable), vérifications automatiques GitHub, puis compléter l'application (mot de passe, courriels, administration, purge, alertes, postes coupés, enregistrement à l'abri).
+- [ ] Mise en production : étapes 1 et 2 faites, contrôles GitHub en place. Le 18.11 : courriels, liens d'accès et mot de passe, droit administrateur, purge écrite et éteinte, alertes, dictée à l'abri, livrés en code et revus (588 tests), non commités ni déployés (`PLAN-completer.md`, `REVUE.md`). Écrans en attente de la marque (gate visuel).
 
 ### Next
 - [ ] Recette regroupée par Xavier sur le test (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
@@ -100,7 +100,7 @@
 - Audit externe : prestataire et budget à définir. Ordre de grandeur lu chez un vendeur suisse : CHF 4 500 à 15 000, sans devis.
 - Offre figée après l'envoi : rien n'est prévu pour corriger une offre envoyée (nouvelle version, annulation).
 - `.htaccess` exécuté sur le test, mais les neuf essais « À prouver » de `docs/DEPLOIEMENT.md` ne sont pas faits.
-- Conservation : l'audio devrait être supprimé 30 jours après l'offre, mais aucune tâche planifiée ne lance `bin/purger-audio` ; le 14.11, Xavier a demandé de tout garder pour l'entraînement (sous-chantier 23). Les deux décisions se contredisent : à trancher avant la production, et à écrire dans la politique de confidentialité.
+- Conservation : tranchée le 18.11 (Q1 = A) : audio effacé 30 jours après l'offre, texte gardé ; purge écrite, éteinte tant que `PURGE_AUDIO=1` n'est pas dans le `.env` (décision de Xavier). À écrire dans la politique de confidentialité, avec la dictée gardée en clair dans le navigateur du téléphone.
 - Frein de connexion : une connexion réussie ne remet pas à zéro les échecs du même courriel. Raffinement possible (le compteur par adresse IP, lui, ne doit pas se remettre à zéro).
 - Acquisition (2026-11-17) : selon Claude, 300 à 400 abonnés fin avril 2027 est irréaliste (40 à 60 plausibles), et 1000 fin 2027 exige un canal de distribution ou une sortie de Romandie. Taille du marché non vérifiée (environ 10 000 entreprises du second œuvre en Romandie, de mémoire) : à compter dans STATENT (Origin 475).
 - Allemand : aucune couche de traduction dans le code (constaté le 2026-11-17), qualité de la dictée en dialecte inconnue (banc, Origin 476).

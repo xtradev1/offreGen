@@ -24,6 +24,8 @@ use OffreGen\Audio\TranscripteurFactice;
 use OffreGen\Audio\ValidateurAudio;
 use OffreGen\Compte\Authentification;
 use OffreGen\Compte\Comptes;
+use OffreGen\Compte\LiensAcces;
+use OffreGen\Donnees\DepotLiensAcces;
 use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotClients;
@@ -40,8 +42,12 @@ use OffreGen\Offre\DocumentPdf;
 use OffreGen\Offre\Extracteur;
 use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\ExtracteurFactice;
-use OffreGen\Offre\Messagerie;
-use OffreGen\Offre\MessagerieFichier;
+use OffreGen\Systeme\Messagerie;
+use OffreGen\Systeme\Alertes;
+use OffreGen\Systeme\GestionnaireAlertes;
+use OffreGen\Systeme\MessagerieFichier;
+use OffreGen\Systeme\MessagerieRedirigee;
+use OffreGen\Systeme\MessagerieSmtp;
 use Symfony\Component\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Clock\NativeClock;
@@ -166,9 +172,30 @@ final class Conteneur
     {
         return $this->une(Logger::class, function (): Logger {
             $journal = new Logger('offregen');
+            // Monolog appelle le dernier posé en premier. Ordre voulu : le fichier du journal, puis l'alerte ; en test,
+            // l'alerte, puis le gestionnaire muet (il arrête la chaîne, il doit donc passer en dernier).
             if ($this->environnement() === 'test') {
                 $journal->pushHandler(new NullHandler());
-            } else {
+            }
+            // ALERTES_A : les erreurs partent aussi par courriel à l'exploitant (Q3, 2026-11-18). Vide : rien ne part.
+            $destinataire = $this->parametre('ALERTES_A');
+            if ($destinataire !== '') {
+                $journal->pushHandler(new GestionnaireAlertes(
+                    fn (): Alertes => new Alertes(
+                        $this->messagerie(),
+                        $destinataire,
+                        $this->parametre('ALERTES_DOSSIER', $this->racine . '/var/alertes'),
+                        $this->horloge(),
+                        $this->parametre('APP_URL', 'http://localhost:8000'),
+                    ),
+                    function (string $message): void {
+                        if ($this->environnement() !== 'test') {
+                            error_log($message);
+                        }
+                    },
+                ));
+            }
+            if ($this->environnement() !== 'test') {
                 $journal->pushHandler(new StreamHandler($this->racine . '/var/log/app.log'));
             }
             return $journal;
@@ -203,6 +230,27 @@ final class Conteneur
     public function comptes(): Comptes
     {
         return $this->une(Comptes::class, fn (): Comptes => new Comptes($this->base(), $this->artisans(), $this->hacheur(), $this->stockageAudio(), $this->horloge()));
+    }
+
+    public function liensAcces(): LiensAcces
+    {
+        return $this->une(LiensAcces::class, fn (): LiensAcces => new LiensAcces(
+            $this->base(),
+            new DepotLiensAcces($this->base()),
+            $this->artisans(),
+            $this->messagerie(),
+            $this->hacheur(),
+            $this->horloge(),
+            $this->journal(),
+            $this->parametre('APP_URL', 'http://localhost:8000'),
+            $this->nomApplication(),
+        ));
+    }
+
+    /** Le nom affiché dans les courriels, en attendant le nom définitif (Easy Offre, Dicta : à trancher par Xavier). */
+    public function nomApplication(): string
+    {
+        return $this->parametre('APP_NOM', 'offreGen');
     }
 
     public function enregistrements(Portee $p): DepotEnregistrements
@@ -305,6 +353,7 @@ final class Conteneur
             ]);
             $twig->addFunction(new TwigFunction('csrf', fn (): string => $this->garde()->jeton()));
             $twig->addFunction(new TwigFunction('messages', fn (): array => $this->garde()->messages()));
+            $twig->addFunction(new TwigFunction('compte', fn (): ?int => $this->garde()->artisanCourant()));
             $twig->addExtension(new Formats());
             $twig->addGlobal('pays_adresse', Adresse::PAYS);
             $twig->addGlobal('duree_max_secondes', $this->dureeMaxSecondes());
@@ -431,12 +480,28 @@ final class Conteneur
         return $valeur;
     }
 
+    /**
+     * MESSAGERIE=smtp : envoi réel par MAILER_DSN, au nom de COURRIELS_EXPEDITEUR. « fichier » ou absente : chaque
+     * courriel devient un fichier .eml, rien ne part. Toute autre valeur est refusée (« SMTP » passait en fichiers sans
+     * bruit, revue du 2026-11-18). COURRIELS_REDIRIGER_VERS envoie tout à une seule adresse (site de test).
+     */
     public function messagerie(): Messagerie
     {
-        return $this->une(Messagerie::class, fn (): Messagerie => new MessagerieFichier(
-            $this->parametre('COURRIELS_DOSSIER', $this->racine . '/var/courriels'),
-            $this->horloge(),
-        ));
+        return $this->une(Messagerie::class, function (): Messagerie {
+            $messagerie = match ($this->parametre('MESSAGERIE')) {
+                'smtp' => new MessagerieSmtp($this->parametreRequis('MAILER_DSN'), $this->parametreRequis('COURRIELS_EXPEDITEUR')),
+                '', 'fichier' => new MessagerieFichier($this->parametre('COURRIELS_DOSSIER', $this->racine . '/var/courriels'), $this->horloge()),
+                default => throw new \RuntimeException('Réglage MESSAGERIE inconnu : « smtp » ou « fichier ».'),
+            };
+            $redirection = $this->parametre('COURRIELS_REDIRIGER_VERS');
+            return $redirection === '' ? $messagerie : new MessagerieRedirigee($messagerie, $redirection);
+        });
+    }
+
+    /** Les courriels partent vraiment (MESSAGERIE=smtp) ; sinon ils restent en fichiers dans var/courriels. */
+    public function messagerieReelle(): bool
+    {
+        return $this->parametre('MESSAGERIE') === 'smtp';
     }
 
     public function traiteur(): Traiteur
@@ -459,7 +524,8 @@ final class Conteneur
 
     public function purge(): Purge
     {
-        return $this->une(Purge::class, fn (): Purge => new Purge($this->fileTraitement(), $this->stockageAudio(), $this->horloge(), $this->journal()));
+        return $this->une(Purge::class, fn (): Purge => new Purge($this->fileTraitement(), $this->stockageAudio(), $this->horloge(), $this->journal(),
+            $this->parametre('PURGE_AUDIO') === '1'));
     }
 
     /** Démarre le traitement juste après la réponse, sauf si TRAITEMENT_IMMEDIAT=0 : cron s'en charge alors. */

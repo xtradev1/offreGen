@@ -19,6 +19,7 @@ final class Authentification
     public const ESSAIS_MAX = 5;
     public const FENETRE_MINUTES = 15;
     private const CLE_SESSION = 'artisan_id';
+    private const CLE_VERSION = 'version_session';
 
     /**
      * Hachage d'un mot de passe aléatoire jeté, aux paramètres des vrais : un courriel inconnu coûte
@@ -58,12 +59,58 @@ final class Authentification
         if ($this->hacheur->needsRehash($hache)) {
             $this->artisans->changerMotDePasse($artisan['id'], $this->hacheur->hash($motDePasse));
         }
-        // Session neuve à la connexion : une session posée avant par un tiers ne sert à rien, et rien de la session
-        // d'avant (message en attente, jeton CSRF) ne passe au compte qui se connecte (revue du 2026-11-18, M5).
-        $requete->getSession()->invalidate();
-        $requete->getSession()->set(self::CLE_SESSION, $artisan['id']);
+        $this->ouvrirSession($requete, $artisan['id'], $artisan['version_session']);
         $this->journal->noter($artisan['id'], $courriel, $ip, true, $maintenant);
         return ResultatConnexion::Reussie;
+    }
+
+    /**
+     * Session neuve : une session posée avant par un tiers ne sert à rien, et rien de la session d'avant (message en
+     * attente, jeton CSRF) ne passe au compte qui entre (revue du 2026-11-18, M5). Sert aussi après un lien d'accès.
+     */
+    public function ouvrirSession(Request $requete, int $artisanId, int $versionSession): void
+    {
+        $requete->getSession()->invalidate();
+        $requete->getSession()->set(self::CLE_SESSION, $artisanId);
+        $requete->getSession()->set(self::CLE_VERSION, $versionSession);
+    }
+
+    /**
+     * Le mot de passe actuel, redemandé avant d'en changer. Freiné comme la connexion (revue du 2026-11-18) : avec une
+     * session volée, il ne se devine pas par essais successifs, et chaque essai coûte un hachage.
+     */
+    public function verifierMotDePasseActuel(Request $requete, int $artisanId, string $motDePasse): ResultatConnexion
+    {
+        $artisan = $this->artisans->parId($artisanId);
+        if ($artisan === null) {
+            return ResultatConnexion::Refusee;
+        }
+        $ip = $requete->getClientIp() ?? '0.0.0.0';
+        $maintenant = $this->horloge->now();
+        if ($this->journal->echecsRecents($artisan['courriel'], $ip, $maintenant->modify('-' . self::FENETRE_MINUTES . ' minutes')) >= self::ESSAIS_MAX) {
+            return ResultatConnexion::TropDEssais;
+        }
+        if (!$this->hacheur->verify($artisan['mot_de_passe'], $motDePasse)) {
+            $this->journal->noter($artisanId, $artisan['courriel'], $ip, false, $maintenant);
+            return ResultatConnexion::Refusee;
+        }
+        return ResultatConnexion::Reussie;
+    }
+
+    /**
+     * Nouveau mot de passe choisi dans les réglages : cette session reste ouverte, les autres tombent (M6).
+     * Refusé si le numéro de session a changé depuis l'ouverture de cette session (un lien d'oubli a servi).
+     */
+    public function remplacerMotDePasse(Request $requete, int $artisanId, string $nouveau): bool
+    {
+        $attendue = $requete->getSession()->get(self::CLE_VERSION, 0);
+        $version = $this->artisans->remplacerMotDePasse($artisanId, $this->hacheur->hash($nouveau), is_int($attendue) ? $attendue : 0);
+        if ($version === null) {
+            return false;
+        }
+        $requete->getSession()->migrate(true);
+        $requete->getSession()->set(self::CLE_VERSION, $version);
+        return true;
     }
 
     public function deconnecter(Request $requete): void
@@ -81,10 +128,19 @@ final class Authentification
         if (!is_int($id)) {
             return null;
         }
-        if ($this->artisans->parId($id) === null) {
+        $artisan = $this->artisans->parId($id);
+        // Sans numéro (session ouverte avant le 2026-11-18) : 0, celui de tout compte qui n'a jamais changé de mot de passe.
+        $version = $requete->getSession()->get(self::CLE_VERSION, 0);
+        if ($artisan === null || $version !== $artisan['version_session']) {
             $requete->getSession()->invalidate();
             return null;
         }
         return $id;
+    }
+
+    /** Relu en base à chaque requête : un droit retiré ferme les pages au clic suivant. */
+    public function estAdministrateur(int $artisanId): bool
+    {
+        return ($this->artisans->parId($artisanId)['administrateur'] ?? 0) === 1;
     }
 }

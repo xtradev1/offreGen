@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+{% set sans_menu = true %}
+
+{% block titre %}Mot de passe oublié · offreGen{% endblock %}
+{% block retour %}<a class="back" href="/connexion">Connexion</a>{% endblock %}
+{% block entete %}Mot de passe oublié{% endblock %}
+
+{% block contenu %}
+  {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+  <p class="muted">Indiquez le courriel de votre compte. Un lien pour choisir un nouveau mot de passe y part, valable une heure.</p>
+  <form id="oubli" method="post" action="/mot-de-passe/oubli">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="courriel">Courriel</label>
+      <input id="courriel" name="courriel" type="email" autocomplete="username" inputmode="email" value="{{ courriel }}" maxlength="190" required{% if erreur %} aria-invalid="true"{% endif %}>
+    </div>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><button class="btn primary" type="submit" form="oubli">Recevoir le lien</button></div>
+{% endblock %}

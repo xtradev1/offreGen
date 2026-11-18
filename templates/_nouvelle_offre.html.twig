@@ -38,6 +38,16 @@
     <button class="btn primary large" type="button" data-reessayer>Réessayer l'envoi</button>
     <p class="centre"><a class="lien" href="#" download="visite.webm" data-garder hidden>Garder l'enregistrement dans un fichier</a></p>
   </div>
+
+  {# Sous-chantier 27, R1 B (Xavier, 2026-11-18) : une dictée restée sur le téléphone, proposée à la réouverture.
+     app.js écrit le texte (date, durée) et n'ouvre cette fenêtre que s'il en trouve une. #}
+  <div class="suivi" data-etat="reprise" hidden>
+    <h2 class="suivi-titre">Une dictée n'est pas partie</h2>
+    <p data-reprise-texte></p>
+    <button class="btn primary large" type="button" data-reprise-envoyer>Envoyer et créer l'offre</button>
+    <p class="centre"><a class="lien" href="#" data-reprise-garder>Garder dans un fichier</a></p>
+    <p class="centre"><button class="lien" type="button" data-reprise-supprimer>Supprimer la dictée</button></p>
+  </div>
 {% endset %}
 
 {% set essai_compte = essai() %}

@@ -22,7 +22,9 @@ final class BaseDeTest
         $env['APP_ENV'] = 'test';
         // Une variable du shell ne doit pas changer le comportement d'un test.
         // ADRESSES aussi : aucun test n'appelle swisstopo.
-        unset($env['TRAITEMENT_IMMEDIAT'], $env['AUDIO_DOSSIER'], $env['COURRIELS_DOSSIER'], $env['TRANSCRIPTION'], $env['EXTRACTION'], $env['ADRESSES']);
+        // Rien ne part non plus par courriel : ni envoi réel, ni redirection, ni alerte.
+        unset($env['TRAITEMENT_IMMEDIAT'], $env['AUDIO_DOSSIER'], $env['COURRIELS_DOSSIER'], $env['TRANSCRIPTION'], $env['EXTRACTION'], $env['ADRESSES'],
+            $env['MESSAGERIE'], $env['MAILER_DSN'], $env['COURRIELS_EXPEDITEUR'], $env['COURRIELS_REDIRIGER_VERS'], $env['ALERTES_A'], $env['PURGE_AUDIO']);
         return $env;
     }
 
@@ -67,7 +69,7 @@ final class BaseDeTest
         $pdo = self::pdo();
         // Une facture refaite désigne l'ancienne : on détache avant d'effacer.
         $pdo->exec('UPDATE facture SET refaite_depuis = NULL');
-        foreach (['facture_pdf', 'facture_ligne', 'facture', 'ligne', 'offre', 'client', 'produit', 'enregistrement', 'journal_connexion', 'artisan'] as $table) {
+        foreach (['facture_pdf', 'facture_ligne', 'facture', 'ligne', 'offre', 'client', 'produit', 'enregistrement', 'journal_connexion', 'jeton_acces', 'artisan'] as $table) {
             $pdo->exec("DELETE FROM $table");
         }
     }

@@ -1,19 +1,19 @@
 ---
 chantier: De la voix à l'offre, 27 enregistrement à l'abri
 slug: 2026-11-07_voix-offre/27-enregistrement-abri
-phase: 1
-statut: en_cours
+phase: 6
+statut: non_verifie
 gate_attendu: aucun
 profil: .claude/atoz-profile.md
 ---
 
 ## Prochaine action
 
-Écrire `SPEC.md` à partir de la décision ci-dessous, puis la maquette du bandeau de reprise (phase 3).
+Essai sur un vrai iPhone (sous-tâche 432) : dictée coupée (application fermée pendant l'enregistrement), réouverture, fenêtre de reprise, envoi. Puis rhabiller la fenêtre avec la marque.
 
 ## En attente de toi
 
-Rien pour l'instant.
+- Essayer sur ton iPhone, une fois le test déployé : enregistrer 10 secondes, fermer Safari pendant l'enregistrement, rouvrir l'application.
 
 ## Suivi Origin
 
@@ -23,6 +23,8 @@ Rien pour l'instant.
 ## Décisions
 
 - 2026-11-17, Xavier : « le téléphone sauvegarde l'enregistrement jusqu'à qu'il soit envoyé et qu'il ait reçu une réponse du serveur […] Une fois que c'est traité par le serveur et que l'offre a été traitée, on peut considérer que l'enregistrement peut être supprimé. » « oui tu peux créer la tâche ».
+- 2026-11-18, Xavier, maquette `MAQUETTE-completer.html` : R1 « B · mais il faut que le texte soit plus clair » (fenêtre qui monte).
+- 2026-11-18, Claude : la spec tient dans la décision du 17.11, R1 B et la proposition du journal ; pas de `SPEC.md` à part. La fenêtre n'apparaît qu'aux écrans qui portent la barre du bas (tous les écrans à onglets et `/import`) ; « Fermer » la remet au prochain lancement de l'onglet ; une dictée de moins de 5 s est effacée sans rien demander ; une dictée arrivée est oubliée quand son offre est prête, quand le serveur ne la connaît plus, ou après 30 jours.
 
 ## Journal
 
@@ -30,6 +32,24 @@ Rien pour l'instant.
 - Proposition de Claude, à mettre en spec : chaque tranche rangée dans le stockage du navigateur pendant l'enregistrement ; numéro de l'enregistrement noté après l'envoi ; suppression quand l'état rend `offre` ; à la réouverture, un bandeau pour ce qui n'est pas parti (« Envoyer », « Garder dans un fichier », « Supprimer »), visible du seul compte qui l'a enregistré.
 - Risques à lever : lisibilité d'un enregistrement coupé au milieu (format de Safari surtout) ; Safari peut effacer ce stockage après 7 jours sans visite ; audio d'une visite en clair dans le navigateur, à écrire dans `docs/SECURITE.md`.
 
+- 2026-11-18 : livré en code. `public/js/app.js` : module `abri` (IndexedDB, une tranche par seconde, rangée sous le compte de la page), reprise dans la fenêtre du bas (Envoyer, Garder dans un fichier, Supprimer, Fermer) ; `templates/_nouvelle_offre.html.twig` : état « reprise » ; `base.html.twig` : `data-compte`. Parcours cliqué dans Chromium avec micro simulé, sur le serveur local (IA factice) : tout passe. Non vérifié : Safari sur iPhone (format mp4 coupé, effacement du stockage).
+
 ## Preuves
 
-Aucune encore.
+```
+$ node recette-abri.js (Chromium, 390 px, micro simulé, compte dev)
+1. pendant l'enregistrement : {"dictees":[{"compte":"1","etat":"enregistrement","tranches":7,...,"type":"audio/webm;codecs=opus"}],"morceaux":7}
+2. texte : La dictée du 18 novembre à 17 h 29 (7 s) est restée sur ce téléphone : elle n’est pas arrivée au serveur. Envoyez-la maintenant pour en faire une offre.
+   sondes de la fenêtre : disposition {"deb":0,"chev":0,"coupes":0,"scroll":false}
+3. fichier gardé : enregistrement-2026-11-18-17h29.webm 27355 octets
+4. offre ouverte : http://localhost:8000/offres/163
+   abri après l'offre : {"dictees":[],"morceaux":0}
+5. après « Supprimer » : {"dictees":[],"morceaux":0} fenêtre visible : false
+6. après « Fermer », autre page : fenêtre visible : false
+   compte de démonstration : fenêtre visible : false ; dictées en tout : 1
+erreurs JS : []
+$ ffmpeg -v error -i enregistrement-2026-11-18-17h28.webm -f null -   (dictée coupée)
+[matroska,webm] File ended prematurely at pos. 26121 ; code de sortie 0
+$ env APP_ENV=test vendor/bin/phpunit --filter EnregistrementAbriTest
+OK (3 tests, 13 assertions)
+```

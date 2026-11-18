@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+{% set sans_menu = true %}
+
+{% block titre %}Nouveau mot de passe · offreGen{% endblock %}
+{% block entete %}Nouveau mot de passe{% endblock %}
+
+{% block contenu %}
+  {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+  <form id="nouveau" method="post" action="{{ action }}">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    {% include '_mot_de_passe_champs.html.twig' %}
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><button class="btn primary" type="submit" form="nouveau">Enregistrer et se connecter</button></div>
+{% endblock %}

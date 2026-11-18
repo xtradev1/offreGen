@@ -69,6 +69,13 @@ final class Comptes
         $this->artisans->changerOffresMax($artisan['id'], $offresMax);
     }
 
+    /** Donne ou retire le droit administrateur (bin/administrateur). */
+    public function changerAdministrateur(string $courriel, bool $administrateur): void
+    {
+        $artisan = $this->artisans->parCourriel($courriel) ?? throw new \InvalidArgumentException("Aucun compte pour $courriel.");
+        $this->artisans->changerAdministrateur($artisan['id'], $administrateur);
+    }
+
     private static function verifierOffresMax(?int $offresMax): void
     {
         if ($offresMax !== null && $offresMax < 1) {

@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Après le choix de marque : appliquer la direction à `public/css/app.css` (toute l'application, mode sombre compris), refaire les écrans refusés (P1, P2, P4, A2, R1) dans cette marque, et les soumettre. En parallèle, ce qui est validé et sans écran : envoi de courriels, jetons de mot de passe et d'accès (A3), droit administrateur, purge écrite et désactivée (Q1), alertes vers l'adresse de Xavier (Q3).
+En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 livrés en code, testés, non déployés (le déploiement du test exige un commit poussé : accord de Xavier demandé). Lot 7 non vérifié sur iPhone (sous-chantier 27). Toujours en attente du choix de marque : appliquer la direction à `public/css/app.css`, refaire P1, P2, P4, A2, R1 et les pages du lot 3 dans la marque.
 
 ## En attente de toi
 
@@ -48,6 +48,10 @@ Après le choix de marque : appliquer la direction à `public/css/app.css` (tou
 - 2026-11-18, Xavier, sur `MAQUETTE-sobre.html` : « alors pas B, mais j'hésite entre A et C, mais effectivement j'irais plus sur C le nom aussi pas est moyen est-ce que tu as d'autres idée ». B écarté, C pressenti, nom « Easy Offre » remis en question (domaine et boîte `notifications@` en attente du nom).
 - 2026-11-18, Xavier, sur le nom : « je pars sur dicta.ch et dicta.com ». Vérifié le même jour : dicta.ch libre (registre suisse) ; dicta.com détenu depuis 2001, en vente par la place de marché de GoDaddy (prix non lu, lecture automatique refusée) ; au moins six applications de dictée nommées « Dicta » sur la boutique suisse d'Apple, plus DictaNet et DictaPlus ; Swissreg non vérifié (lecture automatique refusée). Nom à confirmer par Xavier après ces constats ; carpedevis.ch, carpe-devis.ch et carpedevis.com sont libres, calliope.ch et calliope.com pris.
 
+- 2026-11-18, Xavier : « l'envoi de courriels et les jetons de mot de passe et d'accès (A3) ; le droit administrateur ; la purge écrite et désactivée (Q1) ; les alertes vers ton adresse (Q3) ; ensuite l'avertissement des postes coupés (A13) et l'enregistrement à l'abri (sous-chantier 27) ». Plan : `PLAN-completer.md`.
+- 2026-11-18, Claude, décisions de mise en œuvre : pages du lot 3 faites avec les composants actuels (parcours P1, P3 B, P4 acceptés, aspect refusé : elles suivront la marque) ; vouvoiement gardé dans les courriels et les pages, comme le reste de l'application, en attendant le ton de la marque ; aucun courriel vers un compte de démonstration ; droit administrateur en 404 pour tout autre compte et sans session (A1) ; 10 caractères au moins pour un mot de passe, sans règle de composition ; `symfony/mailer` et `symfony/event-dispatcher` figés en 7.4 (le second arrivait en 8.1).
+- 2026-11-18, courriels d'accès relus par l'agent XtraDev : « À retoucher » puis « Prêt » au second tour (objet du courriel d'oubli, adresse de connexion donnée, « avec votre adresse électronique », « vous connecter »).
+
 ## Journal
 
 - 2026-11-17 : inventaire (`INVENTAIRE.md`) établi d'après les `ETAT.md` de chaque sous-chantier, `docs/DEPLOIEMENT.md`, `docs/SECURITE.md`, la crontab du site de test, les routes et la liste des PR. Plan en neuf étapes (`PLAN.md`).
@@ -59,6 +63,10 @@ Après le choix de marque : appliquer la direction à `public/css/app.css` (tou
 - 2026-11-18 : maquette `MAQUETTE-marque.html` : trois directions (A Atelier, B Signal, C Sapin) appliquées aux vrais écrans (connexion, liste des offres, une offre) et au courriel, même logo pour les trois. Défaut trouvé aux captures et corrigé : le jaune de B illisible en texte, remplacé par un jaune foncé (couleur calculée vérifiée). Offre de démonstration rendue en local : la colonne PC contenait des données réelles, écartée (contrôle : 0 occurrence). Gate visuel ouvert sur la marque ; les écrans refusés seront refaits dans la direction choisie.
 - 2026-11-18 : `MAQUETTE-identite.html` : cinq valeurs (simple, décontracté, juste, du métier, suisse), ce que disent les sources sur les couleurs (Jonauskaite 2020, Labrecque et Milne 2012, Broeder 2018 et 2019, Poste et CFF ; aucune étude suisse trouvée sur couleur et confiance), six règles qui en découlent, trois identités prototypées (Carnet, Mètre, Raoul) sur connexion, offres, offre, dictée et courriel, contrastes mesurés. Défauts trouvés et corrigés : tirets demi-cadratins des prix ronds, polices non chargées pour les courriels, deux affirmations non vérifiées retirées. `check.js` vert, captures relues.
 - 2026-11-18 : `MAQUETTE-sobre.html` : une seule direction (fond pierre, en-tête de couleur, listes à filets, IBM Plex Sans, marque carré et trois lignes), trois accents à choisir (bleu ardoise, vert sapin, jaune signal), mode sombre montré. Défaut trouvé et corrigé : texte secondaire et étiquettes d'état entre 5,4 et 6,9:1 alors que la page annonce 7:1, couleurs foncées jusqu'à 7:1 partout (mesuré). Chiffres à chasse fixe vérifiés (largeur de 1111.11 = 8888.88). `check.js` vert, captures des trois accents relues.
+
+- 2026-11-18 : lots 1 à 6 de `PLAN-completer.md`. Messagerie dans `src/Systeme/` (fichier, SMTP, redirection pour le test) ; droit administrateur (`Route::ADMIN`, `bin/administrateur`) ; liens d'accès (table `jeton_acces`, empreinte seule, 1 h et 7 jours, 3 demandes par heure, session des autres appareils fermée au changement) ; purge éteinte sauf `PURGE_AUDIO=1`, ligne cron posée par `outils/deployer-test.sh` ; alertes du journal par courriel (`ALERTES_A`, une par heure pour la même erreur, 30 par jour) ; postes coupés : 5 tests existants verts. Trois migrations additives. Recette visuelle des pages du lot 3 (390, 1440, sombre) : 0 défaut de disposition après correction d'un lien décalé ; contrastes sous 7:1 tous dus à la palette actuelle (gris 4,94, bleu 6,47), remplacée avec la marque.
+- 2026-11-18 : lot 7, enregistrement à l'abri (sous-chantier 27), livré en code ; parcours cliqué dans Chromium vert (détail et preuves dans l'`ETAT.md` du sous-chantier). `docs/SECURITE.md` : dictée en clair dans le navigateur, liens d'accès. Suite complète : 576 tests, PHPStan sans erreur. Fichier inconnu trouvé dans le dépôt, non créé par Claude, laissé tel quel : `docs/terrain/2026-11-18_essai-artisans.txt`.
+- 2026-11-18, soir : revue des lots par trois relecteurs Opus (connexion, exploitation, dictée à l'abri). 2 défauts hauts et une dizaine de moyens, tous vérifiés puis corrigés avec un test chacun ; détail et restes dans `REVUE.md`. Migration additive `Version20261118000004` (clé de dictée). Parcours cliqué de la dictée à l'abri rejoué, six scénarios verts.
 
 ## Preuves
 
@@ -106,4 +114,39 @@ SONDE VERTE
 DÉPLOYÉ : 18d49a09443fa53c43516c0e2ba5e64fe93387ab sur https://easy-offres.xtradev.ch
 $ curl -sI https://easy-offres.xtradev.ch/connexion | grep -i set-cookie
 set-cookie: offregen=<masqué>; ...; path=/; secure; HttpOnly; SameSite=lax
+```
+
+Lots 1 à 6 de `PLAN-completer.md` (2026-11-18) :
+
+```
+$ env APP_ENV=test vendor/bin/phpunit
+OK (576 tests, 3746 assertions)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ composer audit
+No security vulnerability advisories found.
+$ vendor/bin/doctrine-migrations migrate (test et dev)
+[OK] Successfully migrated to version: OffreGen\Migrations\Version20261118000003
+$ php bin/purger-audio
+Purge éteinte (PURGE_AUDIO=1 dans le .env pour l'allumer) : aucun fichier supprimé.
+$ node recette-mdp.js (30 pages : connexion, oubli, envoyé, nouveau, œil, erreur, périmé, réglages, rubrique, erreur ; 390, 1440, sombre)
+débordements 0, chevauchements 0, textes coupés 0, désalignements 0, scroll horizontal 0 ; œil : text,text
+```
+
+Revue des lots et corrections (2026-11-18, soir) :
+
+```
+$ env APP_ENV=test vendor/bin/phpunit
+OK (588 tests, 3785 assertions)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ node recette-abri2.js (Chromium, micro simulé, IA factice)
+A. copie pendant l'enregistrement : 7 tranches, durée 7125 ms ; reprise proposée après 21 s ; fichier gardé 27355 octets
+B. deux touchers : offre /offres/167 ; enregistrements sous la clé : 1 ; abri vide
+C. premier envoi reçu par le serveur : 303 ; réponse coupée : « Pas de connexion au serveur » ; après « Réessayer » : 1 sous la clé
+D. après « Supprimer » : abri vide, fenêtre fermée
+E. après le geste retour, autre page : fenêtre fermée ; compte de démonstration : fenêtre fermée
+F. stockage muet : offre /offres/169 en 1199 ms
+erreurs JS : []
+$ grep -qx 'PURGE_AUDIO=1' (garde cron) : lancée seulement pour la ligne exacte PURGE_AUDIO=1
 ```
