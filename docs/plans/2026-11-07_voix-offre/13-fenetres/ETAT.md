@@ -9,12 +9,12 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier dans le navigateur. Ensuite : commit et PR sur son accord (sous-chantiers 01, 10, 11, 12 et 13).
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Recette : bouton rond « + » de l'accueil, fiche produit (nouveau, modifier, supprimer) par-dessus la liste, bouton retour.
-- Dire si « il faut que je voie des offres » visait bien les offres d'exemple du compte de démonstration.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
+- Dire si « il faut que je voie des offres » visait bien les offres d'exemple du compte de démonstration.
 
 ## Journal
 
@@ -35,6 +35,7 @@ Recette de Xavier dans le navigateur. Ensuite : commit et PR sur son accord (so
 - 2026-11-12 : interprété : une offre sans validité (vide ou 0) est refusée, puisque Xavier la juge dangereuse. À confirmer.
 - 2026-11-12 : paiement stocké en champs (type, jours, acomptes), phrase du document fabriquée par Reglages::conditionsPaiement() ; texte libre conditions_paiement retiré (migration Version20261112000004, jouée en dev et en test ; aucune production). Choix en boutons radio habillés en pastilles, « Autre » et détails affichés par CSS :has, sans JavaScript ; aperçu de la phrase en direct par app.js.
 - 2026-11-12 : question de Xavier : les coûts donnés comprennent-ils son « système d'optimisation » ? Non. Écart de Claude découvert : la SPEC (Architecture, d'après le cadrage section 5) veut un catalogue jamais envoyé en entier et deux appels au plus ; l'extraction du sous-chantier 10 envoie tout le catalogue en un appel avec outil. Écart non consigné jusqu'ici. Xavier veut pouvoir tester les deux versions.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Décisions
 

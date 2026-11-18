@@ -9,12 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier (`RECETTE.md`). Ensuite : commit et PR sur son accord (sous-chantiers 01, 10 et 11).
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Recette selon `RECETTE.md` : parler dans le navigateur, corriger une offre, modifier le catalogue et les réglages.
-- Accord pour commiter la branche `chantier-voix-offre` et ouvrir la PR.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 
 ## Journal
 
@@ -23,6 +22,7 @@ Recette de Xavier (`RECETTE.md`). Ensuite : commit et PR sur son accord (sous-c
 - 2026-11-12 : défaut à moi, du sous-chantier 10 : « Entendu : … » affiché sous chaque ligne, contre la règle « sans rappel de la dictée » (CODING_RULES, Ergonomie). Retiré de l'écran ; la colonne reste pour le banc.
 - 2026-11-12 : défauts trouvés par le parcours cliqué, pas par PHPUnit : quantité et unité éclatées en deux cellules de la grille (unité dans la colonne Prix, corbeille à la ligne) ; focus perdu sur la ligne ajoutée (Chrome le retire en allant à l'ancre `#l…`) ; mention « absente du catalogue » sous le champ de quantité. Corrigés, parcours rejoué.
 - 2026-11-12 : défauts de tests à moi (jeton pris sur l'accueil, qui n'a plus de formulaire ; apostrophe échappée ; message lu par une autre page). Corrigés.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Décisions
 

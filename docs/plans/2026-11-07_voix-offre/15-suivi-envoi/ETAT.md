@@ -9,13 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier : une dictée de moins de 5 s, une vraie dictée, une dictée sans rien d'utile.
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Enregistrer moins de 5 secondes : message « Enregistrement non pris en compte : 5 secondes au minimum », bouton « Recommencer ».
-- Enregistrer une vraie dictée : les étapes avancent une par une, l'offre s'ouvre seule.
-- Enregistrer quelques secondes sans rien dire d'utile : une offre vide, plus d'échec.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 
 ## Journal
 
@@ -24,6 +22,7 @@ Recette de Xavier : une dictée de moins de 5 s, une vraie dictée, une dictée
 - 2026-11-12 : cause de la longue attente trouvée en deux temps. D'abord php -S sans fastcgi_finish_request (réponse complétée par Content-Length et Connection: close). Puis, au parcours rejoué, le vrai verrou : la session PHP reste verrouillée pendant le traitement, toute autre page du même artisan attend (aussi sous PHP-FPM). session_write_close() avant le traitement. Mesuré avant : 17,6 s sur la première étape puis tout vert ; après : envoi 0,3 s, transcription 9,1 s, création 5,1 s.
 - 2026-11-12 : défaut trouvé : le WebM du navigateur n'annonce pas sa durée (ffprobe donne N/A), le minimum n'était pas vérifié au serveur. Durée lue sur le dernier paquet ; deux WebM de synthèse ajoutés aux fixtures.
 - 2026-11-12 : échec de l'essai en direct de Xavier à 17 h 58 expliqué sans lire la dictée : le modèle a répondu sans appeler l'outil (4 jetons), cinq fois (température 0), puis échec. Désormais : offre vide et avertissement au journal ; une réponse sans message reste une erreur.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Décisions
 

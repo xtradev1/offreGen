@@ -9,15 +9,14 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier : `RECETTE.md` (14 gestes, dont le scan du code par son application bancaire). Ses retours, puis le sous-chantier 02 (site de test).
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Jouer `RECETTE.md` sur ton PC et dire ce qui gêne.
-- Scanner avec ton application bancaire le code d'une facture de la démo (sans payer) : OpenCV le lit, une banque est la vraie preuve.
-- Avant la mise en production : une phrase dans la politique de confidentialité sur l'envoi des adresses tapées à swisstopo (`docs/SECURITE.md`, 6 bis).
-- L'adresse de la démo, « Rue de la Gare 4, 2800 Delémont », n'existe pas au registre (Delémont n'a qu'une « Place de la Gare ») : l'écran dit « introuvable ». La garder (elle montre le message) ou en prendre une vraie ?
-- Si tu scannes le code de la maquette : il est en adresse « combinée » (type K), lue par les banques jusqu'au 21.11.2026 seulement. L'application émettra des adresses structurées (type S).
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
+- Scanner avec ton application bancaire le code d'une facture de la démo (sans payer) : OpenCV le lit, une banque est la vraie preuve (repris dans la recette regroupée).
+- Avant la mise en production : une phrase dans la politique de confidentialité sur l'envoi des adresses tapées à swisstopo (`docs/SECURITE.md`, 6 bis ; inventaire de la mise en production, A11).
+- L'adresse de la démo, « Rue de la Gare 4, 2800 Delémont », n'existe pas au registre (Delémont n'a qu'une « Place de la Gare ») : l'écran dit « introuvable ». La garder (elle montre le message) ou en prendre une vraie ?
 
 ## Suivi Origin
 
@@ -73,6 +72,7 @@ Recette de Xavier : `RECETTE.md` (14 gestes, dont le scan du code par son appli
 - 2026-11-13 : lot 6a fait (adresses). `Adresse`, `SaisieAdresse`, `Localites` (3 190 NPA, `outils/localites.php` les refait), migration 10 jouée sur dev et test, défaite puis rejouée ; réglages, assistant et fiche client en champs séparés (`_adresse.html.twig`) ; `RegistreSwisstopo` (délai 3 s, rien de gardé) et `RegistreFactice` (tests et développement) ; `AdresseControleur` (localités d'un NPA, suggestions, vérification ; 20 appels par minute et par session) ; app.js : suggestions pendant la frappe, NPA qui remplit la localité, « trouvée ou pas » en quittant l'adresse, enregistrement automatique qui attend qu'on quitte l'adresse. Trouvé par les tests : le `.env` local (`ADRESSES=swisstopo`) aurait fait appeler swisstopo par les tests ; `BaseDeTest::env` l'écarte, test à l'appui. Trouvé au parcours : rue et numéro tapés ensemble restaient dans la rue (« Bundesplatz 3 », n° 4) : le numéro au bout de la rue passe dans son champ, au serveur et à l'écran ; les suggestions mêlaient l'ancien numéro et l'ancien NPA ; une liste arrivée après la sortie du champ restait ouverte ; le message de NPA inconnu tenait sur cinq lignes ; un vide sous « Pays ». Tous corrigés. Contrôle de compatibilité : un premier essai avec `vendor` en lien symbolique chargeait le nouveau `src` sous les anciens tests (faux rouge) ; refait avec une copie, l'ancienne version passe.
 - 2026-11-14 : lot 6b fait (QR-facture). Essai de placement dans dompdf avant le code : position fixe hors des marges possible ; hauteur d'une cellule de tableau ignorée (bloc de hauteur fixe à la place) ; détecteur d'OpenCV capricieux à côté des filets (recadrage et second détecteur dans la mesure). Tests écrits avant le code. Trouvé par les tests : deux tests faux (apostrophe échappée dans la page, nom du client présent aussi dans l'en-tête). Trouvé à la mesure du PDF : la marge basse du dernier paragraphe traversait le bloc du récépissé et descendait le montant de 2,5 mm. Trouvé aux captures : la section débordait de la feuille, puis défilait en cachant sa colonne de droite. Trouvé en écrivant les mutations : aucun test ne prouvait le niveau de correction M ; test ajouté, la mutation tombe. Tous corrigés.
 - 2026-11-14 : lot 7 fait (démo et recette). Parcours complet en cliquant sur la démo remise à zéro : IBAN, acompte au numéro choisi, aperçu, émission et PDF, facture finale qui déduit l'acompte, annuler et refaire, liste, liens depuis l'offre, bureau en thème sombre. Rien de cassé. Une fausse alerte : texte de la section bleuté sur la capture du bureau sombre, couleur calculée noire (lissage de la capture). `DEPLOIEMENT.md` avait déjà bcmath et les dépendances (lot 6b). `RECETTE.md` écrite.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Preuves
 

@@ -9,11 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier : Réglages, carte « Ma marque » (logo, couleur, modèle), puis « Générer l'offre » et le PDF.
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Envoyer ton vrai logo (PNG ou JPEG), vérifier la couleur proposée, choisir un modèle, ouvrir le document et le PDF.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 
 ## Journal
 
@@ -23,6 +23,7 @@ Recette de Xavier : Réglages, carte « Ma marque » (logo, couleur, modèle)
 - 2026-11-12 : défauts trouvés et corrigés : fixture PNG fausse (rectangle à opacité nulle, ffmpeg drawbox ne touche pas la transparence) ; blanc du logo teinté 255, 253, 255 qui dessinait un cadre sur le papier (composition en RVB, pleine plage) ; « Autre » des couleurs n'ouvrait pas le champ (règle CSS limitée aux pastilles des conditions) ; .doc .c-filet ne visait pas le bloc du modèle Technique.
 - 2026-11-12 : Marque et son test écrits ensemble, sans voir le test rouge d'abord (écart à la méthode, valeurs du test calculées à la main).
 - 2026-11-12 : migration 6 redescendue puis rejouée en dev et en test pour ajouter couleur_logo (jamais commitée ni en production).
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Décisions
 

@@ -9,12 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier (`RECETTE.md`) avec ses propres dictées fictives. Ensuite : commit et PR sur son accord ; brancher Infomaniak (sous-chantiers 03 et 04 : clés, numéro de produit, nom du modèle, vérifier les décisions fragiles 1 et 2 du `PLAN.md`).
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Recette selon `RECETTE.md` : une ou deux dictées de ton téléphone, sans client. Dis-moi format, durée, attente et lignes fausses.
-- Accord pour commiter la branche `chantier-voix-offre` (sous-chantiers 01 et 10) et ouvrir la PR.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 
 ## Journal
 
@@ -25,6 +24,7 @@ Recette de Xavier (`RECETTE.md`) avec ses propres dictées fictives. Ensuite : 
 - 2026-11-12 : Qwen 27B dans Ollama, contexte par défaut de 131 072 jetons : 59 s, modèle à moitié hors de la carte. Variante `offregen-qwen3.8` (16 384 jetons) : 13 s, entière en carte.
 - 2026-11-12 : défauts trouvés par le test de bout en bout et le parcours, pas par les tests unitaires : envoi par morceaux sans longueur (refusé par le serveur local, aurait pu l'être chez Infomaniak : longueur maintenant annoncée) ; traitement immédiat qui rendait la main avant la fin de la transcription (attente de 90 s ajoutée) ; tiret demi-cadratin dans un titre écrit par Qwen (le code le remplace) ; commentaire XML invalide dans `phpunit.xml`, fait par moi.
 - 2026-11-12 : défaut à moi : un tiret demi-cadratin collé en clair dans un fichier de test, remplacé par son échappement JSON. Contrôle du dépôt vert.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Décisions
 

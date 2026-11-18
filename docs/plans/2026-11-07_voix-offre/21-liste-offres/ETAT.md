@@ -2,19 +2,19 @@
 chantier: De la voix à l'offre, 21 liste des offres
 slug: 2026-11-07_voix-offre/21-liste-offres
 phase: 8
-statut: gate_ouvert
+statut: livre_en_code
 gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
 
 ## Prochaine action
 
-Xavier répond dans `MAQUETTE-liste-offres.html` et colle « Copier le texte ». Ensuite : plan et code.
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Recette : balayer une offre vers la gauche, Archiver puis Annuler, Supprimer, ouvrir les archives et Restaurer, trier, Réessayer ou Retirer un échec.
-- Confirmer que « la barre horizontale » à enlever était bien la jauge du compteur.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
+- Confirmer que « la barre horizontale » à enlever était bien la jauge du compteur.
 
 ## Journal
 
@@ -25,6 +25,7 @@ Xavier répond dans `MAQUETTE-liste-offres.html` et colle « Copier le texte �
 - 2026-11-12 : interprété : la barre est la jauge du compteur ; retirée, le texte reste. Le plafond « sur 30 » attend l'abonnement : non affiché.
 - 2026-11-12 : codé. Défauts trouvés au parcours et corrigés : le clic envoyé à la fin d'un balayage refermait l'offre qu'on venait d'ouvrir ; le rouge de « Supprimer » débordait aux coins arrondis des cartes fermées ; « Aucune offre pour l'instant » s'affichait alors que des offres étaient archivées.
 - 2026-11-12 : pour le parcours, deux échecs posés directement en base sur le compte de démo (texte de test, sans audio) : un échec ne se provoque pas depuis l'écran. Compte remis à zéro ensuite.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Décisions
 

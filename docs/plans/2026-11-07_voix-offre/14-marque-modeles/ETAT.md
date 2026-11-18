@@ -2,19 +2,18 @@
 chantier: De la voix à l'offre, 14 marque et modèles
 slug: 2026-11-07_voix-offre/14-marque-modeles
 phase: 3
-statut: gate_ouvert
-gate_attendu: visuel
+statut: termine
+gate_attendu: aucun
 profil: .claude/atoz-profile.md
 ---
 
 ## Prochaine action
 
-Xavier répond dans `MAQUETTE-modeles.html` et colle « Copier le texte ». Ensuite : plan, puis code (logo, couleur, modèles sur l'offre d'abord, facture ensuite).
+Aucune. Réponses de Xavier reçues le 2026-11-12 (voir Journal), code livré au sous-chantier 16.
 
 ## En attente de toi
 
-- Dire si « Moderne » (remplaçant de « Par poste ») est gardé ou écarté, sous son image dans `MAQUETTE-modeles.html`.
-- Variante A ou B du bouton Nouvelle offre (sous-chantier 13), quand tu es sûr.
+- Rien.
 
 ## Journal
 
@@ -25,6 +24,7 @@ Xavier répond dans `MAQUETTE-modeles.html` et colle « Copier le texte ». En
 
 - 2026-11-12 : réponses de Xavier (texte copié de la maquette) : parcours en trois touchers validé ; Sobre, Bandeau, Atelier, Technique, Épuré gardés ; Par poste écarté (« par poste est nul fais en un autre ») ; « Facturer » validé « avec la possiblité de mettre soi meme le numéro » ; QR-facture validée. « enlève les petit texte sous le modèle, les couleurs et logo c'est bien ».
 - 2026-11-12 : maquette reprise : « Moderne » remplace « Par poste » (grand titre en couleur, bandeau date, client, validité ; lignes alternées) ; petits textes de métier retirés ; points tranchés affichés comme réglés, sans boutons.
+- 2026-11-18 : clos. « Moderne » a remplacé « Par poste » sur la maquette reprise et dans le code (sous-chantier 16). La variante A ou B du bouton Nouvelle offre est dépassée : décision D1 du sous-chantier 24, le micro au centre de la barre du bas.
 
 ## Décisions
 

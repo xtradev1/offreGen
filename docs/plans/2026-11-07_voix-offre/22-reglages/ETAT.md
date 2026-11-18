@@ -9,12 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Xavier essaie sur `http://localhost:8000` avec le compte de démonstration (remis à zéro : l'assistant s'ouvre à la connexion). Ensuite : reprise du sous-chantier 17 (clients).
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Te connecter avec le compte de démonstration : l'assistant doit s'ouvrir, quatre étapes, « Plus tard » ou « Terminer » mènent aux offres.
-- Dans Réglages, changer un champ de chaque rubrique : « Enregistré » doit s'afficher en haut à droite, sans bouton.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 - Dire si le résumé de chaque rubrique du sommaire te suffit.
 
 ## Décisions
@@ -41,6 +40,7 @@ Xavier essaie sur `http://localhost:8000` avec le compte de démonstration (remi
 - 2026-11-12 : demande de Xavier : « pour les modèles il faut un bouton pour voir le modèle en grand ». Les vignettes (180 × 255 px) seraient floues une fois agrandies : « Voir en grand » ouvre le vrai document dans ce modèle (`/reglages/modeles/{modele}`, une adresse fixe par modèle), avec le logo, la couleur et la dernière offre de l'artisan, un exemple s'il n'en a aucune. Puces pour passer d'un modèle à l'autre, « Choisir ce modèle » enregistre et revient à Ma marque ou à l'étape de l'assistant. Test : `MarqueEcranTest::testUnModeleSeVoitEnGrandAvantDeLeChoisir`. Suite : 236 tests verts, PHPStan sans erreur. Parcours cliqué : aperçu Bandeau puis Moderne, choix, retour à Ma marque avec « Réglages enregistrés ».
 - 2026-11-12 : constat non expliqué : le modèle du compte de démonstration est passé d'Épuré à Sobre entre deux parcours. Pas reproduit (choix, sommaire, aperçu puis retour, étape de l'assistant : le modèle reste). À surveiller.
 - 2026-11-12 : incident : un script de contrôle a imprimé le corps des POST, mot de passe du compte de démonstration compris. Signalé à Xavier, régénération conseillée. Les scripts n'impriment plus le corps des requêtes de connexion.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Preuves
 

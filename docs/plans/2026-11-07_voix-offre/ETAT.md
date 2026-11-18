@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier, en local : sous-chantiers 01, 10, 11, 12 et 13 (`RECETTE.md` de chacun). Puis commit et PR sur son accord, et sous-chantier 02 (site de test).
+La suite se mène dans le chantier de mise en production (`docs/plans/2026-11-17_mise-en-production/ETAT.md`) : recette regroupée de tous les sous-chantiers livrés, revue de la PR #3, intégration dans `main`.
 
 ## En attente de toi
 
@@ -57,6 +57,7 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-14 : `/sante` n'existait pas, alors que `DEPLOIEMENT.md` et la sonde l'utilisent : écrite (tests avant, mutation attrapée). Script `outils/deployer-test.sh` : entorse au protocole écrite dans le roadmap.
 - 2026-11-17 : essai de Xavier du 16.11 (test, compte démo) : « des frais de nettoyage » absents de l'offre. Cause, au journal du test : « ligne 2 sans quantité valable, écartée ». Le modèle l'avait extraite avec une quantité null, et `ExtracteurApi::valider` l'a jetée. Correctif (773dffd) : quantité absente ou fausse, ligne gardée à 1, à vérifier ; consigne « quantité 1 et forfait quand aucune quantité n'est dictée ». Banc de trois dictées, Qwen3.8-27B contre Qwen3.5-397B-A17B : avant la consigne, le 27B rend null là où le 397B rend 1 ; après, lignes identiques. Tarifs relevés le 17.11 (page anglaise) : 27B CHF 0.40 / 3.00, 397B CHF 0.80 / 3.60 par million de jetons ; extraction mesurée CHF 0.0011 contre 0.0017. Proposition : garder le 27B.
 - 2026-11-17 : `GET /1/ai/357/consumptions` lu (jeton du `.env`) : un total par jour et par modèle, pour tout le produit 357 (développement, test, bancs, et d'anciens usages de 2024 et de janvier 2026) : nombre de requêtes, coût, jetons entrants et sortants pour un modèle de langage, durée pour Whisper. Rien par requête. Qwen : le coût facturé égale au dix-millième jetons × tarif publié (16.11 : 1208 et 192 jetons, CHF 0.0010592 ; banc du 17.11, 27B et 397B, idem). Whisper : facturé à la seconde (CHF 0.0001), mais la dictée du 16.11 (WebM du navigateur, sans durée dans l'en-tête, 19,2 s au dernier paquet) est comptée 1 s. La durée d'Infomaniak ne vaut rien pour les statistiques : la mesurer nous-mêmes.
+- 2026-11-18 : index remis à jour (14 clos, 21 livré, 24, 25 et 26 à leur état, 27 à 29 ajoutés). Les recettes passent dans la recette regroupée de la mise en production.
 
 ## Sous-chantiers
 
@@ -64,7 +65,7 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 
 | # | Sous-chantier | Dossier | Dépend de | État |
 |---|---|---|---|---|
-| 01 | Socle et import : squelette, connexion, isolation, comptes démo, import audio, traitement immédiat et cron, avec transcripteur et extracteur factices ; l'offre produite s'affiche | `01-socle-import/` | rien | livré en code, recette de Xavier attendue |
+| 01 | Socle et import : squelette, connexion, isolation, comptes démo, import audio, traitement immédiat et cron, avec transcripteur et extracteur factices ; l'offre produite s'affiche | `01-socle-import/` | rien | livré en code, recette de Xavier attendue ; recette dans la recette regroupée de la mise en production |
 | 02 | Site de test : serveur Cloud, déploiement depuis `main`, workflows GitHub, liste « À prouver » | `02-site-test/` | 01 | site de test déployé à la main (`outils/deployer-test.sh`, 2026-11-14) ; workflow GitHub à faire |
 | 03 | Extraction et catalogue chez Infomaniak : clé et nom du modèle, ambiguïtés, second avis « À vérifier », chargement du catalogue CSV. L'extraction réelle tourne déjà en local (10) | `03-extraction/` | 10 | clé et modèle vérifiés chez Infomaniak (2026-11-14) ; le reste à faire |
 | 04 | Transcription Whisper chez Infomaniak : clé, numéro de produit, vérifier le format de `data` et l'envoi multipart (décisions fragiles du 10) | `04-transcription/` | 10, jeton | clé, numéro, `data` et multipart vérifiés chez Infomaniak (2026-11-14) |
@@ -73,23 +74,26 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | 07 | Banc de mesure : données fictives de Claude, puis visites de Xavier | `07-banc/` | 03, 04 | à faire |
 | 08 | Enregistrement dans le navigateur | partie locale reprise par 11 | 02 | sur le PC : livré en code dans 11 ; sur le téléphone : attend le site de test en HTTPS |
 | 09 | Production pilote : double authentification, relecture sécurité, sauvegardes, premier déploiement | `09-production-pilote/` | 02 à 07 | à faire |
-| 10 | IA réelle en local : Whisper dans WSL et Qwen 27B dans Ollama, au protocole d'Infomaniak (demande de Xavier du 2026-11-12) | `10-ia-locale/` | 01 | livré en code, recette de Xavier attendue |
-| 11 | Écrans de la maquette : enregistrer dans le navigateur, onglets, catalogue modifiable, réglages, offre corrigeable (demande de Xavier du 2026-11-12) | `11-ecrans/` | 10 | livré en code, recette de Xavier attendue |
-| 12 | Générer l'offre : fenêtre Nouvelle offre, sauvegarde sûre, client, en-tête, document et PDF (retour de Xavier du 2026-11-12) | `12-generer-offre/` | 11 | livré en code, recette de Xavier attendue |
-| 13 | Fenêtres qui montent : bouton rond Nouvelle offre, fiche produit par-dessus la liste, offres d'exemple de la démo (retour de Xavier du 2026-11-12) | `13-fenetres/` | 12 | livré en code, recette de Xavier attendue |
-| 14 | Marque et modèles : logo, couleur, six modèles d'offre et de facture, QR-facture (demande de Xavier du 2026-11-12) | `14-marque-modeles/` | 13 | maquette, réponse de Xavier attendue |
-| 15 | Enregistrement court et suivi en direct : 5 s au minimum, dictée vide donne une offre vide, étapes qui avancent | `15-suivi-envoi/` | 13 | livré en code, recette de Xavier attendue |
-| 16 | Marque et modèles dans l'application : logo, couleur, modèles retenus | `16-marque/` | 14 | livré en code, recette de Xavier attendue |
-| 17 | Clients : liste, fiche, rattachement aux offres | `17-clients/` | 12 | livré en code (liste, fiche, client de l'offre, rapprochement à 80 %, même localité depuis le 2026-11-14), essai de Xavier attendu |
-| 18 | Facture : « Facturer » depuis l'offre, numéro modifiable, QR-facture, PDF | `18-facture/` | 14, 16 | lots 1 à 5 commités (5de18b4) ; lot 6a (adresses) commité (54acafa) ; lot 6b (QR-facture) commité (fb45ec7) ; lot 7 fait : recette de Xavier attendue (`RECETTE.md`) |
+| 10 | IA réelle en local : Whisper dans WSL et Qwen 27B dans Ollama, au protocole d'Infomaniak (demande de Xavier du 2026-11-12) | `10-ia-locale/` | 01 | livré en code, recette de Xavier attendue ; recette dans la recette regroupée de la mise en production |
+| 11 | Écrans de la maquette : enregistrer dans le navigateur, onglets, catalogue modifiable, réglages, offre corrigeable (demande de Xavier du 2026-11-12) | `11-ecrans/` | 10 | livré en code, recette de Xavier attendue ; recette dans la recette regroupée de la mise en production |
+| 12 | Générer l'offre : fenêtre Nouvelle offre, sauvegarde sûre, client, en-tête, document et PDF (retour de Xavier du 2026-11-12) | `12-generer-offre/` | 11 | livré en code, recette de Xavier attendue ; recette dans la recette regroupée de la mise en production |
+| 13 | Fenêtres qui montent : bouton rond Nouvelle offre, fiche produit par-dessus la liste, offres d'exemple de la démo (retour de Xavier du 2026-11-12) | `13-fenetres/` | 12 | livré en code, recette de Xavier attendue ; recette dans la recette regroupée de la mise en production |
+| 14 | Marque et modèles : logo, couleur, six modèles d'offre et de facture, QR-facture (demande de Xavier du 2026-11-12) | `14-marque-modeles/` | 13 | clos le 2026-11-12 (réponses de Xavier), code au 16 |
+| 15 | Enregistrement court et suivi en direct : 5 s au minimum, dictée vide donne une offre vide, étapes qui avancent | `15-suivi-envoi/` | 13 | livré en code, recette de Xavier attendue ; recette dans la recette regroupée de la mise en production |
+| 16 | Marque et modèles dans l'application : logo, couleur, modèles retenus | `16-marque/` | 14 | livré en code, recette de Xavier attendue ; recette dans la recette regroupée de la mise en production |
+| 17 | Clients : liste, fiche, rattachement aux offres | `17-clients/` | 12 | livré en code (liste, fiche, client de l'offre, rapprochement à 80 %, même localité depuis le 2026-11-14), essai de Xavier attendu ; recette dans la recette regroupée de la mise en production |
+| 18 | Facture : « Facturer » depuis l'offre, numéro modifiable, QR-facture, PDF | `18-facture/` | 14, 16 | lots 1 à 5 commités (5de18b4) ; lot 6a (adresses) commité (54acafa) ; lot 6b (QR-facture) commité (fb45ec7) ; lot 7 fait : recette de Xavier attendue (`RECETTE.md`) ; recette dans la recette regroupée de la mise en production |
 | 19 | Envoi par courriel de l'offre et de la facture | (à ouvrir) | 18 | plus tard : « pdf pour l'instant » (Xavier, 2026-11-12) |
 | 20 | Extraction optimisée (cadrage, section 5) à côté de l'actuelle, banc de comparaison | (à ouvrir) | 10 | plus tard (Xavier, 2026-11-12) |
-| 21 | Liste des offres : en préparation, échecs hors quota, tri, archives | `21-liste-offres/` | 15 | livré en code, recette de Xavier attendue |
-| 22 | Réglages mieux rangés : sommaire, assistant, enregistrement | `22-reglages/` | 16 | livré en code (sommaire, assistant, enregistrement automatique), essai de Xavier attendu |
+| 21 | Liste des offres : en préparation, échecs hors quota, tri, archives | `21-liste-offres/` | 15 | livré en code, recette regroupée de la mise en production |
+| 22 | Réglages mieux rangés : sommaire, assistant, enregistrement | `22-reglages/` | 16 | livré en code (sommaire, assistant, enregistrement automatique), essai de Xavier attendu ; recette dans la recette regroupée de la mise en production |
 | 23 | Tout garder pour l'entraînement : audio, transcription, réponse du modèle, offre avant et après corrections, durées ; statistiques ; réécouter et rejouer (demande de Xavier du 2026-11-14) | `23-garder-rejouer/` (à ouvrir) | 10, 15 | réponses de Xavier reçues, maquette à faire |
-| 24 | Ergonomie au pouce, version PC et TVA : micro au centre, relecture ligne par ligne, PDF dans l'application, envoyer et facturer en une feuille, ligne hors catalogue rangée en un toucher, TVA de l'entreprise et par ligne (demandes de Xavier du 2026-11-15) | `24-ergonomie/` | 11, 18 | maquette validée (D1 à D13), SPEC et PLAN à faire |
-| 25 | Facturer en trois touchers : feuille Facturer avec aperçu, acompte en % ou en CHF, facture toujours en PDF, client confirmé avant l'offre, Ajouter et petits écrans pensés pour le PC, tablette en vue téléphone (retours de Xavier du 2026-11-15) | `25-facturer/` | 18, 24 | maquette envoyée, réponses de Xavier attendues |
-| 26 | Partie administration séparée : coût de l'IA, artisans, offres (analyse anonyme), rentabilité plus tard ; statistiques d'exploitation : coût exact de chaque extraction, relevé quotidien de la consommation Infomaniak, écran réservé au droit administrateur (demande de Xavier du 2026-11-17) | `26-couts-ia/` | 10, 25 | maquette envoyée, réponses de Xavier attendues |
+| 24 | Ergonomie au pouce, version PC et TVA : micro au centre, relecture ligne par ligne, PDF dans l'application, envoyer et facturer en une feuille, ligne hors catalogue rangée en un toucher, TVA de l'entreprise et par ligne (demandes de Xavier du 2026-11-15) | `24-ergonomie/` | 11, 18 | livré en code (lots 1 à 8 et lignes étroites du 17.11), recette finale dans la recette regroupée |
+| 25 | Facturer en trois touchers : feuille Facturer avec aperçu, acompte en % ou en CHF, facture toujours en PDF, client confirmé avant l'offre, Ajouter et petits écrans pensés pour le PC, tablette en vue téléphone (retours de Xavier du 2026-11-15) | `25-facturer/` | 18, 24 | livré en code, déployé sur le test, recette regroupée |
+| 26 | Partie administration séparée : coût de l'IA, artisans, offres (analyse anonyme), rentabilité plus tard ; statistiques d'exploitation : coût exact de chaque extraction, relevé quotidien de la consommation Infomaniak, écran réservé au droit administrateur (demande de Xavier du 2026-11-17) | `26-couts-ia/` | 10, 25 | SPEC et maquettes validées (G1 à G5), formules et prix étudiés ; PLAN à écrire |
+| 27 | Enregistrement à l'abri dans le téléphone jusqu'à ce que l'offre soit traitée (décision de Xavier du 2026-11-17) | `27-enregistrement-abri/` | 15 | SPEC à écrire ; étape 5 de la mise en production |
+| 28 | Offre par pièce : pièce relevée par un second appel, offre, ajout et PDF groupés par pièce (demande de Xavier du 2026-11-17) | `28-offre-par-piece/` | 24 | livré en code, déployé sur le test, recette regroupée |
+| 29 | Qualité de l'extraction : corpus de vraies dictées, objectif 95 % (demande de Xavier du 2026-11-17) | `29-qualite-extraction/` | 10 | SPEC écrite ; attend les dictées de Xavier |
 
 ## Décisions
 

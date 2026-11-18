@@ -9,11 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier sur le site de test : dicter pièce par pièce, puis ajouter, renommer, déplacer (voir Journal).
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Sur le site de test, compte de démonstration : dicter une offre pièce par pièce, vérifier le rangement, ajouter une ligne dans une pièce, renommer une pièce, déplacer une ligne depuis sa fiche, ouvrir le PDF.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 
 ## Suivi Origin
 
@@ -37,6 +37,7 @@ Recette de Xavier sur le site de test : dicter pièce par pièce, puis ajouter,
 - Point ouvert : une facture faite depuis une offre rangée par pièce reste rangée par catégorie (les lignes de facture n'ont pas de pièce).
 
 - 2026-11-17, question de Xavier : coût de la seconde passe, et un modèle moins cher ? Mesuré (`scratchpad/pieces-modeles.php`, seconde passe seule, mêmes lignes pour tous, 3 passes) : dictée inventée de 30 min, Qwen 27B 85/85 trois fois, 10 012 + 1 449 jetons, CHF 0.0084, 6 à 9 s ; Gemma 4 31B 85/85 trois fois, CHF 0.0025, 26 à 61 s ; Ministral 14B 69/85 et un dépassement de délai ; Mistral Small 4, 3 à 7/85. Dictée de Luigi : Qwen 7/7 trois fois (CHF 0.0007) ; Gemma 7/7 deux fois, 4/7 une fois (« Mur » pris pour une pièce) ; Ministral 7/7 trois fois ; Mistral Small 1 à 6/7. Qwen reste en service : le plus sûr et le plus rapide ; l'écart de coût est de 0,6 ct par offre de 30 min. `EXTRACTION_MODELE_PIECES` permet d'en changer sans code. Seconde passe avec Qwen : environ un tiers du coût de l'extraction (0,8 ct sur 2,4 ct pour 30 min).
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Preuves
 

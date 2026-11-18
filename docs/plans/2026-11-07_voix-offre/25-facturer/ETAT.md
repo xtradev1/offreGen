@@ -9,12 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Attendre le retour de Xavier sur `RECETTE.md`. Défauts remontés : retour en phase 5. Recette validée : `statut: termine`, `/roadmap-sync`, puis lot 9 du sous-chantier 24.
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Dérouler `RECETTE.md` sur https://easy-offres.xtradev.ch : partie A au téléphone, B sur le PC, C sur une tablette si tu en as une.
-- Me dire ce qui casse ou gêne, geste par geste (numéro de la ligne), en particulier la sobriété d'Ajouter (ta remarque sur E7) et la tablette.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 
 ## Suivi Origin
 
@@ -68,6 +67,7 @@ Attendre le retour de Xavier sur `RECETTE.md`. Défauts remontés : retour en ph
 - 2026-11-15, lot 7 b (tablette) : `@media (min-width: 700px) and (pointer: coarse)` (toute la largeur, barre du bas, fenêtres au milieu) et `@media (min-width: 1024px) and (pointer: coarse)` (liste des offres à gauche, Facturer en deux volets, panneau du PDF à droite). Les styles de la liste des offres sortent du bloc PC. Mesuré en émulation iPad : contenu 820 px en portrait, liste + 860 px en paysage, volets 437 / 503 px, aucune erreur, aucun débordement.
 - 2026-11-15 : d8e55a1 déployé sur le test, sonde verte, migrations à jour ; démo du test remise à zéro (`code=0` ; elle a aussi supprimé 3 enregistrements audio du compte démo, sans doute les essais de Xavier). Gate prod ouvert : `RECETTE.md`.
 - 2026-11-17, hors périmètre du 25, à la demande de Xavier : son enregistrement d'essai du 16.11 sur le test (compte démo, enregistrement 4, offre n° 3). Dictée : 100 m² de murs en double couche, déplacement, frais de nettoyage. L'offre n'a que les deux premiers : aucune ligne « nettoyage » créée puis supprimée, le catalogue démo n'en a pas, et le modèle d'extraction l'a omise alors que la consigne demande une ligne libre pour un travail hors catalogue. À traiter dans l'extraction (consigne et cas au banc), pas dans le 25. Connexion au compte démo du test refusée avec le mot de passe local : PDF rendu par l'application sur le serveur, en lecture seule.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Preuves
 

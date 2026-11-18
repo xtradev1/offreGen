@@ -9,12 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier. Ensuite : commit et PR sur son accord (sous-chantiers 01, 10, 11 et 12).
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Recette : « Nouvelle offre » en fenêtre, offre retravaillée puis quittée, client, réglages de l'en-tête, « Générer l'offre » et le PDF.
-- Accord pour commiter la branche et ouvrir la PR.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 
 ## Journal
 
@@ -22,6 +21,7 @@ Recette de Xavier. Ensuite : commit et PR sur son accord (sous-chantiers 01, 10
 - 2026-11-12 : « pas sauvegardée » reproduit avant correction : quantité tapée puis retour ou onglet sans quitter le champ, correction perdue (envoi du formulaire annulé par la navigation). Avec Entrée ou Tab : gardée.
 - 2026-11-12 : défaut trouvé en route, antérieur : sous php -S, une variable posée au lancement perdait contre le .env (Conteneur::lireEnvironnement), contrairement à son commentaire. Test écrit, vu rouge, corrigé.
 - 2026-11-12 : Ollama fermé par Xavier pendant le travail ; parcours cliqué joué sur un second serveur à IA simulée (port 8001), arrêté ensuite. L'extraction du client par Qwen n'est donc pas encore vérifiée sur le vrai modèle.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Décisions
 

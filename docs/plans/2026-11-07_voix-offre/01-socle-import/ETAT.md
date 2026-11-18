@@ -9,13 +9,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier en local (`En attente de toi`), puis commit et PR sur son accord. Ensuite, sous-chantier 02 (site de test).
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## En attente de toi
 
-- Recette en local selon `RECETTE.md` (huit gestes, un vrai enregistrement de ton téléphone, sans client). Dis-moi ce qui ne va pas, et le format et la taille du fichier.
-- Accord pour commiter la branche `chantier-voix-offre` (cadrage et sous-chantier 01), la pousser et ouvrir la PR.
-- Accord pour une revue indépendante du diff avant la PR (surfaces sensibles : connexion, isolation, import, secrets), environ 4 avis Opus courts à moyens, moins de 10 $.
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 
 ## Journal
 
@@ -42,6 +40,7 @@ Recette de Xavier en local (`En attente de toi`), puis commit et PR sur son acco
 - 2026-11-07 : le frein de connexion a bloqué mon propre parcours Playwright (cinq échecs de 127.0.0.1 en un quart d'heure, sixième essai refusé et noté) : preuve sur le vrai serveur. Échecs fictifs effacés de `offregen_dev` pour rejouer le parcours.
 - 2026-11-07 : phases 6 et 7 : vérification faite lot par lot (sorties collées), revue indépendante pas lancée. Le diff touche quatre surfaces sensibles du profil (connexion et CSRF, isolation, import audio, secrets) : la revue lourde est à lancer avant la production pilote, au plus tard au sous-chantier 09, et à proposer à Xavier avant la PR.
 - 2026-11-07 : phase 8 : gate « prod » ouvert. Ici, il veut dire « recette de Xavier en local puis commit » ; aucune mise en ligne n'est prévue avant le sous-chantier 02.
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Décisions
 

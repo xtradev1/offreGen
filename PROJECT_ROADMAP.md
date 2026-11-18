@@ -5,90 +5,64 @@
 - Goal : application d'offres vocales pour artisans. L'artisan décrit les travaux à voix haute pendant la visite, l'application produit une offre à partir de son catalogue, il la corrige à la voix ou à l'écran.
 - Owner : Xavier Frelechoz (XtraDev)
 - Created : 2026-11-05
-- Last updated : 2026-11-07
+- Last updated : 2026-11-18
 
 ## Executive summary
-- Aucune ligne d'application n'existe. Le socle de sécurité et de déploiement est sur GitHub. La maquette d'ergonomie (version 4) est validée et fusionnée. L'environnement de développement tourne dans WSL.
-- Chantier en cours : « De la voix à l'offre » (`docs/plans/2026-11-07_voix-offre/ETAT.md`). Sous-chantier 01 (socle et import) livré en code le 2026-11-07 : connexion, import, traitement immédiat et cron, offre lue, comptes démo, avec transcription et extraction factices. Pas encore recetté par Xavier, pas encore commité.
-- Le produit est cadré dans `docs/plans/2026-11-05_mesures-ia/cadrage-produit.md`, avec des mesures réelles (Whisper, correction vocale) et des hypothèses économiques.
-- Le premier risque est l'extraction juste d'une offre à partir d'une vraie visite. Le coût de l'IA est faible dans tous les scénarios calculés.
+- L'application tourne de bout en bout sur le site de test (`easy-offres.xtradev.ch`) : dictée ou import, Whisper et Qwen 27B chez Infomaniak, offre rangée par pièce, corrections, catalogue, clients, PDF, facture avec QR-facture. 509 tests verts, PHPStan sans erreur.
+- Tout est sur la branche `chantier-voix-offre` (PR #3, ouverte le 12.11, 77 commits hors de `main`). Rien n'est recetté par Xavier : une recette regroupée l'attend.
+- Chantier en cours : la mise en production (`docs/plans/2026-11-17_mise-en-production/`), 13 points bloquants, plan en 9 étapes. Première production visée : comptes d'essai plafonnés créés par Xavier ; le paiement suit vite (demande de Xavier du 18.11).
+- Premier artisan intéressé : Luigi, peintre, 20 offres d'essai (`docs/terrain/2026-11-17_luigi-peintre.md`).
 
 ## Context
 - Données : adresses et état des logements des clients de l'artisan, transmis à Infomaniak. Une dictée peut contenir par accident des données sensibles (santé d'un occupant, par exemple).
-- Hébergement Infomaniak (PHP 8.5 disponible selon Xavier). IA chez Infomaniak : Whisper pour la transcription, un modèle de langue pour l'extraction et les corrections.
-- Dépôt GitHub privé `xtradev1/offreGen`, plan Free. Copie de travail dans WSL (`~/offreGen`) depuis le 2026-11-07 ; la copie de SynologyDrive n'est plus tenue à jour.
-- Suivi du temps : projet Origin 44, tâche 315 « De la voix à l'offre » (sous-tâches 316 à 322).
+- Hébergement Infomaniak, serveur Cloud. IA chez Infomaniak (produit 357) : Whisper pour la transcription, Qwen 3.8 27B (bêta) pour l'extraction.
+- Dépôt GitHub privé `xtradev1/offreGen`, plan Free. Copie de travail dans WSL (`~/offreGen`) ; la copie de SynologyDrive n'est plus tenue à jour.
+- Suivi du temps : projet Origin 44. Chantier de la voix à l'offre : tâches 315, 400, 403, 414, 422, 428, 434, 438, 442, 447, 452. Mise en production : tâche 458, sous-tâche 459.
 - Règles opposables : `CODING_RULES.md`, `docs/SECURITE.md`, `docs/DEPLOIEMENT.md`.
 
 ## Decisions
-- [2026-11-05] Pile : PHP avec composants Symfony 7.4 LTS et bibliothèques choisies, sans Laravel. Raison de Xavier : « j'aime pas travailler à l'intérieur de l'environnement », et il veut éviter d'être bloqué dans un système qu'il ne connaît pas. Liste dans `CODING_RULES.md`.
-- [2026-11-05] Contrepartie acceptée par Xavier : droits refusés par défaut, accès aux données en un seul endroit, isolation entre clients testée route par route.
-- [2026-11-05] Parcours développement, test, production. Un seul geste humain : lancer la mise en production du commit recetté (`docs/DEPLOIEMENT.md`).
-- [2026-11-05] Production : aucun accès direct de Claude. Environnements de développement accessibles.
-- [2026-11-05] Sous-agents : compteur d'erreurs, bascule sur Opus après 2 erreurs de suite (Xavier avait dit « 2-3 », seuil modifiable).
-- [2026-11-05] SynologyDrive conservé par choix de Xavier. Risque signalé : `.git` et `.env` synchronisés.
-- [2026-11-06] Produit : le cadrage du labo devient offreGen. Architecture de la section 5 du cadrage retenue : deux appels au modèle par offre, le code fait les calculs et la recherche dans le catalogue, les corrections renvoient des modifications ciblées.
-- [2026-11-06] Ergonomie, demande de Xavier : une ligne doit pouvoir être effacée en un clic. Annulation ou confirmation : à départager par des tests d'utilisation avec des artisans.
-- [2026-11-06] GitHub Free conservé par Xavier (refus de Pro). **Entorse au socle :** ni branche protégée, ni secret par environnement. Compensations dans `docs/SECURITE.md` section 3.
-- [2026-11-06] Application web, sur iPhone et Android. Priorité à l'import d'un fichier enregistré avec l'application du téléphone, qui marche sans réseau. Traitement asynchrone : l'offre est prête le soir, sans besoin de temps réel. L'enregistrement dans l'application et le mode hors ligne viennent ensuite.
-- [2026-11-06] Ergonomie, demande de Xavier : « ça doit être utilisable depuis le pouce ». Règle dans `CODING_RULES.md`.
-- [2026-11-06] Offre prête : un courriel dans tous les cas, plus une notification.
-- [2026-11-06] Contrôle de compréhension, idée de Xavier : un second modèle bon marché, chez Infomaniak pour rester en Suisse, note chaque ligne extraite. Sous un seuil, la ligne s'affiche en rouge. Seuil et fiabilité de la note à mesurer.
-- [2026-11-06] Calculs (TVA, ordre remise et TVA, remise sur variante, arrondi aux 5 centimes) : réglages fixés une fois par l'artisan.
-- [2026-11-06] Pas de conversation avec le modèle : chaque commande vocale est traitée seule. L'historique à garder se décidera à l'usage et après le test du cache d'Infomaniak.
-- [2026-11-06] Relecture du code sensible (connexion, droits, filtre par client, appels de fonctions) par Fable, sur proposition de Xavier. Au-delà de 30 $ par lancement, accord préalable.
-- [2026-11-06] Maquette, réponses de Xavier : suppression d'une ligne en un clic avec « Annuler » (à confirmer par les tests chez les artisans), ligne incertaine marquée « À vérifier » sans pourcentage, création d'une offre validée, écran de l'offre à revoir.
-- [2026-11-06] Besoins ajoutés par Xavier : ligne libre pour l'offre d'un fournisseur, sans créer de produit au catalogue ; travail plus difficile que d'habitude compté par majoration du prix ou par ligne de supplément, au choix de chaque artisan ; acomptes (par exemple à 10 jours) ; recherche dans le catalogue ; aperçu plus propre. Proposés dans la maquette v2.
-- [2026-11-06] Maquette v2, réponses de Xavier : lignes sur une seule ligne ; rien de la dictée à l'écran ; une seule fenêtre pour ajouter ; ligne libre au prix de vente ou au prix d'achat plus marge ; majoration ou ligne de supplément validée, sans motif sur le document du client ; catalogue « bien mieux » ; aperçu validé, « un poil petit sur téléphone ». Acompte à revoir : il se décide au moment de l'envoi, avec son délai. L'unité doit se changer d'un toucher. Maquette v3.
-- [2026-11-07] Maquette v3, réponses de Xavier : unité sans réponse, gardée telle quelle. Acompte à revoir : « l'acompte doit être un truc en plus, par exemple générer un acompte une fois l'offre figée ». Maquette v4 : l'envoi fige l'offre, « Générer un acompte » crée une facture d'acompte à part (pourcentage, délai, TVA comprise, place du code QR), plusieurs possibles sans dépasser 100 %.
-- [2026-11-07] Acompte à part validé par Xavier, avec une demande : « il faut pouvoir mettre un pourcentage précis ou un chiffre précis ». Ajouté : champs pourcentage et montant liés, montant repris au centime, limite au total de l'offre.
-- [2026-11-07] Environnement de développement : PHP 8.5, Composer et MariaDB dans WSL (accord de Xavier), installés et vérifiés le jour même (`CODING_RULES.md`). Composer remplacé par l'installeur officiel à la demande de Xavier. Jeton d'API Infomaniak : Xavier l'ajoutera plus tard.
-- [2026-11-07] Copie de travail : clone dans WSL (`~/offreGen`), GitHub comme seule référence, accord de Xavier. Remplace la décision du 2026-11-05 sur SynologyDrive. Raisons : lenteur de `/mnt/c` depuis WSL, synchronisation de `vendor/`, `.git` et `.env` par SynologyDrive.
-- [2026-11-07] Règles de code complétées par Xavier : arborescence, nommage en français pour le métier, CSRF (`CODING_RULES.md`).
+- Décisions du 2026-11-05 au 2026-11-07 (pile, socle, maquette, environnement) → `docs/roadmap-archive-decisions.md`.
+- [2026-11-06] **Entorse au socle :** audit externe reporté. Xavier : « tant que l'app ne tourne pas chez au moins 4-5 artisans ça ne vaut pas la peine ». Déclencheur : l'application en service chez 4 à 5 artisans. Le pilote tourne donc avec de vraies données sans audit externe.
 - [2026-11-07] Connexion réelle dès le squelette, et comptes de démo pour présenter offreGen et le faire tester (Xavier). Détail dans `docs/plans/2026-11-07_voix-offre/SPEC.md`.
 - [2026-11-07] Traitement d'un audio : démarré tout de suite après l'import, puis cron chaque minute pour vérifier et terminer ce qui n'a pas été fait (Xavier).
-- [2026-11-07] **Entorse au socle :** de vraies visites au banc de mesure, avec l'accord des clients, en plus de visites rejouées (Xavier : « on peut bosser avec de vraies données, c'est le mieux »). Compensations : stockage dans WSL hors dépôt et hors SynologyDrive, envoi seulement à Infomaniak, Claude ne lit ni l'audio ni la transcription d'une vraie visite, suppression en fin de banc. Conditions dans la SPEC du chantier.
+- [2026-11-07] **Entorse au socle :** de vraies visites au banc de mesure, avec l'accord des clients, en plus de visites rejouées (Xavier : « on peut bosser avec de vraies données, c'est le mieux »). Compensations : stockage dans WSL hors dépôt et hors SynologyDrive, envoi seulement à Infomaniak, Claude ne lit ni l'audio ni la transcription d'une vraie visite, suppression en fin de banc. Conditions dans la SPEC du chantier.
 - [2026-11-07] Dépendances ajoutées : `symfony/security-core` et `symfony/password-hasher` figées en 7.4, parce que `security-csrf` 7.4 les tirait en 8.1, hors de la branche LTS. `twig/twig` 3, PHPUnit 12, PHPStan 2.
 - [2026-11-07] Dépendances ajoutées au sous-chantier 01 : `doctrine/migrations` 3.9 (DBAL 4), `monolog/monolog` 3, `symfony/clock` 7.4 (horloge que les tests figent). `symfony/string` et `symfony/console`, tirés par les migrations, figés en 7.4. Audit sans alerte.
 - [2026-11-07] Les en-têtes de sécurité sont posés deux fois : par `public/.htaccess` chez l'hébergeur, par `Noyau` en secours et en local. Un test exige que les deux copies restent identiques.
-- [2026-11-12] IA réelle en local d'abord (Xavier : « ensuite on ajoutera juste les clés API ») : Whisper turbo dans WSL sur le processeur, Qwen 27B dans l'Ollama de Windows (variante `offregen-qwen3.8`, contexte 16 384 jetons). Le PHP parle le protocole d'Infomaniak ; passer au serveur ne change que le `.env`. Détail : `docs/plans/2026-11-07_voix-offre/10-ia-locale/`.
+- [2026-11-12] IA réelle en local d'abord (Xavier : « ensuite on ajoutera juste les clés API ») : Whisper turbo dans WSL sur le processeur, Qwen 27B dans l'Ollama de Windows (variante `offregen-qwen3.8`, contexte 16 384 jetons). Le PHP parle le protocole d'Infomaniak ; passer au serveur ne change que le `.env`. Détail : `docs/plans/2026-11-07_voix-offre/10-ia-locale/`.
 - [2026-11-12] Dépendances : `symfony/http-client` et `symfony/mime` 7.4. Hors dépôt : `python3.12-venv` dans Ubuntu, faster-whisper 1.2.1 dans `~/offregen-ia`.
 - [2026-11-14] **Entorse au protocole de déploiement :** le site de test (`easy-offres.xtradev.ch`) est déployé par Claude en SSH avec `outils/deployer-test.sh`, en attendant le workflow GitHub (sous-chantier 02). Mêmes étapes que le workflow, sans maintenance ni sauvegarde (données inventées seulement). Déclencheur de fin : le workflow GitHub en place. Accès de Claude au test accordé par Xavier tant que les données sont inventées.
 - [2026-11-14] ffmpeg statique 7.0.2 (johnvansickle.com, août 2024) déposé hors du site de test : le serveur n'a pas ffmpeg (logo, AMR et 3GP, durée minimale). Version sans correctifs depuis 2024 sur des fichiers venus de l'extérieur : à remplacer par une version suivie avant la production.
-- [2026-11-06] **Entorse au socle :** audit externe reporté. Xavier : « tant que l'app ne tourne pas chez au moins 4-5 artisans ça ne vaut pas la peine ». Déclencheur : l'application en service chez 4 à 5 artisans. Le pilote tourne donc avec de vraies données sans audit externe.
+- [2026-11-17] Acquisition, cadre posé par Xavier : prix visé de 35 à 50 CHF par mois ; objectifs de 300 à 400 abonnés fin avril 2027 et de 1000 fin 2027 ; marketing limité en heures ; pas de budget de pub de 10 000 CHF par mois. Idées de Xavier : traduire le produit en allemand (il le parle) pour couvrir la Suisse sans le Tessin ; élargir plus tard aux autres petits indépendants. Stratégie, seuils et réserves de Claude dans `docs/strategie/acquisition.md`. Tâche Origin 458 « Passage à l'échelle ».
+- [2026-11-17] Limites d'une offre (Xavier) : 30 minutes de dictée, 300 postes. Le téléphone garde l'enregistrement jusqu'à ce que l'offre soit traitée (sous-chantier 27).
+- [2026-11-17] Compte d'essai : plafond absolu d'offres (`bin/creer-compte --offres=N`, `outils/compte-essai-test.sh`). Catalogue vide au départ, l'artisan crée le sien.
+- [2026-11-17] Prix dicté (Xavier) : le catalogue reste par défaut ; une note « Prix dicté » sous la ligne, « Prendre », puis « changer le catalogue oui ou non ».
+- [2026-11-17] Offre par pièce (maquette 28 validée) : pièce relevée par un second appel au modèle, sans le catalogue (dans l'appel principal elle faisait régresser l'extraction) ; « Général » en tête, sans sous-total dans le PDF.
+- [2026-11-17] Formules, base de discussion (`26-couts-ia/OFFRES-ABONNEMENT.md`) : Solo 44.90 HT pour 50 offres, Pro 89 pour 150, Entreprise 179 pour 300 et 3 comptes, recharge 25 CHF pour 25 offres réservée aux abonnés. Pack sans abonnement écarté (Xavier : « ça casse le système »). Coûts fixes : CHF 400 à 500 par an.
+- [2026-11-18] Mise en production : relecture de la connexion et de l'isolation par Fable acceptée par Xavier (« oui va pour fable pour de la relecture »), en plus de la revue par Opus. Domaine envisagé par Xavier : `easy-offre.ch`. Le paiement doit suivre vite la première production.
 
 ## Current state
 ### Done
-- [x] Socle posé : `CODING_RULES.md`, `docs/SECURITE.md`, `docs/DEPLOIEMENT.md`, sonde d'exposition, `public/.htaccess`, fichiers témoins, `.gitignore`, `.gitattributes`.
-- [x] Cadrage produit et scripts de mesure archivés dans `docs/plans/2026-11-05_mesures-ia/`.
-- [x] Premier commit sur `main`, poussé sur GitHub le 2026-11-06.
-- [x] Maquette d'ergonomie cliquable, trois métiers fictifs : `docs/plans/2026-11-06_maquette-ux/MAQUETTE-offre-vocale.html`. Versions 2 et 3 le 2026-11-06, version 4 le 2026-11-07, après les retours de Xavier.
-
-- [x] Maquette fusionnée dans `main` (PR #1, 3a28c6f).
-- [x] Environnement de développement dans WSL : PHP 8.5.12, Composer 2.11.1, MariaDB 10.11.14, clone `~/offreGen` (2026-11-07). PR `environnement-wsl` fusionnée par Xavier (9c0ce79). ffmpeg 6.1 ajouté pour les fichiers audio de test.
-- [x] Sous-chantier 01 « socle et import » livré en code (2026-11-07), branche `chantier-voix-offre` : 89 tests, PHPStan niveau 8, parcours cliqué avec captures. Preuves dans `docs/plans/2026-11-07_voix-offre/01-socle-import/ETAT.md`.
-- [x] Sous-chantier 10 « IA réelle en local » livré en code (2026-11-12) : une dictée fictive de 28 s devient une offre juste en 17 à 28 s. 121 tests, plus un test de bout en bout sur les vrais services.
+- Livré avant le 2026-11-12 (socle, maquette, environnement, sous-chantiers 01 et 10) → `docs/roadmap-archive-done.md`.
+- [x] Sous-chantiers 11 à 18, 21, 22, 24, 25, 28 livrés en code sur la branche, déployés sur le test (dernier code : 9fe1570, sonde verte). État de chacun : `docs/plans/2026-11-07_voix-offre/ETAT.md` et les `ETAT.md` des sous-chantiers, remis à jour le 2026-11-18.
+- [x] Inventaire de ce qui manque avant la production, plan en 9 étapes, recette regroupée (`docs/plans/2026-11-17_mise-en-production/`).
 
 ### In progress
-- [ ] Chantier « de la voix à l'offre » : brancher l'enregistrement, la transcription, l'extraction et les commandes vocales, mesurer et optimiser. Neuf sous-chantiers, le 01 livré en code ; suivi dans `docs/plans/2026-11-07_voix-offre/ETAT.md`.
+- [ ] Mise en production, étapes 1 à 4 du plan (Xavier, 2026-11-18 : « va jusqu'au 4 », avec un design cohérent sur tout le site) : rangement, revue de la PR #3 (Opus, puis Fable), vérifications automatiques GitHub, puis compléter l'application (mot de passe, courriels, administration, purge, alertes, postes coupés, enregistrement à l'abri).
 
 ### Next
-- [ ] Commiter la branche `chantier-voix-offre` et ouvrir la PR (accord de Xavier attendu).
-- [ ] Recette des sous-chantiers 01 et 10 par Xavier en local, avec ses propres dictées fictives (`10-ia-locale/RECETTE.md`).
-- [ ] Sous-chantier 02 : site de test sur le serveur Cloud Infomaniak, avec la sonde d'exposition verte.
-- [ ] Test d'import : enregistrer 30 à 60 min avec l'application native d'un iPhone et d'un Android, puis importer le fichier dans une page web. Compter les gestes, noter les formats obtenus.
-- [ ] Test d'enregistrement dans l'application web : écran verrouillé, réseau coupé en cours de route (après le test d'import).
-- [ ] Test d'extraction complète sur 5 vraies visites (section 9 du cadrage, risque principal).
-- [ ] Tests Infomaniak : ratio réel de Whisper, formats audio acceptés, taille maximale d'un fichier, minimum facturé, appels d'outils, limites de débit.
-- [ ] Écrire les workflows GitHub, dont l'audit quotidien des dépendances.
-- [ ] Créer le site de test et dérouler la liste « À prouver » de `docs/DEPLOIEMENT.md`.
+- [ ] Recette regroupée par Xavier sur le test (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
+- [ ] Fusion de la PR #3 dans `main`, sur accord de Xavier, après revue et recette.
+- [ ] Xavier : site de production, base, domaine, boîte d'envoi, produit IA et accès SSH dédiés ; support de sauvegarde ; textes légaux.
+- [ ] Paiement (Stripe), juste après la première production : compte Stripe et situation TVA de Xavier.
+- [ ] Corpus de vraies dictées (sous-chantier 29) ; journal des appels IA (sous-chantier 26).
 - [ ] Convention de sous-traitance (art. 9 LPD) prête avant le premier artisan pilote.
 
 ### Blocked
-- [ ] Test d'extraction complète.
-- reason : il faut de vrais enregistrements de visite, avec le devis que l'artisan aurait rédigé.
-- [ ] Transcription, extraction et commandes vocales chez Infomaniak (sous-tâches Origin 319 à 321).
-- reason : jeton d'API Infomaniak à fournir par Xavier. Tout tourne déjà en local (sous-chantier 10) ; le jeton ne sert qu'au passage sur le serveur.
+- [ ] Mesure de la qualité réelle (sous-chantier 29).
+- reason : il faut les dictées de Xavier (fiches prêtes dans `OffreGen/corpus/FICHES.md`, hors dépôt).
+- [ ] Site de production.
+- reason : à créer par Xavier dans le Manager Infomaniak ; Claude n'y a aucun accès.
 
 ## References and links
 - Title : Cadrage produit et mesures
@@ -103,32 +77,52 @@
 - Title : GitHub, secrets par environnement
 - Link : https://docs.github.com/actions/security-guides/using-secrets-in-github-actions
 - Notes : sur dépôt privé, réservés à Pro, Team ou Enterprise.
+- Title : Stratégie d'acquisition
+- Link : docs/strategie/acquisition.md
+- Notes : discussion du 2026-11-17. Objectifs de Xavier, estimations de Claude (hypothèses, sans mesure), trois portes, canaux, règles de pub, événements.
+- Title : Coûts de l'IA, prix, paiement, concurrents
+- Link : docs/plans/2026-11-07_voix-offre/26-couts-ia/
+- Notes : `PROFILS-USAGE.md`, `PRIX-ABONNEMENT.md`, `OFFRES-ABONNEMENT.md` (17.11). Relevé Infomaniak `GET /1/ai/357/consumptions` : total par jour et par modèle.
+- Title : Mise en production
+- Link : docs/plans/2026-11-17_mise-en-production/
+- Notes : `INVENTAIRE.md` (A1 à A13, B, C, D), `PLAN.md`, `RECETTE.md`, `ETAT.md`.
 
 ## Risks / points to clarify
 - Enregistrement dans l'application web : un navigateur mobile peut couper le micro quand l'écran se verrouille (hypothèse, à tester sur iPhone et Android), et le réseau manque souvent sur un chantier. L'import d'un fichier natif contourne ces deux problèmes. Une heure d'audio pèse environ 14 Mo en Opus à 32 kbit/s, et 115 Mo en WAV 16 kHz mono.
-- Import sur iPhone : le glisser-déposer n'existe pas sur téléphone. Le chemin probable passe par « Partager », puis « Enregistrer dans Fichiers », puis le choix du fichier dans la page (hypothèse, à compter au test d'import).
-- Formats : m4a, mp3, amr, ogg ou wav selon le téléphone. Si Whisper d'Infomaniak ne les accepte pas tous, il faut convertir, et la présence d'un outil de conversion sur l'hébergement n'est pas vérifiée.
+- Import sur iPhone : le glisser-déposer n'existe pas sur téléphone. Le chemin probable passe par « Partager », puis « Enregistrer dans Fichiers », puis le choix du fichier dans la page (hypothèse, à compter au test d'import).
 - Enregistrement d'une conversation : si le client parle pendant l'enregistrement, son accord est requis (art. 179ter du Code pénal suisse, à faire confirmer par un juriste). L'application doit le rappeler à l'artisan.
-- Délai après la visite : Whisper d'Infomaniak est asynchrone, et son ratio réel est inconnu. Piste à tester : transcrire chaque morceau pendant l'enregistrement.
-- Le coût de Whisper dépend de ce ratio, non mesuré chez Infomaniak. Même dix fois plus lent que prévu, il reste de l'ordre de quelques dizaines de centimes par offre.
+- Délai après la visite : la file d'attente de Whisper chez Infomaniak varie (47 s puis 5 min pour le même fichier, 17.11), non facturée et non mesurée de façon fiable.
+- Qualité : 96 % de lignes justes sur le banc inventé ; la seule vraie dictée (Luigi) a donné 5 à 7 lignes justes sur 7. Qwen à température 0 varie d'une passe à l'autre.
+- Qwen 3.8 27B est en bêta (« coming_soon ») chez Infomaniak : modèle de secours et réglage de bascule à prévoir.
 - GitHub Free : un push direct sur `main` reste possible, et tout job qui cite un secret le reçoit. Les compensations ne sont pas encore prouvées.
 - Pilote sans audit externe : le cœur de la sécurité n'est éprouvé que par nos tests et la relecture par Fable.
 - Audit externe : prestataire et budget à définir. Ordre de grandeur lu chez un vendeur suisse : CHF 4 500 à 15 000, sans devis.
-- Accès de Claude à l'environnement de test : à confirmer par Xavier.
-- Économie : environ 220 clients à 49 CHF pour 10 000 CHF par mois, avant charges sociales et impôts (calcul du 2026-11-06, le cadrage en donnait 235). L'acquisition de clients et l'import des catalogues sont le frein, à valider par le test de disposition à payer.
-- Facturation : la facture d'acompte entre dans le produit (2026-11-07). La facture de solde, le code QR suisse et le suivi des paiements restent à cadrer.
 - Offre figée après l'envoi : rien n'est prévu pour corriger une offre envoyée (nouvelle version, annulation).
-- `.htaccess` jamais exécuté sur Apache, branche HTTPS de la sonde jamais exercée. Rien n'est prouvé sur Infomaniak.
-- Conservation de la transcription : l'audio est supprimé 30 jours après l'offre prête ou l'échec (décision de Xavier) ; la transcription, aussi personnelle que l'audio, reste en base sans durée décidée.
-- Une transcription qui ne revient jamais laisse l'enregistrement en `transcription` pour toujours : aucun délai d'abandon avant le sous-chantier 04.
-- Frein de connexion : une connexion réussie ne remet pas à zéro les échecs du même courriel. Raffinement possible au sous-chantier 09 (le compteur par adresse IP, lui, ne doit pas se remettre à zéro).
-- Transcription Infomaniak : 50 000 Ko au plus, ni amr ni 3gp (documentation du 2026-11-12). La conversion exige ffmpeg sur l'hébergement Cloud, non vérifié. Le contenu exact de `data` d'un lot réussi et l'acceptation de l'envoi multipart sont des hypothèses à vérifier au premier appel avec le jeton.
-- Whisper sur la carte graphique depuis WSL : plantage de ctranslate2 (pilote 610.88). En local, la transcription tourne sur le processeur (une heure de dictée : environ 13 minutes).
-- Extraction locale : au-delà d'environ 40 minutes de dictée, le contexte de 16 384 jetons de `offregen-qwen3.8` ne suffit plus.
+- `.htaccess` exécuté sur le test, mais les neuf essais « À prouver » de `docs/DEPLOIEMENT.md` ne sont pas faits.
+- Conservation : l'audio devrait être supprimé 30 jours après l'offre, mais aucune tâche planifiée ne lance `bin/purger-audio` ; le 14.11, Xavier a demandé de tout garder pour l'entraînement (sous-chantier 23). Les deux décisions se contredisent : à trancher avant la production, et à écrire dans la politique de confidentialité.
+- Frein de connexion : une connexion réussie ne remet pas à zéro les échecs du même courriel. Raffinement possible (le compteur par adresse IP, lui, ne doit pas se remettre à zéro).
+- Acquisition (2026-11-17) : selon Claude, 300 à 400 abonnés fin avril 2027 est irréaliste (40 à 60 plausibles), et 1000 fin 2027 exige un canal de distribution ou une sortie de Romandie. Taille du marché non vérifiée (environ 10 000 entreprises du second œuvre en Romandie, de mémoire) : à compter dans STATENT (Origin 475).
+- Allemand : aucune couche de traduction dans le code (constaté le 2026-11-17), qualité de la dictée en dialecte inconnue (banc, Origin 476).
+- TWINT chez Stripe est indiqué « B2C » : à confirmer pour des entreprises. TVA de XtraDev (assujetti ou non) à clarifier avec un fiduciaire.
+- Domaine : le test s'appelle `easy-offres` (avec un s), la production envisagée `easy-offre.ch` (sans). Une seule orthographe à choisir.
+- Obsolètes (résolus) : accès de Claude au test (accordé le 14.11) ; jeton Infomaniak (fourni le 14.11) ; format `data` et envoi multipart de Whisper (vérifiés le 14.11) ; ffmpeg sur le test (déposé le 14.11).
+
+## Archives
+- Décisions anciennes → `docs/roadmap-archive-decisions.md`
+- Livré archivé → `docs/roadmap-archive-done.md`
 
 ## Session log
 - [2026-11-05] Roadmap initialized. Cadrage, choix de la pile, pose du socle.
 - [2026-11-06] Cadrage produit reçu et archivé. Règle d'ergonomie, relecture par Fable, report de l'audit externe, GitHub Free, import audio prioritaire. Premier commit. Maquette v1, réponses de Xavier, maquette v2 (lignes, ajout, ligne libre, majoration, acomptes, catalogue, aperçu), réponses de Xavier, maquette v3 (unité, acompte à l'envoi).
-- [2026-11-07] Réponses sur la v3, maquette v4 (acompte à part, offre figée après l'envoi), validée et fusionnée. Environnement WSL installé, clone de travail. Chantier « de la voix à l'offre » ouvert, phase 0.
+- [2026-11-07] Réponses sur la v3, maquette v4 (acompte à part, offre figée après l'envoi), validée et fusionnée. Environnement WSL installé, clone de travail. Chantier « de la voix à l'offre » ouvert, phase 0.
+- [2026-11-07] Chantier : cadrage, découpage en neuf sous-chantiers, sous-chantier 01 enchaîné jusqu'au lot 8 (Xavier : « enchaîne jusqu'au dernier lot »). Défauts trouvés en route : variables d'environnement ignorées sous Ubuntu, en-têtes de sécurité absents hors Apache, purge oubliée pour les échecs, variable PHP avalée par une espace insécable.
 - [2026-11-12] Sous-chantier 10 : documentation d'Infomaniak lue, Whisper local au même protocole, extraction par Qwen dans Ollama, test de bout en bout et parcours cliqué sur les vrais services.
-- [2026-11-07] Chantier : cadrage, découpage en neuf sous-chantiers, sous-chantier 01 enchaîné jusqu'au lot 8 (Xavier : « enchaîne jusqu'au dernier lot »). Défauts trouvés en route : variables d'environnement ignorées sous Ubuntu, en-têtes de sécurité absents hors Apache, purge oubliée pour les échecs, variable PHP avalée par une espace insécable.
+- [2026-11-12 au 16] **Sous-chantiers 11 à 25**, écrans, offre, clients, facture, ergonomie, site de test monté (14.11) et branché sur Infomaniak.
+  - Détail : `docs/plans/2026-11-07_voix-offre/ETAT.md`.
+- [2026-11-17] Stratégie d'acquisition discutée et notée (`docs/strategie/acquisition.md`), tâche Origin 458 créée (19 sous-tâches).
+- [2026-11-17] **Luigi, limites, pièces, prix dicté, formules**
+  - Réunion avec Luigi ; limites 30 min et 300 postes ; plafond des comptes d'essai ; sous-chantier 28 (pièces) et prix dicté livrés sur le test.
+  - Coûts, prix, paiement et formules étudiés. Détail : `26-couts-ia/`, `docs/terrain/2026-11-17_luigi-peintre.md`.
+- [2026-11-18] **Mise en production ouverte**
+  - Inventaire, plan, recette regroupée ; `ETAT.md` des sous-chantiers remis à jour ; démo du test remise à zéro, compte `essai-recette` créé.
+  - Détail : `docs/plans/2026-11-17_mise-en-production/`.

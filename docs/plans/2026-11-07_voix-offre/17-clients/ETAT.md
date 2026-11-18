@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Xavier essaie sur `http://localhost:8000` (compte de démonstration remis à zéro). Ensuite : sous-chantier 18 (facture).
+Recette de Xavier sur le site de test, dans la recette regroupée de la mise en production (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`). Les gestes de ce sous-chantier y sont repris ; l'ancienne `RECETTE.md` locale, s'il y en a une, ne fait plus foi.
 
 ## Plan
 
@@ -22,10 +22,7 @@ Xavier essaie sur `http://localhost:8000` (compte de démonstration remis à zé
 
 ## En attente de toi
 
-- Ouvrir l'onglet Clients : deux fiches d'exemple, une fiche qui monte au toucher, « Nouveau client » en bas.
-- Toucher le client en haut d'une offre : la fenêtre « Client de l'offre » doit permettre de choisir une fiche ou d'en créer une.
-- Après une vraie dictée (IA relancée) : vérifier qu'un client connu se rattache seul et qu'un inconnu reste « à confirmer ».
-- Suivi Origin : faut-il créer des sous-tâches « Clients » et « Facture » sous la tâche 315 ?
+- Jouer la recette regroupée (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
 
 ## Décisions
 
@@ -52,6 +49,7 @@ Xavier essaie sur `http://localhost:8000` (compte de démonstration remis à zé
 - 2026-11-12 : recette au clic (390 px) sur le compte de démonstration. Le cas «nom dicté à confirmer» a été préparé par la base (offre «Façade de la maison» : `client_dicte` = «M. Modele») : produire ce cas par une vraie dictée demande l'IA, coupée à la demande de Xavier. Un premier essai visait la mauvaise offre (la plus ancienne porte le n° 1) : corrigé, rejoué.
 - 2026-11-12 : à noter pour Xavier : dans «Client de l'offre», le bouton «Créer la fiche» reste le plus visible même si une fiche ressemble ; en usage réel, au-dessus de 80 % le traitement a déjà rattaché l'offre.
 - 2026-11-14 : essai réel chez Infomaniak : « Madame Exemple, à Bulle » rattachée d'office à « Famille Exemple, 1700 Fribourg ». Xavier : « si c'est pas la même localité ça ne doit pas marcher ». `Rapprochement::memeLocalite` : le lieu dicté doit contenir le NPA ou la localité de la fiche (mots entiers, sans accents, article de tête ignoré, « St » pour « Saint ») ; sans lieu dicté ou sans localité sur la fiche, le nom seul décide. Deux homonymes de localités différentes sont départagés par le lieu. Conséquence : un chantier dicté ailleurs que chez le client n'est plus rattaché d'office. Tests écrits avant, vus rouges ; mutation « lieu non transmis par le traitement » attrapée ; parcours réel rejoué : « nouveau client, à confirmer ».
+- 2026-11-18 : remis à jour au chantier de mise en production. Branche `chantier-voix-offre` poussée et PR #3 ouverte depuis le 2026-11-12 (les accords de commit et de PR demandés ici sont caducs) ; la recette passe dans la recette regroupée ; la revue indépendante du diff est l'étape 2 du `PLAN.md` de la mise en production.
 
 ## Preuves
 
