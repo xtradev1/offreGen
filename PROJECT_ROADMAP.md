@@ -88,6 +88,7 @@
 - Notes : `INVENTAIRE.md` (A1 à A13, B, C, D), `PLAN.md`, `RECETTE.md`, `ETAT.md`.
 
 ## Risks / points to clarify
+- 2026-11-18 : trois concurrents romands en français déjà en ligne (Chiffr, SecretarIA, Opus), moins chers que les CHF 39 prévus ; prix, périmètre et objectif de clients à revoir. Détail : `docs/strategie/concurrents.md`.
 - Enregistrement dans l'application web : un navigateur mobile peut couper le micro quand l'écran se verrouille (hypothèse, à tester sur iPhone et Android), et le réseau manque souvent sur un chantier. L'import d'un fichier natif contourne ces deux problèmes. Une heure d'audio pèse environ 14 Mo en Opus à 32 kbit/s, et 115 Mo en WAV 16 kHz mono.
 - Import sur iPhone : le glisser-déposer n'existe pas sur téléphone. Le chemin probable passe par « Partager », puis « Enregistrer dans Fichiers », puis le choix du fichier dans la page (hypothèse, à compter au test d'import).
 - Enregistrement d'une conversation : si le client parle pendant l'enregistrement, son accord est requis (art. 179ter du Code pénal suisse, à faire confirmer par un juriste). L'application doit le rappeler à l'artisan.

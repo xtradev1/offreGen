@@ -52,6 +52,8 @@ Conseil : Stripe au départ (aucun frais fixe, prélèvement automatique, relan
 
 ## Concurrents (relevé du 17 novembre 2026)
 
+> **Périmé le 18 novembre 2026.** Trois outils suisses romands en français existent (Chiffr, SecretarIA, Opus). Relevé à jour, prix et stratégie : `docs/strategie/concurrents.md`.
+
 Avec la voix :
 
 | Produit | Pays, langue | Prix par mois | Ce qui est compris | Différence |
