@@ -80,3 +80,40 @@ Et une question : « Est-ce que ça compte pour vous que l'enregistrement reste 
 1. Passer la dictée de Luigi dans les essais gratuits de SecretarIA et de Chiffr, compter leurs touchers, noter ce
    qu'ils font d'un prix dicté. Ouvrir ces comptes est la décision de Xavier.
 2. Appuyer l'hébergement sur la page d'Infomaniak qui dit où tournent les modèles.
+
+## Décision de Xavier (19 novembre 2026)
+
+« Mon unique selling proposition, c'est que je fais la même chose que les autres, mais suisse. Concrètement, vos
+données restent vraiment suisses. » Les arguments partagés avec les concurrents (simplicité, prix contrôlés) se
+disent quand même. Sous-titre proposé par Xavier : « Enregistrer, vérifier, envoyer », écrit « Dicter, vérifier,
+envoyer » parce que « enregistrer » veut dire sauvegarder dans l'application.
+
+Vérifié le même jour :
+
+- Sur l'installation : le code n'appelle que `api.infomaniak.com` (transcription et rédaction) et le géoservice de
+  la Confédération (`api.geo.admin.ch`). La page ne charge rien d'un autre site (CSP `default-src 'self'`, polices
+  hébergées par l'application).
+- Chez le fournisseur (infomaniak.com, page des services d'IA) : « dans nos data centers en Suisse, sans dépendance
+  à des acteurs étrangers » ; « Vos requêtes ne sont ni enregistrées ni utilisées pour entraîner les modèles ».
+
+Ce qu'on écrit, relu par l'agent XtraDev :
+
+- Accroche : « Dictez la visite de chantier. L'offre est rédigée en Suisse. » (ou « Dictez vos offres. Votre voix
+  reste en Suisse. »)
+- Sous-titre : « Dicter, vérifier, envoyer. »
+- Preuve : « Votre voix est transcrite et l'offre rédigée par l'IA d'Infomaniak, dans ses centres de données en
+  Suisse. Selon Infomaniak, vos dictées ne sont ni conservées ni utilisées pour entraîner ses modèles. »
+
+Ce qu'on n'écrit pas :
+
+- « Suisse » tout court : Chiffr, Opus et Offerto hébergent aussi leurs données en Suisse. La différence est la
+  voix et l'IA.
+- « IA suisse » : les modèles sont Whisper (conçu par OpenAI) et Qwen (Alibaba). Ils tournent en Suisse, ils n'y
+  ont pas été conçus.
+- « Garanti », « sécurisé », « 100 % » employés seuls : on écrit le fait et où le vérifier.
+- « En un instant » : l'offre arrive quelques minutes après la dictée.
+
+À fermer avant de l'afficher : le fournisseur de courriels de la production (suisse), la liste publique des
+sous-traitants, la convention de traitement d'Infomaniak rangée au dossier. Un paiement par carte, plus tard,
+passerait par un prestataire étranger : la promesse porte sur ce que l'artisan dicte et sur les données de ses
+clients, pas sur son propre abonnement.
