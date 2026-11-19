@@ -8,7 +8,7 @@ Dicta. Une majuscule, jamais tout en capitales dans une phrase, jamais d'article
 
 ## La phrase d'accroche
 
-À choisir parmi trois candidates : « Fini les offres le soir. », « Sitôt dit, sitôt chiffré. », « Dictez l'offre pièce par pièce. ».
+À écrire une fois l'argument unique choisi (docs/strategie/usp.md). Écartées : « Dicter la visite, recevoir l'offre. » et « Fini les offres le soir. », que les concurrents disent déjà.
 
 ## La description en une phrase
 
