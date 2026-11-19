@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block titre %}{{ offre.titre }} · offreGen{% endblock %}
+{% block titre %}{{ offre.titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
 {% block entete %}Offre {{ offre.numero }}{% endblock %}
 
@@ -17,7 +17,7 @@
     {% if factures is not empty %}<span class="factures-offre">{% for f in factures %}<a class="etiquette facture{% if f.statut == 'annulee' %} annulee{% endif %}" href="/factures/{{ f.id }}{{ f.statut != 'brouillon' ? '/apercu' }}">{{ f.numero ? 'Facture ' ~ f.numero : 'Brouillon de facture' }}</a>{% endfor %}</span>{% endif %}
     {% set a_relire = 0 %}
     {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or r.l.prix_centimes == 0 %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
-    <span class="meta"><span class="status pret">{% if a_relire > 0 %}À relire{% elseif offre.envoyee_le %}Envoyée le {{ offre.envoyee_le|date_locale|slice(0, 10) }}{% else %}Prête{% endif %}</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span>
+    <span class="meta"><span class="status {{ a_relire > 0 ? 'a-verifier' : (offre.envoyee_le ? 'pret' : 'relue') }}">{% if a_relire > 0 %}À relire{% elseif offre.envoyee_le %}Envoyée le {{ offre.envoyee_le|date_locale|slice(0, 10) }}{% else %}Prête{% endif %}</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span>
       {# Sur PC, le document à côté des lignes, qui suit chaque correction (D13). Sans JavaScript, le bouton reste caché. #}
       <button class="btn pc-seul doc-cote" type="button" data-doc-cote="/offres/{{ offre.id }}/document" aria-pressed="false" hidden>Document à côté</button></span>
   </div>

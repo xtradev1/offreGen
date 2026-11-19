@@ -41,6 +41,7 @@
 - [2026-11-17] Formules, base de discussion (`26-couts-ia/OFFRES-ABONNEMENT.md`) : Solo 44.90 HT pour 50 offres, Pro 89 pour 150, Entreprise 179 pour 300 et 3 comptes, recharge 25 CHF pour 25 offres réservée aux abonnés. Pack sans abonnement écarté (Xavier : « ça casse le système »). Coûts fixes : CHF 400 à 500 par an.
 - [2026-11-18] Mise en production : relecture de la connexion et de l'isolation par Fable acceptée par Xavier (« oui va pour fable pour de la relecture »), en plus de la revue par Opus. Domaine envisagé par Xavier : `easy-offre.ch`. Le paiement doit suivre vite la première production.
 - [2026-11-18] Identité (Xavier) : le produit s'appelle **Dicta** (`dicta.ch` réservé d'après sa charte), en-tête et boutons anthracite `#23272D`, terracotta `#C4552D` en accent, mot « offre », logo « le cône et la bulle », encore modifiable. Charte, verbatim, jetons CSS et logos dans `docs/identite/`. Reste à l'appliquer à l'application (feuille de style en bleu, nom « offreGen » dans les courriels).
+- [2026-11-19] Identité appliquée à l'application (branche `chantier-voix-offre`, non déployée) : couleurs et polices de la charte dans `app.css`, nom par défaut « Dicta » (`APP_NOM`). Dépendance ajoutée : polices Archivo et Inter (licence OFL) hébergées dans `public/fonts/`, parce que la CSP refuse toute police externe. Les tailles de `CODING_RULES.md` (64, 56, 48 px) priment sur la charte, qui a été corrigée.
 
 ## Current state
 ### Done

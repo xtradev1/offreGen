@@ -5,7 +5,7 @@
    qui monte sur l'offre, elle reste ouverte pour la ligne suivante (reste=1) et dit laquelle vient d'entrer. Quand
    la recherche ne trouve rien, le texte tapé s'ajoute en ligne libre, prix à compléter dans l'offre. La ligne libre
    détaillée (unité, prix, catalogue) reste repliée dessous. #}
-{% block titre %}Ajouter à {{ cible.document }} · offreGen{% endblock %}
+{% block titre %}Ajouter à {{ cible.document }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="{{ cible.base }}">{{ cible.retour }}</a>{% endblock %}
 {% block entete %}Ajouter à {{ cible.document }}{% endblock %}
 

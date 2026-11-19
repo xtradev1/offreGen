@@ -247,10 +247,10 @@ final class Conteneur
         ));
     }
 
-    /** Le nom affiché dans les courriels, en attendant le nom définitif (Easy Offre, Dicta : à trancher par Xavier). */
+    /** Le nom affiché dans les pages et les courriels. Dicta : choix de Xavier du 2026-11-18 (docs/identite/). */
     public function nomApplication(): string
     {
-        return $this->parametre('APP_NOM', 'offreGen');
+        return $this->parametre('APP_NOM', 'Dicta');
     }
 
     public function enregistrements(Portee $p): DepotEnregistrements
@@ -356,6 +356,7 @@ final class Conteneur
             $twig->addFunction(new TwigFunction('compte', fn (): ?int => $this->garde()->artisanCourant()));
             $twig->addExtension(new Formats());
             $twig->addGlobal('pays_adresse', Adresse::PAYS);
+            $twig->addGlobal('nom_application', $this->nomApplication());
             $twig->addGlobal('duree_max_secondes', $this->dureeMaxSecondes());
             $twig->addFunction(new TwigFunction('essai', function (): ?PlafondEssai {
                 $id = $this->garde()->artisanCourant();
@@ -519,6 +520,7 @@ final class Conteneur
             $this->parametre('APP_URL', 'http://localhost:8000'),
             $this->dureeAudio(),
             $this->dureeMaxSecondes(),
+            $this->nomApplication(),
         ));
     }
 

@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% set sans_menu = true %}
 
-{% block titre %}Mot de passe oublié · offreGen{% endblock %}
+{% block titre %}Mot de passe oublié · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/connexion">Connexion</a>{% endblock %}
 {% block entete %}Mot de passe oublié{% endblock %}
 

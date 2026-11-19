@@ -50,6 +50,7 @@ final class Traiteur
         /** Mesure de la durée avant la transcription ; null : pas de mesure (tests sans fichier). */
         private readonly ?DureeAudio $duree = null,
         private readonly int $dureeMaxSecondes = 1800,
+        private readonly string $nomApplication = 'Dicta',
     ) {
     }
 
@@ -198,7 +199,7 @@ final class Traiteur
             $this->messagerie->envoyer(
                 $artisan['courriel'],
                 'Votre offre est prête',
-                "Bonjour,\r\n\r\nL'offre préparée à partir de votre enregistrement est prête à relire :\r\n$lien\r\n\r\noffreGen",
+                "Bonjour,\r\n\r\nL'offre préparée à partir de votre enregistrement est prête à relire :\r\n$lien\r\n\r\n{$this->nomApplication}",
             );
         } catch (\Throwable $e) {
             $this->journal->error("offreGen, courriel « offre prête » pour l'offre $offreId : " . $e->getMessage());

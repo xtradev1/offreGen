@@ -96,6 +96,8 @@ final class TraiteurTest extends TestCase
         $courriels = $this->dossiers->courriels();
         self::assertCount(1, $courriels);
         self::assertStringContainsString('https://exemple.test/offres/', (string) file_get_contents($courriels[0]));
+        // Le courriel signe du nom de l'application (Dicta, charte du 2026-11-18), plus du nom du dépôt.
+        self::assertMatchesRegularExpression('/\R\RDicta\s*$/', (string) file_get_contents($courriels[0]));
     }
 
     /** Un compte de démonstration a une adresse inventée : avec un vrai envoi, le courriel reviendrait en erreur. */

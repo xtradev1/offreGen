@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block titre %}Mes offres · offreGen{% endblock %}
+{% block titre %}Mes offres · {{ nom_application }}{% endblock %}
 {% block entete %}Mes offres{% endblock %}
 {% block ecran_classe %} gris avec-rond{% endblock %}
 
@@ -47,7 +47,7 @@
       </div>
       <a class="ocard" href="/offres/{{ o.id }}">
         <span class="l1"><b class="titre">{{ o.titre }}</b>
-          {% if a_relire[o.id] > 0 %}<span class="status pret">{{ a_relire[o.id] }} à vérifier</span>{% else %}<span class="status relue">Prête</span>{% endif %}</span>
+          {% if a_relire[o.id] > 0 %}<span class="status a-verifier">{{ a_relire[o.id] }} à vérifier</span>{% else %}<span class="status relue">Prête</span>{% endif %}</span>
         <span class="l2"><span>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}Offre {{ o.numero }} · {% if o.modifiee_le %}modifiée le {{ o.modifiee_le|date_locale }}{% else %}{{ o.cree_le|date_locale }}{% endif %}</span><b>{{ totaux[o.id]|chf }}</b></span>
       </a>
     </div>

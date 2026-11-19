@@ -9,6 +9,7 @@
   --dx-texte: #23272D;
   --dx-texte-doux: #454B55;
   --dx-trait: #DDD8CC;
+  --dx-etiquette: #EBE7DE;
   --dx-bord: #7C838C;
   --dx-bande: #23272D;
   --dx-sur-bande: #FFFFFF;
@@ -26,11 +27,13 @@
   --dx-erreur-fond: #FBE7E4;
   --dx-police-titre: "Archivo", system-ui, sans-serif;
   --dx-police-texte: "Inter", system-ui, sans-serif;
-  --dx-rayon-etiquette: 6px;
-  --dx-rayon-champ: 8px;
-  --dx-rayon: 10px;
-  --dx-rayon-carte: 12px;
-  --dx-cible: 52px;
+  --dx-rayon-etiquette: 999px;
+  --dx-rayon: 12px;
+  --dx-rayon-carte: 14px;
+  --dx-cible-principale: 64px;
+  --dx-cible-bouton: 56px;
+  --dx-cible: 48px;
+  --dx-ecart-cibles: 8px;
   --dx-pas: 4px;
   --dx-marge: 16px;
   --dx-duree-etat: 150ms;
@@ -41,8 +44,9 @@
     --dx-fond: #15171A;
     --dx-carte: #1E2125;
     --dx-texte: #ECEAE6;
-    --dx-texte-doux: #AAAFB6;
+    --dx-texte-doux: #B4B9C0;
     --dx-trait: #33373D;
+    --dx-etiquette: #26292E;
     --dx-bord: #868C94;
     --dx-bande: #0F1113;
     --dx-sur-bande: #FFFFFF;
@@ -64,8 +68,9 @@
   --dx-fond: #15171A;
   --dx-carte: #1E2125;
   --dx-texte: #ECEAE6;
-  --dx-texte-doux: #AAAFB6;
+  --dx-texte-doux: #B4B9C0;
   --dx-trait: #33373D;
+  --dx-etiquette: #26292E;
   --dx-bord: #868C94;
   --dx-bande: #0F1113;
   --dx-sur-bande: #FFFFFF;

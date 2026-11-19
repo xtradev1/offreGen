@@ -6,7 +6,7 @@
    offre : la fiche créée devient le client de cette offre. #}
 {% import '_reglages_macros.html.twig' as f %}
 {% set titre = k ? k.nom : 'Nouveau client' %}
-{% block titre %}{{ titre }} · offreGen{% endblock %}
+{% block titre %}{{ titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="{{ offre ? '/offres/' ~ offre.id : '/clients' }}">{{ offre ? 'Offre' : 'Clients' }}</a>{% endblock %}
 {% block entete %}{{ titre }}{% endblock %}
 

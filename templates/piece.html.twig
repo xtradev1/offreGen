@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {# Renommer une pièce de l'offre (sous-chantier 28, P5) : toutes ses lignes suivent. #}
-{% block titre %}Pièce {{ ancienne }} · Offre {{ offre.numero }} · offreGen{% endblock %}
+{% block titre %}Pièce {{ ancienne }} · Offre {{ offre.numero }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
 {% block entete %}Renommer la pièce{% endblock %}
 

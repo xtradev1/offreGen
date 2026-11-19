@@ -3,7 +3,7 @@
 {# Une rubrique des réglages, seule à l'écran ; ou une étape de l'assistant du premier lancement
    (assistant défini). Dans les réglages, chaque changement s'enregistre seul (app.js, data-auto) ;
    sans JavaScript, le bouton Enregistrer envoie le formulaire. #}
-{% block titre %}{{ titre }} · offreGen{% endblock %}
+{% block titre %}{{ titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}{% if not assistant %}<a class="back" href="/reglages">Réglages</a>{% endif %}{% endblock %}
 {% block entete %}{{ assistant ? 'Bienvenue' : titre }}{% endblock %}
 {% block ecran_classe %} gris{% endblock %}

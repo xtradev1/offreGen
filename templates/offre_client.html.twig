@@ -5,7 +5,7 @@
    ou seule sans JavaScript. Depuis « Générer l'offre » (suite=apercu, maquette 25, E6) : « Pour qui est cette
    offre ? », et le choix mène au PDF de l'offre (data-sortir : la fenêtre suit la redirection). #}
 {% set titre = suite ? 'Pour qui est cette offre ?' : 'Client de l\'offre' %}
-{% block titre %}{{ titre }} · offreGen{% endblock %}
+{% block titre %}{{ titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
 {% block entete %}{{ titre }}{% endblock %}
 

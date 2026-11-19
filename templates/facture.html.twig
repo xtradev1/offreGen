@@ -4,7 +4,7 @@
    en plus) ; il prend son numéro à la création. « Créer la facture » le rend définitif sans page de confirmation (E3)
    et ouvre son PDF. Sur PC, le document suit à côté des lignes (E8). Une facture émise ou annulée ne passe plus par
    ici : elle se voit en PDF (FactureControleur::afficher). #}
-{% block titre %}Brouillon de facture · offreGen{% endblock %}
+{% block titre %}Brouillon de facture · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/offres/{{ f.offre_id }}">Offre {{ f.offre_numero }}</a>{% endblock %}
 {% block entete %}Brouillon de facture{% endblock %}
 

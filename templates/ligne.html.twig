@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block titre %}Ligne · offreGen{% endblock %}
+{% block titre %}Ligne · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="{{ cible.base }}#l{{ l.id }}">{{ cible.retour }}</a>{% endblock %}
 {% block entete %}Ligne{% endblock %}
 

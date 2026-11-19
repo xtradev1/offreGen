@@ -2,7 +2,7 @@
 
 {# Rattacher une ligne à un produit du catalogue (décision D6, maquette 24, 2026-11-15). La recherche part du premier mot
    de la ligne ; le choix se fait d'un toucher. #}
-{% block titre %}Rattacher · {{ offre.titre }} · offreGen{% endblock %}
+{% block titre %}Rattacher · {{ offre.titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/offres/{{ offre.id }}#l{{ l.id }}">Offre</a>{% endblock %}
 {% block entete %}Rattacher à un produit{% endblock %}
 

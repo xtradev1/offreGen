@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {# Rubrique « Mot de passe » des réglages (P4, Xavier, 2026-11-18 : parcours accepté, aspect à refaire avec la marque). #}
-{% block titre %}Mot de passe · offreGen{% endblock %}
+{% block titre %}Mot de passe · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/reglages">Réglages</a>{% endblock %}
 {% block entete %}Mot de passe{% endblock %}
 {% set onglet = 'reglages' %}

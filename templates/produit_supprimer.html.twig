@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% set onglet = 'catalogue' %}
 
-{% block titre %}Supprimer un produit · offreGen{% endblock %}
+{% block titre %}Supprimer un produit · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/catalogue/{{ p.id }}">Produit</a>{% endblock %}
 {% block entete %}Supprimer un produit{% endblock %}
 

@@ -3,7 +3,7 @@
 
 {# Annuler une facture émise : elle reste, barrée, son numéro n'est jamais repris. « Annuler et refaire » crée
    aussitôt un brouillon copié, qui prendra son numéro à la création (sous-chantier 18, E5 du 25). #}
-{% block titre %}Annuler la facture · offreGen{% endblock %}
+{% block titre %}Annuler la facture · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/factures/{{ f.id }}/apercu">Facture</a>{% endblock %}
 {% block entete %}Annuler la facture{% endblock %}
 

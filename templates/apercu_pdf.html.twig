@@ -7,7 +7,7 @@
    null), modifier (ou null), facturer (ou null), facture (pour une facture : {f, etat, annuler}, sinon absent).
    Une facture a son panneau (maquette 25, E8) : montant, état, échéance, client, offre, « Annuler la facture » ; sous
    le PDF au téléphone, à côté sur PC. #}
-{% block titre %}{{ titre }} · PDF · offreGen{% endblock %}
+{% block titre %}{{ titre }} · PDF · {{ nom_application }}{% endblock %}
 {% block entete_html %}<script type="module" src="/js/apercu-pdf.js"></script>{% endblock %}
 {% block retour %}<a class="back" href="{{ retour.href }}">{{ retour.texte }}</a>{% endblock %}
 {% block entete %}{{ titre }} · PDF{% endblock %}

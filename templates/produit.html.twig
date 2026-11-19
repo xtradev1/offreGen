@@ -2,7 +2,7 @@
 {% set onglet = 'catalogue' %}
 
 {% set titre = p ? 'Modifier le produit' : 'Nouveau produit' %}
-{% block titre %}{{ titre }} · offreGen{% endblock %}
+{% block titre %}{{ titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/catalogue{% if p %}#p{{ p.id }}{% endif %}">Catalogue</a>{% endblock %}
 {% block entete %}{{ titre }}{% endblock %}
 

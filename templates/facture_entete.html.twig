@@ -2,7 +2,7 @@
 {% set onglet = 'factures' %}
 
 {# Numéro, date et échéance d'un brouillon ; sa suppression, qui libère le numéro. #}
-{% block titre %}Brouillon de facture · offreGen{% endblock %}
+{% block titre %}Brouillon de facture · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/factures/{{ f.id }}">Facture</a>{% endblock %}
 {% block entete %}Brouillon de facture{% endblock %}
 

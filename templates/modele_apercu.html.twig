@@ -4,7 +4,7 @@
 {# « Voir en grand » (Xavier, 2026-11-12) : un modèle d'offre, en vrai, avec le logo et la couleur de l'artisan.
    Rien n'est enregistré tant qu'on ne touche pas « Choisir ce modèle ». #}
 {% block entete_html %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
-{% block titre %}Modèle {{ modeles[modele] }} · offreGen{% endblock %}
+{% block titre %}Modèle {{ modeles[modele] }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="{{ retour }}">Ma marque</a>{% endblock %}
 {% block entete %}Modèle {{ modeles[modele] }}{% endblock %}
 {% block ecran_classe %} gris{% endblock %}

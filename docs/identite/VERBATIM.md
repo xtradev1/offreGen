@@ -8,7 +8,7 @@ Dicta. Une majuscule, jamais tout en capitales dans une phrase, jamais d'article
 
 ## La phrase d'accroche
 
-Dicter la visite, recevoir l'offre.
+À choisir parmi trois candidates : « Fini les offres le soir. », « Sitôt dit, sitôt chiffré. », « Dictez l'offre pièce par pièce. ».
 
 ## La description en une phrase
 
@@ -16,7 +16,7 @@ L'artisan dicte sa visite de chantier, Dicta rédige l'offre chiffrée.
 
 ## Les trois arguments
 
-- Les données et l'IA sont hébergées en Suisse. (À confirmer par Xavier avant publication : site, courriels, sauvegardes.)
+- Les données et l'IA sont hébergées en Suisse.
 - La visite se dicte pièce par pièce.
 - Les prix dictés sont comparés au catalogue de l'artisan.
 

@@ -2,7 +2,7 @@
 
 {# Relecture au pouce, une ligne à la fois (décision D5, maquette 24, 2026-11-15). Le contenu descend vers les boutons ;
    le rappel de la dictée est permis ici (CODING_RULES, Ergonomie). #}
-{% block titre %}Relecture · {{ offre.titre }} · offreGen{% endblock %}
+{% block titre %}Relecture · {{ offre.titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
 {% block entete %}Relecture{% endblock %}
 {% block ecran_classe %} relecture{% endblock %}

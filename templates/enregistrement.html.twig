@@ -2,7 +2,7 @@
 
 {# Sans JavaScript, la page se recharge ; avec, app.js fait avancer les étapes chaque seconde. #}
 {% block entete_html %}{% if not fini %}<noscript><meta http-equiv="refresh" content="5"></noscript>{% endif %}{% endblock %}
-{% block titre %}Préparation de l'offre · offreGen{% endblock %}
+{% block titre %}Préparation de l'offre · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
 {% block entete %}Préparation de l'offre{% endblock %}
 

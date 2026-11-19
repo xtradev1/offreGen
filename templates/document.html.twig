@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {% block entete_html %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
-{% block titre %}Offre {{ offre.numero }} · offreGen{% endblock %}
+{% block titre %}Offre {{ offre.numero }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
 {% block entete %}Offre {{ offre.numero }}{% endblock %}
 {% block ecran_classe %} gris{% endblock %}

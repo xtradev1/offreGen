@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block titre %}Offre {{ offre.numero }} · offreGen{% endblock %}
+{% block titre %}Offre {{ offre.numero }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
 {% block entete %}Offre {{ offre.numero }}{% endblock %}
 
