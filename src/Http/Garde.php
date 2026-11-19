@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http;
 
 use OffreGen\Compte\Authentification;
+use OffreGen\Compte\Role;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
@@ -78,8 +79,15 @@ final class Garde
         return $this->authentification->artisanConnecte($requete);
     }
 
-    public function administrateur(int $artisanId): bool
+    public function role(int $artisanId): ?Role
     {
-        return $this->authentification->estAdministrateur($artisanId);
+        return $this->authentification->role($artisanId);
+    }
+
+    /** Rôle de la requête en cours, posé par le noyau sur les pages d'administration ; null ailleurs. */
+    public function roleCourant(): ?Role
+    {
+        $role = $this->pile->getCurrentRequest()?->attributes->get('_role');
+        return $role instanceof Role ? $role : null;
     }
 }

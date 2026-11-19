@@ -66,6 +66,11 @@ use Symfony\Component\Security\Csrf\TokenStorage\SessionTokenStorage;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
+use OffreGen\Compte\ArtisansEquipe;
+use OffreGen\Compte\Equipe;
+use OffreGen\Compte\Role;
+use OffreGen\Donnees\DepotEquipe;
+use OffreGen\Donnees\JournalAdmin;
 
 /**
  * Fabrique les services de l'application, chacun une seule fois et seulement s'il sert.
@@ -232,6 +237,26 @@ final class Conteneur
         return $this->une(Comptes::class, fn (): Comptes => new Comptes($this->base(), $this->artisans(), $this->hacheur(), $this->stockageAudio(), $this->horloge()));
     }
 
+    public function journalAdmin(): JournalAdmin
+    {
+        return $this->une(JournalAdmin::class, fn (): JournalAdmin => new JournalAdmin($this->base()));
+    }
+
+    public function depotEquipe(): DepotEquipe
+    {
+        return $this->une(DepotEquipe::class, fn (): DepotEquipe => new DepotEquipe($this->base()));
+    }
+
+    public function equipe(): Equipe
+    {
+        return $this->une(Equipe::class, fn (): Equipe => new Equipe($this->base(), $this->artisans(), $this->depotEquipe(), $this->journalAdmin(), $this->comptes(), $this->horloge()));
+    }
+
+    public function artisansEquipe(): ArtisansEquipe
+    {
+        return $this->une(ArtisansEquipe::class, fn (): ArtisansEquipe => new ArtisansEquipe($this->base(), $this->depotEquipe(), $this->journalAdmin(), $this->horloge()));
+    }
+
     public function liensAcces(): LiensAcces
     {
         return $this->une(LiensAcces::class, fn (): LiensAcces => new LiensAcces(
@@ -354,6 +379,11 @@ final class Conteneur
             $twig->addFunction(new TwigFunction('csrf', fn (): string => $this->garde()->jeton()));
             $twig->addFunction(new TwigFunction('messages', fn (): array => $this->garde()->messages()));
             $twig->addFunction(new TwigFunction('compte', fn (): ?int => $this->garde()->artisanCourant()));
+            // Le rôle d'équipe du compte connecté : l'entrée « Administration » de « Plus » et du menu n'existe que pour lui.
+            $twig->addFunction(new TwigFunction('role_equipe', function (): ?Role {
+                $id = $this->garde()->artisanCourant();
+                return $id === null ? null : $this->authentification()->role($id);
+            }));
             $twig->addExtension(new Formats());
             $twig->addGlobal('pays_adresse', Adresse::PAYS);
             $twig->addGlobal('nom_application', $this->nomApplication());

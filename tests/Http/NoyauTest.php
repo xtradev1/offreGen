@@ -97,7 +97,7 @@ final class NoyauTest extends TestCase
         $routes = Monde::conteneur()->noyau()->routes();
         self::assertNotEmpty($routes);
         foreach ($routes as $route) {
-            self::assertContains($route->droit, [Route::PUBLIC, Route::ARTISAN, Route::ADMIN], "Route sans droit : {$route->nom}");
+            self::assertContains($route->droit, [Route::PUBLIC, Route::ARTISAN, ...Route::RESERVES], "Route sans droit : {$route->nom}");
         }
     }
 }

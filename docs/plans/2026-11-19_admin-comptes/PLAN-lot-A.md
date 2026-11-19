@@ -78,7 +78,7 @@ journal_admin(id, acteur_id INT UNSIGNED, artisan_id INT UNSIGNED NULL, geste VA
               detail VARCHAR(190) NULL, quand DATETIME, KEY (artisan_id, quand), KEY (acteur_id, quand))
 ```
 
-`jeton_acces.motif` (existant, `migrations/Version20261118000003.php`) reçoit deux valeurs de plus : `demo_qr` (1 heure) et `demo_message` (24 heures).
+`jeton_acces.motif` (existant, `migrations/Version20261118000003.php`) reçoit deux valeurs de plus : `demo_qr` (1 heure) et `demo_msg` (24 heures) ; la colonne fait 10 caractères.
 
 Un compte de démo est une ligne `artisan` avec `demo = 1`, `offres_max = 10`, `plafond_jour = NULL`, `demo_fin` rempli, un courriel fabriqué `demo-<16 hexadécimaux>@demo.invalid` (la colonne est `NOT NULL UNIQUE`) et un mot de passe aléatoire jamais montré. On n'y entre que par un lien.
 

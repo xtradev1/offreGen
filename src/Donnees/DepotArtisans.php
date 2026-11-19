@@ -8,11 +8,11 @@ namespace OffreGen\Donnees;
  * Les comptes. Hors portée par nature : on cherche un compte avant de savoir qui est connecté.
  * Sert la connexion et les commandes de bin/, jamais une page qui liste des comptes.
  *
- * @phpstan-type Artisan array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null, administrateur: int, version_session: int}
+ * @phpstan-type Artisan array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null, administrateur: int, version_session: int, role: string|null, cree_par: int|null, demo_fin: string|null, offres_offertes: int}
  */
 final class DepotArtisans
 {
-    private const COLONNES = 'id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max, administrateur, version_session';
+    private const COLONNES = 'id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max, administrateur, version_session, role, cree_par, demo_fin, offres_offertes';
 
     public function __construct(private readonly Base $base)
     {

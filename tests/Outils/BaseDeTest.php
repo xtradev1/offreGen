@@ -69,7 +69,9 @@ final class BaseDeTest
         $pdo = self::pdo();
         // Une facture refaite désigne l'ancienne : on détache avant d'effacer.
         $pdo->exec('UPDATE facture SET refaite_depuis = NULL');
-        foreach (['facture_pdf', 'facture_ligne', 'facture', 'ligne', 'offre', 'client', 'produit', 'enregistrement', 'journal_connexion', 'jeton_acces', 'artisan'] as $table) {
+        // Un compte peut en désigner un autre comme créateur : on détache avant d'effacer.
+        $pdo->exec('UPDATE artisan SET cree_par = NULL');
+        foreach (['facture_pdf', 'facture_ligne', 'facture', 'ligne', 'offre', 'client', 'produit', 'enregistrement', 'journal_connexion', 'jeton_acces', 'demande_appel', 'journal_admin', 'artisan'] as $table) {
             $pdo->exec("DELETE FROM $table");
         }
     }

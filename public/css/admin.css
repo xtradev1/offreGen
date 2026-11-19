@@ -1,0 +1,32 @@
+/* Partie administration (G1, 2026-11-17 ; maquettes de docs/plans/2026-11-19_admin-comptes, validées le 2026-11-19).
+   Chargée après app.css, dont elle reprend les couleurs et les composants. Aucun style en ligne : la CSP les refuse.
+   Le terracotta ne porte ici que des formes, comme le veut la charte : le filet sous l'en-tête et le contour du rôle. */
+.admin .bar { border-bottom: 3px solid var(--marque); }
+/* Blanc sur l'en-tête anthracite : 15:1. Le contour terracotta sur l'en-tête : 3,35:1 (forme). */
+.role-puce { font-family: var(--titre); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; line-height: 1; color: var(--on-bande); border: 1.5px solid var(--marque); border-radius: 999px; padding: 5px 10px; white-space: nowrap; margin-left: auto; }
+.admin-tete { margin: 4px 0 14px; }
+.admin-tete h1 { margin: 0; font-family: var(--titre); font-size: 25px; font-weight: 600; line-height: 1.2; letter-spacing: -.4px; }
+.admin-tete p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+/* Étiquette de rôle dans une liste : neutre, comme les étiquettes d'état sans alerte de la charte. */
+.badge.role { background: var(--chip); color: var(--ink); font-style: normal; }
+/* Bouton qui retire ou ferme : contour et libellé rouges, comme le veut la charte (rouge sur carte : 9,6:1 en clair).
+   Il pèse moins que l'action courante posée au-dessus de lui. */
+.admin .btn.danger { background: var(--surface); color: var(--bad); border-color: var(--bad); }
+.actions-admin { display: grid; gap: 0; margin: 12px 0 4px; }
+.filtres-admin { margin: 0 0 8px; }
+/* Fiche d'un artisan : la jauge des dictées, les ajouts d'un toucher, le fil. Aucune largeur en ligne : <progress>. */
+.jauge { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 0 0 12px; }
+.jauge .haut { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.jauge .haut b { font-family: var(--titre); font-size: 24px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.jauge .badge { justify-self: start; margin-left: 0; }
+.jauge progress { appearance: none; -webkit-appearance: none; display: block; width: 100%; height: 10px; border: 0; border-radius: 5px; background: var(--chip); overflow: hidden; }
+.jauge progress::-webkit-progress-bar { background: var(--chip); border-radius: 5px; }
+.jauge progress::-webkit-progress-value { background: var(--ink); border-radius: 5px; }
+.jauge progress::-moz-progress-bar { background: var(--ink); border-radius: 5px; }
+.ajouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.ajouts .btn { font-variant-numeric: tabular-nums; }
+.fil { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.fil li { display: grid; grid-template-columns: 124px 1fr; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 14px; }
+.fil li:first-child { border-top: 0; }
+.fil time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.fil .err { color: var(--bad); }

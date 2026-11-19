@@ -1,7 +1,7 @@
 # Chantier : administration des comptes et des démos
 
 - statut : en_cours (gate visuel franchi le 2026-11-19 pour les lots A et B)
-- phase : lot A en 5 (lot 0 fait) ; lot B en 2 (découpage écrit, plans par sous-lot à venir)
+- phase : lot A en 5 (lots 0 à 4 faits, lots 5 à 9 à faire) ; lot B en 2 (découpage écrit)
 - Demande de Xavier, 2026-11-19 : « fais la page d'administration, maquette d'abord » ; « est-ce que maintenant on peut déjà créer un compte facile pour les démos ».
 
 ## Suivi Origin
@@ -14,9 +14,9 @@
 
 ## Prochaine action
 
-Lot A : `PLAN-lot-A.md` écrit le 2026-11-19. Lot 0 fait, non commité. Lot 1 (migration) puis lot 2 (traceur `/admin`) dès que les autres sessions ont commité `public/css/app.css`, `public/js/app.js` et `CODING_RULES.md` (modifiés et non commités le 19.11 à 12:25), et sur accord de Xavier pour l'ordre entre ce chantier et celui des métiers, qui touchent les mêmes fichiers (`src/Compte/Comptes.php`, table `artisan`).
+Lot A, suite : lot 5 (démo par QR et par message), après le chantier des métiers (ordre choisi par Xavier le 2026-11-19 : « Admin, métiers, puis démo »). Les lots 5 et 6 touchent `public/js/app.js` et `public/css/app.css` : attendre que les autres sessions les aient commités. Puis lots 6 à 9.
 
-Lot B : découpé en cinq sous-lots dans `DECOUPAGE-lot-B.md`, après le lot A. Préalables à fournir par Xavier : créancier des QR-factures, TVA, conditions générales, compte Stripe, site de production.
+Lot B : découpé dans `DECOUPAGE-lot-B.md`, après le lot A. Préalables à fournir par Xavier : créancier des QR-factures, TVA, conditions générales, compte Stripe, site de production.
 
 ## Décisions
 
@@ -181,3 +181,42 @@ erreurs JS: []
 ```
 
 Mise à jour de la v6 après les réponses (2026-11-19) : prix annuel par mois, « −17 % », tout en QR-facture ; textes relus, « Prêt » (montants recalculés par le relecteur : 538.80, 449.00, 37.42, 493.90). Captures regardées, clics rejoués : bouton « Recevoir ma QR-facture de CHF 449.00 » après un toucher sur « À l'année », aucune erreur JS. `DECOUPAGE-lot-B.md` écrit.
+
+Lots 1 à 4 du lot A (2026-11-19), accord de Xavier pour coder (« Admin, métiers, puis démo ») :
+
+- Lot 1 : migration `Version20261119100001` (numéro en 1000xx pour ne pas croiser une migration du chantier des métiers), jouée sur les bases de test et de développement.
+- Lot 2 : droits `Route::EQUIPE` et `Route::MODERATION`, rôle relu en base à chaque requête, `/admin` et ses pages par rôle, entrée dans « Plus » et dans le menu PC.
+- Lot 3 : équipe (créer, donner un rôle à un compte existant, changer de rôle, retirer), journal des gestes.
+- Lot 4 : liste et fiche des artisans sous `PorteeEquipe`, « offrir des offres » dans la limite du rôle, fil sans contenu d'offre.
+
+Écarts avec `PLAN-lot-A.md`, décidés en codant :
+- Les styles de l'administration sont dans `public/css/admin.css`, chargé après `app.css` : une autre session modifie `app.css` sans l'avoir commité.
+- Le menu du lot A ne propose que des pages qui existent : « Équipe » (administrateur) et « Suivi » (modérateur) tiennent la place d'« Offres », qui arrive avec le sous-chantier 26. Le rond « Nouvelle démo » arrive avec le lot 5.
+- Filtres de la liste : Tous, Démos, Comptes (« Essais » n'existe plus depuis T1).
+- Retirer un membre lui laisse un compte d'artisan ordinaire : fermer un compte attend la tâche 463 (conservation des données). La maquette disait « son compte se ferme ».
+- Le lien d'accès d'un nouveau membre s'affiche à l'écran quand le site n'envoie pas de courriels (D6). Le chemin « courriel réel » n'a pas de test : non vérifié.
+- Motifs des jetons de démo, pour le lot 5 : `demo_qr` et `demo_msg` (la colonne `jeton_acces.motif` fait 10 caractères).
+- Tests : `tests/Http/ArtisansEquipeTest.php` regroupe l'isolation et les limites d'offres prévues en deux fichiers.
+
+```
+$ env APP_ENV=test vendor/bin/phpunit --filter testLEquipeASesColonnesEtSesTables   (avant la migration)
+FAILURES! Tests: 1, Assertions: 2, Failures: 1.
+$ doctrine-migrations migrate (bases de test et de développement)
+[OK] Successfully migrated to version: OffreGen\Migrations\Version20261119100001
+$ phpunit --filter DroitsEquipe (avant le code du lot 2)
+Error: Undefined constant OffreGen\Http\Route::EQUIPE ; Tests: 9, Errors: 1, Failures: 5
+$ phpunit --filter EquipeTest (avant le branchement du lot 3)
+ERRORS! Tests: 16, Errors: 7
+$ phpunit --filter ArtisansEquipe (avant le branchement du lot 4)
+FAILURES! Tests: 7, Failures: 7
+$ env APP_ENV=test vendor/bin/phpunit   (après le lot 4)
+OK (621 tests, 4841 assertions)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ node recette-lot2.js (trois rôles, téléphone et PC, clair et sombre, 24 écrans)   : aucun défaut aux sondes
+$ node recette-lot3.js (créer, refus, changer de rôle, retirer ; téléphone clair, PC sombre, 14 écrans) : aucun défaut aux sondes
+$ node recette-lot4.js (liste, filtres, recherche vide, fiche, offrir ; administrateur et commercial, 10 écrans) : aucun défaut aux sondes
+  administrateur : boutons +2 +5 +10 avant et après ; commercial : +2 +5 +10 puis aucun, « c'est la limite de votre rôle »
+```
+
+Défauts vus sur les images et corrigés, que les sondes n'avaient pas relevés : logo du menu PC invisible (version pour fond sombre) et en double avec l'en-tête ; étiquette de rôle étirée sur toute la largeur ; bouton « Retirer de l'équipe » rouge plein, passé en contour rouge ; rôles affichés sous leur nom interne dans le fil.

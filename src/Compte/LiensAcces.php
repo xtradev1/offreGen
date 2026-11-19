@@ -81,6 +81,15 @@ final class LiensAcces
         );
     }
 
+    /**
+     * Le lien d'accès lui-même, sans courriel : pour un site qui n'envoie pas de courriels, l'administrateur le
+     * transmet à la personne (D6, 2026-11-19). Même jeton qu'envoyerAcces : 7 jours, une seule fois.
+     */
+    public function lienDAcces(int $artisanId): string
+    {
+        return $this->lien($this->emettre($artisanId, self::ACCES));
+    }
+
     public function artisanDuLien(string $jeton): ?int
     {
         if (preg_match(self::FORMAT_JETON, $jeton) !== 1) {

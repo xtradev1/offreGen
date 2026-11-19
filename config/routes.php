@@ -6,6 +6,7 @@ use OffreGen\Compte\Marque;
 use OffreGen\Donnees\EtatBase;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Controleur\AccueilControleur;
+use OffreGen\Http\Controleur\AdminControleur;
 use OffreGen\Http\Controleur\AdresseControleur;
 use OffreGen\Http\Controleur\CatalogueControleur;
 use OffreGen\Http\Controleur\ClientControleur;
@@ -26,7 +27,8 @@ use OffreGen\Http\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-// Chaque route déclare son droit : Route::PUBLIC, Route::ARTISAN ou Route::ADMIN. Sans droit, 403.
+// Chaque route déclare son droit : Route::PUBLIC, Route::ARTISAN, ou pour l'administration Route::EQUIPE,
+// Route::MODERATION, Route::ADMIN. Sans droit, 403.
 // Tout POST passe par le contrôle CSRF du noyau. Une route artisan exige une session.
 // Les tests parcourent cette liste (tests/Http/NoyauTest.php, tests/Http/IsolationRoutesTest.php).
 return static function (Conteneur $c): array {
@@ -40,6 +42,7 @@ return static function (Conteneur $c): array {
     $facture = static fn (): FactureControleur => new FactureControleur($c);
     $ligneFacture = static fn (): LigneControleur => new LigneControleur($c, LigneControleur::FACTURE);
     $motDePasse = static fn (): MotDePasseControleur => new MotDePasseControleur($c);
+    $admin = static fn (): AdminControleur => new AdminControleur($c);
 
     $routes = [
         // État pour la sonde d'exposition, après chaque déploiement (docs/DEPLOIEMENT.md). Lecture seule.
@@ -151,6 +154,21 @@ return static function (Conteneur $c): array {
         new Route('reglages_enregistrer', '/reglages', ['POST'], static fn (Request $r): Response => $reglages()->enregistrer($r), Route::ARTISAN),
         new Route('bienvenue_passer', '/bienvenue/passer', ['POST'], static fn (Request $r): Response => $reglages()->passer($r), Route::ARTISAN),
     ];
+    // Administration (docs/plans/2026-11-19_admin-comptes/PLAN-lot-A.md) : 404 pour qui n'a pas le rôle.
+    $routes[] = new Route('admin', '/admin', ['GET'], static fn (Request $r): Response => $admin()->accueil($r), Route::EQUIPE);
+    $routes[] = new Route('admin_tableau', '/admin/tableau', ['GET'], static fn (): Response => $admin()->ossature('tableau', 'Tableau de bord'), Route::ADMIN);
+    $routes[] = new Route('admin_aider', '/admin/a-aider', ['GET'], static fn (): Response => $admin()->ossature('aider', 'À aider'), Route::MODERATION);
+    $routes[] = new Route('admin_suivi', '/admin/suivi', ['GET'], static fn (): Response => $admin()->ossature('suivi', 'Suivi'), Route::EQUIPE);
+    $routes[] = new Route('admin_artisans', '/admin/artisans', ['GET'], static fn (Request $r): Response => $admin()->artisans($r), Route::EQUIPE);
+    $routes[] = new Route('admin_artisan', '/admin/artisans/{id}', ['GET'], static fn (Request $r, array $p): Response => $admin()->artisan($p), Route::EQUIPE);
+    $routes[] = new Route('admin_artisan_offres', '/admin/artisans/{id}/offres', ['POST'], static fn (Request $r, array $p): Response => $admin()->artisanOffres($r, $p), Route::EQUIPE);
+    // L'équipe : « nouveau » avant {id}.
+    $routes[] = new Route('admin_equipe', '/admin/equipe', ['GET'], static fn (): Response => $admin()->equipe(), Route::ADMIN);
+    $routes[] = new Route('admin_membre_creer', '/admin/equipe', ['POST'], static fn (Request $r): Response => $admin()->membreCreer($r), Route::ADMIN);
+    $routes[] = new Route('admin_membre_nouveau', '/admin/equipe/nouveau', ['GET'], static fn (): Response => $admin()->membreNouveau(), Route::ADMIN);
+    $routes[] = new Route('admin_membre', '/admin/equipe/{id}', ['GET'], static fn (Request $r, array $p): Response => $admin()->membre($p), Route::ADMIN);
+    $routes[] = new Route('admin_membre_role', '/admin/equipe/{id}/role', ['POST'], static fn (Request $r, array $p): Response => $admin()->membreRole($r, $p), Route::ADMIN);
+    $routes[] = new Route('admin_plus', '/admin/plus', ['GET'], static fn (): Response => $admin()->plus(), Route::EQUIPE);
     // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.
     foreach (array_keys(ReglagesControleur::RUBRIQUES) as $nom) {
         $routes[] = new Route("reglages_$nom", "/reglages/$nom", ['GET'], static fn (Request $r): Response => $reglages()->rubrique($r, $nom), Route::ARTISAN);

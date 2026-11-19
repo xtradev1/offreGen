@@ -1,0 +1,22 @@
+{% extends 'admin/base.html.twig' %}
+
+{# L'équipe (R1, Xavier, 2026-11-19) : qui a quel rôle, et combien d'artisans chacun a créés. Un administrateur ne se
+   modifie pas ici : son droit se donne et se retire par bin/administrateur. #}
+{% set libelles = {administrateur: 'Admin', moderateur: 'Modérateur', commercial: 'Commercial'} %}
+{% block sous %}<p>{{ membres|length }} personne{{ membres|length > 1 ? 's' : '' }}</p>{% endblock %}
+
+{% block contenu %}
+  <nav class="plus" aria-label="Membres de l'équipe">
+    {% for m in membres %}
+      {% set modifiable = m.role != 'administrateur' %}
+      <{{ modifiable ? 'a' : 'div' }} class="plus-ligne"{% if modifiable %} href="/admin/equipe/{{ m.id }}"{% endif %}>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>
+        <span><b>{{ m.entreprise }} <i class="badge role">{{ libelles[m.role] }}</i></b><small>{{ m.courriel }} · {{ m.artisans }} artisan{{ m.artisans > 1 ? 's' : '' }}</small></span>
+      </{{ modifiable ? 'a' : 'div' }}>
+    {% endfor %}
+  </nav>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><a class="btn primary" href="/admin/equipe/nouveau">Nouveau membre</a></div>
+{% endblock %}

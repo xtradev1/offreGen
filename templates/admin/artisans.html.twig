@@ -1,0 +1,33 @@
+{% extends 'admin/base.html.twig' %}
+
+{# La liste des artisans dans la portée du rôle (R1, Xavier, 2026-11-19) : le commercial ne voit que les siens.
+   Les membres de l'équipe n'y figurent jamais. Aucun contenu d'offre : un nom, un type, un compte de dictées. #}
+{% block sous %}<p>{{ comptes|length }} artisan{{ comptes|length > 1 ? 's' : '' }}</p>{% endblock %}
+
+{% block contenu %}
+  <nav class="puces-liens filtres-admin" aria-label="Type de compte">
+    {% for cle, nom in {tous: 'Tous', demos: 'Démos', comptes: 'Comptes'} %}
+      <a class="puce-lien" href="/admin/artisans?type={{ cle }}{% if q != '' %}&amp;q={{ q|url_encode }}{% endif %}"{% if type == cle %} aria-current="true"{% endif %}>{{ nom }}</a>
+    {% endfor %}
+  </nav>
+  <form class="search box-seule" method="get" action="/admin/artisans" role="search">
+    <input type="hidden" name="type" value="{{ type }}">
+    <div class="box">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input name="q" type="search" value="{{ q }}" placeholder="Chercher une entreprise" autocomplete="off" aria-label="Chercher un artisan" maxlength="80">
+    </div>
+  </form>
+  {% if comptes is empty %}
+    <p class="muted">Aucun artisan{% if q != '' or type != 'tous' %} pour cette recherche{% endif %}.</p>
+  {% else %}
+    <nav class="plus" aria-label="Artisans">
+      {% for c in comptes %}
+        <a class="plus-ligne" href="/admin/artisans/{{ c.id }}">
+          <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5l8-2v18M12 8h8v13M4 21h16M8 8h.01M8 12h.01M8 16h.01M16 12h.01M16 16h.01"/></svg>
+          <span><b>{{ c.entreprise }} <i class="badge role">{{ c.demo == 1 ? 'Démo' : 'Compte' }}</i></b>
+            <small>{% if role.value != 'commercial' and c.createur is not null %}par {{ c.createur }} · {% endif %}{{ c.dictees }} dictée{{ c.dictees > 1 ? 's' : '' }}{% if c.offres_max is not null %} sur {{ c.offres_max }}{% endif %}{% if c.derniere is not null %} · {{ c.derniere|jour }}{% endif %}</small></span>
+        </a>
+      {% endfor %}
+    </nav>
+  {% endif %}
+{% endblock %}

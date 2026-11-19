@@ -1,0 +1,25 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Après la création d'un membre. Le lien d'accès ne s'affiche que sur un site qui n'envoie pas de courriels
+   (D6, 2026-11-19) ; ailleurs, il part par courriel et ne se montre jamais. #}
+{% set libelles = {moderateur: 'Modérateur', commercial: 'Commercial'} %}
+{% block retour %}<a class="back" href="/admin/equipe">Équipe</a>{% endblock %}
+{% block sous %}<p>{{ libelles[membre.role] }} · {{ membre.courriel }}</p>{% endblock %}
+
+{% block contenu %}
+  {% if not nouveau %}
+    <p>Ce compte existait déjà : il a maintenant le rôle {{ libelles[membre.role] }}. Son mot de passe ne change pas.</p>
+  {% elseif lien %}
+    <p class="alerte warn">Ce site n'envoie pas de courriels. Transmettez ce lien à {{ membre.entreprise }}&nbsp;: il sert une seule fois, pendant 7&nbsp;jours.</p>
+    <div class="champ">
+      <label for="lien">Lien d'accès</label>
+      <input id="lien" type="text" value="{{ lien }}" readonly>
+    </div>
+  {% else %}
+    <p>Courriel d'accès envoyé à {{ membre.courriel }}. Le lien vaut 7&nbsp;jours&nbsp;: {{ membre.entreprise }} y choisit son mot de passe.</p>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><a class="btn primary" href="/admin/equipe">Terminé</a></div>
+{% endblock %}

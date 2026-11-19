@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http;
 
+use OffreGen\Compte\Role;
 use Symfony\Component\HttpFoundation\Exception\SuspiciousOperationException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -50,7 +51,7 @@ final class Noyau
             }
             $this->routes[$route->nom] = $route;
             $this->collection->add($route->nom, new RouteSymfony($route->chemin, methods: $route->verbes));
-            if ($route->droit !== Route::ADMIN) {
+            if (!in_array($route->droit, Route::RESERVES, true)) {
                 $this->collectionHorsAdmin->add($route->nom, new RouteSymfony($route->chemin, methods: $route->verbes));
             }
         }
@@ -99,7 +100,7 @@ final class Noyau
         }
 
         $route = $this->routes[(string) $parametres['_route']];
-        if (!in_array($route->droit, [Route::PUBLIC, Route::ARTISAN, Route::ADMIN], true)) {
+        if (!in_array($route->droit, [Route::PUBLIC, Route::ARTISAN, ...Route::RESERVES], true)) {
             return $this->erreur(403, 'Accès refusé');
         }
 
@@ -112,13 +113,15 @@ final class Noyau
                 }
                 $requete->attributes->set('_artisan', $artisan);
             }
-            if ($route->droit === Route::ADMIN) {
+            if (in_array($route->droit, Route::RESERVES, true)) {
                 // 404 et non 403 ni renvoi à la connexion : la page n'existe pour personne d'autre.
                 $artisan = $this->garde->artisan($requete);
-                if ($artisan === null || !$this->garde->administrateur($artisan)) {
+                $role = $artisan === null ? null : $this->garde->role($artisan);
+                if ($artisan === null || $role === null || !self::admis($role, $route->droit)) {
                     return $this->erreur(404, 'Page introuvable');
                 }
                 $requete->attributes->set('_artisan', $artisan);
+                $requete->attributes->set('_role', $role);
             }
             if ($requete->isMethod('POST')) {
                 if ($this->corpsPerdu($requete)) {
@@ -142,6 +145,16 @@ final class Noyau
         } finally {
             $this->garde->sortir();
         }
+    }
+
+    /** Qui passe une page réservée : l'administrateur partout, le modérateur sauf l'argent et l'équipe, le commercial le reste. */
+    private static function admis(Role $role, string $droit): bool
+    {
+        return match ($droit) {
+            Route::ADMIN => $role === Role::Administrateur,
+            Route::MODERATION => $role !== Role::Commercial,
+            default => true,
+        };
     }
 
     private function existeHorsAdmin(Request $requete): bool

@@ -143,4 +143,21 @@ final class Authentification
     {
         return ($this->artisans->parId($artisanId)['administrateur'] ?? 0) === 1;
     }
+
+    /**
+     * Le rôle d'équipe du compte, relu en base à chaque requête. Le droit administrateur ne vient que de sa colonne,
+     * donnée par bin/administrateur : la colonne « role » ne porte que modérateur ou commercial.
+     */
+    public function role(int $artisanId): ?Role
+    {
+        $artisan = $this->artisans->parId($artisanId);
+        if ($artisan === null) {
+            return null;
+        }
+        if ($artisan['administrateur'] === 1) {
+            return Role::Administrateur;
+        }
+        $role = Role::tryFrom((string) $artisan['role']);
+        return $role === Role::Administrateur ? null : $role;
+    }
 }
