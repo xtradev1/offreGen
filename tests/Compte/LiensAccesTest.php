@@ -304,4 +304,31 @@ final class LiensAccesTest extends TestCase
         $n->session->remove('version_session');
         self::assertSame(200, $n->get('/')->getStatusCode());
     }
+
+    /**
+     * Signalé par Xavier le 2026-11-19 : sans l'adresse du compte dans la page, un gestionnaire de mots de passe
+     * range le nouveau mot de passe sans identifiant, ou sur une autre entrée.
+     */
+    public function testLesPagesDeMotDePassePortentLAdresseDuCompte(): void
+    {
+        $champ = '/<input[^>]*autocomplete="username"[^>]*value="a@exemple\.ch"[^>]*readonly/';
+        $n = $this->navigateur();
+        $this->demander($n, 'a@exemple.ch');
+        [$lien] = $this->liensRecus();
+        self::assertMatchesRegularExpression($champ, (string) $n->get($lien)->getContent());
+        // Mot de passe refusé : la page revient avec l'adresse.
+        $refus = $n->post($lien, ['mot_de_passe' => 'court', 'confirmation' => 'court']);
+        self::assertSame(422, $refus->getStatusCode());
+        self::assertMatchesRegularExpression($champ, (string) $refus->getContent());
+
+        $pc = $this->navigateur('198.51.100.2');
+        $pc->connecter('a@exemple.ch');
+        $page = (string) $pc->get('/reglages/mot-de-passe')->getContent();
+        self::assertMatchesRegularExpression($champ, $page);
+        // L'identifiant précède les mots de passe : c'est l'ordre que lisent les gestionnaires.
+        self::assertLessThan(strpos($page, 'name="ancien"'), strpos($page, 'autocomplete="username"'));
+        $refus = $pc->post('/reglages/mot-de-passe', ['ancien' => 'faux', 'mot_de_passe' => self::NOUVEAU, 'confirmation' => self::NOUVEAU]);
+        self::assertSame(422, $refus->getStatusCode());
+        self::assertMatchesRegularExpression($champ, (string) $refus->getContent());
+    }
 }

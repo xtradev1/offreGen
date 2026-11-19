@@ -8,6 +8,7 @@
   {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
   <form id="nouveau" method="post" action="{{ action }}">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    {% include '_mot_de_passe_compte.html.twig' %}
     {% include '_mot_de_passe_champs.html.twig' %}
   </form>
 {% endblock %}

@@ -42,23 +42,25 @@ final class MotDePasseControleur
     /** @param array<string, string> $p */
     public function lien(Request $requete, array $p): Response
     {
-        if ($this->c->liensAcces()->artisanDuLien($p['jeton']) === null) {
+        $artisan = $this->c->liensAcces()->artisanDuLien($p['jeton']);
+        if ($artisan === null) {
             return $this->page('mot_de_passe_perime.html.twig', [], 410);
         }
-        return $this->page('mot_de_passe_nouveau.html.twig', ['action' => '/mot-de-passe/' . $p['jeton'], 'erreur' => null]);
+        return $this->page('mot_de_passe_nouveau.html.twig', ['action' => '/mot-de-passe/' . $p['jeton'], 'erreur' => null, 'courriel_compte' => $this->courriel($artisan)]);
     }
 
     /** @param array<string, string> $p */
     public function choisir(Request $requete, array $p): Response
     {
         $action = '/mot-de-passe/' . $p['jeton'];
-        if ($this->c->liensAcces()->artisanDuLien($p['jeton']) === null) {
+        $artisan = $this->c->liensAcces()->artisanDuLien($p['jeton']);
+        if ($artisan === null) {
             return $this->page('mot_de_passe_perime.html.twig', [], 410);
         }
         $motDePasse = $requete->request->getString('mot_de_passe');
         $erreur = MotDePasse::erreur($motDePasse, $requete->request->getString('confirmation'));
         if ($erreur !== null) {
-            return $this->page('mot_de_passe_nouveau.html.twig', ['action' => $action, 'erreur' => $erreur], 422);
+            return $this->page('mot_de_passe_nouveau.html.twig', ['action' => $action, 'erreur' => $erreur, 'courriel_compte' => $this->courriel($artisan)], 422);
         }
         $resultat = $this->c->liensAcces()->utiliser($p['jeton'], $motDePasse);
         if ($resultat === null) {
@@ -71,7 +73,7 @@ final class MotDePasseControleur
 
     public function reglages(Request $requete): Response
     {
-        return $this->demonstration() ?? $this->page('reglages_mot_de_passe.html.twig', ['erreur' => null]);
+        return $this->demonstration() ?? $this->page('reglages_mot_de_passe.html.twig', ['erreur' => null, 'courriel_compte' => $this->courriel($this->c->garde()->artisanCourant())]);
     }
 
     public function changer(Request $requete): Response
@@ -84,13 +86,13 @@ final class MotDePasseControleur
         $nouveau = $requete->request->getString('mot_de_passe');
         $actuel = $this->c->authentification()->verifierMotDePasseActuel($requete, $artisan, $requete->request->getString('ancien'));
         if ($actuel === ResultatConnexion::TropDEssais) {
-            return $this->page('reglages_mot_de_passe.html.twig', ['erreur' => "Trop d'essais. Réessayez dans " . Authentification::FENETRE_MINUTES . ' minutes.'], 429);
+            return $this->page('reglages_mot_de_passe.html.twig', ['erreur' => "Trop d'essais. Réessayez dans " . Authentification::FENETRE_MINUTES . ' minutes.', 'courriel_compte' => $this->courriel($artisan)], 429);
         }
         $erreur = $actuel === ResultatConnexion::Reussie
             ? MotDePasse::erreur($nouveau, $requete->request->getString('confirmation'))
             : 'Le mot de passe actuel est faux.';
         if ($erreur !== null) {
-            return $this->page('reglages_mot_de_passe.html.twig', ['erreur' => $erreur], 422);
+            return $this->page('reglages_mot_de_passe.html.twig', ['erreur' => $erreur, 'courriel_compte' => $this->courriel($artisan)], 422);
         }
         if (!$this->c->authentification()->remplacerMotDePasse($requete, $artisan, $nouveau)) {
             // Un lien d'oubli a servi pendant ce temps : celui-là l'emporte, cette session n'est plus la bonne.
@@ -109,6 +111,12 @@ final class MotDePasseControleur
             return null;
         }
         return new Response($this->c->twig()->render('erreur.html.twig', ['code' => 403, 'titre' => 'Mot de passe fixe pour un compte de démonstration']), 403);
+    }
+
+    /** L'adresse affichée en lecture seule au-dessus des champs, pour les gestionnaires de mots de passe. */
+    private function courriel(?int $artisanId): string
+    {
+        return $this->c->artisans()->parId($artisanId ?? 0)['courriel'] ?? '';
     }
 
     /** @param array<string, mixed> $vars */

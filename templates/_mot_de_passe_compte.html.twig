@@ -1,0 +1,6 @@
+{# L'adresse du compte, en lecture seule et sans nom (elle n'est pas renvoyée) : un gestionnaire de mots de passe
+   sait ainsi à quel compte rattacher le mot de passe (signalé par Xavier, 2026-11-19). #}
+<div class="champ">
+  <label for="compte_courriel">Compte</label>
+  <input id="compte_courriel" type="email" autocomplete="username" value="{{ courriel_compte }}" readonly>
+</div>

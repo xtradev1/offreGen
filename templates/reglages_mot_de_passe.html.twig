@@ -10,6 +10,7 @@
   {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
   <form id="changer" method="post" action="/reglages/mot-de-passe">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    {% include '_mot_de_passe_compte.html.twig' %}
     <div class="champ">
       <label for="ancien">Mot de passe actuel</label>
       <input id="ancien" name="ancien" type="password" autocomplete="current-password" maxlength="128" required data-oeil-cible>

@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administration des comptes, v2</title>
+<style>
+/* Charte Dicta du 19.11 (docs/identite/CHARTE.html, dicta-tokens.css) : jetons, composants, polices et logo. */
+@font-face { font-family: "Archivo"; font-weight: 500 700; font-display: swap; src: url("../../../public/fonts/archivo-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("../../../public/fonts/inter-latin.woff2") format("woff2"); }
+:root {
+  --mk-ink: #23272D; --mk-bg: #F4F1EA; --mk-surface: #FFFFFF; --mk-line: #DDD8CC; --mk-accent: #23272D;
+  --fond: #F4F1EA; --carte: #FFFFFF; --encre: #23272D; --doux: #454B55; --trait: #DDD8CC; --etiquette: #EBE7DE; --bord: #7C838C;
+  --bande: #23272D; --sur-bande: #FFFFFF; --bande-doux: #B9BDC3; --acc: #23272D; --sur-acc: #FFFFFF; --mic: #C4552D; --sur-mic: #FFFFFF;
+  --ok: #13553A; --ok-fond: #E1EFE6; --att: #5A4300; --att-fond: #FFF0B3; --att-ligne: #FFFAE5; --err: #8C1D18; --err-fond: #FBE7E4;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --att-ligne: #221D14; --err: #FF9A91; --err-fond: #3B1613; } }
+:root[data-theme="dark"] {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --att-ligne: #221D14; --err: #FF9A91; --err-fond: #3B1613; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.55 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.doc { max-width: 1180px; margin: 0 auto; padding: 16px; }
+.doc > h1, .doc > h2 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.3px; }
+.doc > h1 { font-size: 28px; line-height: 1.2; margin: 18px 0 8px; }
+.doc > h2 { font-size: 22px; line-height: 1.25; margin: 36px 0 8px; }
+.doc > p, .doc li { max-width: 820px; }
+.regle { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--ok); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+.regle b { color: var(--ok); }
+.moi { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--mic); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+.exemple { font-size: 13px; font-weight: 600; color: var(--doux); background: var(--etiquette); border-radius: 999px; padding: 2px 10px; }
+
+/* Le téléphone, selon la charte (partie 8) */
+.ecrans { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; margin: 14px 0 6px; }
+.ecrans figure { margin: 0; width: 340px; max-width: 100%; }
+.ecrans figcaption { font-size: 14px; color: var(--doux); margin-top: 6px; }
+.tel { position: relative; border: 1px solid var(--trait); border-radius: 22px; overflow: hidden; background: var(--fond); color: var(--encre); display: flex; flex-direction: column; min-height: 690px; }
+.tel h1, .tel h2, .tel h3, .tel .btn, .tel .etat, .tel label, .tel .metier, .tel .seg span { font-family: "Archivo", system-ui, sans-serif; }
+.bande { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px; background: var(--bande); color: var(--sur-bande); border-bottom: 3px solid var(--mic); }
+.bande img { display: block; height: 26px; width: auto; }
+.bande .retour { display: flex; align-items: center; gap: 4px; color: var(--sur-bande); font: 600 15px "Archivo", system-ui, sans-serif; }
+.role { font: 700 11.5px "Archivo", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--sur-bande); border: 1.5px solid var(--mic); border-radius: 999px; padding: 3px 9px; }
+.tete { padding: 20px 16px 12px; }
+.tete h1 { font-size: 25px; font-weight: 600; letter-spacing: -.4px; line-height: 1.2; margin: 0; }
+.tete .sous { color: var(--doux); margin: 4px 0 0; font-size: 15px; }
+.corps { flex: 1; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.liste { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.item { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; align-items: center; padding: 13px 14px; border-top: 1px solid var(--trait); }
+.item:first-child { border-top: 0; }
+.item b { font-weight: 600; font-size: 16px; }
+.item .meta { color: var(--doux); font-size: 14px; }
+.item .fl { grid-row: span 2; color: var(--doux); font-size: 20px; }
+.groupe { font: 700 12px "Archivo", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--doux); margin: 6px 2px -4px; }
+.etat { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--etiquette); color: var(--encre); white-space: nowrap; }
+.etat svg { width: 15px; height: 15px; }
+.etat.contour { background: transparent; box-shadow: inset 0 0 0 1.5px var(--bord); }
+.etat.ok { background: var(--ok-fond); color: var(--ok); }
+.etat.att { background: var(--att-fond); color: var(--att); }
+.etat.err { background: var(--err-fond); color: var(--err); }
+.seg { display: flex; padding: 3px; border-radius: 12px; background: var(--etiquette); }
+.seg span { flex: 1; text-align: center; font-size: 14px; font-weight: 600; color: var(--doux); padding: 9px 4px; border-radius: 9px; white-space: nowrap; }
+.seg span.on { background: var(--carte); color: var(--encre); box-shadow: inset 0 0 0 1px var(--trait); }
+.recherche { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--carte); color: var(--doux); font-size: 15px; }
+.recherche svg { width: 20px; height: 20px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 17px; min-height: 56px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--carte); color: var(--encre); box-shadow: inset 0 0 0 1.5px var(--encre); text-align: center; }
+.btn svg { width: 20px; height: 20px; }
+.btn.principal { background: var(--acc); color: var(--sur-acc); box-shadow: none; min-height: 64px; }
+.btn.danger { color: var(--err); box-shadow: inset 0 0 0 1.5px var(--err); }
+.btn.large { width: 100%; }
+.actionbar { display: flex; gap: 8px; padding: 10px 16px 14px; background: var(--carte); border-top: 1px solid var(--trait); }
+.actionbar .btn { flex: 1; }
+/* La barre du bas : icônes et mots, le rond terracotta au centre (ici : « Nouvelle démo »). */
+.nav { height: 72px; background: var(--carte); border-top: 1px solid var(--trait); display: grid; align-items: center; }
+.nav.cinq { grid-template-columns: repeat(5, 1fr); }
+.nav.trois { grid-template-columns: repeat(3, 1fr); }
+.nav a { color: var(--doux); font-size: 12px; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.nav a svg { width: 23px; height: 23px; }
+.nav a.on { color: var(--encre); font-weight: 600; }
+.nav .rond { justify-self: center; width: 64px; height: 64px; margin-top: -30px; border-radius: 50%; background: var(--mic); color: var(--sur-mic); display: grid; place-items: center; border: 5px solid var(--carte); }
+.nav .rond svg { width: 28px; height: 28px; }
+.champ { display: grid; gap: 6px; }
+.champ label { font-size: 14px; font-weight: 600; }
+.champ .saisie { min-height: 48px; padding: 11px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--carte); font-size: 16px; }
+.champ .saisie.actif { box-shadow: 0 0 0 3px var(--mic); border-color: var(--mic); }
+.metiers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.metier { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 10px 12px; border: 1px solid var(--trait); border-radius: 14px; background: var(--carte); font-size: 16px; font-weight: 600; }
+.metier svg { width: 26px; height: 26px; flex: none; }
+.metier.on { box-shadow: inset 0 0 0 2px var(--encre); border-color: var(--encre); }
+.metier small { display: block; font: 500 12px "Inter", system-ui, sans-serif; color: var(--doux); }
+.compteur { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 10px 12px; }
+.compteur b { font: 600 16px "Archivo", system-ui, sans-serif; }
+.compteur .pas { display: flex; align-items: center; gap: 6px; }
+.compteur .pas span { min-width: 40px; text-align: center; font: 700 22px "Archivo", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.compteur .pas i { font-style: normal; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--encre); font-size: 22px; background: var(--carte); }
+.note { font-size: 14px; color: var(--doux); }
+.info { font-size: 14px; border-radius: 12px; padding: 10px 12px; background: var(--etiquette); }
+.info.att { background: var(--att-fond); color: var(--att); }
+/* Démo prête */
+.pret { align-items: center; text-align: center; padding-top: 24px; }
+.coche { width: 52px; height: 52px; border-radius: 50%; background: var(--ok-fond); color: var(--ok); display: grid; place-items: center; }
+.coche svg { width: 28px; height: 28px; }
+.qr-cadre { background: #FFFFFF; border: 1px solid var(--trait); border-radius: 18px; padding: 14px; }
+svg.qr { display: block; width: 200px; height: 200px; }
+.minuterie { font-size: 15px; color: var(--doux); }
+.minuterie b { color: var(--encre); font-variant-numeric: tabular-nums; }
+/* Fiche : la jauge dit tout d'un coup d'œil */
+.fiche-tete { display: flex; align-items: center; gap: 12px; }
+.pastille { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font: 700 17px "Archivo", system-ui, sans-serif; background: var(--etiquette); flex: none; }
+.jauge { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; }
+.jauge .haut { display: flex; justify-content: space-between; align-items: baseline; }
+.jauge .haut b { font: 700 24px "Archivo", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.jauge .barre { height: 10px; border-radius: 5px; background: var(--etiquette); overflow: hidden; }
+.jauge .barre i { display: block; height: 100%; background: var(--encre); border-radius: 5px; }
+.jauge .barre.pleine i { background: var(--att); }
+.ajouts { display: flex; gap: 8px; }
+.ajouts span { flex: 1; text-align: center; min-height: 48px; display: grid; place-items: center; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--encre); font: 600 16px "Archivo", system-ui, sans-serif; background: var(--carte); }
+.lignes-action .item { min-height: 56px; }
+.lignes-action .item b { display: flex; align-items: center; gap: 10px; }
+.lignes-action svg { width: 22px; height: 22px; }
+.fil { display: grid; gap: 0; }
+.fil div { display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 9px 14px; border-top: 1px solid var(--trait); font-size: 14px; }
+.fil div:first-child { border-top: 0; }
+.fil time { color: var(--doux); font-variant-numeric: tabular-nums; }
+.fil .err { color: var(--err); font-weight: 600; }
+.logo-ex { font: 700 18px "Archivo", system-ui, sans-serif; }
+/* Rôles */
+.droits { width: 100%; max-width: 980px; border-collapse: collapse; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; font-size: 15px; }
+.droits th, .droits td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--trait); vertical-align: top; }
+.droits th { font: 700 12.5px "Archivo", system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; color: var(--doux); }
+.droits td.o { color: var(--ok); font-weight: 600; }
+.droits td.n { color: var(--doux); }
+.defile { overflow-x: auto; }
+/* PC */
+.pc { display: grid; grid-template-columns: 210px minmax(0, 1fr) 340px; min-height: 560px; border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; background: var(--fond); color: var(--encre); min-width: 1000px; }
+.pc .menu { background: var(--bande); color: var(--sur-bande); padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; border-right: 3px solid var(--mic); }
+.pc .menu img { height: 26px; width: auto; margin: 0 10px 6px; align-self: flex-start; }
+.pc .menu .role { align-self: flex-start; margin: 0 10px 14px; }
+.pc .menu span { font-size: 15px; padding: 10px; border-radius: 9px; color: var(--bande-doux); display: flex; align-items: center; gap: 10px; }
+.pc .menu span svg { width: 20px; height: 20px; }
+.pc .menu span.on { background: rgba(255, 255, 255, .14); color: var(--sur-bande); font-weight: 600; }
+.pc .menu .fin { margin-top: auto; font-size: 14px; }
+.pc .milieu { padding: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pc .milieu .ligne { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pc .milieu h1 { font: 600 25px "Archivo", system-ui, sans-serif; margin: 0 auto 0 0; }
+.pc .milieu .recherche { flex: 1; min-width: 180px; }
+.pc table { width: 100%; border-collapse: collapse; font-size: 14.5px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.pc th, .pc td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--trait); white-space: nowrap; }
+.pc th { font: 700 12px "Archivo", system-ui, sans-serif; color: var(--doux); text-transform: uppercase; letter-spacing: .05em; }
+.pc td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.pc tr.on td { background: var(--fond); }
+.pc tr.on td:first-child { box-shadow: inset 4px 0 0 var(--encre); }
+.pc .droite { background: var(--carte); border-left: 1px solid var(--trait); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.pc .droite h2 { margin: 0; font: 600 21px "Archivo", system-ui, sans-serif; }
+.pc .btn { min-height: 52px; font-size: 16px; }
+.pc .btn.principal { min-height: 56px; }
+
+/* Décisions */
+.choix { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 12px 14px; margin: 12px 0 22px; max-width: 980px; }
+.choix .q { margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--bord); background: var(--carte); color: var(--encre); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--sur-acc); font-weight: 600; }
+.opts button:focus-visible, #copier:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.choix textarea, #texte { width: 100%; font: inherit; font-size: 15px; border: 1px solid var(--bord); border-radius: 10px; padding: 8px 10px; background: var(--carte); color: var(--encre); }
+#texte { min-height: 170px; }
+#copier { font: 600 16px "Archivo", system-ui, sans-serif; min-height: 52px; padding: 10px 20px; border-radius: 12px; border: 0; background: var(--acc); color: var(--sur-acc); cursor: pointer; }
+@media (max-width: 420px) { .ecrans figure { width: 100%; } }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<div class="doc">
+<nav id="mk-toc"></nav>
+<h1>Administration : comptes, démos et rôles (v2)</h1>
+<p>Refaite après tes retours du 19.11 : la charte Dicta appliquée pour de bon (logo, polices, boutons, étiquettes, barre du bas avec le rond terracotta), plus de titre dans le bandeau, un menu en bas, et trois rôles : administrateur, modérateur, commercial. <span class="exemple">Noms et chiffres d'exemple</span></p>
+
+<h2 id="pourquoi" data-toc="Couleurs">Pourquoi c'était tout gris</h2>
+<p class="moi"><b>Ma faute, en partie.</b> La charte que tu as validée limite le terracotta à trois usages : le logo, le micro, le contour du champ actif (« le terracotta couvre peu de surface », partie 3). J'avais respecté cette règle, mais sans le logo (remplacé par un texte), sans les polices Archivo et Inter (elles ne se chargeaient pas), avec des boutons secondaires gris au lieu du contour anthracite, et une étiquette « Démo » en jaune, la couleur réservée à « à vérifier ». Ici, tout vient de la charte. L'orange revient là où elle le permet : le rond central de la barre du bas, qui devient « Nouvelle démo », la ligne sous le bandeau et le contour du rôle, qui disent qu'on est dans l'administration.</p>
+
+<h2 id="regle" data-toc="Réglé">Ce qui est réglé</h2>
+<p class="regle"><b>D1 = A :</b> l'artisan entre dans sa démo par un QR ou un lien envoyé par message, connexion directe, valable une heure, une seule fois.</p>
+<p class="regle"><b>D2 = A :</b> un compte neuf par démo. C'est ce qui permet de la transformer en essai sans rien perdre.</p>
+<p class="regle"><b>D4 :</b> le parcours de démo en trois touchers, validé. <b>D8 :</b> la vue PC, validée (rhabillée ici dans la charte).</p>
+<p class="regle"><b>Offres :</b> une démo a 10 offres en tout, qu'on peut augmenter ; un essai a 10 offres par défaut, 20 si l'artisan en a besoin.</p>
+<p class="regle"><b>Ta question, « une démo peut-elle devenir un essai ? » :</b> oui. Sur la fiche de la démo, « Transformer en essai » demande le courriel de l'artisan et lui envoie son accès ; ses offres, son catalogue et ses réglages restent.</p>
+<p class="regle"><b>Métiers :</b> en ajouter, et pouvoir écrire un métier qui n'est pas dans la liste. Noté au roadmap ; la tuile « Autre métier » montre la place qu'il prendra.</p>
+
+<h2 id="roles" data-toc="Rôles">Trois rôles, trois menus</h2>
+<p>Ce que chacun voit et fait. Le commercial ne voit que les artisans qu'il a créés ; le modérateur voit tout le monde pour aider ; seul l'administrateur voit l'argent.</p>
+<div class="defile">
+<table class="droits">
+<thead><tr><th>Ce qu'on fait</th><th>Administrateur</th><th>Modérateur</th><th>Commercial</th></tr></thead>
+<tbody>
+<tr><td>Créer une démo, un essai</td><td class="o">oui</td><td class="o">oui</td><td class="o">oui</td></tr>
+<tr><td>Voir les artisans</td><td class="o">tous</td><td class="o">tous</td><td class="o">les siens seulement</td></tr>
+<tr><td>Ajouter des offres à une démo ou un essai</td><td class="o">sans limite</td><td class="o">jusqu'à 10 de plus, pour dépanner</td><td class="o">les siens, jusqu'à 20</td></tr>
+<tr><td>Transformer une démo en essai, remettre à zéro, fermer</td><td class="o">tous</td><td class="o">tous</td><td class="o">les siens</td></tr>
+<tr><td>Suivi des offres : étapes, durées, échecs, sans le contenu</td><td class="o">oui</td><td class="o">oui</td><td class="n">non</td></tr>
+<tr><td>Contenu d'une offre (lignes, client de l'artisan)</td><td class="n">si l'artisan l'ouvre (R2)</td><td class="n">si l'artisan l'ouvre (R2)</td><td class="n">non</td></tr>
+<tr><td>Tableau de bord</td><td class="o">complet</td><td class="o">« À aider »</td><td class="o">le sien : démos, essais, clients</td></tr>
+<tr><td>Coût de l'IA, rentabilité</td><td class="o">oui</td><td class="n">non</td><td class="n">non</td></tr>
+<tr><td>Équipe : créer un modérateur ou un commercial</td><td class="o">oui</td><td class="n">non</td><td class="n">non</td></tr>
+<tr><td>Donner le droit administrateur</td><td class="n">en commande seulement</td><td class="n">non</td><td class="n">non</td></tr>
+</tbody>
+</table>
+</div>
+<p class="note">Un comptable viendra plus tard : coût de l'IA et rentabilité en lecture, rien d'autre.</p>
+<div class="choix" data-cle="R1"><p class="q"><b>R1</b> · Le tableau des droits</p><div class="opts"><button type="button" data-q="R1" data-v="Valider">Valider</button><button type="button" data-q="R1" data-v="Pas valider">Pas valider</button></div><textarea data-c="R1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+<div class="choix" data-cle="R2"><p class="q"><b>R2</b> · Le contenu des offres. Une offre contient les clients de l'artisan (noms, adresses, montants) : la loi sur la protection des données (LPD) veut qu'on n'y entre que pour une raison et que ce soit tracé. A : le modérateur voit toujours le suivi (étapes, échecs) ; le contenu, seulement quand l'artisan touche « Autoriser l'aide pendant 48 h » dans ses réglages, et chaque ouverture est notée. B : le modérateur voit tout le contenu, tout le temps, et on l'écrit dans les conditions générales.</p><div class="opts"><button type="button" data-q="R2" data-v="A : contenu ouvert par l'artisan, 48 h, tracé">A : ouvert par l'artisan</button><button type="button" data-q="R2" data-v="B : contenu toujours visible, écrit dans les conditions">B : toujours visible</button></div><textarea data-c="R2" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<div class="ecrans">
+  <figure>
+    <div class="tel">
+      <div class="bande"><img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Admin</span></div>
+      <div class="tete"><h1>Artisans</h1><p class="sous">9 comptes · 4 démos cette semaine</p></div>
+      <div class="corps">
+        <div class="seg"><span class="on">Tous</span><span>Démos</span><span>Essais</span><span>Clients</span></div>
+        <div class="recherche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Chercher</div>
+        <div class="liste">
+          <div class="item"><b>Peinture Morand</b><span class="etat">Démo</span><span class="meta">par Nina · 3 offres sur 10</span><span class="meta">aujourd'hui</span></div>
+          <div class="item"><b>Menuiserie Rochat</b><span class="etat contour">Essai</span><span class="meta">par Xavier · 14 offres sur 20</span><span class="meta">hier</span></div>
+          <div class="item"><b>Carrelage Buchs</b><span class="etat err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.1"/></svg>2 échecs</span><span class="meta">par Nina · essai, 2 offres sur 10</span><span class="meta">12.11</span></div>
+          <div class="item"><b>Sanitaire Vuilleumier</b><span class="etat">Démo</span><span class="meta">par Léo · ferme dans 2 jours</span><span class="meta">10.11</span></div>
+        </div>
+      </div>
+      <nav class="nav cinq">
+        <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.6 5.2"/></svg>Artisans</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>Offres</a>
+        <span class="rond" aria-label="Nouvelle démo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rentabilité</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>Plus</a>
+      </nav>
+    </div>
+    <figcaption>Administrateur : coût de l'IA, tableau de bord et équipe sous « Plus »</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Commercial</span></div>
+      <div class="tete"><h1>Mes artisans</h1><p class="sous">Nina · 3 démos cette semaine, 1 devenue essai</p></div>
+      <div class="corps">
+        <div class="liste">
+          <div class="item"><b>Peinture Morand</b><span class="etat">Démo</span><span class="meta">3 offres sur 10 · ouverte par QR</span><span class="meta">aujourd'hui</span></div>
+          <div class="item"><b>Carrelage Buchs</b><span class="etat contour">Essai</span><span class="meta">2 offres sur 10 · depuis le 12.11</span><span class="meta">12.11</span></div>
+          <div class="item"><b>Plâtrerie Dubois</b><span class="etat">Démo</span><span class="meta">QR pas encore scanné</span><span class="meta">hier</span></div>
+        </div>
+        <p class="note">Nina ne voit que ses artisans. Ni les coûts, ni ceux des autres.</p>
+      </div>
+      <nav class="nav trois">
+        <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.6 5.2"/></svg>Mes artisans</a>
+        <span class="rond" aria-label="Nouvelle démo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Mon suivi</a>
+      </nav>
+    </div>
+    <figcaption>Commercial : ses artisans, le rond pour une démo, son suivi</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Modérateur</span></div>
+      <div class="tete"><h1>À aider</h1><p class="sous">3 artisans ont besoin d'un coup de main</p></div>
+      <div class="corps">
+        <div class="liste">
+          <div class="item"><b>Carrelage Buchs</b><span class="etat err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.1"/></svg>Échec</span><span class="meta">2 dictées non traitées depuis hier</span><span></span></div>
+          <div class="item"><b>Menuiserie Rochat</b><span class="etat att"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.1"/></svg>20 sur 20</span><span class="meta">essai épuisé, a dicté hier</span><span></span></div>
+          <div class="item"><b>Peinture Favre</b><span class="etat">Accès</span><span class="meta">lien jamais ouvert, envoyé il y a 5 jours</span><span></span></div>
+        </div>
+      </div>
+      <nav class="nav cinq">
+        <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg>À aider</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.6 5.2"/></svg>Artisans</a>
+        <span class="rond" aria-label="Nouvelle démo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>Offres</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>Plus</a>
+      </nav>
+    </div>
+    <figcaption>Modérateur : la liste de ceux qui coincent, d'abord</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="R3"><p class="q"><b>R3</b> · Les trois menus du bas. Pour toi : Artisans, Offres, le rond « Nouvelle démo », Rentabilité, Plus (coût de l'IA, tableau de bord, équipe, retour à l'application). Coût de l'IA hors de l'accès rapide, comme tu l'hésitais.</p><div class="opts"><button type="button" data-q="R3" data-v="Valider">Valider</button><button type="button" data-q="R3" data-v="Pas valider">Pas valider</button></div><textarea data-c="R3" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+<div class="choix" data-cle="R4"><p class="q"><b>R4</b> · Un compte d'équipe (commercial, modérateur) est-il aussi un compte artisan ? A : non, il n'ouvre que l'administration ; Nina montre Dicta à travers les démos qu'elle crée. B : oui, il a aussi son propre espace artisan, comme ton compte.</p><div class="opts"><button type="button" data-q="R4" data-v="A : administration seule">A : administration seule</button><button type="button" data-q="R4" data-v="B : aussi un espace artisan">B : aussi un espace artisan</button></div><textarea data-c="R4" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="demo" data-toc="La démo">La démo en rendez-vous</h2>
+<p>Le parcours validé (D4), rhabillé. Le rond terracotta, puis le métier, puis le QR. « Envoyer par message » devient un vrai bouton : WhatsApp, SMS, ce que le téléphone propose.</p>
+<div class="ecrans">
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Artisans</span><span class="role">Admin</span></div>
+      <div class="tete"><h1>Nouvelle démo</h1><p class="sous">Le métier de l'artisan</p></div>
+      <div class="corps">
+        <div class="metiers">
+          <span class="metier on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="14" height="6" rx="1.5"/><path d="M17 6h3v5h-8v3"/><rect x="10" y="14" width="4" height="7" rx="1"/></svg>Peintre</span>
+          <span class="metier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21 14 10M14 10l3-7 4 4-7 3"/><path d="m6 15 3 3"/></svg>Menuisier</span>
+          <span class="metier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v4H4zM10 6h6a4 4 0 0 1 4 4v3"/><path d="M20 17v.01M18 19v.01M20 21v.01"/></svg>Sanitaire</span>
+          <span class="metier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg><span>Autre métier<small>à venir</small></span></span>
+        </div>
+        <div class="champ"><label>Nom de l'entreprise (facultatif)</label><div class="saisie actif">Peinture Morand</div></div>
+        <div class="info">10 offres, deux offres d'exemple, le catalogue du peintre (12 produits). Fermée le 03.12.2026.</div>
+      </div>
+      <div class="actionbar"><span class="btn principal">Créer la démo</span></div>
+    </div>
+    <figcaption>Le métier en grandes tuiles, le nom si tu l'as (champ actif : contour terracotta)</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Artisans</span><span class="role">Admin</span></div>
+      <div class="corps pret">
+        <span class="coche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>
+        <div class="tete" style="padding:0"><h1>Peinture Morand</h1><p class="sous">À scanner avec l'appareil photo de l'artisan</p></div>
+        <div class="qr-cadre"><svg class="qr" viewBox="0 0 29 29" role="img" aria-label="QR de connexion d'exemple"></svg></div>
+        <p class="minuterie">Valable encore <b>59:12</b>, une seule fois</p>
+        <span class="btn large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v8h14v-8"/></svg>Envoyer par message</span>
+      </div>
+      <div class="actionbar"><span class="btn">Voir la fiche</span><span class="btn principal">Terminé</span></div>
+    </div>
+    <figcaption>Démo prête : scanner, ou envoyer le lien (WhatsApp, SMS)</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande" style="border-bottom:0"><img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="note" style="color:var(--bande-doux)">Peinture Morand</span></div>
+      <div class="tete"><h1>Offres</h1><p class="sous">Démo · 10 offres · jusqu'au 03.12.2026</p></div>
+      <div class="corps">
+        <div class="liste">
+          <div class="item"><b>Appartement 3 pièces</b><span class="montant"><small class="note">CHF</small> 3’377.05</span><span class="meta">Madame Exemple · n° 2</span><span class="etat ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Prête</span></div>
+          <div class="item"><b>Cage d'escalier</b><span class="montant"><small class="note">CHF</small> 2’140.00</span><span class="meta">Famille Test · n° 1</span><span class="etat ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Prête</span></div>
+        </div>
+        <p class="note">Le micro, en bas, sert à dicter la visite.</p>
+      </div>
+      <nav class="nav cinq">
+        <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>Offres</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Clients</a>
+        <span class="rond" aria-label="Dicter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Factures</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>Plus</a>
+      </nav>
+    </div>
+    <figcaption>Chez l'artisan, après le scan : l'application normale, sans bandeau terracotta</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="D3"><p class="q"><b>D3</b> · Durée d'une démo (tu as écrit « 14 jours ou 7 jours »). À la fin, elle se ferme et ses dictées sont supprimées, sauf si elle est devenue un essai.</p><div class="opts"><button type="button" data-q="D3" data-v="7 jours">7 jours</button><button type="button" data-q="D3" data-v="14 jours">14 jours</button></div><textarea data-c="D3" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="essai" data-toc="Essai">Un essai</h2>
+<p>Deux champs à taper ; le métier, le catalogue d'exemple et 10 offres sont déjà choisis.</p>
+<div class="ecrans">
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Artisans</span><span class="role">Admin</span></div>
+      <div class="tete"><h1>Nouvel essai</h1></div>
+      <div class="corps">
+        <div class="champ"><label>Entreprise</label><div class="saisie">Menuiserie Rochat</div></div>
+        <div class="champ"><label>Courriel de l'artisan</label><div class="saisie actif">info@menuiserie-rochat.ch</div></div>
+        <div class="metiers">
+          <span class="metier">Peintre</span><span class="metier on">Menuisier</span><span class="metier">Sanitaire</span><span class="metier"><span>Autre métier<small>à venir</small></span></span>
+        </div>
+        <div class="seg"><span class="on">Catalogue d'exemple</span><span>Catalogue vide</span></div>
+        <div class="compteur"><b>Offres de l'essai</b><span class="pas"><i>−</i><span>10</span><i>+</i></span></div>
+      </div>
+      <div class="actionbar"><span class="btn principal">Créer et envoyer l'accès</span></div>
+    </div>
+    <figcaption>Le formulaire</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Artisans</span><span class="role">Admin</span></div>
+      <div class="corps pret">
+        <span class="coche" style="margin-top:28px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></span>
+        <div class="tete" style="padding:0"><h1>Menuiserie Rochat</h1><p class="sous">Essai de 10 offres</p></div>
+        <p>Courriel d'accès envoyé à<br><b>info@menuiserie-rochat.ch</b></p>
+        <p class="note">Lien valable 7 jours. L'artisan y choisit son mot de passe.</p>
+      </div>
+      <div class="actionbar"><span class="btn">Voir la fiche</span><span class="btn principal">Terminé</span></div>
+    </div>
+    <figcaption>Après la création, en production</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="D5"><p class="q"><b>D5</b> · Le formulaire d'essai</p><div class="opts"><button type="button" data-q="D5" data-v="Valider">Valider</button><button type="button" data-q="D5" data-v="Pas valider">Pas valider</button></div><textarea data-c="D5" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+<div class="choix" data-cle="D6"><p class="q"><b>D6</b>, reformulée · Sur le site de test, aucun courriel ne part : l'artisan ne recevrait jamais son lien d'accès. Faut-il, sur le test seulement, afficher le lien à l'écran avec un bouton « Copier », pour que tu le lui envoies toi-même ? En production, jamais : le lien part par courriel.</p><div class="opts"><button type="button" data-q="D6" data-v="Oui, sur le test seulement">Oui, sur le test seulement</button><button type="button" data-q="D6" data-v="Non">Non</button></div><textarea data-c="D6" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="fiche" data-toc="Fiche">La fiche d'un artisan, refaite</h2>
+<p>D7 refusé : « faut rendre ça mieux ». Trois changements. La jauge des offres se lit d'un coup d'œil. Ajouter des offres se fait d'un toucher (+2, +5, +10), sans compteur à manier. Le fil de ce qui s'est passé dit au commercial si la démo vit, et au modérateur où ça a coincé, sans jamais montrer le contenu d'une offre.</p>
+<div class="ecrans">
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Artisans</span><span class="role">Admin</span></div>
+      <div class="tete"><div class="fiche-tete"><span class="pastille">PM</span><div><h1>Peinture Morand</h1><p class="sous">Démo · peintre · par Nina</p></div></div></div>
+      <div class="corps">
+        <div class="jauge"><div class="haut"><span class="note">Offres utilisées</span><b>3 / 10</b></div><div class="barre"><i style="width:30%"></i></div><span class="note">Ferme le 03.12.2026, dans 14 jours</span></div>
+        <div class="ajouts"><span>+2</span><span>+5</span><span>+10</span></div>
+        <div class="liste lignes-action">
+          <div class="item"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M12 6l6 6-6 6"/><path d="M20 4v16"/></svg>Transformer en essai</b><span class="fl">›</span></div>
+          <div class="item"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4"/></svg>Remettre à zéro</b><span class="fl">›</span></div>
+        </div>
+        <div class="liste fil"><div><time>14:20</time><span>Offre prête, 11 lignes, 3 min 40 de dictée</span></div><div><time>14:06</time><span>Première dictée</span></div><div><time>14:05</time><span>QR scanné, démo ouverte</span></div></div>
+        <span class="btn danger large">Fermer la démo</span>
+      </div>
+      <div class="actionbar"><span class="btn principal">Afficher le QR</span></div>
+    </div>
+    <figcaption>Une démo : le QR à refaire d'un toucher, en bas</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ À aider</span><span class="role">Modérateur</span></div>
+      <div class="tete"><div class="fiche-tete"><span class="pastille">MR</span><div><h1>Menuiserie Rochat</h1><p class="sous">Essai · menuisier · par Xavier</p></div></div></div>
+      <div class="corps">
+        <div class="jauge"><div class="haut"><span class="note">Offres utilisées</span><b>20 / 20</b></div><div class="barre pleine"><i style="width:100%"></i></div><span class="etat att"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.1"/></svg>Essai épuisé hier, 17:40</span></div>
+        <div class="ajouts"><span>+2</span><span>+5</span><span>+10</span></div>
+        <div class="liste fil"><div><time>hier</time><span>Dictée refusée : plus d'offre dans l'essai</span></div><div><time>17.11</time><span class="err">Échec du traitement, offrir 1 offre ?</span></div><div><time>12.11</time><span>Accès ouvert, mot de passe choisi</span></div></div>
+        <div class="liste lignes-action">
+          <div class="item"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>Renvoyer le lien d'accès</b><span class="fl">›</span></div>
+          <div class="item"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>Suivi de ses offres</b><span class="fl">›</span></div>
+        </div>
+      </div>
+    </div>
+    <figcaption>Un essai vu par le modérateur : le geste « offrir des offres » au pouce</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="D7"><p class="q"><b>D7</b>, refaite · Les deux fiches : jauge, ajouts d'un toucher, fil des événements</p><div class="opts"><button type="button" data-q="D7" data-v="Valider">Valider</button><button type="button" data-q="D7" data-v="Pas valider">Pas valider</button></div><textarea data-c="D7" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="pc" data-toc="Sur PC">Sur PC</h2>
+<p>Validée (D8), rhabillée dans la charte : le menu à gauche suit le rôle, la fiche s'ouvre à droite sans changer de page.</p>
+<div class="defile">
+<div class="pc">
+  <div class="menu">
+    <img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Admin</span>
+    <span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/></svg>Artisans</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg>Offres</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rentabilité</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1.2 1.1-2 2.5-2s2.5.8 2.5 2-1.1 1.8-2.5 2.2-2.5 1-2.5 2.3 1.1 2 2.5 2 2.5-.8 2.5-2"/></svg>Coût de l'IA</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>Tableau de bord</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3 2.8-4.5 6-4.5s5.4 1.5 6 4.5M14 15.6c.6-.1 1.3-.1 2-.1 3.2 0 5.4 1.5 6 4.5"/></svg>Équipe</span>
+    <span class="fin">‹ Revenir à l'application</span>
+  </div>
+  <div class="milieu">
+    <div class="ligne"><h1>Artisans</h1><span class="btn">Nouvel essai</span><span class="btn principal">Nouvelle démo</span></div>
+    <div class="ligne"><div class="seg"><span class="on">Tous 9</span><span>Démos 4</span><span>Essais 3</span><span>Clients 2</span></div><div class="recherche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Chercher</div></div>
+    <table>
+      <thead><tr><th>Entreprise</th><th>Type</th><th>Créé par</th><th class="n">Offres</th><th>Dernière activité</th></tr></thead>
+      <tbody>
+        <tr class="on"><td><b>Peinture Morand</b></td><td><span class="etat">Démo</span></td><td>Nina</td><td class="n">3 / 10</td><td>aujourd'hui 14:20</td></tr>
+        <tr><td>Menuiserie Rochat</td><td><span class="etat contour">Essai</span></td><td>Xavier</td><td class="n">20 / 20</td><td>hier 17:40</td></tr>
+        <tr><td>Carrelage Buchs</td><td><span class="etat contour">Essai</span></td><td>Nina</td><td class="n">2 / 10</td><td>12.11.2026</td></tr>
+        <tr><td>Sanitaire Vuilleumier</td><td><span class="etat">Démo</span></td><td>Léo</td><td class="n">1 / 10</td><td>10.11.2026</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="droite">
+    <div class="fiche-tete"><span class="pastille">PM</span><div><h2>Peinture Morand</h2><span class="note">Démo · peintre · par Nina</span></div></div>
+    <div class="jauge"><div class="haut"><span class="note">Offres utilisées</span><b>3 / 10</b></div><div class="barre"><i style="width:30%"></i></div></div>
+    <div class="ajouts"><span>+2</span><span>+5</span><span>+10</span></div>
+    <span class="btn principal">Afficher le QR</span>
+    <span class="btn">Transformer en essai</span>
+    <span class="btn danger">Fermer la démo</span>
+  </div>
+</div>
+</div>
+
+<h2 id="points" data-toc="Mes points">Les points que j'ajoute</h2>
+<ul>
+<li><b>Un commercial qui s'en va :</b> son compte se ferme, ses artisans passent à toi. « Créé par » reste écrit : c'est aussi la base d'une commission, si tu en verses.</li>
+<li><b>Les démos coûtent de l'IA :</b> au plus 10 démos par commercial et par jour (réglable), pour qu'un compte volé ou un excès de zèle ne fasse pas exploser la facture.</li>
+<li><b>Un journal des gestes :</b> qui a offert des offres, transformé, fermé, et quand. Indispensable dès que d'autres que toi agissent sur les comptes.</li>
+<li><b>Un second facteur pour l'équipe</b> (un code sur le téléphone) avant la production : un compte de modérateur ouvre tous les artisans.</li>
+<li><b>Le droit administrateur</b> reste donné en commande, jamais par un bouton.</li>
+</ul>
+
+<h2 id="hors" data-toc="Hors lot">Hors de ce lot</h2>
+<ul>
+<li>Coût de l'IA, rentabilité, tableau de bord complet : sous-chantier 26, codés ensuite dans ce cadre.</li>
+<li>Passer un essai en client, formules et facture d'abonnement : tâches 461 et 462.</li>
+<li>Rôle comptable : quand la rentabilité existera.</li>
+</ul>
+
+<h2 id="copier-texte" data-toc="Copier">Copier le texte</h2>
+<p><button id="copier" type="button">Copier le texte</button></p>
+<textarea id="texte" readonly></textarea>
+</div>
+<script>
+(function () {
+  // QR d'exemple : trois repères d'angle et un semis fixe. Le vrai sera fait par endroid/qr-code.
+  var n = 29, graine = 7, cases = '';
+  function hasard() { graine = (graine * 9301 + 49297) % 233280; return graine / 233280; }
+  function repere(x, y) { return '<path d="M' + x + ' ' + y + 'h7v7h-7zM' + (x + 1) + ' ' + (y + 1) + 'v5h5v-5z" fill-rule="evenodd"/><rect x="' + (x + 2) + '" y="' + (y + 2) + '" width="3" height="3"/>'; }
+  for (var y = 0; y < n; y++) { for (var x = 0; x < n; x++) {
+    var coin = (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9);
+    if (!coin && hasard() > 0.52) { cases += '<rect x="' + x + '" y="' + y + '" width="1" height="1"/>'; }
+  } }
+  document.querySelectorAll('svg.qr').forEach(function (s) { s.innerHTML = '<g fill="#1B1E22">' + repere(0, 0) + repere(n - 7, 0) + repere(0, n - 7) + cases + '</g>'; });
+
+  var CLE = 'maquette-admin-comptes-v2-2026-11-19', etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  function texte() {
+    var lignes = [];
+    document.querySelectorAll('.choix').forEach(function (c) {
+      var q = c.getAttribute('data-cle'), e = etat[q] || {};
+      if (e.v || e.c) { lignes.push('- ' + q + ' : ' + (e.v || '') + (e.c ? ' · ' + e.c : '')); }
+    });
+    document.getElementById('texte').value = lignes.length ? 'Réponses, maquette des comptes v2 (19.11) :\n' + lignes.join('\n') : '';
+  }
+  document.querySelectorAll('.opts button').forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    b.setAttribute('aria-pressed', (etat[q] && etat[q].v === b.getAttribute('data-v')) ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      etat[q] = etat[q] || {};
+      etat[q].v = b.getAttribute('data-v');
+      document.querySelectorAll('.opts button[data-q="' + q + '"]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      garder(); texte();
+    });
+  });
+  document.querySelectorAll('textarea[data-c]').forEach(function (t) {
+    var q = t.getAttribute('data-c');
+    t.value = (etat[q] && etat[q].c) || '';
+    t.addEventListener('input', function () { etat[q] = etat[q] || {}; etat[q].c = t.value; garder(); texte(); });
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    texte();
+    var t = document.getElementById('texte');
+    t.select();
+    try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand('copy'); }
+  });
+  texte();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>
