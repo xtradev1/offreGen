@@ -37,7 +37,8 @@ Un argument déjà pris se dit encore s'il compte pour l'artisan. Il ne porte pa
 
 - **Le prix dicté est contrôlé contre le catalogue**, et l'écart s'affiche (« Prix dicté 26.00, catalogue 28.00 »).
   Xavier : « ça a le plus de valeur ». Offerto promet la même confiance par un autre chemin (l'origine de chaque prix).
-- **Toute la visite en une dictée**, jusqu'à 30 minutes, rangée par pièce : 93 à 98 % de lignes justes au banc.
+- **Toute la visite en une dictée**, jusqu'à 30 minutes, rangée par pièce : 89 à 98 % de lignes justes au banc selon la passe
+  (766 sur 810 dans la limite des 30 minutes, soit 94,6 % ; corrigé le 19 novembre, le premier relevé avait manqué la passe à 89 %).
 
 ## Trois façons d'être unique quand les mots sont pris
 
