@@ -148,6 +148,10 @@ final class EquipeTest extends TestCase
     public function testUneSaisieFausseEstRefuseeSansCreerDeCompte(): void
     {
         $admin = $this->navigateur();
+        // Le formulaire porte son bouton (sur PC, il est sous les champs) et le compteur de la fiche.
+        $formulaire = (string) $admin->get('/admin/equipe/nouveau')->getContent();
+        self::assertSame(2, substr_count($formulaire, "Créer et envoyer l'accès</button>"));
+        self::assertStringContainsString('data-pas="1"', $formulaire);
         foreach ([['role' => 'administrateur'], ['role' => 'chef'], ['courriel' => 'pas une adresse'], ['nom' => ' '], ['offres' => '0'], ['offres' => '501']] as $faute) {
             $reponse = $this->inviter($admin, $faute);
             self::assertSame(422, $reponse->getStatusCode(), (string) json_encode($faute));

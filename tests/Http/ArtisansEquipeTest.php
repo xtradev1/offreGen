@@ -155,9 +155,19 @@ final class ArtisansEquipeTest extends TestCase
         $demos = (string) $chef->get('/admin/artisans?type=demos')->getContent();
         self::assertStringContainsString('Sanitaire Durand', $demos);
         self::assertStringNotContainsString('Entreprise B', $demos);
+        // Un essai : un compte avec un plafond d'offres (Xavier, 2026-11-19 : « il faudra rajouter aussi les essais »).
+        // Un compte : sans plafond.
+        $plein = $this->creer('plein@exemple.ch', 'Toiture Pleine', false);
+        BaseDeTest::pdo()->exec("UPDATE artisan SET offres_max = NULL WHERE id = $plein");
+        $essais = (string) $chef->get('/admin/artisans?type=essais')->getContent();
+        self::assertStringContainsString('Entreprise B <i class="badge role">Essai</i>', $essais);
+        self::assertStringNotContainsString('Sanitaire Durand', $essais);
+        self::assertStringNotContainsString('Toiture Pleine', $essais);
         $comptes = (string) $chef->get('/admin/artisans?type=comptes')->getContent();
-        self::assertStringContainsString('Entreprise B', $comptes);
+        self::assertStringContainsString('Toiture Pleine <i class="badge role">Compte</i>', $comptes);
+        self::assertStringNotContainsString('Entreprise B', $comptes);
         self::assertStringNotContainsString('Sanitaire Durand', $comptes);
+        self::assertStringContainsString('Essai · ', (string) $chef->get("/admin/artisans/{$this->jeu->b}")->getContent());
         $cherche = (string) $chef->get('/admin/artisans?q=sanit')->getContent();
         self::assertStringContainsString('Sanitaire Durand', $cherche);
         self::assertStringNotContainsString('Entreprise B', $cherche);

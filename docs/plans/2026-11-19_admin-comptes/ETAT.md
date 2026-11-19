@@ -276,3 +276,37 @@ aucun défaut aux sondes ; compteur 10 -> 11 ; après Enregistrer : « Enregistr
 Une première suite entière a rendu 198 erreurs (« Duplicate entry 'a@exemple.ch' ») : deux suites tournaient en même temps sur la base de test (une autre session). Relancée seule, elle est verte.
 
 Non vérifié : l'envoi du lien par une vraie messagerie (le chemin « courriel réel » n'a pas de test) ; le parcours connecté sur le site de test (pas de mot de passe du compte de Xavier).
+
+Commit `56fbddd` (écran Équipe refait), poussé puis déployé sur le test le 2026-11-19, accord de Xavier (« tu peux commit et push et je regarde en live ») :
+
+```
+== Tests et analyse (copie propre du commit)
+OK (657 tests, 5141 assertions)
+analyse statique : sans erreur
+[OK] Successfully migrated to version: OffreGen\Migrations\Version20261119100002
+SONDE VERTE
+DÉPLOYÉ : 56fbddd07fd8cd9bfb23a61dddf43483eea87a6f sur https://easy-offres.xtradev.ch
+```
+
+Deux essais de déploiement ont été refusés avant celui-ci, tests rouges (379 erreurs, puis 16) : une autre session déployait `687606b` au même moment, sur la même base de test et depuis un dossier du même nom (`~/offreGen-deploiement`). Ce chantier déploie désormais depuis `~/offreGen-deploiement-admin`. Erreur de Claude : en nettoyant ce qu'il prenait pour un reste de son essai, il a retiré le dossier `var/` de la copie de l'autre session pendant qu'elle tournait, puis l'a recréé. Le déploiement de l'autre session n'a pas abouti ; cause non établie. À la fin, `/sante` annonce `56fbddd`.
+
+Non vérifié sur le test : aucun parcours connecté (pas de mot de passe du compte de Xavier). Constaté : `/js/admin.js` 200, `/css/admin.css` porte les styles neufs, `/admin/equipe` sans session 404.
+
+Retour de Xavier sur le test (2026-11-19), après l'écran Équipe refait :
+
+- « Pour la partie équipe, c'est vraiment bien. »
+- Nouveau membre : « j'ai un énorme quantité de vide », le bouton « est hyper loin, à l'autre bout de l'univers », « Fais-moi une interface plus petite et plus propre. » Fait : sur PC, une carte de 480 px, le bouton sous les champs ; mêmes pièces que la fiche (rôle avec sa conséquence, compteur). La page du lien d'accès suit la même carte. Codé sans maquette : correction de disposition d'un écran déjà validé (E1).
+- Artisans : « Il faudra rajouter aussi les essais dedans. » Fait : filtre « Essais » et étiquette « Essai ». Un essai est un compte avec un plafond d'offres (`PlafondEssai`, 2026-11-17) ; un compte n'en a pas. Avant, la liste étiquetait les essais « Compte » : l'écart « Essais n'existe plus depuis T1 » noté plus haut était une erreur de Claude, T1 décrit la formule à venir (lot B), pas les comptes d'essai qui existent.
+- Tableau de bord vide : normal, lot 7.
+- Accord permanent de Xavier (question posée le 2026-11-19, réponse « Oui, et à chaque fois ») : commiter, pousser et déployer sur le test après chaque correction de l'administration, sans redemander. Jamais sur `main`, jamais en production.
+
+```
+$ phpunit --filter 'testLesFiltresEtLaRecherche|testUneSaisieFausseEstRefusee'   (tests écrits, avant le code)
+FAILURES! Tests: 2, Assertions: 5, Failures: 2.
+$ env APP_ENV=test vendor/bin/phpunit   (après le code)
+OK (657 tests, 5154 assertions)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ node recette-v8.js (téléphone, PC sombre 1280, PC clair 1680 ; 15 écrans : formulaire, refus, rempli, lien, essais)
+aucun défaut aux sondes ; sur PC, bouton à 88 px sous le compteur, 438 px de large ; filtre Essais : étiquettes « Essai » seulement
+```

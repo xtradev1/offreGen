@@ -93,4 +93,10 @@
   .equipe-fiche .plus-ligne { min-height: 56px; }
   .equipe-fiche .compteur { background: var(--bg); }
   .roles-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Un formulaire ou un message court : une carte étroite, son bouton sous les champs (Xavier, 2026-11-19 : « une
+     interface plus petite et plus propre », le bouton était « à l'autre bout de l'univers »). */
+  .admin .screen > .carte-admin { max-width: 480px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .carte-admin .btn.primary { width: 100%; min-height: 48px; margin-top: 8px; }
+  .carte-admin .compteur { background: var(--bg); }
+  .carte-admin > :last-child, .carte-admin form > :last-child { margin-bottom: 0; }
 }

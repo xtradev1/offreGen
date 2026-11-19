@@ -47,7 +47,7 @@ final class AdminControleur
     public function artisans(Request $requete): Response
     {
         $type = $requete->query->getString('type');
-        $type = in_array($type, ['demos', 'comptes'], true) ? $type : 'tous';
+        $type = in_array($type, ['demos', 'essais', 'comptes'], true) ? $type : 'tous';
         $q = mb_substr(trim($requete->query->getString('q')), 0, 80);
         // « Ses artisans », depuis la fiche d'un membre : ceux qu'il a amenés. Le commercial reste dans les siens.
         $brut = $requete->query->getString('par');

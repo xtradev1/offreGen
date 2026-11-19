@@ -37,7 +37,7 @@ final class DepotEquipe
     }
 
     /**
-     * @param string $type « demos », « comptes », ou tout autre mot pour tous
+     * @param string $type « demos », « essais », « comptes », ou tout autre mot pour tous
      * @param int|null $apporteur seulement les artisans amenés par ce compte ; null, tous
      * @return list<Compte> les plus récemment actifs d'abord, 200 au plus
      */
@@ -49,9 +49,13 @@ final class DepotEquipe
             $sql .= ' AND a.apporte_par = :par';
             $params += ['par' => $apporteur];
         }
-        if ($type === 'demos' || $type === 'comptes') {
-            $sql .= ' AND a.demo = ' . ($type === 'demos' ? '1' : '0');
-        }
+        // Un essai est un compte avec un plafond d'offres (PlafondEssai) ; un compte n'en a pas.
+        $sql .= match ($type) {
+            'demos' => ' AND a.demo = 1',
+            'essais' => ' AND a.demo = 0 AND a.offres_max IS NOT NULL',
+            'comptes' => ' AND a.demo = 0 AND a.offres_max IS NULL',
+            default => '',
+        };
         if ($recherche !== '') {
             // Les jokers de LIKE se cherchent tels quels.
             $motif = '%' . addcslashes($recherche, '%_\\') . '%';

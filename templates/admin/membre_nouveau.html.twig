@@ -1,35 +1,45 @@
 {% extends 'admin/base.html.twig' %}
 
 {# Nouveau membre (écran E1 validé par Xavier, 2026-11-19) : un commercial ou un modérateur en un écran. Si le
-   courriel est déjà celui d'un compte, ce compte reçoit le rôle et garde son mot de passe. #}
+   courriel est déjà celui d'un compte, ce compte reçoit le rôle et garde son mot de passe. Sur PC : une carte
+   étroite, le bouton sous les champs (Xavier, 2026-11-19). Mêmes pièces que la fiche d'un membre. #}
 {% block retour %}<a class="back" href="/admin/equipe">Équipe</a>{% endblock %}
 
 {% block contenu %}
-  {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
-  <form id="membre" method="post" action="/admin/equipe">
-    <input type="hidden" name="_csrf" value="{{ csrf() }}">
-    <div class="champ">
-      <label for="nom">Nom</label>
-      <input id="nom" name="nom" type="text" autocomplete="off" maxlength="190" value="{{ saisie.nom }}" required>
-    </div>
-    <div class="champ">
-      <label for="courriel">Courriel</label>
-      <input id="courriel" name="courriel" type="email" autocomplete="off" inputmode="email" maxlength="190" value="{{ saisie.courriel }}" required>
-    </div>
-    <fieldset class="segments">
-      <legend class="cache">Rôle</legend>
-      <label><input type="radio" name="role" value="commercial"{% if saisie.role != 'moderateur' %} checked{% endif %}><span>Commercial</span></label>
-      <label><input type="radio" name="role" value="moderateur"{% if saisie.role == 'moderateur' %} checked{% endif %}><span>Modérateur</span></label>
-    </fieldset>
-    <div class="champ">
-      <label for="offres">Offres de son espace artisan</label>
-      <input id="offres" name="offres" type="number" inputmode="numeric" min="1" max="500" value="{{ saisie.offres }}" required>
-      <small class="muted">Cette personne ne peut pas changer ce nombre elle-même.</small>
-    </div>
-  </form>
-  <p class="muted">Le commercial ne voit que les artisans qu'il crée. Le modérateur voit tous les artisans, sans les coûts. Le droit administrateur se donne par commande.</p>
+  <div class="carte-admin">
+    {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+    <form id="membre" method="post" action="/admin/equipe">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <div class="champ">
+        <label for="nom">Nom</label>
+        <input id="nom" name="nom" type="text" autocomplete="off" maxlength="190" value="{{ saisie.nom }}" required>
+      </div>
+      <div class="champ">
+        <label for="courriel">Courriel</label>
+        <input id="courriel" name="courriel" type="email" autocomplete="off" inputmode="email" maxlength="190" value="{{ saisie.courriel }}" required>
+      </div>
+      <span class="libelle" aria-hidden="true">Rôle</span>
+      <fieldset class="segments">
+        <legend class="cache">Rôle</legend>
+        <label><input type="radio" name="role" value="commercial"{% if saisie.role != 'moderateur' %} checked{% endif %}><span>Commercial</span></label>
+        <label><input type="radio" name="role" value="moderateur"{% if saisie.role == 'moderateur' %} checked{% endif %}><span>Modérateur</span></label>
+      </fieldset>
+      <p class="muted role-note" data-role="commercial">Commercial&nbsp;: crée des démos et ne voit que ses artisans.</p>
+      <p class="muted role-note" data-role="moderateur">Modérateur&nbsp;: voit tous les artisans, sans les coûts, et aide ceux qui bloquent.</p>
+      <div class="compteur">
+        <label for="offres"><b>Offres</b><small>Espace artisan</small></label>
+        <span class="pas">
+          <button class="btn" type="button" data-pas="-1" aria-label="Une offre de moins" hidden>−</button>
+          <input id="offres" name="offres" type="number" inputmode="numeric" min="1" max="500" value="{{ saisie.offres }}" required>
+          <button class="btn" type="button" data-pas="1" aria-label="Une offre de plus" hidden>+</button>
+        </span>
+      </div>
+      <p class="muted">Cette personne ne peut pas changer ce nombre elle-même. Le droit administrateur se donne par commande.</p>
+      <button class="btn primary pc-seul" type="submit">Créer et envoyer l'accès</button>
+    </form>
+  </div>
 {% endblock %}
 
 {% block actions %}
-  <div class="actionbar"><button class="btn primary" type="submit" form="membre">Créer et envoyer l'accès</button></div>
+  <div class="actionbar mobile-seul"><button class="btn primary" type="submit" form="membre">Créer et envoyer l'accès</button></div>
 {% endblock %}
