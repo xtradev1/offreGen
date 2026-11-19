@@ -40,6 +40,7 @@
 - [2026-11-17] Offre par pièce (maquette 28 validée) : pièce relevée par un second appel au modèle, sans le catalogue (dans l'appel principal elle faisait régresser l'extraction) ; « Général » en tête, sans sous-total dans le PDF.
 - [2026-11-17] Formules, base de discussion (`26-couts-ia/OFFRES-ABONNEMENT.md`) : Solo 44.90 HT pour 50 offres, Pro 89 pour 150, Entreprise 179 pour 300 et 3 comptes, recharge 25 CHF pour 25 offres réservée aux abonnés. Pack sans abonnement écarté (Xavier : « ça casse le système »). Coûts fixes : CHF 400 à 500 par an.
 - [2026-11-18] Mise en production : relecture de la connexion et de l'isolation par Fable acceptée par Xavier (« oui va pour fable pour de la relecture »), en plus de la revue par Opus. Domaine envisagé par Xavier : `easy-offre.ch`. Le paiement doit suivre vite la première production.
+- [2026-11-18] Identité (Xavier) : le produit s'appelle **Dicta** (`dicta.ch` réservé d'après sa charte), en-tête et boutons anthracite `#23272D`, terracotta `#C4552D` en accent, mot « offre », logo « le cône et la bulle », encore modifiable. Charte, verbatim, jetons CSS et logos dans `docs/identite/`. Reste à l'appliquer à l'application (feuille de style en bleu, nom « offreGen » dans les courriels).
 
 ## Current state
 ### Done

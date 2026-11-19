@@ -13,7 +13,8 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 
 ## En attente de toi
 
-- Envoyer la planche des deux logos (`MAQUETTE-dicta-envoi-img/`) et revenir avec le logo retenu, le 1 (ancien 6) ou le 2 (ancien B).
+- Dans `docs/identite/CHARTE.html`, partie 10 : la phrase d'accroche (A1), le vouvoiement (A2), les langues (A3), l'argument de l'hébergement en Suisse (A4), puis coller « Copier le texte ». Et deux questions du relecteur : un contact direct dans la signature des courriels ? le bouton « Enregistrer » à préciser dans le verbatim ?
+- Dire si l'identité s'applique maintenant à l'application (feuille de style encore en bleu, nom « offreGen » dans les courriels, polices à héberger).
 - Jouer la recette regroupée (`RECETTE.md`).
 - Confirmer que la production ira sur `dicta.ch` et créer la boîte `notifications@`.
 
@@ -57,6 +58,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-18, Xavier, sur `MAQUETTE-dicta-parle.html` : K6 (le porte-voix) « Garder », les neuf autres logos, O2 et M1 sans réponse. Puis : « fais des variantes k6 on doit bien voir que c'est un cone qui parle et dans ce style fais mois 10 autres exemples ».
 - 2026-11-18, Xavier, sur `MAQUETTE-dicta-portevoix.html` : O2 « 5 · Terracotta » (`#C4552D`, en accent sur le logo et le micro, boutons anthracite) ; M1 « Offre » ; V5, V6 et V8 « Garder », les autres sans réponse. Puis : « fais moi une version avec les 3 plus 3 autres dans ce style » et « avec v9 aussi donc 8 variants au total ».
 - 2026-11-18, Xavier, sur `MAQUETTE-dicta-huit.html` : « 6, B fais juste les que je puisse les envoyer donc tu me fais les maquettes avec ces 2 », « que je puisse envoyer pour départager ». En finale : le logo 6 (le cône et les barres) et le logo B (le cône en tranches et la bulle). Xavier les fait départager par des tiers.
+- 2026-11-18, Xavier, sur la planche d'envoi : « go pour le 2 valide la marque avec les couleurs et genere moi la chartre graphique au propre pour qu'elle puisse etre reutiliser, rajoute aussi tous les élémetns ui/uxc qui te semble utile pour avoir un produit propre de obut en bout avec par exemple le verbatim ». Puis : « oui le logo peut encore ce changer c'est un détaille ». Validé : nom Dicta, anthracite `#23272D`, terracotta `#C4552D` en accent, mot « offre », logo « le cône et la bulle ».
 
 ## Journal
 
@@ -80,6 +82,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-18 : `MAQUETTE-dicta-portevoix.html` : dix variantes du logo K6 dans son style (formes pleines, cône couché qui émet du son), avec deux bandes blanches et un socle épais pour qu'on y lise un cône de chantier. Vue d'ensemble puis chaque variante dans cinq emplois (icône en grand, fond clair, en-tête, une couleur, 30 px), sélecteur des six oranges. `check.js` vert, captures relues, parcours cliqué joué. Corrigé avant livraison : variante « la mâchoire » ratée (flèche cassée) remplacée par « le D » (socle et première onde en D), dessins agrandis dans les tuiles.
 - 2026-11-18 : `MAQUETTE-dicta-huit.html` : les quatre logos gardés (5 la bulle, 6 les barres, 8 les tranches, 9 la pastille) et quatre nouveaux dans leur style (A tranches et barres, B tranches et bulle, C la voix dedans, D la pastille à barres), en terracotta sur anthracite. Vue d'ensemble, écran de connexion avec chacun des huit, puis chaque logo dans cinq emplois. 13 couples mesurés (texte 7:1, forme 3:1), tous au-dessus ; terracotta sur anthracite à 3,35:1. `check.js` vert, captures relues, parcours cliqué joué.
 - 2026-11-18 : `MAQUETTE-dicta-envoi.html` et ses exports dans `MAQUETTE-dicta-envoi-img/` (`dicta-deux-logos.png`, `dicta-deux-logos.pdf` d'une page, `dicta-logo-1.png`, `dicta-logo-2.png`) : les deux logos numérotés 1 et 2, chacun en grand, en icône, sur deux écrans, dans un courriel et en noir, avec la question « le 1 ou le 2 ? ». Aucun terme de travail. Texte relu par l'agent XtraDev : « À retoucher » puis « Prêt » au second tour (« l'application rédige l'offre chiffrée », légendes des icônes). `check.js` vert, exports et PDF relus, largeur au téléphone vérifiée.
+- 2026-11-19 : identité livrée dans `docs/identite/` : `CHARTE.html` et `CHARTE.pdf` (20 pages : marque, logo, couleurs claires et sombres, typographie, composants, verbatim, règles d'ergonomie, écrans, jetons), `VERBATIM.md`, `dicta-tokens.css`, et `logo/` (logo, symbole, icône, version réduite, en SVG sans transformation ni police, plus quatre PNG d'icône). Le nom du logo est tracé en contours d'Archivo gras (OFL). Cône agrandi et bulle réduite par rapport à la planche d'envoi, pour les petites tailles. 21 couples de couleurs mesurés en clair et en sombre (texte 7:1, forme 3:1). Verbatim aligné sur les textes lus dans le code (vouvoiement, objets des courriels, format des montants) et relu par l'agent XtraDev : « À retoucher » deux fois, « Prêt » au troisième tour. `check.js` vert, captures et pages du PDF relues (une page vide corrigée). Les sources de génération sont dans le scratchpad de la session, pas dans le dépôt.
 
 ## Preuves
 
