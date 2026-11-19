@@ -5,7 +5,7 @@
 {% set gestes = {offres_ajoutees: 'Offres ajoutées', membre_cree: 'Compte créé', membre_promu: 'Rôle donné', role_change: 'Rôle changé', membre_retire: "Retiré de l'équipe"} %}
 {% set roles = {moderateur: 'modérateur', commercial: 'commercial'} %}
 {% block retour %}<a class="back" href="/admin/artisans">Artisans</a>{% endblock %}
-{% block sous %}<p>{{ compte.demo == 1 ? 'Démo' : 'Compte' }}{% if compte.demo != 1 %} · {{ compte.courriel }}{% endif %}{% if compte.createur is not null %} · par {{ compte.createur }}{% endif %}</p>{% endblock %}
+{% block sous %}<p>{{ compte.demo == 1 ? 'Démo' : 'Compte' }}{% if compte.demo != 1 %} · {{ compte.courriel }}{% endif %}{% if compte.apporteur is not null %} · amené par {{ compte.apporteur }}{% endif %}{% if compte.createur is not null and compte.cree_par != compte.apporte_par %} · suivi par {{ compte.createur }}{% endif %}</p>{% endblock %}
 
 {% block contenu %}
   {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}

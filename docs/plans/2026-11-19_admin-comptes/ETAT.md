@@ -220,3 +220,59 @@ $ node recette-lot4.js (liste, filtres, recherche vide, fiche, offrir ; administ
 ```
 
 Défauts vus sur les images et corrigés, que les sondes n'avaient pas relevés : logo du menu PC invisible (version pour fond sombre) et en double avec l'en-tête ; étiquette de rôle étirée sur toute la largeur ; bouton « Retirer de l'équipe » rouge plein, passé en contour rouge ; rôles affichés sous leur nom interne dans le fil.
+
+Commit `7a7956d` (lots 1 à 4), poussé sur `chantier-voix-offre` le 2026-11-19, accord de Xavier. Vérifié seul dans une copie propre (`git worktree`, `composer install`) :
+
+```
+sources chargées depuis : /home/xavie/offreGen-verif/src
+OK (613 tests, 4033 assertions)
+ [OK] No errors
+```
+
+Un premier contrôle en copie propre était faux et a été refait : la copie empruntait `vendor/` par un lien, et le chargeur de classes de Composer pointait vers les sources de la copie de travail (avec les fichiers non commités des autres sessions). Les 621 tests de la copie de travail comprennent des tests non commités d'autres sessions.
+
+Déploiement sur le test et premier retour de Xavier (2026-11-19) :
+
+- Xavier : « non mais sur le serveur de test et on fait les tests là-dessus ». Commit `3a1715b` déployé sur le test depuis une copie propre (`git worktree`, `composer install`, `bash outils/deployer-test.sh`), la copie de travail portant les fichiers non commités d'autres sessions. Sortie : « OK (613 tests, 4033 assertions) », migration `Version20261119100001` jouée, « SONDE VERTE », `/sante` annonce `3a1715b`. Non vérifié : aucun parcours connecté sur le test par Claude (pas de mot de passe du compte de Xavier).
+- Retour de Xavier après avoir ouvert `/admin` sur le test : « il manque encore certains éléments », « l'interface pour l'équipe est un peu pourrie », « on ne peut pas créer d'administrateur. Ça pourrait quand même être bien. Mais garde ça pour après ».
+- Constat : la maquette v3 ne dessinait que « Nouveau membre » (E1). La liste de l'équipe et la fiche d'un membre ont été codées sans maquette validée. À refaire par une maquette.
+- À faire plus tard, à la demande de Xavier : créer un administrateur depuis l'interface. Cela remplace la règle A1 du 2026-11-18 (le droit administrateur ne se donne que par commande) : à lier au second facteur de l'équipe, parce qu'une session d'administrateur volée pourrait alors créer un autre administrateur.
+- Écart entre deux chantiers, à trancher par Xavier : ici P2 = B (prix d'exemple gardés, « à vérifier ») ; dans `2026-11-19_metiers-demo`, « va pour A » (essai aux prix à 0) avec l'écran « Vos prix » qui propose le prix de la démo (V6 = A), et Xavier y a dit « oublie la réponse à la maquette ». Hypothèse de Claude : la version du chantier des métiers fait foi, elle est plus récente et plus détaillée. L'électricien y est déjà retiré (remplacé par le maçon).
+
+- Maquette `MAQUETTE-equipe-v7.html` (2026-11-19) : liste rangée par rôle, écran « seul » qui explique les rôles, fiche d'un membre, tableau et fiche sur ordinateur. Questions L1 à L4, en attente de Xavier. Contrôle du kit : bureau 1440/1440, téléphone 390/390, 3 images, 0 cassée ; captures regardées (logo de la bande agrandi par une règle trop large, tableau coupé sous la fiche et deux boutons pleins sur ordinateur : corrigés).
+
+Écran Équipe refait (2026-11-19), réponses de Xavier à `MAQUETTE-equipe-v7.html`, collées telles quelles :
+
+- L1 : Valider
+- L2 : A, la garder
+- L3 : Valider · il faut juste regarder qui a amener les artisans car en fonction il y'a une comission.
+- L4 : Valider · la taille doit être la même tout a droite car la j'ai l'impression que les bouton sont taille smarthphone
+
+Puis : « tu peux commit et push et je regarde en live dès que c'est fais ».
+
+Décisions prises en codant :
+- Commission (L3) : colonne `apporte_par`, posée une fois et jamais changée. `cree_par` reste « qui suit l'artisan » et passe à l'administrateur au départ d'un membre. Avant, retirer un commercial effaçait la trace de celui qui avait amené ses artisans. Le lot 5 (`Demos::creer`) devra poser les deux colonnes. La fiche d'un membre ouvre « Ses artisans » (`/admin/artisans?par=<id>`), la liste et la fiche d'un artisan disent « amené par » et, si c'est quelqu'un d'autre, « suivi par ».
+- Accès pas encore ouvert (L2 = A) : colonne `acces_en_attente`, mise à 1 à l'invitation d'un compte neuf, remise à 0 par `DepotArtisans::remplacerMotDePasse`. Les jetons d'accès ne suffisaient pas : `annulerTout` les marque tous utilisés.
+- L4 : sur PC, tous les boutons de la fiche font 48 px de haut et la largeur du panneau.
+- Écart avec la maquette : le libellé du compteur est « Offres » et non « Offres par mois ». Le plafond d'un compte est un total ; le quota par mois arrive avec le lot B1.
+- Écart avec la maquette : « Renvoyer un lien d'accès » est un bouton au téléphone aussi (c'est un envoi, pas une page).
+- `public/js/admin.js`, fichier neuf : les boutons − et + du compteur. Sans script, ils restent cachés et le champ se remplit au clavier.
+- Sur PC, l'administration prend toute la largeur (l'application s'arrête à 1040 px) : au-delà de 1272 px, l'en-tête s'arrêtait au milieu de l'écran. Défaut vu à la capture de 1440 px, présent depuis le lot 2.
+- Migration `Version20261119100002`, additive.
+
+```
+$ phpunit --filter 'EquipeTest|ArtisansEquipe|testLEquipeASesColonnes'   (tests écrits, avant le code)
+FAILURES! Tests: 29, Assertions: 239, Failures: 7.
+$ doctrine-migrations migrate (bases de test et de développement)
+[OK] Successfully migrated to version: OffreGen\Migrations\Version20261119100002
+$ env APP_ENV=test vendor/bin/phpunit   (après le code)
+OK (657 tests, 5142 assertions)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ node recette-v7.js (téléphone clair, PC sombre 1280, PC clair 1440 ; 27 écrans : liste, accès en attente, fiche, compteur, enregistrer, lien, ses artisans, retrait, seul)
+aucun défaut aux sondes ; compteur 10 -> 11 ; après Enregistrer : « Enregistré. », offres 11, rôle moderateur
+```
+
+Une première suite entière a rendu 198 erreurs (« Duplicate entry 'a@exemple.ch' ») : deux suites tournaient en même temps sur la base de test (une autre session). Relancée seule, elle est verte.
+
+Non vérifié : l'envoi du lien par une vraie messagerie (le chemin « courriel réel » n'a pas de test) ; le parcours connecté sur le site de test (pas de mot de passe du compte de Xavier).

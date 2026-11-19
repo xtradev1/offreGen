@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Écran Équipe, v7</title>
+<style>
+/* Charte Dicta du 19.11 (docs/identite/CHARTE.html, dicta-tokens.css) : jetons, composants, polices et logo. */
+@font-face { font-family: "Archivo"; font-weight: 500 700; font-display: swap; src: url("../../../public/fonts/archivo-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("../../../public/fonts/inter-latin.woff2") format("woff2"); }
+:root {
+  --mk-ink: #23272D; --mk-bg: #F4F1EA; --mk-surface: #FFFFFF; --mk-line: #DDD8CC; --mk-accent: #23272D;
+  --fond: #F4F1EA; --carte: #FFFFFF; --encre: #23272D; --doux: #454B55; --trait: #DDD8CC; --etiquette: #EBE7DE; --bord: #7C838C;
+  --bande: #23272D; --sur-bande: #FFFFFF; --bande-doux: #B9BDC3; --acc: #23272D; --sur-acc: #FFFFFF; --mic: #C4552D; --sur-mic: #FFFFFF;
+  --ok: #13553A; --ok-fond: #E1EFE6; --att: #5A4300; --att-fond: #FFF0B3; --att-ligne: #FFFAE5; --err: #8C1D18; --err-fond: #FBE7E4;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --att-ligne: #221D14; --err: #FF9A91; --err-fond: #3B1613; } }
+:root[data-theme="dark"] {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --att-ligne: #221D14; --err: #FF9A91; --err-fond: #3B1613; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.55 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.doc { max-width: 1180px; margin: 0 auto; padding: 16px; }
+.doc > h1, .doc > h2 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.3px; }
+.doc > h1 { font-size: 28px; line-height: 1.2; margin: 18px 0 8px; }
+.doc > h2 { font-size: 22px; line-height: 1.25; margin: 36px 0 8px; }
+.doc > p, .doc li { max-width: 820px; }
+.regle { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--ok); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+.regle b { color: var(--ok); }
+.moi { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--mic); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+.exemple { font-size: 13px; font-weight: 600; color: var(--doux); background: var(--etiquette); border-radius: 999px; padding: 2px 10px; }
+
+/* Le téléphone, selon la charte (partie 8) */
+.ecrans { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; margin: 14px 0 6px; }
+.ecrans figure { margin: 0; width: 340px; max-width: 100%; }
+.ecrans figcaption { font-size: 14px; color: var(--doux); margin-top: 6px; }
+.tel { position: relative; border: 1px solid var(--trait); border-radius: 22px; overflow: hidden; background: var(--fond); color: var(--encre); display: flex; flex-direction: column; min-height: 690px; }
+.tel h1, .tel h2, .tel h3, .tel .btn, .tel .etat, .tel label, .tel .metier, .tel .seg span { font-family: "Archivo", system-ui, sans-serif; }
+.bande { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px; background: var(--bande); color: var(--sur-bande); border-bottom: 3px solid var(--mic); }
+.bande img { display: block; height: 26px; width: auto; }
+.bande .retour { display: flex; align-items: center; gap: 4px; color: var(--sur-bande); font: 600 15px "Archivo", system-ui, sans-serif; }
+.role { font: 700 11.5px "Archivo", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--sur-bande); border: 1.5px solid var(--mic); border-radius: 999px; padding: 3px 9px; }
+.tete { padding: 20px 16px 12px; }
+.tete h1 { font-size: 25px; font-weight: 600; letter-spacing: -.4px; line-height: 1.2; margin: 0; }
+.tete .sous { color: var(--doux); margin: 4px 0 0; font-size: 15px; }
+.corps { flex: 1; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.liste { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.item { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; align-items: center; padding: 13px 14px; border-top: 1px solid var(--trait); }
+.item:first-child { border-top: 0; }
+.item b { font-weight: 600; font-size: 16px; }
+.item .meta { color: var(--doux); font-size: 14px; }
+.item .fl { grid-row: span 2; color: var(--doux); font-size: 20px; }
+.groupe { font: 700 12px "Archivo", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--doux); margin: 6px 2px -4px; }
+.etat { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--etiquette); color: var(--encre); white-space: nowrap; }
+.etat svg { width: 15px; height: 15px; }
+.etat.contour { background: transparent; box-shadow: inset 0 0 0 1.5px var(--bord); }
+.etat.ok { background: var(--ok-fond); color: var(--ok); }
+.etat.att { background: var(--att-fond); color: var(--att); }
+.etat.err { background: var(--err-fond); color: var(--err); }
+.seg { display: flex; padding: 3px; border-radius: 12px; background: var(--etiquette); }
+.seg span { flex: 1; text-align: center; font-size: 14px; font-weight: 600; color: var(--doux); padding: 9px 4px; border-radius: 9px; white-space: nowrap; }
+.seg span.on { background: var(--carte); color: var(--encre); box-shadow: inset 0 0 0 1px var(--trait); }
+.recherche { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--carte); color: var(--doux); font-size: 15px; }
+.recherche svg { width: 20px; height: 20px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 17px; min-height: 56px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--carte); color: var(--encre); box-shadow: inset 0 0 0 1.5px var(--encre); text-align: center; }
+.btn svg { width: 20px; height: 20px; }
+.btn.principal { background: var(--acc); color: var(--sur-acc); box-shadow: none; min-height: 64px; }
+.btn.danger { color: var(--err); box-shadow: inset 0 0 0 1.5px var(--err); }
+.btn.large { width: 100%; }
+.actionbar { display: flex; gap: 8px; padding: 10px 16px 14px; background: var(--carte); border-top: 1px solid var(--trait); }
+.actionbar .btn { flex: 1; }
+/* La barre du bas : icônes et mots, le rond terracotta au centre (ici : « Nouvelle démo »). */
+.nav { height: 72px; background: var(--carte); border-top: 1px solid var(--trait); display: grid; align-items: center; }
+.nav.cinq { grid-template-columns: repeat(5, 1fr); }
+.nav.trois { grid-template-columns: repeat(3, 1fr); }
+.nav a { color: var(--doux); font-size: 12px; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.nav a svg { width: 23px; height: 23px; }
+.nav a.on { color: var(--encre); font-weight: 600; }
+.nav .rond { justify-self: center; width: 64px; height: 64px; margin-top: -30px; border-radius: 50%; background: var(--mic); color: var(--sur-mic); display: grid; place-items: center; border: 5px solid var(--carte); }
+.nav .rond svg { width: 28px; height: 28px; }
+.champ { display: grid; gap: 6px; }
+.champ label { font-size: 14px; font-weight: 600; }
+.champ .saisie { min-height: 48px; padding: 11px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--carte); font-size: 16px; }
+.champ .saisie.actif { box-shadow: 0 0 0 3px var(--mic); border-color: var(--mic); }
+.metiers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.metier { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 10px 12px; border: 1px solid var(--trait); border-radius: 14px; background: var(--carte); font-size: 16px; font-weight: 600; }
+.metier svg { width: 26px; height: 26px; flex: none; }
+.metier.on { box-shadow: inset 0 0 0 2px var(--encre); border-color: var(--encre); }
+.metier small { display: block; font: 500 12px "Inter", system-ui, sans-serif; color: var(--doux); }
+.compteur { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 10px 12px; }
+.compteur b { font: 600 16px "Archivo", system-ui, sans-serif; }
+.compteur .pas { display: flex; align-items: center; gap: 6px; }
+.compteur .pas span { min-width: 40px; text-align: center; font: 700 22px "Archivo", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.compteur .pas i { font-style: normal; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--encre); font-size: 22px; background: var(--carte); }
+.note { font-size: 14px; color: var(--doux); }
+.info { font-size: 14px; border-radius: 12px; padding: 10px 12px; background: var(--etiquette); }
+.info.att { background: var(--att-fond); color: var(--att); }
+/* Démo prête */
+.pret { align-items: center; text-align: center; padding-top: 24px; }
+.coche { width: 52px; height: 52px; border-radius: 50%; background: var(--ok-fond); color: var(--ok); display: grid; place-items: center; }
+.coche svg { width: 28px; height: 28px; }
+.qr-cadre { background: #FFFFFF; border: 1px solid var(--trait); border-radius: 18px; padding: 14px; }
+svg.qr { display: block; width: 200px; height: 200px; }
+.minuterie { font-size: 15px; color: var(--doux); }
+.minuterie b { color: var(--encre); font-variant-numeric: tabular-nums; }
+/* Fiche : la jauge dit tout d'un coup d'œil */
+.fiche-tete { display: flex; align-items: center; gap: 12px; }
+.pastille { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font: 700 17px "Archivo", system-ui, sans-serif; background: var(--etiquette); flex: none; }
+.jauge { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; }
+.jauge .haut { display: flex; justify-content: space-between; align-items: baseline; }
+.jauge .haut b { font: 700 24px "Archivo", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.jauge .barre { height: 10px; border-radius: 5px; background: var(--etiquette); overflow: hidden; }
+.jauge .barre i { display: block; height: 100%; background: var(--encre); border-radius: 5px; }
+.jauge .barre.pleine i { background: var(--att); }
+.ajouts { display: flex; gap: 8px; }
+.ajouts span { flex: 1; text-align: center; min-height: 48px; display: grid; place-items: center; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--encre); font: 600 16px "Archivo", system-ui, sans-serif; background: var(--carte); }
+.lignes-action .item { min-height: 56px; }
+.lignes-action .item b { display: flex; align-items: center; gap: 10px; }
+.lignes-action svg { width: 22px; height: 22px; }
+.fil { display: grid; gap: 0; }
+.fil div { display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 9px 14px; border-top: 1px solid var(--trait); font-size: 14px; }
+.fil div:first-child { border-top: 0; }
+.fil time { color: var(--doux); font-variant-numeric: tabular-nums; }
+.fil .err { color: var(--err); font-weight: 600; }
+.logo-ex { font: 700 18px "Archivo", system-ui, sans-serif; }
+/* Rôles */
+.droits { width: 100%; max-width: 980px; border-collapse: collapse; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; font-size: 15px; }
+.droits th, .droits td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--trait); vertical-align: top; }
+.droits th { font: 700 12.5px "Archivo", system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; color: var(--doux); }
+.droits td.o { color: var(--ok); font-weight: 600; }
+.droits td.n { color: var(--doux); }
+.defile { overflow-x: auto; }
+/* PC */
+.pc { display: grid; grid-template-columns: 210px minmax(0, 1fr) 340px; min-height: 560px; border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; background: var(--fond); color: var(--encre); min-width: 1000px; }
+.pc .menu { background: var(--bande); color: var(--sur-bande); padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; border-right: 3px solid var(--mic); }
+.pc .menu img { height: 26px; width: auto; margin: 0 10px 6px; align-self: flex-start; }
+.pc .menu .role { align-self: flex-start; margin: 0 10px 14px; }
+.pc .menu span { font-size: 15px; padding: 10px; border-radius: 9px; color: var(--bande-doux); display: flex; align-items: center; gap: 10px; }
+.pc .menu span svg { width: 20px; height: 20px; }
+.pc .menu span.on { background: rgba(255, 255, 255, .14); color: var(--sur-bande); font-weight: 600; }
+.pc .menu .fin { margin-top: auto; font-size: 14px; }
+.pc .milieu { padding: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pc .milieu .ligne { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pc .milieu h1 { font: 600 25px "Archivo", system-ui, sans-serif; margin: 0 auto 0 0; }
+.pc .milieu .recherche { flex: 1; min-width: 180px; }
+.pc table { width: 100%; border-collapse: collapse; font-size: 14.5px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.pc th, .pc td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--trait); white-space: nowrap; }
+.pc th { font: 700 12px "Archivo", system-ui, sans-serif; color: var(--doux); text-transform: uppercase; letter-spacing: .05em; }
+.pc td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.pc tr.on td { background: var(--fond); }
+.pc tr.on td:first-child { box-shadow: inset 4px 0 0 var(--encre); }
+.pc .droite { background: var(--carte); border-left: 1px solid var(--trait); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.pc .droite h2 { margin: 0; font: 600 21px "Archivo", system-ui, sans-serif; }
+.pc .btn { min-height: 52px; font-size: 16px; }
+.pc .btn.principal { min-height: 56px; }
+
+/* Décisions */
+.choix { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 12px 14px; margin: 12px 0 22px; max-width: 980px; }
+.choix .q { margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--bord); background: var(--carte); color: var(--encre); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--sur-acc); font-weight: 600; }
+.opts button:focus-visible, #copier:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.choix textarea, #texte { width: 100%; font: inherit; font-size: 15px; border: 1px solid var(--bord); border-radius: 10px; padding: 8px 10px; background: var(--carte); color: var(--encre); }
+#texte { min-height: 170px; }
+#copier { font: 600 16px "Archivo", system-ui, sans-serif; min-height: 52px; padding: 10px 20px; border-radius: 12px; border: 0; background: var(--acc); color: var(--sur-acc); cursor: pointer; }
+@media (max-width: 420px) { .ecrans figure { width: 100%; } }
+
+/* v3 */
+.bandeau-fin { display: grid; gap: 8px; background: var(--carte); border: 1px solid var(--trait); border-left: 4px solid var(--mic); border-radius: 14px; padding: 12px 14px; }
+.bandeau-fin span:not(.btn) { color: var(--doux); font-size: 14px; }
+.carte-msg { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; font-size: 15px; line-height: 1.5; }
+.carte-msg p { margin: 0 0 8px; }
+.carte-msg p:last-child { margin: 0; }
+.carte-msg .url { color: var(--doux); word-break: break-all; }
+.formule { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; }
+.formule div { display: grid; }
+.formule b { font: 600 17px "Archivo", system-ui, sans-serif; }
+.formule.on { box-shadow: inset 0 0 0 2px var(--encre); border-color: var(--encre); }
+.formule .prix { font: 700 18px "Archivo", system-ui, sans-serif; white-space: nowrap; }
+.formule .prix small { font: 500 12px "Inter", system-ui, sans-serif; color: var(--doux); margin-left: 3px; }
+.chiffres3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.chiffres3 div { background: var(--carte); border: 1px solid var(--trait); border-radius: 12px; padding: 9px 10px; }
+.chiffres3 span { display: block; font-size: 12px; color: var(--doux); }
+.chiffres3 b { font: 700 20px "Archivo", system-ui, sans-serif; }
+.nav a { white-space: nowrap; }
+.jauge .haut b { white-space: nowrap; }
+.item .montant { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+
+/* v4 */
+[hidden] { display: none !important; }
+.va { font: 600 14.5px "Archivo", system-ui, sans-serif; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.ruban { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 6px 16px; background: var(--carte); border-bottom: 1px solid var(--trait); font-size: 14px; }
+.ruban b { font-family: "Archivo", system-ui, sans-serif; }
+.voile { position: absolute; inset: 0; background: rgba(15, 17, 19, .58); }
+.feuille { position: absolute; left: 0; right: 0; bottom: 0; background: var(--carte); border-radius: 22px 22px 0 0; padding: 10px 16px 18px; display: grid; gap: 12px; }
+.feuille .poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--trait); justify-self: center; }
+.feuille .fermer { position: absolute; top: 6px; right: 6px; width: 48px; height: 48px; display: grid; place-items: center; color: var(--doux); font-size: 24px; }
+.feuille h2 { margin: 0; font: 600 23px/1.2 "Archivo", system-ui, sans-serif; letter-spacing: -.3px; }
+.feuille p { margin: 0; color: var(--doux); }
+img.icone { width: 52px; height: 52px; border-radius: 12px; display: block; }
+.hero { display: grid; gap: 8px; justify-items: start; }
+.hero img { width: 52px; height: 52px; border-radius: 12px; }
+.hero .grand { font: 700 44px/1 "Archivo", system-ui, sans-serif; letter-spacing: -1.2px; }
+.hero .grand small { display: block; font: 600 22px/1.3 "Archivo", system-ui, sans-serif; letter-spacing: -.3px; margin-top: 4px; }
+.promesse { display: flex; gap: 8px; }
+.promesse div { flex: 1; background: var(--etiquette); border-radius: 12px; padding: 10px 12px; }
+.promesse b { display: block; font: 700 19px "Archivo", system-ui, sans-serif; }
+.promesse span { font-size: 13px; color: var(--doux); }
+.garde { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.garde h3 { margin: 0; font: 600 18px "Archivo", system-ui, sans-serif; }
+.garde ul, .points { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.garde li, .points li { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.garde li svg, .points li svg { width: 20px; height: 20px; color: var(--ok); flex: none; }
+.garde .retire { font-size: 14px; color: var(--doux); border-top: 1px solid var(--trait); padding-top: 10px; }
+.choix-moment { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.choix-moment span { min-height: 48px; display: grid; place-items: center; text-align: center; border-radius: 12px; background: var(--carte); box-shadow: inset 0 0 0 1.5px var(--bord); font: 600 14px/1.2 "Archivo", system-ui, sans-serif; padding: 4px; }
+.choix-moment span.on { box-shadow: inset 0 0 0 2.5px var(--encre); }
+.plan { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 16px; display: grid; gap: 10px; }
+.plan .nom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.plan .nom b { font: 700 24px "Archivo", system-ui, sans-serif; letter-spacing: -.4px; }
+.plan .pour { font-size: 15px; }
+.plan .points li { font: 600 15px "Archivo", system-ui, sans-serif; }
+.plan .detail, .plan .apres { font-size: 13.5px; color: var(--doux); }
+.plan .prix { font: 700 32px/1.1 "Archivo", system-ui, sans-serif; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
+.plan .prix { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
+.plan .prix small { font: 500 14px "Inter", system-ui, sans-serif; color: var(--doux); letter-spacing: 0; white-space: nowrap; }
+.plan[data-plan] { cursor: pointer; }
+.plan[data-plan]:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.plan[aria-checked="true"] { box-shadow: inset 0 0 0 2.5px var(--encre); border-color: var(--encre); }
+.plan .radio { width: 26px; height: 26px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--bord); flex: none; }
+.plan[aria-checked="true"] .radio { background: var(--encre); box-shadow: inset 0 0 0 6px var(--encre), inset 0 0 0 13px var(--carte); }
+.btn.inactif { background: var(--trait); color: var(--doux); box-shadow: none; }
+.feuille h2, .tete h1, .pret h1 { text-wrap: balance; }
+[data-bascule] span { cursor: pointer; }
+[data-bascule] span:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.rappel { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; }
+.rappel .qui { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.rappel b { font: 600 16px "Archivo", system-ui, sans-serif; }
+.rappel .meta { font-size: 14px; color: var(--doux); }
+.rappel .gestes { display: flex; gap: 8px; }
+.rappel .btn { flex: 1; min-height: 48px; font-size: 15px; padding: 0 10px; white-space: nowrap; }
+.nav a { position: relative; }
+.pastille-n { position: absolute; top: -5px; left: 50%; margin-left: 8px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--encre); color: var(--carte); font: 700 11px/18px "Archivo", system-ui, sans-serif; text-align: center; }
+.courriel { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 14px 16px; font-size: 15px; color: var(--encre); }
+.courriel .entetes { color: var(--doux); font-size: 13.5px; border-bottom: 1px solid var(--trait); padding-bottom: 8px; margin: 0 0 10px; }
+.courriel p { margin: 0 0 8px; max-width: none; }
+.metiers.neuf { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.metiers.neuf .metier { flex-direction: column; justify-content: center; text-align: center; gap: 6px; min-height: 84px; padding: 8px 4px; font-size: 14px; line-height: 1.2; }
+.pret .va { margin-top: 2px; }
+
+/* v5 */
+.etat.reco { background: var(--acc); color: var(--sur-acc); justify-self: start; }
+.fil b { font-family: "Archivo", system-ui, sans-serif; }
+.fil time { font-size: 13px; }
+.fil div { grid-template-columns: 64px 1fr; }
+
+/* v6 */
+.plan .prix s { font-weight: 500; font-size: 18px; color: var(--doux); letter-spacing: 0; }
+.plan .prix .etat { align-self: center; }
+.plan .seg { margin: 2px 0; }
+
+/* v7 */
+.nav svg { width: 22px; height: 22px; }
+.garde h3 { margin: 0; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.garde h3 svg { width: 22px; height: 22px; }
+.item b .etat { margin-left: 6px; vertical-align: 1px; }
+.compteur .pas { display: flex; align-items: center; gap: 12px; }
+.compteur .pas b { font: 600 18px "Archivo", system-ui, sans-serif; min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; }
+.pc .milieu .ligne .btn { flex: none; }
+.pc .menu .role { padding: 3px 9px; font-size: 11.5px; color: var(--sur-bande); }
+.pc th:nth-child(n+3) { text-align: right; }
+.pc td:first-child { white-space: normal; }
+.pc td:first-child .etat { margin-top: 3px; }
+.ecrans > figure > img { display: block; width: 100%; height: auto; border: 1px solid var(--trait); border-radius: 14px; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<div class="doc">
+<nav id="mk-toc"></nav>
+<h1>L'écran Équipe, refait (v7)</h1>
+<p>Ton retour du 19.11 sur le site de test : « l'interface pour l'équipe est un peu pourrie ». Tu as raison, et la cause est simple : la maquette que tu avais validée ne dessinait que « Nouveau membre ». La liste et la fiche d'un membre ont été codées sans maquette. Les voici dessinées. <span class="exemple">Noms d'exemple</span></p>
+
+<h2 id="avant" data-toc="Avant">Ce qui est sur le test aujourd'hui</h2>
+<div class="ecrans">
+  <figure style="width:300px"><img src="MAQUETTE-equipe-v7-img/avant-liste-tel.png" alt="La liste de l'équipe au téléphone, telle qu'elle est sur le test : deux lignes et un bouton, le reste de l'écran est vide"><figcaption>La liste au téléphone</figcaption></figure>
+  <figure style="width:300px"><img src="MAQUETTE-equipe-v7-img/avant-fiche-tel.png" alt="La fiche d'un membre au téléphone, telle qu'elle est sur le test : un nom, deux boutons, une phrase"><figcaption>La fiche d'un membre</figcaption></figure>
+  <figure style="width:620px"><img src="MAQUETTE-equipe-v7-img/avant-liste-pc.png" alt="La liste de l'équipe sur ordinateur, telle qu'elle est sur le test : deux lignes étirées sur toute la largeur, le bouton isolé en bas à droite"><figcaption>La liste sur ordinateur</figcaption></figure>
+</div>
+<p class="moi"><b>Les défauts, sans les adoucir.</b> La page ne dit pas ce qu'est un commercial ni un modérateur. Seul dans l'équipe, tu vois une ligne et un écran vide. Sur ordinateur, c'est l'écran du téléphone étiré, avec le bouton à l'autre bout de la page. La fiche d'un membre a deux boutons de même poids, « Passer commercial » qui ne dit pas ce que ça change, et une phrase accordée au féminin pour tout le monde. « Nouveau membre » est un nom alors que la charte demande un verbe.</p>
+
+<h2 id="liste" data-toc="La liste">La liste : rangée par rôle, et qui explique les rôles</h2>
+<p>Chaque rôle a son groupe et une ligne qui dit ce qu'il fait. Quand tu es seul, l'écran sert à comprendre ce que tu peux ajouter. Le bouton devient « Ajouter un membre ».</p>
+<div class="ecrans">
+  <figure>
+    <div class="tel">
+      <div class="bande"><img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Admin</span></div>
+      <div class="tete"><h1>Équipe</h1><p class="sous">Vous êtes seul pour l'instant.</p></div>
+      <div class="corps">
+        <span class="groupe">Administrateur</span>
+        <div class="liste"><div class="item"><b>XtraDev <span class="etat contour">Vous</span></b><span class="fl"></span><span class="meta">Accès à tout</span></div></div>
+        <span class="groupe">Vous pouvez ajouter</span>
+        <div class="garde"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Un commercial</h3><span class="note">Il crée des démos chez les artisans et suit les siens. Il ne voit que ses artisans.</span></div>
+        <div class="garde"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3 2.800-4.500 6-4.500s5.400 1.500 6 4.500M14 15.600c.6-.1 1.300-.1 2-.1 3.200 0 5.400 1.500 6 4.500"/></svg>Un modérateur</h3><span class="note">Il voit tous les artisans et aide ceux qui bloquent. Il peut leur offrir quelques offres.</span></div>
+      </div>
+      <div class="actionbar"><span class="btn principal">Ajouter un membre</span></div>
+      <div class="nav" style="grid-template-columns:repeat(4,1fr)"><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Tableau</a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.2-5.5 6.5-5.5s5.700 1.900 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18 14.800c1.900.7 3 2.400 3.500 5.200"/></svg>Artisans</a><a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3 2.800-4.500 6-4.500s5.400 1.500 6 4.500M14 15.600c.6-.1 1.300-.1 2-.1 3.200 0 5.400 1.500 6 4.500"/></svg>Équipe</a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.300"/><circle cx="12" cy="12" r="1.300"/><circle cx="19" cy="12" r="1.300"/></svg>Plus</a></div>
+    </div>
+    <figcaption>1. Seul dans l'équipe : l'écran explique les deux rôles</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Admin</span></div>
+      <div class="tete"><h1>Équipe</h1><p class="sous">Vous et 3 personnes</p></div>
+      <div class="corps">
+        <span class="groupe">Administrateur</span>
+        <div class="liste"><div class="item"><b>XtraDev <span class="etat contour">Vous</span></b><span class="fl"></span><span class="meta">Accès à tout</span></div></div>
+        <span class="groupe">Commerciaux</span>
+        <span class="note">Ils créent des démos et ne voient que leurs artisans.</span>
+        <div class="liste">
+          <div class="item"><b>Nina Rey</b><span class="fl">›</span><span class="meta">3 artisans · 10 offres par mois</span></div>
+          <div class="item"><b>Léo Favre <span class="etat att">Accès pas encore ouvert</span></b><span class="fl">›</span><span class="meta">Invité le 19.11.2026</span></div>
+        </div>
+        <span class="groupe">Modérateurs</span>
+        <span class="note">Ils voient tous les artisans et aident ceux qui bloquent.</span>
+        <div class="liste"><div class="item"><b>Maud Perret</b><span class="fl">›</span><span class="meta">10 offres par mois</span></div></div>
+      </div>
+      <div class="actionbar"><span class="btn principal">Ajouter un membre</span></div>
+      <div class="nav" style="grid-template-columns:repeat(4,1fr)"><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Tableau</a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.2-5.5 6.5-5.5s5.700 1.900 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18 14.800c1.900.7 3 2.400 3.500 5.200"/></svg>Artisans</a><a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3 2.800-4.500 6-4.500s5.400 1.500 6 4.500M14 15.600c.6-.1 1.300-.1 2-.1 3.200 0 5.400 1.500 6 4.500"/></svg>Équipe</a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.300"/><circle cx="12" cy="12" r="1.300"/><circle cx="19" cy="12" r="1.300"/></svg>Plus</a></div>
+    </div>
+    <figcaption>2. Avec une équipe : un groupe par rôle</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="L1"><p class="q"><b>L1</b> · La liste rangée par rôle, l'écran « seul » qui explique les rôles, le bouton « Ajouter un membre »</p><div class="opts"><button type="button" data-q="L1" data-v="Valider">Valider</button><button type="button" data-q="L1" data-v="Pas valider">Pas valider</button></div><textarea data-c="L1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+<div class="choix" data-cle="L2"><p class="q"><b>L2</b> · L'étiquette « Accès pas encore ouvert » tant que la personne n'a pas choisi son mot de passe. Elle demande de retenir cette information, ce que le site ne fait pas aujourd'hui.</p><div class="opts"><button type="button" data-q="L2" data-v="A, la garder">A · La garder</button><button type="button" data-q="L2" data-v="B, s'en passer">B · S'en passer</button></div><textarea data-c="L2" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="fiche" data-toc="La fiche">La fiche d'un membre</h2>
+<p>Le rôle se choisit, avec sa conséquence écrite dessous. Un seul bouton principal. « Renvoyer un lien d'accès » règle le cas du mot de passe perdu sans passer par moi. Le retrait est à part, en contour rouge, avec ce qu'il entraîne.</p>
+<div class="ecrans">
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Équipe</span><span class="role">Admin</span></div>
+      <div class="tete"><h1>Nina Rey</h1><p class="sous">nina.rey@exemple.ch</p></div>
+      <div class="corps">
+        <div class="champ"><label>Rôle</label><div class="seg"><span class="on">Commercial</span><span>Modérateur</span></div><span class="note">Crée des démos et ne voit que ses artisans.</span></div>
+        <div class="compteur"><span><b>Offres par mois</b><br><span class="note">Dans son espace artisan</span></span><span class="pas"><i>−</i><b>10</b><i>+</i></span></div>
+        <div class="liste lignes-action">
+          <div class="item"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.2-5.5 6.5-5.5s5.700 1.900 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18 14.800c1.900.7 3 2.400 3.500 5.200"/></svg>Ses artisans</b><span class="fl">›</span><span class="meta">3 artisans</span></div>
+          <div class="item"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.700 0l3-3a4 4 0 0 0-5.700-5.700l-1 1M14 10a4 4 0 0 0-5.700 0l-3 3a4 4 0 0 0 5.700 5.700l1-1"/></svg>Renvoyer un lien d'accès</b><span class="fl">›</span><span class="meta">Pour choisir un nouveau mot de passe</span></div>
+        </div>
+        <span class="btn danger large" style="margin-top:auto">Retirer de l'équipe</span>
+        <span class="note">Nina Rey garde son espace artisan. Ses 3 artisans passent à vous.</span>
+      </div>
+      <div class="actionbar"><span class="btn principal">Enregistrer</span></div>
+      <div class="nav" style="grid-template-columns:repeat(4,1fr)"><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Tableau</a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.2-5.5 6.5-5.5s5.700 1.900 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18 14.800c1.900.7 3 2.400 3.500 5.200"/></svg>Artisans</a><a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3 2.800-4.500 6-4.500s5.400 1.500 6 4.500M14 15.600c.6-.1 1.300-.1 2-.1 3.200 0 5.400 1.500 6 4.500"/></svg>Équipe</a><a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.300"/><circle cx="12" cy="12" r="1.300"/><circle cx="19" cy="12" r="1.300"/></svg>Plus</a></div>
+    </div>
+    <figcaption>3. La fiche : rôle, offres, accès, retrait</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="L3"><p class="q"><b>L3</b> · La fiche d'un membre : rôle à choisir, offres par mois réglables, « Ses artisans », « Renvoyer un lien d'accès », retrait à part</p><div class="opts"><button type="button" data-q="L3" data-v="Valider">Valider</button><button type="button" data-q="L3" data-v="Pas valider">Pas valider</button></div><textarea data-c="L3" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="pc" data-toc="Ordinateur">Sur ordinateur : un tableau, la fiche à côté</h2>
+<p>Même disposition que la liste des artisans de la v3 : le tableau au milieu, la fiche de la personne choisie à droite, le bouton à côté du titre. Quand une fiche est ouverte, « Enregistrer » est le seul bouton plein de l'écran et « Ajouter un membre » passe en contour.</p>
+<div class="defile">
+  <div class="pc">
+    <div class="menu">
+      <img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Admin</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Tableau</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.2-5.5 6.5-5.5s5.700 1.900 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18 14.800c1.900.7 3 2.400 3.500 5.200"/></svg>Artisans</span><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3 2.800-4.500 6-4.500s5.400 1.500 6 4.500M14 15.600c.6-.1 1.300-.1 2-.1 3.200 0 5.400 1.500 6 4.500"/></svg>Équipe</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.300"/><circle cx="12" cy="12" r="1.300"/><circle cx="19" cy="12" r="1.300"/></svg>Plus</span>
+      <span class="fin">Revenir à mon espace artisan</span>
+    </div>
+    <div class="milieu">
+      <div class="ligne"><h1>Équipe</h1><span class="btn">Ajouter un membre</span></div>
+      <table>
+        <tr><th>Nom</th><th>Rôle</th><th>Artisans</th><th>Offres / mois</th></tr>
+        <tr><td><b>XtraDev</b> <span class="etat contour">Vous</span></td><td>Administrateur</td><td class="n">5</td><td class="n">Sans plafond</td></tr>
+        <tr class="on"><td><b>Nina Rey</b></td><td>Commercial</td><td class="n">3</td><td class="n">10</td></tr>
+        <tr><td><b>Léo Favre</b> <span class="etat att">Accès pas encore ouvert</span></td><td>Commercial</td><td class="n">0</td><td class="n">10</td></tr>
+        <tr><td><b>Maud Perret</b></td><td>Modérateur</td><td class="n">0</td><td class="n">10</td></tr>
+      </table>
+      <span class="note">Commercial : crée des démos et ne voit que ses artisans. Modérateur : voit tous les artisans et aide ceux qui bloquent.</span>
+    </div>
+    <div class="droite">
+      <h2>Nina Rey</h2>
+      <span class="note">nina.rey@exemple.ch</span>
+      <div class="champ"><label>Rôle</label><div class="seg"><span class="on">Commercial</span><span>Modérateur</span></div></div>
+      <div class="compteur"><span><b>Offres par mois</b></span><span class="pas"><i>−</i><b>10</b><i>+</i></span></div>
+      <span class="btn principal">Enregistrer</span>
+      <span class="btn">Renvoyer un lien d'accès</span>
+      <span class="btn danger" style="margin-top:auto">Retirer de l'équipe</span>
+      <span class="note">Nina Rey garde son espace artisan. Ses 3 artisans passent à vous.</span>
+    </div>
+  </div>
+</div>
+<div class="choix" data-cle="L4"><p class="q"><b>L4</b> · Sur ordinateur : le tableau et la fiche à côté</p><div class="opts"><button type="button" data-q="L4" data-v="Valider">Valider</button><button type="button" data-q="L4" data-v="Pas valider">Pas valider</button></div><textarea data-c="L4" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="plus-tard" data-toc="Plus tard">Noté pour plus tard</h2>
+<p class="regle"><b>Créer un administrateur depuis l'interface :</b> tu l'as demandé le 19.11, « garde ça pour après ». Je le ferai avec le second facteur de l'équipe : sans lui, une session d'administrateur volée suffirait à créer un autre administrateur. D'ici là, ce droit se donne par commande, comme tu l'as décidé le 18.11.</p>
+
+<h2 id="copier-texte" data-toc="Copier">Copier le texte</h2>
+<p><button id="copier" type="button">Copier le texte</button></p>
+<textarea id="texte" readonly></textarea>
+
+</div>
+<script>
+(function () {
+  // QR d'exemple : trois repères d'angle et un semis fixe. Le vrai sera fait par endroid/qr-code.
+  var n = 29, graine = 7, cases = '';
+  function hasard() { graine = (graine * 9301 + 49297) % 233280; return graine / 233280; }
+  function repere(x, y) { return '<path d="M' + x + ' ' + y + 'h7v7h-7zM' + (x + 1) + ' ' + (y + 1) + 'v5h5v-5z" fill-rule="evenodd"/><rect x="' + (x + 2) + '" y="' + (y + 2) + '" width="3" height="3"/>'; }
+  for (var y = 0; y < n; y++) { for (var x = 0; x < n; x++) {
+    var coin = (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9);
+    if (!coin && hasard() > 0.52) { cases += '<rect x="' + x + '" y="' + y + '" width="1" height="1"/>'; }
+  } }
+  document.querySelectorAll('svg.qr').forEach(function (s) { s.innerHTML = '<g fill="#1B1E22">' + repere(0, 0) + repere(n - 7, 0) + repere(0, n - 7) + cases + '</g>'; });
+
+  var CLE = 'maquette-admin-equipe-v7-2026-11-19', etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  function texte() {
+    var lignes = [];
+    document.querySelectorAll('.choix').forEach(function (c) {
+      var q = c.getAttribute('data-cle'), e = etat[q] || {};
+      if (e.v || e.c) { lignes.push('- ' + q + ' : ' + (e.v || '') + (e.c ? ' · ' + e.c : '')); }
+    });
+    document.getElementById('texte').value = lignes.length ? 'Réponses, maquette Équipe v7 (19.11) :\n' + lignes.join('\n') : '';
+  }
+  document.querySelectorAll('.opts button').forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    b.setAttribute('aria-pressed', (etat[q] && etat[q].v === b.getAttribute('data-v')) ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      etat[q] = etat[q] || {};
+      etat[q].v = b.getAttribute('data-v');
+      document.querySelectorAll('.opts button[data-q="' + q + '"]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      garder(); texte();
+    });
+  });
+  document.querySelectorAll('textarea[data-c]').forEach(function (t) {
+    var q = t.getAttribute('data-c');
+    t.value = (etat[q] && etat[q].c) || '';
+    t.addEventListener('input', function () { etat[q] = etat[q] || {}; etat[q].c = t.value; garder(); texte(); });
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    texte();
+    var t = document.getElementById('texte');
+    t.select();
+    try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand('copy'); }
+  });
+  texte();
+})();
+
+(function () {
+  var seg = document.querySelector('[data-bascule]');
+  if (!seg) { return; }
+  seg.querySelectorAll('span').forEach(function (s) {
+    s.setAttribute('role', 'button'); s.tabIndex = 0;
+    function choisir() {
+      seg.querySelectorAll('span').forEach(function (x) { x.classList.toggle('on', x === s); });
+      var mode = s.getAttribute('data-mode');
+      document.querySelectorAll('[data-mois]').forEach(function (e) { e.hidden = mode !== 'mois'; });
+      document.querySelectorAll('[data-an]').forEach(function (e) { e.hidden = mode !== 'an'; });
+    }
+    s.addEventListener('click', choisir);
+    s.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choisir(); } });
+  });
+})();
+
+(function () {
+  var cartes = document.querySelectorAll('.plan[data-plan]'), bouton = document.getElementById('choisir-formule');
+  if (!bouton) { return; }
+  cartes.forEach(function (c) {
+    function choisir() {
+      cartes.forEach(function (x) { x.setAttribute('aria-checked', x === c ? 'true' : 'false'); });
+      bouton.textContent = 'Continuer avec ' + c.getAttribute('data-plan');
+      bouton.className = 'btn principal';
+    }
+    c.addEventListener('click', choisir);
+    c.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choisir(); } });
+  });
+})();
+
+(function () {
+  var cartes = document.querySelectorAll('[data-mode-paiement]'), bouton = document.getElementById('payer');
+  if (!bouton) { return; }
+  cartes.forEach(function (c) {
+    function choisir() {
+      cartes.forEach(function (x) { x.setAttribute('aria-checked', x === c ? 'true' : 'false'); });
+      bouton.textContent = c.getAttribute('data-bouton');
+    }
+    c.style.cursor = 'pointer';
+    c.addEventListener('click', choisir);
+    c.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choisir(); } });
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

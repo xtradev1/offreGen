@@ -1,22 +1,137 @@
 {% extends 'admin/base.html.twig' %}
 
-{# L'équipe (R1, Xavier, 2026-11-19) : qui a quel rôle, et combien d'artisans chacun a créés. Un administrateur ne se
-   modifie pas ici : son droit se donne et se retire par bin/administrateur. #}
-{% set libelles = {administrateur: 'Admin', moderateur: 'Modérateur', commercial: 'Commercial'} %}
-{% block sous %}<p>{{ membres|length }} personne{{ membres|length > 1 ? 's' : '' }}</p>{% endblock %}
+{# L'équipe et la fiche d'un membre (maquette v7, L1 à L4 validées par Xavier le 2026-11-19). Au téléphone : la liste
+   rangée par rôle, puis la fiche sur son écran. Sur PC : le tableau, et la fiche de la personne choisie à côté.
+   Un administrateur ne se modifie pas ici : son droit se donne et se retire par bin/administrateur. #}
+{% set noms = {administrateur: 'Administrateur', commercial: 'Commercial', moderateur: 'Modérateur'} %}
+{% set groupes = {
+  administrateur: ['Administrateur', 'Administrateurs', ''],
+  commercial: ['Commerciaux', 'Commerciaux', 'Ils créent des démos et ne voient que leurs artisans.'],
+  moderateur: ['Modérateurs', 'Modérateurs', 'Ils voient tous les artisans et aident ceux qui bloquent.']
+} %}
+{% set autres = membres|filter(m => m.id != moi)|length %}
+{% set icone_commercial = '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>' %}
+{% set icone_moderateur = '<circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3 2.8-4.5 6-4.5s5.4 1.5 6 4.5M14 15.6c.6-.1 1.3-.1 2-.1 3.2 0 5.4 1.5 6 4.5"/>' %}
+{% block retour %}{% if membre %}<a class="back mobile-seul" href="/admin/equipe">Équipe</a>{% else %}{{ parent() }}{% endif %}{% endblock %}
+{% block tete %}{% endblock %}
 
 {% block contenu %}
-  <nav class="plus" aria-label="Membres de l'équipe">
-    {% for m in membres %}
-      {% set modifiable = m.role != 'administrateur' %}
-      <{{ modifiable ? 'a' : 'div' }} class="plus-ligne"{% if modifiable %} href="/admin/equipe/{{ m.id }}"{% endif %}>
-        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>
-        <span><b>{{ m.entreprise }} <i class="badge role">{{ libelles[m.role] }}</i></b><small>{{ m.courriel }} · {{ m.artisans }} artisan{{ m.artisans > 1 ? 's' : '' }}</small></span>
-      </{{ modifiable ? 'a' : 'div' }}>
-    {% endfor %}
-  </nav>
+<div class="equipe{% if membre %} avec-fiche{% endif %}">
+  <section class="equipe-liste" aria-label="Équipe">
+    <div class="admin-tete avec-action">
+      <div>
+        {% if membre %}<h2>Équipe</h2>{% else %}<h1>Équipe</h1>{% endif %}
+        <p>{% if autres == 0 %}Vous êtes seul pour l'instant.{% else %}Vous et {{ autres }} personne{{ autres > 1 ? 's' : '' }}{% endif %}</p>
+      </div>
+      <a class="btn pc-seul{% if not membre %} primary{% endif %}" href="/admin/equipe/nouveau">Ajouter un membre</a>
+    </div>
+
+    <div class="mobile-seul">
+      {% for cle, groupe in groupes %}
+        {% set du_role = membres|filter(m => m.role == cle) %}
+        {% if du_role|length > 0 %}
+          <h2 class="groupe">{{ du_role|length > 1 ? groupe[1] : groupe[0] }}</h2>
+          {% if groupe[2] != '' %}<p class="muted groupe-note">{{ groupe[2] }}</p>{% endif %}
+          <nav class="plus" aria-label="{{ groupe[1] }}">
+            {% for m in du_role %}
+              {% set modifiable = m.role != 'administrateur' and m.id != moi %}
+              <{{ modifiable ? 'a' : 'div' }} class="plus-ligne"{% if modifiable %} href="/admin/equipe/{{ m.id }}"{% endif %}>
+                <span><b>{{ m.entreprise }}{% if m.id == moi %} <i class="badge contour">Vous</i>{% endif %}{% if m.acces_en_attente == 1 %} <i class="badge manque">Accès pas encore ouvert</i>{% endif %}</b>
+                  <small>
+                    {%- if m.role == 'administrateur' %}Accès à tout
+                    {%- elseif m.acces_en_attente == 1 and m.invite_le is not null %}Invité le {{ m.invite_le|jour }}
+                    {%- else %}{% if m.role == 'commercial' %}{{ m.artisans }} artisan{{ m.artisans > 1 ? 's' : '' }} · {% endif %}{{ m.offres_max is null ? 'Sans plafond' : m.offres_max ~ ' offres' }}
+                    {%- endif %}</small></span>
+                {% if modifiable %}<i class="va" aria-hidden="true">›</i>{% endif %}
+              </{{ modifiable ? 'a' : 'div' }}>
+            {% endfor %}
+          </nav>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <table class="table-admin pc-seul">
+      <thead><tr><th scope="col">Nom</th><th scope="col">Rôle</th><th scope="col" class="n">Artisans</th><th scope="col" class="n">Offres</th></tr></thead>
+      <tbody>
+        {% for m in membres %}
+          {% set modifiable = m.role != 'administrateur' and m.id != moi %}
+          <tr{% if membre and membre.id == m.id %} aria-current="true"{% endif %}>
+            <th scope="row">{% if modifiable %}<a href="/admin/equipe/{{ m.id }}">{{ m.entreprise }}</a>{% else %}{{ m.entreprise }}{% endif %}{% if m.id == moi %} <i class="badge contour">Vous</i>{% endif %}{% if m.acces_en_attente == 1 %} <i class="badge manque">Accès pas encore ouvert</i>{% endif %}</th>
+            <td>{{ noms[m.role] }}</td>
+            <td class="n">{{ m.artisans }}</td>
+            <td class="n">{{ m.offres_max ?? 'Sans plafond' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if autres > 0 %}<p class="muted pc-seul">Commercial&nbsp;: crée des démos et ne voit que ses artisans. Modérateur&nbsp;: voit tous les artisans et aide ceux qui bloquent.</p>{% endif %}
+
+    {% if autres == 0 %}
+      <h2 class="groupe">Vous pouvez ajouter</h2>
+      <div class="roles-cartes">
+        <div class="role-carte">
+          <h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icone_commercial|raw }}</svg>Un commercial</h3>
+          <p>Il crée des démos chez les artisans et suit les siens. Il ne voit que ses artisans.</p>
+        </div>
+        <div class="role-carte">
+          <h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icone_moderateur|raw }}</svg>Un modérateur</h3>
+          <p>Il voit tous les artisans et aide ceux qui bloquent. Il peut leur offrir quelques offres.</p>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if membre %}
+  <section class="equipe-fiche" aria-label="Fiche de {{ membre.entreprise }}">
+    <div class="admin-tete"><h1>{{ membre.entreprise }}</h1><p>{{ membre.courriel }}</p></div>
+    {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+    {% if membre.acces_en_attente == 1 %}<p class="alerte warn">Accès pas encore ouvert{% if membre.invite_le is not null %}&nbsp;: invité le {{ membre.invite_le|jour }}{% endif %}.</p>{% endif %}
+    <form id="membre" method="post" action="/admin/equipe/{{ membre.id }}">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <span class="libelle" aria-hidden="true">Rôle</span>
+      <fieldset class="segments">
+        <legend class="cache">Rôle</legend>
+        <label><input type="radio" name="role" value="commercial"{% if membre.role != 'moderateur' %} checked{% endif %}><span>Commercial</span></label>
+        <label><input type="radio" name="role" value="moderateur"{% if membre.role == 'moderateur' %} checked{% endif %}><span>Modérateur</span></label>
+      </fieldset>
+      <p class="muted role-note" data-role="commercial">Commercial&nbsp;: crée des démos et ne voit que ses artisans.</p>
+      <p class="muted role-note" data-role="moderateur">Modérateur&nbsp;: voit tous les artisans et aide ceux qui bloquent.</p>
+      <div class="compteur">
+        <label for="offres"><b>Offres</b><small>Espace artisan</small></label>
+        <span class="pas">
+          <button class="btn" type="button" data-pas="-1" aria-label="Une offre de moins" hidden>−</button>
+          <input id="offres" name="offres" type="number" inputmode="numeric" min="1" max="500" value="{{ membre.offres_max }}"{% if membre.offres_max is not null %} required{% endif %}>
+          <button class="btn" type="button" data-pas="1" aria-label="Une offre de plus" hidden>+</button>
+        </span>
+      </div>
+      <button class="btn primary pc-seul" type="submit">Enregistrer</button>
+    </form>
+    <nav class="plus" aria-label="Ses artisans">
+      <a class="plus-ligne" href="/admin/artisans?par={{ membre.id }}">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.6 5.2"/></svg>
+        <span><b>Ses artisans</b><small>{{ membre.artisans }} artisan{{ membre.artisans > 1 ? 's' : '' }} amené{{ membre.artisans > 1 ? 's' : '' }}</small></span>
+        <i class="va" aria-hidden="true">›</i>
+      </a>
+    </nav>
+    <form method="post" action="/admin/equipe/{{ membre.id }}/acces">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <button class="btn large" type="submit">Renvoyer un lien d'accès</button>
+    </form>
+    <form class="retrait" method="post" action="/admin/equipe/{{ membre.id }}/role">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <input type="hidden" name="role" value="">
+      <button class="btn large danger" type="submit">Retirer de l'équipe</button>
+    </form>
+    <p class="muted">{{ membre.entreprise }} garde son espace artisan. Ses artisans passent à vous&nbsp;; {{ membre.entreprise }} reste la personne qui les a amenés.</p>
+  </section>
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block actions %}
-  <div class="actionbar"><a class="btn primary" href="/admin/equipe/nouveau">Nouveau membre</a></div>
+  {% if membre %}
+    <div class="actionbar mobile-seul"><button class="btn primary" type="submit" form="membre">Enregistrer</button></div>
+  {% else %}
+    <div class="actionbar mobile-seul"><a class="btn primary" href="/admin/equipe/nouveau">Ajouter un membre</a></div>
+  {% endif %}
 {% endblock %}

@@ -173,6 +173,8 @@ return static function (Conteneur $c): array {
     $routes[] = new Route('admin_membre_creer', '/admin/equipe', ['POST'], static fn (Request $r): Response => $admin()->membreCreer($r), Route::ADMIN);
     $routes[] = new Route('admin_membre_nouveau', '/admin/equipe/nouveau', ['GET'], static fn (): Response => $admin()->membreNouveau(), Route::ADMIN);
     $routes[] = new Route('admin_membre', '/admin/equipe/{id}', ['GET'], static fn (Request $r, array $p): Response => $admin()->membre($p), Route::ADMIN);
+    $routes[] = new Route('admin_membre_enregistrer', '/admin/equipe/{id}', ['POST'], static fn (Request $r, array $p): Response => $admin()->membreEnregistrer($r, $p), Route::ADMIN);
+    $routes[] = new Route('admin_membre_acces', '/admin/equipe/{id}/acces', ['POST'], static fn (Request $r, array $p): Response => $admin()->membreAcces($r, $p), Route::ADMIN);
     $routes[] = new Route('admin_membre_role', '/admin/equipe/{id}/role', ['POST'], static fn (Request $r, array $p): Response => $admin()->membreRole($r, $p), Route::ADMIN);
     $routes[] = new Route('admin_plus', '/admin/plus', ['GET'], static fn (): Response => $admin()->plus(), Route::EQUIPE);
     // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.

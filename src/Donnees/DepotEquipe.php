@@ -8,23 +8,28 @@ namespace OffreGen\Donnees;
  * Les comptes vus par l'équipe (administration, docs/plans/2026-11-19_admin-comptes). Hors portée d'artisan par
  * nature : ces lectures traversent les comptes. Elles ne servent que des routes réservées à l'équipe.
  *
- * @phpstan-type Membre array{id: int, courriel: string, entreprise: string, role: string, offres_max: int|null, artisans: int}
- * @phpstan-type Compte array{id: int, courriel: string, entreprise: string, demo: int, offres_max: int|null, offres_offertes: int, demo_fin: string|null, cree_par: int|null, cree_le: string, createur: string|null, dictees: int, derniere: string|null}
+ * @phpstan-type Membre array{id: int, courriel: string, entreprise: string, role: string, offres_max: int|null, acces_en_attente: int, artisans: int, invite_le: string|null}
+ * @phpstan-type Compte array{id: int, courriel: string, entreprise: string, demo: int, offres_max: int|null, offres_offertes: int, demo_fin: string|null, cree_par: int|null, apporte_par: int|null, cree_le: string, createur: string|null, apporteur: string|null, dictees: int, derniere: string|null}
  * @phpstan-type Evenement array{quand: string, sorte: string, detail: string|null, precision: string|null, acteur: string|null}
  */
 final class DepotEquipe
 {
-    private const MEMBRES = "SELECT a.id, a.courriel, a.entreprise, IF(a.administrateur = 1, 'administrateur', a.role) AS role, a.offres_max,
-                (SELECT COUNT(*) FROM artisan f WHERE f.cree_par = a.id) AS artisans
+    /** « artisans » : ceux que le membre a amenés ; l'équipe n'en fait pas partie. « invite_le » : son entrée dans l'équipe. */
+    private const MEMBRES = "SELECT a.id, a.courriel, a.entreprise, IF(a.administrateur = 1, 'administrateur', a.role) AS role, a.offres_max, a.acces_en_attente,
+                (SELECT COUNT(*) FROM artisan f WHERE f.apporte_par = a.id AND f.administrateur = 0 AND f.role IS NULL) AS artisans,
+                (SELECT MAX(j.quand) FROM journal_admin j WHERE j.artisan_id = a.id AND j.geste IN ('membre_cree', 'membre_promu')) AS invite_le
          FROM artisan a
          WHERE (a.administrateur = 1 OR a.role IN ('moderateur', 'commercial'))";
 
-    /** Les artisans : ni un administrateur, ni un membre de l'équipe ; et, pour un commercial, seulement les siens. */
-    private const COMPTES = "SELECT a.id, a.courriel, a.entreprise, a.demo, a.offres_max, a.offres_offertes, a.demo_fin, a.cree_par, a.cree_le,
-                c.entreprise AS createur,
+    /**
+     * Les artisans : ni un administrateur, ni un membre de l'équipe ; et, pour un commercial, seulement les siens.
+     * « createur » suit l'artisan aujourd'hui (cree_par) ; « apporteur » l'a amené et ne change jamais (apporte_par).
+     */
+    private const COMPTES = "SELECT a.id, a.courriel, a.entreprise, a.demo, a.offres_max, a.offres_offertes, a.demo_fin, a.cree_par, a.apporte_par, a.cree_le,
+                c.entreprise AS createur, ap.entreprise AS apporteur,
                 (SELECT COUNT(*) FROM enregistrement e WHERE e.artisan_id = a.id) AS dictees,
                 (SELECT MAX(e.recu_le) FROM enregistrement e WHERE e.artisan_id = a.id) AS derniere
-         FROM artisan a LEFT JOIN artisan c ON c.id = a.cree_par
+         FROM artisan a LEFT JOIN artisan c ON c.id = a.cree_par LEFT JOIN artisan ap ON ap.id = a.apporte_par
          WHERE a.administrateur = 0 AND a.role IS NULL AND (:tout = 1 OR a.cree_par = :acteur)";
 
     public function __construct(private readonly Base $base)
@@ -33,12 +38,17 @@ final class DepotEquipe
 
     /**
      * @param string $type « demos », « comptes », ou tout autre mot pour tous
+     * @param int|null $apporteur seulement les artisans amenés par ce compte ; null, tous
      * @return list<Compte> les plus récemment actifs d'abord, 200 au plus
      */
-    public function artisans(PorteeEquipe $p, string $type, string $recherche): array
+    public function artisans(PorteeEquipe $p, string $type, string $recherche, ?int $apporteur = null): array
     {
         $sql = self::COMPTES;
         $params = self::portee($p);
+        if ($apporteur !== null) {
+            $sql .= ' AND a.apporte_par = :par';
+            $params += ['par' => $apporteur];
+        }
         if ($type === 'demos' || $type === 'comptes') {
             $sql .= ' AND a.demo = ' . ($type === 'demos' ? '1' : '0');
         }
@@ -104,14 +114,14 @@ final class DepotEquipe
     }
 
     /**
-     * Les administrateurs d'abord, puis les autres par nom.
+     * Les administrateurs d'abord, puis les commerciaux, puis les modérateurs, chacun par nom.
      *
      * @return list<Membre>
      */
     public function membres(): array
     {
         /** @var list<Membre> */
-        return $this->base->lire(self::MEMBRES . ' ORDER BY a.administrateur DESC, a.entreprise, a.id');
+        return $this->base->lire(self::MEMBRES . " ORDER BY a.administrateur DESC, IF(a.administrateur = 1, '', a.role), a.entreprise, a.id");
     }
 
     /** @return Membre|null */
@@ -132,8 +142,28 @@ final class DepotEquipe
         $this->base->ecrire('UPDATE artisan SET role = :r WHERE id = :id', ['r' => $role, 'id' => $id]);
     }
 
+    /** Un membre invité n'a pas encore choisi son mot de passe : le choisir remet la marque à zéro (DepotArtisans). */
+    public function attendreAcces(int $id): void
+    {
+        $this->base->ecrire('UPDATE artisan SET acces_en_attente = 1 WHERE id = :id', ['id' => $id]);
+    }
+
+    /** Le nombre d'offres de l'espace artisan d'un membre (R4 : lui-même ne le change pas). */
+    public function changerOffres(int $id, int $offres): void
+    {
+        $this->base->ecrire("UPDATE artisan SET offres_max = :n WHERE id = :id AND administrateur = 0 AND role IN ('moderateur', 'commercial')", ['n' => $offres, 'id' => $id]);
+    }
+
+    /** Le nom d'un compte, pour dire qui a amené des artisans, même s'il a quitté l'équipe. */
+    public function nomDuCompte(int $id): ?string
+    {
+        $nom = $this->base->valeur('SELECT entreprise FROM artisan WHERE id = :id', ['id' => $id]);
+        return is_string($nom) ? $nom : null;
+    }
+
     /**
-     * Les artisans créés par l'un passent à l'autre (départ d'un commercial, Xavier, 2026-11-19).
+     * Les artisans suivis par l'un passent à l'autre (départ d'un commercial, Xavier, 2026-11-19). Celui qui les a
+     * amenés (apporte_par) reste noté : une commission en dépend.
      *
      * @return int le nombre d'artisans repris
      */

@@ -62,9 +62,47 @@ final class Equipe
                 $id = $this->artisans->parCourriel($courriel)['id'] ?? throw new \LogicException('Compte créé introuvable.');
             }
             $this->depot->rattacher($id, $role->value, $acteurId);
+            if ($existant === null) {
+                // Son mot de passe est tiré au hasard : il n'entre que par son lien d'accès.
+                $this->depot->attendreAcces($id);
+            }
             $this->journal->noter($acteurId, $id, $existant === null ? 'membre_cree' : 'membre_promu', $role->value, $this->horloge->now());
             return ['id' => $id, 'nouveau' => $existant === null];
         });
+    }
+
+    /**
+     * La fiche d'un membre : son rôle et le nombre d'offres de son espace artisan (R4 : lui-même ne le change pas).
+     * Seul ce qui change est écrit et journalisé. $offres null : le compte n'a pas de plafond et n'en reçoit pas.
+     *
+     * @throws \DomainException son propre compte, un administrateur, le rôle administrateur
+     * @throws \InvalidArgumentException un nombre d'offres hors bornes
+     */
+    public function modifier(int $acteurId, int $membreId, Role $role, ?int $offres): void
+    {
+        $membre = $this->depot->membre($membreId);
+        if ($membre === null || $membre['role'] === Role::Administrateur->value || $membreId === $acteurId || $role === Role::Administrateur) {
+            throw new \DomainException('Ce membre ne se modifie pas ici.');
+        }
+        if (($offres === null && $membre['offres_max'] !== null) || ($offres !== null && ($offres < 1 || $offres > self::OFFRES_MAX))) {
+            throw new \InvalidArgumentException("Le nombre d'offres va de 1 à " . self::OFFRES_MAX . '.');
+        }
+        $this->base->transaction(function () use ($acteurId, $membreId, $membre, $role, $offres): void {
+            if ($membre['role'] !== $role->value) {
+                $this->depot->changerRole($membreId, $role->value);
+                $this->journal->noter($acteurId, $membreId, 'role_change', $role->value, $this->horloge->now());
+            }
+            if ($offres !== null && $offres !== $membre['offres_max']) {
+                $this->depot->changerOffres($membreId, $offres);
+                $this->journal->noter($acteurId, $membreId, 'offres_membre', (string) $offres, $this->horloge->now());
+            }
+        });
+    }
+
+    /** Un lien d'accès renvoyé à un membre : le geste se note, le lien lui-même jamais. */
+    public function noterAccesRenvoye(int $acteurId, int $membreId): void
+    {
+        $this->journal->noter($acteurId, $membreId, 'acces_renvoye', null, $this->horloge->now());
     }
 
     /**

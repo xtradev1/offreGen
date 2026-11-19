@@ -7,6 +7,7 @@ namespace OffreGen\Http\Controleur;
 use OffreGen\Compte\ArtisansEquipe;
 use OffreGen\Compte\Equipe;
 use OffreGen\Compte\Role;
+use OffreGen\Donnees\DepotEquipe;
 use OffreGen\Donnees\PorteeEquipe;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Flash;
@@ -18,6 +19,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * La partie administration (G1, Xavier, 2026-11-17 ; rôles et menus du 2026-11-19) : sa mise en page, son menu par
  * rôle. Le noyau a déjà vérifié le rôle : ici, chaque page n'a plus qu'à le lire.
+ *
+ * @phpstan-import-type Membre from DepotEquipe
  */
 final class AdminControleur
 {
@@ -46,12 +49,21 @@ final class AdminControleur
         $type = $requete->query->getString('type');
         $type = in_array($type, ['demos', 'comptes'], true) ? $type : 'tous';
         $q = mb_substr(trim($requete->query->getString('q')), 0, 80);
+        // « Ses artisans », depuis la fiche d'un membre : ceux qu'il a amenés. Le commercial reste dans les siens.
+        $brut = $requete->query->getString('par');
+        $par = $this->portee()->toutVoir && preg_match('/^[1-9]\d{0,8}$/', $brut) === 1 ? (int) $brut : null;
+        $apporteur = $par === null ? null : $this->c->depotEquipe()->nomDuCompte($par);
+        if ($apporteur === null) {
+            $par = null;
+        }
         return $this->page('admin/artisans.html.twig', [
             'actif' => 'artisans',
             'titre' => $this->role() === Role::Commercial ? 'Mes artisans' : 'Artisans',
             'type' => $type,
             'q' => $q,
-            'comptes' => $this->c->depotEquipe()->artisans($this->portee(), $type, $q),
+            'par' => $par,
+            'apporteur' => $apporteur,
+            'comptes' => $this->c->depotEquipe()->artisans($this->portee(), $type, $q, $par),
         ]);
     }
 
@@ -89,7 +101,7 @@ final class AdminControleur
 
     public function equipe(): Response
     {
-        return $this->page('admin/equipe.html.twig', ['actif' => 'equipe', 'titre' => 'Équipe', 'membres' => $this->c->depotEquipe()->membres()]);
+        return $this->pageEquipe(null);
     }
 
     public function membreNouveau(): Response
@@ -126,10 +138,52 @@ final class AdminControleur
     }
 
     /** @param array<string, string> $p */
-    public function membre(array $p): Response
+    public function membre(array $p, ?string $erreur = null, int $code = 200): Response
+    {
+        return $this->pageEquipe($this->membreModifiable((int) $p['id']), $erreur, $code);
+    }
+
+    /** « Enregistrer » sur la fiche d'un membre : son rôle et les offres de son espace artisan.
+     *
+     * @param array<string, string> $p
+     */
+    public function membreEnregistrer(Request $requete, array $p): Response
     {
         $membre = $this->membreModifiable((int) $p['id']);
-        return $this->page('admin/membre.html.twig', ['actif' => 'equipe', 'titre' => $membre['entreprise'], 'membre' => $membre]);
+        $role = Role::tryFrom($requete->request->getString('role'));
+        if ($role === null || $role === Role::Administrateur) {
+            throw new PageIntrouvable();
+        }
+        $brut = trim($requete->request->getString('offres'));
+        // Un nombre illisible vaut zéro : il sort des bornes et se refuse comme les autres.
+        $offres = $brut === '' ? null : (preg_match('/^\d{1,4}$/', $brut) === 1 ? (int) $brut : 0);
+        try {
+            $this->c->equipe()->modifier($this->acteur(), $membre['id'], $role, $offres);
+        } catch (\InvalidArgumentException $e) {
+            return $this->membre($p, $e->getMessage(), 422);
+        } catch (\DomainException) {
+            throw new PageIntrouvable();
+        }
+        Flash::dire($requete, 'info', 'Enregistré.');
+        return new RedirectResponse("/admin/equipe/{$membre['id']}", 303);
+    }
+
+    /**
+     * « Renvoyer un lien d'accès » : par courriel si le site en envoie, sinon affiché une fois pour être transmis (D6).
+     *
+     * @param array<string, string> $p
+     */
+    public function membreAcces(Request $requete, array $p): Response
+    {
+        $membre = $this->membreModifiable((int) $p['id']);
+        $this->c->equipe()->noterAccesRenvoye($this->acteur(), $membre['id']);
+        if ($this->c->messagerieReelle()) {
+            $courriel = $membre['courriel'];
+            $this->c->apresReponse()->ajouter(fn () => $this->c->liensAcces()->envoyerAcces($courriel));
+            Flash::dire($requete, 'info', "Lien d'accès envoyé à $courriel.");
+            return new RedirectResponse("/admin/equipe/{$membre['id']}", 303);
+        }
+        return $this->page('admin/membre_cree.html.twig', ['actif' => 'equipe', 'titre' => $membre['entreprise'], 'membre' => $membre, 'nouveau' => true, 'lien' => $this->c->liensAcces()->lienDAcces($membre['id'])]);
     }
 
     /** @param array<string, string> $p */
@@ -152,7 +206,7 @@ final class AdminControleur
     /**
      * Un membre que l'administrateur peut modifier : ni lui-même, ni un autre administrateur.
      *
-     * @return array{id: int, courriel: string, entreprise: string, role: string, offres_max: int|null, artisans: int}
+     * @return Membre
      */
     private function membreModifiable(int $id): array
     {
@@ -167,6 +221,23 @@ final class AdminControleur
     private function formulaireMembre(array $saisie, ?string $erreur, int $code = 200): Response
     {
         return $this->page('admin/membre_nouveau.html.twig', ['actif' => 'equipe', 'titre' => 'Nouveau membre', 'saisie' => $saisie, 'erreur' => $erreur], $code);
+    }
+
+    /**
+     * La liste de l'équipe, avec la fiche d'un membre quand il y en a un (à côté sur PC, sur son écran au téléphone).
+     *
+     * @param Membre|null $membre
+     */
+    private function pageEquipe(?array $membre, ?string $erreur = null, int $code = 200): Response
+    {
+        return $this->page('admin/equipe.html.twig', [
+            'actif' => 'equipe',
+            'titre' => $membre['entreprise'] ?? 'Équipe',
+            'membres' => $this->c->depotEquipe()->membres(),
+            'membre' => $membre,
+            'moi' => $this->acteur(),
+            'erreur' => $erreur,
+        ], $code);
     }
 
     /** @param array<string, mixed> $vars */

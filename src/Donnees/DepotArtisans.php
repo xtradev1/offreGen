@@ -64,7 +64,7 @@ final class DepotArtisans
     {
         return $this->base->transaction(function () use ($id, $hache, $versionAttendue): ?int {
             $touchees = $this->base->ecrire(
-                'UPDATE artisan SET mot_de_passe = :h, version_session = version_session + 1 WHERE id = :id'
+                'UPDATE artisan SET mot_de_passe = :h, version_session = version_session + 1, acces_en_attente = 0 WHERE id = :id'
                 . ($versionAttendue === null ? '' : ' AND version_session = :v'),
                 ['h' => $hache, 'id' => $id] + ($versionAttendue === null ? [] : ['v' => $versionAttendue]),
             );

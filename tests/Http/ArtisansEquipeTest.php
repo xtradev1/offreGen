@@ -29,11 +29,11 @@ final class ArtisansEquipeTest extends TestCase
         $this->jeu = new Jeu();
         $pdo = BaseDeTest::pdo();
         $pdo->exec("UPDATE artisan SET role = 'commercial', entreprise = 'Nina Rey' WHERE id = {$this->jeu->a}");
-        $pdo->exec("UPDATE artisan SET cree_par = {$this->jeu->a}, offres_max = 10 WHERE id = {$this->jeu->b}");
+        $pdo->exec("UPDATE artisan SET cree_par = {$this->jeu->a}, apporte_par = {$this->jeu->a}, offres_max = 10 WHERE id = {$this->jeu->b}");
         $leo = $this->creer('leo@exemple.ch', 'Léo Favre', false);
         $pdo->exec("UPDATE artisan SET role = 'commercial' WHERE id = $leo");
         $this->d = $this->creer('d@exemple.ch', 'Sanitaire Durand', true);
-        $pdo->exec("UPDATE artisan SET cree_par = $leo WHERE id = {$this->d}");
+        $pdo->exec("UPDATE artisan SET cree_par = $leo, apporte_par = $leo WHERE id = {$this->d}");
         $pdo->exec('UPDATE artisan SET role = \'moderateur\' WHERE id = ' . $this->creer('mod@exemple.ch', 'Maud Modératrice', false));
         $pdo->exec('UPDATE artisan SET administrateur = 1 WHERE id = ' . $this->creer('chef@exemple.ch', 'Le Chef', false));
     }
@@ -165,6 +165,20 @@ final class ArtisansEquipeTest extends TestCase
         $joker = (string) $chef->get('/admin/artisans?q=%25')->getContent();
         self::assertStringNotContainsString('Sanitaire Durand', $joker);
         self::assertStringContainsString('Aucun artisan', $joker);
+    }
+
+    public function testLaListeSeFiltreParCeluiQuiAAmeneLesArtisans(): void
+    {
+        $leo = (int) BaseDeTest::ligne("SELECT id FROM artisan WHERE courriel = 'leo@exemple.ch'")['id'];
+        $page = (string) $this->navigateur('chef@exemple.ch')->get("/admin/artisans?par=$leo")->getContent();
+        self::assertStringContainsString('1 artisan amené par Léo Favre', $page);
+        self::assertStringContainsString('Sanitaire Durand', $page);
+        self::assertStringNotContainsString('Entreprise B', $page);
+        // Le commercial ne sort pas de ses artisans en changeant l'adresse.
+        $nina = (string) $this->navigateur('a@exemple.ch')->get("/admin/artisans?par=$leo")->getContent();
+        self::assertStringContainsString('Entreprise B', $nina);
+        self::assertStringNotContainsString('Sanitaire Durand', $nina);
+        self::assertStringNotContainsString('Léo Favre', $nina);
     }
 
     public function testLaFicheNeMontreAucunContenuDOffre(): void
