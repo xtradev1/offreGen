@@ -5,10 +5,13 @@ declare(strict_types=1);
 
 // Crée un compte. Avec --acces, l'artisan reçoit un courriel et choisit lui-même son mot de passe (lien valable
 // 7 jours, décision A3 de Xavier du 2026-11-18) ; sans --acces, le mot de passe s'affiche une seule fois.
-// Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N] [--acces]
+// Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N] [--acces] [--metier=clé] [--metier-saisi=texte]
 // Un compte démo a un plafond quotidien d'imports (10 par défaut) et ne reçoit aucun courriel.
 // Un compte d'essai (--offres=N) a N offres en tout, tous jours confondus ; bin/offres-essai les change ensuite.
+// --metier : une démo est posée tout de suite (catalogue chiffré, deux offres d'exemple) ; un autre compte reçoit
+// les douze produits du métier, prix à 0. --metier-saisi : le métier tel que l'artisan le nomme, avec --metier=autre.
 
+use OffreGen\Catalogue\CatalogueFictif;
 use OffreGen\Http\Conteneur;
 
 if (PHP_SAPI !== 'cli') {
@@ -21,6 +24,8 @@ $demo = false;
 $acces = false;
 $plafond = null;
 $offres = null;
+$metier = null;
+$metierSaisi = null;
 foreach (array_slice($argv, 1) as $arg) {
     if ($arg === '--demo') {
         $demo = true;
@@ -30,12 +35,17 @@ foreach (array_slice($argv, 1) as $arg) {
         $plafond = (int) $m[1];
     } elseif (preg_match('/^--offres=(\d+)$/', $arg, $m) === 1) {
         $offres = (int) $m[1];
+    } elseif (preg_match('/^--metier=(.+)$/', $arg, $m) === 1) {
+        $metier = $m[1];
+    } elseif (preg_match('/^--metier-saisi=(.+)$/', $arg, $m) === 1) {
+        $metierSaisi = $m[1];
     } else {
         $positionnels[] = $arg;
     }
 }
 if (count($positionnels) !== 2 || ($demo && $acces)) {
-    fwrite(STDERR, "Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N] [--acces]\n--demo et --acces ne vont pas ensemble.\n");
+    fwrite(STDERR, "Usage : bin/creer-compte <courriel> <entreprise> [--demo] [--plafond=N] [--offres=N] [--acces] [--metier=clé] [--metier-saisi=texte]\n"
+        . "--demo et --acces ne vont pas ensemble. Métiers : " . implode(', ', CatalogueFictif::metiers()) . ".\n");
     exit(2);
 }
 if ($demo && $plafond === null) {
@@ -44,13 +54,14 @@ if ($demo && $plafond === null) {
 
 try {
     $c = Conteneur::depuisEnvironnement(dirname(__DIR__));
-    $motDePasse = $c->comptes()->creer($positionnels[0], $positionnels[1], $demo, $plafond, $offres);
+    $motDePasse = $c->comptes()->creer($positionnels[0], $positionnels[1], $demo, $plafond, $offres, $metier, $metierSaisi);
 } catch (\InvalidArgumentException $e) {
     fwrite(STDERR, $e->getMessage() . "\n");
     exit(1);
 }
 
-echo "Compte créé : {$positionnels[0]}" . ($demo ? " (démo, $plafond imports par jour)" : '') . ($offres !== null ? " (essai, $offres offre" . ($offres > 1 ? 's' : '') . ')' : '') . "\n";
+echo "Compte créé : {$positionnels[0]}" . ($demo ? " (démo, $plafond imports par jour)" : '') . ($offres !== null ? " (essai, $offres offre" . ($offres > 1 ? 's' : '') . ')' : '')
+    . ($metier !== null ? ', catalogue ' . CatalogueFictif::libelle($metier) . ($demo ? '' : ' aux prix à 0') : '') . "\n";
 if (!$acces) {
     echo "Mot de passe, affiché une seule fois : $motDePasse\n";
     exit(0);

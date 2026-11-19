@@ -53,20 +53,20 @@ final class DepotOffres implements SupportLignes
      */
     public function creerExemple(string $titre, array $lignes, \DateTimeImmutable $quand, int $clientId): int
     {
-        return $this->creer(null, $titre, $lignes, $quand, $clientId, null, null);
+        return $this->creer(null, $titre, $lignes, $quand, $clientId, null, null, 0, true);
     }
 
     /** @param list<LigneExtraite> $lignes */
-    private function creer(?int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?int $clientId, ?string $clientDicte, ?string $lieuDicte, int $postesCoupes = 0): int
+    private function creer(?int $enregistrementId, string $titre, array $lignes, \DateTimeImmutable $quand, ?int $clientId, ?string $clientDicte, ?string $lieuDicte, int $postesCoupes = 0, bool $exemple = false): int
     {
-        return $this->base->transaction(function () use ($enregistrementId, $titre, $lignes, $quand, $clientId, $clientDicte, $lieuDicte, $postesCoupes): int {
+        return $this->base->transaction(function () use ($enregistrementId, $titre, $lignes, $quand, $clientId, $clientDicte, $lieuDicte, $postesCoupes, $exemple): int {
             $numero = (int) $this->base->valeur('SELECT COALESCE(MAX(numero), 0) + 1 FROM offre WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
             $this->base->ecrire(
-                'INSERT INTO offre (artisan_id, numero, enregistrement_id, titre, client_id, client_dicte, lieu_dicte, cree_le, postes_coupes) VALUES (:a, :n, :e, :t, :ci, :cn, :ca, :q, :pc)',
+                'INSERT INTO offre (artisan_id, numero, enregistrement_id, titre, client_id, client_dicte, lieu_dicte, cree_le, postes_coupes, exemple) VALUES (:a, :n, :e, :t, :ci, :cn, :ca, :q, :pc, :ex)',
                 ['a' => $this->portee->artisanId, 'n' => $numero, 'e' => $enregistrementId, 't' => mb_substr($titre, 0, 190),
                  'ci' => $this->clientDeLArtisan($clientId),
                  'cn' => $clientDicte === null ? null : mb_substr($clientDicte, 0, 190), 'ca' => $lieuDicte === null ? null : mb_substr($lieuDicte, 0, 255),
-                 'q' => Dates::versBase($quand), 'pc' => min(max(0, $postesCoupes), 65535)],
+                 'q' => Dates::versBase($quand), 'pc' => min(max(0, $postesCoupes), 65535), 'ex' => $exemple ? 1 : 0],
             );
             $offreId = $this->base->dernierId();
             foreach ($lignes as $rang => $l) {
@@ -401,6 +401,17 @@ final class DepotOffres implements SupportLignes
     public function toutEffacer(): void
     {
         $this->base->ecrire('DELETE FROM offre WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
+    }
+
+    /**
+     * Passage d'une démonstration à l'essai : les offres d'exemple partent, lignes comprises. Leurs factures
+     * sont à effacer avant (DepotFactures::effacerDesOffresExemple).
+     *
+     * @return int nombre d'offres d'exemple effacées
+     */
+    public function effacerExemples(): int
+    {
+        return $this->base->ecrire('DELETE FROM offre WHERE artisan_id = :a AND exemple = 1', ['a' => $this->portee->artisanId]);
     }
 
     /** Une fiche client n'est désignée que si elle appartient à l'artisan. */

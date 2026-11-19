@@ -388,6 +388,16 @@ final class DepotFactures implements SupportLignes
         $this->base->ecrire('DELETE FROM facture WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
     }
 
+    /** Passage d'une démonstration à l'essai : les factures des offres d'exemple partent avant ces offres, PDF compris. */
+    public function effacerDesOffresExemple(): void
+    {
+        $desExemples = 'JOIN offre o ON o.id = f.offre_id AND o.artisan_id = f.artisan_id AND o.exemple = 1';
+        $a = ['a' => $this->portee->artisanId];
+        $this->base->ecrire("DELETE p FROM facture_pdf p JOIN facture f ON f.id = p.facture_id AND f.artisan_id = p.artisan_id $desExemples WHERE p.artisan_id = :a", $a);
+        $this->base->ecrire("UPDATE facture r JOIN facture f ON f.id = r.refaite_depuis AND f.artisan_id = r.artisan_id $desExemples SET r.refaite_depuis = NULL WHERE r.artisan_id = :a", $a);
+        $this->base->ecrire("DELETE f FROM facture f $desExemples WHERE f.artisan_id = :a", $a);
+    }
+
     private function ligneDuBrouillon(int $factureId, int $ligneId): bool
     {
         return $this->base->valeur(

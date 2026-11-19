@@ -40,8 +40,9 @@ final class Comptes
     /**
      * @return string le mot de passe généré, à transmettre une fois à l'artisan ; il n'est gardé nulle part en clair
      */
-    public function creer(string $courriel, string $entreprise, bool $demo, ?int $plafond, ?int $offresMax = null): string
+    public function creer(string $courriel, string $entreprise, bool $demo, ?int $plafond, ?int $offresMax = null, ?string $metier = null, ?string $metierSaisi = null): string
     {
+        $metierSaisi = self::verifierMetier($metier, $metierSaisi);
         $courriel = DepotArtisans::normaliser($courriel);
         if (filter_var($courriel, FILTER_VALIDATE_EMAIL) === false) {
             throw new \InvalidArgumentException("Courriel invalide : $courriel");
@@ -57,8 +58,90 @@ final class Comptes
         }
         self::verifierOffresMax($offresMax);
         $motDePasse = self::genererMotDePasse();
-        $this->artisans->creer($courriel, $this->hacheur->hash($motDePasse), trim($entreprise), $demo, $plafond, $this->horloge->now(), $offresMax);
+        $hache = $this->hacheur->hash($motDePasse);
+        $this->base->transaction(function () use ($courriel, $hache, $entreprise, $demo, $plafond, $offresMax, $metier, $metierSaisi): void {
+            $id = $this->artisans->creer($courriel, $hache, trim($entreprise), $demo, $plafond, $this->horloge->now(), $offresMax);
+            if ($metier === null) {
+                return;
+            }
+            if ($demo) {
+                // Une démonstration créée avec son métier est posée tout de suite : catalogue chiffré, offres d'exemple.
+                $this->reinitialiserDemo($courriel, $metier, $metierSaisi);
+                return;
+            }
+            // Un essai part des désignations de son métier, tous les prix à 0 ; le prix de la démonstration attend
+            // à côté, proposé par l'écran « Vos prix ».
+            $this->artisans->changerMetier($id, $metier, $metierSaisi);
+            (new DepotProduits($this->base, new Portee($id)))->remplacerTout(self::exemples(CatalogueFictif::produits($metier), true));
+        });
         return $motDePasse;
+    }
+
+    /**
+     * Une démonstration devient un essai, en une transaction : les offres d'exemple, leurs factures et les fiches
+     * d'exemple sans offre partent ; les produits d'exemple jamais modifiés repartent à 0 ; ce que l'artisan a
+     * dicté, créé ou modifié reste, comme ses réglages. Le compte reçoit $offresMax offres en plus de celles
+     * déjà dictées pendant la démonstration. Refuse tout compte qui n'est pas de démonstration.
+     *
+     * @return array{offres: int, clients: int, produits: int} offres et fiches d'exemple effacées, produits remis à 0
+     */
+    public function passerEnEssai(string $courriel, int $offresMax = 10): array
+    {
+        self::verifierOffresMax($offresMax);
+        $artisan = $this->artisans->parCourriel($courriel) ?? throw new \InvalidArgumentException("Aucun compte pour $courriel.");
+        if ($artisan['demo'] !== 1) {
+            throw new \InvalidArgumentException("$courriel n'est pas un compte de démonstration : rien n'est changé.");
+        }
+        $portee = new Portee($artisan['id']);
+        return $this->base->transaction(function () use ($artisan, $portee, $offresMax): array {
+            // Les factures d'abord : elles désignent les offres. Les fiches après : les offres les désignent.
+            (new DepotFactures($this->base, $portee))->effacerDesOffresExemple();
+            $bilan = [
+                'offres' => (new DepotOffres($this->base, $portee))->effacerExemples(),
+                'clients' => (new DepotClients($this->base, $portee))->effacerExemplesSansOffre(),
+                'produits' => (new DepotProduits($this->base, $portee))->remettreExemplesAZero(),
+            ];
+            // Le plafond d'un essai compte tous les imports du compte : ceux de la démonstration ne sont pas décomptés.
+            $this->artisans->sortirDeDemo($artisan['id'], $offresMax + (new DepotEnregistrements($this->base, $portee))->recus());
+            return $bilan;
+        });
+    }
+
+    /**
+     * Le métier est une clé de CatalogueFictif ; le texte saisi ne va qu'avec « autre », 60 caractères au plus.
+     *
+     * @return string|null le texte saisi, sans espaces autour ; null s'il est vide
+     */
+    private static function verifierMetier(?string $metier, ?string $metierSaisi): ?string
+    {
+        $metierSaisi = $metierSaisi === null ? '' : trim($metierSaisi);
+        if ($metier !== null) {
+            CatalogueFictif::libelle($metier);
+        }
+        if ($metierSaisi === '') {
+            return null;
+        }
+        if ($metier !== 'autre') {
+            throw new \InvalidArgumentException('Le texte du métier ne va qu\'avec le métier « autre ».');
+        }
+        if (mb_strlen($metierSaisi) > 60) {
+            throw new \InvalidArgumentException('Le texte du métier fait 60 caractères au plus.');
+        }
+        return $metierSaisi;
+    }
+
+    /**
+     * Les produits d'un catalogue fictif, marqués « exemple » par leur prix de démonstration.
+     *
+     * @param list<array{categorie: string, designation: string, unite: string, prix_centimes: int, synonymes: string|null}> $catalogue
+     * @return list<array{categorie: string, designation: string, unite: string, prix_centimes: int, synonymes: string|null, prix_exemple_centimes: int}>
+     */
+    private static function exemples(array $catalogue, bool $prixAZero): array
+    {
+        return array_map(
+            static fn (array $p): array => ['prix_centimes' => $prixAZero ? 0 : $p['prix_centimes'], 'prix_exemple_centimes' => $p['prix_centimes']] + $p,
+            $catalogue,
+        );
     }
 
     /** Donne plus d'offres à un compte d'essai, ou lève son plafond (null). */
@@ -89,19 +172,21 @@ final class Comptes
      *
      * @return int nombre de fichiers audio supprimés
      */
-    public function reinitialiserDemo(string $courriel, string $metier): int
+    public function reinitialiserDemo(string $courriel, string $metier, ?string $metierSaisi = null): int
     {
         $artisan = $this->artisans->parCourriel($courriel) ?? throw new \InvalidArgumentException("Aucun compte pour $courriel.");
         if ($artisan['demo'] !== 1) {
             throw new \InvalidArgumentException("$courriel n'est pas un compte de démonstration : rien n'est effacé.");
         }
-        $catalogue = CatalogueFictif::produits($metier);
+        $metierSaisi = self::verifierMetier($metier, $metierSaisi);
+        $catalogue = self::exemples(CatalogueFictif::produits($metier), false);
         $portee = new Portee($artisan['id']);
         $enregistrements = new DepotEnregistrements($this->base, $portee);
         $fichiers = $enregistrements->fichiers();
 
         $exemples = CatalogueFictif::offres($metier);
-        $this->base->transaction(function () use ($portee, $enregistrements, $catalogue, $exemples): void {
+        $this->base->transaction(function () use ($artisan, $metier, $metierSaisi, $portee, $enregistrements, $catalogue, $exemples): void {
+            $this->artisans->changerMetier($artisan['id'], $metier, $metierSaisi);
             // Les factures d'abord : elles désignent les offres.
             (new DepotFactures($this->base, $portee))->toutEffacer();
             $offres = new DepotOffres($this->base, $portee);
@@ -126,7 +211,7 @@ final class Comptes
                 $quand = $this->horloge->now()->modify("-{$o['il_y_a_jours']} days");
                 // Les clients des exemples ont leur fiche : la démonstration montre l'onglet Clients rempli.
                 $parNomClient[$o['client']] ??= $clients->creer(['nom' => $o['client'], 'adresse' => Adresse::depuisTexte($o['adresse']) ?? new Adresse(),
-                    'telephone' => null, 'courriel' => null], $quand);
+                    'telephone' => null, 'courriel' => null, 'exemple' => true], $quand);
                 $offres->creerExemple($o['titre'], $lignes, $quand, $parNomClient[$o['client']]);
             }
         });

@@ -7,11 +7,16 @@ namespace OffreGen\Donnees;
 /**
  * Le catalogue d'un artisan.
  *
- * @phpstan-type Produit array{id: int, categorie: string, designation: string, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, synonymes: string|null}
- * @phpstan-type ProduitNeuf array{categorie: string, designation: string, unite: string, prix_centimes: int, tva_pour_dix_mille?: int|null, synonymes?: string|null}
+ * prix_exemple_centimes : null pour un produit de l'artisan ; une valeur pour un produit d'exemple jamais modifié,
+ * son prix de démonstration (0 : exemple sans prix). C'est la marque « exemple » et le prix que « Vos prix » propose.
+ *
+ * @phpstan-type Produit array{id: int, categorie: string, designation: string, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, synonymes: string|null, prix_exemple_centimes: int|null}
+ * @phpstan-type ProduitNeuf array{categorie: string, designation: string, unite: string, prix_centimes: int, tva_pour_dix_mille?: int|null, synonymes?: string|null, prix_exemple_centimes?: int|null}
  */
 final class DepotProduits
 {
+    private const COLONNES = 'id, categorie, designation, unite, prix_centimes, tva_pour_dix_mille, synonymes, prix_exemple_centimes';
+
     public function __construct(private readonly Base $base, private readonly Portee $portee)
     {
     }
@@ -21,7 +26,7 @@ final class DepotProduits
     {
         /** @var list<Produit> */
         return $this->base->lire(
-            'SELECT id, categorie, designation, unite, prix_centimes, tva_pour_dix_mille, synonymes FROM produit WHERE artisan_id = :a ORDER BY categorie, designation, id',
+            'SELECT ' . self::COLONNES . ' FROM produit WHERE artisan_id = :a ORDER BY categorie, designation, id',
             ['a' => $this->portee->artisanId],
         );
     }
@@ -31,7 +36,7 @@ final class DepotProduits
     {
         /** @var Produit|null */
         return $this->base->un(
-            'SELECT id, categorie, designation, unite, prix_centimes, tva_pour_dix_mille, synonymes FROM produit WHERE id = :id AND artisan_id = :a',
+            'SELECT ' . self::COLONNES . ' FROM produit WHERE id = :id AND artisan_id = :a',
             ['id' => $id, 'a' => $this->portee->artisanId],
         );
     }
@@ -49,15 +54,15 @@ final class DepotProduits
     /** @param ProduitNeuf $p */
     public function creer(array $p): int
     {
-        $this->base->ecrire(
-            'INSERT INTO produit (artisan_id, categorie, designation, unite, prix_centimes, tva_pour_dix_mille, synonymes) VALUES (:a, :c, :d, :u, :p, :t, :s)',
-            ['a' => $this->portee->artisanId, 'c' => $p['categorie'], 'd' => $p['designation'], 'u' => $p['unite'],
-             'p' => $p['prix_centimes'], 't' => $p['tva_pour_dix_mille'] ?? null, 's' => $p['synonymes'] ?? null],
-        );
+        $this->inserer($p);
         return $this->base->dernierId();
     }
 
-    /** @param ProduitNeuf $p */
+    /**
+     * Un produit modifié par l'artisan devient le sien : il perd sa marque « exemple ».
+     *
+     * @param ProduitNeuf $p
+     */
     public function modifier(int $id, array $p): bool
     {
         // MariaDB compte 0 ligne touchée quand rien ne change : l'existence se vérifie à part.
@@ -65,7 +70,9 @@ final class DepotProduits
             return false;
         }
         $this->base->ecrire(
-            'UPDATE produit SET categorie = :c, designation = :d, unite = :u, prix_centimes = :p, tva_pour_dix_mille = :t, synonymes = :s WHERE id = :id AND artisan_id = :a',
+            'UPDATE produit SET categorie = :c, designation = :d, unite = :u, prix_centimes = :p, tva_pour_dix_mille = :t, synonymes = :s,
+                    prix_exemple_centimes = NULL
+             WHERE id = :id AND artisan_id = :a',
             ['c' => $p['categorie'], 'd' => $p['designation'], 'u' => $p['unite'], 'p' => $p['prix_centimes'],
              't' => $p['tva_pour_dix_mille'] ?? null, 's' => $p['synonymes'] ?? null, 'id' => $id, 'a' => $this->portee->artisanId],
         );
@@ -84,12 +91,39 @@ final class DepotProduits
         $this->base->transaction(function () use ($produits): void {
             $this->base->ecrire('DELETE FROM produit WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
             foreach ($produits as $p) {
-                $this->base->ecrire(
-                    'INSERT INTO produit (artisan_id, categorie, designation, unite, prix_centimes, tva_pour_dix_mille, synonymes) VALUES (:a, :c, :d, :u, :p, :t, :s)',
-                    ['a' => $this->portee->artisanId, 'c' => $p['categorie'], 'd' => $p['designation'], 'u' => $p['unite'],
-                     'p' => $p['prix_centimes'], 't' => $p['tva_pour_dix_mille'] ?? null, 's' => $p['synonymes'] ?? null],
-                );
+                $this->inserer($p);
             }
         });
+    }
+
+    /**
+     * Passage d'une démonstration à l'essai : les produits d'exemple jamais modifiés gardent désignation et unité,
+     * leur prix repart à 0 ; le prix de la démonstration reste à côté, pour être proposé.
+     *
+     * @return int nombre de produits d'exemple remis à 0
+     */
+    public function remettreExemplesAZero(): int
+    {
+        $exemples = (int) $this->base->valeur(
+            'SELECT COUNT(*) FROM produit WHERE artisan_id = :a AND prix_exemple_centimes IS NOT NULL',
+            ['a' => $this->portee->artisanId],
+        );
+        $this->base->ecrire(
+            'UPDATE produit SET prix_centimes = 0 WHERE artisan_id = :a AND prix_exemple_centimes IS NOT NULL',
+            ['a' => $this->portee->artisanId],
+        );
+        return $exemples;
+    }
+
+    /** @param ProduitNeuf $p */
+    private function inserer(array $p): void
+    {
+        $this->base->ecrire(
+            'INSERT INTO produit (artisan_id, categorie, designation, unite, prix_centimes, tva_pour_dix_mille, synonymes, prix_exemple_centimes)
+             VALUES (:a, :c, :d, :u, :p, :t, :s, :e)',
+            ['a' => $this->portee->artisanId, 'c' => $p['categorie'], 'd' => $p['designation'], 'u' => $p['unite'],
+             'p' => $p['prix_centimes'], 't' => $p['tva_pour_dix_mille'] ?? null, 's' => $p['synonymes'] ?? null,
+             'e' => $p['prix_exemple_centimes'] ?? null],
+        );
     }
 }

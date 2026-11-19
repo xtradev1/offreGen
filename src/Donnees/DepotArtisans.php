@@ -8,11 +8,11 @@ namespace OffreGen\Donnees;
  * Les comptes. Hors portée par nature : on cherche un compte avant de savoir qui est connecté.
  * Sert la connexion et les commandes de bin/, jamais une page qui liste des comptes.
  *
- * @phpstan-type Artisan array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null, administrateur: int, version_session: int, role: string|null, cree_par: int|null, demo_fin: string|null, offres_offertes: int}
+ * @phpstan-type Artisan array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null, administrateur: int, version_session: int, role: string|null, cree_par: int|null, demo_fin: string|null, offres_offertes: int, metier: string|null, metier_saisi: string|null}
  */
 final class DepotArtisans
 {
-    private const COLONNES = 'id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max, administrateur, version_session, role, cree_par, demo_fin, offres_offertes';
+    private const COLONNES = 'id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max, administrateur, version_session, role, cree_par, demo_fin, offres_offertes, metier, metier_saisi';
 
     public function __construct(private readonly Base $base)
     {
@@ -78,6 +78,38 @@ final class DepotArtisans
     public function changerAdministrateur(int $id, bool $administrateur): void
     {
         $this->base->ecrire('UPDATE artisan SET administrateur = :a WHERE id = :id', ['a' => $administrateur ? 1 : 0, 'id' => $id]);
+    }
+
+    /** Le métier du compte (clé de CatalogueFictif) et, sous « autre », le texte tapé. */
+    public function changerMetier(int $id, ?string $metier, ?string $metierSaisi): void
+    {
+        $this->base->ecrire('UPDATE artisan SET metier = :m, metier_saisi = :s WHERE id = :id', ['m' => $metier, 's' => $metierSaisi, 'id' => $id]);
+    }
+
+    /** Une démonstration devient un essai : plus de plafond par jour ni de date de fin, un nombre total d'offres. */
+    public function sortirDeDemo(int $id, int $offresMax): void
+    {
+        $this->base->ecrire(
+            'UPDATE artisan SET demo = 0, plafond_jour = NULL, demo_fin = NULL, offres_max = :m WHERE id = :id',
+            ['m' => $offresMax, 'id' => $id],
+        );
+    }
+
+    /**
+     * Les métiers tapés sous « autre », du plus fréquent au plus rare. Majuscules et accents ne séparent pas
+     * deux saisies (classement de la colonne) ; le texte rendu est l'une d'elles.
+     *
+     * @return list<array{texte: string, nombre: int}>
+     */
+    public function metiersSaisis(): array
+    {
+        /** @var list<array{texte: string, nombre: int}> */
+        return $this->base->lire(
+            "SELECT MIN(metier_saisi) AS texte, COUNT(*) AS nombre FROM artisan
+             WHERE metier = 'autre' AND metier_saisi IS NOT NULL
+             GROUP BY metier_saisi ORDER BY nombre DESC, texte",
+            [],
+        );
     }
 
     public static function normaliser(string $courriel): string

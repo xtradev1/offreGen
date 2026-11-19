@@ -115,6 +115,18 @@ final class EcransTest extends TestCase
         self::assertStringContainsString('Prix&nbsp;?', $this->page('/catalogue'));
     }
 
+    public function testModifierUnProduitDExempleEnFaitCeluiDeLArtisan(): void
+    {
+        // Métiers de la démo (SPEC, passage à l'essai) : un produit d'exemple modifié perd sa marque.
+        $id = $this->jeu->produit['a'];
+        BaseDeTest::pdo()->exec("UPDATE produit SET prix_exemple_centimes = 1850 WHERE id = $id");
+        $this->page("/catalogue/$id");
+        $champs = ['designation' => 'Peinture murale a', 'unite' => 'm²', 'prix' => '21', 'categorie' => 'Peinture', 'nouvelle_categorie' => '', 'synonymes' => ''];
+        self::assertSame(303, $this->a->post("/catalogue/$id", $champs)->getStatusCode());
+        self::assertSame(['prix_centimes' => 2100, 'prix_exemple_centimes' => null],
+            BaseDeTest::ligne("SELECT prix_centimes, prix_exemple_centimes FROM produit WHERE id = $id"));
+    }
+
     public function testProduitFauxRefuseEtRienNEstCree(): void
     {
         $this->page('/catalogue/nouveau');

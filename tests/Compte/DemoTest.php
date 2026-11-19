@@ -41,7 +41,7 @@ final class DemoTest extends TestCase
         $audioA = $this->audioDe($this->jeu->a, $this->jeu->uuid['a']);
         $audioB = $this->audioDe($this->jeu->b, $this->jeu->uuid['b']);
 
-        $supprimes = Monde::conteneur(env: $this->dossiers->env())->comptes()->reinitialiserDemo('a@exemple.ch', 'menuisier');
+        $supprimes = Monde::conteneur(env: $this->dossiers->env())->comptes()->reinitialiserDemo('a@exemple.ch', 'sols');
 
         self::assertSame(1, $supprimes);
         self::assertFileDoesNotExist($audioA);
@@ -65,6 +65,70 @@ final class DemoTest extends TestCase
         self::assertFileExists($audioB);
         self::assertSame(1, BaseDeTest::compter('offre', "artisan_id = {$this->jeu->b}"));
         self::assertSame(1, BaseDeTest::compter('produit', "artisan_id = {$this->jeu->b}"));
+    }
+
+    public function testChaqueMetierDonneUneDemoComplete(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET demo = 1 WHERE id = {$this->jeu->a}");
+        $comptes = Monde::conteneur(env: $this->dossiers->env())->comptes();
+        $a = $this->jeu->a;
+        foreach (CatalogueFictif::metiers() as $metier) {
+            $comptes->reinitialiserDemo('a@exemple.ch', $metier);
+            self::assertSame(12, BaseDeTest::compter('produit', "artisan_id = $a"), $metier);
+            self::assertSame(2, BaseDeTest::compter('offre', "artisan_id = $a"), $metier);
+            self::assertSame(2, BaseDeTest::compter('client', "artisan_id = $a AND npa IS NOT NULL AND localite IS NOT NULL"), "$metier : adresses découpées");
+            self::assertSame(0, BaseDeTest::compter('ligne', "artisan_id = $a AND (produit_id IS NULL OR quantite_milliemes <= 0)"), $metier);
+            self::assertGreaterThanOrEqual(6, BaseDeTest::compter('ligne', "artisan_id = $a"), $metier);
+        }
+    }
+
+    public function testLaDemoEcritSonMetierEtMarqueSesExemples(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET demo = 1 WHERE id = {$this->jeu->a}");
+        Monde::conteneur(env: $this->dossiers->env())->comptes()->reinitialiserDemo('a@exemple.ch', 'platrier');
+        $a = $this->jeu->a;
+        self::assertSame(['metier' => 'platrier', 'metier_saisi' => null], BaseDeTest::ligne("SELECT metier, metier_saisi FROM artisan WHERE id = $a"));
+        // Chaque produit garde à côté son prix de démonstration : c'est sa marque « exemple ».
+        self::assertSame(12, BaseDeTest::compter('produit', "artisan_id = $a AND prix_exemple_centimes = prix_centimes AND prix_centimes > 0"));
+        self::assertSame(2, BaseDeTest::compter('offre', "artisan_id = $a AND exemple = 1"));
+        self::assertSame(2, BaseDeTest::compter('client', "artisan_id = $a AND exemple = 1"));
+        // B n'a ni métier ni marque.
+        $b = $this->jeu->b;
+        self::assertSame(1, BaseDeTest::compter('artisan', "id = $b AND metier IS NULL"));
+        self::assertSame(0, BaseDeTest::compter('produit', "artisan_id = $b AND prix_exemple_centimes IS NOT NULL"));
+        self::assertSame(0, BaseDeTest::compter('offre', "artisan_id = $b AND exemple = 1"));
+        self::assertSame(0, BaseDeTest::compter('client', "artisan_id = $b AND exemple = 1"));
+    }
+
+    public function testAutreMetierGardeLeTexteSaisiEtUnMetierDeLaListeLOublie(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET demo = 1 WHERE id = {$this->jeu->a}");
+        $comptes = Monde::conteneur(env: $this->dossiers->env())->comptes();
+        $comptes->reinitialiserDemo('a@exemple.ch', 'autre', '  Ébéniste  ');
+        self::assertSame(['metier' => 'autre', 'metier_saisi' => 'Ébéniste'], BaseDeTest::ligne("SELECT metier, metier_saisi FROM artisan WHERE id = {$this->jeu->a}"));
+        self::assertSame(12, BaseDeTest::compter('produit', "artisan_id = {$this->jeu->a}"));
+
+        $comptes->reinitialiserDemo('a@exemple.ch', 'macon');
+        self::assertSame(['metier' => 'macon', 'metier_saisi' => null], BaseDeTest::ligne("SELECT metier, metier_saisi FROM artisan WHERE id = {$this->jeu->a}"));
+    }
+
+    public function testTexteDeMetierFauxRefuseAvantDEffacer(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET demo = 1 WHERE id = {$this->jeu->a}");
+        $comptes = Monde::conteneur(env: $this->dossiers->env())->comptes();
+        // 61 caractères, puis un texte donné avec un métier de la liste.
+        foreach ([['autre', str_repeat('é', 61)], ['peintre', 'Ébéniste']] as [$metier, $texte]) {
+            try {
+                $comptes->reinitialiserDemo('a@exemple.ch', $metier, $texte);
+                self::fail("Texte de métier accepté : $metier, $texte");
+            } catch (\InvalidArgumentException) {
+            }
+        }
+        self::assertSame(1, BaseDeTest::compter('offre', "artisan_id = {$this->jeu->a} AND titre = 'Offre a'"));
+        self::assertSame(1, BaseDeTest::compter('artisan', "id = {$this->jeu->a} AND metier IS NULL"));
+        // 60 caractères passent.
+        $comptes->reinitialiserDemo('a@exemple.ch', 'autre', str_repeat('é', 60));
+        self::assertSame(60, mb_strlen((string) BaseDeTest::ligne("SELECT metier_saisi FROM artisan WHERE id = {$this->jeu->a}")['metier_saisi']));
     }
 
     public function testLaReinitialisationEffaceLesFacturesAvantLesOffres(): void
@@ -140,7 +204,7 @@ final class DemoTest extends TestCase
         }
     }
 
-    public function testLesTroisCataloguesOntDouzeProduitsSansDoublon(): void
+    public function testLesCataloguesOntDouzeProduitsSansDoublon(): void
     {
         foreach (CatalogueFictif::metiers() as $metier) {
             $produits = CatalogueFictif::produits($metier);

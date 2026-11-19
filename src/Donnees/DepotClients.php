@@ -19,7 +19,7 @@ use OffreGen\Client\Rapprochement;
  * @phpstan-type Client array{id: int, nom: string, adresse: string|null, rue: string|null, numero: string|null, npa: string|null, localite: string|null, pays: string|null, telephone: string|null, courriel: string|null}
  * @phpstan-type ClientListe array{id: int, nom: string, adresse: string|null, rue: string|null, numero: string|null, npa: string|null, localite: string|null, pays: string|null, telephone: string|null, courriel: string|null, nb_offres: int, derniere: string|null}
  * @phpstan-type OffreDuClient array{id: int, numero: int, titre: string, cree_le: string, archivee_le: string|null}
- * @phpstan-type FicheClient array{nom: string, adresse: Adresse, ancienne?: string|null, telephone: string|null, courriel: string|null}
+ * @phpstan-type FicheClient array{nom: string, adresse: Adresse, ancienne?: string|null, telephone: string|null, courriel: string|null, exemple?: bool}
  */
 final class DepotClients
 {
@@ -77,10 +77,10 @@ final class DepotClients
     public function creer(array $f, \DateTimeImmutable $quand): int
     {
         $this->base->ecrire(
-            'INSERT INTO client (artisan_id, nom, rue, numero, npa, localite, pays, adresse, telephone, courriel, cree_le)
-             VALUES (:a, :n, :rue, :numero, :npa, :localite, :pays, :ad, :t, :c, :q)',
+            'INSERT INTO client (artisan_id, nom, rue, numero, npa, localite, pays, adresse, telephone, courriel, cree_le, exemple)
+             VALUES (:a, :n, :rue, :numero, :npa, :localite, :pays, :ad, :t, :c, :q, :ex)',
             $f['adresse']->versBase('') + ['a' => $this->portee->artisanId, 'n' => $f['nom'], 'ad' => self::texte($f['adresse']) ?? ($f['ancienne'] ?? null),
-             't' => $f['telephone'], 'c' => $f['courriel'], 'q' => Dates::versBase($quand)],
+             't' => $f['telephone'], 'c' => $f['courriel'], 'q' => Dates::versBase($quand), 'ex' => ($f['exemple'] ?? false) ? 1 : 0],
         );
         return $this->base->dernierId();
     }
@@ -99,7 +99,7 @@ final class DepotClients
         $texte = $f['adresse']->estVide() && $avant['npa'] === null ? $avant['adresse'] : self::texte($f['adresse']);
         $this->base->ecrire(
             'UPDATE client SET nom = :n, rue = :rue, numero = :numero, npa = :npa, localite = :localite, pays = :pays, adresse = :ad,
-                    telephone = :t, courriel = :c, modifie_le = :q
+                    telephone = :t, courriel = :c, modifie_le = :q, exemple = 0
              WHERE id = :id AND artisan_id = :a',
             $f['adresse']->versBase('') + ['n' => $f['nom'], 'ad' => $texte, 't' => $f['telephone'], 'c' => $f['courriel'],
              'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
@@ -143,6 +143,23 @@ final class DepotClients
             $this->base->ecrire('DELETE FROM client WHERE id = :id AND artisan_id = :a', ['id' => $id, 'a' => $this->portee->artisanId]);
             return true;
         });
+    }
+
+    /**
+     * Passage d'une démonstration à l'essai, après l'effacement des offres d'exemple : une fiche d'exemple que plus
+     * aucune offre ne désigne part ; celle qu'une offre dictée désigne reste et devient une fiche de l'artisan.
+     *
+     * @return int nombre de fiches d'exemple effacées
+     */
+    public function effacerExemplesSansOffre(): int
+    {
+        $effacees = $this->base->ecrire(
+            'DELETE FROM client WHERE artisan_id = :a AND exemple = 1
+             AND NOT EXISTS (SELECT 1 FROM offre o WHERE o.client_id = client.id AND o.artisan_id = client.artisan_id)',
+            ['a' => $this->portee->artisanId],
+        );
+        $this->base->ecrire('UPDATE client SET exemple = 0 WHERE artisan_id = :a AND exemple = 1', ['a' => $this->portee->artisanId]);
+        return $effacees;
     }
 
     /** Toutes les fiches de l'artisan, après ses offres (réinitialisation d'un compte de démonstration). */
