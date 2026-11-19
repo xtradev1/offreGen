@@ -4,8 +4,14 @@
    Couleurs : les variables d'app.css, thème sombre compris. */
 
 .screen.vos-prix { display: flex; flex-direction: column; }
-/* Le message « Annuler » monte sous le bandeau : en bas, le clavier du téléphone le cacherait. */
-.screen.vos-prix ~ .snack { top: 64px; bottom: auto; }
+/* Le message « Annuler » monte sur le bandeau du haut : en bas, le clavier du téléphone le cacherait ; sous le
+   bandeau, il couvrirait « Je ne fais pas ça ». Clair sur le bandeau sombre ; en thème sombre, le message
+   d'app.css l'est déjà. */
+.screen.vos-prix ~ .snack { top: 6px; bottom: auto; z-index: 60; background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--bord), 0 6px 18px rgba(0, 0, 0, .3); }
+@media (prefers-color-scheme: dark) {
+  .screen.vos-prix ~ .snack { background: var(--ink); color: var(--surface); }
+}
+.screen.vos-prix ~ .snack button { min-height: 48px; }
 
 .vp-quitter { margin: 0; display: flex; }
 .vp-quitter .back { background: none; border: 0; font: inherit; color: inherit; cursor: pointer; min-height: 48px; }
