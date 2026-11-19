@@ -2,8 +2,13 @@
 
 {% block titre %}Mon catalogue · {{ nom_application }}{% endblock %}
 {% block entete %}Mon catalogue{% endblock %}
+{% block entete_html %}{% if sans_prix > 0 %}<link rel="stylesheet" href="/css/vos-prix.css">{% endif %}{% endblock %}
 
 {% block contenu %}
+  {# Rappel vers l'écran « Vos prix » tant qu'un produit est sans prix (chantier des métiers, 2026-11-19). #}
+  {% if sans_prix > 0 %}
+    <p class="vp-rappel"><span>{{ sans_prix }} produit{% if sans_prix > 1 %}s{% endif %} sans prix</span><a href="/vos-prix">Compléter</a></p>
+  {% endif %}
   <form class="search" method="get" action="/catalogue" role="search">
     {% if cat %}<input type="hidden" name="cat" value="{{ cat }}">{% endif %}
     <div class="box">

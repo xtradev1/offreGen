@@ -56,7 +56,23 @@ final class AccueilControleur
             'tri' => $tri,
             'tris' => self::TRIS,
             'du_mois' => $depot->creeesDepuis($this->debutDuMois()),
+            'vos_prix' => $this->vosPrix($requete, $portee, ($artisan['demo'] ?? 0) === 1),
         ]));
+    }
+
+    /**
+     * Le bandeau « Vos prix » : pour un compte hors démonstration dont des produits d'exemple attendent un prix
+     * (essai créé avec un métier, ou démonstration passée à l'essai). « Plus tard » le réduit à une ligne.
+     *
+     * @return array{nombre: int, reduit: bool}
+     */
+    private function vosPrix(Request $requete, Portee $portee, bool $demo): array
+    {
+        $nombre = $demo ? 0 : count(array_filter(
+            $this->c->produits($portee)->sansPrix(),
+            static fn (array $p): bool => $p['prix_exemple_centimes'] !== null,
+        ));
+        return ['nombre' => $nombre, 'reduit' => $requete->getSession()->get(VosPrixControleur::PLUS_TARD) === true];
     }
 
     /**

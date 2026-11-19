@@ -41,6 +41,42 @@ final class DepotProduits
         );
     }
 
+    /** @return list<Produit> les produits au prix 0, dans l'ordre du catalogue (écran « Vos prix ») */
+    public function sansPrix(): array
+    {
+        /** @var list<Produit> */
+        return $this->base->lire(
+            'SELECT ' . self::COLONNES . ' FROM produit WHERE artisan_id = :a AND prix_centimes = 0 ORDER BY categorie, designation, id',
+            ['a' => $this->portee->artisanId],
+        );
+    }
+
+    /** Le prix donné par l'artisan sur l'écran « Vos prix » : le produit devient le sien. */
+    public function fixerPrix(int $id, int $prixCentimes): bool
+    {
+        if ($this->parId($id) === null) {
+            return false;
+        }
+        $this->base->ecrire(
+            'UPDATE produit SET prix_centimes = :p, prix_exemple_centimes = NULL WHERE id = :id AND artisan_id = :a',
+            ['p' => $prixCentimes, 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
+    /** Annule « Reprendre » : le prix repart à 0, le prix de la démonstration revient à côté. */
+    public function remettreExemple(int $id, int $prixExempleCentimes): bool
+    {
+        if ($this->parId($id) === null) {
+            return false;
+        }
+        $this->base->ecrire(
+            'UPDATE produit SET prix_centimes = 0, prix_exemple_centimes = :e WHERE id = :id AND artisan_id = :a',
+            ['e' => $prixExempleCentimes, 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
     /** @return list<string> les catégories du catalogue, dans l'ordre alphabétique */
     public function categories(): array
     {

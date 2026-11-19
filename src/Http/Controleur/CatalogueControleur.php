@@ -49,6 +49,8 @@ final class CatalogueControleur
             'groupes' => $groupes,
             'nombre' => count($produits),
             'trouves' => count($gardes),
+            // Rappel vers l'écran « Vos prix » tant qu'un produit est sans prix.
+            'sans_prix' => count(array_filter($produits, static fn (array $p): bool => $p['prix_centimes'] === 0)),
             'q' => $q,
             'cat' => $cat,
         ]));

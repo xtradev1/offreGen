@@ -3,12 +3,29 @@
 {% block titre %}Mes offres · {{ nom_application }}{% endblock %}
 {% block entete %}Mes offres{% endblock %}
 {% block ecran_classe %} gris avec-rond{% endblock %}
+{% block entete_html %}{% if vos_prix.nombre > 0 %}<link rel="stylesheet" href="/css/vos-prix.css">{% endif %}{% endblock %}
 
 {% block contenu %}
   <p class="muted ent">{{ entreprise }}{% if demo %} (compte de démonstration){% endif %}</p>
   {% set essai_compte = essai() %}{% if essai_compte %}<p class="muted ent">{{ essai_compte.reste }}</p>{% endif %}
   {# Archivées et supprimées comprises ; un échec n'a pas donné d'offre et ne compte pas. #}
   <p class="compteur">{{ du_mois }} offre{% if du_mois > 1 %}s{% endif %} ce mois</p>
+
+  {# « Vos prix » : les produits d'exemple d'un essai attendent leur prix (chantier des métiers, 2026-11-19). #}
+  {% if vos_prix.nombre > 0 %}
+    {% if vos_prix.reduit %}
+      <p class="vp-rappel"><span>{{ vos_prix.nombre }} produit{% if vos_prix.nombre > 1 %}s{% endif %} sans prix</span><a href="/vos-prix">Compléter</a></p>
+    {% else %}
+      <div class="vp-bandeau">
+        <b>{{ vos_prix.nombre }} {{ vos_prix.nombre > 1 ? 'produits attendent' : 'produit attend' }} votre prix</b>
+        <span>Deux minutes. Un prix par produit, et vous retirez ce que vous ne faites pas.</span>
+        <div class="vp-bandeau-gestes">
+          <a class="btn primary" href="/vos-prix">Mettre mes prix</a>
+          <form method="post" action="/vos-prix/plus-tard"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="btn" type="submit">Plus tard</button></form>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
 
   {% if en_preparation is not empty or echecs is not empty %}
     <div class="cat liste"><h5>En préparation</h5></div>

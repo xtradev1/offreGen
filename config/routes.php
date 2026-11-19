@@ -23,6 +23,7 @@ use OffreGen\Http\Controleur\PieceControleur;
 use OffreGen\Http\Controleur\RangementControleur;
 use OffreGen\Http\Controleur\RelectureControleur;
 use OffreGen\Http\Controleur\SanteControleur;
+use OffreGen\Http\Controleur\VosPrixControleur;
 use OffreGen\Http\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -120,6 +121,11 @@ return static function (Conteneur $c): array {
         new Route('produit_modifier', '/catalogue/{id}', ['POST'], static fn (Request $r, array $p): Response => $catalogue()->modifier($r, $p), Route::ARTISAN),
         new Route('produit_suppression', '/catalogue/{id}/supprimer', ['GET'], static fn (Request $r, array $p): Response => $catalogue()->confirmerSuppression($r, $p), Route::ARTISAN),
         new Route('produit_supprimer', '/catalogue/{id}/supprimer', ['POST'], static fn (Request $r, array $p): Response => $catalogue()->supprimer($r, $p), Route::ARTISAN),
+        // « Vos prix » : les produits sans prix, un à la fois (chantier des métiers, 2026-11-19). Chemins fixes d'abord.
+        new Route('vos_prix', '/vos-prix', ['GET'], static fn (Request $r): Response => (new VosPrixControleur($c))->afficher($r), Route::ARTISAN),
+        new Route('vos_prix_annuler', '/vos-prix/annuler', ['POST'], static fn (Request $r): Response => (new VosPrixControleur($c))->annuler($r), Route::ARTISAN),
+        new Route('vos_prix_plus_tard', '/vos-prix/plus-tard', ['POST'], static fn (Request $r): Response => (new VosPrixControleur($c))->plusTard($r), Route::ARTISAN),
+        new Route('vos_prix_agir', '/vos-prix/{id}', ['POST'], static fn (Request $r, array $p): Response => (new VosPrixControleur($c))->agir($r, $p), Route::ARTISAN),
         new Route('clients', '/clients', ['GET'], static fn (Request $r): Response => $client()->liste($r), Route::ARTISAN),
         new Route('client_creer', '/clients', ['POST'], static fn (Request $r): Response => $client()->creer($r), Route::ARTISAN),
         new Route('client_nouveau', '/clients/nouveau', ['GET'], static fn (Request $r): Response => $client()->nouveau($r), Route::ARTISAN),
