@@ -15,11 +15,12 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lots 0 à 6 de `PLAN.md` faits, testés, commités (555dea4) et déployés sur le site de test, six démos neuves vues par l'interface. Suite : lot 7 (traceur de l'écran « Vos prix »). `public/css/app.css` et `public/js/app.js` portent encore les modifications d'autres sessions : relire `git status` avant d'y écrire, et ne commiter que ses propres morceaux (`git apply --cached`). Puis lots 8 à 10, lot 11 (dictées d'essai sur le site de test), phases 6 à 8.
+Lots 0 à 10 de `PLAN.md` faits, testés, commités (555dea4, 727f0dd, 687606b) et en service sur le site de test. Suite : la recette de Xavier sur iPhone (le clavier reste-t-il ouvert d'un produit à l'autre), puis lot 11 (dictées d'essai des six nouveaux métiers), phases 6 à 8 (vérification, revue, recette). Pour déployer : règle de la mémoire du projet (dossier propre à la session, tête de la branche, `pgrep` vide).
 
 ## En attente de toi
 
-- Faire commiter `public/css/app.css` et `public/js/app.js` par les sessions qui les ont modifiés : l'écran « Vos prix » s'écrit dans ces deux fichiers.
+- Essayer « Vos prix » sur ton iPhone, compte `essai-peintre@exemple.ch` du site de test : le clavier reste-t-il ouvert après « Suivant », « Reprendre », « Passer » ; les boutons tiennent-ils au-dessus du clavier ; le glisser à gauche passe-t-il au suivant.
+- Dire quelle démo passer à l'essai pour voir le passage sur le site (`bin/passer-en-essai`, lancé par Claude : le bouton est au chantier des comptes).
 - Dire si les démos déjà posées sur le site de test se remettent à zéro : posées avant la migration, elles n'ont aucune marque, et leur passage à l'essai garderait leurs deux offres d'exemple.
 - Regarder les sept prix corrigés après lecture des pages (`CATALOGUES.md`, premier paragraphe) : ils s'écartent de ce que tu avais vu.
 
@@ -57,6 +58,12 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-19 : six démos créées sur le site de test par `bin/creer-compte --demo --metier=…` (`demo-platrier`, `demo-carreleur`, `demo-macon`, `demo-menuisier`, `demo-sols`, `demo-paysagiste`, toutes `@exemple.ch`). Mots de passe dans `~/.offregen-test-demo-<métier>-compte` (WSL, hors dépôt). `demo-peintre` (5 offres) et `audit-responsive` (autre session) laissées telles quelles : posées avant la migration, elles n'ont ni métier ni marque.
 - 2026-11-19 : recette par l'interface des six démos, au téléphone (390 px) : connexion, assistant passé par « Plus tard », « Mes offres », catalogue, première offre. Puis les six comptes remis à zéro par `bin/reinitialiser-demo` pour rendre l'assistant au premier visiteur.
 - 2026-11-19 : arrêt avant le lot 7. `public/css/app.css` et `public/js/app.js` portent les modifications non commitées d'autres sessions (chantiers responsive et contrastes des boutons) ; un commit par chemins y embarquerait leur travail.
+- 2026-11-19 : Xavier : « tu peux créer une autre démo et on test tout en prod, j'ai un iphone », puis « je peux avoir quatre démos pour des peintres ouvertes en même temps, c'est pas une démo par métier ». Réponses : oui, une démo est un compte et rien ne limite les comptes par métier (`demo-peintre-2` créée à côté de `demo-peintre`) ; « en prod » lu comme « sur le site de test », la production reste fermée à Claude.
+- 2026-11-19 : lots 7 à 10 faits sans toucher `app.css` ni `app.js` : `base.html.twig` offre un bloc d'en-tête par page, l'écran a sa feuille (`vos-prix.css`) et son script (`vos-prix.js`). Tests des lots 7 à 9 écrits avant le code, mais lancés seulement après lui : ils n'ont pas été vus rouges.
+- 2026-11-19 : `config/routes.php` portait mes lignes et celles, non commitées, du chantier des comptes : seules les miennes sont parties au commit 727f0dd (version construite depuis le dernier commit, `git update-index`).
+- 2026-11-19 : collisions avec la session des comptes, qui lançait ses tests et déployait en même temps sur la même base de test : une suite entière rouge dans la copie de travail (229 erreurs), deux refus du script de déploiement avant tout envoi. Aucune erreur de code : la même suite passe seule (652 tests). Règle écrite depuis dans la mémoire du projet par l'autre session : un dossier de copie propre par session, déployer la tête de la branche.
+- 2026-11-19 : 727f0dd déployé sur le test par cette session ; le correctif 687606b y est arrivé avec le déploiement de 56fbddd par la session des comptes. Recette de l'écran par l'interface, au téléphone, sur le compte `essai-vosprix@exemple.ch` créé pour elle. Défaut vu à la capture et corrigé : le message « Annuler » couvrait l'avancement et le haut de « Je ne fais pas ça ».
+- 2026-11-19 : comptes créés sur le test pour la recette de Xavier sur iPhone : `essai-peintre@exemple.ch` (essai neuf, 12 produits à 0) et `demo-peintre-2@exemple.ch` (démo). Mots de passe dans `~/.offregen-test-<nom>-compte`.
 
 ## Décisions
 
@@ -64,6 +71,11 @@ Ce qui a été tranché sans demander, et pourquoi.
 
 | Date | Décision | Raison |
 |---|---|---|
+| 2026-11-19 | Feuille et script propres à l'écran (`vos-prix.css`, `vos-prix.js`) | `app.css` et `app.js` portent les modifications non commitées d'autres sessions ; `document.css` et `apercu-pdf.js` sont des précédents |
+| 2026-11-19 | « Suivant » est le premier bouton du formulaire dans le code, le retrait le dernier ; l'ordre à l'écran vient de la feuille de style | La touche Entrée envoie le premier bouton : elle ne doit jamais retirer un produit |
+| 2026-11-19 | Le message « Annuler » de cet écran est sur le bandeau du haut | En bas, le clavier du téléphone le cache ; sous le bandeau, il couvrait « Je ne fais pas ça » |
+| 2026-11-19 | « Annuler » sans rien à annuler renvoie à la carte en cours (`/vos-prix?suite=1`) | Le plan disait `/vos-prix`, qui recommence le passage et oublie les produits passés |
+| 2026-11-19 | Rappel du catalogue pour tout produit sans prix, démo comprise ; bandeau de l'accueil pour les seuls produits d'exemple d'un compte hors démo | Le rappel est discret et l'écran sert à tout compte ; le bandeau, lui, ne doit rien annoncer à un visiteur de démo ni à un compte réel existant |
 | 2026-11-19 | Une démo neuve par nouveau métier sur le site de test, au lieu de remettre à zéro les démos existantes | `demo-peintre` porte 5 offres que je n'ai pas posées ; effacer le travail d'un autre demande l'accord de Xavier |
 | 2026-11-19 | Le plafond d'un essai issu d'une démo vaut N plus les imports déjà reçus | Le plafond compte tous les imports du compte (`PlafondEssai`) ; sans cela, les visites dictées pendant la démo seraient décomptées des N offres promises |
 | 2026-11-19 | Une fiche client d'exemple modifiée perd sa marque, comme un produit | Même règle que le point 2 de la spec : ce que l'artisan corrige devient le sien et ne part pas au passage à l'essai |
@@ -95,7 +107,8 @@ Ce qui a été tranché sans demander, et pourquoi.
 |---|---|---|
 | `SPEC.md` | 1 | validé par Xavier le 2026-11-19 (« ok pour le reste ») |
 | `MAQUETTE-vos-prix.html` | 3 | validée par Xavier le 2026-11-19 (V1 à V6) ; variante A retenue pour la saisie |
-| `PLAN.md` | 4 | écrit, onze lots, lots 0 à 6 cochés |
+| `PLAN.md` | 4 | écrit, onze lots, lots 0 à 10 cochés |
+| `src/Http/Controleur/VosPrixControleur.php`, `templates/vos_prix.html.twig`, `public/css/vos-prix.css`, `public/js/vos-prix.js`, `tests/Http/VosPrixTest.php` | 5 | lots 7 à 10 livrés en code, testés, vus sur le site de test ; clavier de l'iPhone non vérifié |
 | `CATALOGUES.md` | 1 | pages des sources ouvertes le 2026-11-19, sept prix corrigés ; maçon ajouté, électricien gardé pour le lot 2 |
 | `src/Catalogue/CatalogueFictif.php`, `tests/Catalogue/CatalogueFictifTest.php` | 5 | lot 1 livré en code, testé |
 | `migrations/Version20261119000002.php`, `tests/Donnees/ColonnesMetiersTest.php` | 5 | lot 2 livré en code, testé |
@@ -320,4 +333,47 @@ erreurs []
 
 Même sortie pour les cinq autres : 12 produits, aucun sans prix, 2 offres, aucun débordement, aucune erreur. Sous-totaux lus à l'écran : carreleur 3'078, maçon 6'829, menuisier 11'220, poseur de sols 2'479, paysagiste 1'070, égaux aux totaux calculés depuis le code (lot 1). Captures ouvertes : catalogue du plâtrier, assistant, offre du maçon, « Mes offres » du menuisier.
 
-Non vérifié : peintre, sanitaire et « autre » n'ont pas été regardés dans l'interface (aucune démo neuve pour eux) ; l'essai créé avec un métier et le passage à l'essai n'ont été lancés que par les tests, pas sur le site ; aucune dictée d'essai (lot 11).
+Non vérifié : sanitaire et « autre » n'ont pas été regardés dans l'interface (aucune démo neuve pour eux) ; le passage d'une démo à l'essai n'a été lancé que par les tests, pas sur le site ; aucune dictée d'essai (lot 11).
+
+### Lots 7 à 10 : écran « Vos prix » (2026-11-19)
+
+```
+$ vendor/bin/phpunit --colors=never tests/Http/VosPrixTest.php tests/Http/IsolationRoutesTest.php
+OK (25 tests, 1163 assertions)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ bash outils/deployer-test.sh (copie propre de 727f0dd)
+OK (652 tests, 5068 assertions)
+analyse statique : sans erreur
+SONDE VERTE
+DÉPLOYÉ : 727f0dd6170c51aed8efb5ee574476effe3ac455 sur https://easy-offres.xtradev.ch
+$ vendor/bin/phpunit (copie propre de 687606b, après le correctif de la feuille de style)
+OK (652 tests, 5068 assertions)
+$ curl -s https://easy-offres.xtradev.ch/sante (depuis le serveur de test, après le déploiement de l'autre session)
+{"commit":"56fbddd07fd8cd9bfb23a61dddf43483eea87a6f","base":"ok","migrations":"ok"}
+$ git merge-base --is-ancestor 687606b 56fbddd
+oui
+```
+
+Parcours Playwright sur le site de test, téléphone 390 x 844 tactile, compte `essai-vosprix@exemple.ch` (ce que le script lit à l'écran, second passage après le correctif) :
+
+```
+1 accueil  "10 produits attendent votre prix … Mettre mes prix Plus tard"  hauteurs [48,48]  débordement 0
+2 carte    "1 sur 10"  "Doublage isolant collé"  "Prix de la démo : 75.00 Reprendre"  champ actif : prix  bas des boutons 380 px  petites cibles []
+3 erreur   (premier passage) "Tapez un prix, ou touchez « Passer »."  même carte, page non rechargée
+4 suivant  (premier passage) 45 tapé : "2 sur 12", page non rechargée, champ actif : prix
+5 repris   "3 sur 10"  message "« Déplacement » : prix repris, 60.00 Annuler"  haut 6 px, bas 62 px, au-dessus du bandeau ; « Je ne fais pas ça » commence à 100 px
+6 annulé   "2 sur 10"  "Déplacement"  "Prix de la démo : 60.00 Reprendre"
+8 glissé   à gauche : "4 sur 10", produit suivant
+9 retiré   message "« Crépi de finition intérieur » retiré du catalogue Annuler"
+11 bilan   "C'est noté"  ["Prix enregistrés 1","À compléter plus tard 8","Produits retirés 1"]
+12 accueil après « Plus tard » : "8 produits sans prix Compléter", bandeau absent, lien 48 px
+13 catalogue "8 produits sans prix Compléter", 8 lignes « Prix ? » sur 10 produits
+erreurs ["Failed to load resource: the server responded with a status of 422 ()"]
+```
+
+L'erreur de console est le 422 attendu de « Suivant » sans prix. « Page non rechargée » : une marque posée dans la page avant le geste est encore là après. Ordre lu à l'écran : catégorie et retrait, nom, champ, prix de la démo, « Passer » et « Suivant ». Captures ouvertes : accueil avec bandeau, carte, message après « Reprendre » (avant et après correctif), thème sombre, bilan.
+
+Reste sous 48 px sur l'écran du bilan : le lien de retour « Catalogue » du bandeau (44 px), style commun à tous les écrans dans `app.css`, hors de ce chantier.
+
+Non vérifié : le clavier de l'iPhone (reste-t-il ouvert d'un produit à l'autre, les boutons tiennent-ils au-dessus de lui). Chromium n'a pas de clavier à l'écran : seul le champ resté actif est prouvé. À voir par Xavier sur son iPhone. Non vérifié non plus : l'écran sur PC, et une suite entière dans la copie de travail après les lots 7 à 10 (la seule lancée a croisé celle d'une autre session).

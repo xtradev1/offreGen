@@ -144,7 +144,8 @@ Ordre : données et commandes d'abord (lots 1 à 6, une seule couche, chacun v�
 - [x] Lot 4, 2026-11-19 : `Comptes::creer` et `bin/creer-compte --metier`. Ajout au plan : une démo créée avec un métier est posée tout de suite.
 - [x] Lot 5, 2026-11-19 : `Comptes::passerEnEssai` et `bin/passer-en-essai`. Ajout au plan : le plafond vaut N plus les imports déjà reçus.
 - [x] Lot 6, 2026-11-19 : `DepotArtisans::metiersSaisis` et `bin/metiers-saisis`.
-- [ ] Lots 7 à 10 : `public/css/app.css` et `public/js/app.js` portent encore les modifications d'autres sessions ; n'y commiter que ses propres morceaux. `sansPrix`, `fixerPrix` et `remettreExemple` de `DepotProduits` s'écrivent avec ces lots.
+- [x] Lots 7 à 9, 2026-11-19 : `/vos-prix`, ses quatre gestes, les deux annulations, le bilan, l'écran sans rien à compléter, le bandeau de l'accueil, « Plus tard », le rappel du catalogue. Écart au plan : feuille et script à part (`vos-prix.css`, `vos-prix.js`), `app.css` et `app.js` non touchés ; « Annuler » sans rien à annuler renvoie à `/vos-prix?suite=1`.
+- [x] Lot 10, 2026-11-19 : produit suivant sans rechargement, champ gardé actif, glisser à gauche, message effacé après 5 secondes. Vérifié dans Chromium tactile sur le site de test. Le clavier de l'iPhone (décision fragile 1) reste à voir par Xavier.
 - [ ] Lot 11 : attend le lot 3 et un site de test à jour.
 
 ## Préalables de la recette
