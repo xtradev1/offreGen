@@ -15,7 +15,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lots 0 à 6 de `PLAN.md` faits et testés. Suite : lot 7 (traceur de l'écran « Vos prix »). `public/css/app.css` et `public/js/app.js` portent encore les modifications d'autres sessions : relire `git status` avant d'y écrire, et ne commiter que ses propres morceaux (`git apply --cached`). Puis lots 8 à 10, lot 11 (dictées d'essai sur le site de test), phases 6 à 8.
+Lots 0 à 6 de `PLAN.md` faits, testés, commités (555dea4) et déployés sur le site de test, six démos neuves vues par l'interface. Suite : lot 7 (traceur de l'écran « Vos prix »). `public/css/app.css` et `public/js/app.js` portent encore les modifications d'autres sessions : relire `git status` avant d'y écrire, et ne commiter que ses propres morceaux (`git apply --cached`). Puis lots 8 à 10, lot 11 (dictées d'essai sur le site de test), phases 6 à 8.
 
 ## En attente de toi
 
@@ -53,6 +53,10 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-19 : réponse de Xavier : ce chantier passe (« tu peux ajouter celui-ci »), commit, push, puis site de test (« On va tout mettre sur le site de test ») ; « démo et essai, même chose » : même site, l'hypothèse de la spec est confirmée. Constat au `git log` : le chantier des comptes a déjà commité ses lots 1 à 4 (7a7956d), avec l'ordre « Admin, métiers, puis démo » donné par Xavier à sa session.
 - 2026-11-19 : question de Xavier sur l'entorse à la règle du pouce (V2 = A). Réponse : aucune erreur de sa part. Clavier ouvert, les boutons sont juste au-dessus de lui, vers le milieu de l'écran, sous le pouce. L'écart est de forme : ces boutons quittent la barre d'action fixe du bas que `CODING_RULES.md` prescrit, parce que le clavier la recouvrirait.
 - 2026-11-19 : lots 2 à 6 faits. Tests écrits d'abord et vus rouges (13 erreurs, 4 échecs), puis migration `Version20261119000002` jouée sur les bases locales de test et de développement, dépôts, `Comptes`, quatre commandes. Un rouge venait du test lui-même (les deux fiches d'exemple y étaient gardées) : test corrigé, un essai de plus pour la fiche corrigée. Suite entière et PHPStan verts.
+- 2026-11-19 : commit 555dea4 (lots 0 à 6, 25 fichiers, par chemins) poussé sur `chantier-voix-offre`, puis déployé sur le site de test depuis une copie propre. Premier lancement refusé par le script avant tout envoi : ma copie n'avait pas `.env.test.local`, les tests visaient la base de développement. Second lancement : sonde verte, version précédente 3a1715b.
+- 2026-11-19 : six démos créées sur le site de test par `bin/creer-compte --demo --metier=…` (`demo-platrier`, `demo-carreleur`, `demo-macon`, `demo-menuisier`, `demo-sols`, `demo-paysagiste`, toutes `@exemple.ch`). Mots de passe dans `~/.offregen-test-demo-<métier>-compte` (WSL, hors dépôt). `demo-peintre` (5 offres) et `audit-responsive` (autre session) laissées telles quelles : posées avant la migration, elles n'ont ni métier ni marque.
+- 2026-11-19 : recette par l'interface des six démos, au téléphone (390 px) : connexion, assistant passé par « Plus tard », « Mes offres », catalogue, première offre. Puis les six comptes remis à zéro par `bin/reinitialiser-demo` pour rendre l'assistant au premier visiteur.
+- 2026-11-19 : arrêt avant le lot 7. `public/css/app.css` et `public/js/app.js` portent les modifications non commitées d'autres sessions (chantiers responsive et contrastes des boutons) ; un commit par chemins y embarquerait leur travail.
 
 ## Décisions
 
@@ -60,6 +64,7 @@ Ce qui a été tranché sans demander, et pourquoi.
 
 | Date | Décision | Raison |
 |---|---|---|
+| 2026-11-19 | Une démo neuve par nouveau métier sur le site de test, au lieu de remettre à zéro les démos existantes | `demo-peintre` porte 5 offres que je n'ai pas posées ; effacer le travail d'un autre demande l'accord de Xavier |
 | 2026-11-19 | Le plafond d'un essai issu d'une démo vaut N plus les imports déjà reçus | Le plafond compte tous les imports du compte (`PlafondEssai`) ; sans cela, les visites dictées pendant la démo seraient décomptées des N offres promises |
 | 2026-11-19 | Une fiche client d'exemple modifiée perd sa marque, comme un produit | Même règle que le point 2 de la spec : ce que l'artisan corrige devient le sien et ne part pas au passage à l'essai |
 | 2026-11-19 | `bin/creer-compte --demo --metier=…` pose la démo tout de suite | Sinon la commande créerait une démo vide avec un métier écrit dessus |
@@ -267,3 +272,52 @@ Le message de la migration cite `100001` : c'est la dernière version connue, p
 La suite entière tourne dans la copie de travail, qui porte les modifications non commitées d'autres sessions (`app.css`, `app.js`, gabarits). Le script de déploiement la rejoue sur le commit seul.
 
 Non vérifié : `bin/passer-en-essai --acces` (envoi du courriel) n'a aucun test et n'a pas été lancé.
+
+### Déploiement sur le site de test et recette des démos par l'interface (2026-11-19)
+
+```
+$ git log -1 --format=%h ; git push origin chantier-voix-offre
+555dea4
+   3a1715b..555dea4  chantier-voix-offre -> chantier-voix-offre
+$ bash outils/deployer-test.sh (copie propre du commit, `git worktree`)
+== Tests et analyse
+OK (638 tests, 4918 assertions)
+analyse statique : sans erreur
+== Liens, migrations, bascule, cron
+[notice] finished in 71.7ms, used 8M memory, 1 migrations executed, 4 sql queries
+en service : releases/555dea491caf31dd2610f02e7d4d10bc221ec48b ; précédente : releases/3a1715b6ebcecab2c554ff97d1c15ae808675bff
+== Sonde d'exposition
+LU     /sante : {"commit":"555dea491caf31dd2610f02e7d4d10bc221ec48b","base":"ok","migrations":"ok"}
+SONDE VERTE
+DÉPLOYÉ : 555dea491caf31dd2610f02e7d4d10bc221ec48b sur https://easy-offres.xtradev.ch
+```
+
+Une assertion de moins que dans la copie de travail (4919) : celle-ci porte les fichiers non commités d'autres sessions.
+
+Comptes du site de test après création des six démos (lecture seule, courriels des comptes hors démo masqués) :
+
+```
+demo-peintre@exemple.ch            demo 1  metier -          offres 5   produits 13  marques 0
+audit-responsive@exemple.ch        demo 1  metier -          offres 2   produits 12  marques 0
+demo-platrier@exemple.ch           demo 1  metier platrier   offres 2   produits 12  marques 12
+demo-carreleur@exemple.ch          demo 1  metier carreleur  offres 2   produits 12  marques 12
+demo-macon@exemple.ch              demo 1  metier macon      offres 2   produits 12  marques 12
+demo-menuisier@exemple.ch          demo 1  metier menuisier  offres 2   produits 12  marques 12
+demo-sols@exemple.ch               demo 1  metier sols       offres 2   produits 12  marques 12
+demo-paysagiste@exemple.ch         demo 1  metier paysagiste offres 2   produits 12  marques 12
+```
+
+Parcours Playwright au téléphone, une connexion par compte (extraits de ce que le script lit à l'écran) :
+
+```
+=== macon : après connexion /bienvenue/entreprise
+après « Plus tard » : /
+accueil "Maçonnerie Démo (compte de démonstration) 2 offres ce mois … Ouverture entre cuisine et séjour Prête Famille Exemple · Offre 2 … CHF 7'382.15 … Mur de jardin et chape du garage Prête Monsieur Modèle · Offre 1 … CHF 6'081.70"
+catalogue {"produits":12,"sansPrix":0,"echantillon":["Béton coulé, coffrage compris béton, coffrage, dalle 420.00 / m³","Chape ciment chape 48.00 / m²", …]}
+offre "… Ouverture de porte dans un mur porteur, linteau compris pce 5'500.00 … Sous-total HT CHF 6'829.00 TVA 8,1 % CHF 553.15 Total TTC CHF 7'382.15"
+erreurs []
+```
+
+Même sortie pour les cinq autres : 12 produits, aucun sans prix, 2 offres, aucun débordement, aucune erreur. Sous-totaux lus à l'écran : carreleur 3'078, maçon 6'829, menuisier 11'220, poseur de sols 2'479, paysagiste 1'070, égaux aux totaux calculés depuis le code (lot 1). Captures ouvertes : catalogue du plâtrier, assistant, offre du maçon, « Mes offres » du menuisier.
+
+Non vérifié : peintre, sanitaire et « autre » n'ont pas été regardés dans l'interface (aucune démo neuve pour eux) ; l'essai créé avec un métier et le passage à l'essai n'ont été lancés que par les tests, pas sur le site ; aucune dictée d'essai (lot 11).
