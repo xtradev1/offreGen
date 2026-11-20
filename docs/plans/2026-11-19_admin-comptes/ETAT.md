@@ -355,3 +355,12 @@ Questions ouvertes pour Xavier :
 2. Page publique où un prospect lance sa démo sans commercial : non construite. Elle demanderait un plafond par adresse IP et le choix du métier par le prospect.
 3. Nom provisoire « Démo <métier> » et assistant de bienvenue sauté : à confirmer ; l'assistant pourrait revenir au passage à l'essai.
 4. Passage à l'essai (lot 6 et lot B) : `Comptes::passerEnEssai` remplace le mot de passe et ferme la session ; une offre d'exemple envoyée ou facturée pendant la démo part au passage (D4 de la revue des métiers).
+
+Copie de travail du chantier, depuis le 2026-11-20 : `~/offreGen-admin` (`git worktree`, tête détachée, poussée par `git push origin HEAD:chantier-voix-offre`). Raison : la copie principale `~/offreGen` avait douze commits de retard sur la branche et portait le travail non commité d'une autre session sur `config/routes.php`, `Comptes.php` et `Conteneur.php` ; le push du lot 5 y a été refusé. Le commit du lot 5 a été rejoué ici sur la tête de la branche (un conflit, `config/routes.php`, résolu en ajoutant les six routes à la version de la branche), puis retiré de la copie principale, remise dans l'état où elle était avant le lot.
+
+```
+$ DB_NOM=offregen_admin_test phpunit   (copie du chantier, lot 5 rejoué sur c035e8b)
+Tests: 693, Assertions: 5493, Failures: 1.   (le seul échec : ConteneurTest, à cause de DB_NOM)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+```
