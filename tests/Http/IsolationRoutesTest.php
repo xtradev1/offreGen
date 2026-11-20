@@ -152,6 +152,7 @@ final class IsolationRoutesTest extends TestCase
             'facture_supprimer' => [$this->cheminFacture('b', '/supprimer'), []],
             'facture_emettre' => [$this->cheminFacture('b', '/emettre'), []],
             'facture_annuler' => ['/factures/' . $this->factureEmise['b'] . '/annuler', ['refaire' => '1']],
+            'facture_envoyee' => ['/factures/' . $this->factureEmise['b'] . '/envoyee', []],
             'facture_ligne_ajouter' => [$this->cheminFacture('b', '/lignes'), ['designation' => 'Volée', 'quantite' => '1', 'unite' => 'pce', 'prix' => '1']],
             'facture_ligne_corriger' => [$this->cheminLigneFacture('b'), ['quantite' => '99']],
             'facture_ligne_juste' => [$this->cheminLigneFacture('b', '/juste'), []],

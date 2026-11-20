@@ -27,6 +27,7 @@
         <dl>
           <dt>Client</dt><dd>{{ fac.f.client_nom }}{% if fac.f.client_adresse %}<br><small>{{ fac.f.client_adresse|replace({"\n": ', '}) }}</small>{% endif %}</dd>
           <dt>Datée du</dt><dd>{{ fac.f.date_facture|jour }}</dd>
+          {% if fac.f.envoyee_le %}<dt>Envoyée le</dt><dd>{{ fac.f.envoyee_le|jour }}</dd>{% endif %}
           <dt>Offre</dt><dd><a href="/offres/{{ fac.f.offre_id }}">n°&nbsp;{{ fac.f.offre_numero }}, {{ fac.f.titre }}</a></dd>
         </dl>
         {% if fac.annuler %}<a class="lien-discret" href="{{ fac.annuler }}">Annuler la facture</a>{% endif %}
@@ -38,6 +39,19 @@
 {% endblock %}
 
 {% block actions %}
+  {% set fac = facture ?? null %}
+  {% if fac and fac.f.statut == 'annulee' %}
+    {# 1 C (2026-11-19) : déjà envoyée, le client doit recevoir la version annulée ; jamais partie, le PDF suffit. #}
+    <div class="actionbar avec-phrase">
+      {% if fac.f.envoyee_le %}
+        <a class="btn grand" href="{{ pdf }}" download="{{ fichier }}" data-partager data-titre="{{ partage }}">
+          <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>Envoyer la facture annulée</a>
+        <p class="phrase">Elle a été envoyée le {{ fac.f.envoyee_le|jour }}&nbsp;: prévenez votre client qu'elle ne doit pas être payée.</p>
+      {% else %}
+        <a class="btn grand" href="{{ pdf }}" download="{{ fichier }}">Télécharger le PDF</a>
+      {% endif %}
+    </div>
+  {% else %}
   <div class="actionbar">
     {% if facture ?? null %}<a class="btn grand pc-seul" href="{{ pdf }}" download="{{ fichier }}">Télécharger</a>{% endif %}
     {% if modifier %}<a class="btn grand" href="{{ modifier }}">Modifier</a>{% endif %}
@@ -46,4 +60,5 @@
     <a class="btn primary grand" href="{{ pdf }}" download="{{ fichier }}" data-partager data-titre="{{ partage }}">
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>Envoyer</a>
   </div>
+  {% endif %}
 {% endblock %}

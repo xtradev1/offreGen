@@ -6,6 +6,7 @@ namespace OffreGen\Http\Controleur;
 
 use OffreGen\Adresse\Adresse;
 use OffreGen\Compte\Reglages;
+use OffreGen\Donnees\Dates;
 use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotFactures;
 use OffreGen\Donnees\DepotOffres;
@@ -343,8 +344,7 @@ final class FactureControleur
             'titre' => $offre['titre'], 'client_nom' => (string) $offre['client_nom'], 'client_adresse' => $offre['client_adresse'],
             'tva_pour_dix_mille' => null, 'arrondi_cinq' => null, 'iban' => null, 'reference' => null, 'ht' => null, 'tva' => null,
             'arrondi' => null, 'ttc' => null, 'deja_facture' => null, 'a_payer' => null, 'cree_le' => $maintenant, 'modifiee_le' => null,
-            'emise_le' => null, 'annulee_le' => null, 'refaite_depuis' => null,
-        ] + $this->adresseClient($requete, $offre)->versBase('client_');
+            'emise_le' => null, 'annulee_le' => null, 'refaite_depuis' => null, 'envoyee_le' => null] + $this->adresseClient($requete, $offre)->versBase('client_');
         $lignes = [];
         foreach ($pret['lignes'] as $i => $l) {
             $lignes[] = $l + ['id' => -1 - $i, 'facture_id' => 0, 'rang' => $i + 1, 'a_verifier' => 0, 'entendu' => null, 'tva_ligne' => $l['tva_pour_dix_mille']];
@@ -419,9 +419,9 @@ final class FactureControleur
         if ($f['statut'] === DepotFactures::BROUILLON) {
             return new RedirectResponse($base, 303);
         }
-        $portee = $this->portee($requete);
-        $annulable = $f['statut'] === DepotFactures::EMISE
-            && !($f['genre'] === 'acompte' && $this->c->factures($portee)->finaleEmise($f['offre_id']));
+        // Un acompte déduit par la finale garde son lien : la page d'annulation dit pourquoi elle attend la finale (6b).
+        $annulable = $f['statut'] === DepotFactures::EMISE;
+        $emise = $f['statut'] === DepotFactures::EMISE;
         return new Response($this->c->twig()->render('apercu_pdf.html.twig', [
             'pdfjs' => OffreControleur::PDFJS,
             'titre' => 'Facture ' . $f['numero'],
@@ -429,7 +429,8 @@ final class FactureControleur
             'pdf' => $base . '/pdf',
             'fichier' => self::fichier($f),
             'partage' => 'Facture n° ' . $f['numero'] . ' · ' . $f['titre'],
-            'marquer' => null,
+            // Une facture émise note son envoi quand le partage aboutit (1 C).
+            'marquer' => $emise ? $base . '/envoyee' : null,
             'modifier' => null,
             'facturer' => null,
             'facture' => [
@@ -512,11 +513,30 @@ final class FactureControleur
         ]);
     }
 
+    /**
+     * Le partage du PDF d'une facture émise a abouti (1 C, 2026-11-19) : noté, pour qu'une annulation propose
+     * d'envoyer la facture annulée. Sans partage possible (PC), le PDF se télécharge et rien n'est noté.
+     *
+     * @param array<string, string> $parametres
+     */
+    public function envoyee(Request $requete, array $parametres): Response
+    {
+        $f = $this->facture($requete, $parametres);
+        $this->c->factures($this->portee($requete))->marquerEnvoyee($f['id'], $this->c->horloge()->now());
+        Flash::dire($requete, 'info', 'Facture ' . $f['numero'] . ' envoyée');
+        return new RedirectResponse('/factures/' . $f['id'] . '/apercu', 303);
+    }
+
     /** @param array<string, string> $parametres */
     public function confirmationAnnulation(Request $requete, array $parametres): Response
     {
-        $f = $this->emise($requete, $parametres);
-        return new Response($this->c->twig()->render('facture_annuler.html.twig', $this->donnees($requete, $f)));
+        $f = $this->emiseSeule($requete, $parametres);
+        $finale = $this->finaleQuiDeduit($requete, $f);
+        // Un acompte déduit par la finale : la page le dit et mène à la finale, au lieu de l'erreur 409 nue (6b).
+        return new Response(
+            $this->c->twig()->render('facture_annuler.html.twig', $this->donnees($requete, $f) + ($finale === null ? [] : ['finale' => $finale])),
+            $finale === null ? 200 : 409,
+        );
     }
 
     /**
@@ -533,6 +553,9 @@ final class FactureControleur
         if (!$depot->annuler($f['id'], $quand)) {
             throw new Conflit('Cette facture est déjà annulée.');
         }
+        // 1 C : son PDF devient « Annulée », sans section de paiement ; celui de l'émission reste gardé.
+        $annulee = ['statut' => DepotFactures::ANNULEE, 'annulee_le' => Dates::versBase($quand)] + $f;
+        $depot->garderPdfAnnule($f['id'], OffreControleur::rendrePdf($this->c, ['annulee' => true, 'qr' => null] + $this->vueDocument($requete, $annulee)));
         if ($requete->request->getString('refaire') !== '1') {
             Flash::dire($requete, 'info', 'Facture ' . $f['numero'] . ' annulée');
             return new RedirectResponse('/factures/' . $f['id'] . '/apercu', 303);
@@ -818,14 +841,45 @@ final class FactureControleur
      */
     private function emise(Request $requete, array $parametres): array
     {
+        $f = $this->emiseSeule($requete, $parametres);
+        if ($this->finaleQuiDeduit($requete, $f) !== null) {
+            throw new Conflit("La facture finale de l'offre déduit cet acompte : annulez-la d'abord.");
+        }
+        return $f;
+    }
+
+    /**
+     * Une facture émise, sans regarder si une finale la déduit.
+     *
+     * @param array<string, string> $parametres
+     * @return Facture
+     */
+    private function emiseSeule(Request $requete, array $parametres): array
+    {
         $f = $this->facture($requete, $parametres);
         if ($f['statut'] !== DepotFactures::EMISE) {
             throw new Conflit($f['statut'] === DepotFactures::BROUILLON ? "Un brouillon ne s'annule pas : il se corrige ou se supprime." : 'Cette facture est déjà annulée.');
         }
-        if ($f['genre'] === 'acompte' && $this->c->factures($this->portee($requete))->finaleEmise($f['offre_id'])) {
-            throw new Conflit("La facture finale de l'offre déduit cet acompte : annulez-la d'abord.");
-        }
         return $f;
+    }
+
+    /**
+     * La finale émise qui déduit cet acompte ; null pour une finale, ou un acompte qu'aucune finale émise ne déduit.
+     *
+     * @param Facture $f
+     * @return Facture|null
+     */
+    private function finaleQuiDeduit(Request $requete, array $f): ?array
+    {
+        if ($f['genre'] !== 'acompte') {
+            return null;
+        }
+        foreach ($this->c->factures($this->portee($requete))->deOffre($f['offre_id']) as $x) {
+            if ($x['genre'] === 'finale' && $x['statut'] === DepotFactures::EMISE) {
+                return $x;
+            }
+        }
+        return null;
     }
 
     /**

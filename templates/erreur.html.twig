@@ -6,7 +6,7 @@
 
 {% block contenu %}
   <p class="erreur-code">{{ code }}</p>
-  <p class="muted">{{ titre }}.</p>
+  <p class="muted">{{ titre|trim('.', 'right') }}.</p>
 {% endblock %}
 
 {% block actions %}

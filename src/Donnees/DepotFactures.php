@@ -18,7 +18,7 @@ use OffreGen\Adresse\Adresse;
  * L'adresse du client est copiée à la création, en texte (client_adresse, pour le document) et en champs
  * (client_rue… client_pays, pour la section de paiement).
  *
- * @phpstan-type Facture array{id: int, offre_id: int, offre_numero: int, offre_cree_le: string, numero: string|null, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, statut: string, date_facture: string, echeance: string, titre: string, client_nom: string, client_adresse: string|null, client_rue: string|null, client_numero: string|null, client_npa: string|null, client_localite: string|null, client_pays: string|null, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, iban: string|null, reference: string|null, ht: int|null, tva: int|null, arrondi: int|null, ttc: int|null, deja_facture: int|null, a_payer: int|null, cree_le: string, modifiee_le: string|null, emise_le: string|null, annulee_le: string|null, refaite_depuis: int|null}
+ * @phpstan-type Facture array{id: int, offre_id: int, offre_numero: int, offre_cree_le: string, numero: string|null, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, statut: string, date_facture: string, echeance: string, titre: string, client_nom: string, client_adresse: string|null, client_rue: string|null, client_numero: string|null, client_npa: string|null, client_localite: string|null, client_pays: string|null, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, iban: string|null, reference: string|null, ht: int|null, tva: int|null, arrondi: int|null, ttc: int|null, deja_facture: int|null, a_payer: int|null, cree_le: string, modifiee_le: string|null, emise_le: string|null, annulee_le: string|null, refaite_depuis: int|null, envoyee_le: string|null}
  * @phpstan-type FactureLigne array{id: int, facture_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null}
  * @phpstan-type LigneACopier array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, categorie: string|null, produit_id: int|null, tva_pour_dix_mille?: int|null}
  * @phpstan-type Entete array{offre_id: int, numero: string|null, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, date_facture: \DateTimeImmutable, echeance: \DateTimeImmutable, titre: string, client_nom: string, client_adresse: string|null, client_postale: Adresse, refaite_depuis?: int|null}
@@ -32,7 +32,7 @@ final class DepotFactures implements SupportLignes
     private const SELECT_FACTURE = 'SELECT f.id, f.offre_id, o.numero AS offre_numero, o.cree_le AS offre_cree_le, f.numero, f.genre,
             f.acompte_rang, f.acompte_nombre, f.acompte_pourcent, f.statut, f.date_facture, f.echeance, f.titre, f.client_nom,
             f.client_adresse, f.client_rue, f.client_numero, f.client_npa, f.client_localite, f.client_pays, f.tva_pour_dix_mille, f.arrondi_cinq, f.iban, f.reference, f.ht, f.tva, f.arrondi, f.ttc,
-            f.deja_facture, f.a_payer, f.cree_le, f.modifiee_le, f.emise_le, f.annulee_le, f.refaite_depuis
+            f.deja_facture, f.a_payer, f.cree_le, f.modifiee_le, f.emise_le, f.annulee_le, f.refaite_depuis, f.envoyee_le
          FROM facture f JOIN offre o ON o.id = f.offre_id AND o.artisan_id = f.artisan_id';
 
     private const COLONNES_LIGNE = 'l.id, l.facture_id, l.rang, l.designation, l.quantite_milliemes, l.unite, l.prix_centimes,
@@ -209,11 +209,32 @@ final class DepotFactures implements SupportLignes
         ) === 1;
     }
 
-    /** Le PDF gardé à l'émission ; null pour un brouillon ou une facture d'un autre artisan. */
+    /**
+     * Le PDF de la facture : celui de l'annulation pour une facture annulée qui en a un, sinon celui de l'émission ;
+     * null pour un brouillon ou une facture d'un autre artisan.
+     */
     public function pdf(int $id): ?string
     {
-        $c = $this->base->valeur('SELECT contenu FROM facture_pdf WHERE facture_id = :f AND artisan_id = :a', ['f' => $id, 'a' => $this->portee->artisanId]);
+        $c = $this->base->valeur('SELECT COALESCE(contenu_annule, contenu) FROM facture_pdf WHERE facture_id = :f AND artisan_id = :a', ['f' => $id, 'a' => $this->portee->artisanId]);
         return $c === false ? null : (string) $c;
+    }
+
+    /** Le PDF marqué « Annulée » (1 C, 2026-11-19), à côté de celui de l'émission, qui reste. */
+    public function garderPdfAnnule(int $id, string $pdf): void
+    {
+        $this->base->ecrire(
+            'UPDATE facture_pdf SET contenu_annule = :c WHERE facture_id = :f AND artisan_id = :a',
+            ['c' => $pdf, 'f' => $id, 'a' => $this->portee->artisanId],
+        );
+    }
+
+    /** Le partage du PDF d'une facture émise a abouti (1 C) : la première fois seulement. */
+    public function marquerEnvoyee(int $id, \DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire(
+            "UPDATE facture SET envoyee_le = :q WHERE id = :id AND artisan_id = :a AND statut = 'emise' AND envoyee_le IS NULL",
+            ['q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+        );
     }
 
     /** Vrai si une facture finale émise de l'offre a déjà déduit ses acomptes. */

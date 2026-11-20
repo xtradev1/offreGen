@@ -80,7 +80,7 @@ function envoisDeFormulaires() {
   document.querySelectorAll('form[id]').forEach((form) => {
     form.addEventListener('submit', () => {
       document.querySelectorAll('button[data-attente]').forEach((b) => {
-        if (b.form === form) { b.disabled = true; b.textContent = b.dataset.attente; }
+        if (b.form === form) { b.disabled = true; b.setAttribute('aria-busy', 'true'); b.textContent = b.dataset.attente; }
       });
     });
   });
@@ -875,7 +875,13 @@ function fichesEnFenetre() {
     e.preventDefault();
     const form = e.target;
     const boutons = fond.querySelectorAll('button[type=submit]');
+    const touche = e.submitter || boutons[0] || null;
+    const libelle = touche ? touche.textContent : '';
     boutons.forEach((b) => { b.disabled = true; });
+    if (touche) {
+      touche.setAttribute('aria-busy', 'true');
+      if (touche.dataset.attente) touche.textContent = touche.dataset.attente;
+    }
     const avant = new Set([...document.querySelectorAll(lignes)].map((r) => r.id));
     const modifie = (form.getAttribute('action').match(new RegExp('^' + ici + '/(\\d+)$')) || [])[1] || null;
     // Le bouton touché compte (« Corriger des lignes » contre « Créer la facture ») : FormData seul l'oublie.
@@ -904,7 +910,13 @@ function fichesEnFenetre() {
         avis.textContent = 'Pas de connexion au serveur : rien n’est enregistré. Réessayez.';
         corps.prepend(avis);
       })
-      .finally(() => boutons.forEach((b) => { b.disabled = false; }));
+      .finally(() => {
+        boutons.forEach((b) => { b.disabled = false; });
+        if (touche) {
+          touche.removeAttribute('aria-busy');
+          if (touche.dataset.attente) touche.textContent = libelle;
+        }
+      });
   });
 }
 
@@ -1101,7 +1113,9 @@ function brancherAuto(form) {
       }
     } catch (e) {
       // Session expirée, réseau coupé : on rend la main au bouton, qui recharge la page.
-      dire('Pas enregistré. Touchez Enregistrer.', 'bad');
+      // Au PC, on clique (7c, 2026-11-19).
+      const pc = window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
+      dire(pc ? 'Pas enregistré. Cliquez sur Enregistrer.' : 'Pas enregistré. Touchez Enregistrer.', 'bad');
       montrerBoutons(true);
     } finally {
       enCours = false;
@@ -1649,6 +1663,31 @@ function brancherFacturer(form) {
     ouvrir.addEventListener('click', enGrand);
     ouvrir.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enGrand(); } });
   }
+
+  // PC (point 8 du 2026-11-19) : la facture, posée sur 820 px, se réduit à la largeur de sa colonne ; « Agrandir la
+  // facture » lui donne la place des réglages. Le choix se garde d'une facture à l'autre.
+  if (ouvrir && window.ResizeObserver) {
+    new ResizeObserver(() => {
+      if (ouvrir.clientWidth) ouvrir.style.setProperty('--echelle', String(Math.min(1, ouvrir.clientWidth / 820)));
+    }).observe(ouvrir);
+  }
+  const grille = form.querySelector('.facturer');
+  const large = form.querySelector('[data-facture-large]');
+  if (grille && large) {
+    const regler = (oui) => {
+      grille.classList.toggle('large', oui);
+      large.setAttribute('aria-pressed', oui ? 'true' : 'false');
+      large.querySelector('span').textContent = oui ? 'Réduire la facture' : 'Agrandir la facture';
+    };
+    let garde = null;
+    try { garde = window.localStorage.getItem('offregen-facture-large'); } catch (err) { /* stockage refusé */ }
+    regler(garde === '1');
+    large.addEventListener('click', () => {
+      const oui = !grille.classList.contains('large');
+      regler(oui);
+      try { window.localStorage.setItem('offregen-facture-large', oui ? '1' : '0'); } catch (err) { /* le choix ne se garde pas */ }
+    });
+  }
   montrer();
 }
 
@@ -1779,7 +1818,8 @@ function clavierPc() {
 }
 
 // « Document à côté » (PC, D13) : le document de l'offre remplace la colonne des offres et se recharge après chaque
-// correction. Le choix est gardé dans ce navigateur. Le document vient de /offres/{id}/document, avec ses feuilles
+// correction. Le choix est gardé dans ce navigateur. Dès 1800 px (R10 b C, 2026-11-19), la liste reste et le document
+// s'ouvre d'office, sauf si l'artisan l'a fermé. Le document vient de /offres/{id}/document, avec ses feuilles
 // de style (document.css et la couleur de l'artisan).
 function documentACote() {
   const bouton = document.querySelector('[data-doc-cote]');
@@ -1803,10 +1843,12 @@ function documentACote() {
   };
   // Le brouillon d'une facture (maquette 25, E8) montre son document d'office, sans toucher au choix gardé pour l'offre.
   const toujours = bouton.hasAttribute('data-doc-cote-toujours');
-  const montrer = (oui) => {
+  const troisVolets = window.matchMedia('(min-width: 1800px) and (hover: hover) and (pointer: fine)');
+  const montrer = (oui, garder = true) => {
     document.body.classList.toggle('doc-a-cote', oui);
     bouton.setAttribute('aria-pressed', String(oui));
-    bouton.textContent = oui ? (toujours ? 'Cacher le document' : 'Revenir à la liste') : 'Document à côté';
+    const fermer = toujours ? 'Cacher le document' : (troisVolets.matches ? 'Fermer le document' : 'Revenir à la liste');
+    bouton.textContent = oui ? fermer : 'Document à côté';
     if (oui && !colonne) {
       colonne = document.createElement('aside');
       colonne.className = 'colonne-doc';
@@ -1815,15 +1857,29 @@ function documentACote() {
     }
     if (colonne) colonne.hidden = !oui;
     if (oui) charger();
-    if (toujours) return;
+    if (toujours || !garder) return;
     try { window.localStorage.setItem('offregen-doc-a-cote', oui ? '1' : '0'); } catch (err) { /* stockage refusé : le choix ne se garde pas */ }
   };
   bouton.addEventListener('click', () => montrer(!document.body.classList.contains('doc-a-cote')));
   document.addEventListener('offre-modifiee', () => { if (document.body.classList.contains('doc-a-cote')) charger(); });
-  let garde = false;
-  try { garde = window.localStorage.getItem('offregen-doc-a-cote') === '1'; } catch (err) { /* idem */ }
+  let garde = null;
+  try { garde = window.localStorage.getItem('offregen-doc-a-cote'); } catch (err) { /* idem */ }
   // Le document à côté demande 1280 px (app.css) ; plus étroit, le choix reste gardé pour un plus grand écran.
-  if ((garde || toujours) && window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) montrer(true);
+  if ((garde === '1' || toujours) && window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) montrer(true);
+  else if (garde !== '0' && troisVolets.matches) montrer(true, false);
+}
+
+// Champs de quantité et de prix à la largeur de leur contenu (Xavier, 2026-11-19). app.css le fait par field-sizing ;
+// un navigateur qui ne le connaît pas (Safari) reçoit la même largeur en ch, recalculée à la frappe et quand les lignes
+// sont remplacées après un enregistrement. Minimum : 2 chiffres pour la quantité, 3 pour le prix.
+function largeurDesSaisies() {
+  if (window.CSS && CSS.supports('field-sizing', 'content')) return;
+  const ajuster = (c) => { c.style.width = 'calc(' + Math.max(c.name === 'prix' ? 3 : 2, (c.value || c.placeholder || '').length) + 'ch + 26px)'; };
+  const tous = () => document.querySelectorAll('input.saisie').forEach(ajuster);
+  tous();
+  document.addEventListener('input', (e) => { if (e.target.matches && e.target.matches('input.saisie')) ajuster(e.target); });
+  const ecran = document.querySelector('.screen');
+  if (ecran) new MutationObserver(tous).observe(ecran, { childList: true, subtree: true });
 }
 
 // L'œil d'un mot de passe : montre ou masque tous les champs de mot de passe du même formulaire (P3 B).
@@ -1838,8 +1894,18 @@ function oeilMotDePasse() {
   });
 }
 
+// Un envoi refusé des réglages ou de l'assistant revient en haut de la page : le premier champ en erreur est souvent
+// sous la barre des boutons (9g, 2026-11-19). On l'amène au milieu de l'écran, curseur dedans.
+function premiereErreur() {
+  const champ = document.querySelector('form#reglages [aria-invalid="true"]');
+  if (!champ) return;
+  champ.scrollIntoView({ block: 'center' });
+  champ.focus({ preventScroll: true });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   oeilMotDePasse();
+  premiereErreur();
   clavierPc();
   documentACote();
   messagesDeRecherche();
@@ -1857,6 +1923,7 @@ document.addEventListener('DOMContentLoaded', () => {
   envoisAutomatiques();
   choixDesReglages();
   corrections();
+  largeurDesSaisies();
   envoisDeFormulaires();
   filtres();
   bandeaux();

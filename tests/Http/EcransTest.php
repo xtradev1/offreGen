@@ -232,7 +232,7 @@ final class EcransTest extends TestCase
     public function testAjouterGardeLaFeuilleOuverteEtProposeLeTexteTape(): void
     {
         $offre = $this->page($this->offre);
-        self::assertMatchesRegularExpression("#<a class=\"btn carre\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\" data-en-feuille>#", $offre);
+        self::assertMatchesRegularExpression("#<a class=\"btn ajout\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\" data-en-feuille>#", $offre);
         self::assertMatchesRegularExpression("#<form class=\"ajout-pc pc-seul\" method=\"get\" action=\"{$this->offre}/ajouter\" role=\"search\" data-ajout-pc data-poste=\"{$this->offre}/lignes\" data-csrf=\"[^\"]+\">#", $offre);
         self::assertStringContainsString('<li role="option" data-id="' . $this->jeu->produit['a'] . '" data-texte="peinture murale a peinture', $offre);
 
@@ -334,7 +334,7 @@ final class EcransTest extends TestCase
         BaseDeTest::pdo()->exec("INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier) VALUES ({$this->jeu->a}, $o, 9, 'Crépi', 18000, 'm²', 0, 0)");
         $page = $this->page($this->offre);
         self::assertMatchesRegularExpression('#<div class="totalbar" data-total-fixe><span>Total TTC</span><b>CHF\x{00A0}[0-9\'’.]+</b></div>#u', $page);
-        self::assertMatchesRegularExpression("#<a class=\"btn carre\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\" data-en-feuille>#", $page);
+        self::assertMatchesRegularExpression("#<a class=\"btn ajout\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\" data-en-feuille>#", $page);
         self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/relire\">.*Relire 2 lignes</a>#s", $page);
         self::assertStringNotContainsString("href=\"{$this->offre}/apercu\"", $page, 'pas de génération tant que des lignes attendent');
 

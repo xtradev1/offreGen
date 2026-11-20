@@ -389,6 +389,32 @@ final class FacturesEcranTest extends TestCase
         self::assertSame(1, BaseDeTest::compter('facture', "id = $id AND statut = 'annulee'"));
     }
 
+    public function testLaFactureAnnuleeAUnPdfAnnuleEtLeBonBouton(): void
+    {
+        // 1 C (2026-11-19) : jamais envoyée, « Télécharger le PDF » seul ; envoyée, « Envoyer la facture annulée ».
+        $this->acomptes('30,30,40');
+        $jamais = $this->creer(['genre' => 'acompte']);
+        $envoyee = $this->creer(['genre' => 'acompte']);
+        $this->page('/reglages');
+        self::assertSame(303, $this->a->post("/factures/$envoyee/envoyee", [])->getStatusCode());
+        self::assertSame(1, BaseDeTest::compter('facture', "id = $envoyee AND envoyee_le IS NOT NULL"));
+        foreach ([$jamais, $envoyee] as $id) {
+            $this->page("/factures/$id/annuler");
+            self::assertSame(303, $this->a->post("/factures/$id/annuler", [])->getStatusCode());
+            self::assertSame(1, BaseDeTest::compter('facture_pdf', "facture_id = $id AND contenu_annule IS NOT NULL AND contenu <> contenu_annule"), 'Le PDF annulé s\'ajoute, celui de l\'émission reste.');
+            self::assertStringStartsWith('%PDF', (string) $this->a->get("/factures/$id/pdf")->getContent());
+        }
+        $pdfAnnule = BaseDeTest::ligne("SELECT contenu_annule AS c FROM facture_pdf WHERE facture_id = $jamais")['c'];
+        self::assertSame($pdfAnnule, (string) $this->a->get("/factures/$jamais/pdf")->getContent(), 'Le PDF servi est l\'annulé.');
+        $page = $this->page("/factures/$jamais/apercu");
+        self::assertStringContainsString('Télécharger le PDF', $page);
+        self::assertStringNotContainsString('data-partager', $page);
+        $page = $this->page("/factures/$envoyee/apercu");
+        self::assertStringContainsString('Envoyer la facture annulée', $page);
+        self::assertStringNotContainsString('btn primary grand', $page);
+        self::assertSame(0, BaseDeTest::compter('facture', "id = $jamais AND envoyee_le IS NOT NULL"), 'Une annulée ne se marque plus envoyée.');
+    }
+
     public function testUnAcompteDejaDeduitNeSAnnulePasAvantLaFinale(): void
     {
         $this->acomptes('50,50');
@@ -399,6 +425,14 @@ final class FacturesEcranTest extends TestCase
         $this->page('/reglages');
         self::assertSame(409, $this->a->post("/factures/$acompte/annuler", [])->getStatusCode());
         self::assertSame(1, BaseDeTest::compter('facture', "id = $acompte AND statut = 'emise'"));
+        // La page d'annulation le dit et mène à la finale, sans bouton qui annule (6b, 2026-11-19).
+        $page = $this->a->get("/factures/$acompte/annuler");
+        self::assertSame(409, $page->getStatusCode());
+        $html = (string) $page->getContent();
+        self::assertStringContainsString('Annulation impossible', $html);
+        self::assertStringContainsString("href=\"/factures/$finale/apercu\"", $html);
+        self::assertStringNotContainsString('form="refaire"', $html);
+        self::assertStringContainsString("/factures/$acompte/annuler", (string) $this->a->get("/factures/$acompte/apercu")->getContent(), 'Le lien reste, il mène à l\'explication.');
     }
 
     public function testUneOffreFactureeEnEntierNeSeRefacturePas(): void

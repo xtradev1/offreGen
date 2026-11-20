@@ -24,7 +24,10 @@ if (zone) {
       zone.appendChild(toile);
       await page.render({ canvas: toile, canvasContext: toile.getContext('2d'), viewport: vue }).promise;
     }
-    etat.textContent = doc.numPages > 1 ? doc.numPages + ' pages · pincer pour agrandir' : 'Pincer pour agrandir';
+    // Au PC, on n'agrandit pas en pinçant (7b, 2026-11-19).
+    const pc = window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
+    const geste = pc ? 'Ctrl + molette pour agrandir' : 'Pincer pour agrandir';
+    etat.textContent = doc.numPages > 1 ? doc.numPages + ' pages · ' + geste.charAt(0).toLowerCase() + geste.slice(1) : geste;
     zone.appendChild(etat);
   };
   // « Envoyer » (décision D8) : le partage du téléphone, le PDF joint. Partage réussi : l'offre est notée envoyée

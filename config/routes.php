@@ -164,6 +164,7 @@ return static function (Conteneur $c): array {
         new Route('facture_document', '/factures/{id}/document', ['GET'], static fn (Request $r, array $p): Response => $facture()->document($r, $p), Route::ARTISAN),
         new Route('facture_emettre', '/factures/{id}/emettre', ['POST'], static fn (Request $r, array $p): Response => $facture()->emettre($r, $p), Route::ARTISAN),
         new Route('facture_pdf', '/factures/{id}/pdf', ['GET'], static fn (Request $r, array $p): Response => $facture()->pdf($r, $p), Route::ARTISAN),
+        new Route('facture_envoyee', '/factures/{id}/envoyee', ['POST'], static fn (Request $r, array $p): Response => $facture()->envoyee($r, $p), Route::ARTISAN),
         new Route('facture_annulation', '/factures/{id}/annuler', ['GET'], static fn (Request $r, array $p): Response => $facture()->confirmationAnnulation($r, $p), Route::ARTISAN),
         new Route('facture_annuler', '/factures/{id}/annuler', ['POST'], static fn (Request $r, array $p): Response => $facture()->annuler($r, $p), Route::ARTISAN),
         new Route('facture_entete', '/factures/{id}/modifier', ['GET'], static fn (Request $r, array $p): Response => $facture()->entete($r, $p), Route::ARTISAN),

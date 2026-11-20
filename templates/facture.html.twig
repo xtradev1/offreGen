@@ -11,7 +11,7 @@
 {% block contenu %}
   <div class="ohead">
     <span class="who"><b>{{ f.client_nom }}</b>{% if f.client_adresse %}, {{ f.client_adresse|replace({"\n": ', '}) }}{% endif %}
-      · <a href="/offres/{{ f.offre_id }}">selon offre n°&nbsp;{{ f.offre_numero }}</a></span>
+      · <a class="lien-offre" href="/offres/{{ f.offre_id }}">selon offre n°&nbsp;{{ f.offre_numero }}</a></span>
     <a class="t" href="/factures/{{ f.id }}/modifier">{{ f.titre }}</a>
     <span class="meta"><span class="status pret">{{ f.genre == 'acompte' ? 'Acompte' : 'Facture finale' }}, brouillon</span>
       <span class="muted">N°&nbsp;{{ f.numero ?? numero_prevu ~ ' à la création' }} · datée du {{ f.date_facture|jour }}, échéance le {{ f.echeance|jour }}</span>
@@ -45,8 +45,8 @@
 {% block actions %}
   {% include '_feuille.html.twig' with {options: {recharger: '1'}} %}
   <div class="actionbar avec-phrase">
-    <a class="btn carre" href="/factures/{{ f.id }}/ajouter" aria-label="Ajouter une ligne" data-en-feuille>
-      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+    <a class="btn ajout" href="/factures/{{ f.id }}/ajouter" aria-label="Ajouter une ligne" data-en-feuille>
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ligne</a>
     <button class="btn primary grand" type="submit" form="creer-facture">Créer la facture</button>
     <p class="phrase">{% if raisons is not empty %}{{ raisons|first }}{% else %}{{ montants.a_payer|chf }} à payer. Elle devient définitive et prend le n°&nbsp;{{ f.numero ?? numero_prevu }}&nbsp;; son PDF s'ouvre, prêt à envoyer.{% endif %}</p>
   </div>
