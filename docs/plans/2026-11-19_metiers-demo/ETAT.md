@@ -19,6 +19,8 @@ Lots 0 à 10 de `PLAN.md` faits, testés, commités (555dea4, 727f0dd, 687606b) 
 
 ## En attente de toi
 
+- Trancher D4 de `REVUE.md` : une offre d'exemple que le visiteur a envoyée ou facturée pendant la démo part-elle avec les autres au passage à l'essai (c'est ce que fait le code), ou reste-t-elle.
+- Savoir que le passage à l'essai demande maintenant l'adresse de l'artisan, et qu'un produit d'exemple devient celui de l'artisan quand son prix change (plus à toute modification).
 - Dire qui corrige l'agrandissement de l'écran d'une offre sur iPhone (tâche 502) : le chat du responsive, qui tient `app.css`, ou ce chat.
 - Lot 11 : dicter toi-même une visite sur chacune des six démos neuves (plâtrier, carreleur, maçon, menuisier, poseur de sols, paysagiste), ou me laisser le faire avec une voix de synthèse (preuve plus faible).
 - Dire quelle démo passer à l'essai pour voir le passage sur le site (`bin/passer-en-essai`, lancé par Claude : le bouton est au chantier des comptes).
@@ -417,6 +419,37 @@ Parcours Playwright sur le site de test (une marque posée dans la page avant le
 ```
 
 Capture de l'arrivée depuis le catalogue ouverte : même écran qu'au chargement direct.
+
+Corrections de la revue (2026-11-20, commit 163af05) :
+
+```
+$ vendor/bin/phpunit tests/Compte/PassageEssaiTest.php tests/Compte/DemoTest.php (avant le code)
+ERRORS!
+Tests: 22, Assertions: 229, Errors: 10, Failures: 2.
+$ vendor/bin/phpunit tests/Compte tests/Http/VosPrixTest.php tests/Http/EcransTest.php tests/Http/LigneCatalogueTest.php tests/Regles/CommandesTest.php (après)
+OK (172 tests, 1121 assertions)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ bash outils/deployer-test.sh (copie ~/offreGen-metiers, tête de la branche)
+OK (684 tests, 5390 assertions)
+analyse statique : sans erreur
+LU     /sante : {"commit":"163af05ffd60858c4ab4b9140a638a3e59abe761","base":"ok","migrations":"ok"}
+SONDE VERTE
+```
+
+Parcours rejoué sur le site de test après le déploiement (extraits de ce que le script lit) :
+
+```
+11d dernière carte        {"dernier":true,"nom":"Protection des sols et des accès","sugg":true}
+11e bilan après Reprendre message "« Protection des sols et des accès » : prix repris, 180.00 Annuler", titre "C'est noté"
+11f annulé depuis le bilan "4 sur 4", "Protection des sols et des accès", "Prix de la démo : 180.00 Reprendre"
+11g fiche du catalogue    {"ouverte":true,"fermee":true,"marque":true,"chemin":"/catalogue","script":true}
+2 carte                   bas des boutons 388 px, petites cibles []
+```
+
+11g : la fiche d'un produit s'ouvre et se ferme sans que la page se recharge, script « Vos prix » chargé (revue V1). Les étapes 1 à 13 d'avant passent toujours.
+
+Non vérifié après la revue : l'écran à la souris sur PC (le lien doit s'y ouvrir comme un lien), un Safari d'avant 15.4, `bin/passer-en-essai` lancé sur le site (tests seulement), la feuille de dictée de « Mes offres » (même mécanisme que la fiche du catalogue, non jouée).
 
 Non vérifié : que le clavier de l'iPhone s'ouvre bien par ce moyen. Chromium n'a pas de clavier à l'écran ; la technique (un champ pris pendant le toucher, puis le curseur passé au champ du prix) est celle que Safari accepte d'ordinaire. À voir par Xavier. Une arrivée directe sur `/vos-prix` (adresse tapée, page rechargée) demande toujours un toucher : Safari ne laisse aucun moyen.
 
