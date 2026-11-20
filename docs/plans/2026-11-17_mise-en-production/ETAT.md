@@ -13,7 +13,6 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 
 ## En attente de toi
 
-- Dans `MAQUETTE-site-v3.html`, en tête : le dessin du bloc « Ce que Dicta ne fait pas pour vous » parmi cinq (N1).
 
 - Régler l'envoi de courriels du site de test (et de la production) : dans le `.env` du serveur, `MESSAGERIE=smtp`, `MAILER_DSN`, `COURRIELS_EXPEDITEUR`. Sans cela, les demandes d'essai restent en fichiers sur le serveur et ne t'arrivent pas. Le mot de passe du compte d'envoi ne passe pas par la conversation.
 
@@ -124,6 +123,7 @@ En cours (demande de Xavier du 2026-11-18, `PLAN-completer.md`) : lots 1 à 7 l
 - 2026-11-20 : commit `5f39712` déployé sur le site de test. Constat : le site de test n'envoie aucun courriel. Dans son `.env`, `MESSAGERIE`, `MAILER_DSN` et `COURRIELS_EXPEDITEUR` sont vides : chaque courriel devient un fichier dans `partage/var/courriels`, celui de la demande d'essai comme ceux des liens d'accès. Le formulaire fonctionne et le courriel est produit, mais rien n'arrive dans la boîte de Xavier tant qu'un compte d'envoi n'est pas réglé (bloquant déjà noté : la boîte `notifications@`).
 - 2026-11-20 : le bloc « Ce que Dicta ne fait pas pour vous » devient une grande carte sombre : titre de 44 px (28 au téléphone), trois colonnes, grande croix, phrase de 26 px, preuve dessous. Preuves écrites : « Elle est transcrite chez Infomaniak, en Suisse. », « Infomaniak l'écrit : vos dictées ne servent pas à entraîner ses modèles. » (correction du relecteur), « Rien ne part avant que vous touchiez « Envoyer ». » Commit `88acd25` déployé sur le site de test.
 - 2026-11-20 : Xavier, sur le bloc refait : « C'est mieux. Maintenant, les grosses croix, je sais pas, il y a un truc qui va pas. Il faut d'autres propositions. » `MAQUETTE-site-v3-nefait.html` montre cinq dessins, présentés en tête de la planche (question N1) : A, la croix dans un rond (sur le site) ; B, la phrase barrée ; C, le mot « Jamais » ; D, un pictogramme barré par colonne ; E, une petite croix fine. Le site de test ne change pas avant sa réponse. Preuves : page de comparaison `largeur 390 / 390` et `1280 / 1280`, `archivo true`, `erreurs 0` ; planche `check.js` largeur 1440/1440 et 390/390, kit oui ; les dix captures relues.
+- 2026-11-20 : Xavier : « T'enlèves les croix, tu mets juste le pavé, ce que Dicta ne fait pas pour vous. [...] tu prends la E, mais t'enlèves la petite croix fine. [...] Et je te valide le tout. » Le bloc garde le titre, les trois phrases et leurs preuves, sans aucun signe. N1, R1, R2, R3 et X8 passent dans « Réglé » sur la planche ; restent S1, R5, R6. Déploiement sur le test accordé (« Oui, déploie », aucun vrai client). Preuves locales : bloc `largeur 350`, page `390 / 390` et `1280 / 1280`, CSP fermée, erreurs JS 0, ressources en échec 0, deux captures relues.
 
 ## Preuves
 
