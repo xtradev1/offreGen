@@ -5,6 +5,12 @@
     <input id="entreprise" name="entreprise" value="{{ champs.entreprise }}" maxlength="190" required autocomplete="organization"{{ f.invalide(erreurs, 'entreprise') }}>
     {{ f.erreur(erreurs, 'entreprise') }}
   </div>
+  <div class="champ">
+    <label for="contact_nom">Personne de contact</label>
+    <input id="contact_nom" name="contact_nom" value="{{ champs.contact_nom }}" maxlength="120" autocomplete="name"{{ f.invalide(erreurs, 'contact_nom') }}>
+    <span class="muted petit">Sur vos offres&nbsp;: «&nbsp;Votre contact&nbsp;», et sous la signature de l'entreprise.</span>
+    {{ f.erreur(erreurs, 'contact_nom') }}
+  </div>
   {% include '_adresse.html.twig' with {p: 'adresse_', manque: true, ancienne: champs.adresse_ancienne ?? ''} %}
   <p class="muted petit">En tête de chaque offre et de chaque facture, pour la date «&nbsp;Delémont, le…&nbsp;» et dans la section de paiement.</p>
   <div class="duo">

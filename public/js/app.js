@@ -1245,6 +1245,29 @@ function brancherAdresse(groupe) {
   groupe.addEventListener('input', () => { if (etat.classList.contains('ok')) dire(''); });
 }
 
+// Feuille A4 des documents (modèles du bâtiment, 2026-11-20) : chaque modèle est dessiné sur 794 px, comme dans le PDF,
+// et se réduit à la largeur de son papier (--feuille, lue par document-ecran.css). La réduction ne change pas la place
+// que la feuille occupe : une marge basse négative la lui rend. Les papiers qui arrivent plus tard (document à côté,
+// aperçu d'une facture) sont suivis de la même façon.
+function papiers() {
+  if (!window.ResizeObserver || !window.MutationObserver) return;
+  const ajuster = (papier) => {
+    const feuille = papier.querySelector(':scope > [data-feuille]');
+    if (!feuille || !papier.clientWidth) return;
+    const echelle = papier.clientWidth / 794;
+    papier.style.setProperty('--feuille', String(echelle));
+    feuille.style.marginBottom = Math.round(feuille.offsetHeight * (echelle - 1)) + 'px';
+  };
+  const tailles = new ResizeObserver((entrees) => entrees.forEach((x) => ajuster(x.target)));
+  const suivre = (racine) => {
+    if (racine.matches && racine.matches('.paper')) tailles.observe(racine);
+    racine.querySelectorAll('.paper').forEach((p) => tailles.observe(p));
+  };
+  suivre(document);
+  new MutationObserver((changements) => changements.forEach((c) => c.addedNodes.forEach((n) => { if (n.nodeType === 1) suivre(n); })))
+    .observe(document.body, { childList: true, subtree: true });
+}
+
 // « Voir en grand » sur un modèle (Xavier, 2026-11-15) : l'image s'agrandit dans la page, sans en ouvrir
 // une autre. Flèches pour passer d'un modèle à l'autre, « Choisir ce modèle » coche et ferme (un toucher de
 // moins). Sans JavaScript, le lien mène à la page d'aperçu.
@@ -1710,6 +1733,7 @@ document.addEventListener('DOMContentLoaded', () => {
   feuillesFacturer();
   hauteurDuBas();
   ajoutPc();
+  papiers();
   modelesEnGrand();
   glisserLignes();
   montantRelu();

@@ -68,6 +68,21 @@ final class CreationCompteTest extends TestCase
         self::assertSame(0, BaseDeTest::compter('client', "artisan_id = $id"));
     }
 
+    /** Modèles du bâtiment (2026-11-20) : le compte s'ouvre sur le modèle proposé pour son métier ; sans métier, sur Sobre. */
+    public function testUnCompteDePlatrierOuvreSurChantier(): void
+    {
+        $comptes = Monde::conteneur(env: $this->dossiers->env())->comptes();
+        $comptes->creer('platrier@exemple.ch', 'Plâtrerie Essai', false, null, 10, 'platrier');
+        $comptes->creer('demo-macon@exemple.ch', 'Maçonnerie Démo', true, 5, null, 'macon');
+        $comptes->creer('sans@exemple.ch', 'Sans métier', false, null, 10);
+        $modele = static fn (string $courriel): string => (string) BaseDeTest::ligne("SELECT modele FROM artisan WHERE courriel = '$courriel'")['modele'];
+        self::assertSame(['chantier', 'bandeau', 'sobre'], [$modele('platrier@exemple.ch'), $modele('demo-macon@exemple.ch'), $modele('sans@exemple.ch')]);
+        // Une démonstration remise à zéro dans un autre métier prend le modèle de ce métier, et garde sa couleur.
+        BaseDeTest::pdo()->exec("UPDATE artisan SET couleur = '#2E7D32' WHERE courriel = 'demo-macon@exemple.ch'");
+        $comptes->reinitialiserDemo('demo-macon@exemple.ch', 'sanitaire');
+        self::assertSame(['technique', '#2E7D32'], array_values(BaseDeTest::ligne("SELECT modele, couleur FROM artisan WHERE courriel = 'demo-macon@exemple.ch'")));
+    }
+
     public function testSansMetierLeCatalogueResteVide(): void
     {
         Monde::conteneur(env: $this->dossiers->env())->comptes()->creer('vide@exemple.ch', 'Vide', false, null, 10);

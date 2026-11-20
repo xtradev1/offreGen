@@ -64,6 +64,8 @@ final class Comptes
             if ($metier === null) {
                 return;
             }
+            // Le compte s'ouvre sur le modèle d'offre proposé pour son métier (modèles du bâtiment, 2026-11-20).
+            (new DepotReglages($this->base, new Portee($id)))->enregistrerMarque(Marque::pourMetier($metier), null);
             if ($demo) {
                 // Une démonstration créée avec son métier est posée tout de suite : catalogue chiffré, offres d'exemple.
                 $this->reinitialiserDemo($courriel, $metier, $metierSaisi);
@@ -224,6 +226,9 @@ final class Comptes
         $exemples = CatalogueFictif::offres($metier);
         $this->base->transaction(function () use ($artisan, $metier, $metierSaisi, $portee, $enregistrements, $catalogue, $exemples): void {
             $this->artisans->changerMetier($artisan['id'], $metier, $metierSaisi);
+            // La démonstration montre le modèle d'offre proposé pour son métier ; elle garde sa couleur et son logo.
+            $reglages = new DepotReglages($this->base, $portee);
+            $reglages->enregistrerMarque(Marque::pourMetier($metier), $reglages->lireMarque()->couleurChoisie);
             // Les factures d'abord : elles désignent les offres.
             (new DepotFactures($this->base, $portee))->toutEffacer();
             $offres = new DepotOffres($this->base, $portee);

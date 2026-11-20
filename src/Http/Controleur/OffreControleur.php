@@ -12,6 +12,7 @@ use OffreGen\Http\Conteneur;
 use OffreGen\Http\Flash;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
+use OffreGen\Offre\Chantier;
 use OffreGen\Offre\Piece;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\Totaux;
@@ -54,14 +55,14 @@ final class OffreControleur
     }
 
     /**
-     * L'objet de l'offre. Le client se choisit dans sa fenêtre (ClientControleur::choixPourOffre).
+     * L'objet de l'offre et son chantier. Le client se choisit dans sa fenêtre (ClientControleur::choixPourOffre).
      *
      * @param array<string, string> $parametres
      */
     public function entete(Request $requete, array $parametres): Response
     {
         $offre = $this->offre($requete, $parametres);
-        return $this->formulaireEntete($offre, ['titre' => $offre['titre']], [], 200);
+        return $this->formulaireEntete($offre, ['titre' => $offre['titre']] + Chantier::depuisOffre($offre)->versChamps(), [], 200);
     }
 
     /** @param array<string, string> $parametres */
@@ -69,11 +70,19 @@ final class OffreControleur
     {
         $offre = $this->offre($requete, $parametres);
         $champs = ['titre' => $requete->request->getString('titre')];
+        foreach (array_keys((new Chantier())->versChamps()) as $champ) {
+            $champs[$champ] = $requete->request->getString($champ);
+        }
         $titre = Saisie::texte($champs['titre'], 190);
+        [$chantier, $erreurs] = Chantier::depuisSaisie($champs);
         if ($titre === null) {
-            return $this->formulaireEntete($offre, $champs, ['titre' => "Indiquez l'objet de l'offre (190 caractères au plus)."], 422);
+            $erreurs['titre'] = "Indiquez l'objet de l'offre (190 caractères au plus).";
+        }
+        if ($titre === null || $chantier === null) {
+            return $this->formulaireEntete($offre, $champs, $erreurs, 422);
         }
         $this->offres($requete)->modifierTitre($offre['id'], $titre, $this->c->horloge()->now());
+        $this->offres($requete)->modifierChantier($offre['id'], $chantier, $this->c->horloge()->now());
         Flash::dire($requete, 'info', 'Offre enregistrée');
         return new RedirectResponse('/offres/' . $offre['id'], 303);
     }
@@ -145,11 +154,16 @@ final class OffreControleur
      * Le PDF d'un document (offre ou facture) : le CSS du document et celui de la marque voyagent dedans ; dompdf ne
      * lit aucune adresse (ressources distantes coupées), donc le logo aussi.
      *
+     * « Page n / N » : dompdf compte les pages au fil du rendu, mais ne connaît le total qu'à la fin. Un document d'une
+     * page est juste au premier rendu ; un document plus long est rendu une seconde fois, avec son total.
+     *
      * @param array<string, mixed> $d les données du document, avec « m » (Marque)
      */
     public static function rendrePdf(Conteneur $c, array $d): string
     {
-        return $c->documentPdf()->rendre(self::htmlPdf($c, $d));
+        $pdf = $c->documentPdf();
+        [$sortie, $pages] = $pdf->rendreEtCompter(self::htmlPdf($c, $d));
+        return $pages === 1 ? $sortie : $pdf->rendre(self::htmlPdf($c, ['pages' => $pages] + $d));
     }
 
     /**
@@ -163,7 +177,7 @@ final class OffreControleur
         if (!$m instanceof Marque) {
             throw new \LogicException('Document sans marque.');
         }
-        $d['css'] = (string) file_get_contents($c->racine() . '/public/css/document.css') . "\n" . $m->css();
+        $d['css'] = $c->documentPdf()->policesCss() . (string) file_get_contents($c->racine() . '/public/css/document.css') . "\n" . $m->css();
         $logo = $m->logo === null ? null : $c->dossierLogos() . '/' . basename($m->logo);
         $d['logo_src'] = $logo !== null && is_file($logo) ? 'data:image/jpeg;base64,' . base64_encode((string) file_get_contents($logo)) : null;
         $d['pdf'] = true;
@@ -185,7 +199,7 @@ final class OffreControleur
      * Tout ce que montrent l'écran de l'offre et son document.
      *
      * @param array<string, string> $parametres
-     * @return array{m: Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     * @return array{m: Marque, logo_src: string|null, offre: Offre, chantier: Chantier, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
      */
     private function donnees(Request $requete, array $parametres): array
     {
@@ -199,7 +213,7 @@ final class OffreControleur
      *
      * @param Offre $offre
      * @param list<Ligne> $lignes
-     * @return array{m: Marque, logo_src: string|null, offre: Offre, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     * @return array{m: Marque, logo_src: string|null, offre: Offre, chantier: Chantier, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
      */
     public function vueDocument(Portee $portee, array $offre, array $lignes, Marque $m): array
     {
@@ -212,6 +226,7 @@ final class OffreControleur
             // Aperçu à l'écran : le logo par son adresse (la CSP refuse les images en data:) ; pdf() le remplace.
             'logo_src' => $m->logo === null ? null : '/reglages/logo?v=' . $m->logo,
             'offre' => $offre,
+            'chantier' => Chantier::depuisOffre($offre),
             'groupes' => self::grouper($lignes, $totaux['lignes']),
             'totaux' => $totaux,
             'tva' => $r->tvaPourDixMille,

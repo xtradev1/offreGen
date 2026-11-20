@@ -21,18 +21,18 @@ final class DepotReglages
     {
         $l = $this->base->un(
             'SELECT entreprise, adresse_rue, adresse_numero, adresse_npa, adresse_localite, adresse_pays, telephone, courriel_contact,
-                    ide, iban, tva_pour_dix_mille, arrondi_cinq_centimes, validite_jours, paiement_type, paiement_jours, paiement_acomptes
+                    ide, iban, tva_pour_dix_mille, arrondi_cinq_centimes, validite_jours, paiement_type, paiement_jours, paiement_acomptes, contact_nom
              FROM artisan WHERE id = :a',
             ['a' => $this->portee->artisanId],
         ) ?? throw new \RuntimeException('Compte introuvable.');
-        /** @var array{entreprise: string, adresse_rue: string|null, adresse_numero: string|null, adresse_npa: string|null, adresse_localite: string|null, adresse_pays: string|null, telephone: string|null, courriel_contact: string|null, ide: string|null, iban: string|null, tva_pour_dix_mille: int, arrondi_cinq_centimes: int, validite_jours: int, paiement_type: string, paiement_jours: int, paiement_acomptes: string|null} $l */
+        /** @var array{entreprise: string, adresse_rue: string|null, adresse_numero: string|null, adresse_npa: string|null, adresse_localite: string|null, adresse_pays: string|null, telephone: string|null, courriel_contact: string|null, ide: string|null, iban: string|null, tva_pour_dix_mille: int, arrondi_cinq_centimes: int, validite_jours: int, paiement_type: string, paiement_jours: int, paiement_acomptes: string|null, contact_nom: string|null} $l */
         $acomptes = $l['paiement_type'] === 'acomptes' ? (Reglages::acomptes($l['paiement_acomptes'] ?? '') ?? []) : [];
         // Des acomptes illisibles en base ne cassent pas l'écran : retour au paiement à N jours.
         $type = $l['paiement_type'] === 'acomptes' && $acomptes === [] ? 'jours' : $l['paiement_type'];
         return new Reglages(
             $l['entreprise'], $l['tva_pour_dix_mille'], $l['arrondi_cinq_centimes'] === 1,
             Adresse::depuisBase($l, 'adresse_'), $l['telephone'] ?? '', $l['courriel_contact'] ?? '', $l['ide'] ?? '',
-            $l['validite_jours'], $type, $l['paiement_jours'], $acomptes, $l['iban'] ?? '',
+            $l['validite_jours'], $type, $l['paiement_jours'], $acomptes, $l['iban'] ?? '', $l['contact_nom'] ?? '',
         );
     }
 
@@ -104,12 +104,12 @@ final class DepotReglages
         $this->base->ecrire(
             'UPDATE artisan SET entreprise = :e, adresse = :texte,
                     adresse_rue = :arue, adresse_numero = :anumero, adresse_npa = :anpa, adresse_localite = :alocalite, adresse_pays = :apays,
-                    telephone = :te, courriel_contact = :co, ide = :ide, iban = :ib,
+                    telephone = :te, courriel_contact = :co, ide = :ide, iban = :ib, contact_nom = :cn,
                     tva_pour_dix_mille = :t, arrondi_cinq_centimes = :r, validite_jours = :v,
                     paiement_type = :pt, paiement_jours = :pj, paiement_acomptes = :pa
              WHERE id = :a',
             self::colonnesAdresse($r->adresse) + ['texte' => $vide($texte), 'e' => $r->entreprise, 'te' => $vide($r->telephone), 'co' => $vide($r->courrielContact),
-             'ide' => $vide($r->ide), 'ib' => $vide($r->iban), 't' => $r->tvaPourDixMille, 'r' => $r->arrondiCinqCentimes ? 1 : 0,
+             'ide' => $vide($r->ide), 'ib' => $vide($r->iban), 'cn' => $vide($r->contactNom), 't' => $r->tvaPourDixMille, 'r' => $r->arrondiCinqCentimes ? 1 : 0,
              'v' => $r->validiteJours, 'pt' => $r->paiementType, 'pj' => $r->paiementJours,
              'pa' => $r->paiementAcomptes === [] ? null : implode(',', $r->paiementAcomptes), 'a' => $this->portee->artisanId],
         );

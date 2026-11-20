@@ -4,7 +4,7 @@
 {# L'aperçu d'un brouillon de facture, dans le modèle et la couleur de l'offre (Xavier, 2026-11-12), marqué « Aperçu » :
    au téléphone, seul ; sur PC, repris à côté des lignes (app.js, documentACote). Une facture émise ou annulée se voit
    en PDF (E5, maquette 25). #}
-{% block entete_html %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/css/document-ecran.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
 {% block titre %}Aperçu du brouillon · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/factures/{{ f.id }}">Brouillon</a>{% endblock %}
 {% block entete %}Aperçu du brouillon{% endblock %}

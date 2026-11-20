@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Douze modèles d'offre · offreGen</title>
+<style>
+:root {
+  --ink: #1B1F24; --muted: #5F6772; --line: #E1E4E8; --surface: #FFFFFF; --bg: #F3F4F6; --chip: #EDEFF2;
+  --accent: #C4552D; --accent-soft: #FBEDE7; --on-accent: #fff; --ok: #1E7F4F; --bad: #B42318; --warn: #8A5A00;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--accent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ink: #E7EAEE; --muted: #A3ABB6; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #F0906C; --accent-soft: #3A251D; --on-accent: #1A0E09; --ok: #5CC98F; --bad: #FF8A7A; --warn: #E3B341; }
+}
+:root[data-theme="dark"] { --ink: #E7EAEE; --muted: #A3ABB6; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #F0906C; --accent-soft: #3A251D; --on-accent: #1A0E09; --ok: #5CC98F; --bad: #FF8A7A; --warn: #E3B341; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 27px; line-height: 1.2; margin: 18px 0 8px; }
+h2 { font-size: 22px; margin: 44px 0 8px; padding-top: 8px; }
+h3 { font-size: 18px; margin: 0 0 6px; }
+h4 { font-size: 14px; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+p { margin: 0 0 10px; }
+ul { margin: 0 0 10px; padding-left: 20px; }
+li { margin-bottom: 4px; }
+code { font: 13px ui-monospace, Consolas, monospace; background: var(--chip); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.chapeau { color: var(--muted); max-width: 800px; }
+.carte { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 14px 0; }
+.note-p { font-size: 14px; color: var(--muted); }
+.regle { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; margin: 12px 0; font-size: 14px; max-width: 860px; }
+
+/* Notes */
+.notes { width: 100%; border-collapse: collapse; font-size: 15px; }
+.notes th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.notes td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.notes .ch { white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bas-note { color: var(--bad); }
+.haut-note { color: var(--ok); }
+.grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 10px 0; }
+.grille div { background: var(--chip); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.grille b { display: block; }
+.entete-modele { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 8px; }
+.entete-modele h3 { margin: 0; font-size: 20px; }
+.pastille { display: inline-block; border-radius: 999px; padding: 2px 12px; font-size: 14px; font-weight: 700; background: var(--chip); }
+.pastille.bas { color: var(--bad); }
+.pastille.haut { color: var(--ok); }
+.deux { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 12px; }
+@media (max-width: 760px) { .deux { grid-template-columns: 1fr; } }
+.mk-compare img, .modele img { width: 100%; display: block; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.mk-compare figcaption { text-align: center; }
+
+/* Planche des douze */
+.planche { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 12px; }
+.modele { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.modele figure { margin: 0 0 10px; }
+.modele h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.etat { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border-radius: 6px; padding: 2px 8px; background: var(--chip); color: var(--muted); }
+.etat.neuf { background: var(--accent-soft); color: var(--accent); }
+.modele p { font-size: 14px; margin-bottom: 6px; }
+.modele .lbl { color: var(--muted); }
+.demande { font-size: 13px; color: var(--warn); }
+.mk-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+
+/* Réponses */
+.reponse { border-top: 1px dashed var(--line); margin-top: 12px; padding-top: 10px; }
+.reponse .q { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.reponse .boutons { display: flex; gap: 8px; flex-wrap: wrap; }
+.reponse button { font: inherit; font-size: 14px; min-height: 44px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.reponse button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.reponse textarea { width: 100%; margin-top: 8px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: var(--surface); color: var(--ink); min-height: 44px; }
+.recap textarea { width: 100%; min-height: 200px; font: 13px/1.4 ui-monospace, Consolas, monospace; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface); color: var(--ink); }
+.recap button { font: inherit; min-height: 44px; padding: 8px 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; font-weight: 600; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav id="mk-toc"></nav>
+
+<h1>Douze modèles d'offre pour le bâtiment</h1>
+<p class="chapeau">Les six modèles de l'application notés sur 10, ce qui les empêche d'atteindre 8, leur version refaite, et six modèles nouveaux. Ta réponse se pose sous chaque image ; tout en bas, « Copier le texte » rassemble tes réponses pour me les coller.</p>
+<p class="regle">Données inventées : entreprises, logos, clients, prix, IDE, IBAN. Les feuilles sont dessinées avec ce que le générateur de PDF sait rendre (tableaux, bordures, fonds, positions fixes). Aucune n'est encore passée par ce générateur : la preuve reste à faire avant le code. Les factures ne sont pas redessinées ici.</p>
+
+<h2 id="notes" data-toc="Notes">Les six modèles actuels, notés</h2>
+<div class="carte">
+  <h3>La grille</h3>
+  <p>Cinq critères, deux points chacun. Les notes sont les miennes ; la note qui compte viendra de la question 4 de ta fiche d'essai : « Le PDF : l'enverriez-vous tel quel à un client ? ».</p>
+  <div class="grille">
+    <div><b>Lecture</b>Le total et les postes se trouvent en trois secondes.</div>
+    <div><b>Identité</b>Le logo et la couleur de l'artisan portent la page.</div>
+    <div><b>Contenu</b>Ce qu'une offre du bâtiment doit dire : chantier, délai, non compris, accord.</div>
+    <div><b>Tenue</b>Enveloppe à fenêtre, plusieurs pages, montants alignés.</div>
+    <div><b>Caractère</b>Une structure propre, différente des autres modèles.</div>
+  </div>
+  <table class="notes">
+    <thead><tr><th>Modèle</th><th>Note</th><th>Visée</th><th>Ce qui coûte le plus</th></tr></thead>
+    <tbody>
+      <tr><td><b>Technique</b></td><td class="ch bas-note">6,5</td><td class="ch haut-note">8,5</td><td>Barre de couleur décorative, unité collée à la quantité.</td></tr>
+      <tr><td><b>Bandeau</b></td><td class="ch bas-note">6</td><td class="ch haut-note">8</td><td>Le même document que Sobre avec un fond.</td></tr>
+      <tr><td><b>Sobre</b></td><td class="ch bas-note">5,5</td><td class="ch haut-note">8</td><td>Logo de 56 px, aucun caractère propre.</td></tr>
+      <tr><td><b>Atelier</b></td><td class="ch bas-note">5,5</td><td class="ch haut-note">8</td><td>Police datée, total en maigre.</td></tr>
+      <tr><td><b>Moderne</b></td><td class="ch bas-note">5</td><td class="ch haut-note">8</td><td>« OFFRE » domine la page, adresse hors de la fenêtre.</td></tr>
+      <tr><td><b>Épuré</b></td><td class="ch bas-note">4</td><td class="ch haut-note">7,5</td><td>Supprime les pièces et les sous-totaux.</td></tr>
+    </tbody>
+  </table>
+  <p class="note-p" style="margin-top:10px">Aucun n'atteint 8. Trois points sur dix sont perdus par les six à la fois : voir « Défauts communs ». Les notes visées supposent ces défauts corrigés.</p>
+</div>
+
+<!-- ===== Technique ===== -->
+<div class="carte">
+  <div class="entete-modele"><h3>Technique</h3><span class="pastille bas">6,5 / 10</span><span class="pastille haut">visée 8,5</span></div>
+  <div class="mk-compare">
+    <figure><img src="MAQUETTE-modeles-img/actuel-technique.jpg" alt="Technique, rendu actuel de l'application"><figcaption>Aujourd'hui, dans l'application</figcaption></figure>
+    <figure><img src="MAQUETTE-modeles-img/technique-morel.jpg" alt="Technique refait, mêmes lignes"><figcaption>Refait, mêmes lignes</figcaption></figure>
+  </div>
+  <div class="deux">
+    <div><h4>Pourquoi pas 8</h4><ul>
+      <li>Le meilleur des six : positions numérotées, objet dans le titre. Il perd ses points ailleurs.</li>
+      <li>La barre de couleur de 6 px sur toute la hauteur est un décor.</li>
+      <li>L'unité est collée à la quantité, les chiffres sont dans la police du texte.</li>
+      <li>La validité et le chantier manquent en tête.</li>
+    </ul></div>
+    <div><h4>Ce que je change</h4><ul>
+      <li>Un cartouche comme sur un plan : objet, numéro, date, validité, chantier, contact.</li>
+      <li>Colonne « Un. » à part, chiffres en police à chasse fixe.</li>
+      <li>Repère de couleur sur chaque poste à la place de la barre.</li>
+    </ul></div>
+  </div>
+  <div class="reponse" data-decision="refait-technique" data-titre="Technique refait" data-choix="Valider|À retravailler|Garder l'ancien"></div>
+</div>
+
+<!-- ===== Bandeau ===== -->
+<div class="carte">
+  <div class="entete-modele"><h3>Bandeau</h3><span class="pastille bas">6 / 10</span><span class="pastille haut">visée 8</span></div>
+  <div class="mk-compare">
+    <figure><img src="MAQUETTE-modeles-img/actuel-bandeau.jpg" alt="Bandeau, rendu actuel de l'application"><figcaption>Aujourd'hui, dans l'application</figcaption></figure>
+    <figure><img src="MAQUETTE-modeles-img/bandeau-morel.jpg" alt="Bandeau refait, mêmes lignes"><figcaption>Refait, mêmes lignes</figcaption></figure>
+  </div>
+  <div class="deux">
+    <div><h4>Pourquoi pas 8</h4><ul>
+      <li>Même squelette que Sobre, avec un fond : posés côte à côte, deux fois le même document.</li>
+      <li>La bande s'arrête aux marges ; le logo dans son cartouche blanc ressemble à une étiquette collée.</li>
+      <li>Coordonnées en petit blanc sur la couleur.</li>
+    </ul></div>
+    <div><h4>Ce que je change</h4><ul>
+      <li>Bande d'un bord à l'autre de la feuille, logo sur un onglet blanc qui descend de la bande.</li>
+      <li>« OFFRE » en capitales étroites, postes en couleur.</li>
+      <li>Bande de pied avec IDE, IBAN et numéro de page.</li>
+    </ul></div>
+  </div>
+  <div class="reponse" data-decision="refait-bandeau" data-titre="Bandeau refait" data-choix="Valider|À retravailler|Garder l'ancien"></div>
+</div>
+
+<!-- ===== Sobre ===== -->
+<div class="carte">
+  <div class="entete-modele"><h3>Sobre</h3><span class="pastille bas">5,5 / 10</span><span class="pastille haut">visée 8</span></div>
+  <div class="mk-compare">
+    <figure><img src="MAQUETTE-modeles-img/actuel-sobre.jpg" alt="Sobre, rendu actuel de l'application"><figcaption>Aujourd'hui, dans l'application</figcaption></figure>
+    <figure><img src="MAQUETTE-modeles-img/sobre.jpg" alt="Sobre refait, mêmes lignes"><figcaption>Refait, mêmes lignes</figcaption></figure>
+  </div>
+  <div class="deux">
+    <div><h4>Pourquoi pas 8</h4><ul>
+      <li>Logo plafonné à 56 px de haut (<code>document.css</code>, ligne 14) : l'artisan pèse moins que son tableau.</li>
+      <li>Sous-totaux en italique gris : le niveau « poste » se lit mal.</li>
+      <li>C'est le socle des cinq autres, sans caractère à lui.</li>
+    </ul></div>
+    <div><h4>Ce que je change</h4><ul>
+      <li>Numéro en couleur, objet en gras dessous.</li>
+      <li>Une ligne d'informations : date, validité, chantier, contact.</li>
+      <li>Total en couleur sous un filet épais ; conditions et « non compris » côte à côte.</li>
+    </ul></div>
+  </div>
+  <div class="reponse" data-decision="refait-sobre" data-titre="Sobre refait" data-choix="Valider|À retravailler|Garder l'ancien"></div>
+</div>
+
+<!-- ===== Atelier ===== -->
+<div class="carte">
+  <div class="entete-modele"><h3>Atelier</h3><span class="pastille bas">5,5 / 10</span><span class="pastille haut">visée 8</span></div>
+  <div class="mk-compare">
+    <figure><img src="MAQUETTE-modeles-img/actuel-atelier.jpg" alt="Atelier, rendu actuel de l'application"><figcaption>Aujourd'hui, dans l'application</figcaption></figure>
+    <figure><img src="MAQUETTE-modeles-img/atelier-morel.jpg" alt="Atelier refait, mêmes lignes"><figcaption>Refait, mêmes lignes</figcaption></figure>
+  </div>
+  <div class="deux">
+    <div><h4>Pourquoi pas 8</h4><ul>
+      <li>DejaVu Serif, la police à empattements livrée avec le générateur : elle date le document.</li>
+      <li>Le total est en maigre : le chiffre le plus important est le moins appuyé.</li>
+      <li>L'adresse du client est à gauche, à droite dans les cinq autres : l'artisan qui change de modèle change d'enveloppe.</li>
+    </ul></div>
+    <div><h4>Ce que je change</h4><ul>
+      <li>Source Serif, « Offre » en italique de couleur.</li>
+      <li>Adresse à droite comme les autres, total en demi-gras sous le double filet.</li>
+      <li>Postes en petites capitales espacées.</li>
+    </ul></div>
+  </div>
+  <div class="reponse" data-decision="refait-atelier" data-titre="Atelier refait" data-choix="Valider|À retravailler|Garder l'ancien"></div>
+</div>
+
+<!-- ===== Moderne ===== -->
+<div class="carte">
+  <div class="entete-modele"><h3>Moderne</h3><span class="pastille bas">5 / 10</span><span class="pastille haut">visée 8</span></div>
+  <div class="mk-compare">
+    <figure><img src="MAQUETTE-modeles-img/actuel-moderne.jpg" alt="Moderne, rendu actuel de l'application"><figcaption>Aujourd'hui, dans l'application</figcaption></figure>
+    <figure><img src="MAQUETTE-modeles-img/moderne-morel.jpg" alt="Moderne refait, mêmes lignes"><figcaption>Refait, mêmes lignes</figcaption></figure>
+  </div>
+  <div class="deux">
+    <div><h4>Pourquoi pas 8</h4><ul>
+      <li>Le plus gros mot de la page est « OFFRE » en couleur (<code>document.css</code>, ligne 85). Le nom de l'artisan, quand il n'a pas de logo, est deux fois plus petit.</li>
+      <li>L'adresse du client est dans un bandeau au milieu de la feuille : hors de la fenêtre d'une enveloppe.</li>
+      <li>Le total est posé sur la teinte la plus pâle de la page.</li>
+    </ul></div>
+    <div><h4>Ce que je change</h4><ul>
+      <li>Adresse dans la fenêtre ; le bandeau garde numéro, date, validité, chantier.</li>
+      <li>« Offre » en noir, l'objet en couleur dessous : la couleur va à ce qui informe.</li>
+      <li>Total en blanc sur anthracite, total de chaque poste sur sa ligne de titre.</li>
+    </ul></div>
+  </div>
+  <div class="reponse" data-decision="refait-moderne" data-titre="Moderne refait" data-choix="Valider|À retravailler|Garder l'ancien"></div>
+</div>
+
+<!-- ===== Épuré ===== -->
+<div class="carte">
+  <div class="entete-modele"><h3>Épuré</h3><span class="pastille bas">4 / 10</span><span class="pastille haut">visée 7,5</span></div>
+  <div class="mk-compare">
+    <figure><img src="MAQUETTE-modeles-img/actuel-epure.jpg" alt="Épuré, rendu actuel de l'application"><figcaption>Aujourd'hui, dans l'application</figcaption></figure>
+    <figure><img src="MAQUETTE-modeles-img/epure-morel.jpg" alt="Épuré refait, mêmes lignes"><figcaption>Refait, mêmes lignes</figcaption></figure>
+  </div>
+  <div class="deux">
+    <div><h4>Pourquoi pas 8</h4><ul>
+      <li>Il supprime les titres de poste et les sous-totaux (<code>_document.html.twig</code>, lignes 72 et 84). Sur une offre par pièce, « Peinture des murs » revient trois fois sans dire où. C'est une perte d'information.</li>
+      <li>Le total, presque deux fois plus gros que le texte, sort du tableau et ne s'aligne sur aucune colonne.</li>
+      <li>Titres de colonnes en gris <code>#7A8089</code> : contraste de 3,98 sur le blanc (calculé), sous le seuil de 4,5 que le code impose à la couleur de l'artisan.</li>
+    </ul></div>
+    <div><h4>Ce que je change</h4><ul>
+      <li>Les postes restent, en petites capitales grises, avec leur total sur la même ligne.</li>
+      <li>Total dans la colonne des montants, sous un filet fin.</li>
+      <li>Il plafonne à 7,5 : un modèle sans couleur ni filet porte peu l'identité de l'artisan.</li>
+    </ul></div>
+  </div>
+  <div class="reponse" data-decision="refait-epure" data-titre="Épuré refait" data-choix="Valider|À retravailler|Garder l'ancien"></div>
+</div>
+
+<h2 id="communs" data-toc="Défauts communs">Ce qui plafonne les six</h2>
+<p class="chapeau">Ces défauts tiennent au contenu et au générateur de PDF : ils demandent des champs nouveaux et une preuve en PDF. Les douze feuilles de la planche les supposent corrigés : chaque point demande ta décision.</p>
+
+<div class="carte">
+  <h3>1. Une seule police, celle par défaut</h3>
+  <p>Le PDF sort en DejaVu Sans (<code>src/Offre/DocumentPdf.php</code>, ligne 43), sans autre police chargée. C'est la première cause de l'allure « document par défaut ».</p>
+  <p>Mesuré pour cette planche : Inter, la police de l'application, a des chiffres de largeur variable (« 1111 » fait 32,5 px, « 0000 » fait 50,5 px, à 20 px). Dans un PDF, ses montants ne s'aligneraient pas. Les feuilles utilisent donc des polices libres dont les chiffres ont tous la même largeur : Roboto, Source Serif 4, IBM Plex Sans et Mono (mesurées). Archivo et Barlow Condensed servent aux titres seulement.</p>
+  <p class="demande">À prouver avant le code : un PDF d'essai avec ces six familles intégrées, et son poids.</p>
+  <div class="reponse" data-decision="c1-polices" data-titre="C1 · Polices intégrées au PDF" data-choix="Valider|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>2. Rien sur le chantier</h3>
+  <p>Ni adresse du chantier, ni début des travaux, ni durée : aucun champ dans le code. Dans le bâtiment, le client et le chantier ont souvent deux adresses (régie, propriétaire, résidence secondaire). Les feuilles montrent une ligne « Date, valable jusqu'au, chantier, votre contact », et le modèle Chantier en fait une fiche.</p>
+  <p class="demande">Demande des champs nouveaux sur l'offre : adresse du chantier, début, durée ; un nom de contact dans les réglages.</p>
+  <div class="reponse" data-decision="c2-chantier" data-titre="C2 · Chantier, début, durée, contact" data-choix="Valider|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>3. « Non compris » absent</h3>
+  <p>Les conditions tiennent en deux puces. La liste de ce qui reste hors de l'offre (déplacer les meubles, l'électricité, la peinture de finition) évite la dispute de fin de chantier. Sur les feuilles : à droite des conditions.</p>
+  <p class="demande">Demande un champ sur l'offre, dictable, avec des phrases types par métier.</p>
+  <div class="reponse" data-decision="c3-non-compris" data-titre="C3 · Bloc « Non compris »" data-choix="Valider|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>4. Une signature sur deux, et pas de place pour signer</h3>
+  <p>Le document actuel ne porte que la signature du client, et le trait est au-dessus du libellé : la place pour signer se trouve sous le trait. Sur les feuilles : l'entreprise à gauche avec le nom du contact, le client à droite, un espace au-dessus de chaque trait.</p>
+  <div class="reponse" data-decision="c4-signature" data-titre="C4 · Signature de l'entreprise et du client" data-choix="Valider|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>5. Ni numéro de page, ni IBAN en pied</h3>
+  <p>Aucune numérotation dans le code du PDF. Une offre de trente lignes fait deux pages, et rien ne dit au client qu'il les a toutes. Sur les feuilles : « Page 1 / 1 » et l'IBAN dans le pied.</p>
+  <p class="demande">Non dessiné ici : l'offre longue (en-tête repris en page 2, report du sous-total). À faire avant de valider un modèle pour de bon.</p>
+  <div class="reponse" data-decision="c5-pied" data-titre="C5 · Pied avec IBAN et numéro de page" data-choix="Valider|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>6. L'adresse et la fenêtre de l'enveloppe</h3>
+  <p>L'adresse du client est à 55 % de la largeur dans quatre modèles, à gauche dans Atelier, dans un bandeau dans Moderne ; sa hauteur change selon l'en-tête. Sur les feuilles : à 118 mm du bord gauche dans onze modèles, à gauche dans Lettre. La hauteur varie encore de quelques millimètres d'un modèle à l'autre.</p>
+  <p class="demande">Jamais mesuré contre le gabarit de La Poste, ni dans l'application, ni ici. À faire sur un PDF imprimé.</p>
+  <div class="reponse" data-decision="c6-fenetre" data-titre="C6 · Adresse à la même place dans tous les modèles" data-choix="Valider|Pas valider"></div>
+</div>
+
+<h2 id="douze" data-toc="Les douze">Les douze modèles</h2>
+<p class="chapeau">Six refaits, six nouveaux. Chacun porte une entreprise inventée d'un métier différent, avec son logo et sa couleur. Les six nouveaux changent la structure du document : fiche de chantier, récapitulatif par lot, colonne latérale, métré, prix en bloc, lettre.</p>
+<div class="mk-filters" data-target="#liste">
+  <button type="button" data-v="all" aria-pressed="true">Les douze</button>
+  <button type="button" data-v="classique" aria-pressed="false">Classiques</button>
+  <button type="button" data-v="couleur" aria-pressed="false">Couleur</button>
+  <button type="button" data-v="detail" aria-pressed="false">Détaillés</button>
+  <button type="button" data-v="simple" aria-pressed="false">Simples</button>
+</div>
+<div class="planche" id="liste">
+
+  <div class="modele" data-v="classique">
+    <figure><img src="MAQUETTE-modeles-img/sobre.jpg" alt="Modèle Sobre, peintre"></figure>
+    <h3>Sobre <span class="etat">Refait</span></h3>
+    <p><span class="lbl">Pour :</span> tous les métiers. Le modèle par défaut.</p>
+    <p><span class="lbl">Structure :</span> en-tête, filet de couleur, postes avec sous-total.</p>
+    <div class="reponse" data-decision="m-sobre" data-titre="Sobre" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="classique">
+    <figure><img src="MAQUETTE-modeles-img/lettre.jpg" alt="Modèle Lettre, ferblantier couvreur"></figure>
+    <h3>Lettre <span class="etat neuf">Nouveau</span></h3>
+    <p><span class="lbl">Pour :</span> ferblantier, couvreur, artisan qui écrit aux régies et aux clients âgés.</p>
+    <p><span class="lbl">Structure :</span> une lettre. Adresse à gauche, lieu et date, formule d'appel, phrase d'introduction, tableau, phrase de fin, signature.</p>
+    <p class="demande">Demande : civilité du client, date de la visite, deux phrases types réglables.</p>
+    <div class="reponse" data-decision="m-lettre" data-titre="Lettre" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="classique">
+    <figure><img src="MAQUETTE-modeles-img/atelier.jpg" alt="Modèle Atelier, menuisier"></figure>
+    <h3>Atelier <span class="etat">Refait</span></h3>
+    <p><span class="lbl">Pour :</span> menuisier, ébéniste, agenceur, tout travail sur mesure.</p>
+    <p><span class="lbl">Structure :</span> logo centré, empattements, double filet, lignes pointillées.</p>
+    <div class="reponse" data-decision="m-atelier" data-titre="Atelier" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="couleur">
+    <figure><img src="MAQUETTE-modeles-img/bandeau.jpg" alt="Modèle Bandeau, maçon"></figure>
+    <h3>Bandeau <span class="etat">Refait</span></h3>
+    <p><span class="lbl">Pour :</span> maçon, gros œuvre, façadier, entreprise qui veut sa couleur en grand.</p>
+    <p><span class="lbl">Structure :</span> bande de couleur d'un bord à l'autre, onglet du logo, total plein, bande de pied.</p>
+    <p class="demande">À prouver : la bande d'un bord à l'autre dans le PDF.</p>
+    <div class="reponse" data-decision="m-bandeau" data-titre="Bandeau" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="couleur">
+    <figure><img src="MAQUETTE-modeles-img/moderne.jpg" alt="Modèle Moderne, poseur de sols"></figure>
+    <h3>Moderne <span class="etat">Refait</span></h3>
+    <p><span class="lbl">Pour :</span> poseur de sols, cuisiniste, agencement, jeune entreprise.</p>
+    <p><span class="lbl">Structure :</span> grand titre, bandeau d'informations teinté, lignes alternées, total sur anthracite.</p>
+    <div class="reponse" data-decision="m-moderne" data-titre="Moderne" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="couleur">
+    <figure><img src="MAQUETTE-modeles-img/lateral.jpg" alt="Modèle Latéral, électricien"></figure>
+    <h3>Latéral <span class="etat neuf">Nouveau</span></h3>
+    <p><span class="lbl">Pour :</span> électricien, stores, cuisines : l'artisan dont le client rappelle souvent.</p>
+    <p><span class="lbl">Structure :</span> colonne de couleur à gauche avec le numéro, les dates, le chantier et le contact ; le tableau a toute la hauteur.</p>
+    <p class="demande">À prouver : la colonne répétée sur chaque page du PDF.</p>
+    <div class="reponse" data-decision="m-lateral" data-titre="Latéral" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="detail">
+    <figure><img src="MAQUETTE-modeles-img/technique.jpg" alt="Modèle Technique, sanitaire"></figure>
+    <h3>Technique <span class="etat">Refait</span></h3>
+    <p><span class="lbl">Pour :</span> sanitaire, chauffage, ventilation, électricité.</p>
+    <p><span class="lbl">Structure :</span> cartouche de plan, positions numérotées (1.1, 2.3), grille, unité à part.</p>
+    <div class="reponse" data-decision="m-technique" data-titre="Technique" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="detail">
+    <figure><img src="MAQUETTE-modeles-img/metre.jpg" alt="Modèle Métré, carreleur"></figure>
+    <h3>Métré <span class="etat neuf">Nouveau</span></h3>
+    <p><span class="lbl">Pour :</span> carreleur, plâtrier, peintre en façade, étancheur : tout ce qui se paie à la surface.</p>
+    <p><span class="lbl">Structure :</span> le calcul de la quantité sous chaque ligne (« 3.00 × 2.10 »), quantités en gras, colonnes séparées.</p>
+    <p class="demande">Demande : garder le calcul dicté. Aujourd'hui l'application garde le résultat et les mots entendus, sans le calcul.</p>
+    <div class="reponse" data-decision="m-metre" data-titre="Métré" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="detail">
+    <figure><img src="MAQUETTE-modeles-img/recap.jpg" alt="Modèle Récapitulatif, rénovation"></figure>
+    <h3>Récapitulatif <span class="etat neuf">Nouveau</span></h3>
+    <p><span class="lbl">Pour :</span> rénovation complète, entreprise générale, offre à plusieurs corps de métier.</p>
+    <p><span class="lbl">Structure :</span> les lots et le total d'abord (A, B, C, D), le détail ensuite. Le client lit le prix avant les lignes.</p>
+    <div class="reponse" data-decision="m-recap" data-titre="Récapitulatif" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="detail">
+    <figure><img src="MAQUETTE-modeles-img/chantier.jpg" alt="Modèle Chantier, plâtrier"></figure>
+    <h3>Chantier <span class="etat neuf">Nouveau</span></h3>
+    <p><span class="lbl">Pour :</span> plâtrier, peintre, rénovation d'appartement : l'offre par pièce.</p>
+    <p><span class="lbl">Structure :</span> fiche de chantier en tête (adresse, contact sur place, accès, début, durée), une bande par pièce avec son total.</p>
+    <p class="demande">Demande : contact sur place et accès, en plus des champs du point 2.</p>
+    <div class="reponse" data-decision="m-chantier" data-titre="Chantier" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="simple">
+    <figure><img src="MAQUETTE-modeles-img/epure.jpg" alt="Modèle Épuré, paysagiste"></figure>
+    <h3>Épuré <span class="etat">Refait</span></h3>
+    <p><span class="lbl">Pour :</span> paysagiste, indépendant, petite offre.</p>
+    <p><span class="lbl">Structure :</span> beaucoup de blanc, aucun filet de couleur dans le tableau, postes en petites capitales.</p>
+    <div class="reponse" data-decision="m-epure" data-titre="Épuré" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+
+  <div class="modele" data-v="simple">
+    <figure><img src="MAQUETTE-modeles-img/bloc.jpg" alt="Modèle En bloc, peintre"></figure>
+    <h3>En bloc <span class="etat neuf">Nouveau</span></h3>
+    <p><span class="lbl">Pour :</span> peintre, façadier, artisan qui vend un prix par pièce ou par poste.</p>
+    <p><span class="lbl">Structure :</span> un prix par poste, les travaux et les quantités dessous, sans prix unitaire. Luigi a dicté un prix « en bloc » le 17 novembre.</p>
+    <p class="demande">Demande : un prix saisi par poste, ou la somme des lignes affichée sans le détail.</p>
+    <div class="reponse" data-decision="m-bloc" data-titre="En bloc" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+</div>
+
+<h2 id="combien" data-toc="Combien">Douze, le plafond</h2>
+<div class="carte">
+  <p><b>Douze suffit, et c'est le plafond.</b> Chaque modèle est déjà multiplié par le logo et la couleur de l'artisan. Sur un téléphone, douze vignettes font six rangées ; au-delà, l'artisan se perd dans les détails.</p>
+  <p><b>La différence entre les modèles compte d'abord.</b> Les six actuels sont un seul squelette en six habillages : même en-tête, même tableau, mêmes totaux. Les six ajouts changent ce que le document dit et dans quel ordre.</p>
+  <p><b>Ce qui manque encore relève de fonctions, valables pour les douze :</b> options hors total (« en option : laquage des portes »), photos du chantier, offre sur plusieurs pages, version allemande. En faire des modèles donnerait trente gabarits.</p>
+  <p><b>Le coût de douze :</b> douze gabarits à tenir en offre et en facture avec QR, soit vingt-quatre rendus à contrôler à chaque changement du document.</p>
+  <div class="reponse" data-decision="n-nombre" data-titre="Nombre de modèles" data-choix="Douze|Moins, les mieux notés|Plus"></div>
+</div>
+<div class="carte">
+  <h3>Deux propositions pour l'écran de choix</h3>
+  <p><b>Un modèle proposé selon le métier.</b> Le compte porte un métier depuis le 19 novembre. Le plâtrier ouvre sur Chantier, le sanitaire sur Technique, le carreleur sur Métré ; les onze autres restent à un toucher.</p>
+  <div class="reponse" data-decision="n-metier" data-titre="Modèle proposé selon le métier du compte" data-choix="Valider|Pas valider"></div>
+  <p style="margin-top:14px"><b>Quatre familles pour ranger les douze :</b> Classiques, Couleur, Détaillés, Simples (les filtres de la planche ci-dessus).</p>
+  <div class="reponse" data-decision="n-familles" data-titre="Quatre familles dans l'écran de choix" data-choix="Valider|Pas valider"></div>
+</div>
+
+<h2 id="suite" data-toc="Ce que ça demande">Ce que ça demande</h2>
+<div class="carte">
+  <h3>La preuve d'abord</h3>
+  <ul>
+    <li>Un PDF d'essai par le générateur de l'application : polices intégrées, bande d'un bord à l'autre, colonne latérale répétée, puis une offre de quarante lignes sur trois pages.</li>
+    <li>Une impression pliée dans une enveloppe à fenêtre, pour les douze.</li>
+    <li>Les douze en facture, avec la section de paiement QR.</li>
+  </ul>
+  <h3>Les données nouvelles</h3>
+  <ul>
+    <li>Sur l'offre : adresse du chantier, début, durée, non compris. Pour tous les modèles.</li>
+    <li>Dans les réglages : nom du contact.</li>
+    <li>Propres à un modèle : calcul du métré (Métré), prix par poste (En bloc), contact sur place et accès (Chantier), civilité et date de visite (Lettre).</li>
+  </ul>
+  <h3>Ce que cette planche ne prouve pas</h3>
+  <ul>
+    <li>Aucun rendu PDF. Les images viennent d'un navigateur.</li>
+    <li>Le logo réel d'un artisan (photo, JPEG à fond blanc) : les logos dessinés ici flattent les modèles. L'onglet blanc de Bandeau et de Latéral est fait pour ce cas.</li>
+    <li>Une couleur claire (jaune, orange vif) : la règle d'assombrissement de l'application est reprise, les douze couleurs montrées sont déjà sombres.</li>
+    <li>L'avis d'un artisan.</li>
+  </ul>
+  <p class="note-p">Source des feuilles : <code>generateur.html</code>, dans ce dossier. Elle servira de point de départ aux gabarits.</p>
+</div>
+
+<h2 id="recap" data-toc="Copier">Tes réponses</h2>
+<div class="recap carte">
+  <textarea id="texte-recap" readonly aria-label="Récapitulatif de tes réponses"></textarea>
+  <p style="margin-top:8px"><button type="button" id="copier">Copier le texte</button> <span class="note-p" id="copie"></span></p>
+</div>
+</main>
+
+<script>
+'use strict';
+(function () {
+  var CLE = 'offregen-modeles-2026-11-19';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) { /* stockage refusé : les réponses restent à l'écran */ } }
+  var blocs = Array.prototype.slice.call(document.querySelectorAll('.reponse'));
+  function recap() {
+    var lignes = ['Modèles d\'offre, maquette du 2026-11-19', ''];
+    blocs.forEach(function (b) {
+      var r = etat[b.dataset.decision] || {};
+      lignes.push(b.dataset.titre + ' : ' + (r.choix || 'sans réponse') + (r.note ? ' · ' + r.note : ''));
+    });
+    document.getElementById('texte-recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var id = b.dataset.decision, r = etat[id] || (etat[id] = {});
+    var boite = document.createElement('div'); boite.className = 'boutons';
+    b.dataset.choix.split('|').forEach(function (c) {
+      var bt = document.createElement('button'); bt.type = 'button'; bt.textContent = c;
+      bt.setAttribute('aria-pressed', r.choix === c ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        r.choix = r.choix === c ? '' : c;
+        Array.prototype.forEach.call(boite.children, function (x) { x.setAttribute('aria-pressed', x.textContent === r.choix ? 'true' : 'false'); });
+        garder(); recap();
+      });
+      boite.appendChild(bt);
+    });
+    var ta = document.createElement('textarea'); ta.placeholder = 'Commentaire'; ta.value = r.note || '';
+    ta.setAttribute('aria-label', 'Commentaire : ' + b.dataset.titre);
+    ta.addEventListener('input', function () { r.note = ta.value.trim(); garder(); recap(); });
+    b.appendChild(boite); b.appendChild(ta);
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('texte-recap'), s = document.getElementById('copie');
+    function fait() { s.textContent = 'Copié.'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(fait, function () { t.select(); s.textContent = 'Sélectionné : Ctrl+C pour copier.'; }); }
+    else { t.select(); s.textContent = 'Sélectionné : Ctrl+C pour copier.'; }
+  });
+  recap();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

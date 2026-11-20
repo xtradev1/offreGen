@@ -1,98 +1,369 @@
-/* Document d'offre remis au client. Une seule feuille pour l'aperçu à l'écran (dans .paper) et le PDF
-   (dompdf : CSS 2.1, ni grille, ni flexbox, ni variables). Toujours noir sur blanc, même en thème sombre.
-   Six modèles (.m-sobre, .m-bandeau, .m-atelier, .m-technique, .m-moderne, .m-epure) ; la couleur de
-   l'artisan vient des classes c-* de Marque::css(). */
-@page { margin: 18mm 16mm 16mm 18mm; }
-body.pdf { margin: 0; font-family: "DejaVu Sans", sans-serif; font-size: 9.5pt; color: #1b1f24; background: #fff; }
-.paper { background: #fff; color: #1b1f24; border-radius: 6px; padding: 20px 16px; box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-size: 12px; line-height: 1.4; overflow-x: auto; }
+/* Document remis au client, offre ou facture. Une seule feuille de style pour l'aperçu à l'écran (dans .paper) et pour
+   le PDF (dompdf : CSS 2.1, ni grille, ni flexbox, ni variables). Toujours noir sur blanc, même en thème sombre.
+   Un bloc par modèle (.m-<modèle>, gabarit templates/document/<modèle>.html.twig) ; la couleur de l'artisan vient des
+   classes c-* de Marque::css(). Ce que dompdf ne doit pas lire (polices de l'écran, réduction de la feuille) est dans
+   document-ecran.css. */
+@page { margin: 46px 0 70px 0; }
+body.pdf { margin: 0; font: 12px/1.45 Roboto, Arial, sans-serif; color: #1b1f24; background: #fff; }
+.paper { background: #fff; color: #1b1f24; border-radius: 6px; box-shadow: 0 1px 4px rgba(0, 0, 0, .12); overflow: hidden; }
 .doc table { width: 100%; border-collapse: collapse; }
 .doc td, .doc th { vertical-align: top; padding: 0; }
 .doc .n { text-align: right; white-space: nowrap; }
 
-/* En-tête commun : logo (ou nom) à gauche, coordonnées à droite. */
-.doc-tete td { width: 50%; vertical-align: top; }
-.doc-logo { max-height: 56px; max-width: 200px; }
-.doc-nom { font-size: 1.35em; font-weight: bold; }
-.doc-coord { text-align: right; font-size: .92em; color: #4b525b; }
-.doc-coord b { color: #1b1f24; }
-.doc-client { margin: 26px 0 20px 55%; min-height: 3.6em; }
-.doc-titre { font-weight: bold; font-size: 1.45em; margin: 0 0 2px; }
-.doc-date { margin: 0 0 4px; font-size: .92em; color: #4b525b; }
-.doc-objet { margin: 0 0 14px; color: #4b525b; }
+/* ===== Feuille A4 (modèles du bâtiment, 2026-11-20) =====
+   Chaque modèle se dessine sur une feuille de 794 px (A4 à 96 points par pouce), marges de page comprises : 46 px en
+   haut, 70 px en bas. Dans le PDF, ce sont les marges de @page ; à l'écran, les marges
+   intérieures de la feuille. Le contenu coule de la même façon des deux côtés ; seuls les éléments répétés sur chaque
+   page (pied, bande, colonne) ont deux règles : fixes dans le PDF, absolus à l'écran.
+   Règles de dompdf, relevées à l'essai du 2026-11-20 : box-sizing est ignoré (les hauteurs se donnent hors marges
+   intérieures, et l'écran est remis en content-box) ; l'interligne dépend de la police (bloc « Interlignes du PDF ») ;
+   tout le supplément d'interligne va au-dessus du texte (un texte se centre dans une cellule de tableau). */
+.doc[data-feuille], .doc[data-feuille] *, .doc-pied, .doc-pied *, .doc-colonne, .doc-colonne *, .doc-bas, .doc-bas * { box-sizing: content-box; }
+.doc[data-feuille] { position: relative; width: 794px; min-height: 1007px; padding: 46px 0 70px; background: #fff; color: #1b1f24; font: 12px/1.45 Roboto, Arial, sans-serif; text-align: left; }
+.pdf .doc[data-feuille] { min-height: 0; padding: 0; background: transparent; }
+.doc-in { padding: 0 64px; }
+.doc-lab { font-size: 9px; text-transform: uppercase; letter-spacing: .07em; color: #4b525b; margin-bottom: 2px; }
+/* 79 px : cinq lignes de coordonnées. Plus court, l'en-tête garde cette hauteur et l'adresse du client sa place :
+   182 px du haut de la feuille et 446 px du bord gauche dans tous les modèles (48 et 118 mm, la fenêtre d'une
+   enveloppe C5 ; décision C6 de Xavier, tests/Offre/GabaritsPdfTest.php). Chaque modèle règle la marge qui l'y mène. */
+.doc-haut { min-height: 79px; }
+.doc-tete td + td { text-align: right; }
+.doc-logo, .doc-colonne .doc-logo { display: block; max-height: 50px; max-width: 250px; }
+.doc-nom, .doc-colonne .doc-nom { font: 800 19px/1.2 Archivo, Arial, sans-serif; color: #1b1f24; }
+.doc-coord { font-size: 10.5px; line-height: 1.5; color: #4b525b; }
+.doc-coord b { color: #1b1f24; font-size: 12px; }
+.doc-adresse { margin: 0 0 0 382px; font-size: 12.5px; line-height: 1.5; height: 70px; }
+.doc-infos { margin: 12px 0; }
+.doc-infos td { padding: 7px 12px 7px 0; font-size: 11.5px; }
+/* Un tableau à largeur propre s'écrit « table.doc-x » : « .doc table { width: 100% } » l'emporte sur une classe seule. */
+/* Gris des textes secondaires : #4b525b, 7,9 sur le blanc (mesuré). Le #5a616b de la maquette donnait 5,5 à la sonde de
+   contraste : sous le seuil de 7 pour des libellés de 9 px. */
+/* Graisses des règles communes : 400 et 700 seulement, les deux que toutes les familles de texte ont. Une graisse sans
+   face (Roboto n'a pas de 600) retombe sur DejaVu Sans dans le PDF. */
+.doc-lig th { text-align: left; font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; padding: 7px 6px; font-weight: 700; }
+.doc-lig th.n { text-align: right; }
+.doc-lig td { padding: 4.5px 6px; border-bottom: 1px solid #e3e6ea; }
+.doc-lig .doc-grp td { font-weight: 700; padding-top: 10px; border-bottom: 0; }
+.doc-lig .doc-st td { border-bottom: 0; color: #4b525b; text-align: right; padding-top: 4px; }
+.doc-lig .doc-pos { width: 38px; color: #4b525b; }
+.doc-lig .doc-u { width: 44px; color: #4b525b; }
+.doc-tva { color: #4b525b; }
+table.doc-totaux { width: 300px; margin: 12px 0 0 366px; }
+.doc-totaux td { padding: 3.5px 6px; }
+.doc-tt td { font-weight: 700; font-size: 15px; padding-top: 8px; padding-bottom: 8px; }
+.doc-cond { margin-top: 16px; font-size: 10.5px; color: #2c3138; }
+.doc-cond td { width: 58%; padding-right: 18px; }
+.doc-cond td + td { width: 42%; padding-right: 0; }
+.doc-cond ul, .doc-condp ul { margin: 3px 0 0; padding-left: 15px; }
+.doc-condp ul { margin-bottom: 8px; }
+.doc-mentions { margin-top: 8px; font-size: 9.5px; color: #4b525b; }
+.doc-sign { margin-top: 12px; }
+.doc-sign td { width: 50%; padding-right: 28px; font-size: 10.5px; }
+.doc-sig-nom { height: 28px; padding-top: 4px; font-size: 12px; font-weight: 700; }
+.doc-sig-esp { height: 32px; }
+.doc-sig-l { border-top: 1px solid #6b727c; }
+.doc-sig-s { padding-top: 4px; color: #4b525b; }
+.doc-annulee { display: inline-block; margin: 6px 0 10px; padding: 4px 12px; border: 2px solid #8C1D18; border-radius: 4px; color: #8C1D18; font-weight: bold; font-size: 16px; letter-spacing: .08em; text-transform: uppercase; }
+/* PDF : les totaux, puis les conditions et les signatures, restent entiers d'une page à l'autre. */
+.pdf .doc-totaux, .pdf .doc-fin { page-break-inside: avoid; }
+/* Pied de page : sous le contenu à l'écran, dans la marge basse de chaque page du PDF. */
+table.doc-pied { position: absolute; left: 64px; bottom: 26px; width: 666px; border-collapse: collapse; font: 9.5px/1.45 Roboto, Arial, sans-serif; color: #4b525b; border-top: 1px solid #d9dde2; }
+.doc-pied td { padding: 7px 0 0; vertical-align: top; }
+.doc-pied .n { text-align: right; white-space: nowrap; }
+.pdf .doc-pied { position: fixed; bottom: -44px; }
+/* « Page n / N » : dompdf compte les pages, le total vient du premier rendu (OffreControleur::rendrePdf). */
+.doc-page:before { content: "Page " counter(page) " / "; }
 
-/* Lignes */
-.doc-lignes th { text-align: left; font-weight: bold; font-size: .85em; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1.5px solid #1b1f24; padding: 5px 4px 5px 4px; }
-.doc-lignes th.n { text-align: right; padding-left: 6px; }
-.doc-lignes td { padding: 4px; border-bottom: 0.5px solid #d7dbe0; }
-.doc-lignes td.n { padding-left: 6px; }
-.doc-lignes .pos { width: 34px; color: #4b525b; }
-.doc-grp td { font-weight: bold; padding-top: 10px; border-bottom: 0; }
-.doc-st td { font-style: italic; color: #4b525b; border-bottom: 0; text-align: right; }
+/* Sobre : un filet de couleur sous l'en-tête, titres de colonnes dans la couleur, total en anthracite. */
+.m-sobre .doc-filet { height: 3px; margin: 14px 0 40px; }
+.m-sobre .doc-titre { font-size: 22px; font-weight: 700; line-height: 1.2; }
+.m-sobre .doc-objet { font-size: 14px; font-weight: 700; margin-top: 2px; }
+.m-sobre .doc-infos { border-top: 1px solid #d9dde2; border-bottom: 1px solid #d9dde2; }
+.m-sobre .doc-lig th { border-bottom: 2px solid; }
+.m-sobre .doc-lig th.n { width: 112px; }
+.m-sobre .doc-tt td { border-top: 2px solid; }
 
-/* Totaux */
-.doc-totaux { margin: 10px 0 0 45%; width: 55% !important; }
-.doc-totaux td { padding: 3px 4px; }
-.doc-g td { font-weight: bold; font-size: 1.15em; border-top: 1.5px solid #1b1f24; padding-top: 6px; }
+/* Bandeau : une bande de couleur en tête, le logo sur un cartouche blanc qui en dépasse, une bande au bas de chaque page. */
+.m-bandeau .doc-bande { position: relative; height: 112px; margin-top: -46px; }
+/* 280 px au plus : un nom long, sans logo, passe à la ligne au lieu de courir sous les coordonnées. */
+.m-bandeau .doc-carte { position: absolute; left: 64px; top: 0; max-width: 280px; height: 82px; padding: 30px 18px 14px; background: #fff; border-bottom: 4px solid; }
+.m-bandeau .doc-bande .doc-coord { position: absolute; right: 64px; top: 22px; text-align: right; color: #fff; }
+.m-bandeau .doc-bande .doc-coord b { color: #fff; }
+.m-bandeau .doc-in { padding-top: 70px; }
+.m-bandeau .doc-adresse { height: 66px; }
+.m-bandeau .doc-sur { font: 700 40px/1 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .02em; }
+.m-bandeau .doc-sur span { font-size: 22px; font-weight: 500; color: #1b1f24; letter-spacing: 0; }
+.m-bandeau .doc-objet { font-size: 14px; font-weight: 700; margin-top: 4px; }
+.m-bandeau .doc-infos td { border-left: 3px solid; padding-left: 10px; }
+.m-bandeau .doc-lig .doc-grp td { font: 600 15px/1.2 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .04em; }
+.m-bandeau .doc-tt td { padding: 9px 8px; font-size: 16px; }
+/* Hauteur dite : sans elle, dompdf pose la bande fixe sous le bord de la page. */
+table.doc-bas { position: absolute; left: 0; bottom: 0; width: 794px; height: 34px; border-collapse: collapse; font: 9.5px/1.45 Roboto, Arial, sans-serif; }
+.doc-bas td { height: 24px; padding: 10px 0 0 64px; vertical-align: top; color: #fff; }
+.doc-bas td.n { padding: 10px 64px 0 0; text-align: right; white-space: nowrap; }
+.pdf .doc-bas { position: fixed; bottom: -70px; }
 
-/* Pied */
-.doc-cond { margin: 22px 0 0; }
-.doc-cond ul { margin: 4px 0 0; padding-left: 16px; }
-.doc-signature { margin-top: 34px; }
-.doc-signature td { width: 50%; padding-top: 28px; border-top: 0.5px solid #8a929c; font-size: .9em; color: #4b525b; }
-.doc-signature td + td { padding-left: 20px; }
-.doc-pied { margin-top: 26px; font-size: .85em; color: #69717c; text-align: center; border-top: 0.5px solid #d7dbe0; padding-top: 6px; }
-
-/* 1 Sobre : un filet de couleur sous l'en-tête, titres de colonnes en couleur. */
-.m-sobre .doc-regle { height: 3px; margin: 14px 0 0; }
-.m-sobre .doc-lignes th { border-bottom-width: 2px; }
-.m-sobre .doc-g td { border-top-width: 2px; }
-
-/* 2 Bandeau : bande de couleur en tête, logo sur un cartouche blanc, entêtes de colonnes pleines. */
-.m-bandeau .doc-bande { padding: 14px 16px; }
-.m-bandeau .doc-bande .doc-coord, .m-bandeau .doc-bande .doc-coord b, .m-bandeau .doc-bande .doc-nom { color: #fff; }
-.m-bandeau .doc-boite { display: inline-block; background: #fff; padding: 6px 8px; }
-.m-bandeau .doc-titre { text-transform: uppercase; letter-spacing: .02em; }
-.m-bandeau .doc-lignes th { border-bottom: 0; }
-.m-bandeau .doc-g td { border-top: 0; padding: 7px 6px; }
-
-/* 3 Atelier : centré, empattements, double filet. */
-.m-atelier { font-family: "DejaVu Serif", Georgia, serif; }
+/* Atelier : tout en empattements, le logo centré, un double filet, « Offre » en grande italique. */
+.doc.m-atelier { font-family: "Source Serif 4", Georgia, serif; font-size: 12.5px; }
+.m-atelier .doc-in { padding: 0 76px; }
+.m-atelier .doc-haut { min-height: 74px; }
 .m-atelier .doc-centre { text-align: center; }
-.m-atelier .doc-coord-ligne { text-align: center; font-size: .9em; color: #4b525b; margin-top: 6px; }
-.m-atelier .doc-double { border-top: 3px double; margin: 14px 0 0; }
-.m-atelier .doc-client { margin-left: 0; }
-.m-atelier .doc-titre { font-weight: normal; letter-spacing: .04em; }
-.m-atelier .doc-lignes th { font-weight: normal; font-style: italic; text-transform: none; font-size: .95em; border-bottom-width: 1px; }
-.m-atelier .doc-lignes td { border-bottom: 0.5px dotted #c9cdd2; }
-.m-atelier .doc-g td { border-top: 3px double; font-weight: normal; font-size: 1.25em; }
+.m-atelier .doc-centre .doc-logo { margin: 0 auto; }
+.m-atelier .doc-nom { font: 600 21px/1.2 "Source Serif 4", Georgia, serif; }
+.m-atelier .doc-coord-ligne { text-align: center; font-size: 10.5px; color: #4b525b; margin-top: 8px; letter-spacing: .02em; }
+.m-atelier .doc-double { border-top: 3px double; margin: 14px 0 45px; }
+.m-atelier .doc-tetiere td { width: 50%; }
+.m-atelier .doc-adresse { margin-left: 49px; }
+.m-atelier .doc-titre { font-size: 34px; font-style: italic; line-height: 1; }
+.m-atelier .doc-num { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #4b525b; margin-top: 6px; }
+.m-atelier .doc-objet { font-size: 15px; font-weight: 600; margin: 16px 0 2px; }
+.m-atelier .doc-meta { font-style: italic; color: #4b525b; margin-bottom: 14px; }
+.m-atelier .doc-lig th { font-style: italic; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 400; border-bottom: 1px solid; }
+.m-atelier .doc-lig td { border-bottom: 1px dotted #b9bec5; }
+.m-atelier .doc-lig .doc-grp td { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; border-bottom: 0; }
+.m-atelier .doc-lig .doc-st td { font-style: italic; border-bottom: 0; }
+.m-atelier .doc-totaux { margin-left: 342px; }
+.m-atelier .doc-tt td { border-top: 3px double; font-size: 17px; font-weight: 600; }
+.m-atelier .doc-lab { font-style: italic; text-transform: none; letter-spacing: 0; font-size: 11.5px; }
+.m-atelier .doc-sig-nom { font-weight: 600; }
+.m-atelier .doc-pied { left: 76px; width: 642px; font-family: "Source Serif 4", Georgia, serif; text-align: center; }
 
-/* 4 Technique : barre de couleur à gauche, grille, positions numérotées. */
-.m-technique { border-left: 6px solid; padding-left: 12px; font-size: .95em; }
-.m-technique .doc-lignes th, .m-technique .doc-lignes td { border: 0.5px solid #cfd3d8; padding: 4px 5px; }
-.m-technique .doc-lignes th { background: #f1f3f5; text-transform: none; font-size: .9em; letter-spacing: 0; }
-.m-technique .doc-grp td { background: #fafbfc; }
-.m-technique .doc-st td { border-left: 0; border-right: 0; }
-.m-technique .doc-totaux td { border: 0.5px solid #cfd3d8; padding: 3px 6px; }
-.m-technique .doc-g td { border-top: 0.5px solid #cfd3d8; }
+/* Technique : un cartouche encadré, des positions numérotées, des montants en chasse fixe, un total encadré de foncé. */
+.doc.m-technique { font-family: "IBM Plex Sans", Arial, sans-serif; font-size: 11.5px; }
+.m-technique .doc-adresse { margin-top: 57px; height: 68px; font-size: 12px; }
+table.doc-cart { border: 1.5px solid #1b1f24; margin: 6px 0 16px; }
+.doc-cart td { border: 1px solid #1b1f24; padding: 6px 9px; font-size: 11.5px; }
+.doc-cart .doc-gros { font-size: 15px; font-weight: 600; }
+.doc-cart .doc-gros b { font-weight: 700; letter-spacing: .06em; }
+.m-technique .doc-lig th, .m-technique .doc-lig td { border: 1px solid #c3c8cf; padding: 4.5px 7px; }
+.m-technique .doc-lig th { background: #eef0f3; text-transform: none; letter-spacing: 0; font-size: 10.5px; font-weight: 600; color: #1b1f24; }
+.m-technique .doc-lig .doc-grp td { border-left: 4px solid; padding-top: 5px; font-weight: 600; }
+.m-technique .doc-lig .doc-st td { border: 0; border-bottom: 1px solid #c3c8cf; padding-top: 4.5px; }
+.m-technique .doc-lig td.n, .m-technique .doc-totaux td.n { font-family: "IBM Plex Mono", monospace; font-size: 11px; }
+.m-technique .doc-lig .doc-pos { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; }
+.m-technique .doc-totaux td { border: 1px solid #c3c8cf; padding: 4px 7px; }
+.m-technique .doc-totaux .doc-av td { border-bottom: 2px solid #1b1f24; }
+.m-technique .doc-totaux .doc-tt td { border: 2px solid #1b1f24; font-size: 13.5px; }
+.m-technique .doc-pied { font-family: "IBM Plex Sans", Arial, sans-serif; }
 
-/* 5 Moderne : grand titre en couleur, bandeau d'informations teinté, lignes alternées. */
-.m-moderne .doc-coord-g { font-size: .9em; color: #4b525b; margin-top: 8px; }
-.m-moderne .doc-coord-g b { color: #1b1f24; }
-.m-moderne .doc-grand-titre { text-align: right; font-size: 2.6em; font-weight: bold; letter-spacing: .06em; line-height: 1.05; }
-.m-moderne .doc-grand-titre span { font-size: .4em; font-weight: normal; letter-spacing: 0; color: #4b525b; }
-.m-moderne .doc-infos { margin: 20px 0 12px; }
-.m-moderne .doc-infos td { width: 33%; padding: 9px 12px; }
-.m-moderne .doc-etiquette { font-size: .75em; text-transform: uppercase; letter-spacing: .06em; color: #5d636b; }
-.m-moderne .doc-lignes td { border-bottom: 0; }
-.m-moderne .doc-grp td { font-size: .85em; text-transform: uppercase; letter-spacing: .05em; }
-.m-moderne .doc-st td { border-top: 0.5px solid #e6e8eb; }
-.m-moderne .doc-g td { border-top: 0; padding: 7px 6px; }
+/* Moderne : un grand titre, les références sur fond teinté, une ligne sur deux dans la teinte, le total sur la teinte. */
+.m-moderne .doc-adresse { margin-top: 57px; height: 66px; }
+.m-moderne .doc-titre { font: 800 40px/1 Archivo, Arial, sans-serif; letter-spacing: -.01em; }
+.m-moderne .doc-objet { font: 600 15px/1.3 Archivo, Arial, sans-serif; margin-top: 6px; }
+.m-moderne .doc-infos { margin: 14px 0 10px; }
+.m-moderne .doc-infos td { padding: 10px 12px; }
+.m-moderne .doc-lig th { color: #4b525b; border-bottom: 1.5px solid #1b1f24; }
+.m-moderne .doc-lig td { border-bottom: 0; }
+.m-moderne .doc-lig .doc-grp td { font: 700 10px/1.3 Archivo, Arial, sans-serif; text-transform: uppercase; letter-spacing: .1em; padding-bottom: 4px; }
+.m-moderne .doc-lig .doc-grp td.n { color: #1b1f24; font: 700 12px/1.3 Roboto, Arial, sans-serif; letter-spacing: 0; text-transform: none; }
+.m-moderne .doc-tt td { color: #1b1f24; border-top: 2px solid #1b1f24; padding: 8px 10px; font: 700 15px/1.2 Archivo, Arial, sans-serif; }
+.m-moderne .doc-tt td:first-child { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding-top: 11px; }
 
-/* 6 Épuré : sans groupes, un trait de couleur, un grand total. */
-.m-epure .doc-trait { width: 60px; height: 4px; margin: 0 0 18px; }
-.m-epure .doc-lignes th { font-weight: normal; color: #7a8089; border-bottom: 0.5px solid #e6e8eb; }
-.m-epure .doc-lignes td { border-bottom: 0; padding: 6px 4px; }
-.m-epure .doc-grand-total { text-align: right; font-size: 1.9em; font-weight: bold; margin: 12px 0 0; }
+/* Épuré : de larges marges, un trait de couleur, peu de filets. */
+.m-epure .doc-in { padding: 14px 82px 0; }
+.m-epure .doc-adresse { margin: 43px 0 0 364px; height: 84px; }
+.m-epure .doc-trait { width: 44px; height: 4px; margin: 0 0 14px; }
+.m-epure .doc-titre { font-size: 19px; font-weight: 700; }
+.m-epure .doc-objet { color: #4b525b; margin: 2px 0; font-size: 13px; }
+.m-epure .doc-meta { color: #4b525b; font-size: 11px; margin-bottom: 20px; }
+.m-epure .doc-lig th { color: #4b525b; font-weight: 400; border-bottom: 1px solid #d9dde2; }
+.m-epure .doc-lig td { border-bottom: 0; padding: 6.5px 6px; }
+.m-epure .doc-lig .doc-grp td { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #4b525b; border-top: 1px solid #e3e6ea; padding-top: 10px; padding-bottom: 2px; }
+.m-epure .doc-lig .doc-grp:first-child td { border-top: 0; }
+.m-epure .doc-totaux { width: 280px; margin-left: 350px; border-top: 1px solid #1b1f24; }
+.m-epure .doc-tt td { font-size: 16px; padding-top: 10px; }
+.m-epure .doc-tt td:first-child { font-size: 12px; font-weight: 700; padding-top: 14px; }
+.m-epure .doc-pied { left: 82px; width: 630px; border-top: 0; }
+
+/* Lettre : l'offre écrite comme un courrier, en empattements ; l'adresse à gauche, pour une enveloppe à fenêtre à gauche. */
+.doc.m-lettre { font-family: "Source Serif 4", Georgia, serif; font-size: 12.8px; line-height: 1.5; }
+.m-lettre .doc-in { padding: 4px 72px 0 83px; }
+.m-lettre .doc-coord, .m-lettre .doc-sig-s, .m-lettre .doc-lab, .m-lettre .doc-lig th, .m-lettre .doc-mentions { font-family: Roboto, Arial, sans-serif; }
+.m-lettre .doc-env { margin-top: 34px; }
+.m-lettre .doc-env td { width: 50%; }
+/* L'expéditeur, au-dessus de l'adresse et dans la fenêtre : sur une ligne, coupée si le nom est long (l'adresse ne descend pas). */
+.m-lettre .doc-exp { width: 300px; white-space: nowrap; overflow: hidden; font: 8.5px/1.3 Roboto, Arial, sans-serif; color: #4b525b; border-bottom: 1px solid #9aa0a8; padding-bottom: 2px; margin-bottom: 6px; }
+.m-lettre .doc-adresse { margin: 0; height: 84px; }
+.m-lettre .doc-lieu { text-align: right; padding-top: 16px; }
+.m-lettre .doc-concerne { font-weight: 700; font-size: 14px; margin: 22px 0 14px; }
+.m-lettre .doc-txt { margin-bottom: 10px; }
+.m-lettre .doc-lig { font-size: 11.5px; margin-top: 4px; }
+.m-lettre .doc-lig th { border-top: 1px solid #1b1f24; border-bottom: 1px solid #1b1f24; }
+.m-lettre .doc-totaux { font-size: 11.5px; margin-left: 339px; }
+.m-lettre .doc-tt td { border-top: 1px solid #1b1f24; border-bottom: 3px double #1b1f24; font-size: 14px; }
+.m-lettre .doc-apres { margin-top: 16px; }
+.m-lettre .doc-sign { margin-top: 12px; }
+.m-lettre .doc-sign td { font-size: 12px; }
+/* 30 px sous le nom de l'entreprise : la place de signer à la main, au-dessus du nom du contact. */
+.m-lettre .doc-sig-nom { font-weight: 400; height: 20px; padding-top: 30px; }
+.m-lettre .doc-sig-esp { height: 50px; }
+.m-lettre .doc-pied { left: 83px; width: 639px; }
+
+/* Enseigne : pour l'artisan sans logo, le nom de son entreprise en grandes capitales. Le corps du nom suit sa longueur
+   (Marque::corpsEnseigne) ; l'en-tête garde la hauteur du plus grand corps. */
+.m-enseigne .doc-haut { min-height: 118px; }
+.doc-enseigne { font: 700 58px/.95 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .005em; }
+.doc-enseigne.t46 { font-size: 46px; }
+.doc-enseigne.t36 { font-size: 36px; }
+.doc-enseigne.t28 { font-size: 28px; }
+.doc-enseigne-s { font: 500 13px/1.2 "Barlow Condensed", Arial, sans-serif; letter-spacing: .28em; text-transform: uppercase; margin-top: 6px; }
+.m-enseigne .doc-barre { height: 8px; margin: 12px 0 6px; }
+.doc-enseigne-c { font-size: 10.5px; color: #4b525b; }
+.m-enseigne .doc-duo { margin-top: 18px; }
+.doc-duo td { width: 50%; }
+table.doc-ref { width: 300px; }
+.doc-ref td { width: auto; padding: 2.5px 0; font-size: 11px; border-bottom: 1px solid #e3e6ea; }
+.doc-ref td:first-child { width: 112px; color: #4b525b; font-size: 9px; text-transform: uppercase; letter-spacing: .07em; padding-top: 4.5px; }
+.m-enseigne .doc-adresse { margin: 0 0 0 49px; height: auto; }
+.m-enseigne .doc-titre { font: 700 26px/1.1 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; margin: 20px 0 6px; }
+.m-enseigne .doc-lig th { border-bottom: 3px solid #1b1f24; }
+.m-enseigne .doc-lig .doc-grp td { font: 600 14px/1.2 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+.m-enseigne .doc-tt td { border-top: 3px solid; font-size: 16px; }
+
+/* Récapitulatif : les postes et leurs totaux d'abord, à côté des totaux de l'offre, puis le détail. */
+.doc.m-recap { font-size: 11.3px; }
+.m-recap .doc-filet { height: 2px; background: #1b1f24; margin: 14px 0 41px; }
+.m-recap .doc-adresse { height: 72px; font-size: 12px; }
+.m-recap .doc-titre { font: 700 21px/1.2 Archivo, Arial, sans-serif; }
+.m-recap .doc-meta { color: #4b525b; font-size: 11px; margin: 3px 0 12px; }
+.doc-h2 { font: 700 10.5px/1.3 Archivo, Arial, sans-serif; text-transform: uppercase; letter-spacing: .1em; margin: 0 0 5px; }
+.doc-h2.doc-detail { margin-top: 16px; }
+.doc-duo2 td.doc-g { width: 356px; padding-right: 20px; }
+.doc-rec td { padding: 6px 8px; border-bottom: 1px solid #e3e6ea; font-size: 12.5px; font-weight: 500; }
+.doc-rec .doc-let { width: 30px; }
+table.doc-pas { width: 20px; }
+/* La lettre du poste dans une cellule : dompdf met tout l'interligne au-dessus du texte, une hauteur de ligne ne centre pas. */
+.doc-rec .doc-pas td { width: 20px; height: 20px; padding: 0; border: 0; text-align: center; vertical-align: middle; font: 700 11px/1 Archivo, Arial, sans-serif; }
+table.doc-bloc-tot { margin-top: 0; }
+.doc-bloc-tot td { padding: 4px 10px; }
+.doc-bloc-tot .doc-tt td { font: 700 17px/1.2 Archivo, Arial, sans-serif; padding: 6px 10px 9px; }
+.m-recap .doc-lig { margin-top: 2px; }
+.m-recap .doc-lig th { border-bottom: 1.5px solid #1b1f24; padding: 5px 6px; }
+.m-recap .doc-lig td { padding: 3.6px 6px; }
+.m-recap .doc-lig .doc-grp td { padding-top: 8px; }
+.m-recap .doc-cond { margin-top: 14px; font-size: 10.3px; }
+.m-recap .doc-sig-nom { height: 26px; }
+.m-recap .doc-sig-esp { height: 30px; }
+
+/* Chantier : la fiche du chantier à gauche de l'adresse, les postes sur des bandes teintées. */
+.m-chantier .doc-barre { height: 6px; margin: 12px 0 35px; }
+table.doc-fiche { width: 330px; border: 1.5px solid; }
+.doc-fiche th { text-align: left; font: 600 14px/1.2 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .1em; padding: 5px 10px; }
+.doc-fiche td { padding: 4px 10px; font-size: 11px; border-top: 1px solid #e3e6ea; }
+.doc-fiche td:first-child { width: 104px; color: #3a4049; font-size: 10px; }
+.m-chantier .doc-adresse { margin: 4px 0 0 49px; height: auto; }
+.m-chantier .doc-ref { margin: 14px 0 0 49px; font-size: 11px; color: #4b525b; }
+.m-chantier .doc-titre { font: 700 28px/1.05 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .01em; margin: 16px 0 6px; }
+.m-chantier .doc-lig th { border-bottom: 1.5px solid #1b1f24; }
+.m-chantier .doc-lig th.n { width: 112px; }
+.m-chantier .doc-lig .doc-grp td { font: 600 14px/1.2 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .08em; padding: 5px 6px; border-top: 8px solid #fff; }
+.m-chantier .doc-lig .doc-grp td.n { color: #1b1f24; font: 700 12px/1.4 Roboto, Arial, sans-serif; letter-spacing: 0; text-transform: none; }
+.m-chantier .doc-tt td { border-top: 2px solid #1b1f24; font-size: 16px; }
+
+/* Marge : le poste et son total dans la marge de gauche. */
+.m-marge .doc-filet { height: 1px; background: #1b1f24; margin: 14px 0 42px; }
+.m-marge .doc-titre { font: 700 22px/1.2 Archivo, Arial, sans-serif; }
+.m-marge .doc-infos { border-bottom: 1px solid #d9dde2; margin: 8px 0 14px; }
+.m-marge .doc-lig th { border-bottom: 1.5px solid #1b1f24; color: #4b525b; }
+.m-marge .doc-lig td { border-bottom: 0; padding: 4px 6px; }
+.m-marge .doc-lig .doc-prem td { border-top: 1px solid #1b1f24; padding-top: 9px; }
+.m-marge .doc-lig .doc-der td { padding-bottom: 9px; }
+.m-marge .doc-lig .doc-po { width: 150px; padding-left: 0; font-size: 11px; color: #4b525b; }
+.m-marge .doc-lig .doc-po b { font: 700 13px/1.3 Archivo, Arial, sans-serif; }
+.m-marge .doc-totaux { border-top: 1px solid #1b1f24; }
+.m-marge .doc-tt td { border-top: 2px solid #1b1f24; font-size: 15.5px; }
+
+/* Latéral : la colonne de couleur, sur toute la hauteur de chaque page. */
+.doc-colonne { position: absolute; left: 0; top: 0; bottom: 0; width: 208px; font: 12px/1.45 Roboto, Arial, sans-serif; text-align: left; }
+.pdf .doc-colonne { position: fixed; top: -46px; bottom: auto; height: 1122px; }
+/* Facture d'une page : la colonne s'arrête au-dessus de la section de paiement (1122 px moins ses 110 mm). */
+.pdf.qr-essai .doc-colonne, .pdf.qr-bas .doc-colonne { height: 706px; }
+.doc-colonne .doc-carte { background: #fff; padding: 46px 18px 20px; border-bottom: 5px solid #1b1f24; }
+.doc-colonne .doc-logo { max-width: 170px; max-height: 70px; }
+.doc-colonne .doc-nom { font-size: 21px; line-height: 1.1; }
+.doc-colonne .doc-bloc { padding: 18px 20px 0; font-size: 11px; line-height: 1.5; }
+.doc-colonne .doc-lab { color: #fff; font-size: 8.5px; letter-spacing: .12em; border-bottom: 1px solid #fff; padding-bottom: 3px; margin-bottom: 5px; }
+.doc-colonne .doc-gros { font: 800 26px/1.05 Archivo, Arial, sans-serif; }
+.doc-colonne .doc-fond { position: absolute; left: 20px; bottom: 30px; width: 168px; font-size: 9.5px; line-height: 1.5; }
+.m-lateral .doc-in { margin-left: 208px; padding: 4px 56px 0 36px; }
+.m-lateral .doc-adresse { margin: 132px 0 0 202px; height: 84px; }
+.m-lateral .doc-titre { font: 700 22px/1.2 Archivo, Arial, sans-serif; margin-bottom: 14px; }
+.m-lateral .doc-lig th { border-bottom: 1.5px solid #1b1f24; padding-left: 0; }
+.m-lateral .doc-lig td { padding-left: 0; }
+.m-lateral .doc-lig .doc-grp td { font: 700 10px/1.3 Archivo, Arial, sans-serif; text-transform: uppercase; letter-spacing: .1em; }
+.m-lateral .doc-totaux { width: 280px; margin-left: 214px; }
+.m-lateral .doc-tt td { border-top: 2px solid; font-size: 15.5px; }
+.m-lateral .doc-condp { margin-top: 14px; font-size: 10.8px; color: #2c3138; }
+.m-lateral .doc-sign td { padding-right: 18px; }
+.m-lateral .doc-pied { left: 244px; width: 494px; }
+
+/* ===== Interlignes du PDF =====
+   Le navigateur donne à une ligne la hauteur « interligne x corps ». dompdf la multiplie encore par k, soit 1,1 fois la
+   hauteur de la police (Ascender - Descender de son fichier) : Roboto 1,451 ; Archivo 1,197 ; Barlow Condensed 1,320 ;
+   IBM Plex Sans et Mono 1,430 ; Source Serif 4 1,508 (mesuré le 2026-11-20, tests/Offre/PolicesDocumentTest.php).
+   Chaque interligne de la feuille a donc ici son jumeau pour le PDF : celui de l'écran divisé par le k de sa famille.
+   Une règle de la feuille qui pose un interligne (line-height, ou « font: … / … ») sans jumeau ici sort trop haute ;
+   un élément qui change de famille sans poser d'interligne hérite celui de l'autre famille, et veut aussi son jumeau. */
+/* Roboto, 1.45 à l'écran */
+body.pdf, .pdf .doc[data-feuille], .pdf .doc-pied, .pdf .doc-bas, .pdf .doc-colonne { line-height: 1; }
+/* Roboto, 1.5 */
+.pdf .doc-coord, .pdf .doc-adresse, .pdf .doc-colonne .doc-bloc, .pdf .doc-colonne .doc-fond { line-height: 1.034; }
+/* Roboto, 1.2 */
+.pdf .m-sobre .doc-titre { line-height: .827; }
+/* Archivo, 1.3 */
+.pdf .m-lateral .doc-lig .doc-grp td { line-height: 1.086; }
+/* Archivo, 1.2 */
+.pdf .doc-nom, .pdf .m-lateral .doc-titre { line-height: 1; }
+/* Archivo, 1.1 */
+.pdf .doc-colonne .doc-nom { line-height: .919; }
+/* Archivo, 1.05 */
+.pdf .doc-colonne .doc-gros { line-height: .877; }
+/* Barlow Condensed, 1.2 */
+.pdf .m-bandeau .doc-lig .doc-grp td { line-height: .909; }
+/* Barlow Condensed, 1 */
+.pdf .m-bandeau .doc-sur { line-height: .758; }
+/* Source Serif 4, 1.45 */
+.pdf .doc.m-atelier, .pdf.m-atelier .doc-pied { line-height: .962; }
+/* Source Serif 4, 1.5 */
+.pdf .m-atelier .doc-adresse { line-height: .995; }
+/* Source Serif 4, 1.2 */
+.pdf .m-atelier .doc-nom { line-height: .796; }
+/* Source Serif 4, 1 */
+.pdf .m-atelier .doc-titre { line-height: .663; }
+/* IBM Plex Sans et Mono, 1.45 */
+.pdf .doc.m-technique, .pdf.m-technique .doc-pied { line-height: 1.014; }
+/* IBM Plex Sans, 1.5 */
+.pdf .m-technique .doc-coord, .pdf .m-technique .doc-adresse { line-height: 1.049; }
+/* Archivo, 1.3 */
+.pdf .m-moderne .doc-objet, .pdf .m-moderne .doc-lig .doc-grp td { line-height: 1.086; }
+/* Roboto, 1.3 */
+.pdf .m-moderne .doc-lig .doc-grp td.n { line-height: .896; }
+/* Archivo, 1.2 */
+.pdf .m-moderne .doc-tt td { line-height: 1; }
+/* Archivo, 1 */
+.pdf .m-moderne .doc-titre { line-height: .835; }
+/* Source Serif 4, 1.5 (Lettre) */
+.pdf .doc.m-lettre, .pdf .m-lettre .doc-adresse { line-height: .995; }
+/* Roboto, 1.5, dans Lettre : ces éléments changent de famille sans poser d'interligne, ils hériteraient celui de Source Serif 4 */
+.pdf .m-lettre .doc-sig-s, .pdf .m-lettre .doc-lab, .pdf .m-lettre .doc-lig th, .pdf .m-lettre .doc-mentions { line-height: 1.034; }
+/* Roboto, 1.3 */
+.pdf .m-lettre .doc-exp { line-height: .896; }
+/* Barlow Condensed, 1.2 */
+.pdf .doc-enseigne-s, .pdf .m-enseigne .doc-lig .doc-grp td, .pdf .doc-fiche th, .pdf .m-chantier .doc-lig .doc-grp td { line-height: .909; }
+/* Barlow Condensed, 1.1 */
+.pdf .m-enseigne .doc-titre { line-height: .833; }
+/* Barlow Condensed, 1.05 */
+.pdf .m-chantier .doc-titre { line-height: .795; }
+/* Barlow Condensed, .95 */
+.pdf .doc-enseigne { line-height: .72; }
+/* Roboto, 1.4 */
+.pdf .m-chantier .doc-lig .doc-grp td.n { line-height: .965; }
+/* Archivo, 1.3 */
+.pdf .doc-h2, .pdf .m-marge .doc-lig .doc-po b { line-height: 1.086; }
+/* Archivo, 1.2 */
+.pdf .m-recap .doc-titre, .pdf .doc-bloc-tot .doc-tt td, .pdf .m-marge .doc-titre { line-height: 1; }
+/* Archivo, 1 */
+.pdf .doc-rec .doc-pas td { line-height: .835; }
 
 /* Section de paiement de la QR-facture (norme SIX 2.3, lot 6b) : 210 × 105 mm, récépissé 62 mm, section paiement
    148 mm. Polices permises par la norme : Helvetica, Arial, Liberation Sans, Frutiger. Noir sur blanc. */
@@ -132,11 +403,15 @@ body.pdf { margin: 0; font-family: "DejaVu Sans", sans-serif; font-size: 9.5pt; 
 .pdf .qr-droite { width: 87mm; }
 .pdf .qr-cadre-recu { width: 196.5px; height: 75.6px; }
 .pdf .qr-cadre-paiement { width: 245.7px; height: 94.5px; }
-/* Bas de la page 1 (la facture tient sur une page) : collée au bord, marges de @page comprises. */
-.pdf .qr-bas { position: fixed; left: -18mm; bottom: -16mm; }
-/* Page à part : la consigne à 187 mm du haut, le trait à 192 mm (18 + 140 + 29). */
+/* Bas de la page 1 (la facture tient sur une page) : collée au bord du papier. La marge basse de la page est alors
+   celle de la section (110 mm, soit 415.75 px : document_pdf.html.twig) : la section prend la place du pied, de la
+   bande et du numéro de page, et les mentions du pied passent sous les conditions (.doc-mentions). */
+.pdf .qr-bas { position: fixed; left: 0; bottom: -415.75px; }
+.pdf.qr-essai .doc-pied, .pdf.qr-bas .doc-pied, .pdf.qr-essai .doc-bas, .pdf.qr-bas .doc-bas { display: none; }
+/* Page à part : la consigne à 187 mm du haut, le trait à 192 mm (marge haute de 46 px, soit 12,17 mm, puis
+   140 + 34,83). */
 .pdf .qr-espace { page-break-before: always; height: 140mm; }
-.pdf .qr-apart { position: relative; left: -18mm; top: 29mm; }
+.pdf .qr-apart { position: relative; left: 0; top: 34.83mm; }
 
 /* Aperçu à l'écran : la section réduite à l'échelle de sa largeur (1 mm = 100/210 cqw), comme la maquette validée.
    La colonne de l'application fait au plus 448 px : une section de largeur fixe y défilait et cachait sa colonne de

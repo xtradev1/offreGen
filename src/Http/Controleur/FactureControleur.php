@@ -568,7 +568,7 @@ final class FactureControleur
         }
         $pdf = $this->c->documentPdf();
         $place = $pdf->pages(OffreControleur::htmlPdf($this->c, ['qr_place' => 'essai'] + $vue)) === 1 ? 'bas' : 'apart';
-        return $pdf->rendre(OffreControleur::htmlPdf($this->c, ['qr_place' => $place] + $vue));
+        return OffreControleur::rendrePdf($this->c, ['qr_place' => $place] + $vue);
     }
 
     /**

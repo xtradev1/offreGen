@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ReglagesControleur
 {
-    private const CHAMPS = ['entreprise', 'adresse_rue', 'adresse_numero', 'adresse_npa', 'adresse_localite', 'adresse_pays', 'telephone', 'courriel_contact', 'ide', 'iban', 'tva', 'validite_choix', 'validite_jours',
+    private const CHAMPS = ['entreprise', 'contact_nom', 'adresse_rue', 'adresse_numero', 'adresse_npa', 'adresse_localite', 'adresse_pays', 'telephone', 'courriel_contact', 'ide', 'iban', 'tva', 'validite_choix', 'validite_jours',
                             'paiement_type', 'paiement_jours_choix', 'paiement_jours', 'paiement_acomptes_choix', 'paiement_acomptes',
                             'modele', 'couleur_choix', 'couleur'];
 
@@ -132,13 +132,14 @@ final class ReglagesControleur
     /**
      * Une petite offre de peintre, pour l'aperçu d'un compte qui n'a encore rien dicté.
      *
-     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_id: null, client_nom: string, client_adresse: string, client_dicte: null, lieu_dicte: null, cree_le: string, modifiee_le: null, envoyee_le: null, postes_coupes: int}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: null, categorie: string, tva_pour_dix_mille: null, tva_ligne: null, prix_dicte_centimes: null, prix_catalogue: null, piece: null}>}
+     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_id: null, client_nom: string, client_adresse: string, client_dicte: null, lieu_dicte: null, cree_le: string, modifiee_le: null, envoyee_le: null, postes_coupes: int, chantier_adresse: null, chantier_contact: null, chantier_acces: null, debut_travaux: null, duree_travaux: null, non_compris: null, visite_le: null}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: null, categorie: string, tva_pour_dix_mille: null, tva_ligne: null, prix_dicte_centimes: null, prix_catalogue: null, piece: null}>}
      */
     private static function exemple(\DateTimeImmutable $maintenant): array
     {
         $offre = ['id' => 0, 'numero' => 1, 'enregistrement_id' => null, 'titre' => 'Rafraîchissement du séjour', 'client_id' => null,
                   'client_nom' => 'Madame Exemple', 'client_adresse' => "Rue de l'Exemple 1\n2800 Delémont", 'client_dicte' => null, 'lieu_dicte' => null,
-                  'cree_le' => $maintenant->format('Y-m-d H:i:s'), 'modifiee_le' => null, 'envoyee_le' => null, 'postes_coupes' => 0];
+                  'cree_le' => $maintenant->format('Y-m-d H:i:s'), 'modifiee_le' => null, 'envoyee_le' => null, 'postes_coupes' => 0,
+                  'chantier_adresse' => null, 'chantier_contact' => null, 'chantier_acces' => null, 'debut_travaux' => null, 'duree_travaux' => null, 'non_compris' => null, 'visite_le' => null];
         $lignes = [];
         foreach ([['Préparation', 'Protection des sols et des meubles', 1000, 'forfait', 18000],
                   ['Préparation', 'Ponçage et rebouchage des murs', 42000, 'm²', 900],
@@ -241,7 +242,7 @@ final class ReglagesControleur
         $m = $this->c->reglages($portee)->lireMarque();
         $acomptes = implode(',', $r->paiementAcomptes);
         $proposes = array_map(static fn (array $a): string => implode(',', $a), Reglages::ACOMPTES_PROPOSES);
-        return ['entreprise' => $r->entreprise,
+        return ['entreprise' => $r->entreprise, 'contact_nom' => $r->contactNom,
                 'adresse_rue' => $r->adresse->rue, 'adresse_numero' => $r->adresse->numero, 'adresse_npa' => $r->adresse->npa,
                 'adresse_localite' => $r->adresse->localite, 'adresse_pays' => $r->adresse->pays,
                 // Montrée seulement (elle n'est pas dans CHAMPS) : l'adresse d'avant, à reporter dans les champs.
@@ -340,6 +341,13 @@ final class ReglagesControleur
         }
     }
 
+    /** Le modèle marqué « Proposé pour votre métier » ; aucun pour un compte sans métier, ou d'un métier « autre ». */
+    private function modelePropose(Portee $portee): ?string
+    {
+        $metier = $this->c->artisans()->parId($portee->artisanId)['metier'] ?? null;
+        return $metier === null || $metier === 'autre' ? null : Marque::pourMetier($metier);
+    }
+
     /** @return list<string> la couleur du logo d'abord, puis les couleurs proposées */
     private static function teintes(Marque $m): array
     {
@@ -378,6 +386,8 @@ final class ReglagesControleur
             'marque' => $marque,
             'teintes' => self::teintes($marque),
             'modeles' => Marque::MODELES,
+            'familles' => Marque::FAMILLES,
+            'propose' => $this->modelePropose($portee),
         ]), $code);
     }
 }

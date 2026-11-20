@@ -164,6 +164,52 @@ final class MarqueEcranTest extends TestCase
         self::assertSame(404, $this->a->get('/reglages/modeles/inconnu')->getStatusCode());
     }
 
+    /** Modèles du bâtiment (2026-11-20) : Latéral, premier des nouveaux, de l'écran des réglages jusqu'au PDF. */
+    public function testLateralSeChoisitEtSeVoitEnGrand(): void
+    {
+        self::assertStringContainsString('href="/reglages/modeles/lateral"', $this->page('/reglages/marque'));
+        $apercu = $this->page('/reglages/modeles/lateral');
+        // La feuille a la largeur du papier A4 : l'écran la réduit à sa case (app.js, papiers ; document-ecran.css).
+        self::assertStringContainsString('class="doc m-lateral" data-feuille', $apercu);
+        self::assertStringContainsString('class="doc-colonne c-fond"', $apercu, 'la colonne de couleur');
+        self::assertStringContainsString('href="/css/document-ecran.css"', $apercu);
+        self::assertFileExists(dirname(__DIR__, 2) . '/public/css/document-ecran.css');
+
+        self::assertSame(303, $this->a->post('/reglages', ['modele' => 'lateral', 'retour' => '/reglages/marque'])->getStatusCode());
+        self::assertSame('lateral', $this->marqueDeA()['modele']);
+        $offre = '/offres/' . $this->jeu->offre['a'];
+        self::assertStringContainsString('class="doc m-lateral"', $this->page("$offre/document"));
+        $pdf = $this->a->get("$offre/pdf");
+        self::assertSame(200, $pdf->getStatusCode());
+        self::assertStringStartsWith('%PDF-', (string) $pdf->getContent());
+    }
+
+    /** Douze modèles rangés en quatre familles ; celui du métier du compte est marqué (Xavier, 2026-11-19). */
+    public function testLesDouzeModelesSontRangesEnQuatreFamillesEtCeluiDuMetierEstPropose(): void
+    {
+        $page = $this->page('/reglages/marque');
+        self::assertSame(12, substr_count($page, 'name="modele" value="'));
+        $rangs = [];
+        foreach (['Classiques', 'Couleur', 'Détaillés', 'Simples'] as $famille) {
+            $rang = strpos($page, "<h3 class=\"famille\">$famille</h3>");
+            self::assertNotFalse($rang, $famille);
+            $rangs[] = $rang;
+        }
+        // Bandeau est dans « Couleur », Technique dans « Détaillés », Marge dans « Simples ».
+        foreach (['bandeau' => 1, 'technique' => 2, 'marge' => 3] as $cle => $famille) {
+            $rang = strpos($page, "name=\"modele\" value=\"$cle\"");
+            self::assertGreaterThan($rangs[$famille], $rang, $cle);
+            self::assertLessThan($rangs[$famille + 1] ?? PHP_INT_MAX, $rang, $cle);
+        }
+        self::assertStringNotContainsString('Proposé pour votre métier', $page, 'un compte sans métier');
+
+        BaseDeTest::pdo()->exec("UPDATE artisan SET metier = 'platrier' WHERE id = {$this->jeu->a}");
+        $page = $this->page('/reglages/marque');
+        self::assertSame(1, substr_count($page, 'Proposé pour votre métier'));
+        self::assertMatchesRegularExpression('#name="modele" value="chantier"(?:(?!name="modele").)*Proposé pour votre métier#s', $page, 'sur Chantier, le modèle du plâtrier');
+        self::assertSame('sobre', $this->marqueDeA()['modele'], 'proposer ne change pas le modèle choisi');
+    }
+
     /**
      * Xavier, 2026-11-15 : « voir plus grand » agrandit l'image dans la page, sans ouvrir une autre page.
      * Chaque modèle a sa grande image (tirée du vrai PDF), le lien la désigne ; sans JavaScript, il mène à l'aperçu.

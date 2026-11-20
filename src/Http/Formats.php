@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http;
 
+use OffreGen\Compte\Iban;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
@@ -26,6 +27,8 @@ final class Formats extends AbstractExtension
             new TwigFilter('taux', [self::class, 'taux']),
             new TwigFilter('saisie_quantite', [self::class, 'saisieQuantite']),
             new TwigFilter('saisie_prix', [self::class, 'saisiePrix']),
+            new TwigFilter('iban', [Iban::class, 'lisible']),
+            new TwigFilter('date_longue', [self::class, 'dateLongue']),
         ];
     }
 
@@ -54,6 +57,18 @@ final class Formats extends AbstractExtension
     public static function jour(string $utc): string
     {
         return (new \DateTimeImmutable($utc, new \DateTimeZone('UTC')))->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y');
+    }
+
+    /**
+     * Le jour en toutes lettres, pour une lettre : « 12 novembre 2026 », « 1er décembre 2026 ». Une date de la base (UTC)
+     * est lue à l'heure de Zurich.
+     */
+    public static function dateLongue(string|\DateTimeInterface $date): string
+    {
+        $jour = is_string($date) ? new \DateTimeImmutable($date, new \DateTimeZone('UTC')) : $date;
+        $f = new \IntlDateFormatter('fr_CH', \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, 'Europe/Zurich', null, 'd MMMM y');
+        $texte = (string) $f->format($jour);
+        return str_starts_with($texte, '1 ') ? '1er' . substr($texte, 1) : $texte;
     }
 
     /** Taux en dix-millièmes : 810 donne « 8,1 % ». */

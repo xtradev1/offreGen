@@ -1,0 +1,30 @@
+{# La feuille A4 d'un modèle (modèles du bâtiment, 2026-11-20). Chaque modèle remplit deux blocs : « fixes » (pied,
+   bande du bas, colonne : ce qui revient sur chaque page) et « corps ». Dans le PDF, les éléments fixes sortent de la
+   feuille : dompdf ne répète un élément fixe que s'il est enfant direct de body (essai du 2026-11-20), dont la classe
+   porte le modèle. À l'écran, ils restent dans la feuille, que app.js réduit à la largeur de son papier (data-feuille).
+   La couleur passe par les classes c-* de Marque::css() : la CSP refuse les styles en ligne.
+   Offre ou facture (sous-chantier 18) : « f » et « montants » n'existent que pour une facture, qui garde le client copié
+   le jour de sa création et déduit les acomptes émis. #}
+{% set pdf = pdf ?? false %}
+{% set facture = f is defined %}
+{% set annulee = facture and (annulee ?? false) %}
+{% set doc_nom = facture ? 'Facture' : 'Offre' %}
+{% set doc_numero = facture ? f.numero : offre.numero %}
+{% set doc_objet = facture ? f.titre : offre.titre %}
+{% set doc_date = facture ? f.date_facture|jour : (offre.modifiee_le ?? offre.cree_le)|jour %}
+{% set client_nom = facture ? f.client_nom : offre.client_nom %}
+{% set client_adresse = (facture ? (f.client_adresse ?? '') : (offre.client_adresse ?? ''))|split("\n")|filter(l => l != '') %}
+{% set t = facture ? montants : totaux|merge({taux: tva, deja: 0, a_payer: totaux.ttc}) %}
+{# La TVA par taux dès que le document en a plusieurs (D11, 2026-11-15). #}
+{% set avec_tva = t.par_taux|filter(g => g.taux > 0)|length > 0 %}
+{% set coord = r.adresse.lignes|split("\n")|filter(l => l != '') %}
+{# Le chantier de l'offre (Offre\Chantier) ; une facture ne le montre pas. #}
+{% set chantier = facture ? null : (chantier ?? null) %}
+{% set fixes %}{% block fixes %}{% endblock %}{% endset %}
+{% if pdf %}{{ fixes|raw }}{% endif %}
+{# À l'écran, la section de paiement d'une facture suit la feuille (_document.html.twig) : la feuille s'arrête alors à
+   son contenu, sans pied, comme la facture d'une page du PDF (document-ecran.css). #}
+<div class="doc m-{{ m.modele }}" data-feuille{% if facture and qr and not pdf %} data-avec-section{% endif %}>
+  {% block corps %}{% endblock %}
+  {% if not pdf %}{{ fixes|raw }}{% endif %}
+</div>

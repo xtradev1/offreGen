@@ -402,6 +402,10 @@ label.puce { position: relative; display: inline-flex; align-items: center; just
 .modele img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
 .modele:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 .modele:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Modèles du bâtiment (2026-11-20) : douze modèles en quatre familles ; celui du métier du compte est marqué. */
+.famille { margin: 14px 0 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.famille:first-of-type { margin-top: 0; }
+.badge.propose { margin: 2px 0 0; background: var(--accent-soft); color: var(--accent); text-align: center; line-height: 1.2; white-space: normal; }
 .phrase { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
 .phrase span { color: var(--ink); }
 .puce:active { scale: .96; }

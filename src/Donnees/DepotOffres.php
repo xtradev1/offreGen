@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Donnees;
 
+use OffreGen\Offre\Chantier;
 use OffreGen\Offre\LigneExtraite;
 
 /**
@@ -14,14 +15,15 @@ use OffreGen\Offre\LigneExtraite;
  * Le client d'une offre : sa fiche (client_id), sinon le nom et le lieu dictés, proposition à confirmer.
  * client_nom et client_adresse donnent l'un ou l'autre, pour l'écran et le document.
  *
- * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null, postes_coupes: int}
+ * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null, postes_coupes: int, chantier_adresse: string|null, chantier_contact: string|null, chantier_acces: string|null, debut_travaux: string|null, duree_travaux: string|null, non_compris: string|null, visite_le: string|null}
  * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null, prix_dicte_centimes: int|null, prix_catalogue: int|null, piece: string|null}
  */
 final class DepotOffres implements SupportLignes
 {
     private const SELECT_OFFRE = 'SELECT o.id, o.numero, o.enregistrement_id, o.titre, o.client_id,
             COALESCE(c.nom, o.client_dicte) AS client_nom, CASE WHEN c.id IS NULL THEN o.lieu_dicte ELSE c.adresse END AS client_adresse,
-            o.client_dicte, o.lieu_dicte, o.cree_le, o.modifiee_le, o.envoyee_le, o.postes_coupes
+            o.client_dicte, o.lieu_dicte, o.cree_le, o.modifiee_le, o.envoyee_le, o.postes_coupes,
+            o.chantier_adresse, o.chantier_contact, o.chantier_acces, o.debut_travaux, o.duree_travaux, o.non_compris, o.visite_le
          FROM offre o LEFT JOIN client c ON c.id = o.client_id AND c.artisan_id = o.artisan_id';
 
     /** Colonnes d'une ligne ; la catégorie vient du produit du catalogue, s'il existe encore. */
@@ -62,10 +64,12 @@ final class DepotOffres implements SupportLignes
         return $this->base->transaction(function () use ($enregistrementId, $titre, $lignes, $quand, $clientId, $clientDicte, $lieuDicte, $postesCoupes, $exemple): int {
             $numero = (int) $this->base->valeur('SELECT COALESCE(MAX(numero), 0) + 1 FROM offre WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
             $this->base->ecrire(
-                'INSERT INTO offre (artisan_id, numero, enregistrement_id, titre, client_id, client_dicte, lieu_dicte, cree_le, postes_coupes, exemple) VALUES (:a, :n, :e, :t, :ci, :cn, :ca, :q, :pc, :ex)',
+                // Le lieu dicté est aussi l'adresse du chantier (modèles du bâtiment, 2026-11-20) : l'artisan la corrige sur l'en-tête.
+                'INSERT INTO offre (artisan_id, numero, enregistrement_id, titre, client_id, client_dicte, lieu_dicte, chantier_adresse, cree_le, postes_coupes, exemple) VALUES (:a, :n, :e, :t, :ci, :cn, :ca, :ch, :q, :pc, :ex)',
                 ['a' => $this->portee->artisanId, 'n' => $numero, 'e' => $enregistrementId, 't' => mb_substr($titre, 0, 190),
                  'ci' => $this->clientDeLArtisan($clientId),
                  'cn' => $clientDicte === null ? null : mb_substr($clientDicte, 0, 190), 'ca' => $lieuDicte === null ? null : mb_substr($lieuDicte, 0, 255),
+                 'ch' => $lieuDicte === null ? null : mb_substr($lieuDicte, 0, 255),
                  'q' => Dates::versBase($quand), 'pc' => min(max(0, $postesCoupes), 65535), 'ex' => $exemple ? 1 : 0],
             );
             $offreId = $this->base->dernierId();
@@ -158,6 +162,23 @@ final class DepotOffres implements SupportLignes
         $this->base->ecrire(
             'UPDATE offre SET titre = :t, modifiee_le = :q WHERE id = :id AND artisan_id = :a',
             ['t' => mb_substr($titre, 0, 190), 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
+    /** Le chantier de l'offre, tel que l'artisan l'a rempli ; un champ vide retourne à NULL. Faux si l'offre n'est pas à lui. */
+    public function modifierChantier(int $id, Chantier $c, \DateTimeImmutable $quand): bool
+    {
+        if ($this->parId($id) === null) {
+            return false;
+        }
+        $vide = static fn (string $s): ?string => $s === '' ? null : $s;
+        $this->base->ecrire(
+            'UPDATE offre SET chantier_adresse = :ad, chantier_contact = :co, chantier_acces = :ac, debut_travaux = :de, duree_travaux = :du,
+                    non_compris = :nc, visite_le = :vi, modifiee_le = :q
+             WHERE id = :id AND artisan_id = :a',
+            ['ad' => $vide($c->adresse), 'co' => $vide($c->contact), 'ac' => $vide($c->acces), 'de' => $vide($c->debut), 'du' => $vide($c->duree),
+             'nc' => $vide(implode("\n", $c->nonCompris)), 'vi' => $c->visite?->format('Y-m-d'), 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
         );
         return true;
     }

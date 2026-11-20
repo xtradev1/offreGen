@@ -303,7 +303,7 @@ final class Conteneur
 
     public function documentPdf(): DocumentPdf
     {
-        return $this->une(DocumentPdf::class, fn (): DocumentPdf => new DocumentPdf($this->racine . '/templates', $this->racine . '/var/cache/pdf'));
+        return $this->une(DocumentPdf::class, fn (): DocumentPdf => new DocumentPdf($this->racine . '/templates', $this->racine . '/var/cache/pdf', $this->racine . '/public/fonts'));
     }
 
     public function factures(Portee $p): DepotFactures

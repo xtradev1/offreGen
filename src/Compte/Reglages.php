@@ -12,7 +12,8 @@ use OffreGen\Offre\SaisieRefusee;
 /**
  * Les réglages d'un compte qui changent une offre : l'en-tête du document (entreprise, adresse en champs séparés,
  * téléphone, courriel, IDE), la TVA, l'arrondi du total, la validité et les conditions de paiement ;
- * et l'IBAN, pour la section de paiement des factures (forme compacte, vide s'il n'est pas donné).
+ * l'IBAN, pour la section de paiement des factures (forme compacte, vide s'il n'est pas donné) ;
+ * et la personne de contact, citée sur l'offre et sous la signature de l'entreprise (modèles du bâtiment, 2026-11-20).
  */
 final readonly class Reglages
 {
@@ -48,6 +49,7 @@ final readonly class Reglages
         public int $paiementJours = 30,
         public array $paiementAcomptes = [],
         public string $iban = '',
+        public string $contactNom = '',
     ) {
     }
 
@@ -123,7 +125,7 @@ final readonly class Reglages
     /**
      * Le formulaire de l'écran Réglages ; SaisieRefusee si un champ est faux.
      *
-     * @param array<string, string> $champs entreprise, adresse_rue, adresse_numero, adresse_npa, adresse_localite,
+     * @param array<string, string> $champs entreprise, contact_nom, adresse_rue, adresse_numero, adresse_npa, adresse_localite,
      *        adresse_pays, telephone, courriel_contact, ide, iban, tva,
      *        validite_choix et validite_jours, paiement_type, paiement_jours_choix et paiement_jours,
      *        paiement_acomptes_choix et paiement_acomptes. Un « …_choix » proposé l'emporte ; « autre » ou
@@ -136,6 +138,10 @@ final readonly class Reglages
         $nom = Saisie::texte($c('entreprise'), 190);
         if ($nom === null) {
             $erreurs['entreprise'] = "Indiquez le nom de l'entreprise (190 caractères au plus).";
+        }
+        $contact = trim((string) preg_replace('/\s+/u', ' ', $c('contact_nom')));
+        if (mb_strlen($contact) > 120) {
+            $erreurs['contact_nom'] = 'Le nom du contact : 120 caractères au plus.';
         }
         [$adresse, $erreursAdresse] = SaisieAdresse::lire($champs, 'adresse_');
         $erreurs += $erreursAdresse;
@@ -185,7 +191,7 @@ final readonly class Reglages
         if ($nom === null || $adresse === null || $ide === null || $iban === null || $validite === null || $jours === null || $acomptes === null || $erreurs !== []) {
             throw new SaisieRefusee($erreurs);
         }
-        return new self($nom, $taux, $arrondi, $adresse, $telephone, $courriel, $ide, $validite, $type, $jours, $acomptes, $iban);
+        return new self($nom, $taux, $arrondi, $adresse, $telephone, $courriel, $ide, $validite, $type, $jours, $acomptes, $iban, $contact);
     }
 
     /** « che 123 456 789 tva » donne « CHE-123.456.789 » ; vide reste vide ; null si ce n'est pas un IDE. */
