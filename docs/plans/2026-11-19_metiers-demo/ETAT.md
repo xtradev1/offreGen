@@ -1,7 +1,7 @@
 ---
 chantier: Métiers de la démo et de l'essai
 slug: 2026-11-19_metiers-demo
-phase: 5
+phase: 7
 statut: en_cours
 gate_attendu: aucun
 profil: .claude/atoz-profile.md
@@ -19,8 +19,8 @@ Lots 0 à 10 de `PLAN.md` faits, testés, commités (555dea4, 727f0dd, 687606b) 
 
 ## En attente de toi
 
-- Réessayer sur ton iPhone : le clavier s'ouvre-t-il tout seul en touchant « Compléter » (catalogue des démos de peintre, 3 produits sans prix) ou « Mettre mes prix » (`essai-peintre@exemple.ch`, 12 produits).
-- Dire quels bugs tu as vus, et ce que tu appelles « la nouvelle version visuelle ».
+- Dire qui corrige l'agrandissement de l'écran d'une offre sur iPhone (tâche 502) : le chat du responsive, qui tient `app.css`, ou ce chat.
+- Lot 11 : dicter toi-même une visite sur chacune des six démos neuves (plâtrier, carreleur, maçon, menuisier, poseur de sols, paysagiste), ou me laisser le faire avec une voix de synthèse (preuve plus faible).
 - Dire quelle démo passer à l'essai pour voir le passage sur le site (`bin/passer-en-essai`, lancé par Claude : le bouton est au chantier des comptes).
 - Dire si les démos déjà posées sur le site de test se remettent à zéro : posées avant la migration, elles n'ont aucune marque, et leur passage à l'essai garderait leurs deux offres d'exemple.
 - Regarder les sept prix corrigés après lecture des pages (`CATALOGUES.md`, premier paragraphe) : ils s'écartent de ce que tu avais vu.
@@ -69,6 +69,9 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-20 : Safari sur iPhone n'ouvre le clavier que pendant un toucher. « Mettre mes prix », « Compléter » et « Reprendre les produits passés » ouvrent donc l'écran sans changer de page : un champ provisoire prend le clavier pendant le toucher, le champ du prix le reprend à l'arrivée de la carte. « Annuler » ne recharge plus la page. Test écrit d'abord et vu rouge (2 échecs). Commit 5d62ba8, déployé sur le test au second essai (le premier a croisé la suite d'une autre session).
 - 2026-11-20 : la copie de travail partagée (`~/offreGen`) avait deux commits de retard et ne pouvait pas avancer (`config/routes.php` modifié par une autre session). Travail fait dans une copie propre à ce chantier, `~/offreGen-metiers`, sur la tête de la branche ; elle sert aussi au déploiement.
 - 2026-11-20 : données changées sur le site de test à la demande de Xavier (« pour qu'il me l'affiche 2-3 fois ») : « Laquage des plinthes » et « Couche d'impression » mis sans prix sur `demo-peintre` et `demo-peintre-2`, prix d'avant gardé comme prix proposé. Trois produits sans prix sur chacune. Constat avant : aucun des trois comptes de peintre n'avait de prix modifié.
+- 2026-11-20 : second essai de Xavier sur iPhone, démo de peintre et essai : « c'est hyper clean. Le clavier Apple a apparu. Il n'est pas parti. J'ai cliqué reprendre. Pouf, pouf, ça a avancé […] pour les 3, 10 secondes ». L'ouverture du clavier au toucher est donc vérifiée sur l'appareil. « Selon moi, tu peux mettre tout ça dedans. »
+- 2026-11-20 : le bug qu'il voyait (« ça devient tout gros » en ouvrant une offre à vérifier) est hors de ce chantier. Mesure faite sur le site de test, en lecture seule : les champs quantité et prix de l'écran d'une offre ont un texte de 14 px, et Safari sur iPhone agrandit la page quand un champ sous 16 px prend le curseur. Correction dans `public/css/app.css`, fichier du chantier responsive : tâche Origin 502. Son idée « supprimer l'offre depuis l'écran de l'offre » : tâche Origin 503.
+- 2026-11-20 : phase 7 ouverte, deux relecteurs indépendants (données et passage à l'essai ; écran « Vos prix »).
 
 ## Décisions
 
