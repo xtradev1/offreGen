@@ -1,0 +1,125 @@
+{
+  "_note": "Offres inventées pour le banc de l'import du catalogue. Entreprises et clients fictifs. u = unité telle qu'elle est écrite dans le PDF, attendu = unité du catalogue. ponctuel = travail propre à un client, à laisser de côté.",
+  "offres": [
+    {
+      "id": "inv-a-peintre",
+      "mise_en_page": "classique",
+      "entreprise": "Peinture Exemple Sàrl, rue du Modèle 4, 2800 Delémont",
+      "client": "Madame Exemple, chemin Fictif 12, 2900 Porrentruy",
+      "titre": "Offre n° 2025-014, rafraîchissement du séjour et de la chambre",
+      "date": "14 mars 2025",
+      "sections": [
+        { "titre": "Séjour", "lignes": [
+          { "pos": "1.1", "des": "Protection des sols et du mobilier", "qte": 1, "u": "forfait", "attendu": "forfait", "pu": 180.00 },
+          { "pos": "1.2", "des": "Lessivage des murs", "qte": 62, "u": "m²", "attendu": "m²", "pu": 4.50 },
+          { "pos": "1.3", "des": "Rebouchage des fissures et ponçage", "qte": 62, "u": "m²", "attendu": "m²", "pu": 6.00 },
+          { "pos": "1.4", "des": "Dispersion sur murs, 2 couches", "qte": 62, "u": "m²", "attendu": "m²", "pu": 18.50 },
+          { "pos": "1.5", "des": "Dispersion sur plafonds, 2 couches", "qte": 24, "u": "m²", "attendu": "m²", "pu": 22.00 }
+        ] },
+        { "titre": "Chambre", "lignes": [
+          { "pos": "2.1", "des": "Peinture émail sur portes, 2 faces", "qte": 3, "u": "pce", "attendu": "pce", "pu": 95.00 },
+          { "pos": "2.2", "des": "Peinture des plinthes", "qte": 38, "u": "ml", "attendu": "ml", "pu": 7.50 },
+          { "pos": "2.3", "des": "Réparation de la fissure du séjour, selon discussion sur place", "qte": 1, "u": "forfait", "attendu": "forfait", "pu": 350.00, "ponctuel": true }
+        ] },
+        { "titre": "Divers", "lignes": [
+          { "pos": "3.1", "des": "Déplacement", "qte": 1, "u": "forfait", "attendu": "forfait", "pu": 60.00 },
+          { "pos": "3.2", "des": "Évacuation des déchets", "qte": 1, "u": "forfait", "attendu": "forfait", "pu": 150.00 }
+        ] }
+      ],
+      "rabais": { "libelle": "Rabais de fidélité", "pourcent": 5 },
+      "tva": 8.1,
+      "pied": "Acompte de 30 % à la commande, solde à 30 jours. Offre valable 60 jours."
+    },
+    {
+      "id": "inv-b-peintre",
+      "mise_en_page": "tableur",
+      "entreprise": "Peinture Exemple Sàrl, rue du Modèle 4, 2800 Delémont",
+      "client": "Monsieur Modèle, route Inventée 3, 2800 Delémont",
+      "titre": "Offre 2026-003 : cuisine et couloir",
+      "date": "09.01.2026",
+      "sections": [
+        { "titre": "", "lignes": [
+          { "des": "Peinture murs 2 couches dispersion", "qte": 48, "u": "m2", "attendu": "m²", "pu": 18.50 },
+          { "des": "Plafonds, dispersion 2 couches", "qte": 20, "u": "m2", "attendu": "m²", "pu": 22.00 },
+          { "des": "Rebouchage et ponçage des murs", "qte": 48, "u": "m2", "attendu": "m²", "pu": 6.50 },
+          { "des": "Peinture de radiateur", "qte": 2, "u": "pce", "attendu": "pce", "pu": 120.00 },
+          { "des": "Crépi de finition 1,5 mm", "qte": 31, "u": "m2", "attendu": "m²", "pu": 38.00 },
+          { "des": "Travaux en régie, peintre", "qte": 6, "u": "h", "attendu": "h", "pu": 85.00 },
+          { "des": "Location d'échafaudage roulant", "qte": 2, "u": "j", "attendu": "jour", "pu": 85.00 },
+          { "des": "Fourniture d'enduit de rebouchage", "qte": 25, "u": "kg", "attendu": "kg", "pu": 4.20 },
+          { "des": "Déplacement", "qte": 1, "u": "gl", "attendu": "forfait", "pu": 70.00 },
+          { "des": "Retouches après la pose de la cuisine", "qte": 1, "u": "gl", "attendu": "forfait", "pu": 200.00, "ponctuel": true }
+        ] }
+      ],
+      "tva": 8.1,
+      "pied": "Paiement : 30 jours net. Prix en francs suisses, hors taxe."
+    },
+    {
+      "id": "inv-c-carreleur",
+      "mise_en_page": "colonnes",
+      "entreprise": "Carrelages Fictifs SA, zone du Test 8, 1700 Fribourg",
+      "client": "Famille Exemple, impasse du Gabarit 2, 1630 Bulle",
+      "titre": "Offre 24-118 : rénovation de la salle de bain",
+      "date": "3 octobre 2025",
+      "sections": [
+        { "titre": "", "lignes": [
+          { "pos": "10", "des": "Dépose de l'ancien carrelage, y compris évacuation des gravats", "qte": 18.5, "u": "m2", "attendu": "m²", "pu": 42.00 },
+          { "pos": "20", "des": "Chape de ragréage autolissante", "qte": 18.5, "u": "m2", "attendu": "m²", "pu": 28.00 },
+          { "pos": "30", "des": "Fourniture et pose de carrelage grès cérame 60 x 60, pose droite", "qte": 18.5, "u": "m2", "attendu": "m²", "pu": 135.00 },
+          { "pos": "40", "des": "Plinthes carrelées assorties", "qte": 17, "u": "m'", "attendu": "ml", "pu": 32.00 },
+          { "pos": "50", "des": "Joints silicone sanitaires", "qte": 12, "u": "m'", "attendu": "ml", "pu": 14.00 },
+          { "pos": "60", "des": "Faïence murale 30 x 60, zone de douche", "qte": 9.2, "u": "m2", "attendu": "m²", "pu": 148.00 },
+          { "pos": "70", "des": "Étanchéité sous carrelage, zone de douche", "qte": 1, "u": "fft", "attendu": "forfait", "pu": 480.00 },
+          { "pos": "80", "des": "Profilé de finition en inox", "qte": 4, "u": "pièce", "attendu": "pce", "pu": 38.00 },
+          { "pos": "90", "des": "Déplacement et installation de chantier", "qte": 1, "u": "fft", "attendu": "forfait", "pu": 120.00 }
+        ] }
+      ],
+      "tva": 8.1,
+      "pied": "Conditions : 40 % à la commande, solde à la fin des travaux."
+    },
+    {
+      "id": "inv-d-paysagiste",
+      "mise_en_page": "liste",
+      "entreprise": "Jardins Modèles, chemin de l'Essai 6, 2000 Neuchâtel",
+      "client": "Monsieur et Madame Exemple, rue du Spécimen 9, 2013 Colombier",
+      "titre": "Devis du 22 avril 2025, entretien et remise en état du jardin",
+      "date": "22 avril 2025",
+      "sections": [
+        { "titre": "Entretien", "lignes": [
+          { "des": "Taille de la haie de thuyas, hauteur 2 m", "qte": 35, "u": "ml", "attendu": "ml", "pu": 14.00 },
+          { "des": "Tonte du gazon et évacuation", "qte": 1, "u": "forfait", "attendu": "forfait", "pu": 90.00 },
+          { "des": "Engrais longue durée", "qte": 15, "u": "kg", "attendu": "kg", "pu": 6.80 }
+        ] },
+        { "titre": "Remise en état", "lignes": [
+          { "des": "Engazonnement, semence comprise", "qte": 120, "u": "m²", "attendu": "m²", "pu": 9.50 },
+          { "des": "Fourniture de terre végétale", "qte": 4, "u": "m³", "attendu": "m³", "pu": 85.00 },
+          { "des": "Location d'une mini-pelle avec machiniste", "qte": 2, "u": "jours", "attendu": "jour", "pu": 780.00 },
+          { "des": "Main-d'œuvre jardinier", "qte": 16, "u": "heures", "attendu": "h", "pu": 78.00 },
+          { "des": "Abattage du bouleau malade côté rue", "qte": 1, "u": "forfait", "attendu": "forfait", "pu": 650.00, "ponctuel": true },
+          { "des": "Mise en décharge des déchets verts", "qte": 1, "u": "forfait", "attendu": "forfait", "pu": 80.00 }
+        ] }
+      ],
+      "tva": 8.1,
+      "pied": "Travaux en régie non compris. Devis valable trois mois."
+    }
+  ],
+  "publiques": [
+    { "id": "pub-3-peinture", "fichier": "public/p3/doc.pdf", "source": "docs.google.com (modèle de devis peinture rempli)", "attendu": [
+      { "des": "Préparation des murs", "attendu": "m²", "pu": 9.65 },
+      { "des": "Plafond", "attendu": "m²", "pu": 14.55 },
+      { "des": "Porte", "attendu": "pce", "pu": 50.50 },
+      { "des": "Deux couches de peinture et sous couche", "attendu": "m²", "pu": 11.45 }
+    ] },
+    { "id": "pub-2-menuiserie", "fichier": "public/p2/doc.pdf", "source": "pdf.wondershare.fr (devis d'artisan rempli)", "attendu": [
+      { "des": "Prise de cotes et conception de l'ouvrage", "attendu": "forfait", "pu": 240.00 },
+      { "des": "Fabrication en atelier de la structure bois", "attendu": "forfait", "pu": 980.00 },
+      { "des": "Livraison, pose et finitions sur site", "attendu": "forfait", "pu": 460.00 }
+    ] },
+    { "id": "pub-4-menuiserie", "fichier": "public/p4/doc.pdf", "source": "docs.google.com (modèle de devis de menuiserie rempli)", "attendu": [
+      { "des": "Pose porte-fenêtre coulissante alu 200 x 150 cm", "attendu": "pce", "pu": 900.00 },
+      { "des": "Frais de déplacement", "attendu": "pce", "pu": 60.00 }
+    ] },
+    { "id": "pub-1-platrerie", "fichier": "public/p1/doc.pdf", "source": "commune de La Chapelle-des-Marais, annexe du conseil municipal du 2 avril 2025 (devis réel, 8 pages)", "attendu": null },
+    { "id": "pub-5-btp", "fichier": "public/p5/doc.pdf", "source": "DEAL Martinique, annexe 14 (devis réel)", "attendu": null }
+  ]
+}

@@ -77,6 +77,29 @@ final class DepotProduits
         return true;
     }
 
+    /** Les mots reconnus d'un produit, remplacés (import du catalogue, 2026-11-20). */
+    public function changerSynonymes(int $id, ?string $synonymes): bool
+    {
+        if ($this->parId($id) === null) {
+            return false;
+        }
+        $this->base->ecrire('UPDATE produit SET synonymes = :s WHERE id = :id AND artisan_id = :a', ['s' => $synonymes, 'id' => $id, 'a' => $this->portee->artisanId]);
+        return true;
+    }
+
+    /** Annulation d'un import : le produit retrouve le prix, la marque « exemple » et les mots reconnus d'avant. */
+    public function restaurer(int $id, int $prixCentimes, ?int $prixExempleCentimes, ?string $synonymes): bool
+    {
+        if ($this->parId($id) === null) {
+            return false;
+        }
+        $this->base->ecrire(
+            'UPDATE produit SET prix_centimes = :p, prix_exemple_centimes = :e, synonymes = :s WHERE id = :id AND artisan_id = :a',
+            ['p' => $prixCentimes, 'e' => $prixExempleCentimes, 's' => $synonymes, 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
     /** @return list<string> les catégories du catalogue, dans l'ordre alphabétique */
     public function categories(): array
     {

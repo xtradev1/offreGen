@@ -19,6 +19,7 @@ use OffreGen\Http\Controleur\DemoControleur;
 use OffreGen\Http\Controleur\DemandeEssaiControleur;
 use OffreGen\Http\Controleur\EnregistrementControleur;
 use OffreGen\Http\Controleur\FactureControleur;
+use OffreGen\Http\Controleur\ImportCatalogueControleur;
 use OffreGen\Http\Controleur\ImportControleur;
 use OffreGen\Http\Controleur\MotDePasseControleur;
 use OffreGen\Http\Controleur\OffreControleur;
@@ -147,6 +148,15 @@ return static function (Conteneur $c): array {
         new Route('vos_prix_annuler', '/vos-prix/annuler', ['POST'], static fn (Request $r): Response => (new VosPrixControleur($c))->annuler($r), Route::ARTISAN),
         new Route('vos_prix_plus_tard', '/vos-prix/plus-tard', ['POST'], static fn (Request $r): Response => (new VosPrixControleur($c))->plusTard($r), Route::ARTISAN),
         new Route('vos_prix_agir', '/vos-prix/{id}', ['POST'], static fn (Request $r, array $p): Response => (new VosPrixControleur($c))->agir($r, $p), Route::ARTISAN),
+        // Import du catalogue depuis d'anciennes offres en PDF (chantier 2026-11-20_import-catalogue). Préfixe à part :
+        // /catalogue/{id} prendrait /catalogue/import pour un produit.
+        new Route('import_catalogue', '/import-catalogue', ['GET'], static fn (Request $r): Response => (new ImportCatalogueControleur($c))->page($r), Route::ARTISAN),
+        new Route('import_catalogue_creer', '/import-catalogue', ['POST'], static fn (Request $r): Response => (new ImportCatalogueControleur($c))->creer($r), Route::ARTISAN),
+        new Route('import_catalogue_voir', '/import-catalogue/{id}', ['GET'], static fn (Request $r, array $p): Response => (new ImportCatalogueControleur($c))->voir($r, $p), Route::ARTISAN),
+        new Route('import_catalogue_integrer', '/import-catalogue/{id}', ['POST'], static fn (Request $r, array $p): Response => (new ImportCatalogueControleur($c))->integrer($r, $p), Route::ARTISAN),
+        new Route('import_catalogue_offre', '/import-catalogue/{id}/offres', ['POST'], static fn (Request $r, array $p): Response => (new ImportCatalogueControleur($c))->offre($r, $p), Route::ARTISAN),
+        new Route('import_catalogue_regrouper', '/import-catalogue/{id}/regrouper', ['POST'], static fn (Request $r, array $p): Response => (new ImportCatalogueControleur($c))->regrouper($r, $p), Route::ARTISAN),
+        new Route('import_catalogue_annuler', '/import-catalogue/{id}/annuler', ['POST'], static fn (Request $r, array $p): Response => (new ImportCatalogueControleur($c))->annuler($r, $p), Route::ARTISAN),
         new Route('clients', '/clients', ['GET'], static fn (Request $r): Response => $client()->liste($r), Route::ARTISAN),
         new Route('client_creer', '/clients', ['POST'], static fn (Request $r): Response => $client()->creer($r), Route::ARTISAN),
         new Route('client_nouveau', '/clients/nouveau', ['GET'], static fn (Request $r): Response => $client()->nouveau($r), Route::ARTISAN),

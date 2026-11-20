@@ -12,6 +12,7 @@ use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\DepotFactures;
+use OffreGen\Donnees\DepotImports;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
 use OffreGen\Donnees\DepotReglages;
@@ -238,6 +239,8 @@ final class Comptes
             $enregistrements->toutEffacer();
             $produits = new DepotProduits($this->base, $portee);
             $produits->remplacerTout($catalogue);
+            // Le prochain visiteur retrouve ses trois imports du mois (import du catalogue, 2026-11-20).
+            (new DepotImports($this->base, $portee))->toutEffacer();
             // Le prochain visiteur de la démonstration voit l'assistant du premier lancement.
             (new DepotReglages($this->base, $portee))->assistantARefaire();
             $parNom = array_column($produits->tous(), null, 'designation');

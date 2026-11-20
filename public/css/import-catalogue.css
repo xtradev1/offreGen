@@ -1,0 +1,112 @@
+/* Import du catalogue depuis d'anciennes offres (chantier 2026-11-20_import-catalogue, maquette validée le 2026-11-20).
+   Couleurs : les jetons d'app.css seulement (--ink, --muted, --line, --surface, --chip, --ok, --warn, --bad et leurs
+   fonds), déjà mesurés pour les deux thèmes par le chantier des contrastes du 2026-11-19. */
+
+/* Carte sobre du catalogue (décision D1 : « la carte faut la faire plus sobre ») : une ligne, sans couleur d'alerte. */
+.ic-invite { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; padding: 0 6px 0 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; color: var(--muted); }
+.ic-invite a { display: inline-flex; align-items: center; min-height: 48px; padding: 0 10px; color: var(--ink); font-weight: 700; text-underline-offset: 3px; white-space: nowrap; }
+.ic-invite a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 8px; }
+
+.ic { display: flex; flex-direction: column; gap: 12px; }
+.ic-intro { margin: 0; color: var(--muted); font-size: 15px; }
+.ic-reste { margin: 0; font-size: 14px; font-weight: 600; }
+.ic-note { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+.ic-etat { margin: 0; font-weight: 600; }
+
+/* Zone de dépôt : un gros bouton au téléphone, une zone à pointillés sur PC. */
+.ic-depot { position: relative; display: grid; gap: 4px; place-items: center; align-content: center; text-align: center; min-height: 132px; padding: 16px; border-radius: 14px; background: var(--surface); border: 1.5px solid var(--bord); cursor: pointer; }
+.ic-depot input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.ic-depot b { font-family: var(--titre); font-size: 18px; font-weight: 600; }
+.ic-depot > span { font-size: 14px; color: var(--muted); }
+.ic-depot:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.ic-depot.survol { background: var(--chip); }
+.ic-pc { display: none; }
+
+/* Liste des fichiers et état de la lecture. */
+.ic-liste { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.ic-liste li { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 60px; padding: 6px 6px 6px 14px; border-top: 1px solid var(--line); }
+.ic-liste li:first-child { border-top: 0; }
+.ic-liste li > span { display: flex; flex-direction: column; min-width: 0; }
+.ic-liste b { font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
+.ic-liste small { color: var(--muted); font-size: 13.5px; }
+.ic-liste small.faux { color: var(--bad); font-weight: 600; }
+.ic-badge { display: inline-flex; align-items: center; gap: 6px; flex: none; margin-right: 8px; padding: 4px 10px; border-radius: 999px; background: var(--chip); color: var(--ink); font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.ic-badge.ok { background: var(--ok-soft); color: var(--ok); }
+.ic-badge.ko { background: var(--bad-soft); color: var(--bad); }
+.ic-tourne { width: 13px; height: 13px; border-radius: 50%; border: 2.5px solid var(--bord); border-top-color: var(--ink); animation: ic-tourne .8s linear infinite; }
+@keyframes ic-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ic-tourne { animation: none; } }
+.ic-retirer { flex: none; width: 48px; height: 48px; border: 0; border-radius: 12px; background: transparent; color: var(--ink); font-size: 26px; line-height: 1; cursor: pointer; }
+.ic-retirer:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
+
+/* Relecture. */
+.ic-resume { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.ic-resume span { padding: 4px 10px; border-radius: 999px; background: var(--chip); font-size: 13.5px; font-weight: 600; }
+.ic-resume span.att { background: var(--warn-soft); color: var(--warn); }
+.ic-bloc { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.ic-bloc h2 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0; padding: 12px 14px 8px; font-family: var(--titre); font-size: 17px; font-weight: 600; }
+.ic-bloc h2 span { font-size: 13.5px; color: var(--muted); font-weight: 600; }
+.ic-texte { margin: 0; padding: 0 14px 12px; font-size: 14.5px; color: var(--muted); }
+
+.ic-choix { margin: 0; padding: 10px 14px 12px; border: 0; border-top: 1px solid var(--line); min-width: 0; }
+.ic-choix legend { float: left; width: 100%; padding: 0; font-size: 15.5px; }
+.ic-choix legend small { color: var(--muted); }
+.ic-pourquoi { clear: both; margin: 2px 0 8px; font-size: 14px; color: var(--muted); }
+.ic-prix { display: flex; flex-wrap: wrap; gap: 8px; }
+.ic-prix label { position: relative; flex: 1 1 140px; display: grid; min-height: 56px; padding: 6px 12px; border-radius: 12px; border: 1.5px solid var(--bord); cursor: pointer; }
+.ic-prix input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.ic-prix b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.ic-prix small { font-size: 13px; color: var(--muted); }
+.ic-prix label:has(input:checked) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.ic-prix label:has(input:checked) small { color: var(--on-accent); }
+.ic-prix label:has(input:checked) b::before { content: "✓ "; }
+.ic-prix label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.ic-ligne { position: relative; display: grid; grid-template-columns: 48px minmax(0, 1fr) auto 48px; align-items: center; gap: 2px 6px; min-height: 60px; padding: 4px; border-top: 1px solid var(--line); }
+.ic-case { display: grid; place-items: center; width: 48px; height: 48px; cursor: pointer; }
+.ic-case input { width: 24px; height: 24px; accent-color: var(--accent); margin: 0; cursor: pointer; }
+.ic-nom { display: flex; flex-direction: column; min-width: 0; }
+.ic-nom b { font-weight: 600; font-size: 15.5px; overflow-wrap: anywhere; }
+.ic-nom small, .ic-px small { color: var(--muted); font-size: 13.5px; }
+.ic-px { display: flex; flex-direction: column; align-items: flex-end; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ic-px small { font-weight: 400; }
+/* Une ligne décochée n'entre pas au catalogue : barrée, comme dans la maquette (le gris seul se distinguait mal). */
+.ic-ligne:has(.ic-case input:not(:checked)) .ic-nom b, .ic-ligne:has(.ic-case input:not(:checked)) .ic-px { color: var(--muted); text-decoration: line-through; }
+/* Le crayon : un <details> qui couvre toute la ligne ; son bouton se place dans la quatrième colonne. */
+.ic-crayon { grid-column: 1 / -1; }
+.ic-crayon summary { position: absolute; top: 6px; right: 4px; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; cursor: pointer; list-style: none; color: var(--ink); }
+.ic-crayon summary::-webkit-details-marker { display: none; }
+.ic-crayon summary:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
+.ic-crayon[open] summary { background: var(--chip); }
+.ic-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0 4px; padding: 10px; border-radius: 12px; background: var(--chip); }
+.ic-edit label { display: grid; gap: 3px; font-size: 13.5px; font-weight: 600; }
+.ic-edit .ic-tout { grid-column: 1 / -1; }
+.ic-edit input, .ic-edit select { width: 100%; min-height: 48px; font: inherit; font-size: 16px; padding: 6px 10px; border: 1.5px solid var(--bord); border-radius: 10px; background: var(--surface); color: var(--ink); }
+.ic-err { grid-column: 1 / -1; margin: 0 0 4px; font-size: 13.5px; font-weight: 600; color: var(--bad); }
+.ic-ligne.faux, .ic-choix.faux { background: var(--bad-soft); }
+
+/* Bilan. */
+.ic-fin { align-items: center; text-align: center; padding-top: 16px; }
+.ic-fin h2 { margin: 0; font-family: var(--titre); font-size: 22px; }
+.ic-coche { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--ok-soft); color: var(--ok); }
+.ic-coche svg { width: 30px; height: 30px; }
+.ic-bilan { list-style: none; margin: 0; padding: 0; width: 100%; max-width: 460px; border: 1px solid var(--line); border-radius: 14px; text-align: left; }
+.ic-bilan li { display: flex; justify-content: space-between; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--line); font-size: 15px; }
+.ic-bilan li:first-child { border-top: 0; }
+.ic-bilan b { font-family: var(--titre); font-size: 17px; font-variant-numeric: tabular-nums; }
+.actionbar .ic-annuler { display: flex; flex: 1; margin: 0; }
+.actionbar .ic-annuler .btn { flex: 1; }
+
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .ic-pc { display: inline; }
+  .ic-tel { display: none; }
+  .ic-depot { min-height: 200px; border-style: dashed; border-width: 2px; }
+  .ic-depot b { font-size: 21px; }
+  .ic-ligne { grid-template-columns: 48px minmax(0, 1fr) 140px 48px; }
+  .ic-prix label { flex: 0 0 220px; }
+  .ic-edit { grid-template-columns: 2fr 1fr 1fr; }
+  .ic-edit .ic-tout { grid-column: auto; }
+  /* Le prix seul (prix trouvé pour un produit du catalogue) se place sous la colonne des prix. */
+  .ic-edit > label:only-child { grid-column: 3; }
+  .actionbar .ic-annuler { flex: 0 1 auto; }
+}

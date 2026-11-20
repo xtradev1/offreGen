@@ -43,6 +43,13 @@ use OffreGen\Offre\DocumentPdf;
 use OffreGen\Offre\Extracteur;
 use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\ExtracteurFactice;
+use OffreGen\Catalogue\Comparateur;
+use OffreGen\Catalogue\ComparateurApi;
+use OffreGen\Catalogue\ComparateurFactice;
+use OffreGen\Catalogue\Lecteur;
+use OffreGen\Catalogue\LecteurApi;
+use OffreGen\Catalogue\LecteurFactice;
+use OffreGen\Donnees\DepotImports;
 use OffreGen\Systeme\Messagerie;
 use OffreGen\Systeme\Alertes;
 use OffreGen\Systeme\GestionnaireAlertes;
@@ -486,6 +493,38 @@ final class Conteneur
                 $this->parametre('EXTRACTION_MODELE_PIECES') === '' ? null : $this->parametre('EXTRACTION_MODELE_PIECES'),
             );
         });
+    }
+
+    /**
+     * Import du catalogue (chantier 2026-11-20_import-catalogue) : même service et même modèle que l'extraction.
+     * EXTRACTION=api : lecture des offres par le modèle ; autre valeur ou absente : lecteur factice.
+     */
+    public function lecteur(): Lecteur
+    {
+        return $this->une(Lecteur::class, function (): Lecteur {
+            if ($this->parametre('EXTRACTION') !== 'api') {
+                return new LecteurFactice();
+            }
+            return new LecteurApi($this->http(), $this->adresseService('EXTRACTION_URL'), $this->parametre('EXTRACTION_CLE'),
+                $this->parametreRequis('EXTRACTION_MODELE'), $this->journal(), $this->parametre('EXTRACTION_SANS_RAISONNEMENT', '1') === '1');
+        });
+    }
+
+    /** Comparaison des libellés lus dans les offres : par le modèle avec EXTRACTION=api, sinon par le code seul. */
+    public function comparateur(): Comparateur
+    {
+        return $this->une(Comparateur::class, function (): Comparateur {
+            if ($this->parametre('EXTRACTION') !== 'api') {
+                return new ComparateurFactice();
+            }
+            return new ComparateurApi($this->http(), $this->adresseService('EXTRACTION_URL'), $this->parametre('EXTRACTION_CLE'),
+                $this->parametreRequis('EXTRACTION_MODELE'), $this->journal(), $this->parametre('EXTRACTION_SANS_RAISONNEMENT', '1') === '1');
+        });
+    }
+
+    public function imports(Portee $p): DepotImports
+    {
+        return new DepotImports($this->base(), $p);
     }
 
     /**

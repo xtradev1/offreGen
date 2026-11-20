@@ -78,6 +78,15 @@ final class SaisieTest extends TestCase
         self::assertSame('litre', Saisie::unite('litre', 'litre'));
     }
 
+    /** Demande de Xavier, 2026-11-20 : mètre linéaire, kilo et jour, que portent les anciennes offres des artisans. */
+    public function testMetreLineaireKiloEtJourSontDesUnites(): void
+    {
+        foreach (['ml', 'kg', 'jour'] as $u) {
+            self::assertSame($u, Saisie::unite($u), $u);
+        }
+        self::assertSame(['pce', 'm²', 'm', 'ml', 'm³', 'kg', 'h', 'jour', 'forfait'], Saisie::UNITES);
+    }
+
     public function testTexteReduitLesEspacesEtRefuseLeVide(): void
     {
         self::assertSame('Peinture des murs', Saisie::texte("  Peinture \n des   murs ", 255));

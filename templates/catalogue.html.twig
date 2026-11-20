@@ -2,12 +2,16 @@
 
 {% block titre %}Mon catalogue · {{ nom_application }}{% endblock %}
 {% block entete %}Mon catalogue{% endblock %}
-{% block entete_html %}{% if sans_prix > 0 %}<link rel="stylesheet" href="/css/vos-prix.css"><script src="/js/vos-prix.js" defer></script>{% endif %}{% endblock %}
+{% block entete_html %}{% if sans_prix > 0 %}<link rel="stylesheet" href="/css/vos-prix.css"><script src="/js/vos-prix.js" defer></script>{% endif %}{% if import_propose %}<link rel="stylesheet" href="/css/import-catalogue.css">{% endif %}{% endblock %}
 
 {% block contenu %}
   {# Rappel vers l'écran « Vos prix » tant qu'un produit est sans prix (chantier des métiers, 2026-11-19). #}
   {% if sans_prix > 0 %}
     <p class="vp-rappel"><span>{{ sans_prix }} produit{% if sans_prix > 1 %}s{% endif %} sans prix</span><a href="/vos-prix">Compléter</a></p>
+  {% endif %}
+  {# Import d'anciennes offres (décision D1 du 2026-11-20 : la carte, sobre, puis l'entrée dans « Plus »). #}
+  {% if import_propose %}
+    <p class="ic-invite"><span>Vos anciennes offres en PDF&nbsp;: Dicta y lit vos produits et vos prix.</span><a href="/import-catalogue">Importer</a></p>
   {% endif %}
   <form class="search" method="get" action="/catalogue" role="search">
     {% if cat %}<input type="hidden" name="cat" value="{{ cat }}">{% endif %}

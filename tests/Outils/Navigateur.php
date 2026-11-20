@@ -31,7 +31,7 @@ final class Navigateur
     }
 
     /**
-     * @param array<string, string> $champs sans _csrf, il est repris de la dernière page
+     * @param array<string, string|array<array-key, mixed>> $champs sans _csrf, il est repris de la dernière page ; un tableau comme p[0][choix]
      * @param array<string, UploadedFile> $fichiers
      */
     public function post(string $chemin, array $champs, array $fichiers = [], bool $avecJeton = true, bool $json = false): Response

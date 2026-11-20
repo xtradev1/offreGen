@@ -53,6 +53,8 @@ final class CatalogueControleur
             'sans_prix' => count(array_filter($produits, static fn (array $p): bool => $p['prix_centimes'] === 0)),
             'q' => $q,
             'cat' => $cat,
+            // Décision D1 du 2026-11-20 : une invitation sobre à importer d'anciennes offres, tant que l'import n'a pas servi.
+            'import_propose' => !$this->c->imports(new Portee($requete->attributes->getInt('_artisan')))->aDejaIntegre(),
         ]));
     }
 

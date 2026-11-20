@@ -6,6 +6,7 @@ namespace OffreGen\Tests\Http;
 
 use OffreGen\Adresse\Adresse;
 use OffreGen\Donnees\DepotFactures;
+use OffreGen\Donnees\DepotImports;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Route;
 use OffreGen\Tests\Outils\BaseDeTest;
@@ -30,6 +31,8 @@ final class IsolationRoutesTest extends TestCase
     private array $factureLigne = [];
     /** @var array<string, int> */
     private array $factureEmise = [];
+    /** @var array<string, int> */
+    private array $import = [];
 
     protected function setUp(): void
     {
@@ -51,6 +54,10 @@ final class IsolationRoutesTest extends TestCase
                 VALUES ($artisan, {$this->jeu->offre[$nom]}, '2026-002', 'finale', 'emise', '2026-11-07', '2026-12-07', 'Offre $nom', 'Client $nom', 810, 1, 100, 8, 2, 110, 0, 110, NOW(), NOW())");
             $this->factureEmise[$nom] = (int) BaseDeTest::pdo()->lastInsertId();
             BaseDeTest::pdo()->exec("INSERT INTO facture_pdf (facture_id, artisan_id, contenu, cree_le) VALUES ({$this->factureEmise[$nom]}, $artisan, '%PDF-$nom', NOW())");
+            // Un import du catalogue prêt à relire (chantier 2026-11-20_import-catalogue).
+            $imports = new DepotImports($this->jeu->base, new Portee($artisan));
+            $this->import[$nom] = $imports->creer($this->jeu->maintenant);
+            $imports->enregistrerPropositions($this->import[$nom], '[]');
         }
         $this->a = new Navigateur(Monde::conteneur());
         self::assertSame(303, $this->a->connecter('a@exemple.ch')->getStatusCode());
@@ -94,6 +101,7 @@ final class IsolationRoutesTest extends TestCase
             'ligne_rattacher_choix' => [$this->cheminLigne('a', '/rattacher'), $this->cheminLigne('b', '/rattacher')],
             'ligne_catalogue' => [$this->cheminLigne('a', '/catalogue'), $this->cheminLigne('b', '/catalogue')],
             'produit' => ['/catalogue/' . $this->jeu->produit['a'], '/catalogue/' . $this->jeu->produit['b']],
+            'import_catalogue_voir' => ['/import-catalogue/' . $this->import['a'], '/import-catalogue/' . $this->import['b']],
             'produit_suppression' => ['/catalogue/' . $this->jeu->produit['a'] . '/supprimer', '/catalogue/' . $this->jeu->produit['b'] . '/supprimer'],
             'client' => ['/clients/' . $this->jeu->client['a'], '/clients/' . $this->jeu->client['b']],
             'offre_client' => ['/offres/' . $this->jeu->offre['a'] . '/client', '/offres/' . $this->jeu->offre['b'] . '/client'],
@@ -143,6 +151,10 @@ final class IsolationRoutesTest extends TestCase
             'produit_modifier' => ['/catalogue/' . $this->jeu->produit['b'], $produit],
             'produit_supprimer' => ['/catalogue/' . $this->jeu->produit['b'] . '/supprimer', []],
             'vos_prix_agir' => ['/vos-prix/' . $this->jeu->produit['b'], ['action' => 'retirer', 'prix' => '1']],
+            'import_catalogue_integrer' => ['/import-catalogue/' . $this->import['b'], []],
+            'import_catalogue_offre' => ['/import-catalogue/' . $this->import['b'] . '/offres', ['lignes' => '["Volé | m2 | 1.00"]']],
+            'import_catalogue_regrouper' => ['/import-catalogue/' . $this->import['b'] . '/regrouper', []],
+            'import_catalogue_annuler' => ['/import-catalogue/' . $this->import['b'] . '/annuler', []],
             'offre_archiver' => ['/offres/' . $this->jeu->offre['b'] . '/archiver', []],
             'offre_supprimer' => ['/offres/' . $this->jeu->offre['b'] . '/supprimer', []],
             'offre_restaurer' => ['/offres/' . $this->jeu->offre['b'] . '/restaurer', []],

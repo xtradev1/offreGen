@@ -240,7 +240,7 @@ final class ExtracteurApi implements Extracteur
      * Texte écrit par le modèle, qui finit sur une offre envoyée au client : sans tiret long
      * (règle de XtraDev ; Qwen en a produit un dans un titre le 2026-11-12).
      */
-    private static function texte(string $brut): string
+    public static function texte(string $brut): string
     {
         $t = preg_replace('/\s*[\x{2014}\x{2013}]\s*/u', ', ', trim($brut)) ?? '';
         return trim(preg_replace('/^,\s*|,\s*$/u', '', $t) ?? '');
