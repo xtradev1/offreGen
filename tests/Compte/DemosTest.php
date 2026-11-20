@@ -172,7 +172,75 @@ final class DemosTest extends TestCase
         self::assertSame(410, $autre->get($lien)->getStatusCode());
         $autre->get('/connexion');
         self::assertSame(410, $autre->post($lien, ['courriel' => 'x@exemple.ch'])->getStatusCode());
+    }
+
+    /** Le lien « revenir dans votre démo » du courriel écrit à cette adresse (les fichiers n'ont pas d'ordre). */
+    private function retour(string $adresse): string
+    {
+        foreach ($this->dossiers->courriels() as $fichier) {
+            $texte = (string) file_get_contents($fichier);
+            if (str_contains($texte, "To: $adresse\r\n") && preg_match(self::LIEN, $texte, $m) === 1) {
+                return $m[1];
+            }
+        }
+        self::fail("aucun courriel de retour pour $adresse");
+    }
+
+    public function testLeProspectRecoitUnLienPourRevenirDansSaDemo(): void
+    {
+        $nina = $this->navigateur('a@exemple.ch');
+        $this->creer($nina);
+        $demo = $this->demo();
         self::assertCount(0, $this->dossiers->courriels());
+        [$lien] = $this->lien($nina->get("/admin/artisans/{$demo['id']}/qr"));
+        $prospect = $this->navigateur(null, '198.51.100.20');
+        $prospect->get($lien);
+        self::assertSame(303, $prospect->post($lien, ['courriel' => 'info@peinture-morand.ch'])->getStatusCode());
+        $prospect->c->apresReponse()->executer();
+
+        // Un courriel, à l'adresse tapée, avec un lien bon jusqu'à la fin de la démo (Xavier, 2026-11-20).
+        self::assertCount(1, $this->dossiers->courriels());
+        $retour = $this->retour('info@peinture-morand.ch');
+        $jeton = BaseDeTest::ligne('SELECT motif, TIMESTAMPDIFF(MINUTE, cree_le, expire_le) AS minutes FROM jeton_acces ORDER BY id DESC LIMIT 1');
+        self::assertSame(['demo_ret', 7 * 24 * 60], [$jeton['motif'], (int) $jeton['minutes']]);
+
+        // Depuis un autre appareil, sans rien retaper ; le lien sert autant de fois qu'il faut.
+        foreach (['198.51.100.21', '198.51.100.22'] as $ip) {
+            $ailleurs = $this->navigateur(null, $ip);
+            self::assertStringContainsString('value="info@peinture-morand.ch"', (string) $ailleurs->get($retour)->getContent());
+            self::assertSame(303, $ailleurs->post($retour, ['courriel' => ''])->getStatusCode());
+            self::assertSame(0, $ailleurs->c->apresReponse()->nombre());
+            self::assertSame(200, $ailleurs->get('/catalogue')->getStatusCode());
+        }
+        // Revenir, ou rentrer par un nouveau code avec le même courriel, n'envoie rien de plus.
+        [$lien2] = $this->lien($nina->get("/admin/artisans/{$demo['id']}/qr"));
+        $prospect->get($lien2);
+        self::assertSame(303, $prospect->post($lien2, ['courriel' => 'info@peinture-morand.ch'])->getStatusCode());
+        self::assertSame(0, $prospect->c->apresReponse()->nombre());
+        self::assertCount(1, $this->dossiers->courriels());
+
+        // Le courriel corrigé reçoit un lien neuf ; celui de l'ancienne adresse ne vaut plus.
+        [$lien3] = $this->lien($nina->get("/admin/artisans/{$demo['id']}/qr"));
+        $prospect->get($lien3);
+        self::assertSame(303, $prospect->post($lien3, ['courriel' => 'contact@peinture-morand.ch'])->getStatusCode());
+        $prospect->c->apresReponse()->executer();
+        self::assertCount(2, $this->dossiers->courriels());
+        self::assertSame(410, $this->navigateur(null, '198.51.100.23')->get($retour)->getStatusCode());
+        self::assertSame(200, $this->navigateur(null, '198.51.100.24')->get($this->retour('contact@peinture-morand.ch'))->getStatusCode());
+    }
+
+    public function testUneDemoPartageeNARienDeToutCela(): void
+    {
+        // Une démonstration d'avant, sans date de fin : ni code, ni message, même pour un administrateur.
+        Monde::conteneur()->comptes()->creer('partagee@exemple.ch', 'Démo partagée', true, 5, null, 'peintre');
+        $partagee = (int) BaseDeTest::ligne("SELECT id FROM artisan WHERE courriel = 'partagee@exemple.ch'")['id'];
+        BaseDeTest::pdo()->exec("UPDATE artisan SET administrateur = 1 WHERE id = {$this->jeu->b}");
+        $chef = $this->navigateur('b@exemple.ch', '198.51.100.30');
+        self::assertSame(200, $chef->get("/admin/artisans/$partagee")->getStatusCode());
+        self::assertStringNotContainsString('Afficher le code QR', (string) $chef->get("/admin/artisans/$partagee")->getContent());
+        self::assertSame(404, $chef->get("/admin/artisans/$partagee/qr")->getStatusCode());
+        $chef->get('/admin/plus');
+        self::assertSame(404, $chef->post("/admin/artisans/$partagee/message", [])->getStatusCode());
     }
 
     public function testLeCourrielDejaTapeParLeCommercialSuffit(): void

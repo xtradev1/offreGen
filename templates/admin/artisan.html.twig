@@ -26,7 +26,7 @@
   {% elseif compte.offres_max is not null %}
     <p class="muted">Vous avez offert {{ compte.offres_offertes }} offres à ce compte : c'est la limite de votre rôle.</p>
   {% endif %}
-  {% if compte.demo == 1 %}
+  {% if compte.demo == 1 and compte.demo_fin is not null %}
     <div class="actions-demo">
       <a class="btn" href="/admin/artisans/{{ compte.id }}/qr">Afficher le code QR</a>
       <form method="post" action="/admin/artisans/{{ compte.id }}/message">

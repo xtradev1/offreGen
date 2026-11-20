@@ -398,3 +398,28 @@ un défaut relevé par la sonde, hors de ce chantier : le texte indicatif de la 
 Non vérifié : le chemin « courriel réel » (aucun test) ; iPhone.
 
 Demandes de Xavier du même message, hors de ce chantier, notées dans Origin : application sans rechargement de page (tâche 504) ; code QR de démonstration sur la facture tant qu'il n'y a pas d'IBAN (tâche 509, pour le chantier des modèles d'offre).
+
+Réponses de Xavier aux quatre questions ouvertes (2026-11-20), puis courriel de retour dans la démo :
+
+- Courriel : « je propose qu'il entre direct dans la démo et puis qu'il reçoive automatiquement un mail à son adresse. Et puis que ça lui donne un lien d'accès à la démo. […] Et quand il passe à l'essai, là, on lui valide son mail et on lui crée un mot de passe. » Une démo avec un mot de passe est possible à ses yeux (« théoriquement un compte »), sans être demandée : « L'idée, c'est vraiment que ce soit simple. » Retenu : le lien seul, pas de mot de passe dans une démo.
+- Démo sans commercial : non. « Un artisan ne peut pas lancer une démo sans un commercial. Ce qu'un artisan peut faire, c'est qu'il peut créer et suivre le process d'un essai. » L'inscription à l'essai par le site reste au lot B.
+- Deux touchers pour passer à l'essai : gardés. Anciennes démos partagées : pas de bouton. Ruban vu sur le test : « c'est top ».
+
+Construit :
+- À la première entrée du prospect, et quand il corrige son courriel, un courriel « Votre démo » part après la réponse, à l'adresse tapée, avec un lien `/d/<jeton>` (motif `demo_ret`). Ce lien sert plusieurs fois et expire exactement à la fin de la démo ; un lien de retour plus ancien cesse de valoir ; après le passage à l'essai, il ne vaut plus rien.
+- La règle du 18.11 (« une démo ne reçoit jamais de courriel ») est remplacée, pour ce seul courriel, par la décision ci-dessus. L'adresse reste non confirmée : le message ne donne accès qu'à la démo.
+- Sur le site de test, le courriel est écrit dans `partage/var/courriels` et ne part pas ; la phrase « Vous y recevrez aussi un lien » ne s'affiche que là où les courriels partent.
+- Une démonstration partagée (sans date de fin) n'a plus ni code QR ni message, même pour un administrateur.
+
+Courriel relu par `relecteur-xtradev` : « Prêt » au premier tour, avec une correction sur la page d'entrée (dire que le lien arrive), appliquée. Au choix de Xavier : écrire l'heure de fin en plus de la date ; signer d'un contact humain plutôt que du seul nom du produit.
+
+```
+$ DB_NOM=offregen_admin_test phpunit --filter 'DemosTest|PassageDemoTest'   (tests écrits, avant le code)
+FAILURES! Tests: 13, Assertions: 134, Failures: 3.
+$ DB_NOM=offregen_admin_test phpunit   (après le code, copie du chantier)
+Tests: 917, Assertions: 8178, Failures: 1. (le seul échec : ConteneurTest, à cause de DB_NOM)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+```
+
+Non vérifié : l'envoi par une vraie messagerie (le site de test n'en a pas) ; l'arrivée du courriel dans une boîte réelle.

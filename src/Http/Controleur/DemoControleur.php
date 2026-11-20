@@ -6,6 +6,8 @@ namespace OffreGen\Http\Controleur;
 
 use OffreGen\Catalogue\CatalogueFictif;
 use OffreGen\Compte\Demos;
+use OffreGen\Compte\LiensAcces;
+use OffreGen\Donnees\Dates;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Flash;
 use OffreGen\Http\PageIntrouvable;
@@ -37,6 +39,7 @@ final class DemoControleur
             'action' => '/d/' . $p['jeton'],
             'metier' => $metier,
             'courriel' => $saisi ?? $demo['courriel_saisi'] ?? '',
+            'par_courriel' => $this->c->messagerieReelle(),
             'erreur' => $erreur,
         ], $code);
     }
@@ -62,6 +65,14 @@ final class DemoControleur
         }
         $this->c->depotEquipe()->saisirCourriel($ouverte['artisan'], $courriel);
         $this->c->authentification()->ouvrirSession($requete, $ouverte['artisan'], $ouverte['version']);
+        // Le courriel « revenir dans votre démo » : à la première entrée, et quand le courriel est corrigé.
+        $liens = $this->c->liensAcces();
+        $fin = $demo['demo_fin'];
+        $premiere = $ouverte['motif'] !== LiensAcces::DEMO_RETOUR && !$liens->retourDemoEnvoye($ouverte['artisan']);
+        if ($fin !== null && ($premiere || $courriel !== $demo['courriel_saisi'])) {
+            $id = $ouverte['artisan'];
+            $this->c->apresReponse()->ajouter(static fn () => $liens->envoyerRetourDemo($id, $courriel, Dates::depuisBase($fin)));
+        }
         return new RedirectResponse('/', 303);
     }
 

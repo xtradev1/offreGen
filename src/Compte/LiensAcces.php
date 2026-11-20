@@ -24,7 +24,9 @@ final class LiensAcces
     /** Entrée dans une démo : par un code QR (une heure) ou par un message (24 heures). Aucun mot de passe. */
     public const DEMO_QR = 'demo_qr';
     public const DEMO_MSG = 'demo_msg';
-    private const MOTIFS_DEMO = [self::DEMO_QR, self::DEMO_MSG];
+    /** « Revenir dans votre démo », envoyé au courriel du prospect : sert plusieurs fois, jusqu'à la fin de la démo. */
+    public const DEMO_RETOUR = 'demo_ret';
+    private const MOTIFS_DEMO = [self::DEMO_QR, self::DEMO_MSG, self::DEMO_RETOUR];
     public const DEMANDES_PAR_HEURE = 3;
     private const DUREES = [self::OUBLI => '+1 hour', self::ACCES => '+7 days', self::DEMO_QR => '+1 hour', self::DEMO_MSG => '+24 hours'];
     private const FORMAT_JETON = '/^[A-Za-z0-9_-]{43}$/';
@@ -140,7 +142,7 @@ final class LiensAcces
      */
     public function emettreDemo(int $artisanId, string $motif): string
     {
-        if (!in_array($motif, self::MOTIFS_DEMO, true)) {
+        if (!in_array($motif, [self::DEMO_QR, self::DEMO_MSG], true)) {
             throw new \InvalidArgumentException('Motif de lien de démo inconnu.');
         }
         return rtrim($this->adresseApplication, '/') . '/d/' . $this->emettre($artisanId, $motif);
@@ -158,9 +160,11 @@ final class LiensAcces
 
     /**
      * Consomme le lien d'une démo. Le mot de passe et les sessions du compte ne changent pas : le lien ouvre une
-     * session de plus. Les autres liens de la démo restent bons (un code montré, puis un message envoyé).
+     * session de plus. Les autres liens de la démo restent bons (un code montré, puis un message envoyé). Le lien de
+     * retour, lui, n'est pas consommé : il sert jusqu'à la fin de la démo.
      *
-     * @return array{artisan: int, version: int}|null null si le lien a expiré, a déjà servi ou n'ouvre pas une démo
+     * @return array{artisan: int, version: int, motif: string}|null null si le lien a expiré, a déjà servi ou
+     *         n'ouvre pas une démo
      */
     public function ouvrirDemo(string $jeton): ?array
     {
@@ -174,11 +178,47 @@ final class LiensAcces
                 return null;
             }
             $artisan = $this->artisans->parId($lien['artisan_id']);
-            if ($artisan === null || $artisan['demo'] !== 1 || $this->liens->marquerUtilise($lien['id'], $maintenant) !== 1) {
+            if ($artisan === null || $artisan['demo'] !== 1) {
                 return null;
             }
-            return ['artisan' => $artisan['id'], 'version' => $artisan['version_session']];
+            if ($lien['motif'] !== self::DEMO_RETOUR && $this->liens->marquerUtilise($lien['id'], $maintenant) !== 1) {
+                return null;
+            }
+            return ['artisan' => $artisan['id'], 'version' => $artisan['version_session'], 'motif' => $lien['motif']];
         });
+    }
+
+    /**
+     * Le courriel « revenir dans votre démo » (Xavier, 2026-11-20 : le prospect entre directement, « et puis qu'il
+     * reçoive automatiquement un mail à son adresse », avec « un lien d'accès à la démo »). C'est le seul courriel
+     * qu'une démo fait partir : il remplace, pour lui seul, la règle du 18.11. L'adresse n'est pas confirmée : le
+     * message ne donne accès qu'à la démo, sans mot de passe à choisir. Un lien de retour plus ancien cesse de
+     * valoir (courriel corrigé).
+     */
+    public function envoyerRetourDemo(int $artisanId, string $courriel, \DateTimeImmutable $fin): void
+    {
+        $maintenant = $this->horloge->now();
+        if ($fin <= $maintenant) {
+            return;
+        }
+        $jeton = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+        $this->liens->annulerMotif($artisanId, self::DEMO_RETOUR, $maintenant);
+        $this->liens->creer($artisanId, self::empreinte($jeton), self::DEMO_RETOUR, $maintenant, $fin);
+        $lien = rtrim($this->adresseApplication, '/') . '/d/' . $jeton;
+        $this->messagerie->envoyer(
+            $courriel,
+            "Votre démo {$this->nomApplication}",
+            "Bonjour,\r\n\r\nVotre démo {$this->nomApplication} reste ouverte jusqu'au {$fin->format('d.m.Y')}. "
+            . "Pour y revenir, sur votre téléphone ou sur un ordinateur, ouvrez ce lien\u{00A0}:\r\n$lien\r\n\r\n"
+            . "Ce lien ouvre votre démo sans mot de passe\u{00A0}: gardez-le pour vous.\r\n\r\n"
+            . "Vous n'avez pas essayé {$this->nomApplication}\u{00A0}? Ignorez ce courriel.\r\n\r\n{$this->nomApplication}",
+        );
+    }
+
+    /** Vrai si un lien de retour a déjà été envoyé pour cette démo. */
+    public function retourDemoEnvoye(int $artisanId): bool
+    {
+        return $this->liens->compterDepuis($artisanId, self::DEMO_RETOUR, $this->horloge->now()->modify('-60 days')) > 0;
     }
 
     private function emettre(int $artisanId, string $motif): string

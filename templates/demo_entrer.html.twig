@@ -2,7 +2,7 @@
 {% set sans_menu = true %}
 
 {# L'entrée du prospect dans sa démo (Xavier, 2026-11-20 : « il met son mail, il a l'app, il parle ») : un champ, un
-   bouton. Ouvrir cette page ne consomme pas le lien. Le courriel n'est pas confirmé ici : rien ne lui est envoyé. #}
+   bouton. Ouvrir cette page ne consomme pas le lien. Le courriel n'est pas confirmé ici : il ne reçoit qu'un lien pour revenir dans la démo. #}
 {% block titre %}Votre démo · {{ nom_application }}{% endblock %}
 
 {% block contenu %}
@@ -13,7 +13,7 @@
     <div class="champ">
       <label for="courriel">Votre courriel</label>
       <input id="courriel" name="courriel" type="email" inputmode="email" autocomplete="email" maxlength="190" value="{{ courriel }}" required>
-      <small class="muted">La personne qui vous a présenté {{ nom_application }} le verra, pour vous recontacter. Si vous vous abonnez, il deviendra l'adresse de votre compte. Aucun mot de passe à choisir.</small>
+      <small class="muted">La personne qui vous a présenté {{ nom_application }} le verra, pour vous recontacter. Si vous vous abonnez, il deviendra l'adresse de votre compte.{% if par_courriel %} Vous y recevrez aussi un lien pour revenir dans votre démo.{% endif %} Aucun mot de passe à choisir.</small>
     </div>
   </form>
 {% endblock %}

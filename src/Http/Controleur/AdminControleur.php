@@ -319,7 +319,8 @@ final class AdminControleur
     private function demo(int $id): array
     {
         $compte = $this->c->depotEquipe()->artisan($this->portee(), $id);
-        if ($compte === null || $compte['demo'] !== 1) {
+        // Une démonstration partagée (sans date de fin) ne s'ouvre pas par un lien : son mot de passe circule déjà.
+        if ($compte === null || $compte['demo'] !== 1 || $compte['demo_fin'] === null) {
             throw new PageIntrouvable();
         }
         return $compte;

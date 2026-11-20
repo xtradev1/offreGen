@@ -46,6 +46,15 @@ final class DepotLiensAcces
         return $this->base->ecrire('UPDATE jeton_acces SET utilise_le = :q WHERE id = :id AND utilise_le IS NULL', ['q' => Dates::versBase($quand), 'id' => $id]);
     }
 
+    /** Ferme les liens encore ouverts d'un compte pour un motif (un lien de retour remplacé par un autre). */
+    public function annulerMotif(int $artisanId, string $motif, \DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire(
+            'UPDATE jeton_acces SET utilise_le = :q WHERE artisan_id = :a AND motif = :m AND utilise_le IS NULL',
+            ['q' => Dates::versBase($quand), 'a' => $artisanId, 'm' => $motif],
+        );
+    }
+
     /** Ferme tous les liens encore ouverts d'un compte. */
     public function annulerTout(int $artisanId, \DateTimeImmutable $quand): void
     {

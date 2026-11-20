@@ -58,6 +58,8 @@ final class PassageDemoTest extends TestCase
         $prospect = $this->navigateur(null, '198.51.100.40');
         $prospect->get($lien);
         self::assertSame(303, $prospect->post($lien, ['courriel' => 'info@platrerie-roux.ch'])->getStatusCode());
+        // Le courriel « revenir dans votre démo », envoyé après la réponse.
+        $prospect->c->apresReponse()->executer();
         return [$prospect, $id];
     }
 
@@ -121,7 +123,11 @@ final class PassageDemoTest extends TestCase
         // Ce site n'envoie pas de courriels : le mot de passe se choisit tout de suite.
         $suite = (string) $passage->headers->get('Location');
         self::assertMatchesRegularExpression('#^/mot-de-passe/[A-Za-z0-9_-]{43}$#', $suite);
-        self::assertCount(0, $this->dossiers->courriels());
+        // Le seul courriel écrit est celui de l'entrée dans la démo ; son lien de retour ne vaut plus pour un essai.
+        $courriels = $this->dossiers->courriels();
+        self::assertCount(1, $courriels);
+        self::assertSame(1, preg_match('#https://exemple\.test(/d/[A-Za-z0-9_-]{43})#', (string) file_get_contents($courriels[0]), $m));
+        self::assertSame(410, $this->navigateur(null, '198.51.100.45')->get($m[1] ?? '')->getStatusCode());
 
         // Le compte est un essai, à l'adresse du prospect ; les offres d'exemple sont parties, le catalogue reste.
         self::assertSame(['info@platrerie-roux.ch', 0, 10], array_values($this->compte($id)));
