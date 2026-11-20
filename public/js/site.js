@@ -14,8 +14,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){x.target.classList.add('vu');x.target.querySelectorAll('[data-compte]').forEach(compte);io.unobserve(x.target)}})},{threshold:.12});
     obs.forEach(function(s){io.observe(s)});
   } else {obs.forEach(function(s){s.classList.add('vu')})}
-  // La scène : Dicter, Vérifier, Envoyer, toute seule jusqu'au premier toucher.
-  var s=document.getElementById('scene'),D=[7400,7600,6000],t=null,auto=!rm,tabs=s.querySelectorAll('.onglets button');
+  // La scène : Dicter, Vérifier, Envoyer, toute seule jusqu'au premier toucher. Avec « Réduire les animations » (iPhone),
+  // elle avance aussi (Xavier, 2026-11-20 : « sur iphone la petite animation fonctionne pas tout seul »), sans mouvement :
+  // la feuille coupe les animations de la scène, les étapes changent d'un coup.
+  var s=document.getElementById('scene'),D=[7400,7600,6000],t=null,auto=true,tabs=s.querySelectorAll('.onglets button');
   function va(n){
     s.dataset.e=n; s.classList.toggle('auto',auto);
     tabs.forEach(function(b,i){b.setAttribute('aria-selected',i===n?'true':'false')});

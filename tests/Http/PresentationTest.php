@@ -80,6 +80,15 @@ final class PresentationTest extends TestCase
         $artisan->connecter('a@exemple.ch');
         $page = (string) $artisan->get('/')->getContent();
         self::assertStringContainsString('<a class="marque-pc pc-seul" href="/decouvrir"', $page, 'Le logo du menu de gauche, sur ordinateur.');
+        foreach (['/clients', '/factures', '/catalogue'] as $chemin) {
+            self::assertMatchesRegularExpression('#<header class="bar">.*<a class="vers-site mobile-seul" href="/decouvrir"[^>]*><img class="logo"[^>]*></a></header>#s',
+                (string) $artisan->get($chemin)->getContent(), 'Le logo en haut au téléphone : ' . $chemin);
+        }
+    }
+
+    public function testLaConnexionNAPasDeuxLogos(): void
+    {
+        self::assertStringNotContainsString('vers-site mobile-seul', (string) $this->visiteur->get('/connexion')->getContent());
     }
 
     public function testLaPageRespecteLaCspFermee(): void
