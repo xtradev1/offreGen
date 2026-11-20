@@ -441,6 +441,11 @@ a.rubrique .fl { flex: none; font-size: 22px; line-height: 1; color: var(--muted
 .actionbar .passer { flex: 1; display: flex; margin: 0; }
 /* « Voir en grand » sous chaque modèle, et sa page d'aperçu. */
 .modele-case { display: grid; align-content: start; }
+/* 2a (2026-11-19) : la vignette est le vrai document, posé sur 820 px et réduit à sa case (--echelle, app.js). */
+.vignette { position: relative; display: block; width: 100%; aspect-ratio: 180 / 255; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.vignette > .paper { position: absolute; top: 0; left: 0; width: 820px; padding: 40px 44px; border-radius: 0; box-shadow: none; overflow: hidden; transform: scale(var(--echelle, .13)); transform-origin: top left; pointer-events: none; }
+.agrandi-image > .paper { flex: none; width: 820px; max-width: none; padding: 40px 44px; box-shadow: 0 8px 28px rgba(0, 0, 0, .5); transform-origin: top center; }
+.agrandi-image:has(> .paper) { overflow-x: hidden; }
 .voir { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px; font-size: 12.5px; color: var(--accent); text-decoration: none; }
 .voir svg.i { width: 14px; height: 14px; }
 /* « Voir en grand » : l'image du modèle par-dessus la page, les boutons sous le pouce (2026-11-15). */

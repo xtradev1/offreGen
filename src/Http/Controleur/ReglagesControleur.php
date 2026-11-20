@@ -21,6 +21,10 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @phpstan-import-type Offre from \OffreGen\Donnees\DepotOffres
+ * @phpstan-import-type Ligne from \OffreGen\Donnees\DepotOffres
+ */
 final class ReglagesControleur
 {
     private const CHAMPS = ['entreprise', 'contact_nom', 'adresse_rue', 'adresse_numero', 'adresse_npa', 'adresse_localite', 'adresse_pays', 'telephone', 'courriel_contact', 'ide', 'iban', 'tva', 'validite_choix', 'validite_jours',
@@ -111,12 +115,7 @@ final class ReglagesControleur
     public function apercuModele(Request $requete, string $modele): Response
     {
         $portee = $this->portee($requete);
-        $offres = $this->c->offres($portee);
-        $offre = $offres->liste(1)[0] ?? null;
-        $lignes = $offre === null ? [] : $offres->lignes($offre['id']);
-        if ($offre === null || $lignes === []) {
-            [$offre, $lignes] = self::exemple($this->c->horloge()->now());
-        }
+        [$offre, $lignes] = $this->offreDApercu($portee);
         $m = $this->c->reglages($portee)->lireMarque();
         $apercu = new Marque($modele, $m->couleurChoisie, $m->logo, $m->couleurDuLogo);
         $assistant = $requete->query->getString('depuis') === 'bienvenue';
@@ -127,6 +126,37 @@ final class ReglagesControleur
             'retour' => $assistant ? '/bienvenue/marque' : '/reglages/marque',
             'depuis' => $assistant ? '?depuis=bienvenue' : '',
         ]));
+    }
+
+    /**
+     * L'offre montrée dans les aperçus de modèle : la dernière de l'artisan, ou l'exemple s'il n'a rien dicté.
+     *
+     * @return array{Offre, list<Ligne>}
+     */
+    private function offreDApercu(Portee $portee): array
+    {
+        $offres = $this->c->offres($portee);
+        $offre = $offres->liste(1)[0] ?? null;
+        $lignes = $offre === null ? [] : $offres->lignes($offre['id']);
+        return $offre === null || $lignes === [] ? self::exemple($this->c->horloge()->now()) : [$offre, $lignes];
+    }
+
+    /**
+     * Les vignettes de « Ma marque » (2a, 2026-11-19) : le vrai document de chaque modèle, dans la couleur de l'artisan.
+     * app.js les réduit à la largeur de leur case et change leur couleur au toucher d'une pastille.
+     *
+     * @return array<string, string> le HTML de chaque modèle, par clé
+     */
+    private function vignettes(Portee $portee, Marque $m): array
+    {
+        [$offre, $lignes] = $this->offreDApercu($portee);
+        $vue = new OffreControleur($this->c);
+        $html = [];
+        foreach (array_keys(Marque::MODELES) as $cle) {
+            $html[$cle] = $this->c->twig()->render('_vignette_modele.html.twig',
+                $vue->vueDocument($portee, $offre, $lignes, new Marque($cle, $m->couleurChoisie, $m->logo, $m->couleurDuLogo)));
+        }
+        return $html;
     }
 
     /**
@@ -285,6 +315,11 @@ final class ReglagesControleur
     public function css(Request $requete): Response
     {
         $m = $this->c->reglages(new Portee($requete->attributes->getInt('_artisan')))->lireMarque();
+        // ?apercu=#B23A2E : la couleur touchée, avant que l'enregistrement revienne (2a). Rien n'est écrit.
+        $apercu = Marque::couleurValide($requete->query->getString('apercu'));
+        if ($apercu !== null) {
+            $m = new Marque($m->modele, $apercu, $m->logo, $m->couleurDuLogo);
+        }
         return new Response($m->css(), 200, ['Content-Type' => 'text/css; charset=utf-8', 'Cache-Control' => 'private, max-age=86400']);
     }
 
@@ -388,6 +423,7 @@ final class ReglagesControleur
             'modeles' => Marque::MODELES,
             'familles' => Marque::FAMILLES,
             'propose' => $this->modelePropose($portee),
+            'vignettes' => in_array('marque', $sections, true) ? $this->vignettes($portee, $marque) : [],
         ]), $code);
     }
 }

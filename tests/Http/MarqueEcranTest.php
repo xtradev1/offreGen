@@ -102,6 +102,21 @@ final class MarqueEcranTest extends TestCase
         self::assertSame(404, $this->a->get('/reglages/logo')->getStatusCode());
     }
 
+    public function testLesVignettesSontLeVraiDocumentEtSuiventLaCouleurTouchee(): void
+    {
+        // 2a (2026-11-19) : chaque modèle est le document lui-même, plus une image figée ; la couleur suit au toucher.
+        $page = $this->page('/reglages/marque');
+        self::assertSame(count(\OffreGen\Compte\Marque::MODELES), substr_count($page, 'data-vignette="'));
+        self::assertStringContainsString('class="doc m-bandeau"', $page);
+        self::assertStringNotContainsString('src="/img/modeles/sobre.jpg"', $page);
+        self::assertMatchesRegularExpression('#<link rel="stylesheet" href="/reglages/marque\.css\?v=[0-9a-f]+" data-marque-css>#', $page);
+        $avant = $this->marqueDeA();
+        $css = (string) $this->a->get('/reglages/marque.css?apercu=%23B23A2E')->getContent();
+        self::assertStringContainsString('background-color: #B23A2E', $css);
+        self::assertSame($avant, $this->marqueDeA(), "L'aperçu n'enregistre rien.");
+        self::assertStringNotContainsString('#B23A2E', (string) $this->a->get('/reglages/marque.css?apercu=rouge')->getContent(), 'Une couleur invalide est ignorée.');
+    }
+
     public function testModeleEtCouleurVontAuDocumentEtAuPdf(): void
     {
         $offre = '/offres/' . $this->jeu->offre['a'];

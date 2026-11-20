@@ -4,7 +4,7 @@ Tout ce qui suit se teste à la main, en une passe, sur le site de test (`https:
 
 ## Préalables
 
-- [x] Code sur le site de test : commit `7bd9348`, déployé le 2026-11-20, sonde verte. Le chantier est commité seul, sans les changements non commités du chantier responsive (facture annulée, vignettes vivantes, barre du bas) qui partageaient sa copie de travail. Contrôle : `GET /sante` annonce ce commit.
+- [ ] Code sur le site de test : le commit de la couleur en grand (noté dans `ETAT.md`), déployé quand tu le dis. Le chantier est commité seul, sans les changements non commités du chantier responsive (facture annulée, barre du bas) qui partageaient sa copie de travail. Contrôle : `GET /sante` annonce ce commit.
 - [x] Migration `migrations/Version20261120120001.php` jouée par le déploiement (huit colonnes facultatives) : `GET /sante` rend `"migrations":"ok"`.
 - [x] Le dossier `var/cache/pdf` du site de test accepte l'écriture : le PDF d'une offre de `demo-macon` porte Roboto et Archivo, aucune police de repli (contrôle du 2026-11-20).
 - [ ] Recharger sans le cache du navigateur (Ctrl+F5, ou fermer l'onglet sur téléphone) : `app.css`, `app.js` et `document.css` sont servis sans numéro de version.
@@ -22,9 +22,9 @@ Gestes :
 1. Ouvrir « Plus », « Réglages », « Ma marque ».
 2. Faire défiler la partie « 3. Modèle ».
 
-Attendu : quatre titres, « Classiques » (Sobre, Lettre, Atelier), « Couleur » (Bandeau, Moderne, Latéral, Enseigne), « Détaillés » (Technique, Récapitulatif, Chantier), « Simples » (Épuré, Marge). Chaque case montre une image du modèle, tirée d'un vrai PDF : elle garde la couleur de l'exemple et ne suit ni le logo ni la couleur du compte (les vignettes vivantes sont au chantier responsive, pas encore commité). Si le compte a pour métier « plâtrier », « Chantier » porte l'étiquette « Proposé pour votre métier » ; les comptes créés avant ce chantier gardent le modèle qu'ils avaient.
+Attendu : quatre titres, « Classiques » (Sobre, Lettre, Atelier), « Couleur » (Bandeau, Moderne, Latéral, Enseigne), « Détaillés » (Technique, Récapitulatif, Chantier), « Simples » (Épuré, Marge). Chaque case montre le vrai document en petit, dans la couleur et avec le logo du compte, le logo à ses proportions ; le bas de Lettre, plus longue qu'une page, est coupé. Si le compte a pour métier « plâtrier », « Chantier » porte l'étiquette « Proposé pour votre métier » ; les comptes créés avant ce chantier gardent le modèle qu'ils avaient.
 
-Si ça casse : `templates/_reglages_marque.html.twig`, `Marque::FAMILLES`, colonne `artisan.metier`, images de `public/img/modeles/`.
+Si ça casse : `templates/_reglages_marque.html.twig`, `Marque::FAMILLES`, colonne `artisan.metier`, console du navigateur (fonctions `vignettesVivantes` et `papiers` d'`app.js`).
 
 ## Scénario 2 : voir un modèle en grand, le choisir, changer de couleur
 
@@ -37,11 +37,11 @@ Gestes :
 1. Toucher « Voir en grand » sous « Latéral ».
 2. Passer d'un modèle à l'autre avec les flèches.
 3. Toucher « Choisir ce modèle » sur « Récapitulatif ».
-4. Toucher une autre pastille de couleur, puis ouvrir le document d'une offre.
+4. Toucher une autre pastille de couleur, puis rouvrir « Voir en grand » sur « Bandeau ».
 
-Attendu : le modèle s'ouvre en grand dans la page (une image tirée d'un vrai PDF), entier, sans barre de défilement horizontale. Après « Choisir ce modèle », la case « Récapitulatif » est cochée. La couleur touchée se voit sur le document de l'offre ; les images de « Ma marque » gardent la couleur de l'exemple.
+Attendu : le modèle s'ouvre en grand dans la page, entier en largeur, sans barre de défilement horizontale, dans la couleur du compte. Après « Choisir ce modèle », la case « Récapitulatif » est cochée. Au toucher d'une couleur, les douze vignettes changent de couleur aussitôt, et le modèle rouvert en grand est dans cette couleur (ta demande du 2026-11-20).
 
-Si ça casse : `modelesEnGrand` dans `public/js/app.js`, images de `public/img/modeles/grand/`, `ReglagesControleur::css`.
+Si ça casse : `modelesEnGrand` et `vignettesVivantes` dans `public/js/app.js`, `ReglagesControleur::css` (feuille `?apercu=`), `public/css/document-ecran.css`.
 
 ## Scénario 3 : le document à l'écran
 
@@ -185,7 +185,6 @@ Si ça casse : dis-moi de combien de millimètres l'adresse est décalée, et d
 - Un vrai iPhone et un vrai Android : je n'ai vu que Chromium, à 390 px et à 1280 px.
 - Le verrou posé sur le premier rendu après une mise en ligne (deux PDF demandés à la même seconde) : écrit, pas essayé à deux processus.
 - Le PDF d'une facture annulée : il reste celui de l'émission ; le PDF marqué « Annulée » est au chantier responsive, pas encore commité.
-- Les vignettes vivantes de « Ma marque » (le vrai document, dans la couleur touchée) : même chantier.
 - La production : aucun accès de ma part, elle suit ton protocole de mise en ligne.
 
 ## État des vérifications automatiques

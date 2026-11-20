@@ -3,6 +3,8 @@
 {# Une rubrique des réglages, seule à l'écran ; ou une étape de l'assistant du premier lancement
    (assistant défini). Dans les réglages, chaque changement s'enregistre seul (app.js, data-auto) ;
    sans JavaScript, le bouton Enregistrer envoie le formulaire. #}
+{# Ma marque : le document et sa couleur, pour les vignettes vivantes (2a). #}
+{% block entete_html %}{% if 'marque' in sections %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/css/document-ecran.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ marque.version }}" data-marque-css>{% endif %}{% endblock %}
 {% block titre %}{{ titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}{% if not assistant %}<a class="back" href="/reglages">Réglages</a>{% endif %}{% endblock %}
 {% block entete %}{{ assistant ? 'Bienvenue' : titre }}{% endblock %}

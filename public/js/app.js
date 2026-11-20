@@ -1245,6 +1245,32 @@ function brancherAdresse(groupe) {
   groupe.addEventListener('input', () => { if (etat.classList.contains('ok')) dire(''); });
 }
 
+// « Ma marque » (2a, 2026-11-19) : les vignettes, vrais documents, à la largeur de leur case ; au toucher d'une pastille
+// (ou d'une couleur tapée), leur couleur suit aussitôt, par la feuille d'aperçu (?apercu=, rien n'est écrit).
+function vignettesVivantes() {
+  const cases = document.querySelectorAll('[data-vignette]');
+  if (!cases.length) return;
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver((entrees) => entrees.forEach((x) => { if (x.target.clientWidth) x.target.style.setProperty('--echelle', String(x.target.clientWidth / 820)); }));
+    cases.forEach((c) => ro.observe(c));
+  }
+  const feuille = document.querySelector('link[data-marque-css]');
+  const form = document.querySelector('form#reglages');
+  if (!feuille || !form) return;
+  const couleur = () => {
+    const choix = form.querySelector('input[name="couleur_choix"]:checked');
+    if (!choix) return null;
+    const v = choix.value === 'autre' ? (form.querySelector('#couleur') || {}).value : choix.value;
+    return /^#[0-9a-fA-F]{6}$/.test(v || '') ? v : null;
+  };
+  const suivre = () => {
+    const c = couleur();
+    if (c) feuille.href = '/reglages/marque.css?apercu=' + encodeURIComponent(c.toUpperCase());
+  };
+  form.addEventListener('change', (e) => { if (e.target.matches('[name="couleur_choix"], #couleur')) suivre(); });
+  form.addEventListener('input', (e) => { if (e.target.matches('#couleur')) suivre(); });
+}
+
 // Feuille A4 des documents (modèles du bâtiment, 2026-11-20) : chaque modèle est dessiné sur 794 px, comme dans le PDF,
 // et se réduit à la largeur de son papier (--feuille, lue par document-ecran.css). La réduction ne change pas la place
 // que la feuille occupe : une marge basse négative la lui rend. Les papiers qui arrivent plus tard (document à côté,
@@ -1286,10 +1312,24 @@ function modelesEnGrand() {
     + '<button type="button" class="btn" data-pas="1" aria-label="Modèle suivant">›</button></div>';
   document.body.appendChild(vue);
   const img = vue.querySelector('img');
+  const fond = vue.querySelector('[data-fond]');
   let rang = 0;
   const montrer = (i) => {
     rang = (i + liens.length) % liens.length;
     const l = liens[rang];
+    // 2a : le vrai document du modèle, dans la couleur touchée ; l'image figée seulement sans vignette.
+    const doc = document.querySelector('[data-vignette="' + l.dataset.cle + '"] > .paper');
+    fond.querySelectorAll('.paper').forEach((p) => p.remove());
+    img.hidden = Boolean(doc);
+    if (doc) {
+      const copie = doc.cloneNode(true);
+      fond.append(copie);
+      requestAnimationFrame(() => {
+        const e = Math.min(1, (fond.clientWidth - 24) / 820);
+        copie.style.transform = 'scale(' + e + ')';
+        copie.style.marginBottom = Math.round(copie.offsetHeight * (e - 1)) + 'px';
+      });
+    }
     img.src = l.dataset.grand;
     img.alt = 'Modèle ' + l.dataset.nom + ', en grand';
     vue.querySelector('[data-titre]').textContent = 'Modèle ' + l.dataset.nom;
@@ -1733,6 +1773,7 @@ document.addEventListener('DOMContentLoaded', () => {
   feuillesFacturer();
   hauteurDuBas();
   ajoutPc();
+  vignettesVivantes();
   papiers();
   modelesEnGrand();
   glisserLignes();

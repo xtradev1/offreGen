@@ -2,7 +2,7 @@
 chantier: Modèles d'offre du bâtiment
 slug: 2026-11-19_modeles-offre
 phase: 8
-statut: gate_ouvert
+statut: en_cours
 gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
@@ -16,14 +16,13 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette de Xavier sur le site de test (`RECETTE.md`, commit `7bd9348`). Corrections éventuelles dans la copie propre `~/offreGen-modeles`, rejouée sur la tête de la branche avant chaque poussée. À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
+Déployer sur le site de test le commit de la couleur en grand, quand Xavier le dit (règle du projet : redemander avant chaque déploiement, le test ne doit porter que des données inventées). Puis la suite de sa recette (`RECETTE.md`). À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
 
 ## En attente de toi
 
-- Dérouler `RECETTE.md` sur le site de test (`https://easy-offres.xtradev.ch`, commit `7bd9348`) et dire ce qui casse ou ce qui déplaît. Les comptes de démonstration ouvrent encore l'assistant du premier lancement : le finir ou le passer d'abord.
-- Regarder `rendus/douze-modeles.pdf` (24 pages : les douze modèles, une offre longue, trois factures, trois cas limites).
-- Trancher quatre points : la facture d'une page sans pied ; la couleur de l'artisan à 4,5 de contraste (7 la foncerait) ; le lieu dicté pris pour l'adresse du chantier ; les phrases fixes de Lettre.
-- Savoir que `~/offreGen` garde, non commités, les fichiers de ce chantier mêlés à ceux du chantier responsive : la session du responsive devra, comme celle-ci, commiter depuis une copie propre posée sur la tête de la branche.
+- Dire si je déploie sur le site de test le commit de la couleur en grand, et confirmer qu'il ne porte toujours que des données inventées.
+- Finir la recette (`RECETTE.md`), scénarios 1 et 2 compris, et trancher les quatre points : la facture d'une page sans pied ; la couleur de l'artisan à 4,5 de contraste (7 la foncerait) ; le lieu dicté pris pour l'adresse du chantier ; les phrases fixes de Lettre.
+- Savoir que la session du responsive trouvera le point 2a (vignettes vivantes) déjà commité, identique à sa copie : elle doit commiter le reste depuis une copie propre posée sur la tête de la branche.
 
 ## Journal
 
@@ -62,6 +61,8 @@ Recette de Xavier sur le site de test (`RECETTE.md`, commit `7bd9348`). Correcti
 - 2026-11-20 : commit `7bd9348` poussé sur `chantier-voix-offre`, rejoué une fois (la branche avait avancé d'un commit de l'accueil, sans fichier commun). Défaut trouvé au commit : git normalisait les fins de ligne de `public/fonts/OFL-IBMPlex.txt`, dont l'empreinte est dans `SOURCES.md` ; le test des empreintes aurait échoué sur toute copie fraîche. `.gitattributes` : `*.ttf binary` et `public/fonts/*.txt -text` ; les 73 fichiers du relevé sont identiques dans le commit.
 - 2026-11-20 : déployé sur le site de test par `outils/deployer-test.sh` depuis `~/offreGen-modeles` ; les tests du script tournent sur `offregen_modeles_test`, désignée par le `.env.test.local` de cette copie. Sonde verte. Contrôle sur le site avec `demo-macon`, une connexion, rien de tapé : douze modèles en quatre familles, « Bandeau » proposé ; document d'une offre à 390 et à 1280 px ; PDF d'une page avec Roboto et Archivo embarquées, aucune police de repli. Le dossier `var/cache/pdf` du serveur accepte donc l'écriture. Les démos du test ouvrent encore l'assistant du premier lancement : l'accueil renvoie à `/bienvenue/entreprise`, une offre se trouve par la fiche d'un client.
 - 2026-11-20 : vu sur les captures du site de test, laissé en l'état : sans adresse dans les réglages, le nom de l'entreprise paraît deux fois dans l'en-tête de Sobre (à la place du logo et en tête des coordonnées) ; à 390 px, l'étiquette « Proposé pour votre métier » tient sur trois lignes.
+- 2026-11-20 : recette de Xavier sur le test : « c'est pas trop mal […] le reste, c'est vraiment bien dans les grandes lignes ». Demande : « quand je suis en grand par exemple, je le vois directement […] dans la couleur que j'ai choisie. […] Il faut absolument le faire. » C'est le point 2a du chantier responsive (vignettes vivantes et vue en grand dans la couleur touchée), resté non commité dans `~/offreGen`. Repris à l'identique dans ce chantier, pour qu'une seule version existe : `vignettes()` et `offreDApercu()` de `ReglagesControleur`, `?apercu=` de la feuille de la marque, `_vignette_modele.html.twig`, `vignettesVivantes` et la vue en grand d'`app.js`, règles `.vignette` d'`app.css`, test `testLesVignettesSontLeVraiDocumentEtSuiventLaCouleurTouchee` (rouge avant : « Failed asserting that 0 is identical to 12 »).
+- 2026-11-20 : vérifié dans la copie propre (base `offregen_dev`, `demo-peintre`, couleur d'origine remise) : couleur touchée #866558 ; bande de Bandeau rgb(46, 125, 50) avant, rgb(134, 101, 88) après, dans la vignette et dans la vue en grand de Latéral, Bandeau et Sobre, à 390 et 1280 px. Limite vue : la vignette de Lettre, plus longue qu'une page, a son bas coupé.
 
 ## Décisions
 
@@ -99,6 +100,7 @@ Recette de Xavier sur le site de test (`RECETTE.md`, commit `7bd9348`). Correcti
 | 2026-11-20 | Sur une offre par pièce, « Général » n'a pas de montant sur sa ligne de titre ni dans la marge ; il le garde dans la liste de Récapitulatif. | Sous-chantier 28 : il se lirait comme le total de l'offre ; la liste de Récapitulatif doit tomber juste. |
 | 2026-11-20 | Une facture ne montre plus l'IBAN au pied ni dans la colonne. | Celui de sa section de paiement est figé à l'émission ; le pied lisait les réglages du jour. |
 | 2026-11-20 | Le chantier est commité seul, sans les changements non commités du chantier responsive qui partageaient sa copie de travail. | Chaque session commite son chantier ; le gate du responsive (accord de Xavier pour déployer) n'est pas celui de ce chantier. Interprétation de Claude du mot « le tout » : tout ce chantier. |
+| 2026-11-20 | Le point 2a du chantier responsive (couleur touchée dans les vignettes et la vue en grand) est commité dans ce chantier, recopié à l'identique. | Demande de Xavier (« il faut absolument le faire »). Code identique : la session du responsive n'aura pas de conflit sur ces lignes. |
 
 ## Ce que l'essai dompdf a établi
 
@@ -176,4 +178,7 @@ phase 8, déploiement : git push : 47b4f3d..7bd9348  HEAD -> chantier-voix-offre
   outils/deployer-test.sh : OK (912 tests, 8080 assertions) ; analyse statique : sans erreur ; 1 migrations executed, 2 sql queries ; SONDE VERTE ; /sante : {"commit":"7bd9348b88e5cc069209a921ae6850003b1922aa","base":"ok","migrations":"ok"}
   test-site.js macon : marque {modeles 12, familles Classiques, Couleur, Détaillés, Simples, choisi sobre, propose bandeau, images 12, debordement 0} ; document 390 : doc m-sobre, feuille 358x506, police Roboto ; document 1280 : feuille 984x1392 ; pdf : 200 application/pdf ; aucune erreur JS ni réponse en erreur
   t-pdf.py : 1 page ; polices : Roboto-Regular, Archivo-ExtraBold, Roboto-Bold ; polices de repli : aucune ; trois images regardées (page 1 du PDF, document à 390 px, « Ma marque » à 390 px)
+phase 8, couleur en grand : phpunit --filter MarqueEcranTest avant le code : Failures: 1 (0 is identical to 12) ; après : OK (49 tests, 677 assertions) avec ReglagesEcranTest, ReglesDuDocumentTest, EcransTest
+  grand-couleur.js : bande de Bandeau avant rgb(46, 125, 50), après rgb(134, 101, 88) ; en grand 390 lateral, bandeau, sobre : image false, papier 366x518, couleur rgb(134, 101, 88) ; en grand 1280 : papier 820x1160, débordement 0 ; aucune erreur JS ; trois captures regardées
+  vendor/bin/phpstan analyse : [OK] No errors ; APP_ENV=test vendor/bin/phpunit : OK (913 tests, 8088 assertions)
 ```
