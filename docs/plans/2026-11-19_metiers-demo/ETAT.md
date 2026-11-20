@@ -72,6 +72,8 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-20 : second essai de Xavier sur iPhone, démo de peintre et essai : « c'est hyper clean. Le clavier Apple a apparu. Il n'est pas parti. J'ai cliqué reprendre. Pouf, pouf, ça a avancé […] pour les 3, 10 secondes ». L'ouverture du clavier au toucher est donc vérifiée sur l'appareil. « Selon moi, tu peux mettre tout ça dedans. »
 - 2026-11-20 : le bug qu'il voyait (« ça devient tout gros » en ouvrant une offre à vérifier) est hors de ce chantier. Mesure faite sur le site de test, en lecture seule : les champs quantité et prix de l'écran d'une offre ont un texte de 14 px, et Safari sur iPhone agrandit la page quand un champ sous 16 px prend le curseur. Correction dans `public/css/app.css`, fichier du chantier responsive : tâche Origin 502. Son idée « supprimer l'offre depuis l'écran de l'offre » : tâche Origin 503.
 - 2026-11-20 : phase 7 ouverte, deux relecteurs indépendants (données et passage à l'essai ; écran « Vos prix »).
+- 2026-11-20 : revue rendue, `REVUE.md`. Deux défauts bloquants, tous deux de ce chantier : le passage à l'essai laissait l'adresse inventée, le mot de passe partagé et les sessions de la démo ; le script « Vos prix », en service depuis le matin, rechargeait « Mes offres » et le catalogue à chaque fermeture d'une fenêtre. Chaque trouvaille relue dans le code, puis corrigée : 17 sur 22, 3 voulues, 2 laissées. Une décision reste à Xavier (D4).
+- 2026-11-20 : `bin/passer-en-essai` change de forme : `<courriel de la démo> <courriel de l'artisan>`. Le bouton « Transformer en essai » du chantier des comptes devra demander cette adresse.
 
 ## Décisions
 
@@ -79,6 +81,10 @@ Ce qui a été tranché sans demander, et pourquoi.
 
 | Date | Décision | Raison |
 |---|---|---|
+| 2026-11-20 | Un produit d'exemple perd sa marque quand son prix change, plus à toute modification | Revue D2 : un synonyme ajouté par le rattachement d'une ligne laissait un prix inventé dans le catalogue de l'essai. Écart au point 2 de la spec (« dès que l'artisan le modifie »), à dire à Xavier |
+| 2026-11-20 | Le passage à l'essai exige l'adresse de l'artisan, donne un mot de passe neuf et fait tomber les sessions | Revue D1 : la démo a une adresse inventée et un mot de passe partagé |
+| 2026-11-20 | Une démo sans métier est refusée au passage | Revue D3 : posée avant les marques, rien n'y distingue les exemples |
+| 2026-11-20 | L'arrivée sans navigation sur écran tactile seulement ; la dernière carte part par l'envoi ordinaire | Revue V2 et V3 : garder le message « Annuler » du bilan et les écouteurs d'`app.js` sur PC |
 | 2026-11-19 | Feuille et script propres à l'écran (`vos-prix.css`, `vos-prix.js`) | `app.css` et `app.js` portent les modifications non commitées d'autres sessions ; `document.css` et `apercu-pdf.js` sont des précédents |
 | 2026-11-19 | « Suivant » est le premier bouton du formulaire dans le code, le retrait le dernier ; l'ordre à l'écran vient de la feuille de style | La touche Entrée envoie le premier bouton : elle ne doit jamais retirer un produit |
 | 2026-11-19 | Le message « Annuler » de cet écran est sur le bandeau du haut | En bas, le clavier du téléphone le cache ; sous le bandeau, il couvrait « Je ne fais pas ça » |

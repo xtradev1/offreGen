@@ -101,7 +101,10 @@ final class VosPrixControleur
                 Flash::dire($requete, 'annuler', ['action' => '/vos-prix/annuler', 'texte' => $cite . "\u{00A0}: prix repris, " . Formats::montant($exemple)]);
                 break;
             case 'passer':
-                $etat['passes'][] = $p['id'];
+                // Envoyé deux fois, le geste ne compte qu'une fois.
+                if (!in_array($p['id'], $etat['passes'], true)) {
+                    $etat['passes'][] = $p['id'];
+                }
                 $etat['annulable'] = null;
                 break;
             case 'retirer':
@@ -127,7 +130,10 @@ final class VosPrixControleur
         $cible = null;
         $depot = $this->depot($requete);
         if ($a !== null && ($a['genre'] ?? null) === 'repris' && is_int($a['id'] ?? null) && is_int($a['exemple'] ?? null)) {
-            if ($depot->remettreExemple($a['id'], $a['exemple'])) {
+            // Seulement si le prix repris est encore là : changé depuis dans le catalogue, il est celui de l'artisan.
+            $p = $depot->parId($a['id']);
+            if ($p !== null && $p['prix_centimes'] === $a['exemple'] && $p['prix_exemple_centimes'] === null
+                && $depot->remettreExemple($a['id'], $a['exemple'])) {
                 $etat['faits'] = max(0, $etat['faits'] - 1);
                 $cible = $a['id'];
             }

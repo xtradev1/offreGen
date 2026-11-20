@@ -83,26 +83,54 @@ final class Comptes
      * dicté, créé ou modifié reste, comme ses réglages. Le compte reçoit $offresMax offres en plus de celles
      * déjà dictées pendant la démonstration. Refuse tout compte qui n'est pas de démonstration.
      *
-     * @return array{offres: int, clients: int, produits: int} offres et fiches d'exemple effacées, produits remis à 0
+     * Une démonstration a une adresse inventée et un mot de passe partagé (revue du 2026-11-20) : le compte prend
+     * l'adresse de l'artisan, reçoit un mot de passe neuf, et les sessions ouvertes pendant la démonstration
+     * tombent. Une démonstration posée avant les marques « exemple » (sans métier) est refusée : rien n'y
+     * distingue les exemples, il faut la remettre à zéro d'abord.
+     *
+     * @param string $courriel l'adresse de la démonstration
+     * @param string $courrielArtisan l'adresse de l'artisan, qui devient celle du compte
+     * @return array{offres: int, clients: int, produits: int, dictees: int, mot_de_passe: string} offres et fiches
+     *         d'exemple effacées, produits remis à 0, visites dictées gardées, mot de passe à transmettre une fois
      */
-    public function passerEnEssai(string $courriel, int $offresMax = 10): array
+    public function passerEnEssai(string $courriel, string $courrielArtisan, int $offresMax = 10): array
     {
         self::verifierOffresMax($offresMax);
         $artisan = $this->artisans->parCourriel($courriel) ?? throw new \InvalidArgumentException("Aucun compte pour $courriel.");
         if ($artisan['demo'] !== 1) {
             throw new \InvalidArgumentException("$courriel n'est pas un compte de démonstration : rien n'est changé.");
         }
+        if ($artisan['metier'] === null) {
+            throw new \InvalidArgumentException("$courriel a été posée avant les marques d'exemple : la remettre à zéro (bin/reinitialiser-demo), puis la passer à l'essai.");
+        }
+        $courrielArtisan = DepotArtisans::normaliser($courrielArtisan);
+        if (filter_var($courrielArtisan, FILTER_VALIDATE_EMAIL) === false) {
+            throw new \InvalidArgumentException("Courriel invalide : $courrielArtisan");
+        }
+        if ($courrielArtisan !== $artisan['courriel'] && $this->artisans->parCourriel($courrielArtisan) !== null) {
+            throw new \InvalidArgumentException("Un compte existe déjà pour $courrielArtisan.");
+        }
+        $motDePasse = self::genererMotDePasse();
+        $hache = $this->hacheur->hash($motDePasse);
         $portee = new Portee($artisan['id']);
-        return $this->base->transaction(function () use ($artisan, $portee, $offresMax): array {
+        return $this->base->transaction(function () use ($artisan, $portee, $offresMax, $courrielArtisan, $hache, $motDePasse): array {
             // Les factures d'abord : elles désignent les offres. Les fiches après : les offres les désignent.
             (new DepotFactures($this->base, $portee))->effacerDesOffresExemple();
+            $dictees = (new DepotEnregistrements($this->base, $portee))->recus();
             $bilan = [
                 'offres' => (new DepotOffres($this->base, $portee))->effacerExemples(),
                 'clients' => (new DepotClients($this->base, $portee))->effacerExemplesSansOffre(),
                 'produits' => (new DepotProduits($this->base, $portee))->remettreExemplesAZero(),
+                'dictees' => $dictees,
+                'mot_de_passe' => $motDePasse,
             ];
             // Le plafond d'un essai compte tous les imports du compte : ceux de la démonstration ne sont pas décomptés.
-            $this->artisans->sortirDeDemo($artisan['id'], $offresMax + (new DepotEnregistrements($this->base, $portee))->recus());
+            // Faux : le compte n'est plus une démonstration (remise à zéro ou passage lancés en même temps).
+            if (!$this->artisans->sortirDeDemo($artisan['id'], $offresMax + $dictees, $courrielArtisan)) {
+                throw new \RuntimeException("{$artisan['courriel']} n'est plus une démonstration : rien n'est changé.");
+            }
+            // Le mot de passe de la démonstration ne sert plus, et le numéro de session avance.
+            $this->artisans->remplacerMotDePasse($artisan['id'], $hache);
             return $bilan;
         });
     }
@@ -114,7 +142,16 @@ final class Comptes
      */
     private static function verifierMetier(?string $metier, ?string $metierSaisi): ?string
     {
-        $metierSaisi = $metierSaisi === null ? '' : trim($metierSaisi);
+        $metierSaisi ??= '';
+        // Une entrée d'utilisateur : ni octets illisibles, ni caractères de commande (saut de ligne, séquence
+        // d'échappement), que bin/metiers-saisis imprimerait tels quels dans un terminal.
+        if (!mb_check_encoding($metierSaisi, 'UTF-8')) {
+            throw new \InvalidArgumentException('Le texte du métier est illisible.');
+        }
+        $metierSaisi = (string) preg_replace('/^[\s\x{00A0}]+|[\s\x{00A0}]+$/u', '', $metierSaisi);
+        if (preg_match('/\p{C}/u', $metierSaisi) === 1) {
+            throw new \InvalidArgumentException('Le texte du métier ne contient que des lettres, des chiffres et de la ponctuation.');
+        }
         if ($metier !== null) {
             CatalogueFictif::libelle($metier);
         }

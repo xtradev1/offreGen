@@ -86,13 +86,18 @@ final class DepotArtisans
         $this->base->ecrire('UPDATE artisan SET metier = :m, metier_saisi = :s WHERE id = :id', ['m' => $metier, 's' => $metierSaisi, 'id' => $id]);
     }
 
-    /** Une démonstration devient un essai : plus de plafond par jour ni de date de fin, un nombre total d'offres. */
-    public function sortirDeDemo(int $id, int $offresMax): void
+    /**
+     * Une démonstration devient un essai : plus de plafond par jour ni de date de fin, un nombre total d'offres,
+     * et l'adresse de l'artisan à la place de l'adresse inventée de la démonstration.
+     *
+     * @return bool faux si le compte n'est plus une démonstration (passé ou remis à zéro entre-temps)
+     */
+    public function sortirDeDemo(int $id, int $offresMax, string $courriel): bool
     {
-        $this->base->ecrire(
-            'UPDATE artisan SET demo = 0, plafond_jour = NULL, demo_fin = NULL, offres_max = :m WHERE id = :id',
-            ['m' => $offresMax, 'id' => $id],
-        );
+        return $this->base->ecrire(
+            'UPDATE artisan SET demo = 0, plafond_jour = NULL, demo_fin = NULL, offres_max = :m, courriel = :c WHERE id = :id AND demo = 1',
+            ['m' => $offresMax, 'c' => self::normaliser($courriel), 'id' => $id],
+        ) === 1;
     }
 
     /**

@@ -21,9 +21,10 @@
 {% block contenu %}
   {% if p %}
     <p class="vp-avance" data-zone="avance"><span><b>{{ n }}</b> sur {{ total }}</span><progress class="vp-barre" value="{{ n - 1 }}" max="{{ total }}" aria-hidden="true"></progress></p>
-    <form class="vp-carte" method="post" action="/vos-prix/{{ p.id }}" data-vos-prix>
+    {# data-dernier : après le dernier produit vient le bilan, le script laisse le formulaire partir normalement. #}
+    <form class="vp-carte" method="post" action="/vos-prix/{{ p.id }}" data-vos-prix{% if n == total %} data-dernier{% endif %}>
       <input type="hidden" name="_csrf" value="{{ csrf() }}">
-      <h2 class="vp-nom" data-zone="nom">{{ p.designation }}</h2>
+      <h2 class="vp-nom" data-zone="nom" aria-live="polite">{{ p.designation }}</h2>
       <label class="vp-prix{% if erreur %} faux{% endif %}"><span class="chf">CHF</span>
         <input name="prix" value="{{ saisie }}" inputmode="decimal" autocomplete="off" enterkeyhint="next" placeholder="0" aria-label="Prix de {{ p.designation }}" autofocus>
         <span class="unite" data-zone="unite">par {{ p.unite }}</span></label>

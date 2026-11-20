@@ -73,10 +73,10 @@ final class PassageEssaiTest extends TestCase
         $prixDicte = (int) BaseDeTest::ligne("SELECT prix_centimes FROM ligne WHERE offre_id = {$this->offreDictee}")['prix_centimes'];
         self::assertGreaterThan(0, $prixDicte);
 
-        $bilan = $this->comptes->passerEnEssai('a@exemple.ch', 10);
+        $bilan = $this->comptes->passerEnEssai('a@exemple.ch', 'artisan@exemple.ch',10);
 
         // Onze produits remis à 0 (le douzième a été modifié), deux offres d'exemple, une fiche d'exemple sans offre.
-        self::assertSame(['offres' => 2, 'clients' => 1, 'produits' => 11], $bilan);
+        self::assertSame(['offres' => 2, 'clients' => 1, 'produits' => 11, 'dictees' => 1], array_diff_key($bilan, ['mot_de_passe' => '']));
         self::assertSame(0, BaseDeTest::compter('offre', "artisan_id = $a AND exemple = 1"));
         self::assertSame(1, BaseDeTest::compter('offre', "artisan_id = $a"));
         // L'offre dictée garde sa ligne, son prix du jour de la dictée et son lien au catalogue.
@@ -93,9 +93,80 @@ final class PassageEssaiTest extends TestCase
         // La garantie de la spec : aucun produit ne porte à la fois la marque « exemple » et un prix.
         self::assertSame(0, BaseDeTest::compter('produit', "artisan_id = $a AND prix_exemple_centimes IS NOT NULL AND prix_centimes <> 0"));
         // Le compte : hors démo, dix offres de plus que la visite déjà dictée, métier et entreprise gardés.
-        self::assertSame(['demo' => 0, 'plafond_jour' => null, 'offres_max' => 11, 'demo_fin' => null, 'metier' => 'sols', 'entreprise' => 'Entreprise A'],
-            BaseDeTest::ligne("SELECT demo, plafond_jour, offres_max, demo_fin, metier, entreprise FROM artisan WHERE id = $a"));
+        self::assertSame(['courriel' => 'artisan@exemple.ch', 'demo' => 0, 'plafond_jour' => null, 'offres_max' => 11, 'demo_fin' => null, 'metier' => 'sols', 'entreprise' => 'Entreprise A'],
+            BaseDeTest::ligne("SELECT courriel, demo, plafond_jour, offres_max, demo_fin, metier, entreprise FROM artisan WHERE id = $a"));
         self::assertSame(1, BaseDeTest::compter('enregistrement', "artisan_id = $a"));
+    }
+
+    /**
+     * Une démonstration a une adresse inventée et un mot de passe partagé (revue du 2026-11-20) : l'essai reçoit
+     * l'adresse de l'artisan, un mot de passe neuf, et les sessions ouvertes pendant la démonstration tombent.
+     */
+    public function testLeCompteRecoitLAdresseDeLArtisanEtLesAnciensAccesTombent(): void
+    {
+        $a = $this->jeu->a;
+        $avant = BaseDeTest::ligne("SELECT mot_de_passe, version_session FROM artisan WHERE id = $a");
+
+        $bilan = $this->comptes->passerEnEssai('a@exemple.ch', ' Artisan@Exemple.ch ', 10);
+
+        $apres = BaseDeTest::ligne("SELECT courriel, mot_de_passe, version_session FROM artisan WHERE id = $a");
+        self::assertSame('artisan@exemple.ch', $apres['courriel']);
+        self::assertSame($avant['version_session'] + 1, $apres['version_session']);
+        self::assertFalse(password_verify(Jeu::MOT_DE_PASSE, (string) $apres['mot_de_passe']), 'le mot de passe de la démonstration ouvre encore le compte');
+        self::assertGreaterThanOrEqual(16, strlen($bilan['mot_de_passe']));
+        self::assertTrue(password_verify($bilan['mot_de_passe'], (string) $apres['mot_de_passe']));
+    }
+
+    public function testUneAdresseFausseOuDejaPriseRefuseSansRienChanger(): void
+    {
+        foreach (['pas-une-adresse', 'b@exemple.ch', ''] as $adresse) {
+            try {
+                $this->comptes->passerEnEssai('a@exemple.ch', $adresse, 10);
+                self::fail("Adresse acceptée : $adresse");
+            } catch (\InvalidArgumentException) {
+            }
+        }
+        self::assertSame(1, BaseDeTest::compter('artisan', "id = {$this->jeu->a} AND demo = 1 AND courriel = 'a@exemple.ch'"));
+        self::assertSame(2, BaseDeTest::compter('offre', "artisan_id = {$this->jeu->a} AND exemple = 1"));
+    }
+
+    /** Une démonstration posée avant les marques n'a rien à nettoyer : la passer garderait ses offres d'exemple. */
+    public function testUneDemoSansMarqueEstRefuseeSansRienChanger(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET metier = NULL WHERE id = {$this->jeu->a}");
+        try {
+            $this->comptes->passerEnEssai('a@exemple.ch', 'artisan@exemple.ch', 10);
+            self::fail('Une démonstration sans marque est passée à l\'essai.');
+        } catch (\InvalidArgumentException $e) {
+            self::assertStringContainsString('remettre à zéro', $e->getMessage());
+        }
+        self::assertSame(1, BaseDeTest::compter('artisan', "id = {$this->jeu->a} AND demo = 1"));
+    }
+
+    /**
+     * Rattacher une ligne dictée à un produit d'exemple lui ajoute un synonyme (LigneCatalogueControleur) : le prix
+     * n'a pas changé, le produit reste un exemple et repart à 0 (revue du 2026-11-20).
+     */
+    public function testUnProduitDExempleDontLePrixNAPasChangeResteUnExemple(): void
+    {
+        $a = $this->jeu->a;
+        $produits = new DepotProduits($this->jeu->base, new Portee($a));
+        $p = null;
+        foreach ($produits->tous() as $candidat) {
+            if ($candidat['prix_exemple_centimes'] !== null && $candidat['prix_centimes'] > 0) {
+                $p = $candidat;
+                break;
+            }
+        }
+        self::assertNotNull($p);
+        self::assertSame($p['prix_centimes'], $p['prix_exemple_centimes']);
+        $produits->modifier($p['id'], ['synonymes' => 'laminé, du laminé'] + $p);
+        self::assertSame($p['prix_centimes'], BaseDeTest::ligne("SELECT prix_exemple_centimes FROM produit WHERE id = {$p['id']}")['prix_exemple_centimes']);
+
+        $this->comptes->passerEnEssai('a@exemple.ch', 'artisan@exemple.ch', 10);
+
+        self::assertSame(['prix_centimes' => 0, 'prix_exemple_centimes' => $p['prix_centimes'], 'synonymes' => 'laminé, du laminé'],
+            BaseDeTest::ligne("SELECT prix_centimes, prix_exemple_centimes, synonymes FROM produit WHERE id = {$p['id']}"));
     }
 
     public function testUneFicheDExempleCorrigeeResteCelleDeLArtisan(): void
@@ -104,7 +175,7 @@ final class PassageEssaiTest extends TestCase
         (new DepotClients($this->jeu->base, new Portee($this->jeu->a)))->modifier($this->clientSeul,
             ['nom' => 'Paul Vrai', 'adresse' => new Adresse('Rue du Stand', '4', '2800', 'Delémont'), 'telephone' => null, 'courriel' => null], $this->jeu->maintenant);
 
-        $bilan = $this->comptes->passerEnEssai('a@exemple.ch', 10);
+        $bilan = $this->comptes->passerEnEssai('a@exemple.ch', 'artisan@exemple.ch',10);
 
         self::assertSame(0, $bilan['clients']);
         self::assertSame(1, BaseDeTest::compter('client', "id = {$this->clientSeul} AND nom = 'Paul Vrai' AND exemple = 0"));
@@ -117,7 +188,7 @@ final class PassageEssaiTest extends TestCase
         BaseDeTest::pdo()->exec("UPDATE offre SET exemple = 1 WHERE artisan_id = $b");
         BaseDeTest::pdo()->exec("UPDATE client SET exemple = 1 WHERE artisan_id = $b");
 
-        $this->comptes->passerEnEssai('a@exemple.ch', 10);
+        $this->comptes->passerEnEssai('a@exemple.ch', 'artisan@exemple.ch',10);
 
         self::assertSame(1, BaseDeTest::compter('offre', "artisan_id = $b AND exemple = 1"));
         self::assertSame(1, BaseDeTest::compter('client', "artisan_id = $b AND exemple = 1"));
@@ -142,7 +213,7 @@ final class PassageEssaiTest extends TestCase
             }
         }
 
-        $this->comptes->passerEnEssai('a@exemple.ch', 10);
+        $this->comptes->passerEnEssai('a@exemple.ch', 'artisan@exemple.ch',10);
 
         // Les factures des offres d'exemple partent avec elles ; celle de l'offre dictée reste entière.
         self::assertSame(1, BaseDeTest::compter('facture', "artisan_id = $a AND offre_id = {$this->offreDictee}"));
@@ -154,7 +225,7 @@ final class PassageEssaiTest extends TestCase
     public function testUnCompteQuiNEstPasUneDemoRefuseSansRienChanger(): void
     {
         try {
-            $this->comptes->passerEnEssai('b@exemple.ch', 10);
+            $this->comptes->passerEnEssai('b@exemple.ch', 'autre@exemple.ch', 10);
             self::fail('Un compte réel est passé par le nettoyage.');
         } catch (\InvalidArgumentException $e) {
             self::assertStringContainsString("n'est pas un compte de démonstration", $e->getMessage());
@@ -166,7 +237,7 @@ final class PassageEssaiTest extends TestCase
     public function testUnNombreDOffresNulRefuseSansRienChanger(): void
     {
         try {
-            $this->comptes->passerEnEssai('a@exemple.ch', 0);
+            $this->comptes->passerEnEssai('a@exemple.ch', 'artisan@exemple.ch',0);
             self::fail('Un essai sans offre a été accepté.');
         } catch (\InvalidArgumentException) {
         }
@@ -179,7 +250,7 @@ final class PassageEssaiTest extends TestCase
         $a = $this->jeu->a;
         try {
             // Le plafond dépasse la colonne (INT UNSIGNED) : la dernière écriture de la transaction échoue.
-            $this->comptes->passerEnEssai('a@exemple.ch', 9_000_000_000);
+            $this->comptes->passerEnEssai('a@exemple.ch', 'artisan@exemple.ch',9_000_000_000);
             self::fail('Le plafond hors limite a été accepté.');
         } catch (\PDOException) {
         }

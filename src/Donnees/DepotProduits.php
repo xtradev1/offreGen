@@ -95,7 +95,9 @@ final class DepotProduits
     }
 
     /**
-     * Un produit modifié par l'artisan devient le sien : il perd sa marque « exemple ».
+     * Un produit d'exemple dont l'artisan change le prix devient le sien : il perd sa marque « exemple ». Le prix
+     * inchangé (un synonyme ajouté par le rattachement d'une ligne, une catégorie corrigée), la marque reste :
+     * le prix est toujours celui de la démonstration (revue du 2026-11-20).
      *
      * @param ProduitNeuf $p
      */
@@ -106,10 +108,11 @@ final class DepotProduits
             return false;
         }
         $this->base->ecrire(
-            'UPDATE produit SET categorie = :c, designation = :d, unite = :u, prix_centimes = :p, tva_pour_dix_mille = :t, synonymes = :s,
-                    prix_exemple_centimes = NULL
+            // La marque avant le prix : MariaDB applique les affectations dans l'ordre, et lirait sinon le prix neuf.
+            'UPDATE produit SET prix_exemple_centimes = IF(prix_centimes = :p2, prix_exemple_centimes, NULL),
+                    categorie = :c, designation = :d, unite = :u, prix_centimes = :p, tva_pour_dix_mille = :t, synonymes = :s
              WHERE id = :id AND artisan_id = :a',
-            ['c' => $p['categorie'], 'd' => $p['designation'], 'u' => $p['unite'], 'p' => $p['prix_centimes'],
+            ['p2' => $p['prix_centimes'], 'c' => $p['categorie'], 'd' => $p['designation'], 'u' => $p['unite'], 'p' => $p['prix_centimes'],
              't' => $p['tva_pour_dix_mille'] ?? null, 's' => $p['synonymes'] ?? null, 'id' => $id, 'a' => $this->portee->artisanId],
         );
         return true;

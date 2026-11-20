@@ -179,6 +179,46 @@ final class VosPrixTest extends TestCase
         self::assertSame(1, BaseDeTest::compter('produit', "artisan_id = {$this->jeu->a} AND designation = 'Crépi'"));
     }
 
+    // Revue du 2026-11-20.
+
+    public function testPasserEnvoyeDeuxFoisNeCompteQuUneFois(): void
+    {
+        $this->page('/vos-prix');
+        $this->agir($this->crepi, ['action' => 'passer']);
+        $this->page("/vos-prix?p={$this->lissage}&suite=1");
+        $this->agir($this->crepi, ['action' => 'passer']);
+        self::assertStringContainsString('<b>2</b> sur 3', $this->page("/vos-prix?p={$this->lissage}&suite=1"));
+    }
+
+    public function testUnGesteSuivantRendLAnnulationCaduque(): void
+    {
+        $this->page('/vos-prix');
+        $this->page($this->agir($this->crepi, ['action' => 'reprendre']));
+        $this->page($this->agir($this->lissage, ['action' => 'passer']));
+        $retour = $this->a->post('/vos-prix/annuler', []);
+        self::assertSame('/vos-prix?suite=1', $retour->headers->get('Location'));
+        self::assertSame(['prix_centimes' => 4000, 'prix_exemple_centimes' => null], $this->produit($this->crepi));
+    }
+
+    public function testAnnulerLaisseUnPrixChangeEntreTemps(): void
+    {
+        $this->page('/vos-prix');
+        $this->page($this->agir($this->crepi, ['action' => 'reprendre']));
+        // L'artisan a corrigé ce prix dans son catalogue avant de toucher « Annuler ».
+        BaseDeTest::pdo()->exec("UPDATE produit SET prix_centimes = 5000 WHERE id = {$this->crepi}");
+        self::assertSame(303, $this->a->post('/vos-prix/annuler', [])->getStatusCode());
+        self::assertSame(['prix_centimes' => 5000, 'prix_exemple_centimes' => null], $this->produit($this->crepi));
+    }
+
+    public function testLaDerniereCarteEstMarqueePourLeScript(): void
+    {
+        self::assertStringNotContainsString('data-dernier', $this->page('/vos-prix'));
+        $this->page($this->agir($this->crepi, ['action' => 'passer']));
+        $derniere = $this->page($this->agir($this->lissage, ['action' => 'passer']));
+        self::assertStringContainsString('Baguette', $derniere);
+        self::assertStringContainsString('data-dernier', $derniere);
+    }
+
     public function testLeBilanCompteCeQuiAEteFait(): void
     {
         $this->page('/vos-prix');

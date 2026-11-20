@@ -5,17 +5,22 @@
 // - glisser la carte vers la gauche fait « Passer », et rien d'autre ;
 // - le message « Annuler » s'efface seul après 5 secondes, et « Annuler » ne recharge pas la page non plus.
 // Chargé par l'écran lui-même, et par « Mes offres » et le catalogue quand ils portent le bandeau ou le rappel.
-// Tout est écouté sur le document : la carte peut arriver après le chargement de la page.
+// Tout est écouté sur le document : la carte peut arriver après le chargement de la page. Sur ces deux écrans,
+// le script ne fait rien tant qu'on ne touche pas un lien vers « Vos prix » (revue du 2026-11-20).
 (() => {
   'use strict';
   if (!window.fetch || !window.DOMParser) return;
   const ZONES = ['nom', 'unite', 'sous', 'haut'];
+  const SUITE = '/vos-prix?suite=1';
   const carte = () => document.querySelector('form[data-vos-prix]');
   const champDe = (form) => form.querySelector('input[name="prix"]');
   const lire = (reponse) => reponse.text().then((html) => ({ reponse, doc: new DOMParser().parseFromString(html, 'text/html') }));
   let envoi = false;
+  let ouverture = false;
+  let installe = false;
+  let dernierBouton = null;
 
-  // Les messages de la page reçue remplacent ceux de l'écran.
+  // Les messages de la page reçue remplacent ceux de l'écran. Un message qui a le curseur reste.
   const messages = (doc) => {
     document.querySelectorAll('.app > .snack').forEach((s) => s.remove());
     const bas = document.querySelector('.app > .bas');
@@ -23,7 +28,7 @@
     doc.querySelectorAll('.app > .snack').forEach((s) => {
       const message = document.importNode(s, true);
       bas.before(message);
-      setTimeout(() => message.remove(), 5000);
+      setTimeout(() => { if (!message.contains(document.activeElement)) message.remove(); }, 5000);
     });
   };
 
@@ -37,6 +42,7 @@
     if (!form || !nouveau || !nouveauChamp || !jeton || ZONES.some((z) => !nouveau.querySelector(`[data-zone="${z}"]`))) return false;
     const champ = champDe(form);
     form.setAttribute('action', nouveau.getAttribute('action'));
+    form.toggleAttribute('data-dernier', nouveau.hasAttribute('data-dernier'));
     form.querySelector('input[name="_csrf"]').value = jeton.value;
     for (const z of ZONES) {
       form.querySelector(`[data-zone="${z}"]`).innerHTML = nouveau.querySelector(`[data-zone="${z}"]`).innerHTML;
@@ -66,15 +72,19 @@
     document.title = doc.title;
     messages(doc);
     history.pushState(null, '', adresse);
+    installe = true;
     window.scrollTo(0, 0);
     return true;
   };
-  // Retour du navigateur après une arrivée sans navigation : la page de l'adresse se recharge.
-  window.addEventListener('popstate', () => location.reload());
+  // Retour du navigateur après une arrivée sans navigation : la page de l'adresse se recharge. Seulement dans ce
+  // cas : sur « Mes offres » et le catalogue, app.js ferme ses fenêtres par l'historique (revue du 2026-11-20).
+  window.addEventListener('popstate', () => { if (installe) location.reload(); });
 
   // iPhone : le clavier ne s'ouvre que pendant un toucher. Un champ provisoire le prend tout de suite ; le champ
   // du prix le lui reprend quand la carte est là.
   const ouvrir = (adresse) => {
+    if (ouverture) return;
+    ouverture = true;
     const provisoire = document.createElement('input');
     provisoire.setAttribute('inputmode', 'decimal');
     provisoire.tabIndex = -1;
@@ -87,29 +97,38 @@
         if (!reponse.ok || !installer(doc, reponse.url)) { location.assign(adresse); return; }
         champDe(carte()).focus();
         provisoire.remove();
+        ouverture = false;
       })
       .catch(() => location.assign(adresse));
   };
 
   document.addEventListener('click', (e) => {
     if (!(e.target instanceof Element) || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    // Sans navigation sur un écran tactile seulement : à la souris, le lien s'ouvre comme un lien, et les
+    // écouteurs d'app.js sur le bas de l'écran (micro, touche D) restent en place.
     const lien = e.target.closest('a[href="/vos-prix"]');
     if (lien) {
+      if (!window.matchMedia('(pointer: coarse)').matches) return;
       e.preventDefault();
       ouvrir(lien.href);
       return;
     }
-    // Toucher la carte hors d'un bouton rend le curseur au champ.
     const form = carte();
-    if (form && form.contains(e.target) && !e.target.closest('button')) champDe(form).focus();
-  });
+    if (!form || !form.contains(e.target)) return;
+    // Le bouton touché, pour les navigateurs qui ne le donnent pas à l'envoi (Safari avant 15.4) : sans lui,
+    // « Je ne fais pas ça » partirait comme « Suivant ».
+    const bouton = e.target.closest('button[name="action"]');
+    if (bouton) dernierBouton = bouton;
+    else if (!e.target.closest('button')) champDe(form).focus();
+  }, true);
 
   // Toucher un bouton de la carte ou du message ne retire pas le curseur du champ.
   document.addEventListener('mousedown', (e) => {
     if (carte() && e.target instanceof Element && e.target.closest('form[data-vos-prix] button, .snack button')) e.preventDefault();
   });
 
-  // Repli : l'envoi ordinaire du formulaire, page rechargée.
+  // L'envoi ordinaire du formulaire, page rechargée : repli si le réseau lâche, et règle pour le dernier produit
+  // (le bilan suit, et son message « Annuler » doit arriver avec lui).
   const envoyerSansScript = (form, action) => {
     if (action) {
       const cache = document.createElement('input');
@@ -122,30 +141,38 @@
     form.submit();
   };
 
-  // $action : le geste de la carte ; null pour « Annuler », envoyé par le formulaire du message.
+  // action : le geste de la carte ; null pour « Annuler », envoyé par le formulaire du message.
   const envoyer = (form, action) => {
     if (envoi) return;
     envoi = true;
+    const laCarte = carte();
+    if (laCarte) laCarte.classList.add('vp-envoi');
     const corps = new FormData(form);
     if (action) corps.set('action', action);
     fetch(form.getAttribute('action'), { method: 'POST', body: corps, credentials: 'same-origin' })
       .then(lire)
       .then(({ reponse, doc }) => {
-        if (remplacer(doc, reponse.redirected ? reponse.url : null)) return;
-        // Le bilan, ou une page inattendue (session finie) : la page entière.
-        if (reponse.redirected) location.assign(reponse.url);
-        else location.reload();
-      })
-      .catch(() => envoyerSansScript(form, action))
-      .finally(() => { envoi = false; });
+        // Le serveur a répondu : plus aucun renvoi du formulaire, il ferait le geste deux fois.
+        let fait = false;
+        try { fait = remplacer(doc, reponse.redirected ? reponse.url : null); } catch (erreur) { fait = false; }
+        if (!fait) location.assign(reponse.redirected ? reponse.url : SUITE);
+      }, () => envoyerSansScript(form, action))
+      .finally(() => {
+        envoi = false;
+        if (laCarte) laCarte.classList.remove('vp-envoi');
+      });
   };
 
   document.addEventListener('submit', (e) => {
     const form = e.target;
     if (!(form instanceof HTMLFormElement) || form.dataset.natif) return;
     if (form.hasAttribute('data-vos-prix')) {
+      // Dernier produit : envoi ordinaire, le navigateur joint lui-même le bouton touché.
+      if (form.hasAttribute('data-dernier')) return;
       e.preventDefault();
-      const bouton = e.submitter instanceof HTMLButtonElement && e.submitter.name === 'action' ? e.submitter : null;
+      const donne = e.submitter instanceof HTMLButtonElement && e.submitter.name === 'action' ? e.submitter : null;
+      const bouton = donne || ('submitter' in e ? null : dernierBouton);
+      dernierBouton = null;
       envoyer(form, bouton ? bouton.value : 'suivant');
     } else if (form.getAttribute('action') === '/vos-prix/annuler' && carte()) {
       e.preventDefault();
@@ -153,29 +180,30 @@
     }
   });
 
-  // Glisser à gauche : « Passer ». Un geste raté ne doit ni enregistrer un prix ni retirer un produit.
+  // Glisser à gauche : « Passer ». Un geste raté, ou un défilement, ne doit rien faire.
   let glisse = null;
   document.addEventListener('touchstart', (e) => {
     const form = carte();
     if (!form || e.touches.length !== 1 || !(e.target instanceof Node) || !form.contains(e.target)) return;
-    glisse = { form, x: e.touches[0].clientX, y: e.touches[0].clientY, ecart: 0 };
+    glisse = { form, x: e.touches[0].clientX, y: e.touches[0].clientY, dx: 0, dy: 0 };
     form.classList.remove('vp-glisse');
   }, { passive: true });
   document.addEventListener('touchmove', (e) => {
     if (!glisse) return;
-    const dx = e.touches[0].clientX - glisse.x;
-    const dy = e.touches[0].clientY - glisse.y;
-    if (Math.abs(dy) > Math.abs(dx)) return;
-    glisse.ecart = dx;
-    glisse.form.style.transform = dx < 0 ? `translateX(${dx}px)` : '';
+    glisse.dx = e.touches[0].clientX - glisse.x;
+    glisse.dy = e.touches[0].clientY - glisse.y;
+    const horizontal = Math.abs(glisse.dx) > 2 * Math.abs(glisse.dy);
+    glisse.form.style.transform = horizontal && glisse.dx < 0 ? `translateX(${glisse.dx}px)` : '';
   }, { passive: true });
   const finDuGeste = (annule) => {
     if (!glisse) return;
-    const { form, ecart } = glisse;
+    const { form, dx, dy } = glisse;
     glisse = null;
     form.classList.add('vp-glisse');
     form.style.transform = '';
-    if (!annule && ecart < -80) envoyer(form, 'passer');
+    if (annule || dx > -80 || Math.abs(dx) <= 2 * Math.abs(dy)) return;
+    if (form.hasAttribute('data-dernier')) envoyerSansScript(form, 'passer');
+    else envoyer(form, 'passer');
   };
   document.addEventListener('touchend', () => finDuGeste(false));
   document.addEventListener('touchcancel', () => finDuGeste(true));

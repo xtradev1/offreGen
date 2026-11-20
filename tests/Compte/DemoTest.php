@@ -117,7 +117,8 @@ final class DemoTest extends TestCase
         BaseDeTest::pdo()->exec("UPDATE artisan SET demo = 1 WHERE id = {$this->jeu->a}");
         $comptes = Monde::conteneur(env: $this->dossiers->env())->comptes();
         // 61 caractères, puis un texte donné avec un métier de la liste.
-        foreach ([['autre', str_repeat('é', 61)], ['peintre', 'Ébéniste']] as [$metier, $texte]) {
+        // Puis un saut de ligne et une séquence d'échappement, qui s'imprimeraient tels quels dans un terminal.
+        foreach ([['autre', str_repeat('é', 61)], ['peintre', 'Ébéniste'], ['autre', "Ébéniste\nfaux"], ['autre', "\e[31mrouge"]] as [$metier, $texte]) {
             try {
                 $comptes->reinitialiserDemo('a@exemple.ch', $metier, $texte);
                 self::fail("Texte de métier accepté : $metier, $texte");
