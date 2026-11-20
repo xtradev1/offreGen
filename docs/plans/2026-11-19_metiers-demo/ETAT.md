@@ -76,6 +76,7 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-20 : phase 7 ouverte, deux relecteurs indépendants (données et passage à l'essai ; écran « Vos prix »).
 - 2026-11-20 : revue rendue, `REVUE.md`. Deux défauts bloquants, tous deux de ce chantier : le passage à l'essai laissait l'adresse inventée, le mot de passe partagé et les sessions de la démo ; le script « Vos prix », en service depuis le matin, rechargeait « Mes offres » et le catalogue à chaque fermeture d'une fenêtre. Chaque trouvaille relue dans le code, puis corrigée : 17 sur 22, 3 voulues, 2 laissées. Une décision reste à Xavier (D4).
 - 2026-11-20 : `bin/passer-en-essai` change de forme : `<courriel de la démo> <courriel de l'artisan>`. Le bouton « Transformer en essai » du chantier des comptes devra demander cette adresse.
+- 2026-11-20 : demande de Xavier, hors de ce chantier : une démo lancée « en 30 secondes » à partir du mail du prospect (« il met son mail, touf, il a l'app, elle s'ouvre, il la teste, il parle »), puis transformée en essai sans friction. Ses réponses aux quatre questions posées : la démo se lance des deux façons (commercial dans l'administration, et page publique) ; le mail se confirme au passage à l'essai ; pour le métier, « c'est le commercial qui lui crée une démo direct pour son métier » ; c'est le chat des comptes qui construit (son lot 5). Texte de passation remis à Xavier pour ce chat. Resté ouvert : le choix du métier sur la page publique, où il n'y a pas de commercial.
 
 ## Décisions
 
