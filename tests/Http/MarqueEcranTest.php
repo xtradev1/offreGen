@@ -117,6 +117,37 @@ final class MarqueEcranTest extends TestCase
         self::assertStringNotContainsString('#B23A2E', (string) $this->a->get('/reglages/marque.css?apercu=rouge')->getContent(), 'Une couleur invalide est ignorée.');
     }
 
+    /**
+     * Xavier, 2026-11-20 : « j'ai tenté de mettre du blanc […] j'ai pas de message ». 2b : une couleur tapée trop claire
+     * est signalée, avec deux versions plus foncées de sa teinte ; un toucher en prend une (sans JavaScript aussi).
+     */
+    public function testUneCouleurTapeeTropClaireEstSignaleeAvecDeuxPropositions(): void
+    {
+        $cache = '#<div class="avis-couleur" data-avis-couleur[^>]* hidden>#';
+        self::assertMatchesRegularExpression($cache, $this->page('/reglages/marque'), 'la couleur par défaut se lit bien');
+
+        self::assertSame(303, $this->a->post('/reglages', ['couleur_choix' => 'autre', 'couleur' => '#FFFFFF', 'retour' => '/reglages/marque'])->getStatusCode());
+        $page = $this->page('/reglages/marque');
+        self::assertDoesNotMatchRegularExpression($cache, $page);
+        self::assertStringContainsString('Cette couleur se lit mal sur le papier blanc', $page);
+        self::assertStringContainsString('contraste <span data-avis-contraste>1</span>:1', $page);
+        $p = \OffreGen\Compte\Marque::propositions('#FFFFFF');
+        self::assertNotNull($p);
+        foreach (['bien', 'visible'] as $niveau) {
+            self::assertStringContainsString('name="couleur_prise" value="' . $p[$niveau] . '" data-niveau="' . $niveau . '"', $page);
+        }
+
+        // Sans JavaScript, le bouton envoie le formulaire : la couleur prise devient celle des documents.
+        self::assertSame(303, $this->a->post('/reglages', ['couleur_prise' => $p['bien'], 'couleur_choix' => 'autre', 'couleur' => '#FFFFFF', 'retour' => '/reglages/marque'])->getStatusCode());
+        self::assertSame($p['bien'], $this->marqueDeA()['couleur']);
+        self::assertMatchesRegularExpression($cache, $this->page('/reglages/marque'));
+        self::assertSame(422, $this->a->post('/reglages', ['couleur_prise' => 'rouge', 'retour' => '/reglages/marque'])->getStatusCode(), 'une couleur prise invalide est refusée');
+
+        // Les six couleurs proposées ne déclenchent rien, même sous 7:1 (le pétrole, 4,9:1).
+        self::assertSame(303, $this->a->post('/reglages', ['couleur_choix' => '#0F7C8C', 'retour' => '/reglages/marque'])->getStatusCode());
+        self::assertMatchesRegularExpression($cache, $this->page('/reglages/marque'));
+    }
+
     public function testModeleEtCouleurVontAuDocumentEtAuPdf(): void
     {
         $offre = '/offres/' . $this->jeu->offre['a'];

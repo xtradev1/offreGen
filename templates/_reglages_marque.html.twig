@@ -27,6 +27,18 @@
       <input id="couleur" name="couleur" type="color" value="{{ champs.couleur|default('#1D4E89')|lower }}"{{ f.invalide(erreurs, 'couleur') }}>
     </div>
     {{ f.erreur(erreurs, 'couleur') }}
+    {# 2b (maquette du 5e tour du chantier responsive, validée par Xavier le 2026-11-20) : une couleur tapée, ou celle du
+       logo, sous 7:1 sur le papier blanc. Deux versions plus foncées de la même teinte, d'un toucher ; sans JavaScript,
+       le bouton envoie le formulaire. app.js (avisCouleur) le tient à jour pendant le choix. #}
+    <div class="avis-couleur" data-avis-couleur data-teintes="{{ proposees|join(',') }}" aria-live="polite"{% if not avis %} hidden{% endif %}>
+      <p><b data-avis-titre>{{ avis and avis.contraste >= 4.5 ? 'Cette couleur manque de contraste sur le papier blanc' : 'Cette couleur se lit mal sur le papier blanc' }}</b> (contraste <span data-avis-contraste>{{ avis.rapport ?? '' }}</span>:1).<span data-avis-pale{% if avis and avis.contraste >= 4.5 %} hidden{% endif %}> Vos documents l'emploient foncée juste assez pour rester lisible.</span></p>
+      <p>Prenez une version plus foncée de la même teinte&nbsp;:</p>
+      {% for niveau, nom in {bien: 'Bien visible', visible: 'Visible'} %}
+        <button class="choix-couleur" type="submit" name="couleur_prise" value="{{ avis[niveau] ?? '' }}" data-niveau="{{ niveau }}">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="{{ avis[niveau] ?? '#FFFFFF' }}"/></svg>
+          <span><b>{{ nom }}</b><small><span data-hex>{{ avis[niveau] ?? '' }}</span> · contraste <span data-rapport>{{ avis[niveau ~ '_rapport'] ?? '' }}</span>:1</small></span></button>
+      {% endfor %}
+    </div>
   </fieldset>
   <fieldset class="groupe">
     <legend>3. Modèle</legend>

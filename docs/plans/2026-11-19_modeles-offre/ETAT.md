@@ -2,7 +2,7 @@
 chantier: Modèles d'offre du bâtiment
 slug: 2026-11-19_modeles-offre
 phase: 8
-statut: gate_ouvert
+statut: en_cours
 gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
@@ -16,13 +16,14 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Suite de la recette de Xavier sur le site de test (`RECETTE.md`, commit `70eca7a`). À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
+Déployer sur le site de test le commit de l'encadré de couleur et du glissement, quand Xavier le dit (règle du projet : redemander avant chaque déploiement). Puis ses réponses aux quatre questions et à celle des couleurs proposées. À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
 
 ## En attente de toi
 
-- Finir la recette (`RECETTE.md`) sur le site de test, commit `70eca7a`, et dire ce qui casse ou ce qui déplaît.
-- Trancher quatre points : la facture d'une page sans pied ; la couleur de l'artisan à 4,5 de contraste (7 la foncerait) ; le lieu dicté pris pour l'adresse du chantier ; les phrases fixes de Lettre.
-- Savoir que la session du responsive trouvera le point 2a (vignettes vivantes) déjà commité, identique à sa copie : elle doit commiter le reste depuis une copie propre posée sur la tête de la branche.
+- Dire si je déploie sur le site de test l'encadré de couleur et le glissement au doigt (données toujours inventées ?).
+- Répondre aux quatre questions, détaillées dans la réponse du 2026-11-20 : facture d'une page sans pied ; couleur de l'artisan à 4,5 ou 7 ; lieu dicté pris pour l'adresse du chantier ; phrases fixes de Lettre.
+- Dire si les quatre couleurs proposées sous 7:1 (vert 5,1, rouge 5,9, brun 5,8, pétrole 4,9) doivent être foncées.
+- Savoir que la session du responsive trouvera 2a et 2b déjà commités : elle doit commiter le reste depuis une copie propre posée sur la tête de la branche.
 
 ## Journal
 
@@ -64,6 +65,8 @@ Suite de la recette de Xavier sur le site de test (`RECETTE.md`, commit `70eca7a
 - 2026-11-20 : recette de Xavier sur le test : « c'est pas trop mal […] le reste, c'est vraiment bien dans les grandes lignes ». Demande : « quand je suis en grand par exemple, je le vois directement […] dans la couleur que j'ai choisie. […] Il faut absolument le faire. » C'est le point 2a du chantier responsive (vignettes vivantes et vue en grand dans la couleur touchée), resté non commité dans `~/offreGen`. Repris à l'identique dans ce chantier, pour qu'une seule version existe : `vignettes()` et `offreDApercu()` de `ReglagesControleur`, `?apercu=` de la feuille de la marque, `_vignette_modele.html.twig`, `vignettesVivantes` et la vue en grand d'`app.js`, règles `.vignette` d'`app.css`, test `testLesVignettesSontLeVraiDocumentEtSuiventLaCouleurTouchee` (rouge avant : « Failed asserting that 0 is identical to 12 »).
 - 2026-11-20 : vérifié dans la copie propre (base `offregen_dev`, `demo-peintre`, couleur d'origine remise) : couleur touchée #866558 ; bande de Bandeau rgb(46, 125, 50) avant, rgb(134, 101, 88) après, dans la vignette et dans la vue en grand de Latéral, Bandeau et Sobre, à 390 et 1280 px. Limite vue : la vignette de Lettre, plus longue qu'une page, a son bas coupé.
 - 2026-11-20 : Xavier : « déploie ». `70eca7a` déployé, sonde verte ; une autre session l'avait mis en service juste avant (version précédente : le même commit). Contrôle sur le site de test avec `demo-macon` (couleur d'origine #1D4E89 remise) : couleur touchée #B23A2E, bande de Bandeau rgb(29, 78, 137) avant, rgb(178, 58, 46) après ; Latéral, Bandeau et Sobre en grand dans cette couleur, à 390 et 1280 px ; « Ma marque » chargée en 358 ms à 390 px, 111 ms à 1280 px.
+- 2026-11-20 : recette de Xavier : « j'ai tenté de mettre du blanc […] J'ai pas de message […] il faut corriger » ; « quand on les a en grand, je veux qu'avec les doigts, on puisse aussi les décaler » ; les quatre questions à détailler. Cause du blanc : il était enregistré, et `Marque::principale()` le fonçait en silence jusqu'à 4,5:1 (un gris). Réponse validée au 5e tour du chantier responsive (2b, « Couleur tapée : Valider »), pas encore codée : codée ici. Sous la couleur, pour une couleur tapée ou celle du logo sous 7:1, un encadré dit le contraste et propose « Bien visible » (7:1) et « Visible » (la couleur du document, 4,5:1), d'un toucher ; sans JavaScript, le bouton envoie le formulaire (`couleur_prise`). Glisser au doigt dans la vue en grand : 50 px au moins, surtout horizontal ; deux doigts ou page agrandie, rien.
+- 2026-11-20 : écarts à la maquette 2b, de moi : le texte « Vos titres et votre total seraient pâles » est remplacé par ce qui se passe vraiment (« Vos documents l'emploient foncée juste assez pour rester lisible ») ; les contrastes sont arrondis vers le bas (2,1:1 pour l'orange que la maquette disait 2,2:1). Mesure qui contredit la maquette : quatre des six couleurs proposées sont sous 7:1 (vert #2E7D32 5,1 ; rouge #B23A2E 5,9 ; brun #8A5A2B 5,8 ; pétrole #0F7C8C 4,9). Elles ne déclenchent pas l'encadré, comme la maquette le voulait ; question posée à Xavier.
 
 ## Décisions
 
@@ -102,6 +105,7 @@ Suite de la recette de Xavier sur le site de test (`RECETTE.md`, commit `70eca7a
 | 2026-11-20 | Une facture ne montre plus l'IBAN au pied ni dans la colonne. | Celui de sa section de paiement est figé à l'émission ; le pied lisait les réglages du jour. |
 | 2026-11-20 | Le chantier est commité seul, sans les changements non commités du chantier responsive qui partageaient sa copie de travail. | Chaque session commite son chantier ; le gate du responsive (accord de Xavier pour déployer) n'est pas celui de ce chantier. Interprétation de Claude du mot « le tout » : tout ce chantier. |
 | 2026-11-20 | Le point 2a du chantier responsive (couleur touchée dans les vignettes et la vue en grand) est commité dans ce chantier, recopié à l'identique. | Demande de Xavier (« il faut absolument le faire »). Code identique : la session du responsive n'aura pas de conflit sur ces lignes. |
+| 2026-11-20 | Le point 2b du chantier responsive (encadré sous une couleur trop claire) est codé dans ce chantier. | Demande de Xavier pendant sa recette (« il faut corriger »). La session du responsive le trouvera commité. |
 
 ## Ce que l'essai dompdf a établi
 
@@ -184,4 +188,7 @@ phase 8, couleur en grand : phpunit --filter MarqueEcranTest avant le code : Fai
   vendor/bin/phpstan analyse : [OK] No errors ; APP_ENV=test vendor/bin/phpunit : OK (913 tests, 8088 assertions)
 phase 8, déploiement de la couleur en grand : outils/deployer-test.sh : OK (915 tests, 8151 assertions) ; analyse statique : sans erreur ; SONDE VERTE ; /sante : {"commit":"70eca7ae21df0633eb94fa61cf94400c7ce9e7b7","base":"ok","migrations":"ok"}
   grand-couleur.js sur https://easy-offres.xtradev.ch (demo-macon) : en grand 390 et 1280, lateral, bandeau, sobre : image false, couleur rgb(178, 58, 46) ; aucune erreur JS ; capture regardée (Bandeau en grand, 390 px)
+phase 8, couleur trop claire et glissement : tests avant le code : Errors: 3 (Marque::propositions inexistante), Failures: 1 (encadré absent) ; après : OK (20 tests, 299 assertions) ; suite complète : OK (919 tests, 8204 assertions) ; phpstan : [OK] No errors
+  avis-glisser.js (local, demo-peintre, couleur d'origine remise) : blanc tapé : encadré visible, « contraste 1:1 », bien=#565656 (7,3:1), visible=#6F6F6F (5:1), « Enregistré » ; orange : 2,1:1, bien=#7D4F0A, visible=#A1660D ; « Bien visible » touché : encadré fermé, champ #7d4f0a, gardé au rechargement ; glissé à gauche : Bandeau puis Moderne ; à droite : Bandeau ; geste vertical et geste court : rien ; aucune erreur JS ; deux captures regardées
+  contraste-avis.js : 13 textes de l'encadré, plus bas 8,21:1 en clair, 7,72:1 en sombre ; témoin injecté en clair : 1,24:1, 5 textes sous 7 (la mesure sait échouer)
 ```

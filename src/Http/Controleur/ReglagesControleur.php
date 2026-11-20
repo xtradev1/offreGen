@@ -228,6 +228,12 @@ final class ReglagesControleur
                 $champs[$nom] = $recus->getString($nom);
             }
         }
+        // 2b : une version plus foncée prise d'un toucher dans l'encadré sous la couleur. Sans JavaScript, son bouton envoie
+        // le formulaire ; une valeur invalide tombe dans le contrôle de la couleur, plus bas.
+        if ($recus->has('couleur_prise')) {
+            $champs['couleur_choix'] = 'autre';
+            $champs['couleur'] = $recus->getString('couleur_prise');
+        }
         // Un nombre tapé sans son choix (formulaire ancien) vaut « Autre » : sinon le choix actuel l'emporterait.
         foreach (['validite_jours' => 'validite_choix', 'paiement_jours' => 'paiement_jours_choix', 'paiement_acomptes' => 'paiement_acomptes_choix'] as $tape => $choix) {
             if ($recus->has($tape) && !$recus->has($choix)) {
@@ -383,6 +389,25 @@ final class ReglagesControleur
         return $metier === null || $metier === 'autre' ? null : Marque::pourMetier($metier);
     }
 
+    /**
+     * L'encadré sous la couleur (2b) : pour une couleur tapée, ou celle du logo, sous 7:1 ; jamais pour les six couleurs
+     * proposées (maquette du 5e tour du chantier responsive). Contrastes déjà écrits pour l'écran.
+     *
+     * @param array<string, string> $champs
+     * @return array{contraste: float, rapport: string, bien: string, bien_rapport: string, visible: string, visible_rapport: string}|null
+     */
+    private static function avisCouleur(array $champs): ?array
+    {
+        $choix = $champs['couleur_choix'] ?? '';
+        $couleur = Marque::couleurValide($choix === 'autre' ? ($champs['couleur'] ?? '') : $choix);
+        $p = $couleur === null || in_array($couleur, Marque::TEINTES, true) ? null : Marque::propositions($couleur);
+        return $p === null ? null : $p + [
+            'rapport' => Marque::rapport($p['contraste']),
+            'bien_rapport' => Marque::rapport(Marque::contraste($p['bien'], '#FFFFFF')),
+            'visible_rapport' => Marque::rapport(Marque::contraste($p['visible'], '#FFFFFF')),
+        ];
+    }
+
     /** @return list<string> la couleur du logo d'abord, puis les couleurs proposées */
     private static function teintes(Marque $m): array
     {
@@ -424,6 +449,8 @@ final class ReglagesControleur
             'familles' => Marque::FAMILLES,
             'propose' => $this->modelePropose($portee),
             'vignettes' => in_array('marque', $sections, true) ? $this->vignettes($portee, $marque) : [],
+            'proposees' => Marque::TEINTES,
+            'avis' => self::avisCouleur($champs),
         ]), $code);
     }
 }

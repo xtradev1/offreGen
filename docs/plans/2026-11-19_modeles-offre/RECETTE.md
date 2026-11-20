@@ -38,10 +38,27 @@ Gestes :
 2. Passer d'un modèle à l'autre avec les flèches.
 3. Toucher « Choisir ce modèle » sur « Récapitulatif ».
 4. Toucher une autre pastille de couleur, puis rouvrir « Voir en grand » sur « Bandeau ».
+5. Dans la vue en grand, glisser le doigt vers la gauche, puis vers la droite.
 
-Attendu : le modèle s'ouvre en grand dans la page, entier en largeur, sans barre de défilement horizontale, dans la couleur du compte. Après « Choisir ce modèle », la case « Récapitulatif » est cochée. Au toucher d'une couleur, les douze vignettes changent de couleur aussitôt, et le modèle rouvert en grand est dans cette couleur (ta demande du 2026-11-20).
+Attendu : le modèle s'ouvre en grand dans la page, entier en largeur, sans barre de défilement horizontale, dans la couleur du compte. Après « Choisir ce modèle », la case « Récapitulatif » est cochée. Au toucher d'une couleur, les douze vignettes changent de couleur aussitôt, et le modèle rouvert en grand est dans cette couleur (ta demande du 2026-11-20). Au 5, le doigt vers la gauche montre le modèle suivant, vers la droite le précédent ; un geste vertical fait défiler la page sans changer de modèle.
 
 Si ça casse : `modelesEnGrand` et `vignettesVivantes` dans `public/js/app.js`, `ReglagesControleur::css` (feuille `?apercu=`), `public/css/document-ecran.css`.
+
+## Scénario 2 bis : une couleur trop claire
+
+| | |
+|---|---|
+| URL | `/reglages/marque` |
+| Compte | `demo-platrier@exemple.ch` |
+
+Gestes :
+1. Toucher « Autre » et choisir le blanc, puis un jaune ou un orange clair.
+2. Toucher « Bien visible ».
+3. Toucher une des six couleurs proposées.
+
+Attendu : au 1, un encadré jaune sous la couleur dit « Cette couleur se lit mal sur le papier blanc », avec son contraste, et propose « Bien visible » et « Visible », deux versions plus foncées de la même teinte (pour le blanc, deux gris). Au 2, la couleur prise s'enregistre, l'encadré disparaît, les vignettes la prennent. Au 3, pas d'encadré.
+
+Si ça casse : `avisCouleur` dans `public/js/app.js`, `Marque::propositions`, `ReglagesControleur::avisCouleur`.
 
 ## Scénario 3 : le document à l'écran
 

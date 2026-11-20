@@ -28,6 +28,46 @@ final class MarqueTest extends TestCase
         self::assertSame('#1D4E89', (new Marque('sobre', '#1D4E89'))->principale());
     }
 
+    /** 2b (Xavier, 2026-11-20) : une couleur qui tient 7:1 sur le blanc ne déclenche rien. */
+    public function testUneCouleurQuiSeLitBienNeDemandeRien(): void
+    {
+        self::assertNull(Marque::propositions('#1D4E89'));
+        self::assertNull(Marque::propositions('#3B3F46'));
+    }
+
+    /**
+     * 2b : sous 4,5:1 (le blanc tapé par Xavier le 2026-11-20, un orange, un jaune), deux versions plus foncées de la même
+     * teinte. « Visible » est la couleur que le document emploie déjà ; « Bien visible » tient 7:1.
+     */
+    public function testUneCouleurPaleRecoitDeuxVersionsPlusFonceesDeSaTeinte(): void
+    {
+        foreach (['#FFFFFF', '#F39C12', '#FFEB3B'] as $c) {
+            $p = Marque::propositions($c);
+            self::assertNotNull($p, $c);
+            self::assertLessThan(4.5, $p['contraste'], $c);
+            self::assertGreaterThanOrEqual(7.0, Marque::contraste($p['bien'], '#FFFFFF'), $c);
+            self::assertGreaterThanOrEqual(4.5, Marque::contraste($p['visible'], '#FFFFFF'), $c);
+            self::assertLessThan(7.0, Marque::contraste($p['visible'], '#FFFFFF'), $c);
+            self::assertSame((new Marque('sobre', $c))->principale(), $p['visible'], "$c : Visible est la couleur du document");
+        }
+        $blanc = Marque::propositions('#FFFFFF');
+        self::assertNotNull($blanc);
+        self::assertMatchesRegularExpression('/^#([0-9A-F]{2})\1\1$/', $blanc['bien'], 'le blanc foncé reste un gris');
+        self::assertSame('1', Marque::rapport($blanc['contraste']));
+        // 2,16:1 : arrondi vers le bas, jamais plus beau qu'il n'est (la maquette écrivait 2,2).
+        self::assertSame('2,1', Marque::rapport(Marque::contraste('#F39C12', '#FFFFFF')));
+        self::assertSame('7,3', Marque::rapport(7.39));
+    }
+
+    /** 2b : entre 4,5 et 7:1, « Visible » est la couleur tapée elle-même. */
+    public function testUneCouleurEntreLesDeuxSeuilsEstSaPropreVersionVisible(): void
+    {
+        $p = Marque::propositions('#0F7C8C');
+        self::assertNotNull($p);
+        self::assertSame('#0F7C8C', $p['visible']);
+        self::assertGreaterThanOrEqual(7.0, Marque::contraste($p['bien'], '#FFFFFF'));
+    }
+
     public function testTeinteEtDefauts(): void
     {
         self::assertSame('#E8EDF3', (new Marque('sobre', '#1D4E89'))->teinte(0.9));

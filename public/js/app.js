@@ -1271,6 +1271,63 @@ function vignettesVivantes() {
   form.addEventListener('input', (e) => { if (e.target.matches('#couleur')) suivre(); });
 }
 
+// 2b (Xavier, 2026-11-20 : « j'ai tenté de mettre du blanc […] j'ai pas de message ») : une couleur tapée, ou celle du
+// logo, sous 7:1 sur le blanc ; l'encadré propose deux versions plus foncées de la même teinte. Même calcul que
+// Marque::propositions (PHP). Un toucher en prend une : le champ couleur change, l'enregistrement automatique suit.
+function avisCouleur() {
+  const avis = document.querySelector('[data-avis-couleur]');
+  const form = avis && avis.closest('form');
+  if (!avis || !form) return;
+  const proposees = (avis.dataset.teintes || '').split(',');
+  const rvb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const lin = (c) => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); };
+  const contraste = (h) => { const [r, v, b] = rvb(h).map(lin); return 1.05 / (0.2126 * r + 0.7152 * v + 0.0722 * b + 0.05); };
+  const hex = (t) => '#' + t.map((c) => c.toString(16).padStart(2, '0')).join('').toUpperCase();
+  const foncer = (h, seuil) => {
+    let t = rvb(h);
+    for (let i = 0; i < 40 && contraste(hex(t)) < seuil; i++) t = t.map((c) => Math.round(c * 0.92));
+    return hex(t);
+  };
+  const rapport = (c) => String(Math.floor(c * 10) / 10).replace('.', ',');
+  const couleur = () => {
+    const choix = form.querySelector('input[name="couleur_choix"]:checked');
+    if (!choix) return null;
+    const v = choix.value === 'autre' ? (form.querySelector('#couleur') || {}).value : choix.value;
+    return /^#[0-9a-fA-F]{6}$/.test(v || '') ? v.toUpperCase() : null;
+  };
+  const maj = () => {
+    const c = couleur();
+    const k = c && !proposees.includes(c) ? contraste(c) : 21;
+    avis.hidden = k >= 7;
+    if (avis.hidden) return;
+    avis.querySelector('[data-avis-titre]').textContent = k >= 4.5 ? 'Cette couleur manque de contraste sur le papier blanc' : 'Cette couleur se lit mal sur le papier blanc';
+    avis.querySelector('[data-avis-contraste]').textContent = rapport(k);
+    avis.querySelector('[data-avis-pale]').hidden = k >= 4.5;
+    avis.querySelectorAll('[data-niveau]').forEach((b) => {
+      const h = foncer(c, b.dataset.niveau === 'bien' ? 7 : 4.5);
+      b.value = h;
+      b.querySelector('circle').setAttribute('fill', h);
+      b.querySelector('[data-hex]').textContent = h;
+      b.querySelector('[data-rapport]').textContent = rapport(contraste(h));
+      b.setAttribute('aria-pressed', String(h === c));
+    });
+  };
+  form.addEventListener('change', (e) => { if (e.target.matches('[name="couleur_choix"], #couleur')) maj(); });
+  form.addEventListener('input', (e) => { if (e.target.matches('#couleur')) maj(); });
+  avis.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-niveau]');
+    const autre = form.querySelector('input[name="couleur_choix"][value="autre"]');
+    const champ = form.querySelector('#couleur');
+    if (!b || !autre || !champ) return;
+    e.preventDefault();
+    autre.checked = true;
+    champ.value = b.value.toLowerCase();
+    champ.dispatchEvent(new Event('input', { bubbles: true }));
+    champ.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  maj();
+}
+
 // Feuille A4 des documents (modèles du bâtiment, 2026-11-20) : chaque modèle est dessiné sur 794 px, comme dans le PDF,
 // et se réduit à la largeur de son papier (--feuille, lue par document-ecran.css). La réduction ne change pas la place
 // que la feuille occupe : une marge basse négative la lui rend. Les papiers qui arrivent plus tard (document à côté,
@@ -1352,6 +1409,22 @@ function modelesEnGrand() {
       fermer();
     }
   });
+  // Au doigt (Xavier, 2026-11-20) : glisser vers la gauche montre le modèle suivant, vers la droite le précédent. Un
+  // geste surtout vertical fait défiler la page ; deux doigts, ou une page agrandie, laissent le navigateur zoomer.
+  let depart = null;
+  vue.addEventListener('touchstart', (e) => {
+    const zoom = window.visualViewport ? window.visualViewport.scale : 1;
+    depart = e.touches.length === 1 && zoom <= 1.05 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }, { passive: true });
+  vue.addEventListener('touchmove', (e) => { if (e.touches.length > 1) depart = null; }, { passive: true });
+  vue.addEventListener('touchend', (e) => {
+    if (!depart || e.target.closest('.agrandi-bas, .agrandi-haut')) { depart = null; return; }
+    const t = e.changedTouches[0];
+    const dx = t.clientX - depart.x;
+    const dy = t.clientY - depart.y;
+    depart = null;
+    if (Math.abs(dx) >= 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) montrer(rang + (dx < 0 ? 1 : -1));
+  }, { passive: true });
   document.addEventListener('keydown', (e) => {
     if (calques.ouvert() !== calque) return;
     if (e.key === 'Escape') fermer();
@@ -1774,6 +1847,7 @@ document.addEventListener('DOMContentLoaded', () => {
   hauteurDuBas();
   ajoutPc();
   vignettesVivantes();
+  avisCouleur();
   papiers();
   modelesEnGrand();
   glisserLignes();

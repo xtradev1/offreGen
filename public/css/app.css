@@ -398,6 +398,16 @@ label.puce { position: relative; display: inline-flex; align-items: center; just
 .teinte:has(input:focus-visible) svg { outline: 3px solid var(--focus); outline-offset: 4px; }
 .teinte:active { scale: .9; }
 .teinte-autre { min-height: 44px; }
+/* 2b : couleur tapée sous 7:1. Texte --warn sur --warn-soft, boutons sur la surface. Mesuré le 2026-11-20 sur les treize
+   textes de l'encadré : 8,2:1 au plus bas en clair, 7,7:1 en sombre. */
+.avis-couleur { margin: 12px 0 0; padding: 12px 14px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--warn); font-size: 15px; }
+.avis-couleur p { margin: 0 0 8px; }
+.choix-couleur { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; margin: 8px 0 0; padding: 8px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.choix-couleur svg { width: 32px; height: 32px; flex: none; border-radius: 50%; box-shadow: 0 0 0 1px var(--line); }
+.choix-couleur b { display: block; }
+.choix-couleur small { display: block; font-size: 13px; color: var(--muted); }
+.choix-couleur[aria-pressed="true"] { border: 2px solid var(--ink); }
+.choix-couleur:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .champ input[type="color"] { padding: 4px; min-height: 48px; max-width: 120px; }
 .modeles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .modele { position: relative; display: grid; gap: 4px; justify-items: center; font-size: 13px; cursor: pointer; padding: 6px; border-radius: 10px; border: 2px solid transparent; }

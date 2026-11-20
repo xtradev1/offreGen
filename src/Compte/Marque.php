@@ -42,6 +42,9 @@ final readonly class Marque
     /** Contraste minimal d'un texte sur le blanc (WCAG, niveau AA). */
     private const CONTRASTE_MIN = 4.5;
 
+    /** Contraste d'une couleur « bien visible » (WCAG, niveau AAA) : sous ce seuil, une couleur tapée est signalée (2b). */
+    private const CONTRASTE_BIEN = 7.0;
+
     public string $modele;
 
     /**
@@ -67,8 +70,34 @@ final readonly class Marque
     /** La couleur pour du texte, des filets et des fonds sous texte blanc : assombrie si elle est trop claire. */
     public function principale(): string
     {
-        [$r, $v, $b] = self::rvb($this->couleur());
-        for ($i = 0; $i < 40 && self::contraste(self::hex($r, $v, $b), '#FFFFFF') < self::CONTRASTE_MIN; $i++) {
+        return self::foncer($this->couleur(), self::CONTRASTE_MIN);
+    }
+
+    /**
+     * Une couleur tapée, ou celle du logo, qui ne tient pas 7:1 sur le blanc (2b, maquette du 5e tour du chantier
+     * responsive, validée par Xavier le 2026-11-20) : deux versions plus foncées de la même teinte. « visible » est celle
+     * que le document emploie déjà (principale()), « bien » tient 7:1. app.js (avisCouleur) refait ce calcul à la frappe.
+     *
+     * @return array{contraste: float, bien: string, visible: string}|null null si la couleur tient déjà 7:1
+     */
+    public static function propositions(string $couleur): ?array
+    {
+        $c = self::contraste($couleur, '#FFFFFF');
+        return $c >= self::CONTRASTE_BIEN ? null
+            : ['contraste' => $c, 'bien' => self::foncer($couleur, self::CONTRASTE_BIEN), 'visible' => self::foncer($couleur, self::CONTRASTE_MIN)];
+    }
+
+    /** Un contraste pour l'écran, arrondi vers le bas au dixième (jamais plus beau qu'il n'est) : « 1 », « 2,2 », « 7,3 ». */
+    public static function rapport(float $contraste): string
+    {
+        return (string) preg_replace('/,0$/', '', number_format(floor($contraste * 10) / 10, 1, ',', ''));
+    }
+
+    /** La couleur assombrie par pas de 8 % jusqu'à tenir le contraste demandé sur le blanc. */
+    private static function foncer(string $couleur, float $seuil): string
+    {
+        [$r, $v, $b] = self::rvb($couleur);
+        for ($i = 0; $i < 40 && self::contraste(self::hex($r, $v, $b), '#FFFFFF') < $seuil; $i++) {
             [$r, $v, $b] = [(int) round($r * 0.92), (int) round($v * 0.92), (int) round($b * 0.92)];
         }
         return self::hex($r, $v, $b);
