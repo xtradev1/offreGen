@@ -21,6 +21,8 @@ final class Demos
 {
     public const OFFRES = 10;
     public const JOURS = 7;
+    /** Offres d'un essai ouvert depuis une démo, en plus de celles déjà dictées pendant la démo. */
+    public const OFFRES_ESSAI = 10;
     /** Démos qu'un commercial peut créer en 24 heures : chacune peut coûter jusqu'à dix dictées d'IA. */
     public const PAR_JOUR = 10;
 

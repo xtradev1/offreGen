@@ -1,0 +1,11 @@
+{# Le ruban d'une démo créée par l'équipe (N1, Xavier, 2026-11-19 ; « Passer à l'essai » visible en haut, 2026-11-20).
+   Sur tous les écrans de l'application, sauf celui du passage. Une démonstration partagée n'en a pas : demo() rend
+   null. La feuille de style est à part : app.css est modifiée par d'autres chantiers. #}
+{% set demo_compte = demo() %}
+{% if demo_compte and not (sans_ruban ?? false) %}
+  <link rel="stylesheet" href="/css/demo.css">
+  <div class="ruban-demo" role="note">
+    <span><b>Démo</b> · {% if demo_compte.jours > 1 %}{{ demo_compte.jours }} jours restants{% elseif demo_compte.jours == 1 %}1 jour restant{% else %}dernier jour{% endif %}</span>
+    <a class="btn" href="/passer-a-l-essai">Passer à l'essai</a>
+  </div>
+{% endif %}

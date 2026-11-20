@@ -385,6 +385,17 @@ final class Conteneur
                 $id = $this->garde()->artisanCourant();
                 return $id === null ? null : $this->authentification()->role($id);
             }));
+            // Le ruban d'une démo créée par l'équipe : jours restants. Null pour tout autre compte, démonstration
+            // partagée comprise (sans date de fin) : elle ne se passe pas à l'essai depuis l'écran.
+            $twig->addFunction(new TwigFunction('demo', function (): ?array {
+                $id = $this->garde()->artisanCourant();
+                $demo = $id === null ? null : $this->depotEquipe()->demo($id);
+                if ($demo === null || $demo['demo_fin'] === null) {
+                    return null;
+                }
+                $reste = \OffreGen\Donnees\Dates::depuisBase($demo['demo_fin'])->getTimestamp() - $this->horloge()->now()->getTimestamp();
+                return ['jours' => max(0, (int) ceil($reste / 86400))];
+            }));
             $twig->addExtension(new Formats());
             $twig->addGlobal('pays_adresse', Adresse::PAYS);
             $twig->addGlobal('nom_application', $this->nomApplication());

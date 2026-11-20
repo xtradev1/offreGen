@@ -196,6 +196,8 @@ return static function (Conteneur $c): array {
     $routes[] = new Route('admin_demo_qr', '/admin/artisans/{id}/qr', ['GET'], static fn (Request $r, array $p): Response => $admin()->demoQr($p), Route::EQUIPE);
     $routes[] = new Route('admin_demo_message', '/admin/artisans/{id}/message', ['POST'], static fn (Request $r, array $p): Response => $admin()->demoMessage($p), Route::EQUIPE);
     $routes[] = new Route('demo_entrer', '/d/{jeton}', ['GET'], static fn (Request $r, array $p): Response => $demo()->entrer($r, $p), Route::PUBLIC);
+    $routes[] = new Route('essai_passage', '/passer-a-l-essai', ['GET'], static fn (Request $r): Response => $demo()->passage($r), Route::ARTISAN);
+    $routes[] = new Route('essai_passer', '/passer-a-l-essai', ['POST'], static fn (Request $r): Response => $demo()->passer($r), Route::ARTISAN);
     $routes[] = new Route('demo_ouvrir', '/d/{jeton}', ['POST'], static fn (Request $r, array $p): Response => $demo()->ouvrir($r, $p), Route::PUBLIC);
     $routes[] = new Route('admin_plus', '/admin/plus', ['GET'], static fn (): Response => $admin()->plus(), Route::EQUIPE);
     // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.

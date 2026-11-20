@@ -364,3 +364,37 @@ Tests: 693, Assertions: 5493, Failures: 1.   (le seul échec : ConteneurTest, à
 $ vendor/bin/phpstan analyse --no-progress
  [OK] No errors
 ```
+
+Ruban de démo et passage à l'essai (2026-11-20, début du lot 6). Retour de Xavier après avoir essayé une démo : « la démo, je vois qu'on ne peut pas passer à aucun moment, le gars il peut passer dans un essai. […] Il faut que ce soit visible en haut quand on crée une offre. » « quand je suis dans mes offres démo plâtrier compte de démonstration il faut un petit bouton passer à l'essai pouf et là ça passe. »
+
+Construit :
+- Ruban en haut de chaque écran d'une démo créée par l'équipe (`templates/_ruban_demo.html.twig`, inclus dans `base.html.twig`, fonction Twig `demo()`) : « Démo · 7 jours restants » et le bouton « Passer à l'essai ». Styles dans `public/css/demo.css`, chargés dans une démo seulement.
+- `/passer-a-l-essai` : un écran (ce qui reste, ce qui est effacé, le courriel pré-rempli, un bouton). Le passage appelle `Comptes::passerEnEssai` (chantier des métiers), sur le même compte, avec 10 offres.
+- La session du prospect est rouverte aussitôt : `passerEnEssai` remplace le mot de passe et avance le numéro de session.
+- Le courriel se confirme par le lien du mot de passe : envoyé si le site envoie des courriels ; sur un site sans courriel (le test), le prospect est conduit tout de suite sur la page du mot de passe, sinon son compte serait perdu à la fin de la session.
+- Le passage est noté au journal (`passage_essai`) et se lit dans la fiche de l'artisan, toujours « amené par » son commercial.
+
+Décisions prises en codant :
+- Deux touchers et non un : le passage efface les exemples, il se confirme sur un écran qui le dit avant. À revoir si Xavier veut un seul toucher.
+- Une démonstration partagée (sans date de fin, mot de passe connu de plusieurs personnes) n'a ni ruban ni passage : 404.
+- L'adresse est `/passer-a-l-essai` : `/essai` est déjà le formulaire public de demande d'essai de la page de présentation (vu aux tests : le POST rendait 303).
+- Sous le ruban, la ligne du plafond dit « Démo : 10 offres restantes » et non « Compte d'essai » (une ligne changée dans `templates/accueil.html.twig`).
+- L'essai ouvert ici est celui qui existe : 10 offres, sans durée, sans formule ni paiement. Le mois gratuit d'une formule (T1) reste au lot B.
+
+Textes vus par le prospect relus par `relecteur-xtradev`, trois tours : « À corriger » aux tours 1 et 2 (« Vous gardez » promettait de garder une offre d'exemple modifiée, alors qu'elle est effacée ; les deux encadrés se contredisaient sur les clients d'exemple), une dernière faute au tour 3, corrigée. Au choix de Xavier : le ruban dit « dernier jour » sans dire ce qui arrive après ; rien ne dit ce qui se passe après les 10 offres de l'essai.
+
+```
+$ DB_NOM=offregen_admin_test phpunit --filter PassageDemoTest   (tests écrits, avant le code)
+FAILURES! Tests: 2, Assertions: 10, Failures: 2.
+$ DB_NOM=offregen_admin_test phpunit   (après le code, copie du chantier)
+Tests: 914, Assertions: 8143, Failures: 1.
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ node recette-lot6.js (prospect au téléphone clair et sur PC sombre ; 12 écrans)
+ruban : « Démo · 7 jours restants  Passer à l'essai », 61 px de haut ; après le passage : /mot-de-passe/<jeton>, « Vous êtes à l'essai. Choisissez votre mot de passe pour retrouver votre compte. » ; après le mot de passe : / , plus de ruban
+un défaut relevé par la sonde, hors de ce chantier : le texte indicatif de la recherche du catalogue (3,7:1 en clair, 3,2:1 en sombre)
+```
+
+Non vérifié : le chemin « courriel réel » (aucun test) ; iPhone.
+
+Demandes de Xavier du même message, hors de ce chantier, notées dans Origin : application sans rechargement de page (tâche 504) ; code QR de démonstration sur la facture tant qu'il n'y a pas d'IBAN (tâche 509, pour le chantier des modèles d'offre).
