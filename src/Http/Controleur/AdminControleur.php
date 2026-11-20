@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Catalogue\CatalogueFictif;
 use OffreGen\Compte\ArtisansEquipe;
+use OffreGen\Compte\Demos;
 use OffreGen\Compte\Equipe;
+use OffreGen\Compte\LiensAcces;
+use OffreGen\Compte\QrLien;
 use OffreGen\Compte\Role;
 use OffreGen\Donnees\DepotEquipe;
 use OffreGen\Donnees\PorteeEquipe;
@@ -21,6 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
  * rôle. Le noyau a déjà vérifié le rôle : ici, chaque page n'a plus qu'à le lire.
  *
  * @phpstan-import-type Membre from DepotEquipe
+ * @phpstan-import-type Compte from DepotEquipe
  */
 final class AdminControleur
 {
@@ -63,6 +68,7 @@ final class AdminControleur
             'q' => $q,
             'par' => $par,
             'apporteur' => $apporteur,
+            'metiers' => CatalogueFictif::libelles(),
             'comptes' => $this->c->depotEquipe()->artisans($this->portee(), $type, $q, $par),
         ]);
     }
@@ -77,6 +83,7 @@ final class AdminControleur
             'compte' => $compte,
             'evenements' => $this->c->depotEquipe()->evenements($compte['id']),
             'ajouts' => ArtisansEquipe::ajoutsPossibles($this->role(), $compte),
+            'metier' => self::metier($compte),
             'erreur' => $erreur,
         ], $code);
     }
@@ -97,6 +104,61 @@ final class AdminControleur
         }
         Flash::dire($requete, 'info', "$ajout offres ajoutées.");
         return new RedirectResponse("/admin/artisans/$id", 303);
+    }
+
+    /** @param array{metier: string, metier_saisi: string, entreprise: string, courriel: string}|null $saisie */
+    public function demoNouvelle(?array $saisie = null, ?string $erreur = null, int $code = 200): Response
+    {
+        return $this->page('admin/demo_nouvelle.html.twig', [
+            'actif' => 'artisans',
+            'titre' => 'Nouvelle démo',
+            'metiers' => CatalogueFictif::libelles(),
+            'saisie' => $saisie ?? ['metier' => '', 'metier_saisi' => '', 'entreprise' => '', 'courriel' => ''],
+            'erreur' => $erreur,
+        ], $code);
+    }
+
+    public function demoCreer(Request $requete): Response
+    {
+        $saisie = [
+            'metier' => $requete->request->getString('metier'),
+            'metier_saisi' => trim($requete->request->getString('metier_saisi')),
+            'entreprise' => trim($requete->request->getString('entreprise')),
+            'courriel' => trim($requete->request->getString('courriel')),
+        ];
+        try {
+            $id = $this->demos()->creer($this->portee(), $this->role(), $saisie['metier'], $saisie['metier_saisi'], $saisie['entreprise'], $saisie['courriel']);
+        } catch (\OverflowException $e) {
+            return $this->demoNouvelle($saisie, $e->getMessage(), 429);
+        } catch (\InvalidArgumentException $e) {
+            return $this->demoNouvelle($saisie, $e->getMessage(), 422);
+        }
+        return new RedirectResponse("/admin/artisans/$id/qr", 303);
+    }
+
+    /**
+     * Le code QR d'une démo : chaque affichage émet un lien neuf, bon une heure et une seule fois.
+     *
+     * @param array<string, string> $p
+     */
+    public function demoQr(array $p): Response
+    {
+        $demo = $this->demo((int) $p['id']);
+        $lien = $this->c->liensAcces()->emettreDemo($demo['id'], LiensAcces::DEMO_QR);
+        return $this->page('admin/demo_prete.html.twig', ['actif' => 'artisans', 'titre' => $demo['entreprise'], 'compte' => $demo, 'metier' => self::metier($demo), 'lien' => $lien, 'qr' => QrLien::svg($lien)]);
+    }
+
+    /**
+     * Le message à envoyer au prospect, avec un lien bon 24 heures et une seule fois.
+     *
+     * @param array<string, string> $p
+     */
+    public function demoMessage(array $p): Response
+    {
+        $demo = $this->demo((int) $p['id']);
+        $lien = $this->c->liensAcces()->emettreDemo($demo['id'], LiensAcces::DEMO_MSG);
+        $message = "Bonjour, voici votre démo {$this->c->nomApplication()}\u{00A0}: $lien\nLe lien est valable 24 heures et sert une seule fois. Ouvrez-le sur votre téléphone, indiquez votre courriel et dictez votre première visite.";
+        return $this->page('admin/demo_message.html.twig', ['actif' => 'artisans', 'titre' => $demo['entreprise'], 'compte' => $demo, 'metier' => self::metier($demo), 'message' => $message]);
     }
 
     public function equipe(): Response
@@ -247,6 +309,39 @@ final class AdminControleur
         // Des comptes, des liens d'accès, des numéros de téléphone : rien ne reste dans le cache du navigateur.
         $reponse->headers->set('Cache-Control', 'no-store');
         return $reponse;
+    }
+
+    /**
+     * Une démo de la portée ; tout autre compte n'a ni code ni lien de démo.
+     *
+     * @return Compte
+     */
+    private function demo(int $id): array
+    {
+        $compte = $this->c->depotEquipe()->artisan($this->portee(), $id);
+        if ($compte === null || $compte['demo'] !== 1) {
+            throw new PageIntrouvable();
+        }
+        return $compte;
+    }
+
+    /**
+     * Le métier d'un compte, tel qu'on le lit : le texte tapé pour « Autre métier », sinon le libellé de la liste.
+     *
+     * @param Compte $compte
+     */
+    private static function metier(array $compte): ?string
+    {
+        if ($compte['metier_saisi'] !== null) {
+            return $compte['metier_saisi'];
+        }
+        return $compte['metier'] === null || $compte['metier'] === 'autre' ? null : (CatalogueFictif::libelles()[$compte['metier']] ?? $compte['metier']);
+    }
+
+    /** Sans passer par le conteneur, qu'une autre session modifie en ce moment (2026-11-20). */
+    private function demos(): Demos
+    {
+        return new Demos($this->c->base(), $this->c->comptes(), $this->c->artisans(), $this->c->depotEquipe(), $this->c->journalAdmin(), $this->c->horloge());
     }
 
     /** Le commercial n'atteint que les artisans qu'il a créés ; le modérateur et l'administrateur, tous. */

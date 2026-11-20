@@ -15,6 +15,7 @@ use OffreGen\Http\Controleur\LigneCatalogueControleur;
 use OffreGen\Http\Controleur\LigneControleur;
 use OffreGen\Http\Controleur\ReglagesControleur;
 use OffreGen\Http\Controleur\ConnexionControleur;
+use OffreGen\Http\Controleur\DemoControleur;
 use OffreGen\Http\Controleur\DemandeEssaiControleur;
 use OffreGen\Http\Controleur\EnregistrementControleur;
 use OffreGen\Http\Controleur\FactureControleur;
@@ -46,6 +47,7 @@ return static function (Conteneur $c): array {
     $ligneFacture = static fn (): LigneControleur => new LigneControleur($c, LigneControleur::FACTURE);
     $motDePasse = static fn (): MotDePasseControleur => new MotDePasseControleur($c);
     $admin = static fn (): AdminControleur => new AdminControleur($c);
+    $demo = static fn (): DemoControleur => new DemoControleur($c);
 
     $routes = [
         // État pour la sonde d'exposition, après chaque déploiement (docs/DEPLOIEMENT.md). Lecture seule.
@@ -188,6 +190,13 @@ return static function (Conteneur $c): array {
     $routes[] = new Route('admin_membre_enregistrer', '/admin/equipe/{id}', ['POST'], static fn (Request $r, array $p): Response => $admin()->membreEnregistrer($r, $p), Route::ADMIN);
     $routes[] = new Route('admin_membre_acces', '/admin/equipe/{id}/acces', ['POST'], static fn (Request $r, array $p): Response => $admin()->membreAcces($r, $p), Route::ADMIN);
     $routes[] = new Route('admin_membre_role', '/admin/equipe/{id}/role', ['POST'], static fn (Request $r, array $p): Response => $admin()->membreRole($r, $p), Route::ADMIN);
+    // Démos (lot 5) : créées par l'équipe ; le prospect y entre par un lien, sans compte ni mot de passe.
+    $routes[] = new Route('admin_demo_nouvelle', '/admin/demos/nouvelle', ['GET'], static fn (): Response => $admin()->demoNouvelle(), Route::EQUIPE);
+    $routes[] = new Route('admin_demo_creer', '/admin/demos', ['POST'], static fn (Request $r): Response => $admin()->demoCreer($r), Route::EQUIPE);
+    $routes[] = new Route('admin_demo_qr', '/admin/artisans/{id}/qr', ['GET'], static fn (Request $r, array $p): Response => $admin()->demoQr($p), Route::EQUIPE);
+    $routes[] = new Route('admin_demo_message', '/admin/artisans/{id}/message', ['POST'], static fn (Request $r, array $p): Response => $admin()->demoMessage($p), Route::EQUIPE);
+    $routes[] = new Route('demo_entrer', '/d/{jeton}', ['GET'], static fn (Request $r, array $p): Response => $demo()->entrer($r, $p), Route::PUBLIC);
+    $routes[] = new Route('demo_ouvrir', '/d/{jeton}', ['POST'], static fn (Request $r, array $p): Response => $demo()->ouvrir($r, $p), Route::PUBLIC);
     $routes[] = new Route('admin_plus', '/admin/plus', ['GET'], static fn (): Response => $admin()->plus(), Route::EQUIPE);
     // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.
     foreach (array_keys(ReglagesControleur::RUBRIQUES) as $nom) {

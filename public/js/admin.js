@@ -14,4 +14,13 @@
       champ.value = String(Math.min(maxi, Math.max(mini, valeur)));
     });
   });
+  // « Copier le message » : le bouton ne se montre que si le navigateur sait copier.
+  document.querySelectorAll('[data-copier]').forEach(function (bouton) {
+    var source = document.querySelector(bouton.getAttribute('data-copier'));
+    if (!source || !navigator.clipboard) { return; }
+    bouton.hidden = false;
+    bouton.addEventListener('click', function () {
+      navigator.clipboard.writeText(source.value).then(function () { bouton.textContent = 'Message copié'; });
+    });
+  });
 })();

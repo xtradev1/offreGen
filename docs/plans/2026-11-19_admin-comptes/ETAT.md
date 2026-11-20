@@ -1,7 +1,7 @@
 # Chantier : administration des comptes et des démos
 
 - statut : en_cours (gate visuel franchi le 2026-11-19 pour les lots A et B)
-- phase : lot A en 5 (lots 0 à 4 faits, lots 5 à 9 à faire) ; lot B en 2 (découpage écrit)
+- phase : lot A en 5 (lots 0 à 5 faits, lots 6 à 9 à faire) ; lot B en 2 (découpage écrit)
 - Demande de Xavier, 2026-11-19 : « fais la page d'administration, maquette d'abord » ; « est-ce que maintenant on peut déjà créer un compte facile pour les démos ».
 
 ## Suivi Origin
@@ -310,3 +310,48 @@ $ vendor/bin/phpstan analyse --no-progress
 $ node recette-v8.js (téléphone, PC sombre 1280, PC clair 1680 ; 15 écrans : formulaire, refus, rempli, lien, essais)
 aucun défaut aux sondes ; sur PC, bouton à 88 px sous le compteur, 438 px de large ; filtre Essais : étiquettes « Essai » seulement
 ```
+
+Lot 5, démo par QR et par message (2026-11-20). Demande de Xavier transmise par le chat des métiers : « quand on crée une démo, la personne elle a juste à écrire son mail et la démo est lancée avec les données de démo. […] en 30 secondes que le gars puisse commencer à parler. Il met son mail, touf, il a l'app, elle s'ouvre, il la teste, il parle. » « c'est le commercial qui lui crée une démo direct pour son métier ». Ses décisions : le commercial crée la démo et choisit le métier ; le courriel est tapé par le prospect à l'ouverture, ou par le commercial à la création ; il se confirme au passage à l'essai, pas avant ; ce chat construit.
+
+Construit :
+- `/admin/demos/nouvelle` : neuf métiers (`CatalogueFictif::libelles()`), entreprise et courriel du prospect facultatifs. La démo est posée tout de suite par `Comptes::creer` (catalogue, deux offres d'exemple), 10 offres, 7 jours, `cree_par` et `apporte_par` remplis.
+- `/admin/artisans/{id}/qr` : code QR écrit en SVG dans la page (`QrLien`, sans la croix suisse de la QR-facture), lien d'une heure émis à chaque affichage. `/admin/artisans/{id}/message` : message prêt, lien de 24 heures, envoi par WhatsApp ou par courriel (simples liens), « Copier le message ».
+- `/d/{jeton}`, page publique : un champ (courriel), un bouton (« Commencer »). Ouvrir la page ne consomme pas le lien ; l'envoyer, oui, une seule fois.
+- Entrée dans la liste des artisans (« Créer une démo ») et dans la fiche d'une démo (« Afficher le code QR », « Envoyer par message »).
+
+Décisions prises en codant :
+- Le courriel tapé va dans `courriel_saisi` (migration `Version20261120140001`). Le compte garde son adresse `demo-<hex>@demo.invalid` jusqu'au passage à l'essai : un courriel non confirmé peut être celui d'un autre, il ne donne aucun droit et ne sert pas à se connecter.
+- Aucun courriel n'est envoyé. La règle du 18.11 (« une démo ne reçoit jamais de courriel ») reste en place tant que Xavier ne l'a pas changée : sans courriel de retour, le prospect revient par sa session ou par un nouveau lien du commercial.
+- Un lien de démo n'ouvre qu'une démo : `LiensAcces::artisanDuLien` et `utiliser` le refusent, sinon il aurait permis de choisir le mot de passe du compte de démo. Et un lien d'accès n'ouvre pas de démo.
+- Écart avec le plan : la page `/d/{jeton}` porte un formulaire, elle ne s'envoie plus seule. La décision fragile 1 (aperçus de lien des messageries) tombe : rien n'est consommé sans le toucher sur « Commencer ». Aucun changement dans `public/js/app.js`.
+- L'assistant de bienvenue est noté comme passé à la création d'une démo de l'équipe : sans cela, le prospect tombait sur « Votre entreprise », étape 1 sur 4, au lieu de ses offres (vu au parcours cliqué). Les réglages restent ouverts dans « Plus ».
+- Nom provisoire quand le commercial ne tape pas d'entreprise : « Démo » suivi du métier.
+- Limite d'un commercial : 10 démos par 24 heures glissantes, comptées dans `journal_admin` (une démo supprimée compte encore). Administrateur et modérateur sans limite.
+- `Demos` est construit dans `AdminControleur`, pas dans `Conteneur.php`, qu'une autre session modifiait sans l'avoir commité. Pour la même raison, `config/routes.php` est commité par l'index : la version commitée plus les six routes du lot.
+- Le rond « Nouvelle démo » du menu (R3) n'est pas fait : le bouton est dans la liste des artisans.
+
+Textes vus par le prospect (page d'entrée, lien expiré, message) relus par `relecteur-xtradev` : « À corriger » au tour 1 (la phrase sous le champ ne disait pas qui lit le courriel), « Prêt » au tour 2. Au choix de Xavier : « dictez votre première visite » ou « votre première offre » (deux endroits).
+
+```
+$ DB_NOM=offregen_admin_test phpunit --filter DemosTest   (tests écrits, avant le code)
+ERRORS! Tests: 9, Assertions: 4, Errors: 7, Failures: 1.
+$ doctrine-migrations migrate (bases de test et de développement, base du chantier)
+[OK] Successfully migrated to version: OffreGen\Migrations\Version20261120140001
+$ DB_NOM=offregen_admin_test phpunit   (après le code, copie de travail)
+Tests: 888, Assertions: 7894, Failures: 1.
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ node recette-lot5.js (commercial au téléphone et sur PC sombre, prospect sur un téléphone ; 20 écrans)
+aucun défaut aux sondes ; code QR 320 x 320 px ; après « Commencer » : / , titre « Mes offres · Dicta » ; le lien une seconde fois : 410
+fiche : Démo · Carreleur · info@carrelage-buchs.ch · amené par Peinture Démo Sàrl
+```
+
+La suite tourne sur une base à part, `offregen_admin_test` (mémoire « Base de test partagée ») : son seul échec, `ConteneurTest::testLeMotDePasseDeStructureNEstLuQueParLesMigrations`, vient de la variable `DB_NOM`. À supprimer à la clôture du chantier.
+
+Non vérifié : un vrai téléphone qui scanne le code ; WhatsApp et la messagerie ouverts par les deux liens ; iPhone.
+
+Questions ouvertes pour Xavier :
+1. Courriel de retour : garder la règle du 18.11 (aucun courriel à une démo), ou envoyer un seul courriel « Revenir dans votre démo » à l'adresse tapée.
+2. Page publique où un prospect lance sa démo sans commercial : non construite. Elle demanderait un plafond par adresse IP et le choix du métier par le prospect.
+3. Nom provisoire « Démo <métier> » et assistant de bienvenue sauté : à confirmer ; l'assistant pourrait revenir au passage à l'essai.
+4. Passage à l'essai (lot 6 et lot B) : `Comptes::passerEnEssai` remplace le mot de passe et ferme la session ; une offre d'exemple envoyée ou facturée pendant la démo part au passage (D4 de la revue des métiers).

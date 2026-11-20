@@ -9,7 +9,7 @@ namespace OffreGen\Donnees;
  * nature : ces lectures traversent les comptes. Elles ne servent que des routes réservées à l'équipe.
  *
  * @phpstan-type Membre array{id: int, courriel: string, entreprise: string, role: string, offres_max: int|null, acces_en_attente: int, artisans: int, invite_le: string|null}
- * @phpstan-type Compte array{id: int, courriel: string, entreprise: string, demo: int, offres_max: int|null, offres_offertes: int, demo_fin: string|null, cree_par: int|null, apporte_par: int|null, cree_le: string, createur: string|null, apporteur: string|null, dictees: int, derniere: string|null}
+ * @phpstan-type Compte array{id: int, courriel: string, entreprise: string, demo: int, offres_max: int|null, offres_offertes: int, demo_fin: string|null, cree_par: int|null, apporte_par: int|null, cree_le: string, createur: string|null, apporteur: string|null, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, dictees: int, derniere: string|null}
  * @phpstan-type Evenement array{quand: string, sorte: string, detail: string|null, precision: string|null, acteur: string|null}
  */
 final class DepotEquipe
@@ -25,7 +25,7 @@ final class DepotEquipe
      * Les artisans : ni un administrateur, ni un membre de l'équipe ; et, pour un commercial, seulement les siens.
      * « createur » suit l'artisan aujourd'hui (cree_par) ; « apporteur » l'a amené et ne change jamais (apporte_par).
      */
-    private const COMPTES = "SELECT a.id, a.courriel, a.entreprise, a.demo, a.offres_max, a.offres_offertes, a.demo_fin, a.cree_par, a.apporte_par, a.cree_le,
+    private const COMPTES = "SELECT a.id, a.courriel, a.entreprise, a.demo, a.offres_max, a.offres_offertes, a.demo_fin, a.cree_par, a.apporte_par, a.cree_le, a.metier, a.metier_saisi, a.courriel_saisi,
                 c.entreprise AS createur, ap.entreprise AS apporteur,
                 (SELECT COUNT(*) FROM enregistrement e WHERE e.artisan_id = a.id) AS dictees,
                 (SELECT MAX(e.recu_le) FROM enregistrement e WHERE e.artisan_id = a.id) AS derniere
@@ -156,6 +156,45 @@ final class DepotEquipe
     public function changerOffres(int $id, int $offres): void
     {
         $this->base->ecrire("UPDATE artisan SET offres_max = :n WHERE id = :id AND administrateur = 0 AND role IN ('moderateur', 'commercial')", ['n' => $offres, 'id' => $id]);
+    }
+
+    /**
+     * Ce qui fait d'un compte de démonstration une démo de l'équipe : qui l'a créée et amenée, quand elle finit, et le
+     * courriel du prospect s'il est déjà connu. L'assistant de bienvenue est noté comme passé : le prospect arrive
+     * sur ses offres et peut dicter tout de suite (Xavier, 2026-11-20). Les réglages restent ouverts dans « Plus ».
+     */
+    public function poserDemo(int $id, int $acteur, \DateTimeImmutable $maintenant, \DateTimeImmutable $fin, ?string $courrielSaisi): void
+    {
+        $this->base->ecrire(
+            'UPDATE artisan SET cree_par = :a1, apporte_par = :a2, demo_fin = :f, courriel_saisi = :c, reglages_faits_le = :q WHERE id = :id AND demo = 1',
+            ['a1' => $acteur, 'a2' => $acteur, 'f' => Dates::versBase($fin), 'c' => $courrielSaisi, 'q' => Dates::versBase($maintenant), 'id' => $id],
+        );
+    }
+
+    /** Le courriel tapé par le prospect d'une démo. Non confirmé : il ne devient pas l'adresse du compte. */
+    public function saisirCourriel(int $id, string $courriel): void
+    {
+        $this->base->ecrire('UPDATE artisan SET courriel_saisi = :c WHERE id = :id AND demo = 1', ['c' => $courriel, 'id' => $id]);
+    }
+
+    /** Les démos créées par ce membre depuis une date, d'après le journal : une démo supprimée ou reprise compte encore. */
+    public function demosCreees(int $acteur, \DateTimeImmutable $depuis): int
+    {
+        return (int) $this->base->valeur(
+            "SELECT COUNT(*) FROM journal_admin WHERE acteur_id = :a AND geste = 'demo_creee' AND quand > :d",
+            ['a' => $acteur, 'd' => Dates::versBase($depuis)],
+        );
+    }
+
+    /**
+     * Une démo, pour la page d'entrée du prospect : hors portée d'équipe, celui qui tient le lien y entre.
+     *
+     * @return array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null}|null
+     */
+    public function demo(int $id): ?array
+    {
+        /** @var array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null}|null */
+        return $this->base->un('SELECT id, entreprise, metier, metier_saisi, courriel_saisi, demo_fin FROM artisan WHERE id = :id AND demo = 1', ['id' => $id]);
     }
 
     /** Le nom d'un compte, pour dire qui a amené des artisans, même s'il a quitté l'équipe. */

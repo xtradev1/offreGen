@@ -179,3 +179,14 @@ Le lot 8 éteint la suppression par défaut, comme la purge des audios (Q1 du 18
 - Jouer `Version20261119000001` (le déploiement du test le fait).
 - Donner un rôle à un compte d'essai : `/admin/equipe`, depuis le compte de Xavier.
 - Sur le test, aucun courriel ne part : le courriel d'accès d'un membre et le courriel de demande d'appel se lisent dans `partage/var/courriels`.
+
+## Avenant du 2026-11-20 (lot 5)
+
+Demande de Xavier du 2026-11-20, détail dans `ETAT.md`. Ce qui change dans le contrat :
+
+- Colonne `artisan.courriel_saisi VARCHAR(190) NULL` : courriel du prospect, non confirmé. L'adresse `demo-<hex>@demo.invalid` reste celle du compte jusqu'au passage à l'essai.
+- `GET /d/{jeton}` : page avec un champ (courriel) et un bouton ; elle ne s'envoie plus seule. `POST /d/{jeton}` : entrée `courriel` (vide si le commercial l'a déjà tapé) ; 422 sans consommer le lien si le courriel manque ou est faux ; 410 si le lien ne vaut plus.
+- `POST /admin/demos` : entrées `metier`, `metier_saisi`, `entreprise` et `courriel` facultatifs.
+- Signatures livrées : `Demos::creer(PorteeEquipe, Role, string $metier, string $metierSaisi, string $entreprise, string $courriel): int` ; `LiensAcces::emettreDemo(int, string): string`, `demoDuLien(string): ?int`, `ouvrirDemo(string): ?array{artisan, version}` ; `DepotEquipe::poserDemo`, `saisirCourriel`, `demosCreees`, `demo`.
+- Aucun courriel ne part vers une démo (règle du 18.11, inchangée).
+- Lot 6 : le passage à l'essai devra rouvrir la session, `Comptes::passerEnEssai` remplaçant le mot de passe.

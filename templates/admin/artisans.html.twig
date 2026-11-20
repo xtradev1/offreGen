@@ -2,7 +2,7 @@
 
 {# La liste des artisans dans la portée du rôle (R1, Xavier, 2026-11-19) : le commercial ne voit que les siens.
    Les membres de l'équipe n'y figurent jamais. Aucun contenu d'offre : un nom, un type, un compte de dictées. #}
-{% block sous %}<p>{{ comptes|length }} artisan{{ comptes|length > 1 ? 's' : '' }}{% if apporteur is not null %} amené{{ comptes|length > 1 ? 's' : '' }} par {{ apporteur }} · <a class="lien" href="/admin/artisans">Voir tous les artisans</a>{% endif %}</p>{% endblock %}
+{% block tete %}<div class="admin-tete avec-action"><div><h1>{{ titre }}</h1><p>{{ comptes|length }} artisan{{ comptes|length > 1 ? 's' : '' }}{% if apporteur is not null %} amené{{ comptes|length > 1 ? 's' : '' }} par {{ apporteur }} · <a class="lien" href="/admin/artisans">Voir tous les artisans</a>{% endif %}</p></div><a class="btn primary pc-seul" href="/admin/demos/nouvelle">Créer une démo</a></div>{% endblock %}
 
 {% block contenu %}
   <nav class="puces-liens filtres-admin" aria-label="Type de compte">
@@ -26,9 +26,13 @@
         <a class="plus-ligne" href="/admin/artisans/{{ c.id }}">
           <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5l8-2v18M12 8h8v13M4 21h16M8 8h.01M8 12h.01M8 16h.01M16 12h.01M16 16h.01"/></svg>
           <span><b>{{ c.entreprise }} <i class="badge role">{{ c.demo == 1 ? 'Démo' : (c.offres_max is null ? 'Compte' : 'Essai') }}</i></b>
-            <small>{% if role.value != 'commercial' and c.apporteur is not null %}amené par {{ c.apporteur }} · {% endif %}{{ c.dictees }} dictée{{ c.dictees > 1 ? 's' : '' }}{% if c.offres_max is not null %} sur {{ c.offres_max }}{% endif %}{% if c.derniere is not null %} · {{ c.derniere|jour }}{% endif %}</small></span>
+            <small>{% if c.demo == 1 and c.metier is not null %}{{ c.metier_saisi ?? metiers[c.metier] ?? c.metier }} · {% endif %}{% if role.value != 'commercial' and c.apporteur is not null %}amené par {{ c.apporteur }} · {% endif %}{{ c.dictees }} dictée{{ c.dictees > 1 ? 's' : '' }}{% if c.offres_max is not null %} sur {{ c.offres_max }}{% endif %}{% if c.derniere is not null %} · {{ c.derniere|jour }}{% endif %}</small></span>
         </a>
       {% endfor %}
     </nav>
   {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar mobile-seul"><a class="btn primary" href="/admin/demos/nouvelle">Créer une démo</a></div>
 {% endblock %}

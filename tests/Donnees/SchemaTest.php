@@ -45,7 +45,7 @@ final class SchemaTest extends TestCase
     {
         $requete = BaseDeTest::pdo()->query(
             "SELECT COLUMN_NAME, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'artisan' AND COLUMN_NAME IN ('role', 'cree_par', 'demo_fin', 'offres_offertes', 'apporte_par', 'acces_en_attente')"
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'artisan' AND COLUMN_NAME IN ('role', 'cree_par', 'demo_fin', 'offres_offertes', 'apporte_par', 'acces_en_attente', 'courriel_saisi')"
         );
         self::assertNotFalse($requete);
         $colonnes = [];
@@ -57,6 +57,7 @@ final class SchemaTest extends TestCase
         self::assertSame([
             'acces_en_attente' => ['NO', '0'],
             'apporte_par' => ['YES', 'NULL'],
+            'courriel_saisi' => ['YES', 'NULL'],
             'cree_par' => ['YES', 'NULL'],
             'demo_fin' => ['YES', 'NULL'],
             'offres_offertes' => ['NO', '0'],

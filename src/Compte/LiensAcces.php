@@ -21,8 +21,12 @@ final class LiensAcces
 {
     public const OUBLI = 'oubli';
     public const ACCES = 'acces';
+    /** Entrée dans une démo : par un code QR (une heure) ou par un message (24 heures). Aucun mot de passe. */
+    public const DEMO_QR = 'demo_qr';
+    public const DEMO_MSG = 'demo_msg';
+    private const MOTIFS_DEMO = [self::DEMO_QR, self::DEMO_MSG];
     public const DEMANDES_PAR_HEURE = 3;
-    private const DUREES = [self::OUBLI => '+1 hour', self::ACCES => '+7 days'];
+    private const DUREES = [self::OUBLI => '+1 hour', self::ACCES => '+7 days', self::DEMO_QR => '+1 hour', self::DEMO_MSG => '+24 hours'];
     private const FORMAT_JETON = '/^[A-Za-z0-9_-]{43}$/';
 
     public function __construct(
@@ -95,7 +99,9 @@ final class LiensAcces
         if (preg_match(self::FORMAT_JETON, $jeton) !== 1) {
             return null;
         }
-        return $this->liens->valide(self::empreinte($jeton), $this->horloge->now())['artisan_id'] ?? null;
+        $lien = $this->liens->valide(self::empreinte($jeton), $this->horloge->now());
+        // Un lien de démo ouvre une démo : il ne sert jamais à choisir un mot de passe.
+        return $lien === null || in_array($lien['motif'], self::MOTIFS_DEMO, true) ? null : $lien['artisan_id'];
     }
 
     /**
@@ -112,7 +118,7 @@ final class LiensAcces
         $maintenant = $this->horloge->now();
         return $this->base->transaction(function () use ($jeton, $hache, $maintenant): ?array {
             $lien = $this->liens->valide(self::empreinte($jeton), $maintenant);
-            if ($lien === null || $this->liens->marquerUtilise($lien['id'], $maintenant) !== 1) {
+            if ($lien === null || in_array($lien['motif'], self::MOTIFS_DEMO, true) || $this->liens->marquerUtilise($lien['id'], $maintenant) !== 1) {
                 return null;
             }
             $this->liens->annulerTout($lien['artisan_id'], $maintenant);
@@ -126,6 +132,53 @@ final class LiensAcces
     public function annulerTout(int $artisanId): void
     {
         $this->liens->annulerTout($artisanId, $this->horloge->now());
+    }
+
+    /**
+     * Le lien d'entrée dans une démo, à mettre dans un code QR ou dans un message. L'appelant a vérifié que le compte
+     * est une démo de sa portée.
+     */
+    public function emettreDemo(int $artisanId, string $motif): string
+    {
+        if (!in_array($motif, self::MOTIFS_DEMO, true)) {
+            throw new \InvalidArgumentException('Motif de lien de démo inconnu.');
+        }
+        return rtrim($this->adresseApplication, '/') . '/d/' . $this->emettre($artisanId, $motif);
+    }
+
+    /** La démo qu'ouvre ce lien, sans le consommer ; null s'il a expiré, a servi, ou n'est pas un lien de démo. */
+    public function demoDuLien(string $jeton): ?int
+    {
+        if (preg_match(self::FORMAT_JETON, $jeton) !== 1) {
+            return null;
+        }
+        $lien = $this->liens->valide(self::empreinte($jeton), $this->horloge->now());
+        return $lien !== null && in_array($lien['motif'], self::MOTIFS_DEMO, true) ? $lien['artisan_id'] : null;
+    }
+
+    /**
+     * Consomme le lien d'une démo. Le mot de passe et les sessions du compte ne changent pas : le lien ouvre une
+     * session de plus. Les autres liens de la démo restent bons (un code montré, puis un message envoyé).
+     *
+     * @return array{artisan: int, version: int}|null null si le lien a expiré, a déjà servi ou n'ouvre pas une démo
+     */
+    public function ouvrirDemo(string $jeton): ?array
+    {
+        if ($this->demoDuLien($jeton) === null) {
+            return null;
+        }
+        $maintenant = $this->horloge->now();
+        return $this->base->transaction(function () use ($jeton, $maintenant): ?array {
+            $lien = $this->liens->valide(self::empreinte($jeton), $maintenant);
+            if ($lien === null || !in_array($lien['motif'], self::MOTIFS_DEMO, true)) {
+                return null;
+            }
+            $artisan = $this->artisans->parId($lien['artisan_id']);
+            if ($artisan === null || $artisan['demo'] !== 1 || $this->liens->marquerUtilise($lien['id'], $maintenant) !== 1) {
+                return null;
+            }
+            return ['artisan' => $artisan['id'], 'version' => $artisan['version_session']];
+        });
     }
 
     private function emettre(int $artisanId, string $motif): string

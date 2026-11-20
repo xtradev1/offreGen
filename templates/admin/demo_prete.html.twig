@@ -1,0 +1,23 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Démo prête : le code QR à faire scanner (D1 de Xavier, 2026-11-19). Chaque affichage émet un lien neuf, bon une
+   heure et une seule fois. Le SVG est écrit dans la page : la politique de sécurité refuse une image en data:. #}
+{% block retour %}<a class="back" href="/admin/artisans/{{ compte.id }}">{{ compte.entreprise }}</a>{% endblock %}
+{% block sous %}<p>Démo{% if metier %} · {{ metier }}{% endif %}</p>{% endblock %}
+
+{% block contenu %}
+  <div class="carte-admin">
+    <div class="qr">{{ qr|raw }}</div>
+    <p>Faites scanner ce code avec l'appareil photo du téléphone. Il est valable 1&nbsp;heure et sert une seule fois.</p>
+    <form method="post" action="/admin/artisans/{{ compte.id }}/message">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <button class="btn large" type="submit">Envoyer par message</button>
+    </form>
+    <p class="muted"><a class="lien" href="{{ lien }}">Ouvrir la démo sur cet appareil</a>&nbsp;: vous y serez connecté à la place de l'administration.</p>
+    <a class="btn primary pc-seul" href="/admin/artisans/{{ compte.id }}">Terminé</a>
+  </div>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar mobile-seul"><a class="btn primary" href="/admin/artisans/{{ compte.id }}">Terminé</a></div>
+{% endblock %}
