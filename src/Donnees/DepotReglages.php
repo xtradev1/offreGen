@@ -6,6 +6,7 @@ namespace OffreGen\Donnees;
 
 use OffreGen\Adresse\Adresse;
 use OffreGen\Compte\Marque;
+use OffreGen\Compte\PhrasesLettre;
 use OffreGen\Compte\Reglages;
 
 /**
@@ -21,11 +22,12 @@ final class DepotReglages
     {
         $l = $this->base->un(
             'SELECT entreprise, adresse_rue, adresse_numero, adresse_npa, adresse_localite, adresse_pays, telephone, courriel_contact,
-                    ide, iban, tva_pour_dix_mille, arrondi_cinq_centimes, validite_jours, paiement_type, paiement_jours, paiement_acomptes, contact_nom
+                    ide, iban, tva_pour_dix_mille, arrondi_cinq_centimes, validite_jours, paiement_type, paiement_jours, paiement_acomptes, contact_nom,
+                    lettre_appel, lettre_offre_debut, lettre_offre_fin, lettre_facture_debut, lettre_facture_fin
              FROM artisan WHERE id = :a',
             ['a' => $this->portee->artisanId],
         ) ?? throw new \RuntimeException('Compte introuvable.');
-        /** @var array{entreprise: string, adresse_rue: string|null, adresse_numero: string|null, adresse_npa: string|null, adresse_localite: string|null, adresse_pays: string|null, telephone: string|null, courriel_contact: string|null, ide: string|null, iban: string|null, tva_pour_dix_mille: int, arrondi_cinq_centimes: int, validite_jours: int, paiement_type: string, paiement_jours: int, paiement_acomptes: string|null, contact_nom: string|null} $l */
+        /** @var array{entreprise: string, adresse_rue: string|null, adresse_numero: string|null, adresse_npa: string|null, adresse_localite: string|null, adresse_pays: string|null, telephone: string|null, courriel_contact: string|null, ide: string|null, iban: string|null, tva_pour_dix_mille: int, arrondi_cinq_centimes: int, validite_jours: int, paiement_type: string, paiement_jours: int, paiement_acomptes: string|null, contact_nom: string|null, lettre_appel: string|null, lettre_offre_debut: string|null, lettre_offre_fin: string|null, lettre_facture_debut: string|null, lettre_facture_fin: string|null} $l */
         $acomptes = $l['paiement_type'] === 'acomptes' ? (Reglages::acomptes($l['paiement_acomptes'] ?? '') ?? []) : [];
         // Des acomptes illisibles en base ne cassent pas l'écran : retour au paiement à N jours.
         $type = $l['paiement_type'] === 'acomptes' && $acomptes === [] ? 'jours' : $l['paiement_type'];
@@ -33,6 +35,8 @@ final class DepotReglages
             $l['entreprise'], $l['tva_pour_dix_mille'], $l['arrondi_cinq_centimes'] === 1,
             Adresse::depuisBase($l, 'adresse_'), $l['telephone'] ?? '', $l['courriel_contact'] ?? '', $l['ide'] ?? '',
             $l['validite_jours'], $type, $l['paiement_jours'], $acomptes, $l['iban'] ?? '', $l['contact_nom'] ?? '',
+            new PhrasesLettre($l['lettre_appel'] === 'client', $l['lettre_offre_debut'] ?? '', $l['lettre_offre_fin'] ?? '',
+                $l['lettre_facture_debut'] ?? '', $l['lettre_facture_fin'] ?? ''),
         );
     }
 
@@ -106,12 +110,15 @@ final class DepotReglages
                     adresse_rue = :arue, adresse_numero = :anumero, adresse_npa = :anpa, adresse_localite = :alocalite, adresse_pays = :apays,
                     telephone = :te, courriel_contact = :co, ide = :ide, iban = :ib, contact_nom = :cn,
                     tva_pour_dix_mille = :t, arrondi_cinq_centimes = :r, validite_jours = :v,
-                    paiement_type = :pt, paiement_jours = :pj, paiement_acomptes = :pa
+                    paiement_type = :pt, paiement_jours = :pj, paiement_acomptes = :pa,
+                    lettre_appel = :la, lettre_offre_debut = :lod, lettre_offre_fin = :lof, lettre_facture_debut = :lfd, lettre_facture_fin = :lff
              WHERE id = :a',
             self::colonnesAdresse($r->adresse) + ['texte' => $vide($texte), 'e' => $r->entreprise, 'te' => $vide($r->telephone), 'co' => $vide($r->courrielContact),
              'ide' => $vide($r->ide), 'ib' => $vide($r->iban), 'cn' => $vide($r->contactNom), 't' => $r->tvaPourDixMille, 'r' => $r->arrondiCinqCentimes ? 1 : 0,
              'v' => $r->validiteJours, 'pt' => $r->paiementType, 'pj' => $r->paiementJours,
-             'pa' => $r->paiementAcomptes === [] ? null : implode(',', $r->paiementAcomptes), 'a' => $this->portee->artisanId],
+             'pa' => $r->paiementAcomptes === [] ? null : implode(',', $r->paiementAcomptes),
+             'la' => $r->lettre->appelSelonClient ? 'client' : null, 'lod' => $vide($r->lettre->offreDebut), 'lof' => $vide($r->lettre->offreFin),
+             'lfd' => $vide($r->lettre->factureDebut), 'lff' => $vide($r->lettre->factureFin), 'a' => $this->portee->artisanId],
         );
     }
 

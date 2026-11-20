@@ -19,7 +19,7 @@ final class ColonnesChantierTest extends TestCase
             "SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE() AND (
                  (TABLE_NAME = 'offre' AND COLUMN_NAME IN ('chantier_adresse', 'chantier_contact', 'chantier_acces', 'debut_travaux', 'duree_travaux', 'non_compris', 'visite_le'))
-                 OR (TABLE_NAME = 'artisan' AND COLUMN_NAME = 'contact_nom'))"
+                 OR (TABLE_NAME = 'artisan' AND COLUMN_NAME IN ('contact_nom', 'lettre_appel', 'lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin')))"
         );
         self::assertNotFalse($requete);
         $colonnes = [];
@@ -30,6 +30,12 @@ final class ColonnesChantierTest extends TestCase
         // Une offre et un compte d'avant la migration : tout est vide, l'ancienne version du code n'écrit rien ici.
         self::assertSame([
             'artisan.contact_nom' => ['varchar(120)', 'YES', 'NULL'],
+            // Phrases de Lettre (2026-11-20) : vides, la lettre garde les phrases d'aujourd'hui.
+            'artisan.lettre_appel' => ['varchar(8)', 'YES', 'NULL'],
+            'artisan.lettre_facture_debut' => ['varchar(500)', 'YES', 'NULL'],
+            'artisan.lettre_facture_fin' => ['varchar(500)', 'YES', 'NULL'],
+            'artisan.lettre_offre_debut' => ['varchar(500)', 'YES', 'NULL'],
+            'artisan.lettre_offre_fin' => ['varchar(500)', 'YES', 'NULL'],
             'offre.chantier_acces' => ['varchar(255)', 'YES', 'NULL'],
             'offre.chantier_adresse' => ['varchar(255)', 'YES', 'NULL'],
             'offre.chantier_contact' => ['varchar(190)', 'YES', 'NULL'],

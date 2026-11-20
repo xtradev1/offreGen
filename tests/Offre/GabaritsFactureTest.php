@@ -112,7 +112,7 @@ final class GabaritsFactureTest extends TestCase
     public function testUneFactureDitSaReferenceSansChantierNiAccord(string $modele): void
     {
         $corps = (string) strstr(FactureDEssai::html($this->c, $this->jeu, new Marque($modele, '#B8470F'), 2, 'bas'), '<body');
-        self::assertStringContainsString($modele === 'lettre' ? 'selon notre offre n°&nbsp;1 du 07.11.2026' : 'selon offre n°&nbsp;1 du 07.11.2026', $corps);
+        self::assertStringContainsString($modele === 'lettre' ? 'Nous vous adressons notre facture pour les travaux suivants. Selon notre offre n°&nbsp;1 du 07.11.2026.' : 'selon offre n°&nbsp;1 du 07.11.2026', $corps);
         self::assertStringContainsString('2026-001', $corps);
         foreach (['Bon pour accord', 'Rue du Test 9', 'Non compris', 'Peinture de finition', 'valable jusqu', 'Valable jusqu'] as $absent) {
             self::assertStringNotContainsString($absent, $corps);

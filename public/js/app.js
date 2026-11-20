@@ -1355,6 +1355,30 @@ function avisCouleur() {
   maj();
 }
 
+// Phrases de Lettre (2026-11-20, L6) : un toucher sur une tournure la met dans son champ ; l'enregistrement automatique
+// suit (événement input, comme une frappe). La tournure égale au champ est marquée.
+function tournuresLettre() {
+  const boutons = [...document.querySelectorAll('[data-tournure]')];
+  if (!boutons.length) return;
+  const marquer = (champ) => boutons.filter((b) => b.dataset.pour === champ.id)
+    .forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tournure === champ.value.trim())));
+  boutons.forEach((b) => {
+    const champ = document.getElementById(b.dataset.pour);
+    if (!champ) return;
+    b.addEventListener('click', () => {
+      champ.value = b.dataset.tournure;
+      champ.dispatchEvent(new Event('input', { bubbles: true }));
+      champ.focus();
+    });
+  });
+  new Set(boutons.map((b) => b.dataset.pour)).forEach((id) => {
+    const champ = document.getElementById(id);
+    if (!champ) return;
+    champ.addEventListener('input', () => marquer(champ));
+    marquer(champ);
+  });
+}
+
 // Feuille A4 des documents (modèles du bâtiment, 2026-11-20) : chaque modèle est dessiné sur 794 px, comme dans le PDF,
 // et se réduit à la largeur de son papier (--feuille, lue par document-ecran.css). La réduction ne change pas la place
 // que la feuille occupe : une marge basse négative la lui rend. Les papiers qui arrivent plus tard (document à côté,
@@ -1927,6 +1951,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ajoutPc();
   vignettesVivantes();
   avisCouleur();
+  tournuresLettre();
   papiers();
   modelesEnGrand();
   glisserLignes();

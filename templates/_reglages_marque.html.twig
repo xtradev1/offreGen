@@ -58,4 +58,30 @@
     </div>
     {% endfor %}
   </fieldset>
+  {# Les phrases du modèle Lettre (maquette MAQUETTE-lettre-phrases.html, réponses de Xavier du 2026-11-20) : sous le
+     modèle, visibles quand Lettre est coché (app.css). Un toucher sur une tournure la met dans le champ (app.js,
+     tournuresLettre) ; l'enregistrement automatique suit. Un champ vidé reprend la phrase d'avant. #}
+  <fieldset class="groupe si-lettre">
+    <legend>4. Les phrases de la lettre</legend>
+    <p class="muted petit">Vos phrases. Après le début, la lettre ajoute d'elle-même la date de la visite et l'adresse du chantier (offre), ou le numéro de l'offre (facture).</p>
+    <div class="lettre-appel" role="radiogroup" aria-labelledby="lettre-appel-titre">
+      <span class="lettre-titre" id="lettre-appel-titre">Formule d'appel</span>
+      <label class="radio"><input type="radio" name="lettre_appel" value="fixe"{% if champs.lettre_appel != 'client' %} checked{% endif %}> La même pour tous&nbsp;: «&nbsp;Madame, Monsieur,&nbsp;»</label>
+      <label class="radio"><input type="radio" name="lettre_appel" value="client"{% if champs.lettre_appel == 'client' %} checked{% endif %}> Selon le client&nbsp;: «&nbsp;Madame,&nbsp;», «&nbsp;Monsieur,&nbsp;», ou «&nbsp;Madame, Monsieur,&nbsp;» pour une famille ou une entreprise. La fin de la lettre suit.</label>
+    </div>
+    {% for doc, titre in {offre: "Dans une offre", facture: "Dans une facture"} %}
+      <h3 class="famille">{{ titre }}</h3>
+      {% for partie, nom in {debut: 'Début', fin: 'Fin'} %}
+        {% set champ = 'lettre_' ~ doc ~ '_' ~ partie %}
+        <div class="champ">
+          <label for="{{ champ }}">{{ nom }}</label>
+          <div class="puces tournures" role="group" aria-label="Tournures proposées, {{ nom|lower }} {{ doc == 'offre' ? "de l'offre" : 'de la facture' }}">
+            {% for t in tournures[doc ~ '_' ~ partie] %}<button type="button" class="puce" data-tournure="{{ t }}" data-pour="{{ champ }}" title="{{ t }}">{{ loop.first ? 'Actuelle' : 'Tournure ' ~ loop.index }}</button>{% endfor %}
+          </div>
+          <textarea id="{{ champ }}" name="{{ champ }}" rows="4" maxlength="500"{{ f.invalide(erreurs, champ) }}>{{ champs[champ] ?? '' }}</textarea>
+          {{ f.erreur(erreurs, champ) }}
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </fieldset>
 </div>

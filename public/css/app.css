@@ -418,6 +418,13 @@ label.puce { position: relative; display: inline-flex; align-items: center; just
 .teinte:has(input:focus-visible) svg { outline: 3px solid var(--focus); outline-offset: 4px; }
 .teinte:active { scale: .9; }
 .teinte-autre { min-height: 48px; }
+/* Phrases de Lettre (2026-11-20) : visibles quand Lettre est coché ; sans :has, toujours visibles. */
+.si-lettre { display: none; }
+#marque:has(input[name="modele"][value="lettre"]:checked) .si-lettre { display: block; }
+@supports not selector(:has(*)) { .si-lettre { display: block; } }
+.lettre-appel { margin: 0 0 12px; }
+.lettre-titre { display: block; font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.tournures .puce[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 /* 2b : couleur tapée sous 7:1. Texte --warn sur --warn-soft, boutons sur la surface. Mesuré le 2026-11-20 sur les treize
    textes de l'encadré : 8,2:1 au plus bas en clair, 7,7:1 en sombre. */
 .avis-couleur { margin: 12px 0 0; padding: 12px 14px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--warn); font-size: 15px; }

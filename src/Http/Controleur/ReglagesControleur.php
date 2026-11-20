@@ -7,6 +7,7 @@ namespace OffreGen\Http\Controleur;
 use OffreGen\Compte\LogoRefuse;
 use OffreGen\Compte\Iban;
 use OffreGen\Compte\Marque;
+use OffreGen\Compte\PhrasesLettre;
 use OffreGen\Compte\Reglages;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Conteneur;
@@ -29,7 +30,8 @@ final class ReglagesControleur
 {
     private const CHAMPS = ['entreprise', 'contact_nom', 'adresse_rue', 'adresse_numero', 'adresse_npa', 'adresse_localite', 'adresse_pays', 'telephone', 'courriel_contact', 'ide', 'iban', 'tva', 'validite_choix', 'validite_jours',
                             'paiement_type', 'paiement_jours_choix', 'paiement_jours', 'paiement_acomptes_choix', 'paiement_acomptes',
-                            'modele', 'couleur_choix', 'couleur'];
+                            'modele', 'couleur_choix', 'couleur',
+                            'lettre_appel', 'lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin'];
 
     /** Les rubriques du sommaire, dans l'ordre de la maquette validée le 2026-11-12. */
     public const RUBRIQUES = ['entreprise' => 'Mon entreprise', 'marque' => 'Ma marque', 'conditions' => "Conditions de l'offre", 'tva' => 'TVA et arrondi'];
@@ -295,7 +297,7 @@ final class ReglagesControleur
                 'paiement_acomptes' => str_replace(',', ', ', $acomptes),
                 'modele' => $m->modele,
                 'couleur_choix' => in_array($m->couleur(), self::teintes($m), true) ? $m->couleur() : 'autre',
-                'couleur' => $m->couleur()];
+                'couleur' => $m->couleur()] + $r->lettre->versChamps();
     }
 
     private function portee(Request $requete): Portee
@@ -450,6 +452,7 @@ final class ReglagesControleur
             'propose' => $this->modelePropose($portee),
             'vignettes' => in_array('marque', $sections, true) ? $this->vignettes($portee, $marque) : [],
             'proposees' => Marque::TEINTES,
+            'tournures' => PhrasesLettre::TOURNURES,
             'avis' => self::avisCouleur($champs),
         ]), $code);
     }

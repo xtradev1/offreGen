@@ -2,7 +2,7 @@
 chantier: Modèles d'offre du bâtiment
 slug: 2026-11-19_modeles-offre
 phase: 8
-statut: gate_ouvert
+statut: en_cours
 gate_attendu: visuel
 profil: .claude/atoz-profile.md
 ---
@@ -12,17 +12,17 @@ profil: .claude/atoz-profile.md
 - Projet 44 (offreGen), tâche 488 (Douze modèles d'offre pour le bâtiment), créée le 2026-11-20 à la demande de Xavier.
 - Sous-tâches : 489 analyse et maquettes ; 490 essai dompdf ; 491 plan ; 492 lots 0 à 2 ; 493 lots 3 et 4 ; 494 lot 5 ; 495 lot 6 ; 496 lot 7 ; 497 lot 8 ; 498 revue et recette.
 - Tâche 499 : options et variantes, à cadrer dans son propre chantier (décision O6).
-- Conversation rattachée à 498 (revue et recette) le 2026-11-20, après 492 à 497 ; puis à 511 (maquette des phrases de Lettre, tâche 510) le même jour.
+- Conversation rattachée à 498 (revue et recette) le 2026-11-20, après 492 à 497 ; puis à 511 (maquette des phrases de Lettre, tâche 510), puis à 512 (code) le même jour.
 
 ## Prochaine action
 
-Attendre les réponses de Xavier à `MAQUETTE-lettre-phrases.html` (L1 à L6), puis coder les phrases réglables de Lettre (tâche Origin 510, sous-tâche 512) test d'abord. Déployer sur le test le commit `112c063` (encadré de couleur, glissement) quand Xavier le dit. À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
+Déployer sur le test la tête de la branche (encadré de couleur, glissement, phrases de Lettre ; deux migrations) quand Xavier le dit. Puis sa recette (`RECETTE.md`, scénarios 2, 2 bis, 8 bis). Trancher avec lui le commentaire de L1. À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
 
 ## En attente de toi
 
-- Répondre à `MAQUETTE-lettre-phrases.html` (L1 à L6 : où, date de visite et chantier, formule d'appel, phrase propre à une offre, factures, tournures), puis coller le texte de « Copier mes réponses ».
-- Dire si je déploie sur le test le commit `112c063` (encadré de couleur, glissement au doigt), données toujours inventées.
-- Corriger ma lecture de B si elle est fausse : l'artisan choisit dans l'encadré, le document reste à 4,5:1 sans choix, les six pastilles ne changent pas.
+- Dire si je déploie sur le test (données toujours inventées ?) : encadré de couleur, glissement au doigt, phrases de Lettre. Deux migrations partent : la mienne (`Version20261120220001`) et `Version20261120210001` d'une autre session, déjà sur la branche.
+- Préciser le commentaire de L1 (« doit pouvoir être modifié (écrit par l'application, à partir de l'offre) ») : les mots que l'application ajoute (« Visite du », « Chantier : », la phrase des conditions) doivent-ils devenir réglables, ou bien cela vise-t-il les données elles-mêmes, déjà modifiables dans l'en-tête de l'offre et dans les réglages ?
+- Dérouler `RECETTE.md`, scénarios 2, 2 bis et 8 bis.
 
 ## Journal
 
@@ -67,6 +67,8 @@ Attendre les réponses de Xavier à `MAQUETTE-lettre-phrases.html` (L1 à L6), p
 - 2026-11-20 : recette de Xavier : « j'ai tenté de mettre du blanc […] J'ai pas de message […] il faut corriger » ; « quand on les a en grand, je veux qu'avec les doigts, on puisse aussi les décaler » ; les quatre questions à détailler. Cause du blanc : il était enregistré, et `Marque::principale()` le fonçait en silence jusqu'à 4,5:1 (un gris). Réponse validée au 5e tour du chantier responsive (2b, « Couleur tapée : Valider »), pas encore codée : codée ici. Sous la couleur, pour une couleur tapée ou celle du logo sous 7:1, un encadré dit le contraste et propose « Bien visible » (7:1) et « Visible » (la couleur du document, 4,5:1), d'un toucher ; sans JavaScript, le bouton envoie le formulaire (`couleur_prise`). Glisser au doigt dans la vue en grand : 50 px au moins, surtout horizontal ; deux doigts ou page agrandie, rien.
 - 2026-11-20 : écarts à la maquette 2b, de moi : le texte « Vos titres et votre total seraient pâles » est remplacé par ce qui se passe vraiment (« Vos documents l'emploient foncée juste assez pour rester lisible ») ; les contrastes sont arrondis vers le bas (2,1:1 pour l'orange que la maquette disait 2,2:1). Mesure qui contredit la maquette : quatre des six couleurs proposées sont sous 7:1 (vert #2E7D32 5,1 ; rouge #B23A2E 5,9 ; brun #8A5A2B 5,8 ; pétrole #0F7C8C 4,9). Elles ne déclenchent pas l'encadré, comme la maquette le voulait ; question posée à Xavier.
 - 2026-11-20 : réponses de Xavier : « A oui, B au choix du client, C souventz le chantier, D pourquoi pas pouvoir changer fais une maquette ». A : la facture d'une page reste sans pied. B, lecture de Claude : l'artisan choisit dans l'encadré 2b (« Bien visible » ou « Visible ») ; sans choix, 4,5:1 ; les six pastilles ne changent pas. C : le lieu dicté reste recopié dans l'adresse du chantier. D : maquette `MAQUETTE-lettre-phrases.html` (lettre réelle d'aujourd'hui, démo cliquable du réglage, six décisions L1 à L6) ; tâche Origin 510 créée (sous-tâches 511 à 513). Gate visuel ouvert pour ce morceau.
+- 2026-11-20 : réponses de Xavier à la maquette des phrases : « L1 : A. Dans Ma marque, sous Lettre. Commentaire : doit pouvoir etre modifié (écrit par l'application, à partir de l'offre) ; L2 : A. Ajoutés après la phrase ; L3 : Les deux, au choix de l'artisan (comme la démo) ; L4 : A. Non ; L5 : A. Phrases réglables aussi ; L6 : Valider ». Gate visuel franchi. Codé : `Compte\PhrasesLettre` (formule d'appel la même pour tous ou selon le client, quatre phrases, trois tournures chacune, vide = la phrase d'avant), dans `Reglages` (dernier paramètre) ; migration `Version20261120220001` (cinq colonnes facultatives sur `artisan`) ; groupe « 4. Les phrases de la lettre » dans « Ma marque », visible quand Lettre est coché ; gabarit Lettre : la phrase de l'artisan, puis « Visite du … » et « Chantier : … » (offre) ou « Selon notre offre n° … du … » (facture). Le commentaire de L1 est ambigu : question posée, rien de codé pour lui.
+- 2026-11-20 : défauts trouvés en route : un client sans nom (offre au client à choisir) faisait tomber « Ma marque » en erreur 500, `appel()` refusant null (corrigé, cas ajouté au test) ; la migration `Version20261120210001` d'une autre session manquait sur ma base de test (jouée) ; champs de trois lignes trop courts à 390 px (quatre). Sur la base de développement, seule ma migration a été jouée, par son nom.
 
 ## Décisions
 
@@ -109,6 +111,9 @@ Attendre les réponses de Xavier à `MAQUETTE-lettre-phrases.html` (L1 à L6), p
 | 2026-11-20 | Facture d'une page sans pied : gardé. | Xavier : « A oui ». |
 | 2026-11-20 | Couleur du document : 4,5:1 par défaut, 7:1 si l'artisan prend « Bien visible » dans l'encadré ; les six pastilles inchangées. | Xavier : « B au choix du client » (lecture de Claude, à corriger s'il voulait autre chose). |
 | 2026-11-20 | Le lieu dicté reste recopié dans l'adresse du chantier. | Xavier : « C souvent le chantier ». |
+| 2026-11-20 | Phrases de Lettre : dans Ma marque sous Lettre (L1), visite et chantier ajoutés après la phrase (L2), formule d'appel au choix de l'artisan (L3), pas de phrase propre à une offre (L4), factures réglables aussi (L5), tournures validées (L6). | Réponses de Xavier à MAQUETTE-lettre-phrases.html. |
+| 2026-11-20 | Les phrases vivent dans `Reglages` (paramètre `lettre`), pas dans un circuit à part. | Le gabarit Lettre lit déjà `r` ; l'enregistrement automatique et la validation des réglages les portent sans code de plus. |
+| 2026-11-20 | La formule « la même pour tous » reste « Madame, Monsieur, », sans champ libre. | L3 « comme la démo » : la démo n'avait pas de champ pour elle. |
 
 ## Ce que l'essai dompdf a établi
 
@@ -195,4 +200,6 @@ phase 8, couleur trop claire et glissement : tests avant le code : Errors: 3 (Ma
   avis-glisser.js (local, demo-peintre, couleur d'origine remise) : blanc tapé : encadré visible, « contraste 1:1 », bien=#565656 (7,3:1), visible=#6F6F6F (5:1), « Enregistré » ; orange : 2,1:1, bien=#7D4F0A, visible=#A1660D ; « Bien visible » touché : encadré fermé, champ #7d4f0a, gardé au rechargement ; glissé à gauche : Bandeau puis Moderne ; à droite : Bandeau ; geste vertical et geste court : rien ; aucune erreur JS ; deux captures regardées
   contraste-avis.js : 13 textes de l'encadré, plus bas 8,21:1 en clair, 7,72:1 en sombre ; témoin injecté en clair : 1,24:1, 5 textes sous 7 (la mesure sait échouer)
 phase 3 (Lettre) : check.js : bureau 1440/1440 et téléphone 390/390, images 1, cassées 0, kit oui ; demo-lettre.js : « Selon le client » + Madame Exemple donne « Madame, » et « vous prions d'agréer, Madame, nos salutations » ; sans visite : « Chantier : Rue du Test 9 » seul ; champ vidé : phrase actuelle ; débordement 0 ; aucune erreur JS ; captures regardées (haut de page aux deux largeurs, démo aux deux largeurs)
+phase 5 et 6, phrases de Lettre : tests avant le code : Errors 5 (PhrasesLettre absente), colonnes absentes, 3 échecs d'écran ; après : OK (989 tests, 8649 assertions) ; phpstan : [OK] No errors
+  lettre-ecran.js (local, demo-peintre, état d'origine remis : bandeau, fixe, phrases identiques) : groupe 4 caché avant Lettre, visible après ; Tournure 3 marquée ; « Enregistré » ; document : « Monsieur, », « Comme convenu, voici notre offre pour les travaux suivants. » ; PDF : « Recevez, Monsieur, nos meilleures salutations. » ; sonde du groupe 4 : 0 débordement, 0 chevauchement, 0 texte coupé ; aucune erreur JS ; deux captures regardées
 ```

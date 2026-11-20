@@ -13,7 +13,8 @@ use OffreGen\Offre\SaisieRefusee;
  * Les réglages d'un compte qui changent une offre : l'en-tête du document (entreprise, adresse en champs séparés,
  * téléphone, courriel, IDE), la TVA, l'arrondi du total, la validité et les conditions de paiement ;
  * l'IBAN, pour la section de paiement des factures (forme compacte, vide s'il n'est pas donné) ;
- * et la personne de contact, citée sur l'offre et sous la signature de l'entreprise (modèles du bâtiment, 2026-11-20).
+ * la personne de contact, citée sur l'offre et sous la signature de l'entreprise (modèles du bâtiment, 2026-11-20) ;
+ * et les phrases du modèle Lettre (PhrasesLettre, même jour).
  */
 final readonly class Reglages
 {
@@ -50,6 +51,7 @@ final readonly class Reglages
         public array $paiementAcomptes = [],
         public string $iban = '',
         public string $contactNom = '',
+        public PhrasesLettre $lettre = new PhrasesLettre(),
     ) {
     }
 
@@ -129,7 +131,7 @@ final readonly class Reglages
      *        adresse_pays, telephone, courriel_contact, ide, iban, tva,
      *        validite_choix et validite_jours, paiement_type, paiement_jours_choix et paiement_jours,
      *        paiement_acomptes_choix et paiement_acomptes. Un « …_choix » proposé l'emporte ; « autre » ou
-     *        absent : la valeur tapée.
+     *        absent : la valeur tapée. Les phrases de Lettre : voir PhrasesLettre::depuisSaisie.
      */
     public static function depuisSaisie(array $champs, bool $arrondi): self
     {
@@ -188,10 +190,12 @@ final readonly class Reglages
                 $erreurs['paiement_jours'] = 'Un délai de 1 à 120 jours.';
             }
         }
-        if ($nom === null || $adresse === null || $ide === null || $iban === null || $validite === null || $jours === null || $acomptes === null || $erreurs !== []) {
+        [$lettre, $erreursLettre] = PhrasesLettre::depuisSaisie($champs);
+        $erreurs += $erreursLettre;
+        if ($nom === null || $adresse === null || $ide === null || $iban === null || $validite === null || $jours === null || $acomptes === null || $lettre === null || $erreurs !== []) {
             throw new SaisieRefusee($erreurs);
         }
-        return new self($nom, $taux, $arrondi, $adresse, $telephone, $courriel, $ide, $validite, $type, $jours, $acomptes, $iban, $contact);
+        return new self($nom, $taux, $arrondi, $adresse, $telephone, $courriel, $ide, $validite, $type, $jours, $acomptes, $iban, $contact, $lettre);
     }
 
     /** « che 123 456 789 tva » donne « CHE-123.456.789 » ; vide reste vide ; null si ce n'est pas un IDE. */

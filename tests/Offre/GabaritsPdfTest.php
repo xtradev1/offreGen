@@ -196,9 +196,10 @@ final class GabaritsPdfTest extends TestCase
         self::assertSame(40, substr_count($html, '<td class="doc-po">'), 'une cellule de marge par ligne');
     }
 
+    /** L2 (Xavier, 2026-11-20) : la phrase de l'artisan, puis la visite et le chantier, ajoutés par l'application. */
     public function testLettreSansVisiteNeCiteAucuneDate(): void
     {
-        self::assertStringContainsString('Suite à notre visite du 12 novembre 2026, nous vous remettons notre offre', $this->html('lettre', 4));
+        self::assertStringContainsString('Nous vous remettons notre offre pour les travaux suivants. Visite du 12 novembre 2026. Chantier&nbsp;: Rue du Test 9', $this->html('lettre', 4));
         $sans = (string) strstr($this->html('lettre', 4, []), '<body');
         self::assertStringNotContainsString('visite', $sans);
         self::assertStringContainsString('Nous vous remettons notre offre pour les travaux suivants.', $sans);

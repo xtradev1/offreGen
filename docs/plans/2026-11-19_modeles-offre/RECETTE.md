@@ -4,7 +4,7 @@ Tout ce qui suit se teste à la main, en une passe, sur le site de test (`https:
 
 ## Préalables
 
-- [ ] Code sur le site de test : le commit de la couleur en grand (noté dans `ETAT.md`), déployé quand tu le dis. Le chantier est commité seul, sans les changements non commités du chantier responsive (facture annulée, barre du bas) qui partageaient sa copie de travail. Contrôle : `GET /sante` annonce ce commit.
+- [ ] Code sur le site de test : la tête de `chantier-voix-offre` (commit noté dans `ETAT.md`), déployée quand tu le dis. Deux migrations partent avec : `Version20261120220001` (cinq colonnes facultatives, les phrases de Lettre) et celle d'une autre session, `Version20261120210001`. Contrôle : `GET /sante` annonce ce commit, `"migrations":"ok"`.
 - [x] Migration `migrations/Version20261120120001.php` jouée par le déploiement (huit colonnes facultatives) : `GET /sante` rend `"migrations":"ok"`.
 - [x] Le dossier `var/cache/pdf` du site de test accepte l'écriture : le PDF d'une offre de `demo-macon` porte Roboto et Archivo, aucune police de repli (contrôle du 2026-11-20).
 - [ ] Recharger sans le cache du navigateur (Ctrl+F5, ou fermer l'onglet sur téléphone) : `app.css`, `app.js` et `document.css` sont servis sans numéro de version.
@@ -165,6 +165,24 @@ Attendu, pour tous : l'adresse du client au même endroit, rien qui se chevauch
 
 Si ça casse : `templates/document/<modèle>.html.twig`, le bloc du modèle dans `public/css/document.css`.
 
+## Scénario 8 bis : les phrases de Lettre
+
+| | |
+|---|---|
+| URL | `/reglages/marque`, puis le document d'une offre |
+| Compte | `demo-macon@exemple.ch` |
+
+Gestes :
+1. Cocher le modèle « Lettre » : le groupe « 4. Les phrases de la lettre » paraît.
+2. Choisir « Selon le client », toucher « Tournure 3 » sous le début de l'offre, taper une fin à soi qui contient « Madame, Monsieur ».
+3. Ouvrir le document d'une offre dont le client commence par « Madame » ou « Monsieur », puis d'une offre à une famille.
+4. Créer une facture de cette offre, ouvrir son PDF.
+5. Vider un champ, revenir : il montre la phrase d'avant.
+
+Attendu : au 1, le groupe paraît sous les modèles, et disparaît si un autre modèle est coché. Au 3, « Madame, » ou « Monsieur, » en tête, « Madame, Monsieur, » pour la famille ; ta fin reprend la même formule ; après le début, « Visite du … » et « Chantier : … » quand l'offre les a. Au 4, le début et la fin de la facture, puis « Selon notre offre n° … du … ».
+
+Si ça casse : `Compte\PhrasesLettre`, `templates/document/lettre.html.twig`, colonnes `artisan.lettre_*`, `tournuresLettre` dans `public/js/app.js`.
+
 ## Scénario 9 : les factures
 
 | | |
@@ -197,7 +215,6 @@ Si ça casse : dis-moi de combien de millimètres l'adresse est décalée, et d
 - Les options et les variantes : chantier à part, après celui-ci (tâche Origin 499).
 - Marge : quand un poste passe d'une page à l'autre, son nom reste sur la première page.
 - La couleur de l'artisan en texte tient un contraste de 4,5 sur le blanc (règle du 2026-11-12), pas 7 : à trancher par toi.
-- Les textes fixes de Lettre (« Madame, Monsieur, », la formule de politesse) ne se règlent pas ; relis-les.
 - L'avis d'un artisan sur les douze modèles (question 4 de la fiche d'essai).
 - Un vrai iPhone et un vrai Android : je n'ai vu que Chromium, à 390 px et à 1280 px.
 - Le verrou posé sur le premier rendu après une mise en ligne (deux PDF demandés à la même seconde) : écrit, pas essayé à deux processus.
