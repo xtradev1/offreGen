@@ -24,6 +24,7 @@ use OffreGen\Audio\TranscripteurFactice;
 use OffreGen\Audio\ValidateurAudio;
 use OffreGen\Compte\Authentification;
 use OffreGen\Compte\Comptes;
+use OffreGen\Compte\DemandesEssai;
 use OffreGen\Compte\LiensAcces;
 use OffreGen\Donnees\DepotLiensAcces;
 use OffreGen\Donnees\Base;
@@ -527,6 +528,20 @@ final class Conteneur
             $redirection = $this->parametre('COURRIELS_REDIRIGER_VERS');
             return $redirection === '' ? $messagerie : new MessagerieRedirigee($messagerie, $redirection);
         });
+    }
+
+    /**
+     * Les demandes d'essai de la page de présentation : un courriel à l'exploitant (DEMANDES_ESSAI_DESTINATAIRE),
+     * plafonné par jour. Le compteur du jour tient dans DEMANDES_ESSAI_DOSSIER.
+     */
+    public function demandesEssai(): DemandesEssai
+    {
+        return $this->une(DemandesEssai::class, fn (): DemandesEssai => new DemandesEssai(
+            $this->messagerie(),
+            $this->parametre('DEMANDES_ESSAI_DESTINATAIRE', 'info@xtradev.ch'),
+            $this->parametre('DEMANDES_ESSAI_DOSSIER', $this->racine . '/var/demandes-essai'),
+            $this->horloge(),
+        ));
     }
 
     /** Les courriels partent vraiment (MESSAGERIE=smtp) ; sinon ils restent en fichiers dans var/courriels. */

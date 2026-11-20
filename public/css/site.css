@@ -363,6 +363,15 @@ section.suisse .in{position:relative}
 .carte-d .pt.vous,.carte-d .et,.carte-d .pt.hote{pointer-events:none}
 .suisse .legende{margin-top:18px}
 .suisse .tete h2{max-width:13em;margin-bottom:0}
+.suisse .seule{color:#fff;font-size:19px;max-width:38em;margin:-6px 0 30px}
+.surtitre{display:flex;align-items:center;gap:10px;font:700 14px "Archivo",system-ui,sans-serif;letter-spacing:.9px;text-transform:uppercase;margin:0 0 16px}
+.surtitre .croix{width:24px;height:24px;flex:none;color:var(--terra)}
+.nefait ul{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 24px}
+.nefait li{display:flex;gap:12px;align-items:center;font:600 18px/1.25 "Archivo",system-ui,sans-serif}
+.nefait li svg{width:36px;height:36px;flex:none;padding:8px;border-radius:50%;background:var(--terra);color:#fff;stroke-width:2.6}
+.mention{margin-top:12px}
+.reponse{margin:0 0 4px;padding:12px 14px;border-radius:12px;font-weight:600;background:var(--av-l);color:var(--av)}
+.reponse.ok{background:#E1EFE6;color:#13553A}
 .pays3{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:48px;align-items:start}
 .faits{list-style:none;margin:0;padding:0;border-top:1px solid var(--doux)}
 .faits li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:4px 14px;padding:18px 0;border-bottom:1px solid var(--doux)}
@@ -405,6 +414,8 @@ section.suisse .in{position:relative}
   .feuille{width:270px;max-width:100%;margin:0 auto}
   .pays3{grid-template-columns:minmax(0,1fr);gap:26px}
   .sceau.grand{display:none}
+  .nefait ul{grid-template-columns:minmax(0,1fr)}
+  .suisse .seule{font-size:18px;margin-bottom:22px}
   .lieu i{width:11px;height:11px;border-width:2.5px}
 }
 /* Positions, décalages et variables posés élément par élément (la CSP du site refuse les attributs style). */

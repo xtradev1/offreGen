@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use OffreGen\Compte\DemandesEssai;
 use OffreGen\Compte\Marque;
 use OffreGen\Donnees\EtatBase;
 use OffreGen\Http\Conteneur;
@@ -14,6 +15,7 @@ use OffreGen\Http\Controleur\LigneCatalogueControleur;
 use OffreGen\Http\Controleur\LigneControleur;
 use OffreGen\Http\Controleur\ReglagesControleur;
 use OffreGen\Http\Controleur\ConnexionControleur;
+use OffreGen\Http\Controleur\DemandeEssaiControleur;
 use OffreGen\Http\Controleur\EnregistrementControleur;
 use OffreGen\Http\Controleur\FactureControleur;
 use OffreGen\Http\Controleur\ImportControleur;
@@ -67,10 +69,13 @@ return static function (Conteneur $c): array {
         // (Xavier, 2026-11-20 : « mets la page à / maintenant »), statique : aucune donnée lue ni écrite. « ?etat=avant »
         // montre l'état d'avant l'ouverture des inscriptions.
         new Route('accueil', '/', ['GET'], static fn (Request $r): Response => $accueil()->liste($r), Route::ARTISAN,
-            static fn (Request $r): Response => new Response($c->twig()->render(
-                'presentation.html.twig',
-                ['avant' => $r->query->getString('etat') === 'avant'],
-            ))),
+            static fn (Request $r): Response => new Response($c->twig()->render('presentation.html.twig', [
+                'avant' => $r->query->getString('etat') === 'avant',
+                // La réponse à une demande d'essai (renvoi de /essai) : reçue, invalide ou trop.
+                'demande' => in_array($r->query->getString('demande'), DemandesEssai::ETATS, true) ? $r->query->getString('demande') : '',
+            ]))),
+        // « Bon pour essai » : tant que l'inscription n'existe pas, le courriel du visiteur part à l'exploitant (2026-11-20).
+        new Route('demande_essai', '/essai', ['POST'], static fn (Request $r): Response => (new DemandeEssaiControleur($c))->deposer($r), Route::PUBLIC),
         // « Plus » (décision D2, 2026-11-15) : catalogue, réglages, import, déconnexion. Lecture seule.
         new Route('plus', '/plus', ['GET'], static fn (): Response => new Response($c->twig()->render('plus.html.twig')), Route::ARTISAN),
         new Route('import', '/import', ['GET'], static fn (Request $r): Response => $import()->afficher($r), Route::ARTISAN),
