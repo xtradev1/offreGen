@@ -223,6 +223,8 @@ final class VosPrixTest extends TestCase
         self::assertStringContainsString('3 produits attendent votre prix', $accueil);
         self::assertStringContainsString('href="/vos-prix"', $accueil);
         self::assertStringContainsString('href="/css/vos-prix.css"', $accueil);
+        // Le script ouvre l'écran sans changer de page : sur iPhone, le clavier ne s'ouvre que pendant un toucher.
+        self::assertStringContainsString('src="/js/vos-prix.js"', $accueil);
 
         $reponse = $this->a->post('/vos-prix/plus-tard', []);
         self::assertSame(303, $reponse->getStatusCode());
@@ -231,6 +233,7 @@ final class VosPrixTest extends TestCase
         self::assertStringNotContainsString('attendent votre prix', $accueil);
         self::assertStringContainsString('3 produits sans prix', $accueil);
         self::assertStringContainsString('href="/vos-prix"', $accueil);
+        self::assertStringContainsString('src="/js/vos-prix.js"', $accueil);
     }
 
     public function testLAccueilNeDitRienAUneDemoNiAUnCompteSansProduitDExemple(): void
@@ -252,6 +255,7 @@ final class VosPrixTest extends TestCase
         $catalogue = $this->page('/catalogue');
         self::assertStringContainsString('3 produits sans prix', $catalogue);
         self::assertStringContainsString('href="/vos-prix"', $catalogue);
+        self::assertStringContainsString('src="/js/vos-prix.js"', $catalogue);
         BaseDeTest::pdo()->exec("UPDATE produit SET prix_centimes = 100 WHERE artisan_id = {$this->jeu->a}");
         self::assertStringNotContainsString('/vos-prix', $this->page('/catalogue'));
     }

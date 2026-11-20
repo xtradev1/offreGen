@@ -3,7 +3,7 @@
 {% block titre %}Mes offres · {{ nom_application }}{% endblock %}
 {% block entete %}Mes offres{% endblock %}
 {% block ecran_classe %} gris avec-rond{% endblock %}
-{% block entete_html %}{% if vos_prix.nombre > 0 %}<link rel="stylesheet" href="/css/vos-prix.css">{% endif %}{% endblock %}
+{% block entete_html %}{% if vos_prix.nombre > 0 %}<link rel="stylesheet" href="/css/vos-prix.css"><script src="/js/vos-prix.js" defer></script>{% endif %}{% endblock %}
 
 {% block contenu %}
   <p class="muted ent">{{ entreprise }}{% if demo %} (compte de démonstration){% endif %}</p>
