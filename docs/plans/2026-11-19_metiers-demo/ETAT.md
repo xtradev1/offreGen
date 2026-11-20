@@ -15,11 +15,12 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lots 0 à 10 de `PLAN.md` faits, testés, commités (555dea4, 727f0dd, 687606b) et en service sur le site de test. Suite : la recette de Xavier sur iPhone (le clavier reste-t-il ouvert d'un produit à l'autre), puis lot 11 (dictées d'essai des six nouveaux métiers), phases 6 à 8 (vérification, revue, recette). Pour déployer : règle de la mémoire du projet (dossier propre à la session, tête de la branche, `pgrep` vide).
+Lots 0 à 10 de `PLAN.md` faits, testés, commités (555dea4, 727f0dd, 687606b) et en service sur le site de test. Suite : la recette de Xavier sur iPhone (le clavier reste-t-il ouvert d'un produit à l'autre), puis lot 11 (dictées d'essai des six nouveaux métiers), phases 6 à 8 (vérification, revue, recette). Pour coder et déployer : la copie `~/offreGen-metiers` (tête de la branche, `git fetch` puis `git checkout --detach origin/chantier-voix-offre`), script du scratchpad `deployer-metiers.sh` ; la copie partagée `~/offreGen` est en retard et porte les fichiers d'autres sessions.
 
 ## En attente de toi
 
-- Essayer « Vos prix » sur ton iPhone, compte `essai-peintre@exemple.ch` du site de test : le clavier reste-t-il ouvert après « Suivant », « Reprendre », « Passer » ; les boutons tiennent-ils au-dessus du clavier ; le glisser à gauche passe-t-il au suivant.
+- Réessayer sur ton iPhone : le clavier s'ouvre-t-il tout seul en touchant « Compléter » (catalogue des démos de peintre, 3 produits sans prix) ou « Mettre mes prix » (`essai-peintre@exemple.ch`, 12 produits).
+- Dire quels bugs tu as vus, et ce que tu appelles « la nouvelle version visuelle ».
 - Dire quelle démo passer à l'essai pour voir le passage sur le site (`bin/passer-en-essai`, lancé par Claude : le bouton est au chantier des comptes).
 - Dire si les démos déjà posées sur le site de test se remettent à zéro : posées avant la migration, elles n'ont aucune marque, et leur passage à l'essai garderait leurs deux offres d'exemple.
 - Regarder les sept prix corrigés après lecture des pages (`CATALOGUES.md`, premier paragraphe) : ils s'écartent de ce que tu avais vu.
@@ -64,6 +65,10 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-19 : collisions avec la session des comptes, qui lançait ses tests et déployait en même temps sur la même base de test : une suite entière rouge dans la copie de travail (229 erreurs), deux refus du script de déploiement avant tout envoi. Aucune erreur de code : la même suite passe seule (652 tests). Règle écrite depuis dans la mémoire du projet par l'autre session : un dossier de copie propre par session, déployer la tête de la branche.
 - 2026-11-19 : 727f0dd déployé sur le test par cette session ; le correctif 687606b y est arrivé avec le déploiement de 56fbddd par la session des comptes. Recette de l'écran par l'interface, au téléphone, sur le compte `essai-vosprix@exemple.ch` créé pour elle. Défaut vu à la capture et corrigé : le message « Annuler » couvrait l'avancement et le haut de « Je ne fais pas ça ».
 - 2026-11-19 : comptes créés sur le test pour la recette de Xavier sur iPhone : `essai-peintre@exemple.ch` (essai neuf, 12 produits à 0) et `demo-peintre-2@exemple.ch` (démo). Mots de passe dans `~/.offregen-test-<nom>-compte`.
+- 2026-11-20 : retour de Xavier après essai sur son iPhone : « globalement le clavier ça marche bien », il reste ouvert d'un produit à l'autre (décision fragile 1 levée). Manque : le clavier doit s'ouvrir tout seul à l'arrivée sur l'écran. Il signale aussi « un peu des bugs » et « la nouvelle version visuelle », sans détail : question posée.
+- 2026-11-20 : Safari sur iPhone n'ouvre le clavier que pendant un toucher. « Mettre mes prix », « Compléter » et « Reprendre les produits passés » ouvrent donc l'écran sans changer de page : un champ provisoire prend le clavier pendant le toucher, le champ du prix le reprend à l'arrivée de la carte. « Annuler » ne recharge plus la page. Test écrit d'abord et vu rouge (2 échecs). Commit 5d62ba8, déployé sur le test au second essai (le premier a croisé la suite d'une autre session).
+- 2026-11-20 : la copie de travail partagée (`~/offreGen`) avait deux commits de retard et ne pouvait pas avancer (`config/routes.php` modifié par une autre session). Travail fait dans une copie propre à ce chantier, `~/offreGen-metiers`, sur la tête de la branche ; elle sert aussi au déploiement.
+- 2026-11-20 : données changées sur le site de test à la demande de Xavier (« pour qu'il me l'affiche 2-3 fois ») : « Laquage des plinthes » et « Couche d'impression » mis sans prix sur `demo-peintre` et `demo-peintre-2`, prix d'avant gardé comme prix proposé. Trois produits sans prix sur chacune. Constat avant : aucun des trois comptes de peintre n'avait de prix modifié.
 
 ## Décisions
 
@@ -376,4 +381,34 @@ L'erreur de console est le 422 attendu de « Suivant » sans prix. « Page no
 
 Reste sous 48 px sur l'écran du bilan : le lien de retour « Catalogue » du bandeau (44 px), style commun à tous les écrans dans `app.css`, hors de ce chantier.
 
-Non vérifié : le clavier de l'iPhone (reste-t-il ouvert d'un produit à l'autre, les boutons tiennent-ils au-dessus de lui). Chromium n'a pas de clavier à l'écran : seul le champ resté actif est prouvé. À voir par Xavier sur son iPhone. Non vérifié non plus : l'écran sur PC, et une suite entière dans la copie de travail après les lots 7 à 10 (la seule lancée a croisé celle d'une autre session).
+Ouverture sans changement de page (2026-11-20, commit 5d62ba8) :
+
+```
+$ vendor/bin/phpunit tests/Http/VosPrixTest.php (avant le code)
+FAILURES!
+Tests: 14, Assertions: 122, Failures: 2.
+$ vendor/bin/phpunit tests/Http/VosPrixTest.php (après)
+OK (14 tests, 131 assertions)
+$ node --check public/js/vos-prix.js
+syntaxe : ok
+$ bash outils/deployer-test.sh (copie ~/offreGen-metiers, second essai)
+OK (662 tests, 5182 assertions)
+analyse statique : sans erreur
+LU     /sante : {"commit":"5d62ba8d56e7e8225acc9117496205000a6073ba","base":"ok","migrations":"ok"}
+SONDE VERTE
+```
+
+Parcours Playwright sur le site de test (une marque posée dans la page avant le toucher est encore là après : aucune navigation) :
+
+```
+2 carte      depuis « Mettre mes prix » : chemin /vos-prix, "1 sur 8", champ actif : prix, marque : true
+6 annulé     « Annuler » du message : "2 sur 8", "Heure de régie", champ actif : prix, marque : true
+11b reprise  depuis le bilan, « Reprendre les produits passés » : "1 sur 6", champ actif : prix, marque : true
+11c          depuis le catalogue, « Compléter » : "1 sur 6", champ actif : prix, marque : true
+```
+
+Capture de l'arrivée depuis le catalogue ouverte : même écran qu'au chargement direct.
+
+Non vérifié : que le clavier de l'iPhone s'ouvre bien par ce moyen. Chromium n'a pas de clavier à l'écran ; la technique (un champ pris pendant le toucher, puis le curseur passé au champ du prix) est celle que Safari accepte d'ordinaire. À voir par Xavier. Une arrivée directe sur `/vos-prix` (adresse tapée, page rechargée) demande toujours un toucher : Safari ne laisse aucun moyen.
+
+Vérifié par Xavier sur iPhone le 2026-11-20 : le clavier reste ouvert d'un produit à l'autre. Reste non vérifié : les boutons tiennent-ils au-dessus du clavier sur un petit iPhone. Chromium n'a pas de clavier à l'écran : seul le champ resté actif est prouvé. À voir par Xavier sur son iPhone. Non vérifié non plus : l'écran sur PC, et une suite entière dans la copie de travail après les lots 7 à 10 (la seule lancée a croisé celle d'une autre session).
