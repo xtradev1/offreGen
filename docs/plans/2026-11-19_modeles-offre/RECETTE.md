@@ -4,11 +4,11 @@ Tout ce qui suit se teste à la main, en une passe, sur le site de test (`https:
 
 ## Préalables
 
-- [ ] Code sur le site de test : le chantier est commité seul, depuis une copie propre posée sur la tête de la branche, sans les changements non commités du chantier responsive (facture annulée, vignettes vivantes, barre du bas) qui partageaient sa copie de travail. Contrôle : `GET /sante` annonce le commit noté dans `ETAT.md`.
-- [ ] Migration à jouer sur la base du site de test : `migrations/Version20261120120001.php` (huit colonnes facultatives ; le script de déploiement la joue). Contrôle : `GET /sante` rend `"migrations":"ok"`.
-- [ ] Le dossier `var/cache/pdf` du site de test accepte l'écriture : dompdf y range maintenant ses polices (`var/cache/pdf/polices-…`). S'il ne l'accepte pas, tous les PDF sortent en police de repli.
+- [x] Code sur le site de test : commit `7bd9348`, déployé le 2026-11-20, sonde verte. Le chantier est commité seul, sans les changements non commités du chantier responsive (facture annulée, vignettes vivantes, barre du bas) qui partageaient sa copie de travail. Contrôle : `GET /sante` annonce ce commit.
+- [x] Migration `migrations/Version20261120120001.php` jouée par le déploiement (huit colonnes facultatives) : `GET /sante` rend `"migrations":"ok"`.
+- [x] Le dossier `var/cache/pdf` du site de test accepte l'écriture : le PDF d'une offre de `demo-macon` porte Roboto et Archivo, aucune police de repli (contrôle du 2026-11-20).
 - [ ] Recharger sans le cache du navigateur (Ctrl+F5, ou fermer l'onglet sur téléphone) : `app.css`, `app.js` et `document.css` sont servis sans numéro de version.
-- [ ] Comptes : `demo-platrier@exemple.ch` et `demo-macon@exemple.ch` (mots de passe dans `~/.offregen-test-demo-platrier-compte` et `~/.offregen-test-demo-macon-compte`, WSL). Données inventées seulement.
+- [ ] Comptes : `demo-platrier@exemple.ch` et `demo-macon@exemple.ch` (mots de passe dans `~/.offregen-test-demo-platrier-compte` et `~/.offregen-test-demo-macon-compte`, WSL). Données inventées seulement. À la connexion, l'assistant du premier lancement s'ouvre : le finir ou le passer, sinon l'accueil y renvoie.
 - [ ] Pour le scénario 10 : une imprimante, une enveloppe C5 à fenêtre à droite, une à fenêtre à gauche.
 
 ## Scénario 1 : douze modèles en quatre familles

@@ -16,11 +16,12 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Déployer le commit sur le site de test (`outils/deployer-test.sh` depuis `~/offreGen-modeles`), relire `/sante`, puis recette de Xavier (`RECETTE.md`). À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), et la suppression de la base `offregen_modeles_test`.
+Recette de Xavier sur le site de test (`RECETTE.md`, commit `7bd9348`). Corrections éventuelles dans la copie propre `~/offreGen-modeles`, rejouée sur la tête de la branche avant chaque poussée. À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
 
 ## En attente de toi
 
-- Regarder `rendus/douze-modeles.pdf` (24 pages : les douze modèles, une offre longue, trois factures, trois cas limites), puis dérouler `RECETTE.md` sur le site de test et dire ce qui casse ou ce qui déplaît.
+- Dérouler `RECETTE.md` sur le site de test (`https://easy-offres.xtradev.ch`, commit `7bd9348`) et dire ce qui casse ou ce qui déplaît. Les comptes de démonstration ouvrent encore l'assistant du premier lancement : le finir ou le passer d'abord.
+- Regarder `rendus/douze-modeles.pdf` (24 pages : les douze modèles, une offre longue, trois factures, trois cas limites).
 - Trancher quatre points : la facture d'une page sans pied ; la couleur de l'artisan à 4,5 de contraste (7 la foncerait) ; le lieu dicté pris pour l'adresse du chantier ; les phrases fixes de Lettre.
 - Savoir que `~/offreGen` garde, non commités, les fichiers de ce chantier mêlés à ceux du chantier responsive : la session du responsive devra, comme celle-ci, commiter depuis une copie propre posée sur la tête de la branche.
 
@@ -58,6 +59,9 @@ Déployer le commit sur le site de test (`outils/deployer-test.sh` depuis `~/off
 - 2026-11-20 : phase 8. `RECETTE.md` écrit (dix scénarios), `rendus/douze-modeles.pdf` assemblé. Gate de recette ouvert. Rien n'est commité ni déployé. Reste sur le poste : la base `offregen_modeles_test` (à supprimer à la clôture, en root : `DROP DATABASE offregen_modeles_test`), le serveur local du port 8017 arrêté.
 - 2026-11-20 : Xavier : « Tip top, tu vas pouvoir commit et puis push le tout sur le test. » La copie `~/offreGen` porte aussi le chantier responsive, jamais commité (facture annulée, vignettes vivantes de « Ma marque », barre du bas, unités), et dix-sept commits de retard sur la branche. Décision de Claude : commiter ce chantier seul, depuis une copie propre (`~/offreGen-modeles`) posée sur la tête de `origin/chantier-voix-offre` (08fc4df). Dix-neuf fichiers portés par leur diff entier, sans conflit ; sept repris à la main avec les seuls changements de ce chantier (`app.css`, `app.js`, `FactureControleur`, `ReglagesControleur`, `_reglages_marque`, `facturer`, `MarqueEcranTest`) ; le reste est neuf. Du lot « 9c », seul reste le troisième paramètre de `DocumentPdf` dans `Conteneur`.
 - 2026-11-20 : ce que le commit seul change par rapport à ce que j'avais regardé jusque-là : « Ma marque » montre les images de repli (tirées du vrai PDF, dans la couleur de l'exemple), les vignettes vivantes restent au chantier responsive ; le PDF d'une facture annulée reste celui de l'émission. `RECETTE.md` corrigé (préalables, scénarios 1, 2 et 9). Cette combinaison n'avait jamais tourné : suite, analyse et écrans repassés dans la copie propre.
+- 2026-11-20 : commit `7bd9348` poussé sur `chantier-voix-offre`, rejoué une fois (la branche avait avancé d'un commit de l'accueil, sans fichier commun). Défaut trouvé au commit : git normalisait les fins de ligne de `public/fonts/OFL-IBMPlex.txt`, dont l'empreinte est dans `SOURCES.md` ; le test des empreintes aurait échoué sur toute copie fraîche. `.gitattributes` : `*.ttf binary` et `public/fonts/*.txt -text` ; les 73 fichiers du relevé sont identiques dans le commit.
+- 2026-11-20 : déployé sur le site de test par `outils/deployer-test.sh` depuis `~/offreGen-modeles` ; les tests du script tournent sur `offregen_modeles_test`, désignée par le `.env.test.local` de cette copie. Sonde verte. Contrôle sur le site avec `demo-macon`, une connexion, rien de tapé : douze modèles en quatre familles, « Bandeau » proposé ; document d'une offre à 390 et à 1280 px ; PDF d'une page avec Roboto et Archivo embarquées, aucune police de repli. Le dossier `var/cache/pdf` du serveur accepte donc l'écriture. Les démos du test ouvrent encore l'assistant du premier lancement : l'accueil renvoie à `/bienvenue/entreprise`, une offre se trouve par la fiche d'un client.
+- 2026-11-20 : vu sur les captures du site de test, laissé en l'état : sans adresse dans les réglages, le nom de l'entreprise paraît deux fois dans l'en-tête de Sobre (à la place du logo et en tête des coordonnées) ; à 390 px, l'étiquette « Proposé pour votre métier » tient sur trois lignes.
 
 ## Décisions
 
@@ -168,4 +172,8 @@ phase 8, commit : copie propre ~/offreGen-modeles sur 08fc4df ; git apply --3way
   ecran.js sur la copie propre : marque-390, marque-1280, modele-recap-390, document-390, document-1280, facturer-1300, entete-390, offre-1400 : 200 partout, débordement 0 ; seule erreur : 404 du logo (le dossier des logos n'est pas dans cette copie) ; cinq captures regardées
   doc-a-cote.js (1400 px) : bouton [1238,226,134,40] puis [663,226,129,40], position static ; feuille de la colonne 555x785, échelle 0.699 ; aucune erreur JS
   sondes de disposition (marque 390 et 1280, document 390, facturer 1300, en-tête 390) : 0 débordement, 0 chevauchement, 0 texte coupé
+phase 8, déploiement : git push : 47b4f3d..7bd9348  HEAD -> chantier-voix-offre
+  outils/deployer-test.sh : OK (912 tests, 8080 assertions) ; analyse statique : sans erreur ; 1 migrations executed, 2 sql queries ; SONDE VERTE ; /sante : {"commit":"7bd9348b88e5cc069209a921ae6850003b1922aa","base":"ok","migrations":"ok"}
+  test-site.js macon : marque {modeles 12, familles Classiques, Couleur, Détaillés, Simples, choisi sobre, propose bandeau, images 12, debordement 0} ; document 390 : doc m-sobre, feuille 358x506, police Roboto ; document 1280 : feuille 984x1392 ; pdf : 200 application/pdf ; aucune erreur JS ni réponse en erreur
+  t-pdf.py : 1 page ; polices : Roboto-Regular, Archivo-ExtraBold, Roboto-Bold ; polices de repli : aucune ; trois images regardées (page 1 du PDF, document à 390 px, « Ma marque » à 390 px)
 ```
