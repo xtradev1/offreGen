@@ -1,5 +1,6 @@
 {% extends 'base.html.twig' %}
 {% set sans_menu = true %}
+{% block entete_html %}<link rel="stylesheet" href="/css/connexion.css">{% endblock %}
 
 {% block titre %}Mot de passe oublié · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/connexion">Connexion</a>{% endblock %}

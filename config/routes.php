@@ -63,14 +63,14 @@ return static function (Conteneur $c): array {
         // Changer son mot de passe (P4) : les autres appareils sont déconnectés.
         new Route('reglages_mot_de_passe', '/reglages/mot-de-passe', ['GET'], static fn (Request $r): Response => $motDePasse()->reglages($r), Route::ARTISAN),
         new Route('reglages_mot_de_passe_changer', '/reglages/mot-de-passe', ['POST'], static fn (Request $r): Response => $motDePasse()->changer($r), Route::ARTISAN),
-        // Page de présentation de Dicta (maquette validée le 2026-11-20), en recette sur le test. Statique : aucune donnée lue ni
-        // écrite. « ?etat=avant » montre l'état d'avant l'ouverture des inscriptions. Elle sera servie à « / » pour un visiteur
-        // sans session quand l'inscription existera (docs/plans/2026-11-17_mise-en-production/ETAT.md).
-        new Route('presentation', '/presentation', ['GET'], static fn (Request $r): Response => new Response($c->twig()->render(
-            'presentation.html.twig',
-            ['avant' => $r->query->getString('etat') === 'avant'],
-        )), Route::PUBLIC),
-        new Route('accueil', '/', ['GET'], static fn (Request $r): Response => $accueil()->liste($r), Route::ARTISAN),
+        // « / » : la liste des offres pour l'artisan connecté. Le visiteur sans session y voit la page de présentation de Dicta
+        // (Xavier, 2026-11-20 : « mets la page à / maintenant »), statique : aucune donnée lue ni écrite. « ?etat=avant »
+        // montre l'état d'avant l'ouverture des inscriptions.
+        new Route('accueil', '/', ['GET'], static fn (Request $r): Response => $accueil()->liste($r), Route::ARTISAN,
+            static fn (Request $r): Response => new Response($c->twig()->render(
+                'presentation.html.twig',
+                ['avant' => $r->query->getString('etat') === 'avant'],
+            ))),
         // « Plus » (décision D2, 2026-11-15) : catalogue, réglages, import, déconnexion. Lecture seule.
         new Route('plus', '/plus', ['GET'], static fn (): Response => new Response($c->twig()->render('plus.html.twig')), Route::ARTISAN),
         new Route('import', '/import', ['GET'], static fn (Request $r): Response => $import()->afficher($r), Route::ARTISAN),

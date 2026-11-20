@@ -23,6 +23,8 @@ final readonly class Route
     /**
      * @param list<string> $verbes
      * @param \Closure(\Symfony\Component\HttpFoundation\Request, array<string, string>): \Symfony\Component\HttpFoundation\Response $action
+     * @param (\Closure(\Symfony\Component\HttpFoundation\Request): \Symfony\Component\HttpFoundation\Response)|null $visiteur
+     *        Sur une route artisan : ce que voit un visiteur sans session, à la place du renvoi à la connexion.
      */
     public function __construct(
         public string $nom,
@@ -30,6 +32,7 @@ final readonly class Route
         public array $verbes,
         public \Closure $action,
         public ?string $droit,
+        public ?\Closure $visiteur = null,
     ) {
     }
 }

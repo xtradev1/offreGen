@@ -109,7 +109,7 @@ final class Noyau
             if ($route->droit === Route::ARTISAN) {
                 $artisan = $this->garde->artisan($requete);
                 if ($artisan === null) {
-                    return new RedirectResponse('/connexion', 303);
+                    return $route->visiteur !== null ? ($route->visiteur)($requete) : new RedirectResponse('/connexion', 303);
                 }
                 $requete->attributes->set('_artisan', $artisan);
             }

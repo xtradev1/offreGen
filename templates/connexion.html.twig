@@ -1,11 +1,12 @@
 {% extends 'base.html.twig' %}
 {% set sans_menu = true %}
 
+{% block entete_html %}<link rel="stylesheet" href="/css/connexion.css">{% endblock %}
 {% block titre %}Connexion · {{ nom_application }}{% endblock %}
 {% block entete %}Connexion{% endblock %}
 
 {% block contenu %}
-  <picture><source srcset="/img/dicta-logo-sombre.svg" media="(prefers-color-scheme: dark)"><img class="accueil-marque" src="/img/dicta-logo-clair.svg" alt="{{ nom_application }}" width="177" height="64"></picture>
+  <a class="vers-accueil" href="/" aria-label="{{ nom_application }}, page d'accueil"><picture><source srcset="/img/dicta-logo-sombre.svg" media="(prefers-color-scheme: dark)"><img class="accueil-marque" src="/img/dicta-logo-clair.svg" alt="" width="177" height="64"></picture></a>
   {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
   <p class="muted">Connectez-vous pour importer une visite et retrouver vos offres.</p>
   <form id="connexion" method="post" action="/connexion">

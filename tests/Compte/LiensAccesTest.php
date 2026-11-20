@@ -225,7 +225,7 @@ final class LiensAccesTest extends TestCase
         $reponse = $pc->post('/reglages/mot-de-passe', ['ancien' => Jeu::MOT_DE_PASSE, 'mot_de_passe' => self::NOUVEAU, 'confirmation' => self::NOUVEAU]);
         self::assertSame(303, $reponse->getStatusCode());
         self::assertSame(200, $pc->get('/')->getStatusCode());
-        self::assertSame(303, $telephone->get('/')->getStatusCode());
+        self::assertSame(303, $telephone->get('/catalogue')->getStatusCode());
         self::assertSame(303, $this->navigateur('198.51.100.3')->connecter('a@exemple.ch', self::NOUVEAU)->getStatusCode());
     }
 

@@ -1,0 +1,17 @@
+/* Connexion et mot de passe (écrans « app-seule ») sur tablette et ordinateur : une carte centrée, le bouton sous les champs.
+   Au téléphone, seul le logo change : il ramène à la page d'accueil. Cette feuille est chargée avant app.css : ses sélecteurs
+   portent « .app.app-seule » pour l'emporter sur les règles générales. */
+.app.app-seule .vers-accueil { display: inline-flex; align-items: center; min-height: 48px; margin: 0 0 12px; border-radius: 8px; }
+.app.app-seule .vers-accueil:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.app.app-seule .vers-accueil .accueil-marque { margin: 0; }
+
+@media (min-width: 700px) {
+  /* Colonne souple : la marge de la carte reste dans la page (sinon elle déborde du corps et la page défile sans raison). */
+  body { display: flex; flex-direction: column; align-items: center; }
+  .app.app-seule { flex: none; width: min(460px, calc(100% - 48px)); max-width: none; min-height: 0; margin: clamp(40px, 14vh, 160px) 0 40px; border: 1px solid var(--line); border-radius: 20px; overflow: hidden; box-shadow: 0 30px 70px -44px rgba(35, 39, 45, .55); }
+  .app.app-seule .bar { min-height: 56px; padding: 6px 28px; }
+  .app.app-seule .screen { flex: none; padding: 26px 28px 4px; }
+  .app.app-seule .bas { position: static; }
+  .app.app-seule .actionbar { border-top: 0; padding: 8px 28px 28px; justify-content: stretch; }
+  .app.app-seule .actionbar .btn { flex: 1 1 auto; min-width: 0; min-height: 56px; font-size: 16px; }
+}

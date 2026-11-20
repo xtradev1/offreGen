@@ -108,7 +108,7 @@ final class ConnexionTest extends TestCase
 
     public function testRouteArtisanSansSessionRedirigeVersConnexion(): void
     {
-        $reponse = $this->navigateur()->get('/');
+        $reponse = $this->navigateur()->get('/catalogue');
         self::assertSame(303, $reponse->getStatusCode());
         self::assertSame('/connexion', $reponse->headers->get('Location'));
     }
@@ -119,7 +119,9 @@ final class ConnexionTest extends TestCase
         $n->connecter('a@exemple.ch');
         self::assertStringContainsString('action="/deconnexion"', (string) $n->get('/reglages')->getContent());
         self::assertSame(303, $n->post('/deconnexion', [])->getStatusCode());
-        self::assertSame(303, $n->get('/')->getStatusCode());
+        self::assertSame(303, $n->get('/catalogue')->getStatusCode());
+        // « / » montre désormais la présentation au visiteur sans session (2026-11-20) : plus aucune offre n'y paraît.
+        self::assertStringContainsString('Dictez votre visite de chantier.', (string) $n->get('/')->getContent());
     }
 
     public function testCompteSupprimeNeGardePasSaSession(): void
@@ -127,7 +129,7 @@ final class ConnexionTest extends TestCase
         $n = $this->navigateur();
         $n->connecter('a@exemple.ch');
         BaseDeTest::vider();
-        self::assertSame(303, $n->get('/')->getStatusCode());
+        self::assertSame(303, $n->get('/catalogue')->getStatusCode());
     }
 
     /**

@@ -17,7 +17,8 @@
 <body{% if compte_courant %} data-compte="{{ compte_courant }}"{% endif %}>
   {# Sur PC, une colonne à côté de l'écran (la liste des offres, D12) ; le téléphone ne la montre pas. #}
   {% block colonne %}{% endblock %}
-  <div class="app">
+  {# « app-seule » : connexion, mot de passe, erreur. Sur grand écran, la feuille connexion.css en fait une carte centrée. #}
+  <div class="app{% if sans_menu ?? false %} app-seule{% endif %}">
     <header class="bar">{% block retour %}{% endblock %}<h1>{% block entete %}<img class="logo" src="/img/dicta-logo-sombre.svg" alt="{{ nom_application }}" width="177" height="64">{% endblock %}</h1></header>
     <main class="screen{% block ecran_classe %}{% endblock %}">{% block contenu %}{% endblock %}</main>
     {% set msg = messages() %}

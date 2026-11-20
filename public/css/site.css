@@ -311,10 +311,6 @@ footer a{color:var(--bande-doux);font-size:15px;text-underline-offset:3px}
 .gros .calc.apres{color:var(--doux);margin-left:.3em}
 .case:not(.nuit) .gros .calc{color:var(--doux)}
 .case:not(.nuit)>.carte-ligne{background:var(--sable)}
-.case.nuit.large p{color:var(--bande-doux)}
-.offre-mini .piece{padding:11px 16px 9px}
-.offre-mini .ligne{border-bottom:1px solid var(--trait)}
-.offre-mini .ligne:last-child{border-bottom:0}
 .gros .trait{display:inline-block;border-bottom:8px solid var(--terra);padding-bottom:.04em;white-space:nowrap}
 .carte-ligne{background:var(--blanc);color:var(--anth);border:1px solid var(--trait);border-radius:14px;overflow:hidden}
 .carte-ligne .ligne{font-size:16.5px;padding:13px 16px;border-bottom:0}
@@ -402,7 +398,10 @@ section.suisse .in{position:relative}
   .suite-doc{gap:8px}
   .suite-doc .btn.petit{padding:0 9px;font-size:13.5px;min-height:40px}
   .choisir{grid-template-columns:minmax(0,1fr);gap:20px}
-  .choisir>div:first-child{order:2}
+  .choisir>div:first-child{order:2;min-width:0}
+  .puces{flex-wrap:nowrap;overflow-x:auto;margin:0 -20px 4px;padding:0 20px 8px;scrollbar-width:none}
+  .puces::-webkit-scrollbar{display:none}
+  .puces button{flex:none}
   .feuille{width:270px;max-width:100%;margin:0 auto}
   .pays3{grid-template-columns:minmax(0,1fr);gap:26px}
   .sceau.grand{display:none}

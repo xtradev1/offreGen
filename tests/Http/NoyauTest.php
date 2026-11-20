@@ -29,7 +29,24 @@ final class NoyauTest extends TestCase
             new Route('sans_droit', '/sans-droit', ['GET'], $ok, null),
             new Route('droit_inconnu', '/droit-inconnu', ['GET'], $ok, 'inconnu'),
             new Route('casse', '/casse', ['GET'], static fn (): Response => throw new \RuntimeException('boum'), Route::PUBLIC),
+            new Route('reserve', '/reserve', ['GET'], $ok, Route::ARTISAN),
+            new Route('vitrine', '/vitrine', ['GET'], $ok, Route::ARTISAN, static fn (): Response => new Response('vitrine')),
         ], $c->twig(), $c->garde(), $journal);
+    }
+
+    public function testRouteArtisanSansSessionRenvoieALaConnexion(): void
+    {
+        $reponse = $this->noyauDeTest()->traiter(Request::create('/reserve'));
+        self::assertSame(303, $reponse->getStatusCode());
+        self::assertSame('/connexion', $reponse->headers->get('Location'));
+    }
+
+    /** « / » (2026-11-20) : une route artisan peut dire ce que voit un visiteur sans session, à la place du renvoi. */
+    public function testRouteArtisanAvecPageDeVisiteurLaMontreSansSession(): void
+    {
+        $reponse = $this->noyauDeTest()->traiter(Request::create('/vitrine'));
+        self::assertSame(200, $reponse->getStatusCode());
+        self::assertSame('vitrine', $reponse->getContent());
     }
 
     public function testRouteInconnueRend404(): void
