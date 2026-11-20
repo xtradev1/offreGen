@@ -207,7 +207,7 @@ final class ClientsEcranTest extends TestCase
         BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL, client_dicte = 'Mme Dictée' WHERE id = {$this->jeu->offre['a']}");
         $offre = $this->page($this->offreA());
         self::assertStringContainsString('<span class="etiquette nouveau">à confirmer</span>', $offre);
-        self::assertStringContainsString('<a class="btn primary grand" href="' . $this->offreA() . '/client?suite=apercu" data-en-feuille>Générer l\'offre', $offre);
+        self::assertStringContainsString('<a class="btn primary grand" href="' . $this->offreA() . '/client?suite=apercu" data-en-feuille><span class="libelle-total"><span>Générer l\'offre</span>', $offre);
 
         $choix = $this->page($this->offreA() . '/client?suite=apercu');
         self::assertStringContainsString("Pour qui est cette offre\u{00A0}?", $choix);
@@ -218,7 +218,7 @@ final class ClientsEcranTest extends TestCase
         // Une fiche choisie : le PDF de l'offre suit.
         $r = $this->a->post($this->offreA() . '/client', ['client' => (string) $this->jeu->client['a'], 'suite' => 'apercu']);
         self::assertSame($this->offreA() . '/apercu', $r->headers->get('Location'));
-        self::assertStringContainsString('<a class="btn primary grand" href="' . $this->offreA() . '/apercu">Générer l\'offre', $this->page($this->offreA()), 'Client confirmé : le PDF directement.');
+        self::assertStringContainsString('<a class="btn primary grand" href="' . $this->offreA() . '/apercu"><span class="libelle-total"><span>Générer l\'offre</span>', $this->page($this->offreA()), 'Client confirmé : le PDF directement.');
 
         // La fiche du nom dicté, ou une nouvelle fiche : pareil.
         BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL WHERE id = {$this->jeu->offre['a']}");

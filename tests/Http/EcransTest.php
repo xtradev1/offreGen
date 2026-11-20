@@ -334,17 +334,19 @@ final class EcransTest extends TestCase
         BaseDeTest::pdo()->exec("INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier) VALUES ({$this->jeu->a}, $o, 9, 'Crépi', 18000, 'm²', 0, 0)");
         $page = $this->page($this->offre);
         self::assertMatchesRegularExpression('#<div class="totalbar" data-total-fixe><span>Total TTC</span><b>CHF\x{00A0}[0-9\'’.]+</b></div>#u', $page);
+        // 3 A (2026-11-20) : le même total sous le libellé du bouton principal (montré hors PC).
+        self::assertMatchesRegularExpression('#<span class="libelle-total"><span>[^<]+</span><small data-total-bouton>CHF\x{00A0}[0-9\'’.]+</small></span>#u', $page);
         self::assertMatchesRegularExpression("#<a class=\"btn ajout\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\" data-en-feuille>#", $page);
-        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/relire\">.*Relire 2 lignes</a>#s", $page);
+        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/relire\">.*Relire 2 lignes</span>#s", $page);
         self::assertStringNotContainsString("href=\"{$this->offre}/apercu\"", $page, 'pas de génération tant que des lignes attendent');
 
         BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 0, prix_centimes = 1500 WHERE offre_id = $o");
         $page = $this->page($this->offre);
         // Sans client confirmé, « Générer l'offre » le fait confirmer d'abord (maquette 25, E6) ; avec, le PDF.
-        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/client\?suite=apercu\" data-en-feuille>Générer l'offre#", $page);
+        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/client\?suite=apercu\" data-en-feuille><span class=\"libelle-total\"><span>Générer l'offre</span>#", $page);
         BaseDeTest::pdo()->exec("UPDATE offre SET client_id = {$this->jeu->client['a']} WHERE id = $o");
         $page = $this->page($this->offre);
-        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/apercu\">Générer l'offre#", $page);
+        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/apercu\"><span class=\"libelle-total\"><span>Générer l'offre</span>#", $page);
         self::assertStringNotContainsString('/relire"', $page);
     }
 

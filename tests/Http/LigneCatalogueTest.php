@@ -48,13 +48,41 @@ final class LigneCatalogueTest extends TestCase
         return BaseDeTest::ligne("SELECT * FROM ligne WHERE id = {$this->libre}");
     }
 
-    public function testUneLigneHorsCatalogueMontreSesDeuxBoutons(): void
+    public function testUneLigneHorsCatalogueMeneALaFicheMettreAuCatalogue(): void
     {
+        // 4a (2026-11-20) : une bande sous la ligne, plus deux boutons.
         $page = $this->page($this->offre);
-        self::assertMatchesRegularExpression("#<form class=\"ranger\" method=\"post\" action=\"{$this->offre}/lignes/{$this->libre}/produit\">.*Créer le produit</button>#s", $page);
-        self::assertStringContainsString("<a class=\"btn\" href=\"{$this->offre}/lignes/{$this->libre}/rattacher\">Rattacher à un produit</a>", $page);
-        // Une ligne déjà au catalogue ne les montre pas : 2 boutons de chaque pour une seule ligne libre.
-        self::assertSame(1, substr_count($page, 'Créer le produit</button>'));
+        self::assertStringContainsString("<a class=\"vers-catalogue\" href=\"{$this->offre}/lignes/{$this->libre}/catalogue\" data-en-feuille>", $page);
+        self::assertSame(1, substr_count($page, 'class="vers-catalogue"'), 'Une ligne déjà au catalogue ne la montre pas.');
+        self::assertStringNotContainsString('Créer le produit</button>', $page);
+        // 4b : sans produit proche, la fiche s'ouvre sur « Nouveau produit », nom, unité et prix repris.
+        $fiche = $this->page("{$this->offre}/lignes/{$this->libre}/catalogue");
+        self::assertMatchesRegularExpression('#name="onglet_catalogue" value="nouveau" checked#', $fiche);
+        self::assertStringContainsString('value="Crépi de soubassement"', $fiche);
+        self::assertMatchesRegularExpression('#id="prix" name="prix" value="38(\.00)?"#', $fiche);
+    }
+
+    public function testLaFicheCreeLeProduitDansLaCategorieChoisie(): void
+    {
+        $this->page("{$this->offre}/lignes/{$this->libre}/catalogue");
+        $r = $this->a->post("{$this->offre}/lignes/{$this->libre}/produit", ['designation' => 'Crépi de soubassement', 'unite' => 'm²',
+            'prix' => '40', 'categorie' => '', 'nouvelle_categorie' => 'Façades']);
+        self::assertSame(303, $r->getStatusCode(), (string) $r->getContent());
+        $p = BaseDeTest::ligne("SELECT * FROM produit WHERE artisan_id = {$this->jeu->a} AND designation = 'Crépi de soubassement'");
+        self::assertSame(['Façades', 4000], [$p['categorie'], (int) $p['prix_centimes']]);
+        self::assertSame((int) $p['id'], (int) $this->ligneEnBase()['produit_id']);
+        // Une saisie refusée revient sur la fiche, onglet « Nouveau produit », rien n'est créé.
+        $this->page($this->offre);
+        $avant = BaseDeTest::compter('produit', "artisan_id = {$this->jeu->a}");
+        $pdo = BaseDeTest::pdo();
+        $pdo->prepare('INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier, entendu) VALUES (?, ?, 10, ?, 1000, ?, 0, 0, NULL)')
+            ->execute([$this->jeu->a, $this->jeu->offre['a'], 'Ponçage des radiateurs', 'forfait']);
+        $autre = (int) $pdo->lastInsertId();
+        $refus = $this->a->post("{$this->offre}/lignes/$autre/produit", ['designation' => '', 'unite' => 'forfait', 'prix' => '1', 'categorie' => 'Façades', 'nouvelle_categorie' => '']);
+        self::assertSame(422, $refus->getStatusCode());
+        self::assertStringContainsString('Le produit n\'est pas créé', (string) $refus->getContent());
+        self::assertMatchesRegularExpression('#name="onglet_catalogue" value="nouveau" checked#', (string) $refus->getContent());
+        self::assertSame($avant, BaseDeTest::compter('produit', "artisan_id = {$this->jeu->a}"));
     }
 
     public function testCreerLeProduitRangeLaLigneAuCatalogueEnUnToucher(): void
@@ -83,6 +111,8 @@ final class LigneCatalogueTest extends TestCase
         self::assertSame(303, $r->getStatusCode());
         $l = $this->ligneEnBase();
         self::assertSame([$produit, 'Crépi rustique', 4200, 18000], [(int) $l['produit_id'], $l['designation'], (int) $l['prix_centimes'], (int) $l['quantite_milliemes']]);
+        // 4b (2026-11-20) : un autre prix au catalogue ; la ligne garde le sien en note et passe à vérifier.
+        self::assertSame([3800, 1], [(int) $l['prix_dicte_centimes'], (int) $l['a_verifier']]);
         self::assertSame('ribé, Crépi de soubassement', BaseDeTest::ligne("SELECT synonymes FROM produit WHERE id = $produit")['synonymes']);
     }
 

@@ -31,7 +31,7 @@ function corrections() {
         .filter((c) => c.value !== c.defaultValue)
         .map((c) => [c.closest('.row').id, c.name, c.value]);
       // Le total fixé en bas (D3) suit aussi : il restait à l'ancien montant jusqu'au lot 8 (constaté le 2026-11-15).
-      ['.rows', '.totals', '[data-sauvegarde]', '[data-total-fixe]', '.lcard[aria-current="page"]'].forEach((s) => {
+      ['.rows', '.totals', '[data-sauvegarde]', '[data-total-fixe]', '[data-total-bouton]', '.lcard[aria-current="page"]'].forEach((s) => {
         const neuf = page.querySelector(s);
         const vieux = document.querySelector(s);
         if (neuf && vieux) vieux.replaceWith(neuf);
@@ -41,6 +41,7 @@ function corrections() {
         if (c) c.value = valeur;
       });
       page.querySelectorAll('.snack').forEach((s) => { document.querySelector('.app').append(s); setTimeout(() => s.remove(), 6000); });
+      bandeauDansLeTotal();
       if (garde) {
         const retrouve = document.querySelector('#' + garde[0] + ' input[name=' + garde[1] + ']');
         if (retrouve) { retrouve.focus(); try { retrouve.setSelectionRange(garde[2], garde[3]); } catch (e) { /* champ sans sélection */ } }
@@ -133,11 +134,23 @@ function brancherFiltre(champ) {
   if (champ.form) champ.form.addEventListener('submit', (e) => { e.preventDefault(); appliquer(); });
 }
 
+// 7a (2026-11-20) : au PC, le bandeau « Annuler » d'une ligne prend la place de la ligne du total, sous les lignes, le
+// temps de l'annuler ; centré sur la fenêtre, il couvrait le document à côté. Parti, le total revient (app.css, :has).
+function bandeauDansLeTotal() {
+  if (!window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches) return;
+  const total = document.querySelector('.bas > .totalbar');
+  const s = document.querySelector('.app > .snack[data-disparait]');
+  if (!total || !s) return;
+  s.classList.add('dans-total');
+  total.before(s);
+}
+
 function bandeaux() {
   document.querySelectorAll('.snack').forEach((s) => {
     // « Annuler » reste quelques secondes (CODING_RULES), les autres messages moins longtemps.
     setTimeout(() => s.remove(), s.hasAttribute('data-disparait') ? 8000 : 4000);
   });
+  bandeauDansLeTotal();
   // Ligne ajoutée depuis le catalogue : sa quantité s'ouvre aussitôt. Après « load » : Chrome
   // retire le focus en allant à l'ancre #l… de l'adresse (constaté le 2026-11-12).
   const focus = document.querySelector('[data-focus-ligne]');

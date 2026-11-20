@@ -33,15 +33,11 @@
           <div class="tt">{{ r.total|montant }}</div>
           <span></span>
         {% endif %}
-        {# Ligne hors catalogue d'une offre : la ranger en un toucher (décision D6, 2026-11-15). #}
+        {# Ligne hors catalogue d'une offre (4a et 4b, 2026-11-20) : une bande sous la ligne ouvre la fiche « Mettre au
+           catalogue » (nouveau produit, ou produit déjà au catalogue). #}
         {% if modifiable and (ranger ?? false) and l.produit_id is null %}
-          <div class="ranger-ligne">
-            <form class="ranger" method="post" action="{{ lien }}/produit">
-              <input type="hidden" name="_csrf" value="{{ csrf() }}">
-              <button class="btn" type="submit">Créer le produit</button>
-            </form>
-            <a class="btn" href="{{ lien }}/rattacher">Rattacher à un produit</a>
-          </div>
+          <a class="vers-catalogue" href="{{ lien }}/catalogue" data-en-feuille>
+            <span class="vc-ic"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21a2 2 0 0 1 2-2h13v2"/><path d="M12 7v6M9 10h6"/></svg></span><span class="vc-tx"><b>Pas dans votre catalogue</b><small>Ajoutez-le pour la prochaine dictée</small></span><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
         {% endif %}
         {# Prix dicté pour un produit du catalogue (Xavier, 2026-11-17) : le catalogue reste par défaut ; « Prendre » met le
            prix dicté, puis la question du catalogue. Les lignes de facture n'en ont pas. #}

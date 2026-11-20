@@ -92,6 +92,7 @@ final class IsolationRoutesTest extends TestCase
             'offre_relire' => ['/offres/' . $this->jeu->offre['a'] . '/relire', '/offres/' . $this->jeu->offre['b'] . '/relire'],
             'ligne' => [$this->cheminLigne('a'), $this->cheminLigne('b')],
             'ligne_rattacher_choix' => [$this->cheminLigne('a', '/rattacher'), $this->cheminLigne('b', '/rattacher')],
+            'ligne_catalogue' => [$this->cheminLigne('a', '/catalogue'), $this->cheminLigne('b', '/catalogue')],
             'produit' => ['/catalogue/' . $this->jeu->produit['a'], '/catalogue/' . $this->jeu->produit['b']],
             'produit_suppression' => ['/catalogue/' . $this->jeu->produit['a'] . '/supprimer', '/catalogue/' . $this->jeu->produit['b'] . '/supprimer'],
             'client' => ['/clients/' . $this->jeu->client['a'], '/clients/' . $this->jeu->client['b']],

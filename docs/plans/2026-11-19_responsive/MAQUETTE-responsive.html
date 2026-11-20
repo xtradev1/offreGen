@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Responsive, corrections proposées</title>
+<style>
+:root { --ink: #23272D; --muted: #4A505A; --bg: #F4F1EA; --surface: #FFFFFF; --line: #DDD8CC; --accent: #23272D; --marque: #A8441F; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; } }
+:root[data-theme="dark"] { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 4px; scroll-margin-top: 70px; }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 760px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; margin: 22px 0; }
+.etiq { display: inline-block; font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 2px 10px; margin: 0 6px 8px 0; }
+.etiq.grave { background: var(--bad-soft); color: var(--bad); }
+.etiq.moyen { background: var(--warn-soft); color: var(--warn); }
+.etiq.faible { background: var(--ok-soft); color: var(--ok); }
+.etiq.ou { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.mk-compare { margin: 12px 0; }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; }
+figcaption { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 8px 0 12px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 650; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tableau { overflow-x: auto; }
+.conseil { border-left: 4px solid var(--marque); background: var(--bg); padding: 10px 14px; border-radius: 0 10px 10px 0; margin: 12px 0; }
+.conseil b:first-child { display: block; margin-bottom: 2px; }
+.cout { color: var(--muted); font-size: 14.5px; }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 650; }
+.opts button:focus-visible, textarea:focus-visible, .copier:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+textarea { width: 100%; min-height: 64px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 220px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+ul.serre { margin: 4px 0 10px; padding-left: 20px; }
+@media (max-width: 600px) { .synth th:nth-child(3), .synth td:nth-child(3) { display: none; } }
+code { font: 13.5px ui-monospace, Consolas, monospace; background: var(--bg); border-radius: 4px; padding: 1px 4px; overflow-wrap: anywhere; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Responsive du site de test : les corrections, avant et après</h1>
+<p class="chapeau">Site de test, version <code>dabc3d9</code> (avec la marque Dicta), le 19.11.2026. Chaque « après » est une vraie capture du site : j'ai injecté le correctif dans le navigateur, par-dessus la feuille de style déployée. Rien n'a changé sur le serveur ni dans <code>app.css</code>. Les chiffres sous chaque image sont mesurés dans la page.</p>
+<p class="chapeau">Pour répondre : sous chaque point, un bouton par choix et un champ de commentaire. Les réponses restent dans ce navigateur. En bas, « Copier le texte » les rassemble pour me les coller.</p>
+
+<h2 id="synthese" data-toc="Synthèse">Synthèse et ordre conseillé</h2>
+<div class="tableau">
+<table class="synth">
+<thead><tr><th>Point</th><th>Défaut</th><th>Où</th><th>Je conseille</th></tr></thead>
+<tbody>
+<tr><td>R1</td><td>Le micro recouvre le bouton principal</td><td>téléphones, tablettes, petite fenêtre PC</td><td>B : micro de 64 px</td></tr>
+<tr><td>R3 + R9</td><td>La quantité recouvre la désignation ; nom de ligne trop petit à toucher</td><td>téléphones de 420 à 480 px, petite fenêtre PC</td><td>les deux ensemble</td></tr>
+<tr><td>R4</td><td>« Échéance » sort de sa carte, la page défile en largeur</td><td>Facturer, 360 px et PC 1024</td><td>oui</td></tr>
+<tr><td>R2</td><td>Téléphone couché : l'offre n'a plus de place</td><td>téléphone en paysage</td><td>A : onglets à gauche</td></tr>
+<tr><td>R5</td><td>Champs de 14 px : iPhone zoome à chaque toucher</td><td>offre, sur iPhone</td><td>oui</td></tr>
+<tr><td>R6</td><td>Formulaires sur toute la largeur</td><td>tablettes</td><td>oui</td></tr>
+<tr><td>R7</td><td>Téléphone et Numéro IDE décalés</td><td>Mon entreprise, assistant</td><td>oui</td></tr>
+<tr><td>R8</td><td>Filtres coupés net, sans signe qu'il en reste</td><td>catalogue au téléphone</td><td>oui</td></tr>
+<tr><td>R10 a</td><td>Petite fenêtre PC en colonne de téléphone</td><td>PC de 700 à 1023 px</td><td>B : onglets à gauche</td></tr>
+<tr><td>R10 b</td><td>Bande grise à droite</td><td>PC 1920 px</td><td>A : laisser</td></tr>
+</tbody>
+</table>
+</div>
+<p>R2 et R10 a utilisent le même composant : la barre d'onglets passe à gauche, en colonne de 80 px. Si tu valides les deux, je l'écris une seule fois.</p>
+
+<!-- R1 -->
+<section class="point" id="r1">
+<h2 id="h-r1" data-toc="R1">R1. Le micro recouvre le bouton principal</h2>
+<span class="etiq grave">grave</span><span class="etiq ou">tous les écrans tactiles, fenêtre PC étroite</span>
+<p>Le rond du micro (72 px) remonte de 24 px au-dessus des onglets, et la barre d'actions ne garde que 10 px de marge. Toucher le bas de « Générer l'offre », au milieu, lance la dictée.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r1-tel__avant.jpg" alt="Téléphone 390 px, avant : le rond orange du micro mord le bas du bouton Générer l'offre"><figcaption>Avant : 72 x 13 px du bouton sous le micro.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r1-tel__R1B.jpg" alt="Téléphone 390 px, variante B : micro de 64 px, 9 px d'écart avec le bouton"><figcaption>Variante B : micro de 64 px, relevé de 12 px ; 9 px d'écart.</figcaption></figure>
+</div>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r1-tel__avant.jpg" alt="Téléphone 390 px, avant"><figcaption>Avant.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r1-tel__R1A.jpg" alt="Téléphone 390 px, variante A : micro de 72 px, la barre d'actions descend de 24 px de marge en plus"><figcaption>Variante A : micro inchangé, 24 px de marge sous les boutons ; 11 px d'écart.</figcaption></figure>
+</div>
+<div class="tableau"><table>
+<thead><tr><th>Écran</th><th>Avant</th><th>A</th><th>B</th></tr></thead>
+<tbody>
+<tr><td>Offre, téléphone 390</td><td class="n">72 x 13 px recouverts</td><td class="n">écart 11 px</td><td class="n">écart 9 px</td></tr>
+<tr><td>Catalogue, « Nouveau produit », 390</td><td class="n">72 x 13 px recouverts</td><td class="n">écart 11 px</td><td class="n">écart 9 px</td></tr>
+<tr><td>Offre, tablette 820</td><td class="n">72 x 11 px recouverts</td><td class="n">écart 11 px</td><td class="n">écart 9 px</td></tr>
+<tr><td>Hauteur prise au contenu</td><td class="n">0</td><td class="n">24 px</td><td class="n">10 px</td></tr>
+</tbody></table></div>
+<figure><img src="MAQUETTE-responsive-img/r1-tab__R1B.jpg" alt="Tablette 820 px, variante B : le micro ne touche plus le bouton"><figcaption>Tablette 820 px, variante B.</figcaption></figure>
+<div class="conseil"><b>Je conseille B.</b> Le micro reste le bouton le plus gros de l'écran, il a la taille du micro de l'accueil (64 px), et on perd 10 px de contenu au lieu de 24. B modifie ta décision D1 du 15.11 (72 px) : c'est pour ça que je te la soumets.</div>
+<p class="cout">Coût : une règle CSS, aucune page à toucher.</p>
+<div class="decision" data-q="R1">
+<p class="q">Ton choix pour R1</p>
+<div class="opts"><button type="button" data-v="A">A : garder 72 px, réserver 24 px</button><button type="button" data-v="B">B : micro de 64 px, réserver 10 px</button><button type="button" data-v="aucun">Ni l'un ni l'autre</button></div>
+<textarea aria-label="Commentaire sur R1" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- R3 + R9 -->
+<section class="point" id="r3">
+<h2 id="h-r3" data-toc="R3 R9">R3 et R9. Lignes de l'offre sur un grand téléphone</h2>
+<span class="etiq grave">grave</span><span class="etiq ou">iPhone Plus et Pro Max (430 px), fenêtre PC étroite</span>
+<p>C'est le défaut vu par Luigi (décision L1 du 17.11). La correction ne s'applique que sous 420 px : à 430 px, le champ quantité et son unité débordent à gauche sur la désignation.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r3-430__avant.jpg" alt="Téléphone 430 px, avant : la désignation et le champ quantité se touchent, la désignation se coupe en deux lignes serrées"><figcaption>Avant, 430 px : 2 désignations recouvertes de 15 px, lignes trop larges de 4 px.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r3-430__R3.jpg" alt="Téléphone 430 px, après : la désignation prend toute la largeur, les champs passent dessous"><figcaption>Après R3 : la disposition des téléphones de 360 à 419 px, jusqu'à 480 px de colonne.</figcaption></figure>
+</div>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r3-pc900__avant.jpg" alt="Fenêtre PC de 900 px, avant : même recouvrement dans la colonne de 480 px"><figcaption>Avant, fenêtre PC de 900 px : même défaut.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r3-pc900__R3.jpg" alt="Fenêtre PC de 900 px, après R3"><figcaption>Après R3.</figcaption></figure>
+</div>
+<h3>R9, qui vient avec : la désignation à toucher</h3>
+<p>Dans cette disposition, la désignation est le lien qui ouvre la ligne, et elle ne fait que 29 px de haut. <code>CODING_RULES.md</code> demande 48 px. Ce défaut existe déjà de 360 à 419 px, et R3 l'étend aux grands téléphones. En pointillé, la zone qu'on touche :</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r9-390__avant.jpg" alt="Téléphone 390 px, avant : la zone à toucher en pointillé est une bande mince de 29 px"><figcaption>Avant : 29 px de haut.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r9-390__R9.jpg" alt="Téléphone 390 px, après : la zone à toucher fait 48 px de haut"><figcaption>Après R9 : 48 px.</figcaption></figure>
+</div>
+<div class="tableau"><table>
+<thead><tr><th>Mesure</th><th>Avant</th><th>Après</th></tr></thead>
+<tbody>
+<tr><td>Désignations recouvertes (430 px et PC 900)</td><td class="n">2 sur 6, 15 px</td><td class="n">0 (R3)</td></tr>
+<tr><td>Hauteur de la zone « désignation »</td><td class="n">29 px</td><td class="n">48 px (R9)</td></tr>
+<tr><td>Hauteur moyenne d'une ligne au téléphone</td><td class="n">82 px</td><td class="n">101 px (R9)</td></tr>
+</tbody></table></div>
+<div class="conseil"><b>Je conseille R3 et R9 ensemble.</b> R3 seul corrige le recouvrement mais donne aux grands téléphones la cible de 29 px. R9 coûte 19 px par ligne : sur 390 px, on voit environ une ligne de moins par écran. L'autre voie serait d'ouvrir la ligne d'un toucher sur sa rangée de chiffres, mais ce sont des champs : on ouvrirait la ligne en voulant corriger un prix.</div>
+<div class="decision" data-q="R3">
+<p class="q">Ton choix pour R3 (seuil de la vue compacte à 480 px)</p>
+<div class="opts"><button type="button" data-v="oui">Valider</button><button type="button" data-v="non">Pas valider</button></div>
+<textarea aria-label="Commentaire sur R3" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="decision" data-q="R9">
+<p class="q">Ton choix pour R9 (désignation de 48 px, 19 px de plus par ligne)</p>
+<div class="opts"><button type="button" data-v="oui">Valider</button><button type="button" data-v="non">Pas valider</button></div>
+<textarea aria-label="Commentaire sur R9" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- R4 -->
+<section class="point" id="r4">
+<h2 id="h-r4" data-toc="R4">R4. Facturer : « Échéance » sort de sa carte</h2>
+<span class="etiq grave">grave</span><span class="etiq ou">téléphone 360 px, PC 1024 px</span>
+<p>Une fois « Modifier » ouvert, les deux colonnes Date et Échéance gardent la largeur minimale d'un champ date. Au téléphone, la page défile alors en largeur.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r4-360__avant.jpg" alt="Téléphone 360 px, avant : le champ Échéance dépasse le bord droit de sa carte et de l'écran"><figcaption>Avant, 360 px : le champ dépasse sa carte de 33 px, la page défile de 17 px.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r4-360__R4.jpg" alt="Téléphone 360 px, après : les deux champs date tiennent dans la carte"><figcaption>Après : les deux champs tiennent, plus de défilement.</figcaption></figure>
+</div>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r4-pc1024__avant.jpg" alt="PC 1024 px, avant : le champ Échéance dépasse sa carte"><figcaption>Avant, PC 1024 : dépasse de 18 px.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r4-pc1024__R4.jpg" alt="PC 1024 px, après"><figcaption>Après : 0.</figcaption></figure>
+</div>
+<div class="conseil"><b>Je conseille de valider.</b> Les colonnes du composant <code>.duo</code> deviennent <code>minmax(0, 1fr)</code> et le champ peut rétrécir. Le correctif vaut pour toutes les paires de champs du site ; je contrôlerai chaque écran qui en a une.</div>
+<div class="decision" data-q="R4">
+<p class="q">Ton choix pour R4</p>
+<div class="opts"><button type="button" data-v="oui">Valider</button><button type="button" data-v="non">Pas valider</button></div>
+<textarea aria-label="Commentaire sur R4" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- R2 -->
+<section class="point" id="r2">
+<h2 id="h-r2" data-toc="R2">R2. Téléphone couché : il ne reste rien pour l'offre</h2>
+<span class="etiq grave">grave</span><span class="etiq ou">téléphone en paysage (844 x 390)</span>
+<p>Couché, le téléphone reçoit la mise en page de la tablette : en-tête, total, boutons, onglets et micro empilés. Sur 390 px de haut, l'offre en garde 137.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r2-offre__avant.jpg" alt="Téléphone couché, avant : le bas de l'écran (total, boutons, onglets, micro) prend la moitié de la hauteur, on ne voit aucune ligne de l'offre"><figcaption>Avant : 137 px de contenu, aucune ligne visible.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r2-offre__R2A.jpg" alt="Téléphone couché, variante A : onglets et micro en colonne à gauche, total et boutons sur une seule rangée, la première ligne de l'offre est visible"><figcaption>Variante A : onglets à gauche, total et boutons sur une rangée ; 274 px de contenu.</figcaption></figure>
+</div>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r2-cat__avant.jpg" alt="Catalogue, téléphone couché, avant"><figcaption>Catalogue, avant : 185 px.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r2-cat__R2A.jpg" alt="Catalogue, téléphone couché, variante A"><figcaption>Catalogue, variante A : 278 px.</figcaption></figure>
+</div>
+<figure><img src="MAQUETTE-responsive-img/r2-offre__R2B.jpg" alt="Téléphone couché, variante B : un écran sombre dit Tournez le téléphone pour dicter et corriger vos offres"><figcaption>Variante B : on ne gère pas le paysage, l'écran demande de tourner le téléphone.</figcaption></figure>
+<div class="conseil"><b>Je conseille A.</b> Un artisan pose souvent le téléphone couché, sur un support de voiture ou contre une boîte de vis. B bloque l'application dans ces cas, alors que A double la place de l'offre avec une règle CSS. Les libellés des onglets passent en 11 px dans la colonne de gauche : à vérifier sur ton téléphone.</div>
+<div class="decision" data-q="R2">
+<p class="q">Ton choix pour R2</p>
+<div class="opts"><button type="button" data-v="A">A : onglets à gauche</button><button type="button" data-v="B">B : « Tournez le téléphone »</button><button type="button" data-v="plus-tard">Plus tard</button></div>
+<textarea aria-label="Commentaire sur R2" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- R5 -->
+<section class="point" id="r5">
+<h2 id="h-r5" data-toc="R5">R5. Champs quantité et prix en 14 px : l'iPhone zoome</h2>
+<span class="etiq moyen">moyen</span><span class="etiq ou">iPhone, écran de l'offre</span>
+<p>Safari agrandit la page dès qu'on touche un champ écrit en moins de 16 px, et ne la remet pas à l'échelle ensuite. Sur l'écran le plus utilisé, chaque correction fait sauter la page. <b>Je n'ai pas pu le montrer</b> : Chromium ne reproduit pas ce zoom, il faut un iPhone. Les captures montrent seulement que les chiffres en 16 px tiennent dans leurs champs.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r5-390__avant.jpg" alt="Téléphone 390 px, avant : chiffres des champs en 14 px"><figcaption>Avant : 14 px.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r5-390__R5.jpg" alt="Téléphone 390 px, après : chiffres en 16 px, champ du prix un peu plus large"><figcaption>Après : 16 px, champ du prix de 60 à 76 px, quantité de 44 à 52 px.</figcaption></figure>
+</div>
+<p>Contrôle : aucun champ de cette offre ne coupe son chiffre (valeurs de 1 à 180). Un prix à quatre chiffres (« 1'250 ») reste à vérifier pendant la correction.</p>
+<div class="conseil"><b>Je conseille de valider</b>, puis de le vérifier sur ton iPhone après le déploiement sur le test.</div>
+<div class="decision" data-q="R5">
+<p class="q">Ton choix pour R5</p>
+<div class="opts"><button type="button" data-v="oui">Valider</button><button type="button" data-v="non">Pas valider</button></div>
+<textarea aria-label="Commentaire sur R5" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- R6 -->
+<section class="point" id="r6">
+<h2 id="h-r6" data-toc="R6">R6. Tablette : les formulaires prennent toute la largeur</h2>
+<span class="etiq moyen">moyen</span><span class="etiq ou">tablettes</span>
+<p>Sur un iPad couché, le champ « Nom » d'un nouveau client fait 1124 px, et « Ajouter » se trouve à l'autre bout de l'écran. Le PC limite déjà ces écrans, la tablette non.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r6-1180__avant.jpg" alt="Tablette 1180 px, avant : champs étirés sur toute la largeur"><figcaption>Avant : champ le plus large 1124 px.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r6-1180__R6.jpg" alt="Tablette 1180 px, après : formulaire centré sur 720 px, boutons alignés sur son bord"><figcaption>Après : formulaire centré sur 720 px, boutons alignés sur lui.</figcaption></figure>
+</div>
+<p>Sur une tablette en portrait (820 px), l'écart est faible : la carte passe de 770 à 720 px.</p>
+<div class="conseil"><b>Je conseille de valider.</b> La règle vise les écrans qui ont des champs de formulaire, hors Facturer (qui a déjà ses deux volets).</div>
+<div class="decision" data-q="R6">
+<p class="q">Ton choix pour R6</p>
+<div class="opts"><button type="button" data-v="oui">Valider</button><button type="button" data-v="non">Pas valider</button></div>
+<textarea aria-label="Commentaire sur R6" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- R7 -->
+<section class="point" id="r7">
+<h2 id="h-r7" data-toc="R7">R7. Mon entreprise : Téléphone et Numéro IDE décalés</h2>
+<span class="etiq moyen">moyen</span><span class="etiq ou">téléphone, réglages et assistant</span>
+<p>L'étiquette « à compléter » passe à la ligne sous « Numéro IDE » et pousse son champ plus bas que son voisin.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r7-390__avant.jpg" alt="Téléphone 390 px, avant : le champ Numéro IDE est 22 px plus bas que le champ Téléphone"><figcaption>Avant : 22 px de décalage.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r7-390__R7.jpg" alt="Téléphone 390 px, après : les deux champs sont alignés, le libellé Téléphone descend au niveau de l'étiquette à compléter"><figcaption>Après : champs alignés ; le libellé « Téléphone » descend en face de l'étiquette.</figcaption></figure>
+</div>
+<div class="conseil"><b>Je conseille de valider.</b> Les champs alignés comptent plus que les libellés. L'autre voie est de poser « à compléter » sous le champ, en petit, mais cela demande de toucher le gabarit de chaque champ qui porte l'étiquette.</div>
+<div class="decision" data-q="R7">
+<p class="q">Ton choix pour R7</p>
+<div class="opts"><button type="button" data-v="oui">Valider</button><button type="button" data-v="sous-le-champ">Plutôt l'étiquette sous le champ</button><button type="button" data-v="non">Pas valider</button></div>
+<textarea aria-label="Commentaire sur R7" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- R8 -->
+<section class="point" id="r8">
+<h2 id="h-r8" data-toc="R8">R8. Catalogue : les filtres coupés net</h2>
+<span class="etiq moyen">moyen</span><span class="etiq ou">téléphone</span>
+<p>La rangée de filtres fait 520 px pour 358 visibles. « Peinture intéri » est coupé au bord, et rien ne dit qu'il reste « Préparation » à droite.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r8-390__avant.jpg" alt="Téléphone 390 px, avant : le filtre Peinture intérieure est coupé net au bord droit"><figcaption>Avant : coupe nette.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r8-390__R8.jpg" alt="Téléphone 390 px, après : le dernier filtre visible s'efface en fondu vers le bord"><figcaption>Après : fondu de 44 px au bord droit, qui disparaît au bout de la rangée.</figcaption></figure>
+</div>
+<p>Sur tablette couchée, les cinq filtres tiennent déjà (1124 px pour 1124). Le correctif y ajoute seulement le retour à la ligne, pour un catalogue plus grand.</p>
+<div class="conseil"><b>Je conseille de valider</b>, avec une réserve : le fondu est discret. Si tu veux un signe plus franc, une petite flèche « › » au bord est possible.</div>
+<div class="decision" data-q="R8">
+<p class="q">Ton choix pour R8</p>
+<div class="opts"><button type="button" data-v="oui">Valider le fondu</button><button type="button" data-v="fleche">Plutôt une flèche</button><button type="button" data-v="non">Pas valider</button></div>
+<textarea aria-label="Commentaire sur R8" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- R10a -->
+<section class="point" id="r10a">
+<h2 id="h-r10a" data-toc="R10 a">R10 a. PC, fenêtre de 700 à 1023 px</h2>
+<span class="etiq faible">faible</span><span class="etiq ou">écran partagé, petit portable</span>
+<p>Conforme à ta décision du 15.11 : « la fenêtre étroite d'un PC garde la colonne du téléphone ». C'est pourtant le cas d'un artisan au bureau qui ouvre le PDF à côté. Il obtient une colonne de 480 px entre deux bandes grises de 210 px, avec le micro sur le bouton (R1).</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r10a-900__avant.jpg" alt="Fenêtre PC de 900 px, avant : colonne de téléphone de 480 px au milieu, bandes grises de chaque côté"><figcaption>Avant : 480 px utiles sur 900.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r10a-900__R10aB.jpg" alt="Fenêtre PC de 900 px, variante B : onglets et micro en colonne à gauche, l'offre sur 820 px avec les colonnes larges de la tablette"><figcaption>Variante B : onglets à gauche (le composant de R2), 820 px utiles, désignations sur une ligne.</figcaption></figure>
+</div>
+<div class="conseil"><b>Je conseille B.</b> C'est le composant de R2 A, sans code en plus, et la désignation ne se coupe plus en deux lignes. B remplace ta décision du 15.11.</div>
+<div class="decision" data-q="R10a">
+<p class="q">Ton choix pour R10 a</p>
+<div class="opts"><button type="button" data-v="A">A : garder la colonne du téléphone</button><button type="button" data-v="B">B : onglets à gauche</button></div>
+<textarea aria-label="Commentaire sur R10 a" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- R10b -->
+<section class="point" id="r10b">
+<h2 id="h-r10b" data-toc="R10 b">R10 b. PC 1920 px : la bande grise à droite</h2>
+<span class="etiq faible">faible</span><span class="etiq ou">grand écran</span>
+<p>La liste des offres s'arrête à 1272 px, collée au menu, avec 648 px de gris à droite.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r10b-accueil__avant.jpg" alt="PC 1920 px, avant : la liste collée au menu, grande bande grise à droite"><figcaption>Avant : 648 px de gris à droite.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r10b-accueil__R10bB.jpg" alt="PC 1920 px, variante B : la liste centrée dans l'espace à droite du menu"><figcaption>Variante B : liste centrée, 324 px de gris de chaque côté.</figcaption></figure>
+</div>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-img/r10b-offre__avant.jpg" alt="PC 1920 px, offre, avant"><figcaption>Offre, avant : 348 px à droite.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-img/r10b-offre__R10bB.jpg" alt="PC 1920 px, offre, variante B centrée"><figcaption>Offre, variante B : 174 px de chaque côté.</figcaption></figure>
+</div>
+<div class="conseil"><b>Je conseille A : laisser.</b> Centrer éloigne la liste du menu, l'œil fait plus de chemin, et la bande grise ne gêne aucune action. Pas d'avis fort : c'est une question de goût.</div>
+<div class="decision" data-q="R10b">
+<p class="q">Ton choix pour R10 b</p>
+<div class="opts"><button type="button" data-v="A">A : laisser</button><button type="button" data-v="B">B : centrer</button></div>
+<textarea aria-label="Commentaire sur R10 b" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="limites" data-toc="Limites">Ce que cette maquette ne prouve pas</h2>
+<ul class="serre">
+<li>Tout est rendu par Chromium. Pas de Safari ni de vrai iPhone sur ce poste : le zoom de R5 et le rendu des libellés de 11 px de R2 se vérifient sur ton téléphone.</li>
+<li>Les correctifs sont injectés par-dessus la feuille déployée. Écrits dans <code>app.css</code>, ils seront remesurés sur les mêmes écrans, puis recettés en cliquant.</li>
+<li>Les contrastes ne sont pas mesurés ici. La marque Dicta les annonce à 7:1, je les mesurerai pendant la recette.</li>
+</ul>
+
+<h2 id="reponses" data-toc="Copier">Copier mes réponses</h2>
+<div class="recap">
+<p>Ce texte se remplit avec tes choix. Copie-le et colle-le dans la conversation.</p>
+<textarea id="recap" readonly aria-label="Récapitulatif des réponses"></textarea>
+<p><button type="button" class="copier" id="copier">Copier le texte</button><span class="copie-ok" id="copie-ok" hidden>Copié.</span></p>
+</div>
+</main>
+<script>
+(function () {
+  var CLE = 'offregen-responsive-2026-11-19';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  var blocs = document.querySelectorAll('.decision');
+  function recap() {
+    var lignes = [];
+    blocs.forEach(function (b) {
+      var q = b.getAttribute('data-q'), r = etat[q] || {};
+      var choisi = b.querySelector('.opts button[data-v="' + (r.v || '') + '"]');
+      var l = q + ' : ' + (choisi ? choisi.textContent : '(pas de réponse)');
+      if (r.c) l += '. Commentaire : ' + r.c.replace(/\s+/g, ' ').trim();
+      lignes.push(l);
+    });
+    document.getElementById('recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    etat[q] = etat[q] || {};
+    var boutons = b.querySelectorAll('.opts button');
+    var champ = b.querySelector('textarea');
+    boutons.forEach(function (bt) {
+      bt.setAttribute('aria-pressed', bt.getAttribute('data-v') === etat[q].v ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        etat[q].v = etat[q].v === bt.getAttribute('data-v') ? '' : bt.getAttribute('data-v');
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-v') === etat[q].v ? 'true' : 'false'); });
+        garder(); recap();
+      });
+    });
+    champ.value = etat[q].c || '';
+    champ.addEventListener('input', function () { etat[q].c = champ.value; garder(); recap(); });
+  });
+  recap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('recap');
+    var ok = function () { var s = document.getElementById('copie-ok'); s.hidden = false; setTimeout(function () { s.hidden = true; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); document.execCommand('copy'); ok(); }); }
+    else { t.select(); document.execCommand('copy'); ok(); }
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{# « Mettre au catalogue » une ligne hors catalogue (4a et 4b du chantier responsive, Xavier, 2026-11-20). Deux onglets :
+   un nouveau produit (nom, unité, prix repris de la ligne, catégorie à choisir), ou un produit déjà au catalogue (la
+   recherche part du premier mot). Ouvert d'office sur « Déjà au catalogue » quand la recherche trouve quelque chose.
+   Les onglets sont des boutons radio : la feuille de style montre le bon panneau, sans JavaScript. #}
+{% block titre %}Mettre au catalogue · {{ offre.titre }} · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}#l{{ l.id }}">Offre</a>{% endblock %}
+{% block entete %}Mettre au catalogue{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% set lien = '/offres/' ~ offre.id ~ '/lignes/' ~ l.id %}
+  <p class="rappel-ligne"><b>{{ l.designation }}</b><br>{{ l.quantite_milliemes|quantite }}&nbsp;{{ l.unite }} · {{ l.prix_centimes|montant }}&nbsp;CHF</p>
+  <fieldset class="segments onglets-catalogue">
+    <legend class="sr">Ce produit est</legend>
+    <label><input type="radio" name="onglet_catalogue" value="nouveau"{% if onglet == 'nouveau' %} checked{% endif %}><span>Nouveau produit</span></label>
+    <label><input type="radio" name="onglet_catalogue" value="existant"{% if onglet == 'existant' %} checked{% endif %}><span>Déjà au catalogue</span></label>
+  </fieldset>
+
+  <section class="panneau-catalogue" data-onglet="nouveau" aria-label="Nouveau produit">
+    {% if erreurs is not empty %}<p class="alerte bad" role="alert">Le produit n'est pas créé&nbsp;: corrigez les champs signalés.</p>{% endif %}
+    <form id="nouveau-produit" method="post" action="{{ lien }}/produit">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <div class="champ">
+        <label for="designation">Désignation</label>
+        <input id="designation" name="designation" value="{{ champs.designation }}" maxlength="255" required{{ f.invalide(erreurs, 'designation') }}>
+        {{ f.erreur(erreurs, 'designation') }}
+      </div>
+      <div class="duo">
+        <div class="champ">
+          <label for="unite">Unité</label>
+          <select id="unite" name="unite"{{ f.invalide(erreurs, 'unite') }}>
+            {% for u in unites %}<option{% if u == champs.unite %} selected{% endif %}>{{ u }}</option>{% endfor %}
+          </select>
+          {{ f.erreur(erreurs, 'unite') }}
+        </div>
+        <div class="champ">
+          <label for="prix">Prix (CHF)</label>
+          <input id="prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?"{{ f.invalide(erreurs, 'prix') }}>
+          {{ f.erreur(erreurs, 'prix') }}
+        </div>
+      </div>
+      <div class="champ">
+        <label for="categorie">Catégorie</label>
+        <select id="categorie" name="categorie"{{ f.invalide(erreurs, 'categorie') }}>
+          {% if categories is empty %}<option value="">(aucune pour l'instant)</option>{% endif %}
+          {% for c in categories %}<option{% if c == champs.categorie %} selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+        {{ f.erreur(erreurs, 'categorie') }}
+      </div>
+      <div class="champ">
+        <label for="nouvelle_categorie">Ou une nouvelle catégorie</label>
+        <input id="nouvelle_categorie" name="nouvelle_categorie" value="{{ champs.nouvelle_categorie }}" maxlength="100" placeholder="Par exemple&nbsp;: Radiateurs">
+      </div>
+      <button class="btn primary grand" type="submit">Créer et ranger</button>
+    </form>
+  </section>
+
+  <section class="panneau-catalogue" data-onglet="existant" aria-label="Produit déjà au catalogue">
+    <p class="muted petit">Touchez le produit que cette ligne désigne&nbsp;: elle prend son nom et son unité, et garde sa quantité. «&nbsp;{{ l.designation }}&nbsp;» devient un mot reconnu du produit.</p>
+    <form class="search" method="get" action="{{ lien }}/catalogue" role="search">
+      <input type="hidden" name="onglet" value="existant">
+      <div class="box">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="cherche" name="q" type="search" value="{{ q }}" placeholder="Chercher dans le catalogue" autocomplete="off" aria-label="Chercher dans le catalogue" data-filtre="#res-catalogue">
+      </div>
+    </form>
+    {% if aucun and q != '' %}<p class="muted petit" data-cache-si-recherche>Rien pour «&nbsp;{{ q }}&nbsp;» : voici tout le catalogue.</p>{% endif %}
+    <div id="res-catalogue" class="res">
+      {% for p in produits %}
+        <form method="post" action="{{ lien }}/rattacher" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
+          <input type="hidden" name="_csrf" value="{{ csrf() }}">
+          <button class="pick" type="submit" name="produit" value="{{ p.id }}"><b class="pn">{{ p.designation }}<small>{{ p.categorie }}{% if p.unite != l.unite %} · se compte en {{ p.unite }}, la ligne garde {{ l.quantite_milliemes|quantite }}{% endif %}</small></b>
+            <span>{% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %} /&nbsp;{{ p.unite }}</span></button>
+        </form>
+      {% endfor %}
+    </div>
+    {% if l.prix_centimes > 0 %}<p class="muted petit">Si le prix du produit diffère, la ligne passe à vérifier et propose de garder ses {{ l.prix_centimes|montant }}.</p>{% endif %}
+  </section>
+{% endblock %}

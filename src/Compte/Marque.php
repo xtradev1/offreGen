@@ -35,7 +35,8 @@ final readonly class Marque
         'menuisier' => 'atelier', 'sols' => 'moderne', 'paysagiste' => 'epure'];
 
     /** Couleurs proposées d'un toucher, après celle du logo. */
-    public const TEINTES = ['#1D4E89', '#2E7D32', '#B23A2E', '#8A5A2B', '#0F7C8C', '#3B3F46'];
+    // Toutes à 7:1 au moins sur le blanc (2b, 2026-11-20) : vert, rouge, brun et pétrole assombris au pas de principale().
+    public const TEINTES = ['#1D4E89', '#246227', '#973127', '#754C25', '#0C616D', '#3B3F46'];
 
     public const COULEUR_DEFAUT = '#1D4E89';
 

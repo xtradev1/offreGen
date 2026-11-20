@@ -14,6 +14,8 @@ use OffreGen\Http\Flash;
 use OffreGen\Http\Formats;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
+use OffreGen\Offre\Saisie;
+use OffreGen\Offre\SaisieRefusee;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,15 +49,76 @@ final class LigneCatalogueControleur
         if ($l['produit_id'] !== null) {
             throw new Conflit('Cette ligne est déjà au catalogue.');
         }
-        $produit = SaisieProduit::lire(['designation' => $l['designation'], 'unite' => $l['unite'],
-            'prix' => $l['prix_centimes'] === 0 ? '' : Formats::saisiePrix($l['prix_centimes']),
-            'categorie' => self::CATEGORIE, 'nouvelle_categorie' => '', 'synonymes' => ''], $l['unite']);
+        // Depuis la fiche « Mettre au catalogue » (4b) : les champs de l'artisan, catégorie comprise. Sans eux : la ligne
+        // telle quelle, en « Divers » (bouton d'avant, encore servi sans JavaScript ni fiche).
+        $r = $requete->request;
+        if ($r->has('designation')) {
+            $champs = ['designation' => $r->getString('designation'), 'unite' => $r->getString('unite'), 'prix' => $r->getString('prix'),
+                'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie'), 'synonymes' => ''];
+            try {
+                $produit = SaisieProduit::lire($champs, $l['unite']);
+            } catch (SaisieRefusee $e) {
+                return $this->vueFiche($requete, $offre, $l, $champs, $e->erreurs, 422, 'nouveau');
+            }
+        } else {
+            $produit = SaisieProduit::lire(['designation' => $l['designation'], 'unite' => $l['unite'],
+                'prix' => $l['prix_centimes'] === 0 ? '' : Formats::saisiePrix($l['prix_centimes']),
+                'categorie' => self::CATEGORIE, 'nouvelle_categorie' => '', 'synonymes' => ''], $l['unite']);
+        }
         $id = $this->c->produits($this->portee($requete))->creer($produit);
         $offres = $this->offres($requete);
         $offres->rattacherProduit($offre['id'], $l['id'], $id);
         $offres->marquerModifiee($offre['id'], $this->c->horloge()->now());
         Flash::dire($requete, 'info', Flash::cite($produit['designation']) . ' ajouté au catalogue');
         return new RedirectResponse('/offres/' . $offre['id'] . '#l' . $l['id'], 303);
+    }
+
+    /**
+     * La fiche « Mettre au catalogue » d'une ligne hors catalogue (4a et 4b, 2026-11-20).
+     *
+     * @param array<string, string> $parametres
+     */
+    public function fiche(Request $requete, array $parametres): Response
+    {
+        // Ouverte aussi pour une ligne déjà rangée (changer de produit, comme l'écran Rattacher) ; « Nouveau produit »
+        // y répond 409 (creerProduit).
+        [$offre, $l] = $this->ligne($requete, $parametres);
+        $onglet = $requete->query->getString('onglet');
+        return $this->vueFiche($requete, $offre, $l, null, [], 200, in_array($onglet, ['nouveau', 'existant'], true) ? $onglet : null);
+    }
+
+    /**
+     * @param array<string, mixed> $offre
+     * @param array<string, mixed> $l
+     * @param array<string, string>|null $champs null : repris de la ligne
+     * @param array<string, string> $erreurs
+     * @param string|null $onglet null : « existant » si la recherche trouve un produit, sinon « nouveau »
+     */
+    private function vueFiche(Request $requete, array $offre, array $l, ?array $champs, array $erreurs, int $code, ?string $onglet): Response
+    {
+        $depot = $this->c->produits($this->portee($requete));
+        $tous = $depot->tous();
+        $designation = (string) $l['designation'];
+        $q = $requete->query->has('q') ? $requete->query->getString('q') : self::premierMot($designation);
+        $gardes = array_column(Recherche::filtrer($tous, $q), 'id', 'id');
+        $produits = [];
+        foreach ($tous as $p) {
+            $produits[] = $p + ['texte' => Recherche::texte($p), 'visible' => $gardes === [] || isset($gardes[$p['id']])];
+        }
+        $categories = $depot->categories();
+        $unites = Saisie::UNITES;
+        if (!in_array($l['unite'], $unites, true)) {
+            $unites[] = (string) $l['unite'];
+        }
+        $prix = (int) $l['prix_centimes'];
+        $champs ??= ['designation' => $designation, 'unite' => (string) $l['unite'], 'prix' => $prix === 0 ? '' : Formats::saisiePrix($prix),
+            'categorie' => in_array(self::CATEGORIE, $categories, true) ? self::CATEGORIE : ($categories[0] ?? ''),
+            'nouvelle_categorie' => $categories === [] ? self::CATEGORIE : ''];
+        return new Response($this->c->twig()->render('ligne_catalogue.html.twig', [
+            'offre' => $offre, 'l' => $l, 'q' => $q, 'produits' => $produits, 'aucun' => $gardes === [],
+            'onglet' => $onglet ?? ($tous !== [] && $gardes !== [] ? 'existant' : 'nouveau'),
+            'champs' => $champs, 'erreurs' => $erreurs, 'categories' => $categories, 'unites' => $unites,
+        ]), $code);
     }
 
     /** @param array<string, string> $parametres */
@@ -89,6 +152,10 @@ final class LigneCatalogueControleur
         $offres = $this->offres($requete);
         $offres->corrigerLigne($offre['id'], $l['id'], $p['designation'], $l['quantite_milliemes'], $p['unite'], $p['prix_centimes']);
         $offres->rattacherProduit($offre['id'], $l['id'], $p['id']);
+        // 4b (2026-11-20) : un autre prix au catalogue ; la ligne garde le sien en note et passe à vérifier, en jaune.
+        if ($l['prix_centimes'] !== 0 && $l['prix_centimes'] !== $p['prix_centimes']) {
+            $offres->garderPrixDeLaLigne($offre['id'], $l['id'], $l['prix_centimes']);
+        }
         if ($l['produit_id'] === null && mb_strtolower($l['designation']) !== mb_strtolower($p['designation'])) {
             $synonymes = SaisieProduit::synonymes(($p['synonymes'] ?? '') . ', ' . $l['designation']);
             if (mb_strlen($synonymes) <= SaisieProduit::SYNONYMES_MAX) {

@@ -644,6 +644,26 @@ fieldset.adresse legend { font-size: 14px; font-weight: 600; padding: 0; margin:
 .relu-fin h2 { margin: 8px 0 4px; }
 /* Ligne hors catalogue (D6) : la ranger d'un toucher, deux boutons de 48 px sous la ligne. */
 .ranger-ligne { grid-column: 1 / -1; display: flex; gap: 8px; padding: 0 0 10px; }
+/* 4a (2026-11-20) : la ligne hors catalogue porte une bande blanche à bord gris, toute touchable, vers la fiche. */
+.vers-catalogue { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; min-height: 56px; margin: 4px 0 10px; padding: 6px 10px 6px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.vers-catalogue .vc-ic { display: grid; place-items: center; flex: none; color: var(--ink); }
+.vers-catalogue .vc-ic svg.i { width: 22px; height: 22px; }
+.vers-catalogue .vc-tx { flex: 1; display: flex; flex-direction: column; line-height: 1.25; }
+.vers-catalogue .vc-tx b { font-size: 15px; }
+.vers-catalogue .vc-tx small { font-size: 14px; color: var(--muted); }
+.vers-catalogue > svg.i { width: 20px; height: 20px; color: var(--muted); flex: none; }
+.row:has(.vers-catalogue) .nm .tag { display: none; }
+.rappel-ligne { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--chip); font-size: 15px; }
+.onglets-catalogue { margin: 0 0 14px; }
+.panneau-catalogue { display: none; }
+body:has(input[name="onglet_catalogue"][value="nouveau"]:checked) .panneau-catalogue[data-onglet="nouveau"],
+body:has(input[name="onglet_catalogue"][value="existant"]:checked) .panneau-catalogue[data-onglet="existant"] { display: block; }
+.panneau-catalogue .btn.grand { width: 100%; margin-top: 6px; }
+/* 3 A (2026-11-20) : le total sous le libellé du bouton principal de l'offre. */
+.libelle-total { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.libelle-total small { font-size: 14px; font-weight: 500; }
+/* 5 (2026-11-20) : icônes d'Archiver et Supprimer, montrées au PC seulement ; au téléphone, les mots. */
+.actions-glisse svg.i { display: none; }
 .ranger-ligne .ranger { display: contents; }
 .ranger-ligne .btn { flex: 1; min-height: 48px; font-size: 14px; padding: 6px 8px; }
 .rattacher-ligne { font-size: 18px; font-weight: 600; margin: 4px 0 10px; }
@@ -732,6 +752,8 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
 .lcard[aria-current="page"] small { color: var(--ink); }
 .lcard:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
 @media not all and (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .bas:has([data-total-bouton]) .totalbar { display: none; }
+  .bas:has([data-total-bouton]) .totalbar + .actionbar { padding-top: 12px; border-top: 1px solid var(--line); }
   .pc-seul { display: none !important; }
   /* Le micro (72 px) dépasse de 24 px au-dessus des onglets : la barre d'actions lui réserve sa place (R1 A, 2026-11-19). */
   .bas:has(.tabs:not(.pc-seul)) .actionbar { padding-bottom: 34px; }
@@ -775,6 +797,24 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
   .bas > .nouvelle:last-child { padding-bottom: 0; }
   /* À la souris, la ligne à relire suit son compteur : poussée en bas pour le pouce, elle laissait 310 à 620 px vides. */
   .screen.relecture .relu-reste { margin-bottom: 16px; }
+  [data-total-bouton] { display: none; }
+  /* 5 (2026-11-20) : au survol de la carte (ou au clavier), Archiver et Supprimer en icônes dans la carte. */
+  .glisse { overflow: visible; }
+  .glisse > .ocard, .glisse.ouverte > .ocard, .actions-glisse:focus-within + .ocard { transform: none; transition: padding-right .15s; }
+  .glisse:hover > .ocard, .glisse:focus-within > .ocard { padding-right: 134px; }
+  .actions-glisse { inset: auto; top: 50%; right: 12px; transform: translateY(-50%); z-index: 2; gap: 2px; padding-left: 10px; border-left: 1px solid var(--line); opacity: 0; pointer-events: none; transition: opacity .15s; }
+  .glisse:hover .actions-glisse, .actions-glisse:focus-within { opacity: 1; pointer-events: auto; transition-delay: 0s; }
+  .actions-glisse button { position: relative; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: transparent; color: var(--muted); }
+  .actions-glisse .arch, .actions-glisse .supp { background: transparent; color: var(--muted); }
+  .actions-glisse button:hover, .actions-glisse button:focus-visible { background: var(--chip); color: var(--ink); }
+  .actions-glisse .supp:hover, .actions-glisse .supp:focus-visible { color: var(--bad); }
+  .actions-glisse svg.i { display: block; width: 22px; height: 22px; }
+  .actions-glisse button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .actions-glisse button:hover::after, .actions-glisse button:focus-visible::after { content: attr(data-t); position: absolute; top: 54px; left: 50%; transform: translateX(-50%); padding: 4px 8px; border-radius: 6px; background: var(--ink); color: var(--surface); font-size: 13px; font-weight: 500; white-space: nowrap; z-index: 3; }
+  /* 7a (2026-11-20) : le bandeau « Annuler » d'une ligne à la place de la ligne du total, aux mêmes marges, fond jaune. */
+  .snack.dans-total { position: static; transform: none; width: auto; min-height: 52px; margin: 0; padding: 4px 28px; border-radius: 0; border-top: 1px solid var(--line); background: var(--warn-soft); color: var(--ink); font-size: 15px; font-weight: 600; }
+  .snack.dans-total button { min-height: 44px; padding: 0 14px; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface); color: var(--ink); font-family: var(--titre); text-decoration: none; }
+  .bas:has(> .snack.dans-total) > .totalbar { display: none; }
   @media (hover: hover) {
     .ocard:hover, .krow:hover, .frow:hover, .omini:hover { border-color: var(--bord); }
     .crow:hover, .pick:hover { background: var(--chip); }

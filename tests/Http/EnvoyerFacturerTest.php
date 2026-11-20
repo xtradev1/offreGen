@@ -69,7 +69,7 @@ final class EnvoyerFacturerTest extends TestCase
         $offre = $this->page($this->offre);
         self::assertMatchesRegularExpression('#<span class="status pret">Envoyée le \d{2}\.\d{2}\.\d{4}</span>#', $offre);
         // E1 : « Facturer » ouvre la feuille par-dessus l'offre (la page seule sans JavaScript).
-        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/facturer\" data-en-feuille>Facturer#", $offre);
+        self::assertMatchesRegularExpression("#<a class=\"btn primary grand\" href=\"{$this->offre}/facturer\" data-en-feuille><span class=\"libelle-total\"><span>Facturer</span>#", $offre);
     }
 
     /** La feuille : l'acompte suivant choisi, les puces, le bouton qui dit le montant ; plus de « Vérifier avant d'émettre ». */

@@ -143,8 +143,8 @@ final class MarqueEcranTest extends TestCase
         self::assertMatchesRegularExpression($cache, $this->page('/reglages/marque'));
         self::assertSame(422, $this->a->post('/reglages', ['couleur_prise' => 'rouge', 'retour' => '/reglages/marque'])->getStatusCode(), 'une couleur prise invalide est refusée');
 
-        // Les six couleurs proposées ne déclenchent rien, même sous 7:1 (le pétrole, 4,9:1).
-        self::assertSame(303, $this->a->post('/reglages', ['couleur_choix' => '#0F7C8C', 'retour' => '/reglages/marque'])->getStatusCode());
+        // Les six couleurs proposées ne déclenchent rien : toutes à 7:1 depuis le 5e tour du responsive (pétrole #0C616D).
+        self::assertSame(303, $this->a->post('/reglages', ['couleur_choix' => '#0C616D', 'retour' => '/reglages/marque'])->getStatusCode());
         self::assertMatchesRegularExpression($cache, $this->page('/reglages/marque'));
     }
 

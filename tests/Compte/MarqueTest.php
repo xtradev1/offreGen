@@ -137,4 +137,12 @@ final class MarqueTest extends TestCase
             self::assertSame($corps, Marque::corpsEnseigne($nom), $nom);
         }
     }
+
+    public function testLesCouleursProposeesSontAuMoinsA7(): void
+    {
+        // 2b (2026-11-20) : les six pastilles ne déclenchent jamais l'avis de couleur.
+        foreach (Marque::TEINTES as $t) {
+            self::assertGreaterThanOrEqual(7.0, Marque::contraste($t, '#FFFFFF'), $t);
+        }
+    }
 }

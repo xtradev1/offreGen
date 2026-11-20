@@ -113,6 +113,7 @@ return static function (Conteneur $c): array {
         new Route('offre_pdf', '/offres/{id}/pdf', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->pdf($r, $p), Route::ARTISAN),
         // Ligne et catalogue : créer le produit, rattacher à un produit (décision D6, 2026-11-15).
         new Route('ligne_creer_produit', '/offres/{id}/lignes/{ligne}/produit', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->creerProduit($r, $p), Route::ARTISAN),
+        new Route('ligne_catalogue', '/offres/{id}/lignes/{ligne}/catalogue', ['GET'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->fiche($r, $p), Route::ARTISAN),
         new Route('ligne_rattacher_choix', '/offres/{id}/lignes/{ligne}/rattacher', ['GET'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->choix($r, $p), Route::ARTISAN),
         new Route('ligne_rattacher', '/offres/{id}/lignes/{ligne}/rattacher', ['POST'], static fn (Request $r, array $p): Response => (new LigneCatalogueControleur($c))->rattacher($r, $p), Route::ARTISAN),
         // Prix dicté à côté du catalogue (Xavier, 2026-11-17) : « Prendre », puis « Mettre aussi au catalogue ? ».

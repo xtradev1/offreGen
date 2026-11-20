@@ -410,6 +410,18 @@ final class DepotOffres implements SupportLignes
         ) === 1 || $this->ligne($offreId, $ligneId) !== null;
     }
 
+    /**
+     * Rattachée à un produit d'un autre prix (4b, 2026-11-20) : la ligne garde son prix d'avant en note (comme un prix
+     * dicté, « Prendre ») et passe à vérifier.
+     */
+    public function garderPrixDeLaLigne(int $offreId, int $ligneId, int $prixCentimes): void
+    {
+        $this->base->ecrire(
+            'UPDATE ligne SET prix_dicte_centimes = :p, a_verifier = 1 WHERE id = :l AND offre_id = :o AND artisan_id = :a AND supprimee_le IS NULL',
+            ['p' => $prixCentimes, 'l' => $ligneId, 'o' => $offreId, 'a' => $this->portee->artisanId],
+        );
+    }
+
     public function rattacherProduit(int $offreId, int $ligneId, int $produitId): void
     {
         $this->base->ecrire(
