@@ -2,8 +2,8 @@
 chantier: Modèles d'offre du bâtiment
 slug: 2026-11-19_modeles-offre
 phase: 8
-statut: en_cours
-gate_attendu: prod
+statut: gate_ouvert
+gate_attendu: visuel
 profil: .claude/atoz-profile.md
 ---
 
@@ -12,18 +12,17 @@ profil: .claude/atoz-profile.md
 - Projet 44 (offreGen), tâche 488 (Douze modèles d'offre pour le bâtiment), créée le 2026-11-20 à la demande de Xavier.
 - Sous-tâches : 489 analyse et maquettes ; 490 essai dompdf ; 491 plan ; 492 lots 0 à 2 ; 493 lots 3 et 4 ; 494 lot 5 ; 495 lot 6 ; 496 lot 7 ; 497 lot 8 ; 498 revue et recette.
 - Tâche 499 : options et variantes, à cadrer dans son propre chantier (décision O6).
-- Conversation rattachée à 498 (revue et recette) le 2026-11-20, après 492 à 497.
+- Conversation rattachée à 498 (revue et recette) le 2026-11-20, après 492 à 497 ; puis à 511 (maquette des phrases de Lettre, tâche 510) le même jour.
 
 ## Prochaine action
 
-Déployer sur le site de test le commit de l'encadré de couleur et du glissement, quand Xavier le dit (règle du projet : redemander avant chaque déploiement). Puis ses réponses aux quatre questions et à celle des couleurs proposées. À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
+Attendre les réponses de Xavier à `MAQUETTE-lettre-phrases.html` (L1 à L6), puis coder les phrases réglables de Lettre (tâche Origin 510, sous-tâche 512) test d'abord. Déployer sur le test le commit `112c063` (encadré de couleur, glissement) quand Xavier le dit. À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
 
 ## En attente de toi
 
-- Dire si je déploie sur le site de test l'encadré de couleur et le glissement au doigt (données toujours inventées ?).
-- Répondre aux quatre questions, détaillées dans la réponse du 2026-11-20 : facture d'une page sans pied ; couleur de l'artisan à 4,5 ou 7 ; lieu dicté pris pour l'adresse du chantier ; phrases fixes de Lettre.
-- Dire si les quatre couleurs proposées sous 7:1 (vert 5,1, rouge 5,9, brun 5,8, pétrole 4,9) doivent être foncées.
-- Savoir que la session du responsive trouvera 2a et 2b déjà commités : elle doit commiter le reste depuis une copie propre posée sur la tête de la branche.
+- Répondre à `MAQUETTE-lettre-phrases.html` (L1 à L6 : où, date de visite et chantier, formule d'appel, phrase propre à une offre, factures, tournures), puis coller le texte de « Copier mes réponses ».
+- Dire si je déploie sur le test le commit `112c063` (encadré de couleur, glissement au doigt), données toujours inventées.
+- Corriger ma lecture de B si elle est fausse : l'artisan choisit dans l'encadré, le document reste à 4,5:1 sans choix, les six pastilles ne changent pas.
 
 ## Journal
 
@@ -67,6 +66,7 @@ Déployer sur le site de test le commit de l'encadré de couleur et du glissemen
 - 2026-11-20 : Xavier : « déploie ». `70eca7a` déployé, sonde verte ; une autre session l'avait mis en service juste avant (version précédente : le même commit). Contrôle sur le site de test avec `demo-macon` (couleur d'origine #1D4E89 remise) : couleur touchée #B23A2E, bande de Bandeau rgb(29, 78, 137) avant, rgb(178, 58, 46) après ; Latéral, Bandeau et Sobre en grand dans cette couleur, à 390 et 1280 px ; « Ma marque » chargée en 358 ms à 390 px, 111 ms à 1280 px.
 - 2026-11-20 : recette de Xavier : « j'ai tenté de mettre du blanc […] J'ai pas de message […] il faut corriger » ; « quand on les a en grand, je veux qu'avec les doigts, on puisse aussi les décaler » ; les quatre questions à détailler. Cause du blanc : il était enregistré, et `Marque::principale()` le fonçait en silence jusqu'à 4,5:1 (un gris). Réponse validée au 5e tour du chantier responsive (2b, « Couleur tapée : Valider »), pas encore codée : codée ici. Sous la couleur, pour une couleur tapée ou celle du logo sous 7:1, un encadré dit le contraste et propose « Bien visible » (7:1) et « Visible » (la couleur du document, 4,5:1), d'un toucher ; sans JavaScript, le bouton envoie le formulaire (`couleur_prise`). Glisser au doigt dans la vue en grand : 50 px au moins, surtout horizontal ; deux doigts ou page agrandie, rien.
 - 2026-11-20 : écarts à la maquette 2b, de moi : le texte « Vos titres et votre total seraient pâles » est remplacé par ce qui se passe vraiment (« Vos documents l'emploient foncée juste assez pour rester lisible ») ; les contrastes sont arrondis vers le bas (2,1:1 pour l'orange que la maquette disait 2,2:1). Mesure qui contredit la maquette : quatre des six couleurs proposées sont sous 7:1 (vert #2E7D32 5,1 ; rouge #B23A2E 5,9 ; brun #8A5A2B 5,8 ; pétrole #0F7C8C 4,9). Elles ne déclenchent pas l'encadré, comme la maquette le voulait ; question posée à Xavier.
+- 2026-11-20 : réponses de Xavier : « A oui, B au choix du client, C souventz le chantier, D pourquoi pas pouvoir changer fais une maquette ». A : la facture d'une page reste sans pied. B, lecture de Claude : l'artisan choisit dans l'encadré 2b (« Bien visible » ou « Visible ») ; sans choix, 4,5:1 ; les six pastilles ne changent pas. C : le lieu dicté reste recopié dans l'adresse du chantier. D : maquette `MAQUETTE-lettre-phrases.html` (lettre réelle d'aujourd'hui, démo cliquable du réglage, six décisions L1 à L6) ; tâche Origin 510 créée (sous-tâches 511 à 513). Gate visuel ouvert pour ce morceau.
 
 ## Décisions
 
@@ -106,6 +106,9 @@ Déployer sur le site de test le commit de l'encadré de couleur et du glissemen
 | 2026-11-20 | Le chantier est commité seul, sans les changements non commités du chantier responsive qui partageaient sa copie de travail. | Chaque session commite son chantier ; le gate du responsive (accord de Xavier pour déployer) n'est pas celui de ce chantier. Interprétation de Claude du mot « le tout » : tout ce chantier. |
 | 2026-11-20 | Le point 2a du chantier responsive (couleur touchée dans les vignettes et la vue en grand) est commité dans ce chantier, recopié à l'identique. | Demande de Xavier (« il faut absolument le faire »). Code identique : la session du responsive n'aura pas de conflit sur ces lignes. |
 | 2026-11-20 | Le point 2b du chantier responsive (encadré sous une couleur trop claire) est codé dans ce chantier. | Demande de Xavier pendant sa recette (« il faut corriger »). La session du responsive le trouvera commité. |
+| 2026-11-20 | Facture d'une page sans pied : gardé. | Xavier : « A oui ». |
+| 2026-11-20 | Couleur du document : 4,5:1 par défaut, 7:1 si l'artisan prend « Bien visible » dans l'encadré ; les six pastilles inchangées. | Xavier : « B au choix du client » (lecture de Claude, à corriger s'il voulait autre chose). |
+| 2026-11-20 | Le lieu dicté reste recopié dans l'adresse du chantier. | Xavier : « C souvent le chantier ». |
 
 ## Ce que l'essai dompdf a établi
 
@@ -191,4 +194,5 @@ phase 8, déploiement de la couleur en grand : outils/deployer-test.sh : OK (915
 phase 8, couleur trop claire et glissement : tests avant le code : Errors: 3 (Marque::propositions inexistante), Failures: 1 (encadré absent) ; après : OK (20 tests, 299 assertions) ; suite complète : OK (919 tests, 8204 assertions) ; phpstan : [OK] No errors
   avis-glisser.js (local, demo-peintre, couleur d'origine remise) : blanc tapé : encadré visible, « contraste 1:1 », bien=#565656 (7,3:1), visible=#6F6F6F (5:1), « Enregistré » ; orange : 2,1:1, bien=#7D4F0A, visible=#A1660D ; « Bien visible » touché : encadré fermé, champ #7d4f0a, gardé au rechargement ; glissé à gauche : Bandeau puis Moderne ; à droite : Bandeau ; geste vertical et geste court : rien ; aucune erreur JS ; deux captures regardées
   contraste-avis.js : 13 textes de l'encadré, plus bas 8,21:1 en clair, 7,72:1 en sombre ; témoin injecté en clair : 1,24:1, 5 textes sous 7 (la mesure sait échouer)
+phase 3 (Lettre) : check.js : bureau 1440/1440 et téléphone 390/390, images 1, cassées 0, kit oui ; demo-lettre.js : « Selon le client » + Madame Exemple donne « Madame, » et « vous prions d'agréer, Madame, nos salutations » ; sans visite : « Chantier : Rue du Test 9 » seul ; champ vidé : phrase actuelle ; débordement 0 ; aucune erreur JS ; captures regardées (haut de page aux deux largeurs, démo aux deux largeurs)
 ```

@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lettre, phrases à soi</title>
+<style>
+:root { --ink: #23272D; --muted: #4A505A; --bg: #F4F1EA; --surface: #FFFFFF; --line: #DDD8CC; --accent: #23272D; --marque: #A8441F; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --papier: #FFFFFF; --papier-ink: #1E2125; --auto: #EEF1F5; --auto-ink: #3D4450; --bleu: #1D4E89;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; } }
+:root[data-theme="dark"] { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 4px; scroll-margin-top: 70px; }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 760px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; margin: 22px 0; }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; }
+figcaption { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+.paire { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; margin: 12px 0; align-items: start; }
+.regle { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.regle li { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.regle li b { color: var(--ok); }
+.tranche { background: var(--ok-soft); color: var(--ink); border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
+.tranche b { color: var(--ok); }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 650; }
+.opts button:focus-visible, textarea:focus-visible, .copier:focus-visible, .demo button:focus-visible, .demo input:focus-visible, .demo textarea:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+textarea { width: 100%; min-height: 64px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 150px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+.reco { font-size: 13px; font-weight: 650; color: var(--ok); }
+
+/* Démo : l'écran de réglage à gauche, la lettre à droite. */
+.demo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 18px; margin: 14px 0 6px; align-items: start; }
+@media (max-width: 860px) { .demo { grid-template-columns: 1fr; } }
+.ecran { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+.ecran h4 { margin: 0 0 2px; font-size: 17px; }
+.ecran .aide { font-size: 14px; color: var(--muted); margin: 0 0 12px; }
+.groupe-d { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 0 0 12px; }
+.groupe-d > b { display: block; margin: 0 0 6px; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.puces button { font: inherit; font-size: 14px; min-height: 40px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.puces button[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.groupe-d textarea { min-height: 112px; }
+.groupe-d .compte { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+.radios { display: grid; gap: 6px; margin: 0 0 6px; }
+.radios label { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; cursor: pointer; }
+.radios input { margin-top: 4px; width: 18px; height: 18px; flex: none; }
+.essai { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 14px; color: var(--muted); margin: 0 0 8px; }
+.essai select { font: inherit; font-size: 14px; min-height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 2px 6px; }
+.onglets { display: flex; gap: 6px; margin: 0 0 10px; }
+.onglets button { font: inherit; font-size: 15px; font-weight: 600; min-height: 44px; flex: 1; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.onglets button[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+
+/* La lettre simulée : papier blanc dans les deux thèmes. */
+.feuille-d { background: var(--papier); color: var(--papier-ink); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 22px rgba(0, 0, 0, .12); padding: 26px 28px 30px; font: 15px/1.55 Georgia, "Source Serif 4", "Times New Roman", serif; }
+.feuille-d .lieu { text-align: right; margin: 0 0 14px; }
+.feuille-d .concerne { font-weight: 700; margin: 0 0 14px; }
+.feuille-d .concerne span { color: var(--bleu); }
+.feuille-d .ph { margin: 0 0 12px; }
+.feuille-d .fait { background: var(--auto); color: var(--auto-ink); border-radius: 4px; padding: 0 3px; }
+.feuille-d .tableau-d { border: 1px dashed #9AA3AF; color: #3D4450; border-radius: 6px; padding: 12px; text-align: center; font: 14px/1.4 system-ui, sans-serif; margin: 0 0 12px; }
+.feuille-d .sign { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; font-size: 14px; }
+.feuille-d .sign b { display: block; }
+.feuille-d .vous { outline: 2px solid #E6A23C; outline-offset: 2px; border-radius: 3px; }
+.legende-d { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--muted); margin: 8px 0 0; }
+.legende-d span::before { content: ""; display: inline-block; width: 14px; height: 10px; margin-right: 6px; vertical-align: -1px; border-radius: 2px; }
+.legende-d .l-vous::before { outline: 2px solid #E6A23C; }
+.legende-d .l-auto::before { background: var(--auto); border: 1px solid #C9CFD8; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Lettre : les phrases de l'artisan</h1>
+<p class="chapeau">Ta réponse du 20 novembre : « pourquoi pas pouvoir changer, fais une maquette ». Aujourd'hui, le modèle Lettre écrit cinq phrases que personne ne peut changer. Cette page montre la lettre telle qu'elle sort, puis un écran de réglage que tu peux essayer : tape, choisis, la lettre suit, à côté sur un grand écran, dessous sur un téléphone. Rien n'est codé.</p>
+
+<section class="point" id="deja">
+<h2 id="h-deja" data-toc="Tranché">Déjà tranché</h2>
+<div class="tranche"><b>A. Facture d'une page sans pied</b> : oui, elle reste ainsi.</div>
+<div class="tranche"><b>B. Jusqu'où foncer la couleur</b> : « au choix du client ». Je le lis ainsi : l'artisan choisit dans l'encadré de couleur (« Bien visible » ou « Visible ») ; sans choix, le document reste à 4,5:1. Les six pastilles ne changent pas. Dis-le si tu voulais autre chose.</div>
+<div class="tranche"><b>C. Lieu dicté</b> : « souvent le chantier ». Il reste recopié dans « Adresse du chantier ».</div>
+</section>
+
+<section class="point" id="aujourdhui">
+<h2 id="h-auj" data-toc="Aujourd'hui">La lettre d'aujourd'hui</h2>
+<div class="paire">
+<figure><img src="MAQUETTE-lettre-phrases-img/lettre-aujourdhui.jpg" alt="PDF actuel du modèle Lettre : Madame, Monsieur, puis Suite à notre visite du 5 novembre 2026, nous vous remettons notre offre pour les travaux suivants, le tableau, les conditions en phrases, et la formule de politesse"><figcaption>Le vrai PDF, rendu par l'application (offre d'essai, données inventées).</figcaption></figure>
+<div>
+<p><b>Les cinq phrases fixes :</b></p>
+<ul class="regle">
+<li><b>Formule d'appel</b> : « Madame, Monsieur, »</li>
+<li><b>Début de l'offre</b> : « Nous vous remettons notre offre pour les travaux suivants. » Avec une date de visite, l'application la fait précéder de « Suite à notre visite du 5 novembre 2026, ».</li>
+<li><b>Fin de l'offre</b> : « Nous restons à votre disposition pour toute question et vous adressons, Madame, Monsieur, nos salutations les meilleures. »</li>
+<li><b>Début de la facture</b> : « Nous vous adressons notre facture pour les travaux suivants, selon notre offre n° 42 du 07.11.2026. »</li>
+<li><b>Fin de la facture</b> : « Nous vous remercions de votre confiance et vous adressons, Madame, Monsieur, nos salutations les meilleures. »</li>
+</ul>
+<p>Ce qui reste écrit par l'application, à partir de l'offre : la date de visite, l'adresse du chantier, le numéro de l'offre, et la phrase des conditions (début, durée, paiement, validité, non compris). L'artisan les règle déjà ailleurs.</p>
+</div>
+</div>
+</section>
+
+<section class="point" id="demo">
+<h2 id="h-demo" data-toc="Essayer">Essayer : l'écran de réglage et la lettre</h2>
+<p>Touche une tournure, ou tape ta phrase ; change le client ou la date de visite en haut de la lettre pour voir comment la phrase s'adapte. Un champ vidé reprend la phrase actuelle.</p>
+<div class="demo">
+  <div class="ecran" aria-label="Écran de réglage proposé">
+    <h4>Les phrases de la lettre</h4>
+    <p class="aide">Dans « Ma marque », sous le modèle Lettre quand il est choisi. Vos phrases ; l'application ajoute la date de visite, le chantier et les conditions.</p>
+    <div class="onglets" role="group" aria-label="Document">
+      <button type="button" data-doc="offre" aria-pressed="true">Offre</button>
+      <button type="button" data-doc="facture" aria-pressed="false">Facture</button>
+    </div>
+    <div class="groupe-d">
+      <b>Formule d'appel</b>
+      <div class="radios">
+        <label><input type="radio" name="appel" value="fixe" checked><span>La même pour tous : « Madame, Monsieur, »</span></label>
+        <label><input type="radio" name="appel" value="client"><span>Selon le client : « Madame, », « Monsieur, », ou « Madame, Monsieur, » pour une famille ou une entreprise</span></label>
+      </div>
+    </div>
+    <div class="groupe-d">
+      <b data-titre-debut>Début de la lettre</b>
+      <div class="puces" data-puces="debut"></div>
+      <textarea data-champ="debut" aria-label="Début de la lettre" maxlength="500"></textarea>
+      <p class="compte" data-compte="debut"></p>
+    </div>
+    <div class="groupe-d">
+      <b>Fin de la lettre</b>
+      <div class="puces" data-puces="fin"></div>
+      <textarea data-champ="fin" aria-label="Fin de la lettre" maxlength="500"></textarea>
+      <p class="compte" data-compte="fin"></p>
+    </div>
+  </div>
+  <div>
+    <div class="essai">
+      <label>Client <select data-client>
+        <option value="Famille Exemple">Famille Exemple</option>
+        <option value="Madame Exemple">Madame Exemple</option>
+        <option value="Monsieur Modèle">Monsieur Modèle</option>
+        <option value="Menuiserie Exemple SA">Menuiserie Exemple SA</option>
+      </select></label>
+      <label><input type="checkbox" data-visite checked> Date de visite notée</label>
+    </div>
+    <div class="feuille-d" aria-live="polite" aria-label="La lettre, telle qu'elle sortirait">
+      <p class="lieu">Delémont, le 20 novembre 2026</p>
+      <p class="concerne"><span data-concerne>Offre n° 42</span> : Rafraîchissement du séjour</p>
+      <p class="ph"><span class="vous" data-sortie="appel"></span></p>
+      <p class="ph"><span class="vous" data-sortie="debut"></span> <span class="fait" data-sortie="faits"></span></p>
+      <div class="tableau-d" data-sortie="tableau">Le tableau des travaux et le total, inchangés</div>
+      <p class="ph"><span class="fait" data-sortie="conditions"></span></p>
+      <p class="ph"><span class="vous" data-sortie="fin"></span></p>
+      <div class="sign"><div><b>Peinture Morel Sàrl</b>Luc Morel</div><div data-sortie="accord">Bon pour accord<br>Lieu, date et signature du client</div></div>
+    </div>
+    <div class="legende-d"><span class="l-vous">écrit par l'artisan (réglage)</span><span class="l-auto">écrit par l'application, à partir de l'offre</span></div>
+  </div>
+</div>
+</section>
+
+<section class="point" id="decisions">
+<h2 id="h-dec" data-toc="Décisions">Cinq décisions</h2>
+
+<h3>1. Où se règlent les phrases</h3>
+<ul class="regle">
+<li><b>A</b> : dans « Ma marque », sous le modèle Lettre, visible seulement quand Lettre est choisi. Les phrases sont près du modèle qu'elles concernent ; les onze autres modèles n'en ont pas. <span class="reco">Recommandé</span></li>
+<li><b>B</b> : une rubrique à part dans Réglages, « Textes de la lettre ». Toujours visible, même pour qui n'utilise pas Lettre.</li>
+</ul>
+<div class="decision" data-q="L1 Où se règlent les phrases">
+<div class="opts"><button type="button" data-v="A">A. Dans Ma marque, sous Lettre</button><button type="button" data-v="B">B. Rubrique à part</button></div>
+<textarea aria-label="Commentaire sur l'endroit du réglage" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h3>2. Comment la date de visite et le chantier entrent dans la phrase</h3>
+<ul class="regle">
+<li><b>A</b> : l'artisan écrit sa phrase ; l'application ajoute après elle « Visite du 5 novembre 2026. Chantier : … » (en gris dans la démo). Toute phrase marche, même sans visite notée. <span class="reco">Recommandé</span> C'est ce que montre la démo.</li>
+<li><b>B</b> : l'artisan place lui-même [date de la visite] et [chantier] dans sa phrase, d'un toucher. Plus souple ; mais une offre sans visite notée laisserait un trou, il faudrait une seconde phrase « sans visite » à écrire aussi.</li>
+<li><b>C</b> : comme aujourd'hui, l'application fait précéder la phrase de « Suite à notre visite du …, » et met sa première lettre en minuscule. Garde la tournure actuelle ; casse avec une phrase comme « Comme convenu, voici notre offre ».</li>
+</ul>
+<div class="decision" data-q="L2 Date de visite et chantier">
+<div class="opts"><button type="button" data-v="A">A. Ajoutés après la phrase</button><button type="button" data-v="B">B. Placés par l'artisan</button><button type="button" data-v="C">C. Comme aujourd'hui</button></div>
+<textarea aria-label="Commentaire sur la date de visite et le chantier" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h3>3. La formule d'appel</h3>
+<ul class="regle">
+<li><b>A</b> : la même pour tous, modifiable (« Madame, Monsieur, », « Bonjour, »…).</li>
+<li><b>B</b> : selon le nom du client : « Madame, » si le nom commence par Madame, « Monsieur, » par Monsieur, sinon « Madame, Monsieur, ». La fin de lettre suit : « vous adressons, Madame, nos salutations ». Essaie-le dans la démo (choix « Selon le client », puis change le client). <span class="reco">Recommandé</span></li>
+</ul>
+<div class="decision" data-q="L3 Formule d'appel">
+<div class="opts"><button type="button" data-v="A">A. La même pour tous</button><button type="button" data-v="B">B. Selon le client</button><button type="button" data-v="AB">Les deux, au choix de l'artisan (comme la démo)</button></div>
+<textarea aria-label="Commentaire sur la formule d'appel" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h3>4. Une offre en particulier</h3>
+<ul class="regle">
+<li><b>A</b> : non ; le réglage vaut pour toutes les lettres. <span class="reco">Recommandé pour commencer</span></li>
+<li><b>B</b> : oui ; l'en-tête de l'offre (là où se notent le chantier et la visite) a un champ « Début de la lettre pour cette offre ». Vide, il prend le réglage.</li>
+</ul>
+<div class="decision" data-q="L4 Phrase propre à une offre">
+<div class="opts"><button type="button" data-v="A">A. Non</button><button type="button" data-v="B">B. Oui, dans l'en-tête de l'offre</button></div>
+<textarea aria-label="Commentaire sur la phrase propre à une offre" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h3>5. Les factures</h3>
+<ul class="regle">
+<li><b>A</b> : la facture a ses deux phrases à elle, réglées au même endroit (onglet « Facture » de la démo). Le numéro et la date de l'offre restent ajoutés par l'application. <span class="reco">Recommandé</span></li>
+<li><b>B</b> : les factures gardent leurs phrases fixes.</li>
+</ul>
+<div class="decision" data-q="L5 Factures">
+<div class="opts"><button type="button" data-v="A">A. Phrases réglables aussi</button><button type="button" data-v="B">B. Phrases fixes</button></div>
+<textarea aria-label="Commentaire sur les factures" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h3>Les tournures proposées</h3>
+<p>Trois par phrase dans la démo, la première étant celle d'aujourd'hui. Corrige-les ou ajoutes-en dans le commentaire.</p>
+<div class="decision" data-q="L6 Tournures proposées">
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire sur les tournures proposées" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="reponses" data-toc="Copier">Copier mes réponses</h2>
+<div class="recap">
+<p>Ce texte se remplit avec tes choix. Copie-le et colle-le dans la conversation.</p>
+<textarea id="recap" readonly aria-label="Récapitulatif des réponses"></textarea>
+<p><button type="button" class="copier" id="copier">Copier le texte</button><span class="copie-ok" id="copie-ok" hidden>Copié.</span></p>
+</div>
+</main>
+
+<script>
+// La démo : tournures, champs, client et date de visite ; la lettre à droite suit. Rien n'est enregistré.
+(function () {
+  var NB = ' ';
+  var TOURNURES = {
+    offre: {
+      debut: ['Nous vous remettons notre offre pour les travaux suivants.',
+              'Nous avons le plaisir de vous soumettre notre offre pour les travaux suivants.',
+              'Comme convenu, voici notre offre pour les travaux suivants.'],
+      fin: ['Nous restons à votre disposition pour toute question et vous adressons, Madame, Monsieur, nos salutations les meilleures.',
+            'Dans l\'attente de votre réponse, nous vous prions d\'agréer, Madame, Monsieur, nos salutations distinguées.',
+            'Nous nous réjouissons de travailler pour vous et restons à votre disposition. Avec nos meilleures salutations.']
+    },
+    facture: {
+      debut: ['Nous vous adressons notre facture pour les travaux suivants.',
+              'Les travaux étant terminés, voici notre facture.',
+              'Nous vous remercions de nous avoir confié ces travaux et vous adressons notre facture.'],
+      fin: ['Nous vous remercions de votre confiance et vous adressons, Madame, Monsieur, nos salutations les meilleures.',
+            'Merci de votre confiance. Nous restons à votre disposition pour tout futur projet.',
+            'Avec nos remerciements et nos meilleures salutations.']
+    }
+  };
+  var etat = { doc: 'offre', offre: { debut: TOURNURES.offre.debut[0], fin: TOURNURES.offre.fin[0] }, facture: { debut: TOURNURES.facture.debut[0], fin: TOURNURES.facture.fin[0] } };
+  var q = function (s) { return document.querySelector(s); };
+  var appel = function () {
+    var client = q('[data-client]').value;
+    if (q('input[name="appel"]:checked').value === 'fixe') return 'Madame, Monsieur,';
+    if (/^Madame\b/.test(client)) return 'Madame,';
+    if (/^Monsieur\b/.test(client)) return 'Monsieur,';
+    return 'Madame, Monsieur,';
+  };
+  var typo = function (t) { return t.replace(/ ([:;!?])/g, NB + '$1'); };
+  var dessiner = function () {
+    var d = etat.doc, a = appel();
+    var nom = a.replace(/,$/, '');
+    q('[data-sortie="appel"]').textContent = a;
+    q('[data-sortie="debut"]').textContent = typo(etat[d].debut.trim() || TOURNURES[d].debut[0]);
+    var fin = typo(etat[d].fin.trim() || TOURNURES[d].fin[0]);
+    q('[data-sortie="fin"]').textContent = fin.replace(/Madame, Monsieur/g, nom);
+    var faits = d === 'offre'
+      ? (q('[data-visite]').checked ? 'Visite du 5 novembre 2026. ' : '') + 'Chantier' + NB + ': Rue du Test 9, 2900 Porrentruy.'
+      : 'Selon notre offre n°' + NB + '42 du 07.11.2026.';
+    q('[data-sortie="faits"]').textContent = faits;
+    q('[data-sortie="conditions"]').textContent = d === 'offre'
+      ? 'Début des travaux' + NB + ': semaine 3, 2027. Paiement' + NB + ': 30' + NB + '% à la commande, le solde à la fin des travaux. Cette offre est valable jusqu\'au 20.12.2026. Prix en francs suisses, TVA comprise.'
+      : 'Payable jusqu\'au 20.12.2026 avec la section de paiement ci-dessous. Montants en francs suisses, TVA comprise dans le total.';
+    q('[data-concerne]').textContent = d === 'offre' ? 'Offre n°' + NB + '42' : 'Facture n°' + NB + '2026-014';
+    q('[data-sortie="accord"]').hidden = d !== 'offre';
+    q('[data-visite]').disabled = d !== 'offre';
+    q('[data-titre-debut]').textContent = d === 'offre' ? 'Début de la lettre' : 'Début de la facture';
+    ['debut', 'fin'].forEach(function (k) {
+      var champ = q('[data-champ="' + k + '"]');
+      if (document.activeElement !== champ) champ.value = etat[d][k];
+      q('[data-compte="' + k + '"]').textContent = champ.value.length + ' / 500 caractères' + (champ.value.trim() ? '' : ' (vide : la phrase actuelle)');
+      q('[data-puces="' + k + '"]').querySelectorAll('button').forEach(function (b, i) {
+        b.setAttribute('aria-pressed', String(etat[d][k] === TOURNURES[d][k][i]));
+      });
+    });
+  };
+  var puces = function () {
+    ['debut', 'fin'].forEach(function (k) {
+      var boite = q('[data-puces="' + k + '"]');
+      boite.innerHTML = '';
+      TOURNURES[etat.doc][k].forEach(function (t, i) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = i === 0 ? 'Actuelle' : 'Tournure ' + (i + 1);
+        b.title = t;
+        b.addEventListener('click', function () { etat[etat.doc][k] = t; q('[data-champ="' + k + '"]').value = t; dessiner(); });
+        boite.appendChild(b);
+      });
+    });
+  };
+  ['debut', 'fin'].forEach(function (k) {
+    q('[data-champ="' + k + '"]').addEventListener('input', function (e) { etat[etat.doc][k] = e.target.value; dessiner(); });
+  });
+  document.querySelectorAll('[data-doc]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      etat.doc = b.getAttribute('data-doc');
+      document.querySelectorAll('[data-doc]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      puces(); dessiner();
+    });
+  });
+  document.querySelectorAll('input[name="appel"], [data-client], [data-visite]').forEach(function (c) { c.addEventListener('change', dessiner); });
+  puces(); dessiner();
+})();
+
+// Les réponses : gardées dans ce navigateur, rassemblées pour la conversation.
+(function () {
+  var CLE = 'offregen-modeles-2026-11-20-lettre-phrases';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  var blocs = document.querySelectorAll('.decision');
+  function recap() {
+    var lignes = [];
+    blocs.forEach(function (b) {
+      var q = b.getAttribute('data-q'), r = etat[q] || {};
+      var choisi = b.querySelector('.opts button[data-v="' + (r.v || '') + '"]');
+      var l = q + ' : ' + (choisi ? choisi.textContent : '(pas de réponse)');
+      if (r.c) l += '. Commentaire : ' + r.c.replace(/\s+/g, ' ').trim();
+      lignes.push(l);
+    });
+    document.getElementById('recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    etat[q] = etat[q] || {};
+    var boutons = b.querySelectorAll('.opts button');
+    var champ = b.querySelector('textarea');
+    boutons.forEach(function (bt) {
+      bt.setAttribute('aria-pressed', bt.getAttribute('data-v') === etat[q].v ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        etat[q].v = etat[q].v === bt.getAttribute('data-v') ? '' : bt.getAttribute('data-v');
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-v') === etat[q].v ? 'true' : 'false'); });
+        garder(); recap();
+      });
+    });
+    if (champ) {
+      champ.value = etat[q].c || '';
+      champ.addEventListener('input', function () { etat[q].c = champ.value; garder(); recap(); });
+    }
+  });
+  recap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('recap');
+    var ok = function () { var s = document.getElementById('copie-ok'); s.hidden = false; setTimeout(function () { s.hidden = true; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); document.execCommand('copy'); ok(); }); }
+    else { t.select(); document.execCommand('copy'); ok(); }
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>
