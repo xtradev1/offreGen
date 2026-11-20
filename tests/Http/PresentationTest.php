@@ -43,9 +43,43 @@ final class PresentationTest extends TestCase
         self::assertStringContainsString("CHF\u{00A0}250.00", $page);
     }
 
-    public function testLaPageNAPasDAutreAdresse(): void
+    public function testLaPageNAPasDAutreAdresseQueDecouvrir(): void
     {
         self::assertSame(404, $this->visiteur->get('/presentation')->getStatusCode());
+    }
+
+    public function testLeVisiteurVoitLaPageADecouvrir(): void
+    {
+        $reponse = $this->visiteur->get('/decouvrir');
+        self::assertSame(200, $reponse->getStatusCode());
+        $page = (string) $reponse->getContent();
+        self::assertStringContainsString('Dictez votre visite de chantier.', $page);
+        self::assertStringContainsString('href="/connexion"', $page);
+        self::assertStringContainsString('Essayer Dicta', $page);
+        self::assertStringNotContainsString('Mes offres', $page);
+    }
+
+    public function testLArtisanConnecteRevoitLaPageADecouvrir(): void
+    {
+        new Jeu();
+        $artisan = new Navigateur(Monde::conteneur());
+        $artisan->connecter('a@exemple.ch');
+        $reponse = $artisan->get('/decouvrir');
+        self::assertSame(200, $reponse->getStatusCode());
+        $page = (string) $reponse->getContent();
+        self::assertStringContainsString('Dictez votre visite de chantier.', $page);
+        self::assertSame(2, substr_count($page, 'href="/">Mes offres</a>'), 'En haut et dans la barre du pouce.');
+        self::assertStringNotContainsString('href="/connexion"', $page);
+        self::assertStringNotContainsString('Essayer Dicta', $page, 'Il a déjà un compte.');
+    }
+
+    public function testLeLogoDeLApplicationMeneALaPage(): void
+    {
+        new Jeu();
+        $artisan = new Navigateur(Monde::conteneur());
+        $artisan->connecter('a@exemple.ch');
+        $page = (string) $artisan->get('/')->getContent();
+        self::assertStringContainsString('<a class="marque-pc pc-seul" href="/decouvrir"', $page, 'Le logo du menu de gauche, sur ordinateur.');
     }
 
     public function testLaPageRespecteLaCspFermee(): void

@@ -303,7 +303,7 @@ final class EcransTest extends TestCase
         foreach (['/', '/clients', '/factures', '/catalogue', '/reglages', $this->offre] as $chemin) {
             $page = $this->page($chemin);
             // Au téléphone, les entrées pc-seul sont cachées : restent Offres, Clients, micro, Factures, Plus (D1, D2, D12).
-            self::assertMatchesRegularExpression('#<nav class="tabs" aria-label="Sections">\s*<span class="marque-pc pc-seul"><picture>.*alt="Dicta".*</picture></span>\s*<a href="/"[^>]*>.*Offres</a>\s*<a href="/clients"[^>]*>.*Clients</a>\s*'
+            self::assertMatchesRegularExpression('#<nav class="tabs" aria-label="Sections">\s*<a class="marque-pc pc-seul" href="/decouvrir" aria-label="Dicta, le site"><picture>.*</picture></a>\s*<a href="/"[^>]*>.*Offres</a>\s*<a href="/clients"[^>]*>.*Clients</a>\s*'
                 . '<button class="micro-central" type="button" aria-label="Dicter une offre" aria-keyshortcuts="D" data-enregistrer>.*</button>\s*<a href="/factures"[^>]*>.*Factures</a>\s*'
                 . '(?:<a class="pc-seul"[^>]*>.*?</a>\s*)*<a class="mobile-seul" href="/plus"[^>]*>.*Plus</a>\s*(?:<(a|small) class="pc-seul[^"]*"[^>]*>.*?</\1>\s*)*</nav>#s', $page, $chemin);
             // Une seule feuille de dictée et un seul formulaire d'envoi par écran.

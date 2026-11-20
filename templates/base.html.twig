@@ -19,7 +19,7 @@
   {% block colonne %}{% endblock %}
   {# « app-seule » : connexion, mot de passe, erreur. Sur grand écran, la feuille connexion.css en fait une carte centrée. #}
   <div class="app{% if sans_menu ?? false %} app-seule{% endif %}">
-    <header class="bar">{% block retour %}{% endblock %}<h1>{% block entete %}<img class="logo" src="/img/dicta-logo-sombre.svg" alt="{{ nom_application }}" width="177" height="64">{% endblock %}</h1></header>
+    <header class="bar">{% block retour %}{% endblock %}<h1>{% block entete %}<a href="/decouvrir" class="vers-site" aria-label="{{ nom_application }}, le site"><img class="logo" src="/img/dicta-logo-sombre.svg" alt="" width="177" height="64"></a>{% endblock %}</h1></header>
     {% include '_ruban_demo.html.twig' %}
     <main class="screen{% block ecran_classe %}{% endblock %}">{% block contenu %}{% endblock %}</main>
     {% set msg = messages() %}

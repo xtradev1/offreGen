@@ -30,6 +30,9 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .app { max-width: 480px; min-height: 100%; margin: 0 auto; background: var(--surface); display: flex; flex-direction: column; }
 .bar { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 16px; background: var(--bande); color: var(--on-bande); }
 .bar .logo { display: block; height: 30px; width: auto; }
+/* Le logo mène à la page du site (/decouvrir) : cible de 48 px au moins. */
+.bar .vers-site { display: inline-flex; align-items: center; min-height: 48px; border-radius: 8px; }
+.bar .vers-site:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .bar h1 { margin: 0; font-family: var(--titre); font-size: 17px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .screen { flex: 1; padding: 16px 16px 28px; }
 .bas { position: sticky; bottom: 0; z-index: 5; background: var(--surface); }
@@ -680,7 +683,7 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
 
   /* Le menu de gauche */
   .tabs { position: fixed; left: 0; top: 0; bottom: 0; width: var(--menu); z-index: 6; flex-direction: column; gap: 2px; padding: 14px 12px; border-top: 0; border-right: 1px solid var(--line); overflow-y: auto; }
-  .tabs .marque-pc { order: -1; font-size: 18px; font-weight: 750; padding: 4px 12px 16px; }
+  .tabs .marque-pc { order: -1; font-size: 18px; font-weight: 750; padding: 4px 12px 16px; min-height: 48px; }
   .tabs a { flex: none; flex-direction: row; align-items: center; gap: 12px; min-height: 44px; padding: 8px 12px; border-radius: 10px; font-size: 15px; color: var(--ink); }
   .tabs a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
   .tabs .micro-central { order: 1; flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; margin-top: 18px; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-size: 15px; }
