@@ -366,9 +366,15 @@ section.suisse .in{position:relative}
 .suisse .seule{color:#fff;font-size:19px;max-width:38em;margin:-6px 0 30px}
 .surtitre{display:flex;align-items:center;gap:10px;font:700 14px "Archivo",system-ui,sans-serif;letter-spacing:.9px;text-transform:uppercase;margin:0 0 16px}
 .surtitre .croix{width:24px;height:24px;flex:none;color:var(--terra)}
-.nefait ul{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 24px}
-.nefait li{display:flex;gap:12px;align-items:center;font:600 18px/1.25 "Archivo",system-ui,sans-serif}
-.nefait li svg{width:36px;height:36px;flex:none;padding:8px;border-radius:50%;background:var(--terra);color:#fff;stroke-width:2.6}
+.case.nefait{background:var(--anth);border-color:var(--anth);color:#fff;padding:40px 40px 34px;gap:30px}
+.nefait h3{font:700 clamp(28px,3.6vw,44px)/1.04 "Archivo",system-ui,sans-serif;letter-spacing:-1px;margin:0}
+.nefait h3 em{font-style:normal;color:#E0714A}
+.nefait ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.nefait li{display:grid;align-content:start;gap:12px;padding:26px 28px 6px;border-left:1px solid var(--doux)}
+.nefait li:first-child{padding-left:0;border-left:0}
+.nefait li svg{width:56px;height:56px;padding:13px;border-radius:50%;background:var(--terra);color:#fff;stroke-width:2.8}
+.nefait li b{font:700 clamp(21px,2.1vw,26px)/1.14 "Archivo",system-ui,sans-serif;letter-spacing:-.3px}
+.case.nefait li p{margin:0;color:var(--bande-doux);font-size:16.5px;line-height:1.45}
 .mention{margin-top:12px}
 .reponse{margin:0 0 4px;padding:12px 14px;border-radius:12px;font-weight:600;background:var(--av-l);color:var(--av)}
 .reponse.ok{background:#E1EFE6;color:#13553A}
@@ -414,7 +420,11 @@ section.suisse .in{position:relative}
   .feuille{width:270px;max-width:100%;margin:0 auto}
   .pays3{grid-template-columns:minmax(0,1fr);gap:26px}
   .sceau.grand{display:none}
+  .case.nefait{padding:28px 22px 12px;gap:18px}
   .nefait ul{grid-template-columns:minmax(0,1fr)}
+  .nefait li,.nefait li:first-child{grid-template-columns:48px minmax(0,1fr);column-gap:14px;row-gap:4px;padding:20px 0;border-left:0;border-top:1px solid var(--doux)}
+  .nefait li svg{width:48px;height:48px;padding:11px;grid-row:span 2}
+  .nefait li p{grid-column:2}
   .suisse .seule{font-size:18px;margin-bottom:22px}
   .lieu i{width:11px;height:11px;border-width:2.5px}
 }
