@@ -1,0 +1,11 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - config
+        - public/index.php
+        - tests
+        - migrations
+        - migrations.php
+        - migrations-db.php
+    tmpDir: var/cache/phpstan

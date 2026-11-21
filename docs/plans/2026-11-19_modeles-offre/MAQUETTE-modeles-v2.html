@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Douze modèles d'offre, reprise · offreGen</title>
+<style>
+:root {
+  --ink: #1B1F24; --muted: #5F6772; --line: #E1E4E8; --surface: #FFFFFF; --bg: #F3F4F6; --chip: #EDEFF2;
+  --accent: #C4552D; --accent-soft: #FBEDE7; --on-accent: #fff; --ok: #1E7F4F; --ok-soft: #E6F4EC; --bad: #B42318; --warn: #8A5A00;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--accent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ink: #E7EAEE; --muted: #A3ABB6; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #F0906C; --accent-soft: #3A251D; --on-accent: #1A0E09; --ok: #5CC98F; --ok-soft: #173326; --bad: #FF8A7A; --warn: #E3B341; }
+}
+:root[data-theme="dark"] { --ink: #E7EAEE; --muted: #A3ABB6; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #F0906C; --accent-soft: #3A251D; --on-accent: #1A0E09; --ok: #5CC98F; --ok-soft: #173326; --bad: #FF8A7A; --warn: #E3B341; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 27px; line-height: 1.2; margin: 18px 0 8px; }
+h2 { font-size: 22px; margin: 44px 0 8px; padding-top: 8px; }
+h3 { font-size: 18px; margin: 0 0 6px; }
+h4 { font-size: 14px; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+p { margin: 0 0 10px; }
+ul { margin: 0 0 10px; padding-left: 20px; }
+li { margin-bottom: 4px; }
+code { font: 13px ui-monospace, Consolas, monospace; background: var(--chip); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.chapeau { color: var(--muted); max-width: 800px; }
+.carte { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 14px 0; }
+.note-p { font-size: 14px; color: var(--muted); }
+.regle { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; margin: 12px 0; font-size: 14px; max-width: 860px; }
+.demande { font-size: 13px; color: var(--warn); }
+.deux { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 760px) { .deux { grid-template-columns: 1fr; } }
+figure { margin: 0; }
+figcaption { font-size: 13px; color: var(--muted); text-align: center; margin-top: 4px; }
+.mk-compare img, .modele img, .vue img { width: 100%; display: block; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+
+/* Réglé : la réponse de Xavier, sans boutons */
+.regle-ok { background: var(--ok-soft); border-radius: 10px; padding: 8px 12px; margin: 8px 0 0; font-size: 14px; }
+.regle-ok b { color: var(--ok); }
+.liste-ok { list-style: none; padding: 0; margin: 0; }
+.liste-ok li { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.liste-ok li:last-child { border-bottom: 0; }
+.liste-ok q { color: var(--muted); quotes: "« " " »"; }
+.entete-modele { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 8px; }
+.entete-modele h3 { margin: 0; font-size: 20px; }
+
+/* Dictée */
+.dictee { border-collapse: collapse; width: 100%; font-size: 15px; }
+.dictee th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.dictee td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.dictee td:first-child { font-style: italic; }
+
+/* Planche */
+.planche { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 12px; }
+.modele { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.modele figure { margin: 0 0 10px; }
+.modele h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.etat { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border-radius: 6px; padding: 2px 8px; background: var(--chip); color: var(--muted); }
+.etat.neuf { background: var(--accent-soft); color: var(--accent); }
+.etat.ok { background: var(--ok-soft); color: var(--ok); }
+.modele p { font-size: 14px; margin-bottom: 6px; }
+.modele .lbl { color: var(--muted); }
+.mk-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+
+/* Réponses */
+.reponse { border-top: 1px dashed var(--line); margin-top: 12px; padding-top: 10px; }
+.reponse .boutons { display: flex; gap: 8px; flex-wrap: wrap; }
+.reponse button { font: inherit; font-size: 14px; min-height: 44px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.reponse button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.reponse textarea { width: 100%; margin-top: 8px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: var(--surface); color: var(--ink); min-height: 44px; }
+.recap textarea { width: 100%; min-height: 200px; font: 13px/1.4 ui-monospace, Consolas, monospace; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface); color: var(--ink); }
+.recap button { font: inherit; min-height: 44px; padding: 8px 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; font-weight: 600; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav id="mk-toc"></nav>
+
+<h1>Douze modèles d'offre : reprise après tes réponses</h1>
+<p class="chapeau">Reprise du 19 novembre 2026. En haut, ce qui est réglé, avec tes mots, sans boutons. Restent ouverts : deux totaux retouchés, deux modèles pour remplacer Métré et En bloc, et les options et variantes. Ta réponse se pose sous chaque image ; « Copier le texte » est tout en bas.</p>
+<p class="regle">Données inventées : entreprises, logos, clients, prix, IDE, IBAN. Aucune feuille n'est encore passée par le générateur de PDF de l'application. La première planche reste dans <code>MAQUETTE-modeles.html</code>.</p>
+
+<h2 id="regle" data-toc="Réglé">Réglé</h2>
+<div class="carte">
+  <ul class="liste-ok">
+    <li><b>Bandeau, Atelier refaits :</b> <q>Valider</q></li>
+    <li><b>Technique refait :</b> <q>Valider · attention au bordure foncé le total ttc il fut que le haut soit aussi foncé</q>. Corrigé, image ci-dessous.</li>
+    <li><b>Sobre refait :</b> <q>Valider · total en noir/anthracite car sinon le contraste peut être mauvais</q>. Corrigé, image ci-dessous.</li>
+    <li><b>Polices intégrées, chantier, non compris, deux signatures, pied avec IBAN et page, adresse à la même place (C1 à C6) :</b> <q>Valider</q></li>
+    <li><b>Lettre, Latéral, Récapitulatif, Chantier :</b> <q>Garder</q></li>
+    <li><b>Métré, En bloc :</b> <q>Écarter</q>. Retirés de la planche et de la source.</li>
+    <li><b>Nombre de modèles :</b> <q>Douze · ajoute la possibilité d'avoir des options et variantes a prendre en compte dans la dicté.</q></li>
+    <li><b>Modèle proposé selon le métier, quatre familles :</b> <q>Valider</q></li>
+  </ul>
+  <p class="note-p" style="margin-top:10px">Ma lecture, à corriger si elle est fausse : tu n'as rien coché sous les six modèles refaits dans la planche des douze ; je les compte comme gardés, puisque tu les as validés ou demandés en retouche plus haut.</p>
+</div>
+<div class="carte">
+  <h3>Les deux corrections demandées</h3>
+  <div class="deux">
+    <figure class="vue"><img src="MAQUETTE-modeles-v2-img/technique.jpg" alt="Technique, cadre du total foncé sur ses quatre côtés"><figcaption>Technique : le cadre du total est foncé sur ses quatre côtés.</figcaption></figure>
+    <figure class="vue"><img src="MAQUETTE-modeles-v2-img/sobre.jpg" alt="Sobre, total en anthracite"><figcaption>Sobre : le total est en anthracite, le filet reste en couleur.</figcaption></figure>
+  </div>
+  <p class="note-p" style="margin-top:10px">Pour ton information : l'application assombrit déjà la couleur de l'artisan jusqu'à un contraste de 4,5 sur le blanc avant de l'employer pour du texte. Le total en anthracite reste le choix le plus sûr, et il est appliqué.</p>
+</div>
+
+<h2 id="retouches" data-toc="Retouches">Deux totaux retouchés</h2>
+<div class="carte">
+  <div class="entete-modele"><h3>Moderne</h3></div>
+  <p class="regle-ok"><b>Ta remarque :</b> « total ttc trop gros ça fais gros point noir changer ce petit aspect »</p>
+  <div class="mk-compare" style="margin-top:12px">
+    <figure><img src="MAQUETTE-modeles-img/moderne-morel.jpg" alt="Moderne, première planche : total blanc sur bloc anthracite"><figcaption>Première planche : bloc anthracite</figcaption></figure>
+    <figure><img src="MAQUETTE-modeles-v2-img/moderne-morel.jpg" alt="Moderne retouché : total anthracite sur fond teinté"><figcaption>Retouché : fond à la couleur de l'artisan, texte anthracite</figcaption></figure>
+  </div>
+  <p style="margin-top:10px">Le bloc noir a disparu. Le total est écrit en anthracite sur la teinte de l'artisan, sous un filet foncé, deux points plus petit.</p>
+  <div class="reponse" data-decision="r-moderne" data-titre="Moderne, total retouché" data-choix="Valider|À retravailler"></div>
+</div>
+<div class="carte">
+  <div class="entete-modele"><h3>Épuré</h3></div>
+  <p class="regle-ok"><b>Ta remarque :</b> « total un peut trop grand »</p>
+  <div class="mk-compare" style="margin-top:12px">
+    <figure><img src="MAQUETTE-modeles-img/epure-morel.jpg" alt="Épuré, première planche : total en 20 points"><figcaption>Première planche</figcaption></figure>
+    <figure><img src="MAQUETTE-modeles-v2-img/epure-morel.jpg" alt="Épuré retouché : total plus petit"><figcaption>Retouché : total ramené de 20 à 16</figcaption></figure>
+  </div>
+  <div class="reponse" data-decision="r-epure" data-titre="Épuré, total retouché" data-choix="Valider|À retravailler"></div>
+</div>
+
+<h2 id="remplacants" data-toc="Deux nouveaux">Deux modèles pour revenir à douze</h2>
+<p class="chapeau">Tu veux douze modèles et tu en écartes deux : il en reste dix. Voici deux propositions pour les places libres. Elles se contentent des données communes déjà validées, sans champ propre. Si dix te suffisent, écarte-les.</p>
+<div class="deux">
+  <div class="carte">
+    <figure class="vue"><img src="MAQUETTE-modeles-v2-img/enseigne.jpg" alt="Modèle Enseigne, carreleur sans logo"></figure>
+    <h3 style="margin-top:10px">Enseigne</h3>
+    <p><b>Pour :</b> l'artisan qui n'a pas de logo. Aujourd'hui son nom sort en petit gras à la place du logo.</p>
+    <p><b>Structure :</b> le nom de l'entreprise en très grand, dans sa couleur, comme l'enseigne au-dessus de l'atelier ; métier et lieu dessous ; barre de couleur ; bloc de références à gauche de l'adresse.</p>
+    <p class="demande">Question que ce modèle pose : il faut un nom court dans les réglages (« Carrelages Damier » sans « Sàrl »), sinon un nom long déborde.</p>
+    <div class="reponse" data-decision="m-enseigne" data-titre="Enseigne" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+  <div class="carte">
+    <figure class="vue"><img src="MAQUETTE-modeles-v2-img/marge.jpg" alt="Modèle Marge, peintre"></figure>
+    <h3 style="margin-top:10px">Marge</h3>
+    <p><b>Pour :</b> peintre, plâtrier, poseur de sols : l'offre par pièce, en version aérée.</p>
+    <p><b>Structure :</b> chaque pièce et son total dans la marge de gauche, les lignes à droite, un filet entre deux pièces. Le client lit la colonne de gauche et connaît le prix de chaque pièce.</p>
+    <p class="demande">À prouver : la case de la marge quand une pièce passe d'une page à l'autre dans le PDF.</p>
+    <div class="reponse" data-decision="m-marge" data-titre="Marge" data-choix="Garder|À retravailler|Écarter"></div>
+  </div>
+</div>
+
+<h2 id="options" data-toc="Options et variantes">Options et variantes</h2>
+<p class="chapeau">Ta demande : « ajoute la possibilité d'avoir des options et variantes a prendre en compte dans la dicté ». Ce sont des fonctions de l'offre, valables pour les douze modèles. Elles touchent la dictée, le calcul, l'écran et le document. Voici le document ; chaque règle demande ta décision.</p>
+
+<div class="carte">
+  <h3>Sur le document</h3>
+  <div class="deux">
+    <figure class="vue"><img src="MAQUETTE-modeles-v2-img/sobre-options.jpg" alt="Sobre avec une variante sous sa ligne et un bloc d'options sous le total"><figcaption>Sobre : une variante sous sa ligne, deux options sous le total</figcaption></figure>
+    <figure class="vue"><img src="MAQUETTE-modeles-v2-img/chantier-options.jpg" alt="Chantier avec une variante et deux options"><figcaption>Chantier : la même règle dans une offre par pièce</figcaption></figure>
+  </div>
+  <p class="note-p" style="margin-top:10px">Les deux offres d'exemple sont raccourcies pour tenir sur une page : une offre avec options et variantes sera plus longue.</p>
+</div>
+
+<div class="carte">
+  <h3>O1 · L'option</h3>
+  <p>Un travail en plus que le client peut prendre ou laisser. Elle reste <b>hors du total</b>. Elle sort dans un bloc à part, sous le total, avec une case à cocher et son montant. Une dernière ligne donne le total si le client prend tout.</p>
+  <div class="reponse" data-decision="o1-option" data-titre="O1 · Option : bloc sous le total, cases à cocher, total avec toutes les options" data-choix="Valider|Sans la ligne « avec toutes les options »|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>O2 · La variante</h3>
+  <p>Une autre façon de faire une ligne de l'offre : une peinture lessivable à la place de la peinture standard. Elle sort <b>sous la ligne qu'elle remplace</b>, en italique, avec une case à cocher, son prix unitaire et l'écart : « +252.00 », plus-value ou moins-value. Le total de l'offre compte la ligne de base.</p>
+  <div class="reponse" data-decision="o2-variante" data-titre="O2 · Variante : sous la ligne remplacée, avec l'écart de prix" data-choix="Valider|Dans un bloc à part comme les options|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>O3 · Dans la dictée</h3>
+  <table class="dictee">
+    <thead><tr><th>L'artisan dit</th><th>L'offre reçoit</th></tr></thead>
+    <tbody>
+      <tr><td>« En option, laquage des portes, trois pièces à cent quarante francs. »</td><td>Une option : Laquage des portes, 3 pce, 140.00.</td></tr>
+      <tr><td>« Variante pour les murs : peinture lessivable à trente-quatre francs le mètre carré. »</td><td>Une variante de la ligne « Peinture des murs », même quantité, 34.00.</td></tr>
+      <tr><td>« Ou alors du vinyle à la place du parquet. »</td><td>Une variante de la ligne du parquet, marquée « À vérifier » : le prix manque.</td></tr>
+      <tr><td>« Et peut-être les plinthes, à voir avec le client. »</td><td>Une option marquée « À vérifier » : la quantité et le prix viennent du catalogue.</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:10px">Mots reconnus : « en option », « option », « variante », « en variante », « ou alors », « à la place de ». Une variante sans ligne de base retrouvée devient une option « À vérifier ».</p>
+  <div class="reponse" data-decision="o3-dictee" data-titre="O3 · Mots de la dictée et lignes « À vérifier »" data-choix="Valider|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>O4 · À l'écran, sans la voix</h3>
+  <p>La règle du projet veut que toute correction vocale ait son équivalent à l'écran. Sur une ligne de l'offre : un toucher pour la passer en option, un pour la remettre dans le total ; « Ajouter une variante » depuis la ligne.</p>
+  <div class="reponse" data-decision="o4-ecran" data-titre="O4 · Passer une ligne en option et ajouter une variante à l'écran" data-choix="Valider|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>O5 · Quand le client accepte</h3>
+  <p>L'artisan coche dans l'application les options et variantes retenues. Le total se recalcule, et la facture créée depuis l'offre reprend ce qui est coché. Sans cette étape, la facture ignore ce que le client a choisi.</p>
+  <div class="reponse" data-decision="o5-accord" data-titre="O5 · Cocher les options retenues avant de facturer" data-choix="Valider|Plus tard, la facture se corrige à la main|Pas valider"></div>
+</div>
+<div class="carte">
+  <h3>Ce que ça demande, et un risque</h3>
+  <ul>
+    <li><b>Données :</b> chaque ligne reçoit un état (dans le total, option, variante) et, pour une variante, la ligne qu'elle remplace.</li>
+    <li><b>Calcul :</b> les options et les variantes sortent du total, de la TVA et de l'acompte.</li>
+    <li><b>Document :</b> les deux blocs ci-dessus, dans les douze modèles, en offre.</li>
+    <li><b>Dictée :</b> la consigne d'extraction change. Le sous-chantier 29 demande un banc lancé avant chaque changement de consigne, sur un corpus de vraies dictées ; sa tâche est encore ouverte dans Origin. Les cas « option » et « variante » doivent entrer dans ce corpus : une nouvelle source d'erreurs se mesure avant d'être ajoutée.</li>
+  </ul>
+  <p class="demande">Mon avis : c'est un chantier à part, plus gros que les modèles. Je propose de le cadrer après tes réponses, avec sa propre spécification.</p>
+  <div class="reponse" data-decision="o6-ordre" data-titre="O6 · Ordre des travaux" data-choix="Les modèles d'abord, les options ensuite|Les options d'abord|Les deux ensemble"></div>
+</div>
+
+<h2 id="douze" data-toc="Les douze">Les douze, à ce jour</h2>
+<p class="chapeau">Dix réglés, deux en attente de ta réponse (Enseigne, Marge). Clique une image pour la lire en grand.</p>
+<div class="mk-filters" data-target="#liste">
+  <button type="button" data-v="all" aria-pressed="true">Les douze</button>
+  <button type="button" data-v="classique" aria-pressed="false">Classiques</button>
+  <button type="button" data-v="couleur" aria-pressed="false">Couleur</button>
+  <button type="button" data-v="detail" aria-pressed="false">Détaillés</button>
+  <button type="button" data-v="simple" aria-pressed="false">Simples</button>
+</div>
+<div class="planche" id="liste">
+  <div class="modele" data-v="classique"><figure><img src="MAQUETTE-modeles-v2-img/sobre.jpg" alt="Sobre, peintre"></figure><h3>Sobre <span class="etat ok">Validé</span></h3><p><span class="lbl">Pour :</span> tous les métiers. Le modèle par défaut.</p></div>
+  <div class="modele" data-v="classique"><figure><img src="MAQUETTE-modeles-v2-img/lettre.jpg" alt="Lettre, ferblantier couvreur"></figure><h3>Lettre <span class="etat ok">Gardé</span></h3><p><span class="lbl">Pour :</span> ferblantier, couvreur, artisan qui écrit aux régies.</p></div>
+  <div class="modele" data-v="classique"><figure><img src="MAQUETTE-modeles-v2-img/atelier.jpg" alt="Atelier, menuisier"></figure><h3>Atelier <span class="etat ok">Validé</span></h3><p><span class="lbl">Pour :</span> menuisier, ébéniste, agenceur.</p></div>
+  <div class="modele" data-v="couleur"><figure><img src="MAQUETTE-modeles-v2-img/bandeau.jpg" alt="Bandeau, maçon"></figure><h3>Bandeau <span class="etat ok">Validé</span></h3><p><span class="lbl">Pour :</span> maçon, gros œuvre, façadier.</p></div>
+  <div class="modele" data-v="couleur"><figure><img src="MAQUETTE-modeles-v2-img/moderne.jpg" alt="Moderne, poseur de sols"></figure><h3>Moderne <span class="etat">Total retouché</span></h3><p><span class="lbl">Pour :</span> poseur de sols, cuisiniste, agencement.</p></div>
+  <div class="modele" data-v="couleur"><figure><img src="MAQUETTE-modeles-v2-img/lateral.jpg" alt="Latéral, électricien"></figure><h3>Latéral <span class="etat ok">Gardé</span></h3><p><span class="lbl">Pour :</span> électricien, stores, cuisines.</p></div>
+  <div class="modele" data-v="couleur"><figure><img src="MAQUETTE-modeles-v2-img/enseigne.jpg" alt="Enseigne, carreleur sans logo"></figure><h3>Enseigne <span class="etat neuf">À décider</span></h3><p><span class="lbl">Pour :</span> l'artisan sans logo.</p></div>
+  <div class="modele" data-v="detail"><figure><img src="MAQUETTE-modeles-v2-img/technique.jpg" alt="Technique, sanitaire"></figure><h3>Technique <span class="etat ok">Validé</span></h3><p><span class="lbl">Pour :</span> sanitaire, chauffage, ventilation, électricité.</p></div>
+  <div class="modele" data-v="detail"><figure><img src="MAQUETTE-modeles-v2-img/recap.jpg" alt="Récapitulatif, rénovation"></figure><h3>Récapitulatif <span class="etat ok">Gardé</span></h3><p><span class="lbl">Pour :</span> rénovation complète, plusieurs corps de métier.</p></div>
+  <div class="modele" data-v="detail"><figure><img src="MAQUETTE-modeles-v2-img/chantier.jpg" alt="Chantier, plâtrier"></figure><h3>Chantier <span class="etat ok">Gardé</span></h3><p><span class="lbl">Pour :</span> plâtrier, peintre, rénovation d'appartement.</p></div>
+  <div class="modele" data-v="simple"><figure><img src="MAQUETTE-modeles-v2-img/epure.jpg" alt="Épuré, paysagiste"></figure><h3>Épuré <span class="etat">Total retouché</span></h3><p><span class="lbl">Pour :</span> paysagiste, indépendant, petite offre.</p></div>
+  <div class="modele" data-v="simple"><figure><img src="MAQUETTE-modeles-v2-img/marge.jpg" alt="Marge, peintre"></figure><h3>Marge <span class="etat neuf">À décider</span></h3><p><span class="lbl">Pour :</span> peintre, plâtrier, offre par pièce aérée.</p></div>
+</div>
+
+<h2 id="suite" data-toc="Suite">La suite</h2>
+<div class="carte">
+  <ol style="margin:0;padding-left:20px">
+    <li>Un PDF d'essai par le générateur de l'application : polices intégrées, bande de Bandeau d'un bord à l'autre, colonne de Latéral répétée, case de Marge sur deux pages, offre de quarante lignes.</li>
+    <li>Une impression pliée dans une enveloppe à fenêtre.</li>
+    <li>Les champs communs validés (chantier, début, durée, non compris, contact), puis les gabarits un par un.</li>
+    <li>Les factures des douze, avec la section de paiement QR.</li>
+  </ol>
+  <p class="note-p" style="margin-top:10px">Toujours sans preuve : le rendu PDF, un logo réel d'artisan, une couleur claire, l'avis d'un artisan.</p>
+</div>
+
+<h2 id="recap" data-toc="Copier">Tes réponses</h2>
+<div class="recap carte">
+  <textarea id="texte-recap" readonly aria-label="Récapitulatif de tes réponses"></textarea>
+  <p style="margin-top:8px"><button type="button" id="copier">Copier le texte</button> <span class="note-p" id="copie"></span></p>
+</div>
+</main>
+
+<script>
+'use strict';
+(function () {
+  var CLE = 'offregen-modeles-2026-11-19-reprise';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) { /* stockage refusé : les réponses restent à l'écran */ } }
+  var blocs = Array.prototype.slice.call(document.querySelectorAll('.reponse'));
+  function recap() {
+    var lignes = ['Modèles d\'offre, reprise du 2026-11-19', ''];
+    blocs.forEach(function (b) {
+      var r = etat[b.dataset.decision] || {};
+      lignes.push(b.dataset.titre + ' : ' + (r.choix || 'sans réponse') + (r.note ? ' · ' + r.note : ''));
+    });
+    document.getElementById('texte-recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var id = b.dataset.decision, r = etat[id] || (etat[id] = {});
+    var boite = document.createElement('div'); boite.className = 'boutons';
+    b.dataset.choix.split('|').forEach(function (c) {
+      var bt = document.createElement('button'); bt.type = 'button'; bt.textContent = c;
+      bt.setAttribute('aria-pressed', r.choix === c ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        r.choix = r.choix === c ? '' : c;
+        Array.prototype.forEach.call(boite.children, function (x) { x.setAttribute('aria-pressed', x.textContent === r.choix ? 'true' : 'false'); });
+        garder(); recap();
+      });
+      boite.appendChild(bt);
+    });
+    var ta = document.createElement('textarea'); ta.placeholder = 'Commentaire'; ta.value = r.note || '';
+    ta.setAttribute('aria-label', 'Commentaire : ' + b.dataset.titre);
+    ta.addEventListener('input', function () { r.note = ta.value.trim(); garder(); recap(); });
+    b.appendChild(boite); b.appendChild(ta);
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('texte-recap'), s = document.getElementById('copie');
+    function fait() { s.textContent = 'Copié.'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(fait, function () { t.select(); s.textContent = 'Sélectionné : Ctrl+C pour copier.'; }); }
+    else { t.select(); s.textContent = 'Sélectionné : Ctrl+C pour copier.'; }
+  });
+  recap();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

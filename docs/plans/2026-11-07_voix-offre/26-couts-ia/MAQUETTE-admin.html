@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administration d'offreGen, maquette 26</title>
+<style>
+:root { --mk-ink: #1B1F24; --mk-bg: #F3F4F6; --mk-surface: #FFFFFF; --mk-line: #E4E7EB; --mk-accent: #2457C5; --muted: #69717C; --soft: #E8EEFB; --warn: #9A5B00; --warn-soft: #FDF3E1; --ok: #1E7F4F; --ok-soft: #E6F4EC; --admin: #1F2937; --admin-ink: #F3F4F6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #E7EAEE; --mk-bg: #121519; --mk-surface: #1C2026; --mk-line: #30363D; --mk-accent: #8AACF2; --muted: #9BA3AE; --soft: #1F2C47; --warn: #E9B44C; --warn-soft: #362A12; --ok: #5CC796; --ok-soft: #17301F; --admin: #0B0E12; --admin-ink: #E7EAEE; } }
+:root[data-theme="dark"] { --mk-ink: #E7EAEE; --mk-bg: #121519; --mk-surface: #1C2026; --mk-line: #30363D; --mk-accent: #8AACF2; --muted: #9BA3AE; --soft: #1F2C47; --warn: #E9B44C; --warn-soft: #362A12; --ok: #5CC796; --ok-soft: #17301F; --admin: #0B0E12; --admin-ink: #E7EAEE; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1160px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 26px; margin: 18px 0 6px; }
+h2 { font-size: 20px; margin: 30px 0 10px; }
+p, li { max-width: 800px; }
+.regle-ok { background: var(--soft); border-radius: 12px; padding: 10px 14px; margin: 8px 0; }
+.regle-ok b { color: var(--mk-accent); }
+.exemple { font-size: 12px; color: var(--warn); font-weight: 600; }
+/* Le prototype */
+.admin { display: grid; grid-template-columns: 210px minmax(0, 1fr); background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 14px; overflow: hidden; min-height: 640px; }
+.amenu { background: var(--admin); color: var(--admin-ink); padding: 14px 10px; }
+.amenu .marque { font-weight: 750; padding: 2px 10px 2px; }
+.amenu .marque small { display: block; font-weight: 500; font-size: 12px; opacity: .7; }
+.amenu nav { display: flex; flex-direction: column; gap: 2px; margin-top: 14px; }
+.amenu button { font: inherit; font-size: 15px; text-align: left; color: inherit; background: none; border: 0; border-radius: 9px; padding: 9px 10px; cursor: pointer; opacity: .82; min-height: 42px; }
+.amenu button[aria-current="page"] { background: rgba(255, 255, 255, .14); opacity: 1; font-weight: 600; }
+.amenu .retour { display: block; margin-top: 18px; padding: 8px 10px; font-size: 13px; opacity: .7; }
+.acorps { padding: 18px 22px 24px; min-width: 0; }
+.periode { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--mk-line); margin-bottom: 14px; }
+.periode .seg { display: inline-flex; background: var(--mk-bg); border-radius: 10px; padding: 3px; }
+.periode .seg button, .chip { font: inherit; font-size: 14px; border: 0; background: none; color: var(--muted); border-radius: 8px; padding: 6px 10px; cursor: pointer; min-height: 34px; }
+.periode .seg button[aria-pressed="true"] { background: var(--mk-surface); color: var(--mk-ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .12); }
+.periode select, .periode input { font: inherit; font-size: 14px; border: 1px solid var(--mk-line); border-radius: 9px; padding: 5px 8px; background: var(--mk-surface); color: var(--mk-ink); min-height: 34px; }
+.chip { border: 1px solid var(--mk-line); }
+.chip[aria-pressed="true"] { background: var(--soft); color: var(--mk-accent); border-color: var(--mk-accent); }
+.libelle { font-weight: 650; margin-left: auto; }
+.cartes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 12px 0; }
+.carte { border: 1px solid var(--mk-line); border-radius: 12px; padding: 10px 12px; }
+.carte span { display: block; font-size: 12.5px; color: var(--muted); }
+.carte b { display: block; font-size: 21px; font-variant-numeric: tabular-nums; }
+.carte small { color: var(--muted); font-size: 12px; }
+.carte.resultat b { color: var(--ok); }
+h3 { margin: 4px 0 8px; font-size: 19px; }
+h4 { margin: 18px 0 6px; font-size: 15px; }
+.tab { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--mk-line); white-space: nowrap; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+tr.total td { font-weight: 700; }
+.barre { display: inline-block; height: 8px; border-radius: 4px; background: var(--mk-accent); vertical-align: middle; margin-right: 6px; }
+.outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 8px; }
+.outils input[type=search] { font: inherit; font-size: 14px; border: 1px solid var(--mk-line); border-radius: 9px; padding: 6px 10px; background: var(--mk-surface); color: var(--mk-ink); min-width: 220px; }
+.signal { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 8px 12px; font-size: 14px; margin: 10px 0; }
+.note { font-size: 13px; color: var(--muted); }
+.lecon { background: var(--ok-soft); border-radius: 10px; padding: 8px 12px; font-size: 14px; margin: 10px 0; }
+.bientot { display: inline-block; font-size: 11px; font-weight: 700; background: var(--warn-soft); color: var(--warn); border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 2px; }
+/* Décisions */
+.decision { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 12px 14px; margin: 12px 0 18px; }
+.decision .q { font-weight: 600; margin-bottom: 8px; }
+.decision .boutons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.decision button { font: inherit; font-size: 14px; border: 1px solid var(--mk-line); background: var(--mk-bg); color: var(--mk-ink); border-radius: 10px; padding: 8px 12px; cursor: pointer; min-height: 40px; }
+.decision button[aria-pressed="true"] { background: var(--mk-accent); border-color: var(--mk-accent); color: #fff; }
+.decision textarea { width: 100%; min-height: 56px; font: inherit; font-size: 14px; border: 1px solid var(--mk-line); border-radius: 10px; padding: 8px; background: var(--mk-bg); color: var(--mk-ink); }
+#recap { white-space: pre-wrap; background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 12px; font-size: 14px; }
+.copier { font: inherit; border: 0; background: var(--mk-accent); color: #fff; border-radius: 10px; padding: 10px 16px; cursor: pointer; margin: 8px 0; }
+@media (max-width: 760px) {
+  .admin { grid-template-columns: minmax(0, 1fr); }
+  .amenu { padding: 10px; }
+  .amenu nav { flex-direction: row; overflow-x: auto; margin-top: 8px; }
+  .amenu button { white-space: nowrap; }
+  .amenu .retour { display: none; }
+  .acorps { padding: 14px; }
+  .cartes { grid-template-columns: 1fr 1fr; }
+  .libelle { margin-left: 0; width: 100%; }
+}
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav id="mk-toc"></nav>
+<h1>Administration d'offreGen</h1>
+<p>Sous-chantier 26, tes retours du 17.11 : une partie dédiée, séparée de l'application des artisans, pour tes statistiques d'exploitation, et plus tard la rentabilité. Essaie le prototype : le menu, la période, les classements. <span class="exemple">Tous les chiffres sont des exemples</span>, à l'échelle de quelques centaines d'artisans ; seuls les tarifs de l'IA sont les vrais.</p>
+
+<h2 id="regle" data-toc="Réglé">Ce qui est réglé</h2>
+<p class="regle-ok"><b>Accès :</b> le droit administrateur, refusé par défaut, que tu pourras donner à un collaborateur. Toute adresse de l'administration répond « introuvable » aux autres comptes ; son entrée n'apparaît que pour un administrateur, dans « Plus » au téléphone et en bas du menu sur PC.</p>
+<p class="regle-ok"><b>Whisper par artisan (ta réponse A) :</b> la part du jour, répartie au prorata de l'audio ; c'est une estimation, on l'affinera avec les données.</p>
+<p class="regle-ok"><b>Un coût par requête chez Infomaniak ?</b> J'ai lu la spécification officielle de leur API : aucun point d'entrée ne le donne. Qwen se compte exactement par ses jetons ; Whisper ne se connaît que par le total du jour. Un produit IA séparé pour la production, avec son jeton, rendra au moins le total de la production exact.</p>
+<p class="regle-ok"><b>Rien de personnel :</b> aucune page de l'administration ne montre un texte de dictée, un nom de client ou une ligne d'offre. L'analyse des offres ne porte que sur des mesures (produits, lignes, audio, jetons, coût).</p>
+
+<h2 id="proto" data-toc="Prototype">Le prototype</h2>
+<div class="admin" id="admin">
+  <div class="amenu">
+    <div class="marque">offreGen<small>Administration</small></div>
+    <nav aria-label="Administration">
+      <button type="button" data-section="bord" aria-current="page">Tableau de bord</button>
+      <button type="button" data-section="ia">Coût de l'IA</button>
+      <button type="button" data-section="artisans">Artisans</button>
+      <button type="button" data-section="offres">Offres</button>
+      <button type="button" data-section="renta">Rentabilité</button>
+    </nav>
+    <span class="retour">← Revenir à l'application</span>
+  </div>
+  <div class="acorps">
+    <div class="periode" aria-label="Période">
+      <span class="seg" role="group" aria-label="Sorte de période">
+        <button type="button" data-mode="mois" aria-pressed="true">Mois</button>
+        <button type="button" data-mode="annee" aria-pressed="false">Année</button>
+        <button type="button" data-mode="dates" aria-pressed="false">Dates</button>
+      </span>
+      <select data-champ="mois" aria-label="Mois"></select>
+      <select data-champ="annee" aria-label="Année" hidden><option>2026</option><option>2027</option></select>
+      <span data-champ="dates" hidden>du <input type="date" value="2026-11-03" aria-label="Du"> au <input type="date" value="2026-11-16" aria-label="Au"></span>
+      <button type="button" class="chip" data-raccourci="ce-mois">Ce mois</button>
+      <button type="button" class="chip" data-raccourci="mois-passe">Le mois passé</button>
+      <button type="button" class="chip" data-raccourci="annee">Cette année</button>
+      <button type="button" class="chip" data-raccourci="14j">14 derniers jours</button>
+      <span class="libelle" data-libelle></span>
+    </div>
+    <div data-vue></div>
+  </div>
+</div>
+<p class="note">Au téléphone, le menu passe en onglets au-dessus de la page ; la période et les tableaux restent les mêmes (tableaux qui défilent de côté).</p>
+
+<div class="decision" data-id="G1"><div class="q">G1 · Une partie administration séparée, avec son menu : tableau de bord, coût de l'IA, artisans, offres, rentabilité</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire : une section qui manque, une de trop"></textarea></div>
+<div class="decision" data-id="G2"><div class="q">G2 · La période : mois, année ou deux dates, avec les raccourcis</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire : un raccourci à ajouter"></textarea></div>
+<div class="decision" data-id="G3"><div class="q">G3 · Artisans : les 10 ou 20 plus gros, triés par offres, coût total ou coût par offre ; une recherche ; le signal des artisans devenus gourmands</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="G4"><div class="q">G4 · Offres : analyse anonyme du coût selon le catalogue, les lignes, l'audio ; les offres les plus chères, sans client ni texte</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire : une mesure qui t'aiderait à comprendre"></textarea></div>
+<div class="decision" data-id="G5"><div class="q">G5 · Rentabilité (plus tard) : abonnements, frais, coût de l'IA, résultat ; le mois en cours en direct et sa projection</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire : un frais à compter (paiement, hébergement, autre)"></textarea></div>
+
+<h2 id="copier-titre" data-toc="Copier">Copier tes réponses</h2>
+<button class="copier" type="button" id="copier">Copier le texte</button>
+<div id="recap"></div>
+</main>
+<script>
+(() => {
+  // ---------- Données d'exemple ----------
+  const NB = ' ';
+  // Séparateur des milliers sur la partie entière seulement (« CHF 0.4099 », pas « 0.4’099 »).
+  const chf = (v, d = 2) => { const [e, f] = v.toFixed(d).split('.'); return 'CHF' + NB + e.replace(/\B(?=(\d{3})+(?!\d))/g, '’') + (f ? '.' + f : ''); };
+  const nb = (v) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '’');
+  // En centimes ; trois décimales sous le centième, sinon « 0,00 ct » cacherait un coût réel.
+  const ct = (v) => (v * 100).toFixed(v * 100 < 0.01 ? 3 : 2).replace('.', ',') + NB + 'ct';
+  const metiers = ['Peinture', 'Menuiserie', 'Sanitaire', 'Électricité', 'Carrelage', 'Toiture'];
+  const noms = ['Alpha', 'Jura Déco', 'Morel', 'Ajoie Bois', 'Delémont Habitat', 'Lac et Montagne', 'Franches-Montagnes', 'Les Rangiers', 'Doubs', 'Clos du Doubs',
+    'Vallée', 'Saint-Imier', 'Tramelan', 'Bienne Nord', 'Porrentruy', 'Courtételle', 'Develier', 'Bassecourt', 'Moutier', 'Tavannes', 'Saignelégier', 'Fontenais', 'Alle', 'Courrendlin'];
+  let graine = 7;
+  const hasard = () => { graine = (graine * 16807) % 2147483647; return graine / 2147483647; };
+  // Coût d'une offre : consigne 600 jetons, 50 par produit du catalogue, 260 par minute d'audio ; 45 jetons reçus par ligne ;
+  // Whisper : environ 3 s de calcul par minute d'audio.
+  const coutOffre = (produits, lignes, minutes) => {
+    const envoyes = 600 + 50 * produits + 260 * minutes;
+    const recus = 60 + 45 * lignes;
+    return { envoyes, recus, cout: envoyes * 0.40 / 1e6 + recus * 3.00 / 1e6 + minutes * 3 * 0.0001 };
+  };
+  const artisans = noms.map((n, i) => {
+    const produits = Math.round(20 + hasard() * 380);
+    const offres = Math.round(8 + hasard() * 70);
+    const lignes = Math.round(4 + hasard() * 18);
+    const minutes = 0.5 + hasard() * 4;
+    const c = coutOffre(produits, lignes, minutes).cout;
+    return { nom: `${metiers[i % metiers.length]} ${n}`, metier: metiers[i % metiers.length], produits, offres, lignes, minutes, parOffre: c, total: c * offres, avant: c * (i === 4 ? 0.25 : 0.9) };
+  });
+  const offres = [];
+  for (let i = 0; i < 400; i++) {
+    const a = artisans[Math.floor(hasard() * artisans.length)];
+    const produits = Math.max(5, Math.round(a.produits * (0.9 + hasard() * 0.2)));
+    const lignes = Math.max(1, Math.round(a.lignes * (0.5 + hasard())));
+    const minutes = Math.max(0.3, a.minutes * (0.4 + hasard() * 1.2));
+    const c = coutOffre(produits, lignes, minutes);
+    offres.push({ ref: 'O-' + (0x1a2b + i * 37).toString(16).toUpperCase(), metier: a.metier, produits, lignes, minutes, ...c });
+  }
+  // ---------- Période ----------
+  const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  const etat = { section: 'bord', mode: 'mois', mois: 10, annee: 2026, du: '2026-11-03', au: '2026-11-16', top: 10, tri: 'total', cherche: '' };
+  const facteur = () => {
+    if (etat.mode === 'annee') return 9.6;
+    if (etat.mode === 'dates') { const j = (new Date(etat.au) - new Date(etat.du)) / 864e5 + 1; return Math.max(0.03, j / 30); }
+    return etat.mois === 10 ? 0.57 : 1; // novembre en cours : au 17
+  };
+  const libelle = () => {
+    if (etat.mode === 'annee') return `Année ${etat.annee}`;
+    if (etat.mode === 'dates') { const f = (s) => s.split('-').reverse().join('.'); return `Du ${f(etat.du)} au ${f(etat.au)}`; }
+    return `${MOIS[etat.mois][0].toUpperCase()}${MOIS[etat.mois].slice(1)} ${etat.annee}${etat.mois === 10 ? ' (au 17)' : ''}`;
+  };
+  // ---------- Vues ----------
+  // Les totaux de la période, tirés des offres d'exemple : jetons × tarif pour Qwen, secondes de calcul × tarif pour
+  // Whisper ; ainsi les chiffres se recoupent comme dans la réalité.
+  const moy = (cle) => offres.reduce((s, x) => s + x[cle], 0) / offres.length;
+  const totaux = () => {
+    const f = facteur();
+    const nbOffres = Math.round(2400 * f);
+    const envoyes = Math.round(nbOffres * moy('envoyes'));
+    const recus = Math.round(nbOffres * moy('recus'));
+    const qwen = envoyes * 0.40 / 1e6 + recus * 3.00 / 1e6;
+    const secondes = Math.round(nbOffres * moy('minutes') * 3);
+    const whisper = secondes * 0.0001;
+    const autres = 0.0021 * f;
+    const ia = qwen + whisper + autres;
+    return { f, nbOffres, envoyes, recus, qwen, secondes, whisper, autres, ia, actifs: Math.round(312 * Math.min(1, 0.5 + f / 2)), parOffre: (qwen + whisper) / nbOffres };
+  };
+  const carte = (titre, valeur, petit, classe = '') => `<div class="carte ${classe}"><span>${titre}</span><b>${valeur}</b><small>${petit}</small></div>`;
+  const vues = {
+    bord: () => {
+      const t = totaux();
+      const signal = artisans[4];
+      return `<h3>Tableau de bord</h3>
+        <div class="cartes">${carte('Offres créées', nb(t.nbOffres), `${nb(t.actifs)} artisans actifs`)}${carte('Coût de l\'IA', chf(t.ia), 'facturé par Infomaniak')}${carte('Coût moyen d\'une offre', ct(t.parOffre), 'extraction et transcription')}${carte('Résultat', chf((5800 - 160) * t.f - t.ia), 'abonnements moins frais et IA <span class="bientot">plus tard</span>', 'resultat')}</div>
+        <p class="signal">Signal : ${signal.nom} coûte ${ct(signal.parOffre)} par offre ces 14 derniers jours, quatre fois plus qu'avant (son catalogue est passé à ${signal.produits} produits). <a href="#" data-aller="artisans">Voir les artisans</a></p>
+        <h4>Les 5 plus gros consommateurs</h4>${tableArtisans(5, 'total')}`;
+    },
+    ia: () => {
+      const t = totaux();
+      const essaisEnv = Math.round(t.autres / 3 * 1e6 / 0.40);
+      const essaisRec = Math.round(t.autres * 2 / 3 * 1e6 / 3.00);
+      const lignes = [
+        `<tr><td>Qwen3.8 27B (extraction)</td><td class="n">${nb(t.nbOffres)}</td><td class="n">${nb(t.envoyes)}</td><td class="n">${nb(t.recus)}</td><td class="n"></td><td class="n">${chf(t.qwen, 4)}</td></tr>`,
+        `<tr><td>Whisper (transcription)</td><td class="n">${nb(t.nbOffres)}</td><td class="n"></td><td class="n"></td><td class="n">${nb(t.secondes)} s</td><td class="n">${chf(t.whisper, 4)}</td></tr>`,
+        `<tr><td>Essais hors offre</td><td class="n">${nb(Math.max(1, 3 * t.f))}</td><td class="n">${nb(essaisEnv)}</td><td class="n">${nb(essaisRec)}</td><td class="n"></td><td class="n">${chf(t.autres, 4)}</td></tr>`,
+      ].join('');
+      return `<h3>Coût de l'IA</h3><p class="note">Un jeton : un morceau de mot. Envoyés : ce que le modèle lit (consigne, catalogue, dictée), CHF 0.40 le million ; reçus : ce qu'il écrit, CHF 3.00 le million. Whisper se facture au temps de calcul, CHF 0.006 la minute.</p>
+        <div class="tab"><table><tr><th>Modèle</th><th class="n">Requêtes</th><th class="n">Jetons envoyés</th><th class="n">Jetons reçus</th><th class="n">Temps de calcul</th><th class="n">Coût</th></tr>${lignes}<tr class="total"><td>Total facturé</td><td></td><td></td><td></td><td></td><td class="n">${chf(t.ia, 4)}</td></tr></table></div>
+        <h4>Écart avec nos chiffres</h4><p class="note">Nos extractions comptées une à une : ${chf(t.qwen, 4)}, égal à la ligne de Qwen. Le reste de la facture : la transcription, répartie par artisan au prorata de l'audio (${chf(t.whisper, 4)}), et les essais hors offre (${chf(t.autres, 4)}).</p>`;
+    },
+    artisans: () => `<h3>Artisans</h3>
+      <div class="outils">
+        <span class="seg" role="group" aria-label="Combien"><button type="button" class="chip" data-top="10" aria-pressed="${etat.top === 10}">Top 10</button> <button type="button" class="chip" data-top="20" aria-pressed="${etat.top === 20}">Top 20</button></span>
+        <span>Trier par</span>
+        <button type="button" class="chip" data-tri="offres" aria-pressed="${etat.tri === 'offres'}">Nombre d'offres</button>
+        <button type="button" class="chip" data-tri="total" aria-pressed="${etat.tri === 'total'}">Coût total</button>
+        <button type="button" class="chip" data-tri="parOffre" aria-pressed="${etat.tri === 'parOffre'}">Coût par offre</button>
+        <input type="search" placeholder="Chercher un artisan par son nom" value="${etat.cherche}" data-cherche aria-label="Chercher un artisan">
+      </div>
+      <p class="signal">Devenus gourmands sur la période : ${artisans[4].nom}, coût par offre × 4 (catalogue à ${artisans[4].produits} produits).</p>
+      ${tableArtisans(etat.top, etat.tri, etat.cherche)}
+      <p class="note">Sur 312 artisans actifs, seuls les ${etat.top} premiers s'affichent ; la recherche trouve n'importe lequel.</p>`,
+    offres: () => {
+      const f = facteur();
+      const tranches = [[0, 50], [50, 150], [150, 300], [300, 9999]];
+      const parCat = tranches.map(([a, b]) => {
+        const o = offres.filter((x) => x.produits >= a && x.produits < b);
+        const moy = o.reduce((s, x) => s + x.cout, 0) / o.length;
+        const lig = o.reduce((s, x) => s + x.lignes, 0) / o.length;
+        return { nom: b > 9000 ? `${a} et plus` : `${a} à ${b - 1}`, n: o.length, env: o.reduce((s, x) => s + x.envoyes, 0) / o.length, moy, parLigne: moy / lig };
+      });
+      const max = Math.max(...parCat.map((x) => x.moy));
+      const chers = [...offres].sort((x, y) => y.cout - x.cout).slice(0, 10);
+      return `<h3>Offres</h3><p class="note">Analyse anonyme : aucune offre n'est rattachée à un client ni à un texte ; seulement ses mesures.</p>
+        <div class="cartes">${carte('Coût moyen d\'une offre', ct(offres.reduce((s, x) => s + x.cout, 0) / offres.length), `${nb(offres.length * 3 * f)} offres`)}${carte('Coût moyen par ligne', ct(offres.reduce((s, x) => s + x.cout / x.lignes, 0) / offres.length), 'lignes de l\'offre')}${carte('Par produit du catalogue', ct(0.00002), 'ajouté à chaque offre')}${carte('Par minute d\'audio', ct(260 * 0.4 / 1e6 + 0.0003), 'transcription et lecture')}</div>
+        <p class="lecon">Ce qui pèse le plus : la taille du catalogue, envoyé au modèle à chaque offre. Un catalogue de 300 produits ajoute environ 0,6 ct à chaque offre.</p>
+        <h4>Selon la taille du catalogue</h4>
+        <div class="tab"><table><tr><th>Produits au catalogue</th><th class="n">Offres</th><th class="n">Jetons envoyés, moyenne</th><th>Coût moyen d'une offre</th><th class="n">Par ligne</th></tr>
+        ${parCat.map((x) => `<tr><td>${x.nom}</td><td class="n">${nb(x.n * 3 * f)}</td><td class="n">${nb(x.env)}</td><td><span class="barre" style="width:${Math.round(80 * x.moy / max)}px"></span>${ct(x.moy)}</td><td class="n">${ct(x.parLigne)}</td></tr>`).join('')}</table></div>
+        <h4>Les 10 offres les plus chères de la période</h4>
+        <div class="tab"><table><tr><th>Réf.</th><th>Métier</th><th class="n">Produits au catalogue</th><th class="n">Lignes</th><th class="n">Audio</th><th class="n">Jetons envoyés</th><th class="n">Jetons reçus</th><th class="n">Coût</th><th class="n">Par ligne</th></tr>
+        ${chers.map((x) => `<tr><td>${x.ref}</td><td>${x.metier}</td><td class="n">${x.produits}</td><td class="n">${x.lignes}</td><td class="n">${x.minutes.toFixed(1).replace('.', ',')} min</td><td class="n">${nb(x.envoyes)}</td><td class="n">${nb(x.recus)}</td><td class="n">${ct(x.cout)}</td><td class="n">${ct(x.cout / x.lignes)}</td></tr>`).join('')}</table></div>`;
+    },
+    renta: () => {
+      const t = totaux();
+      const mois = 2400 * (moy('envoyes') * 0.40 / 1e6 + moy('recus') * 3.00 / 1e6 + moy('minutes') * 3 * 0.0001) + 0.0021;
+      const lignes = [['juin', 4900, 140, 0.84], ['juillet', 5100, 145, 0.88], ['août', 5200, 150, 0.9], ['septembre', 5500, 150, 0.95], ['octobre', 5800, 160, 1]]
+        .map(([m, a, fr, part]) => [m, a, fr, mois * part]);
+      return `<h3>Rentabilité <span class="bientot">plus tard</span></h3>
+        <p class="note">Branchée quand les abonnements existeront. Exemple : 200 abonnements à CHF 29, frais de paiement et d'hébergement CHF 160 par mois.</p>
+        <div class="cartes">${carte('Abonnements encaissés', chf(5800 * t.f), 'sur la période')}${carte('Frais', chf(160 * t.f), 'paiements, hébergement')}${carte('Coût de l\'IA', chf(t.ia), 'facturé par Infomaniak')}${carte('Résultat', chf((5800 - 160) * t.f - t.ia), 'encaissé moins frais et IA', 'resultat')}</div>
+        <h4>Novembre en direct, au 17</h4>
+        <div class="cartes">${carte('Encaissé à ce jour', chf(3480), '120 abonnements renouvelés')}${carte('IA à ce jour', chf(mois * 0.57), '')}${carte('Projection fin de mois', chf(5800), 'abonnements attendus')}${carte('Résultat projeté', chf(5800 - 160 - mois), 'selon le rythme des 17 premiers jours', 'resultat')}</div>
+        <h4>Les derniers mois</h4>
+        <div class="tab"><table><tr><th>Mois</th><th class="n">Abonnements</th><th class="n">Frais</th><th class="n">IA</th><th class="n">Résultat</th></tr>
+        ${lignes.map(([m, a, fr, ia]) => `<tr><td>${m}</td><td class="n">${chf(a)}</td><td class="n">${chf(fr)}</td><td class="n">${chf(ia)}</td><td class="n">${chf(a - fr - ia)}</td></tr>`).join('')}</table></div>`;
+    },
+  };
+  function tableArtisans(n, tri, cherche = '') {
+    const f = facteur();
+    let liste = [...artisans].sort((x, y) => y[tri] - x[tri]);
+    if (cherche.trim()) liste = liste.filter((a) => a.nom.toLowerCase().includes(cherche.trim().toLowerCase()));
+    liste = liste.slice(0, n);
+    return `<div class="tab"><table><tr><th class="n">#</th><th>Artisan</th><th class="n">Offres</th><th class="n">Coût total</th><th class="n">Par offre</th><th class="n">Produits au catalogue</th><th class="n">Lignes par offre</th><th class="n">Audio par offre</th></tr>
+      ${liste.map((a, i) => `<tr><td class="n">${i + 1}</td><td>${a.nom}</td><td class="n">${nb(a.offres * f)}</td><td class="n">${chf(a.total * f, 4)}</td><td class="n">${ct(a.parOffre)}</td><td class="n">${a.produits}</td><td class="n">${a.lignes}</td><td class="n">${a.minutes.toFixed(1).replace('.', ',')} min</td></tr>`).join('') || '<tr><td colspan="8">Aucun artisan ne correspond.</td></tr>'}</table></div>`;
+  }
+  // ---------- Branchements ----------
+  const racine = document.getElementById('admin');
+  const vue = racine.querySelector('[data-vue]');
+  const selMois = racine.querySelector('[data-champ="mois"]');
+  MOIS.forEach((m, i) => { const o = document.createElement('option'); o.value = i; o.textContent = `${m} 2026`; if (i === etat.mois) o.selected = true; selMois.append(o); });
+  const montrer = () => {
+    racine.querySelectorAll('[data-section]').forEach((b) => b.setAttribute('aria-current', b.dataset.section === etat.section ? 'page' : 'false'));
+    racine.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === etat.mode)));
+    racine.querySelector('[data-champ="mois"]').hidden = etat.mode !== 'mois';
+    racine.querySelector('[data-champ="annee"]').hidden = etat.mode !== 'annee';
+    racine.querySelector('[data-champ="dates"]').hidden = etat.mode !== 'dates';
+    racine.querySelector('[data-libelle]').textContent = libelle();
+    vue.innerHTML = vues[etat.section]();
+  };
+  racine.addEventListener('click', (e) => {
+    const b = e.target.closest('button, a');
+    if (!b) return;
+    if (b.dataset.section) etat.section = b.dataset.section;
+    else if (b.dataset.aller) { e.preventDefault(); etat.section = b.dataset.aller; }
+    else if (b.dataset.mode) etat.mode = b.dataset.mode;
+    else if (b.dataset.top) etat.top = Number(b.dataset.top);
+    else if (b.dataset.tri) etat.tri = b.dataset.tri;
+    else if (b.dataset.raccourci) {
+      const r = b.dataset.raccourci;
+      if (r === 'ce-mois') Object.assign(etat, { mode: 'mois', mois: 10 });
+      if (r === 'mois-passe') Object.assign(etat, { mode: 'mois', mois: 9 });
+      if (r === 'annee') Object.assign(etat, { mode: 'annee' });
+      if (r === '14j') Object.assign(etat, { mode: 'dates', du: '2026-11-03', au: '2026-11-16' });
+      selMois.value = etat.mois;
+      racine.querySelectorAll('[data-champ="dates"] input')[0].value = etat.du;
+      racine.querySelectorAll('[data-champ="dates"] input')[1].value = etat.au;
+    } else return;
+    montrer();
+  });
+  selMois.addEventListener('change', () => { etat.mois = Number(selMois.value); montrer(); });
+  racine.querySelectorAll('[data-champ="dates"] input').forEach((inp, i) => inp.addEventListener('change', () => { if (i === 0) etat.du = inp.value; else etat.au = inp.value; montrer(); }));
+  vue.addEventListener('input', (e) => {
+    if (!e.target.matches('[data-cherche]')) return;
+    etat.cherche = e.target.value;
+    const pos = e.target.selectionStart;
+    montrer();
+    const champ = vue.querySelector('[data-cherche]');
+    champ.focus(); champ.setSelectionRange(pos, pos);
+  });
+  montrer();
+
+  // ---------- Réponses ----------
+  const CLE = 'offregen-maquette-26-admin';
+  let rep = {};
+  try { rep = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { rep = {}; }
+  const garder = () => { try { localStorage.setItem(CLE, JSON.stringify(rep)); } catch (e) { /* stockage refusé */ } };
+  const blocs = [...document.querySelectorAll('.decision')];
+  const recap = () => {
+    document.getElementById('recap').textContent = ['Maquette 26, administration'].concat(blocs.map((b) => {
+      const r = rep[b.dataset.id] || {};
+      return b.querySelector('.q').textContent + ' : ' + (r.choix || '(sans réponse)') + (r.commentaire ? ' · ' + r.commentaire : '');
+    })).join('\n');
+  };
+  blocs.forEach((b) => {
+    const id = b.dataset.id;
+    const r = rep[id] || {};
+    b.querySelectorAll('button').forEach((bouton) => {
+      bouton.type = 'button';
+      bouton.setAttribute('aria-pressed', String(r.choix === bouton.textContent));
+      bouton.addEventListener('click', () => {
+        rep[id] = Object.assign({}, rep[id], { choix: bouton.textContent });
+        b.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === bouton)));
+        garder(); recap();
+      });
+    });
+    const t = b.querySelector('textarea');
+    t.value = r.commentaire || '';
+    t.addEventListener('input', () => { rep[id] = Object.assign({}, rep[id], { commentaire: t.value }); garder(); recap(); });
+  });
+  document.getElementById('copier').addEventListener('click', () => { if (navigator.clipboard) navigator.clipboard.writeText(document.getElementById('recap').textContent); });
+  recap();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

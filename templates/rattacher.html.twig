@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{# Rattacher une ligne à un produit du catalogue (décision D6, maquette 24, 2026-11-15). La recherche part du premier mot
+   de la ligne ; le choix se fait d'un toucher. #}
+{% block titre %}Rattacher · {{ offre.titre }} · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}#l{{ l.id }}">Offre</a>{% endblock %}
+{% block entete %}Rattacher à un produit{% endblock %}
+
+{% block contenu %}
+  <p class="rattacher-ligne">«&nbsp;{{ l.designation }}&nbsp;» est…</p>
+  <form class="search" method="get" action="/offres/{{ offre.id }}/lignes/{{ l.id }}/rattacher" role="search">
+    <div class="box">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="cherche" name="q" type="search" value="{{ q }}" placeholder="Chercher dans le catalogue" autocomplete="off" aria-label="Chercher dans le catalogue" data-filtre="#res">
+    </div>
+  </form>
+  {% if aucun and q != '' %}<p class="muted petit" data-cache-si-recherche>Rien pour «&nbsp;{{ q }}&nbsp;» : voici tout le catalogue.</p>{% endif %}
+  <div id="res" class="res">
+    {% for p in produits %}
+      <form method="post" action="/offres/{{ offre.id }}/lignes/{{ l.id }}/rattacher" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <button class="pick" type="submit" name="produit" value="{{ p.id }}"><b class="pn">{{ p.designation }}<small>{{ p.categorie }}</small></b>
+          <span>{% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %} /&nbsp;{{ p.unite }}</span></button>
+      </form>
+    {% endfor %}
+    <p class="vide" data-aucun hidden>Rien dans le catalogue pour cette recherche.</p>
+  </div>
+  {% if l.produit_id is null %}
+    <p class="alerte info">«&nbsp;{{ l.designation }}&nbsp;» sera ajouté aux synonymes du produit choisi&nbsp;: la prochaine dictée le reconnaîtra. La ligne prend la désignation, l'unité et le prix du catalogue, et garde sa quantité.</p>
+  {% else %}
+    <p class="muted petit">La ligne prend la désignation, l'unité et le prix du produit choisi, et garde sa quantité.</p>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><a class="btn grand" href="/offres/{{ offre.id }}#l{{ l.id }}">Annuler</a></div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{# L'aperçu de la facture que « Créer la facture » créerait (maquette 25, E1) : le même gabarit que le PDF, marqué
+   « Aperçu » ; rien n'est écrit. data-a-payer et data-bouton servent au bouton de la feuille (app.js, feuilleFacturer).
+   Choix refusé (422) : le message seul. #}
+{% if erreurs is not empty %}
+  <p class="alerte bad" role="alert" data-apercu-erreur>{{ erreurs|first }}</p>
+{% else %}
+  <div class="apercu-facture" data-a-payer="{{ montants.a_payer }}" data-bouton="Créer la facture · {{ montants.a_payer|chf }}">
+    <span class="filigrane" aria-hidden="true">Aperçu</span>
+    <article class="paper apercu">{% include '_document.html.twig' %}</article>
+  </div>
+{% endif %}

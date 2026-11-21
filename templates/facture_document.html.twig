@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+{% set onglet = 'factures' %}
+
+{# L'aperçu d'un brouillon de facture, dans le modèle et la couleur de l'offre (Xavier, 2026-11-12), marqué « Aperçu » :
+   au téléphone, seul ; sur PC, repris à côté des lignes (app.js, documentACote). Une facture émise ou annulée se voit
+   en PDF (E5, maquette 25). #}
+{% block entete_html %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/css/document-ecran.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
+{% block titre %}Aperçu du brouillon · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/factures/{{ f.id }}">Brouillon</a>{% endblock %}
+{% block entete %}Aperçu du brouillon{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  {% if manque > 0 %}<p class="alerte bad">{{ manque }} ligne{{ manque > 1 ? 's' : '' }} sans prix&nbsp;: à compléter avant de créer la facture.</p>{% endif %}
+  {% if r.adresse.estVide %}<p class="alerte warn">Votre adresse manque en tête de la facture&nbsp;: <a href="/reglages/entreprise">la compléter dans les réglages</a>.</p>{% endif %}
+  {% if qr_raison %}<p class="alerte warn">{{ qr_raison }}{% if qr_lien %}&nbsp;: <a href="/reglages/entreprise">compléter dans les réglages</a>{% endif %}.</p>{% endif %}
+  <div class="apercu-facture"><span class="filigrane" aria-hidden="true">Aperçu</span>
+    <article class="paper apercu">{% include '_document.html.twig' with {f: f|merge({numero: f.numero ?? numero_prevu})} %}</article></div>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/factures/{{ f.id }}">Corriger les lignes</a>
+    <button class="btn primary" type="submit" form="creer-facture-doc">Créer la facture</button>
+  </div>
+  <form id="creer-facture-doc" method="post" action="/factures/{{ f.id }}/emettre"><input type="hidden" name="_csrf" value="{{ csrf() }}"></form>
+{% endblock %}

@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<title>Générateur des douze modèles</title>
+<!-- Source des feuilles A4 de MAQUETTE-modeles-v2.html. Ouvrir avec #m=<modele>&d=<jeu> pour une feuille, sans rien pour toutes.
+     Dans .a4 : seulement ce que dompdf sait rendre (tableaux, flottants, position absolue, bordures, fonds).
+     Les variables CSS (--p, --t) sont une facilité du générateur : l'application passe par les classes c-* de Marque::css().
+     Données inventées : entreprises, clients, prix, IDE, IBAN. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400;1,600&display=block" rel="stylesheet">
+<style>
+body { margin: 0; background: #cfd4da; }
+.pile { padding: 20px; }
+.pile .a4 { margin: 0 auto 24px; }
+body.une { background: #fff; }
+body.une .pile { padding: 0; }
+body.une .pile .a4 { margin: 0; }
+
+/* ===== Commun ===== */
+.a4 { width: 794px; height: 1123px; position: relative; overflow: hidden; background: #fff; color: #1b1f24; font: 12px/1.45 Roboto, Arial, sans-serif; text-align: left; }
+.a4 * { box-sizing: border-box; }
+.a4 .in { padding: 44px 64px 0; }
+.a4 table { border-collapse: collapse; width: 100%; }
+.a4 td, .a4 th { vertical-align: top; padding: 0; text-align: left; font-weight: normal; }
+.a4 p { margin: 0; }
+.a4 .n { text-align: right; white-space: nowrap; }
+.a4 .c { color: var(--p); }
+.a4 .bg { background: var(--p); color: #fff; }
+.a4 .t { background: var(--t); }
+.a4 .lab { font-size: 9px; text-transform: uppercase; letter-spacing: .07em; color: #5a616b; margin-bottom: 2px; }
+.a4 .h td + td { text-align: right; }
+.a4 .logo svg { display: block; }
+.a4 .coord { font-size: 10.5px; line-height: 1.5; color: #4b525b; }
+.a4 .coord b { color: #1b1f24; font-size: 12px; }
+.a4 .adr { margin: 0 0 0 382px; font-size: 12.5px; line-height: 1.5; height: 70px; }
+.a4 .infos { margin: 12px 0 12px; }
+.a4 .infos td { padding: 7px 12px 7px 0; font-size: 11.5px; }
+.a4 .lig th { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; padding: 7px 6px; font-weight: 600; }
+.a4 .lig th.n { text-align: right; }
+.a4 .lig td { padding: 4.5px 6px; border-bottom: 1px solid #e3e6ea; }
+.a4 .lig .grp td { font-weight: 700; padding-top: 10px; border-bottom: 0; }
+.a4 .lig .st td { border-bottom: 0; color: #4b525b; text-align: right; padding-top: 4px; }
+.a4 .lig .pos { width: 38px; color: #4b525b; }
+.a4 .lig .u { width: 44px; color: #4b525b; }
+.a4 .met { font-size: 10px; color: #5a616b; }
+.a4 .case { display: inline-block; width: 9px; height: 9px; border: 1px solid #1b1f24; margin-right: 7px; }
+.a4 .lig .var td { font-style: italic; color: #2c3138; }
+.a4 .lig .var td:first-child { padding-left: 22px; }
+.a4 .opt { margin-top: 14px; }
+/* Les options s'alignent sur les colonnes du tableau des lignes. */
+.m-sobre .lig th.n, .m-chantier .lig th.n, .a4 .opt td.n { width: 112px; }
+.a4 .opt th { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; padding: 6px; border-top: 1.5px solid #1b1f24; border-bottom: 1px solid #1b1f24; }
+.a4 .opt td { padding: 4.5px 6px; border-bottom: 1px solid #e3e6ea; }
+.a4 .opt .ot td { border-bottom: 0; font-weight: 700; }
+.a4 .totaux { width: 300px; margin: 12px 0 0 366px; }
+.a4 .totaux td { padding: 3.5px 6px; }
+.a4 .totaux .tt td { font-weight: 700; font-size: 15px; padding-top: 8px; padding-bottom: 8px; }
+.a4 .cond { margin-top: 16px; font-size: 10.5px; color: #2c3138; }
+.a4 .cond td { width: 58%; padding-right: 18px; }
+.a4 .cond td + td { width: 42%; padding-right: 0; }
+.a4 .cond ul { margin: 3px 0 0; padding-left: 15px; }
+.a4 .sign { margin-top: 12px; }
+.a4 .sign td { width: 50%; padding-right: 28px; font-size: 10.5px; }
+.a4 .sig-nom { height: 32px; padding-top: 4px; font-size: 12px; font-weight: 600; }
+.a4 .sig-esp { height: 32px; }
+.a4 .sig-l { border-top: 1px solid #6b727c; }
+.a4 .sig-s { padding-top: 4px; color: #4b525b; }
+.a4 .pied { position: absolute; left: 64px; bottom: 28px; width: 666px; font-size: 9.5px; color: #5a616b; border-top: 1px solid #d9dde2; }
+.a4 .pied td { padding-top: 7px; }
+
+/* ===== 1 Sobre ===== */
+.m-sobre .filet { height: 3px; margin: 14px 0 28px; }
+.m-sobre .titre { font-size: 22px; font-weight: 700; line-height: 1.2; }
+.m-sobre .objet { font-size: 14px; font-weight: 600; margin-top: 2px; }
+.m-sobre .infos { border-top: 1px solid #d9dde2; border-bottom: 1px solid #d9dde2; }
+.m-sobre .lig th { color: var(--p); border-bottom: 2px solid var(--p); }
+.m-sobre .totaux .tt td { border-top: 2px solid var(--p); }
+
+/* ===== 2 Bandeau ===== */
+.m-bandeau { font-family: Roboto, Arial, sans-serif; }
+.m-bandeau .bande { height: 112px; position: relative; }
+.m-bandeau .carte { position: absolute; left: 64px; top: 0; background: #fff; padding: 30px 18px 14px; height: 130px; border-bottom: 4px solid var(--p); }
+.m-bandeau .bande .coord { position: absolute; right: 64px; top: 22px; text-align: right; color: #fff; }
+.m-bandeau .bande .coord b { color: #fff; }
+.m-bandeau .in { padding-top: 38px; }
+.m-bandeau .adr { height: 66px; }
+.m-bandeau .sur { font: 700 40px/1 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .02em; }
+.m-bandeau .sur span { font-size: 22px; font-weight: 500; color: #1b1f24; letter-spacing: 0; }
+.m-bandeau .objet { font-size: 14px; font-weight: 600; margin-top: 4px; }
+.m-bandeau .infos td { border-left: 3px solid var(--p); padding-left: 10px; }
+.m-bandeau .lig th { background: var(--p); color: #fff; }
+.m-bandeau .lig .grp td { font: 600 15px/1.2 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .04em; color: var(--p); }
+.m-bandeau .totaux .tt td { background: var(--p); color: #fff; padding: 9px 8px; font-size: 16px; }
+.m-bandeau .bas { position: absolute; left: 0; bottom: 0; width: 794px; height: 34px; font-size: 9.5px; }
+.m-bandeau .bas td { color: #fff; padding: 10px 0 0 64px; }
+.m-bandeau .bas td.n { padding: 10px 64px 0 0; }
+
+/* ===== 3 Atelier ===== */
+.m-atelier { font-family: "Source Serif 4", Georgia, serif; font-size: 12.5px; }
+.m-atelier .in { padding: 46px 76px 0; }
+.m-atelier .centre { text-align: center; }
+.m-atelier .centre .logo svg { margin: 0 auto; }
+.m-atelier .ligne-coord { text-align: center; font-size: 10.5px; color: #4b525b; margin-top: 8px; letter-spacing: .02em; }
+.m-atelier .double { border-top: 3px double var(--p); margin: 14px 0 26px; }
+.m-atelier .tetiere td { width: 50%; }
+.m-atelier .adr { margin-left: 44px; }
+.m-atelier .titre { font-size: 34px; font-style: italic; line-height: 1; }
+.m-atelier .num { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #4b525b; margin-top: 6px; }
+.m-atelier .objet { font-size: 15px; font-weight: 600; margin: 16px 0 2px; }
+.m-atelier .meta { font-style: italic; color: #4b525b; margin-bottom: 14px; }
+.m-atelier .lig th { font-style: italic; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 400; border-bottom: 1px solid var(--p); }
+.m-atelier .lig td { border-bottom: 1px dotted #b9bec5; }
+.m-atelier .lig .grp td { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--p); }
+.m-atelier .lig .st td { font-style: italic; }
+.m-atelier .totaux { margin-left: 342px; }
+.m-atelier .totaux .tt td { border-top: 3px double var(--p); font-size: 17px; font-weight: 600; }
+.m-atelier .lab { font-family: "Source Serif 4", Georgia, serif; font-style: italic; text-transform: none; letter-spacing: 0; font-size: 11.5px; }
+.m-atelier .pied { left: 76px; width: 642px; text-align: center; }
+
+/* ===== 4 Technique ===== */
+.m-technique { font-family: "IBM Plex Sans", Arial, sans-serif; font-size: 11.5px; }
+.m-technique .adr { margin-top: 22px; height: 68px; font-size: 12px; }
+.m-technique .cart { border: 1.5px solid #1b1f24; margin: 6px 0 16px; }
+.m-technique .cart td { border: 1px solid #1b1f24; padding: 6px 9px; font-size: 11.5px; }
+.m-technique .cart .gros { font-size: 15px; font-weight: 600; }
+.m-technique .cart .gros b { color: var(--p); font-weight: 700; letter-spacing: .06em; }
+.m-technique .lig th, .m-technique .lig td { border: 1px solid #c3c8cf; padding: 4.5px 7px; }
+.m-technique .lig th { background: #eef0f3; text-transform: none; letter-spacing: 0; font-size: 10.5px; color: #1b1f24; }
+.m-technique .lig .grp td { background: var(--t); border-left: 4px solid var(--p); padding-top: 5px; font-weight: 600; }
+.m-technique .lig .st td { border: 0; border-bottom: 1px solid #c3c8cf; padding-top: 4.5px; }
+.m-technique .lig td.n, .m-technique .totaux td.n { font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace; font-size: 11px; }
+.m-technique .lig .pos { font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace; font-size: 10.5px; }
+.m-technique .totaux td { border: 1px solid #c3c8cf; padding: 4px 7px; }
+.m-technique .totaux .av td { border-bottom: 2px solid #1b1f24; }
+.m-technique .totaux .tt td { border: 2px solid #1b1f24; font-size: 13.5px; }
+
+/* ===== 5 Moderne ===== */
+.m-moderne { font-family: Roboto, Arial, sans-serif; }
+.m-moderne .adr { margin-top: 26px; height: 66px; }
+.m-moderne .titre { font: 800 40px/1 Archivo, Arial, sans-serif; letter-spacing: -.01em; }
+.m-moderne .objet { font: 600 15px/1.3 Archivo, Arial, sans-serif; margin-top: 6px; color: var(--p); }
+.m-moderne .infos { margin: 14px 0 10px; }
+.m-moderne .infos td { background: var(--t); padding: 10px 12px; }
+.m-moderne .lig th { color: #5a616b; border-bottom: 1.5px solid #1b1f24; }
+.m-moderne .lig td { border-bottom: 0; }
+.m-moderne .lig .z td { background: var(--t); }
+.m-moderne .lig .grp td { font: 700 10px/1.3 Archivo, Arial, sans-serif; text-transform: uppercase; letter-spacing: .1em; color: var(--p); padding-bottom: 4px; }
+.m-moderne .lig .grp td.n { color: #1b1f24; font: 600 12px/1.3 Roboto, Arial, sans-serif; letter-spacing: 0; }
+.m-moderne .totaux .tt td { background: var(--t2); color: #1b1f24; border-top: 2px solid #1b1f24; padding: 8px 10px; font: 700 15px/1.2 Archivo, Arial, sans-serif; }
+.m-moderne .totaux .tt td:first-child { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding-top: 11px; }
+
+/* ===== 6 Épuré ===== */
+.m-epure .in { padding: 60px 82px 0; }
+.m-epure .adr { margin: 34px 0 0 364px; height: 84px; }
+.m-epure .trait { width: 44px; height: 4px; margin: 0 0 14px; }
+.m-epure .titre { font-size: 19px; font-weight: 600; }
+.m-epure .objet { color: #4b525b; margin: 2px 0 2px; font-size: 13px; }
+.m-epure .meta { color: #5a616b; font-size: 11px; margin-bottom: 20px; }
+.m-epure .lig th { color: #5a616b; font-weight: 400; border-bottom: 1px solid #d9dde2; }
+.m-epure .lig td { border-bottom: 0; padding: 6.5px 6px; }
+.m-epure .lig .grp td { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; color: #5a616b; border-top: 1px solid #e3e6ea; padding-top: 10px; padding-bottom: 2px; }
+.m-epure .lig .grp:first-child td { border-top: 0; }
+.m-epure .totaux { width: 280px; margin-left: 350px; border-top: 1px solid #1b1f24; }
+.m-epure .totaux .tt td { font-size: 16px; padding-top: 10px; }
+.m-epure .totaux .tt td:first-child { font-size: 12px; font-weight: 600; padding-top: 14px; }
+.m-epure .pied { left: 82px; width: 630px; border-top: 0; }
+
+/* ===== 7 Chantier ===== */
+.m-chantier .barre { height: 6px; margin: 12px 0 18px; }
+.m-chantier .duo td { width: 50%; }
+.m-chantier .fiche { width: 330px; border: 1.5px solid var(--p); }
+.m-chantier .fiche th { background: var(--p); color: #fff; font: 600 14px/1.2 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .1em; padding: 5px 10px; }
+.m-chantier .fiche td { padding: 4px 10px; font-size: 11px; border-top: 1px solid #e3e6ea; }
+.m-chantier .fiche td:first-child { width: 104px; background: var(--t); color: #3a4049; font-size: 10px; }
+.m-chantier .adr { margin: 4px 0 0 49px; height: auto; }
+.m-chantier .ref { margin: 14px 0 0 49px; font-size: 11px; color: #4b525b; }
+.m-chantier .titre { font: 700 28px/1.05 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .01em; margin: 16px 0 6px; }
+.m-chantier .titre span { color: var(--p); }
+.m-chantier .lig th { border-bottom: 1.5px solid #1b1f24; }
+.m-chantier .lig .grp td { background: var(--t); font: 600 14px/1.2 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--p); padding: 5px 6px; border-top: 8px solid #fff; }
+.m-chantier .lig .grp td.n { color: #1b1f24; font: 700 12px/1.4 Roboto, Arial, sans-serif; letter-spacing: 0; }
+.m-chantier .totaux .tt td { border-top: 2px solid #1b1f24; font-size: 16px; }
+
+/* ===== 8 Récapitulatif ===== */
+.m-recap { font-size: 11.3px; }
+.m-recap .filet { height: 2px; background: #1b1f24; margin: 14px 0 24px; }
+.m-recap .adr { height: 72px; font-size: 12px; }
+.m-recap .titre { font: 700 21px/1.2 Archivo, Arial, sans-serif; }
+.m-recap .titre span { color: var(--p); }
+.m-recap .meta { color: #4b525b; font-size: 11px; margin: 3px 0 12px; }
+.m-recap .h2 { font: 700 10.5px/1.3 Archivo, Arial, sans-serif; text-transform: uppercase; letter-spacing: .1em; margin: 0 0 5px; }
+.m-recap .rec td { padding: 6px 8px; border-bottom: 1px solid #e3e6ea; font-size: 12.5px; font-weight: 500; }
+.m-recap .rec .let { width: 30px; }
+/* Lettre du lot dans une cellule de tableau : dompdf met tout l'interligne au-dessus du texte, une hauteur de ligne ne centre pas. */
+.m-recap .rec .pas { width: 20px; }
+.m-recap .rec .pas td { width: 20px; height: 20px; padding: 0; border: 0; text-align: center; vertical-align: middle; background: var(--p); color: #fff; font: 700 11px/1 Archivo, Arial, sans-serif; }
+.m-recap .bloc-tot { background: var(--t); margin-top: 0; }
+.m-recap .bloc-tot td { padding: 4px 10px; }
+.m-recap .bloc-tot .tt td { font: 700 17px/1.2 Archivo, Arial, sans-serif; padding: 6px 10px 9px; }
+.m-recap .duo2 td.g { width: 356px; padding-right: 20px; }
+.m-recap .lig { margin-top: 2px; }
+.m-recap .lig th { border-bottom: 1.5px solid #1b1f24; padding: 5px 6px; }
+.m-recap .lig td { padding: 3.6px 6px; }
+.m-recap .lig .grp td { color: var(--p); padding-top: 8px; }
+.m-recap .cond { margin-top: 14px; font-size: 10.3px; }
+.m-recap .sign { margin-top: 12px; }
+.m-recap .sig-nom, .m-recap .sig-esp { height: 30px; }
+
+/* ===== 9 Latéral ===== */
+.m-lateral .cote { position: absolute; left: 0; top: 0; width: 208px; height: 1123px; background: var(--p); color: #fff; }
+.m-lateral .cote .carte { background: #fff; padding: 46px 18px 20px; border-bottom: 5px solid #1b1f24; }
+.m-lateral .cote .bloc { padding: 18px 20px 0; font-size: 11px; line-height: 1.5; }
+.m-lateral .cote .lab { color: #fff; font-size: 8.5px; letter-spacing: .12em; border-bottom: 1px solid #fff; padding-bottom: 3px; margin-bottom: 5px; }
+.m-lateral .cote .gros { font: 800 26px/1.05 Archivo, Arial, sans-serif; }
+.m-lateral .cote .fond { position: absolute; left: 20px; bottom: 30px; width: 168px; font-size: 9.5px; line-height: 1.5; }
+.m-lateral .in { margin-left: 208px; padding: 50px 56px 0 36px; }
+.m-lateral .adr { margin: 132px 0 0 202px; height: 84px; }
+.m-lateral .titre { font: 700 22px/1.2 Archivo, Arial, sans-serif; margin-bottom: 14px; }
+.m-lateral .lig th { border-bottom: 1.5px solid #1b1f24; padding-left: 0; }
+.m-lateral .lig td { padding-left: 0; }
+.m-lateral .lig .grp td { color: var(--p); font: 700 10px/1.3 Archivo, Arial, sans-serif; text-transform: uppercase; letter-spacing: .1em; }
+.m-lateral .totaux { width: 280px; margin-left: 214px; }
+.m-lateral .totaux .tt td { border-top: 2px solid var(--p); font-size: 15.5px; }
+.m-lateral .condp { margin-top: 14px; font-size: 10.8px; color: #2c3138; }
+.m-lateral .condp ul { margin: 3px 0 8px; padding-left: 15px; }
+.m-lateral .sign td { padding-right: 18px; }
+.m-lateral .pied { left: 244px; width: 494px; }
+
+/* ===== 10 Enseigne : pour l'artisan sans logo, son nom en grand ===== */
+.m-enseigne .ens { font: 700 58px/0.95 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .005em; }
+.m-enseigne .ens-s { font: 500 13px/1.2 "Barlow Condensed", Arial, sans-serif; letter-spacing: .28em; text-transform: uppercase; margin-top: 6px; }
+.m-enseigne .barre { height: 8px; margin: 12px 0 6px; }
+.m-enseigne .ens-c { font-size: 10.5px; color: #4b525b; }
+.m-enseigne .duo { margin-top: 26px; }
+.m-enseigne .duo td { width: 50%; }
+.m-enseigne .ref { width: 300px; }
+.m-enseigne .ref td { padding: 2.5px 0; font-size: 11px; border-bottom: 1px solid #e3e6ea; width: auto; }
+.m-enseigne .ref td:first-child { width: 112px; color: #5a616b; font-size: 9px; text-transform: uppercase; letter-spacing: .07em; padding-top: 4.5px; }
+.m-enseigne .adr { margin: 0 0 0 49px; height: auto; }
+.m-enseigne .titre { font: 700 26px/1.1 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; margin: 20px 0 6px; }
+.m-enseigne .lig th { border-bottom: 3px solid #1b1f24; }
+.m-enseigne .lig .grp td { font: 600 14px/1.2 "Barlow Condensed", Arial, sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--p); }
+.m-enseigne .totaux .tt td { border-top: 3px solid var(--p); font-size: 16px; }
+
+/* ===== 11 Marge : le poste et son total dans la marge de gauche ===== */
+.m-marge .filet { height: 1px; background: #1b1f24; margin: 14px 0 28px; }
+.m-marge .titre { font: 700 22px/1.2 Archivo, Arial, sans-serif; }
+.m-marge .titre span { color: var(--p); }
+.m-marge .infos { border-bottom: 1px solid #d9dde2; margin: 8px 0 14px; }
+.m-marge .lig th { border-bottom: 1.5px solid #1b1f24; color: #5a616b; }
+.m-marge .lig td { border-bottom: 0; padding: 4px 6px; }
+.m-marge .lig .prem td { border-top: 1px solid #1b1f24; padding-top: 9px; }
+.m-marge .lig .fin td { padding-bottom: 9px; }
+.m-marge .lig .po { width: 150px; padding-left: 0; font-size: 11px; color: #4b525b; }
+.m-marge .lig .po b { font: 700 13px/1.3 Archivo, Arial, sans-serif; }
+.m-marge .totaux { border-top: 1px solid #1b1f24; }
+.m-marge .totaux .tt td { border-top: 2px solid #1b1f24; font-size: 15.5px; }
+
+/* ===== 12 Lettre ===== */
+.m-lettre { font-family: "Source Serif 4", Georgia, serif; font-size: 12.8px; line-height: 1.5; }
+.m-lettre .in { padding: 50px 72px 0 83px; }
+.m-lettre .coord, .m-lettre .pied, .m-lettre .sig-s, .m-lettre .lab, .m-lettre .lig th { font-family: Roboto, Arial, sans-serif; }
+.m-lettre .env { margin-top: 44px; }
+.m-lettre .env td { width: 50%; }
+.m-lettre .exp { font: 8.5px/1.3 Roboto, Arial, sans-serif; color: #4b525b; border-bottom: 1px solid #9aa0a8; padding-bottom: 2px; margin-bottom: 6px; width: 250px; }
+.m-lettre .adr { margin: 0; height: 84px; }
+.m-lettre .lieu { text-align: right; padding-top: 16px; }
+.m-lettre .concerne { font-weight: 700; font-size: 14px; margin: 26px 0 16px; }
+.m-lettre .concerne span { color: var(--p); }
+.m-lettre .txt { margin-bottom: 10px; }
+.m-lettre .lig { font-size: 11.5px; margin-top: 4px; }
+.m-lettre .lig th { border-top: 1px solid #1b1f24; border-bottom: 1px solid #1b1f24; }
+.m-lettre .totaux { font-size: 11.5px; margin-left: 339px; }
+.m-lettre .totaux .tt td { border-top: 1px solid #1b1f24; border-bottom: 3px double #1b1f24; font-size: 14px; }
+.m-lettre .apres { margin-top: 18px; }
+.m-lettre .sign { margin-top: 16px; }
+.m-lettre .sign td { font-family: "Source Serif 4", Georgia, serif; font-size: 12px; }
+.m-lettre .sig-nom { font-weight: 400; height: 54px; padding-top: 34px; }
+.m-lettre .sig-esp { height: 54px; }
+.m-lettre .pied { left: 83px; width: 639px; }
+</style>
+</head>
+<body>
+<div class="pile" id="pile"></div>
+<script>
+'use strict';
+const NB = ' ';
+const DATE = '19.11.2026', DATE_LONGUE = '19 novembre 2026', VALIDE = '19.12.2026';
+
+/* ---------- Couleur : même règle que Marque::principale() et Marque::teinte() ---------- */
+const rvb = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
+const hex = a => '#' + a.map(c => Math.round(c).toString(16).padStart(2, '0')).join('').toUpperCase();
+const lum = h => { const [r, v, b] = rvb(h).map(c => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * v + 0.0722 * b; };
+const contraste = h => 1.05 / (lum(h) + 0.05);
+function principale(h) { let a = rvb(h); for (let i = 0; i < 40 && contraste(hex(a)) < 4.5; i++) a = a.map(c => Math.round(c * 0.92)); return hex(a); }
+const teinte = (h, blanc) => hex(rvb(h).map(c => c + (255 - c) * blanc));
+
+/* ---------- Logos inventés (l'application reçoit un PNG ou un JPEG de l'artisan) ---------- */
+const MARQUES = {
+  rouleau: p => `<rect x="4" y="6" width="34" height="14" fill="${p}"/><rect x="38" y="11" width="6" height="4" fill="${p}"/><rect x="42" y="11" width="3" height="16" fill="${p}"/><rect x="20" y="24" width="25" height="3" fill="${p}"/><rect x="19" y="24" width="5" height="20" fill="${p}"/>`,
+  briques: p => `<rect x="2" y="6" width="20" height="10" fill="${p}"/><rect x="25" y="6" width="20" height="10" fill="${p}"/><rect x="2" y="19" width="9" height="10" fill="${p}"/><rect x="14" y="19" width="20" height="10" fill="${p}"/><rect x="37" y="19" width="8" height="10" fill="${p}"/><rect x="2" y="32" width="20" height="10" fill="${p}"/><rect x="25" y="32" width="20" height="10" fill="${p}"/>`,
+  cernes: p => `<circle cx="24" cy="24" r="20" fill="none" stroke="${p}" stroke-width="3"/><circle cx="24" cy="24" r="13" fill="none" stroke="${p}" stroke-width="2.5"/><circle cx="24" cy="24" r="6.5" fill="none" stroke="${p}" stroke-width="2.5"/><circle cx="24" cy="24" r="1.8" fill="${p}"/>`,
+  goutte: p => `<path d="M24 3 C24 3 8 22 8 32 a16 16 0 0 0 32 0 C40 22 24 3 24 3 Z" fill="${p}"/><path d="M16 32 a8 8 0 0 0 8 8" fill="none" stroke="#fff" stroke-width="3"/>`,
+  lames: p => `<rect x="3" y="4" width="19" height="9" fill="${p}"/><rect x="25" y="4" width="20" height="9" fill="${p}" opacity=".55"/><rect x="3" y="16" width="29" height="9" fill="${p}" opacity=".55"/><rect x="35" y="16" width="10" height="9" fill="${p}"/><rect x="3" y="28" width="12" height="9" fill="${p}"/><rect x="18" y="28" width="27" height="9" fill="${p}" opacity=".55"/><rect x="3" y="40" width="42" height="4" fill="${p}"/>`,
+  feuille: p => `<path d="M6 42 C6 18 20 6 44 4 C44 28 30 42 6 42 Z" fill="${p}"/><path d="M6 42 L32 16" stroke="#fff" stroke-width="2.5"/>`,
+  truelle: p => `<path d="M4 30 L30 4 L44 18 Z" fill="${p}"/><rect x="2" y="34" width="44" height="5" fill="${p}"/><rect x="2" y="41" width="44" height="3" fill="${p}" opacity=".55"/>`,
+  maison: p => `<path d="M4 24 L24 5 L44 24 L44 44 L4 44 Z" fill="${p}"/><rect x="18" y="27" width="12" height="17" fill="#fff"/>`,
+  eclair: p => `<rect x="2" y="2" width="44" height="44" fill="${p}"/><path d="M28 6 L12 27 H22 L19 42 L36 20 H25 Z" fill="#fff"/>`,
+  carreaux: p => `<rect x="3" y="3" width="20" height="20" fill="${p}"/><rect x="26" y="3" width="20" height="20" fill="${p}" opacity=".55"/><rect x="3" y="26" width="20" height="20" fill="${p}" opacity=".55"/><rect x="26" y="26" width="20" height="20" fill="${p}"/>`,
+  pinceau: p => `<circle cx="24" cy="24" r="21" fill="${p}"/><path d="M24 3 a21 21 0 0 1 0 42 Z" fill="#fff" opacity=".45"/><circle cx="24" cy="24" r="7" fill="#fff"/>`,
+  toit: p => `<path d="M2 26 L24 6 L46 26 L40 26 L24 12 L8 26 Z" fill="${p}"/><path d="M2 40 L24 20 L46 40 L40 40 L24 26 L8 40 Z" fill="${p}" opacity=".55"/>`,
+};
+function logo(e, p, opt = {}) {
+  const f = opt.police || 'Archivo, Arial, sans-serif';
+  const w = opt.largeur || 250;
+  return `<span class="logo"><svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="50" viewBox="0 0 ${w} 50">${MARQUES[e.marque](p)}<text x="58" y="${e.sous ? 24 : 31}" font-family="${f}" font-size="${opt.taille || 19}" font-weight="${opt.graisse || 800}" fill="#1b1f24">${e.court}</text>${e.sous ? `<text x="58.5" y="40" font-family="Roboto, Arial, sans-serif" font-size="8.5" letter-spacing="1.6" fill="#4b525b">${e.sous}</text>` : ''}</svg></span>`;
+}
+
+/* ---------- Entreprises et offres inventées ---------- */
+const E = (nom, court, sous, marque, couleur, lieu, contact, tel, dom) => ({ nom, court, sous, marque, couleur, lieu, contact, tel, mail: 'info@' + dom + '.example', rue: "Rue de l'Exemple 12", ide: 'CHE-000.000.000', iban: 'CH00 0000 0000 0000 0000 0' });
+const L = (d, q, u, p) => ({ d, q, u, p });
+const JEUX = {
+  morel: { e: E('Peinture Morel Sàrl', 'Peinture Morel', 'PEINTURE · DÉCORATION', 'rouleau', '#2E7D32', '2800 Delémont', 'Luc Morel', '032 000 00 01', 'peinture-morel'),
+    o: { num: '2026-042', titre: 'Rafraîchissement du séjour', client: ['Famille Exemple', 'Chemin des Essais 4', '1700 Fribourg'], chantier: 'Chemin des Essais 4, Fribourg', debut: 'semaine 2, 2027', duree: '4 jours ouvrables', paiement: '30 % à la commande, 30 % en cours de travaux, 40 % à la fin des travaux',
+      non: ['Déplacement et remise en place des meubles lourds', 'Réparation de fissures structurelles'],
+      g: [{ nom: 'Préparation', l: [L('Protection des sols et des meubles', 1, 'forfait', 180), L('Rebouchage et ponçage des murs', 42, 'm²', 9)] },
+          { nom: 'Peinture intérieure', l: [L('Peinture des murs, 2 couches', 42, 'm²', 28), L('Peinture des plafonds, 2 couches', 24, 'm²', 32), L('Laquage des plinthes', 26, 'm', 12)] },
+          { nom: 'Divers', l: [L('Déplacement', 1, 'forfait', 60)] }] } },
+  macon: { e: E('Maçonnerie du Vallon SA', 'Maçonnerie du Vallon', 'GROS ŒUVRE · TRANSFORMATION', 'briques', '#B23A2E', '2740 Moutier', 'Denis Roche', '032 000 00 02', 'maconnerie-vallon'),
+    o: { num: '2026-031', titre: 'Ouverture entre cuisine et séjour', client: ['Monsieur Modèle', 'Rue du Test 9', '2900 Porrentruy'], chantier: 'Rue du Test 9, Porrentruy', debut: 'semaine 4, 2027', duree: '5 jours ouvrables', paiement: '40 % à la commande, solde à 30 jours',
+      non: ["Rapport de l'ingénieur civil", 'Reprise des revêtements de sol', 'Peinture'],
+      g: [{ nom: 'Démolition', l: [L('Démolition de cloison non porteuse', 9, 'm²', 45), L('Ouverture de porte dans un mur porteur, linteau compris', 1, 'pce', 5500)] },
+          { nom: 'Finitions', l: [L('Crépi de mur', 12, 'm²', 32), L('Chape ciment', 6, 'm²', 48)] },
+          { nom: 'Divers', l: [L('Benne à gravats, pose et enlèvement', 1, 'pce', 480), L('Déplacement', 1, 'forfait', 60)] }] } },
+  menuisier: { e: E('Menuiserie des Tilleuls Sàrl', 'Menuiserie des Tilleuls', null, 'cernes', '#8A5A2B', '2350 Saignelégier', 'Anne Chêne', '032 000 00 03', 'menuiserie-tilleuls'),
+    o: { num: '2026-008', titre: "Fenêtres du séjour et armoire de l'entrée", client: ['Madame Essai', 'Route du Modèle 21', '2800 Delémont'], chantier: 'Route du Modèle 21, Delémont', debut: 'février 2027', duree: '3 jours de pose', paiement: '40 % à la commande, solde à la pose',
+      non: ['Retouches de peinture autour des cadres', 'Stores et moustiquaires'],
+      g: [{ nom: 'Fenêtres', l: [L('Fenêtre bois, double vitrage, posée', 2, 'pce', 1200), L('Porte-fenêtre bois, double vitrage, posée', 1, 'pce', 1800), L("Dépose et évacuation d'une ancienne fenêtre", 3, 'pce', 120)] },
+          { nom: 'Agencement', l: [L('Armoire sur mesure, toute hauteur', 3, 'm', 2200), L('Étagère sur mesure', 2, 'm', 180)] },
+          { nom: 'Divers', l: [L('Déplacement', 1, 'forfait', 60)] }] } },
+  sanitaire: { e: E('Sanitaire Trois-Sources SA', 'Trois-Sources', 'SANITAIRE · CHAUFFAGE', 'goutte', '#1D4E89', '2800 Delémont', 'Marc Fontaine', '032 000 00 04', 'trois-sources'),
+    o: { num: '2026-057', titre: 'Remplacement du chauffe-eau et des conduites de la buanderie', client: ['Régie Exemple SA', 'Avenue des Essais 30', '2000 Neuchâtel'], chantier: 'Rue du Test 14, Delémont, sous-sol', debut: 'semaine 3, 2027', duree: '2 jours ouvrables', paiement: 'net à 30 jours',
+      non: ['Raccordement électrique', 'Travaux de maçonnerie et de peinture'],
+      g: [{ nom: 'Dépose', l: [L("Vidange et dépose de l'ancien chauffe-eau", 1, 'pce', 280), L('Évacuation et recyclage', 1, 'forfait', 120)] },
+          { nom: 'Installation', l: [L('Chauffe-eau 300 l, fourni et posé', 1, 'pce', 2450), L('Conduites en inox serti, DN 20', 14, 'm', 68), L("Vanne d'arrêt, fournie et posée", 3, 'pce', 85), L('Groupe de sécurité', 1, 'pce', 190)] },
+          { nom: 'Mise en service', l: [L('Essai de pression et mise en service', 1, 'forfait', 180), L('Déplacement', 1, 'forfait', 70)] }] } },
+  sols: { e: E('Horizon Sols Sàrl', 'Horizon Sols', 'PARQUETS · REVÊTEMENTS', 'lames', '#8E2246', '2900 Porrentruy', 'Sophie Lame', '032 000 00 05', 'horizon-sols'),
+    o: { num: '2026-019', titre: 'Parquet de la chambre et vinyle du couloir', client: ['Famille Exemple', 'Chemin des Essais 4', '1700 Fribourg'], chantier: 'Chemin des Essais 4, Fribourg', debut: 'semaine 5, 2027', duree: '3 jours ouvrables', paiement: '30 % à la commande, solde à 20 jours',
+      non: ['Déplacement des meubles', 'Rabotage des portes'],
+      g: [{ nom: 'Chambre', l: [L("Dépose de l'ancien revêtement", 16, 'm²', 15), L('Sous-couche isolante', 16, 'm²', 8), L('Parquet chêne contrecollé, pose collée', 16, 'm²', 95), L('Plinthes, fournies et posées', 18, 'm', 22)] },
+          { nom: 'Couloir', l: [L('Ragréage du sol', 9, 'm²', 28), L('Vinyle clipsé, fourni et posé', 9, 'm²', 98), L('Barre de seuil', 2, 'pce', 45)] },
+          { nom: 'Divers', l: [L('Évacuation des déchets', 1, 'forfait', 150), L('Déplacement', 1, 'forfait', 60)] }] } },
+  paysagiste: { e: E('Jardins du Mont', 'Jardins du Mont', null, 'feuille', '#5F7A1C', '2340 Le Noirmont', 'Paul Verger', '032 000 00 06', 'jardins-du-mont'),
+    o: { num: '2026-012', titre: 'Allée et gazon', client: ['Monsieur Modèle', 'Rue du Test 9', '2900 Porrentruy'], chantier: 'Rue du Test 9, Porrentruy', debut: 'mars 2027', duree: '4 jours, selon la météo', paiement: 'net à 30 jours',
+      non: ['Arrosage après la pose', 'Éclairage du jardin'],
+      g: [{ nom: 'Aménagement', l: [L('Allée en pavés, fournie et posée', 18, 'm²', 180), L('Bordure, fournie et posée', 24, 'm', 48)] },
+          { nom: 'Plantation', l: [L('Gazon en rouleau, fourni et posé', 60, 'm²', 30), L('Arbuste, fourni et planté', 5, 'pce', 65)] },
+          { nom: 'Divers', l: [L('Évacuation des déchets verts', 1, 'forfait', 80), L('Déplacement', 1, 'forfait', 60)] }] } },
+  platrier: { e: E('Plâtrerie Arc Sàrl', 'Plâtrerie Arc', 'PLÂTRERIE · CLOISONS · PLAFONDS', 'truelle', '#A8650A', '2800 Delémont', 'Rémy Chaux', '032 000 00 07', 'platrerie-arc'),
+    o: { num: '2026-026', titre: "Transformation de l'étage", client: ['Madame Essai', 'Route du Modèle 21', '2800 Delémont'], chantier: 'Rue du Test 9, 2900 Porrentruy, 1er étage', surplace: 'Mme Essai, 079 000 00 00', acces: 'Clé chez la concierge, place de parc dans la cour', debut: 'semaine 3, 2027', duree: '6 jours ouvrables', paiement: '30 % à la commande, solde à 30 jours',
+      non: ['Peinture de finition', 'Installations électriques dans les cloisons'],
+      g: [{ nom: 'Bureau', l: [L('Cloison en plaques de plâtre, posée', 14, 'm²', 95), L('Faux plafond en plaques de plâtre', 12, 'm²', 110), L('Lissage des murs, 2 passes', 28, 'm²', 40)] },
+          { nom: 'Chambre', l: [L('Lissage des murs, 2 passes', 36, 'm²', 40), L('Lissage des plafonds, 2 passes', 14, 'm²', 45)] },
+          { nom: 'Général', l: [L('Protection des sols et des accès', 1, 'forfait', 180), L('Évacuation des déchets', 1, 'forfait', 160)] }] } },
+  renovation: { e: E('Rénova Habitat Sàrl', 'Rénova Habitat', 'RÉNOVATION · TRANSFORMATION', 'maison', '#3B3F46', '2800 Delémont', 'Claire Mur', '032 000 00 08', 'renova-habitat'),
+    o: { num: '2026-064', titre: 'Rénovation complète de la salle de bains', client: ['Famille Exemple', 'Chemin des Essais 4', '1700 Fribourg'], chantier: 'Chemin des Essais 4, Fribourg', debut: 'semaine 6, 2027', duree: '3 semaines', paiement: '30 % à la commande, 40 % à mi-chantier, 30 % à la réception',
+      non: ['Appareils électriques', 'Porte de la salle de bains'],
+      g: [{ nom: 'Démolition', l: [L('Dépose des appareils et du carrelage', 1, 'forfait', 1450), L('Benne, pose et enlèvement', 1, 'pce', 480)] },
+          { nom: 'Sanitaire', l: [L("Douche à l'italienne, receveur et paroi, posés", 1, 'pce', 3900), L('Lavabo et meuble, posés', 1, 'pce', 1650), L('WC suspendu, posé', 1, 'pce', 1380)] },
+          { nom: 'Carrelage', l: [L('Étanchéité sous carrelage', 9, 'm²', 50), L('Carrelage de sol, pose seule', 6, 'm²', 85), L('Faïence murale, pose seule', 18, 'm²', 80)] },
+          { nom: 'Peinture et finitions', l: [L('Peinture du plafond, 2 couches', 6, 'm²', 32), L('Nettoyage de fin de chantier', 1, 'forfait', 220)] }] } },
+  electricien: { e: E('Volta Électricité SA', 'Volta', 'ÉLECTRICITÉ', 'eclair', '#B8470F', '2800 Delémont', 'Yann Phase', '032 000 00 09', 'volta-electricite'),
+    o: { num: '2026-048', titre: 'Cuisine, prises et éclairage', client: ['Famille Exemple', 'Chemin des Essais 4', '1700 Fribourg'], chantier: 'Chemin des Essais 4, Fribourg', debut: 'semaine 4, 2027', duree: '2 jours ouvrables', paiement: 'net à 30 jours',
+      non: ['Rebouchage de finition et peinture', 'Appareils ménagers'],
+      g: [{ nom: 'Appareillage', l: [L('Prise triple, fournie et posée', 6, 'pce', 95), L('Interrupteur, fourni et posé', 2, 'pce', 85)] },
+          { nom: 'Éclairage', l: [L('Spot LED encastré, fourni et posé', 8, 'pce', 85)] },
+          { nom: 'Câblage', l: [L('Tirage de câble sous tube', 35, 'm', 14), L('Saignée et rhabillage', 12, 'm', 45)] },
+          { nom: 'Divers', l: [L("Contrôle de l'installation et rapport de sécurité", 1, 'forfait', 280), L('Déplacement', 1, 'forfait', 70)] }] } },
+  carreleur: { e: E('Carrelages Damier Sàrl', 'Carrelages Damier', 'CARRELAGE · FAÏENCE', 'carreaux', '#0F6B74', '2854 Bassecourt', 'Hugo Joint', '032 000 00 10', 'carrelages-damier'),
+    o: { num: '2026-035', titre: 'Salle de bains, sol et murs', client: ['Madame Essai', 'Route du Modèle 21', '2800 Delémont'], chantier: 'Route du Modèle 21, Delémont', debut: 'semaine 7, 2027', duree: '5 jours ouvrables', paiement: '30 % à la commande, solde à 30 jours',
+      non: ['Fourniture du carrelage, choisi par le client', 'Dépose des appareils sanitaires'],
+      g: [{ nom: 'Sol', l: [L("Dépose de l'ancien carrelage", 6, 'm²', 35), L('Étanchéité sous carrelage', 6, 'm²', 50), L('Carrelage de sol, pose seule', 6, 'm²', 85)] },
+          { nom: 'Murs', l: [L('Faïence murale, pose seule', 18, 'm²', 80), L('Joints silicone', 12, 'm', 14)] },
+          { nom: 'Divers', l: [L('Déplacement', 1, 'forfait', 60)] }] } },
+  facade: { e: E('Couleurs & Façades Sàrl', 'Couleurs & Façades', 'PEINTURE · FAÇADES', 'pinceau', '#5B3A8C', '2800 Delémont', 'Luigi Blanc', '032 000 00 11', 'couleurs-facades'),
+    o: { num: '2026-022', titre: "Peinture de l'appartement, trois pièces", client: ['Régie Exemple SA', 'Avenue des Essais 30', '2000 Neuchâtel'], chantier: 'Rue du Test 14, Delémont, 2e étage', debut: 'semaine 2, 2027', duree: '6 jours ouvrables', paiement: 'net à 30 jours',
+      non: ['Déplacement des meubles', 'Remplacement des prises et des interrupteurs'],
+      g: [{ nom: 'Séjour', l: [L('Protection des sols et des meubles', 1, 'forfait', 180), L('Rebouchage et ponçage des murs', 42, 'm²', 9), L('Peinture des murs, 2 couches', 42, 'm²', 28), L('Peinture du plafond, 2 couches', 24, 'm²', 32)] },
+          { nom: 'Chambre', l: [L('Rebouchage et ponçage des murs', 30, 'm²', 9), L('Peinture des murs, 2 couches', 30, 'm²', 28), L('Peinture du plafond, 2 couches', 14, 'm²', 32)] },
+          { nom: 'Couloir et entrée', l: [L('Peinture des murs, 2 couches', 22, 'm²', 28), L('Laquage des portes et des cadres', 3, 'pce', 140)] }] } },
+  toiture: { e: E('Toitures du Jura Sàrl', 'Toitures du Jura', 'FERBLANTERIE · COUVERTURE', 'toit', '#1F3A5F', '2800 Delémont', 'Pierre Faîte', '032 000 00 12', 'toitures-jura'),
+    o: { num: '2026-027', titre: 'Remplacement des chéneaux, façade côté jardin', client: ['Monsieur Modèle', 'Rue du Test 9', '2900 Porrentruy'], chantier: 'Rue du Test 9, Porrentruy', debut: 'la semaine 5 de 2027', duree: 'deux jours', paiement: 'net à 30 jours', visite: '12 novembre',
+      non: ['Réparation de la charpente', 'Nettoyage de la toiture'],
+      g: [{ nom: '', l: [L('Dépose des anciens chéneaux', 18, 'm', 22), L('Chéneau demi-rond en zinc-titane, fourni et posé', 18, 'm', 96), L("Descente d'eau pluviale, fournie et posée", 7, 'm', 78), L('Naissance et raccords', 2, 'pce', 95), L('Échafaudage roulant, par jour', 2, 'pce', 90), L('Déplacement', 1, 'forfait', 60)] }] } },
+};
+
+/* Jeux d'essai des options et des variantes : une option reste hors du total, une variante remplace une ligne. */
+const copie = x => JSON.parse(JSON.stringify(x));
+JEUX['morel-options'] = { e: JEUX.morel.e, o: copie(JEUX.morel.o) };
+JEUX['morel-options'].o.g[1].l = [{ ...L('Peinture des murs, 2 couches', 42, 'm²', 28), v: { d: 'peinture mate lessivable', p: 34 } }, L('Peinture des plafonds, 2 couches', 24, 'm²', 32)];
+JEUX['morel-options'].o.g[0].l = [L('Protection des sols et des meubles', 1, 'forfait', 180)];
+JEUX['morel-options'].o.g.pop();
+JEUX['morel-options'].o.options =[L('Laquage des plinthes', 26, 'm', 12), L('Laquage des portes et des cadres', 3, 'pce', 140)];
+JEUX['platrier-options'] = { e: JEUX.platrier.e, o: copie(JEUX.platrier.o) };
+JEUX['platrier-options'].o.g[0].l = [{ ...L('Cloison en plaques de plâtre, posée', 14, 'm²', 95), v: { d: 'cloison à isolation phonique renforcée', p: 118 } }, L('Lissage des murs, 2 passes', 28, 'm²', 40)];
+JEUX['platrier-options'].o.g[1].l = [L('Lissage des murs, 2 passes', 36, 'm²', 40)];
+JEUX['platrier-options'].o.g.pop();
+JEUX['platrier-options'].o.options = [L('Faux plafond en plaques de plâtre, bureau', 12, 'm²', 110), L('Lissage des plafonds de la chambre, 2 passes', 14, 'm²', 45)];
+
+/* ---------- Calcul et mise en forme ---------- */
+const chf = c => { const [a, b] = (Math.abs(Math.round(c)) / 100).toFixed(2).split('.'); return (c < 0 ? '−' : '') + a.replace(/\B(?=(\d{3})+(?!\d))/g, '’') + '.' + b; };
+const qte = q => Number.isInteger(q) ? String(q) : q.toFixed(2);
+function totaliser(o) {
+  let ht = 0;
+  for (const g of o.g) { g.tot = g.l.reduce((s, x) => s + Math.round(x.q * x.p * 100), 0); ht += g.tot; }
+  const tva = Math.round(ht * 0.081), brut = ht + tva, ttc = Math.round(brut / 5) * 5;
+  const htOpt = ht + (o.options || []).reduce((s, x) => s + Math.round(x.q * x.p * 100), 0);
+  return { ht, tva, arrondi: ttc - brut, ttc, ttcOptions: Math.round((htOpt + Math.round(htOpt * 0.081)) / 5) * 5 };
+}
+
+/* ---------- Briques communes ---------- */
+const coord = e => `<b>${e.nom}</b><br>${e.rue}<br>${e.lieu}<br>${e.tel}<br>${e.mail}`;
+const adresse = o => o.client.join('<br>');
+const infos = cells => `<table class="infos"><tr>${cells.map(([l, v]) => `<td><div class="lab">${l}</div>${v}</td>`).join('')}</tr></table>`;
+function lignes(o, { pos = false, unite = false, st = true, grpTot = false, zebre = false } = {}) {
+  const cols = (pos ? 1 : 0) + 4 + (unite ? 1 : 0);
+  let h = `<table class="lig"><thead><tr>${pos ? '<th class="pos">Pos.</th>' : ''}<th>Désignation</th><th class="n">Quantité</th>${unite ? '<th class="u">Un.</th>' : ''}<th class="n">Prix unit.</th><th class="n">Montant</th></tr></thead><tbody>`;
+  o.g.forEach((g, gi) => {
+    if (g.nom) h += `<tr class="grp"><td colspan="${grpTot ? cols - 1 : cols}">${pos ? (gi + 1) + NB + NB : ''}${g.nom}</td>${grpTot ? `<td class="n">${chf(g.tot)}</td>` : ''}</tr>`;
+    g.l.forEach((x, li) => {
+      h += `<tr${zebre && li % 2 === 0 ? ' class="z"' : ''}>${pos ? `<td class="pos">${gi + 1}.${li + 1}</td>` : ''}<td>${x.d}</td><td class="n q">${qte(x.q)}${unite ? '' : NB + x.u}</td>${unite ? `<td class="u">${x.u}</td>` : ''}<td class="n">${chf(x.p * 100)}</td><td class="n">${chf(Math.round(x.q * x.p * 100))}</td></tr>`;
+      // Variante : sous la ligne qu'elle remplace, hors total, avec l'écart de prix. Dessinée pour les tableaux à quatre colonnes.
+      if (x.v) { const ecart = Math.round(x.q * (x.v.p - x.p) * 100); h += `<tr class="var"><td><span class="case"></span>Variante${NB}: ${x.v.d}<div class="met">${ecart >= 0 ? 'Plus-value' : 'Moins-value'} par rapport à la ligne du dessus</div></td><td class="n">${qte(x.q)}${NB}${x.u}</td><td class="n">${chf(x.v.p * 100)}</td><td class="n">${ecart >= 0 ? '+' : ''}${chf(ecart)}</td></tr>`; }
+    });
+    if (st && !grpTot && g.nom && g.l.length > 1) h += `<tr class="st"><td colspan="${cols - 1}">Total ${g.nom.toLowerCase()}</td><td class="n">${chf(g.tot)}</td></tr>`;
+  });
+  return h + '</tbody></table>';
+}
+const totaux = (T, cls = 'totaux') => `<table class="${cls}"><tr><td>Sous-total HT</td><td class="n">${chf(T.ht)}</td></tr><tr${T.arrondi ? '' : ' class="av"'}><td>TVA 8,1${NB}%</td><td class="n">${chf(T.tva)}</td></tr>${T.arrondi ? `<tr class="av"><td>Arrondi</td><td class="n">${chf(T.arrondi)}</td></tr>` : ''}<tr class="tt"><td>Total TTC</td><td class="n">CHF${NB}${chf(T.ttc)}</td></tr></table>`;
+const options = (o, T) => !o.options ? '' : `<table class="opt"><thead><tr><th colspan="4">Options, hors total · cochez celles que vous retenez</th></tr></thead><tbody>${o.options.map(x => `<tr><td><span class="case"></span>${x.d}</td><td class="n">${qte(x.q)}${NB}${x.u}</td><td class="n">${chf(x.p * 100)}</td><td class="n">${chf(Math.round(x.q * x.p * 100))}</td></tr>`).join('')}<tr class="ot"><td colspan="3" class="n">Total TTC avec toutes les options</td><td class="n">CHF${NB}${chf(T.ttcOptions)}</td></tr></tbody></table>`;
+// Sans cellule fusionnée : dompdf décale les colonnes quand une fusion passe d'une page à l'autre (essai du 2026-11-20).
+function lignesMarge(o) {
+  let h = '<table class="lig"><thead><tr><th class="po">Poste</th><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix unit.</th><th class="n">Montant</th></tr></thead><tbody>';
+  o.g.forEach(g => g.l.forEach((x, li) => {
+    const cl = [li ? '' : 'prem', li === g.l.length - 1 ? 'fin' : ''].join(' ').trim();
+    h += `<tr${cl ? ` class="${cl}"` : ''}><td class="po">${li === 0 ? `<b class="c">${g.nom}</b>${g.l.length === 1 ? '<br>' + chf(g.tot) : ''}` : li === 1 ? chf(g.tot) : ''}</td><td>${x.d}</td><td class="n">${qte(x.q)}${NB}${x.u}</td><td class="n">${chf(x.p * 100)}</td><td class="n">${chf(Math.round(x.q * x.p * 100))}</td></tr>`;
+  }));
+  return h + '</tbody></table>';
+}
+const cond = o => `<table class="cond"><tr><td><div class="lab">Conditions</div><ul><li>Paiement${NB}: ${o.paiement.replace(/ %/g, NB + '%')}.</li><li>Début des travaux${NB}: ${o.debut}. Durée${NB}: ${o.duree}.</li><li>Offre valable jusqu'au ${VALIDE}. Prix en francs suisses, TVA comprise dans le total.</li></ul></td><td><div class="lab">Non compris</div><ul>${o.non.map(x => `<li>${x}</li>`).join('')}</ul></td></tr></table>`;
+const condPile = o => `<div class="condp"><div class="lab">Conditions</div><ul><li>Paiement${NB}: ${o.paiement.replace(/ %/g, NB + '%')}.</li><li>Début des travaux${NB}: ${o.debut}. Durée${NB}: ${o.duree}.</li><li>Offre valable jusqu'au ${VALIDE}. Prix en francs suisses, TVA comprise dans le total.</li></ul><div class="lab">Non compris</div><ul>${o.non.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
+const sign = (e) => `<table class="sign"><tr><td><div class="lab">L'entreprise</div><div class="sig-nom">${e.contact}</div><div class="sig-l"></div><div class="sig-s">${e.nom}, ${e.lieu.replace(/^\d+ /, '')}, le ${DATE}</div></td><td><div class="lab">Bon pour accord</div><div class="sig-esp"></div><div class="sig-l"></div><div class="sig-s">Lieu, date et signature du client</div></td></tr></table>`;
+const pied = e => `<table class="pied"><tr><td>${e.nom} · ${e.ide} TVA · IBAN ${e.iban}</td><td class="n">Page 1 / 1</td></tr></table>`;
+const tete = (e, p, opt) => `<table class="h"><tr><td>${logo(e, p, opt)}</td><td class="coord">${coord(e)}</td></tr></table>`;
+const quatre = (o, e) => infos([['Date', DATE], ["Valable jusqu'au", VALIDE], ['Chantier', o.chantier], ['Votre contact', e.contact]]);
+
+/* ---------- Les douze modèles ---------- */
+const MODELES = {
+  sobre: { nom: 'Sobre', jeu: 'morel', rend: (o, e, T, p) => `<div class="in">${tete(e, p)}<div class="filet bg"></div><div class="adr">${adresse(o)}</div>
+    <p class="titre c">Offre n°${NB}${o.num}</p><p class="objet">${o.titre}</p>${quatre(o, e)}${lignes(o)}${totaux(T)}${options(o, T)}${cond(o)}${sign(e)}</div>${pied(e)}` },
+
+  bandeau: { nom: 'Bandeau', jeu: 'macon', rend: (o, e, T, p) => `<div class="bande bg"><div class="carte">${logo(e, p, { largeur: 262 })}</div><div class="coord">${coord(e)}</div></div>
+    <div class="in"><div class="adr">${adresse(o)}</div><p class="sur c">Offre <span>n°${NB}${o.num}</span></p><p class="objet">${o.titre}</p>${quatre(o, e)}${lignes(o)}${totaux(T)}${cond(o)}${sign(e)}</div>
+    <table class="bas bg"><tr><td>${e.nom} · ${e.ide} TVA · IBAN ${e.iban}</td><td class="n">Page 1 / 1</td></tr></table>` },
+
+  atelier: { nom: 'Atelier', jeu: 'menuisier', rend: (o, e, T, p) => `<div class="in"><div class="centre">${logo(e, p, { police: "'Source Serif 4', Georgia, serif", graisse: 600, taille: 21, largeur: 330 })}</div>
+    <div class="ligne-coord">${e.rue} · ${e.lieu} · ${e.tel} · ${e.mail}</div><div class="double"></div>
+    <table class="tetiere"><tr><td><p class="titre c">Offre</p><p class="num">n°${NB}${o.num}</p></td><td><div class="adr">${adresse(o)}</div></td></tr></table>
+    <p class="objet">${o.titre}</p><p class="meta">${e.lieu.replace(/^\d+ /, '')}, le ${DATE_LONGUE} · valable jusqu'au ${VALIDE} · chantier${NB}: ${o.chantier}</p>
+    ${lignes(o)}${totaux(T)}${cond(o)}${sign(e)}</div>${pied(e)}` },
+
+  technique: { nom: 'Technique', jeu: 'sanitaire', rend: (o, e, T, p) => `<div class="in">${tete(e, p)}<div class="adr">${adresse(o)}</div>
+    <table class="cart"><tr><td colspan="5" class="gros"><b class="c">OFFRE</b>${NB}${NB} ${o.titre}</td></tr>
+    <tr><td><div class="lab">N°</div>${o.num}</td><td><div class="lab">Date</div>${DATE}</td><td><div class="lab">Valable jusqu'au</div>${VALIDE}</td><td><div class="lab">Chantier</div>${o.chantier}</td><td><div class="lab">Contact</div>${e.contact}</td></tr></table>
+    ${lignes(o, { pos: true, unite: true })}${totaux(T)}${cond(o)}${sign(e)}</div>${pied(e)}` },
+
+  moderne: { nom: 'Moderne', jeu: 'sols', rend: (o, e, T, p) => `<div class="in">${tete(e, p)}<div class="adr">${adresse(o)}</div>
+    <p class="titre">Offre</p><p class="objet">${o.titre}</p>${infos([['N°', o.num], ['Date', DATE], ["Valable jusqu'au", VALIDE], ['Chantier', o.chantier]])}
+    ${lignes(o, { zebre: true, grpTot: true })}${totaux(T)}${cond(o)}${sign(e)}</div>${pied(e)}` },
+
+  epure: { nom: 'Épuré', jeu: 'paysagiste', rend: (o, e, T, p) => `<div class="in">${tete(e, p, { graisse: 700 })}<div class="adr">${adresse(o)}</div>
+    <div class="trait bg"></div><p class="titre">Offre n°${NB}${o.num}</p><p class="objet">${o.titre}</p><p class="meta">${DATE} · valable jusqu'au ${VALIDE} · chantier${NB}: ${o.chantier}</p>
+    ${lignes(o, { grpTot: true })}${totaux(T)}${cond(o)}${sign(e)}</div>${pied(e)}` },
+
+  chantier: { nom: 'Chantier', jeu: 'platrier', rend: (o, e, T, p) => `<div class="in">${tete(e, p)}<div class="barre bg"></div>
+    <table class="duo"><tr><td><table class="fiche"><tr><th colspan="2">Chantier</th></tr><tr><td>Adresse</td><td>${o.chantier}</td></tr><tr><td>Contact sur place</td><td>${o.surplace}</td></tr><tr><td>Accès</td><td>${o.acces}</td></tr><tr><td>Début des travaux</td><td>${o.debut}</td></tr><tr><td>Durée estimée</td><td>${o.duree}</td></tr></table></td>
+    <td><div class="adr">${adresse(o)}</div><p class="ref">Offre n°${NB}${o.num} du ${DATE}<br>Valable jusqu'au ${VALIDE}<br>Votre contact${NB}: ${e.contact}</p></td></tr></table>
+    <p class="titre"><span>Offre</span> · ${o.titre}</p>${lignes(o, { grpTot: true })}${totaux(T)}${options(o, T)}${cond(o)}${sign(e)}</div>${pied(e)}` },
+
+  recap: { nom: 'Récapitulatif', jeu: 'renovation', rend: (o, e, T, p) => `<div class="in">${tete(e, p)}<div class="filet"></div><div class="adr">${adresse(o)}</div>
+    <p class="titre"><span>Offre n°${NB}${o.num}</span> · ${o.titre}</p><p class="meta">${DATE} · valable jusqu'au ${VALIDE} · chantier${NB}: ${o.chantier} · votre contact${NB}: ${e.contact}</p>
+    <table class="duo2"><tr><td class="g"><p class="h2">Récapitulatif</p><table class="rec">${o.g.map((g, i) => `<tr><td class="let"><table class="pas"><tr><td>${'ABCDEFGH'[i]}</td></tr></table></td><td>${g.nom}</td><td class="n">${chf(g.tot)}</td></tr>`).join('')}</table></td>
+    <td><p class="h2">&nbsp;</p>${totaux(T, 'bloc-tot')}</td></tr></table>
+    <p class="h2" style="margin-top:16px">Détail des travaux</p>${lignes({ g: o.g.map((g, i) => ({ ...g, nom: 'ABCDEFGH'[i] + NB + '·' + NB + g.nom })) }, { st: false })}
+    ${cond(o)}${sign(e)}</div>${pied(e)}` },
+
+  lateral: { nom: 'Latéral', jeu: 'electricien', rend: (o, e, T, p) => `<div class="cote"><div class="carte">${logo(e, p, { largeur: 170, taille: 24 })}</div>
+    <div class="bloc"><div class="lab">Offre</div><div class="gros">${o.num}</div></div>
+    <div class="bloc"><div class="lab">Date</div>${DATE}</div><div class="bloc"><div class="lab">Valable jusqu'au</div>${VALIDE}</div>
+    <div class="bloc"><div class="lab">Chantier</div>${o.chantier}</div><div class="bloc"><div class="lab">Votre contact</div>${e.contact}<br>${e.tel}<br>${e.mail}</div>
+    <div class="fond"><b>${e.nom}</b><br>${e.rue}<br>${e.lieu}<br>${e.ide} TVA<br>IBAN ${e.iban}</div></div>
+    <div class="in"><div class="adr">${adresse(o)}</div><p class="titre">${o.titre}</p>${lignes(o)}${totaux(T)}${condPile(o)}${sign(e)}</div>
+    <table class="pied"><tr><td>&nbsp;</td><td class="n">Page 1 / 1</td></tr></table>` },
+
+  enseigne: { nom: 'Enseigne', jeu: 'carreleur', rend: (o, e, T, p) => `<div class="in"><p class="ens c">${e.court}</p><p class="ens-s">${e.sous} · ${e.lieu.replace(/^\d+ /, '')}</p><div class="barre bg"></div>
+    <p class="ens-c">${e.rue} · ${e.lieu} · ${e.tel} · ${e.mail}</p>
+    <table class="duo"><tr><td><table class="ref"><tr><td>Offre n°</td><td><b>${o.num}</b></td></tr><tr><td>Date</td><td>${DATE}</td></tr><tr><td>Valable jusqu'au</td><td>${VALIDE}</td></tr><tr><td>Chantier</td><td>${o.chantier}</td></tr><tr><td>Votre contact</td><td>${e.contact}</td></tr></table></td><td><div class="adr">${adresse(o)}</div></td></tr></table>
+    <p class="titre">${o.titre}</p>${lignes(o)}${totaux(T)}${cond(o)}${sign(e)}</div>${pied(e)}` },
+
+  marge: { nom: 'Marge', jeu: 'facade', rend: (o, e, T, p) => `<div class="in">${tete(e, p)}<div class="filet"></div><div class="adr">${adresse(o)}</div>
+    <p class="titre"><span>Offre n°${NB}${o.num}</span> · ${o.titre}</p>${quatre(o, e)}${lignesMarge(o)}${totaux(T)}${cond(o)}${sign(e)}</div>${pied(e)}` },
+
+  lettre: { nom: 'Lettre', jeu: 'toiture', rend: (o, e, T, p) => `<div class="in">${tete(e, p)}
+    <table class="env"><tr><td><div class="exp">${e.nom} · ${e.rue} · ${e.lieu}</div><div class="adr">${adresse(o)}</div></td><td class="lieu">${e.lieu.replace(/^\d+ /, '')}, le ${DATE_LONGUE}</td></tr></table>
+    <p class="concerne"><span>Offre n°${NB}${o.num}</span>${NB}: ${o.titre.toLowerCase()}</p>
+    <p class="txt">Monsieur,</p><p class="txt">Suite à notre visite du ${o.visite}, nous vous remettons notre offre pour les travaux suivants, à réaliser à la ${o.chantier}.</p>
+    ${lignes(o)}${totaux(T)}
+    <p class="txt apres">Les travaux peuvent débuter ${o.debut} et durent ${o.duree}. Paiement ${o.paiement}. Cette offre est valable jusqu'au ${VALIDE}. Ne sont pas compris${NB}: ${o.non.join(', ').toLowerCase()}.</p>
+    <p class="txt">Nous restons à votre disposition pour toute question et vous adressons, Monsieur, nos salutations les meilleures.</p>
+    <table class="sign"><tr><td>${e.nom}<div class="sig-nom">${e.contact}</div></td><td><div class="lab">Bon pour accord</div><div class="sig-esp"></div><div class="sig-l"></div><div class="sig-s">Lieu, date et signature du client</div></td></tr></table></div>${pied(e)}` },
+};
+
+function feuille(m, jeu) {
+  const M = MODELES[m], J = JEUX[jeu || M.jeu];
+  const o = copie(J.o), e = J.e;
+  const T = totaliser(o), p = principale(e.couleur);
+  return `<div class="a4 m-${m}" id="f-${m}-${jeu || M.jeu}" style="--p:${p};--t:${teinte(p, 0.9)};--t2:${teinte(p, 0.82)}">${M.rend(o, e, T, p)}</div>`;
+}
+
+const q = new URLSearchParams(location.hash.slice(1));
+const pile = document.getElementById('pile');
+if (q.get('m')) { document.body.classList.add('une'); pile.innerHTML = feuille(q.get('m'), q.get('d')); }
+else pile.innerHTML = Object.keys(MODELES).map(m => feuille(m)).join('');
+window.MODELES_CLES = Object.keys(MODELES);
+</script>
+</body>
+</html>

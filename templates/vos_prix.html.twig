@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{# « Vos prix » : un produit sans prix à la fois (décisions de Xavier du 2026-11-19, maquette Vos prix, V1 à V6).
+   V2 = A, clavier du téléphone : les boutons sont dans le flux, sous le champ, et non dans la barre d'action du bas
+   que le clavier recouvrirait (entorse à CODING_RULES, Ergonomie, assumée par cette réponse).
+   Ordre dans le code, différent de l'ordre à l'écran (vos-prix.css) : « Suivant » est le premier bouton du
+   formulaire, celui que la touche Entrée envoie ; le retrait vient en dernier.
+   data-zone : ce que vos-prix.js remplace quand le produit suivant arrive sans recharger la page. #}
+{% block entete_html %}<link rel="stylesheet" href="/css/vos-prix.css"><script src="/js/vos-prix.js" defer></script>{% endblock %}
+{% block titre %}Vos prix · {{ nom_application }}{% endblock %}
+{% block retour %}
+  {% if p %}
+    <form class="vp-quitter" method="post" action="/vos-prix/plus-tard"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="back" type="submit">Plus tard</button></form>
+  {% else %}
+    <a class="back" href="/catalogue">Catalogue</a>
+  {% endif %}
+{% endblock %}
+{% block entete %}Vos prix{% endblock %}
+{% block ecran_classe %} vos-prix{% endblock %}
+
+{% block contenu %}
+  {% if p %}
+    <p class="vp-avance" data-zone="avance"><span><b>{{ n }}</b> sur {{ total }}</span><progress class="vp-barre" value="{{ n - 1 }}" max="{{ total }}" aria-hidden="true"></progress></p>
+    {# data-dernier : après le dernier produit vient le bilan, le script laisse le formulaire partir normalement. #}
+    <form class="vp-carte" method="post" action="/vos-prix/{{ p.id }}" data-vos-prix{% if n == total %} data-dernier{% endif %}>
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <h2 class="vp-nom" data-zone="nom" aria-live="polite">{{ p.designation }}</h2>
+      <label class="vp-prix{% if erreur %} faux{% endif %}"><span class="chf">CHF</span>
+        <input name="prix" value="{{ saisie }}" inputmode="decimal" autocomplete="off" enterkeyhint="next" placeholder="0" aria-label="Prix de {{ p.designation }}" autofocus>
+        <span class="unite" data-zone="unite">par {{ p.unite }}</span></label>
+      <div class="vp-gestes">
+        <button class="btn primary" type="submit" name="action" value="suivant">Suivant</button>
+        <button class="btn" type="submit" name="action" value="passer">Passer</button>
+      </div>
+      <div class="vp-sous" data-zone="sous">
+        {% if erreur %}
+          <p class="vp-err" role="alert">Tapez un prix, ou touchez «&nbsp;Passer&nbsp;».</p>
+        {% elseif p.prix_exemple_centimes %}
+          <button class="vp-sugg" type="submit" name="action" value="reprendre"><span>Prix de la démo&nbsp;: {{ p.prix_exemple_centimes|montant }}</span><u>Reprendre</u></button>
+        {% endif %}
+      </div>
+      <div class="vp-haut" data-zone="haut"><span class="vp-cat">{{ p.categorie }}</span><button class="vp-pas" type="submit" name="action" value="retirer">Je ne fais pas ça</button></div>
+    </form>
+  {% elseif bilan.rien %}
+    <div class="relu-fin">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      <h2>Tous vos produits ont un prix</h2>
+      <p class="muted">Rien à compléter.</p>
+    </div>
+  {% else %}
+    <div class="relu-fin">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      <h2>{{ bilan.reste == 0 ? 'Votre catalogue est à vos prix' : 'C\'est noté' }}</h2>
+      <ul class="vp-bilan">
+        <li><span>Prix enregistrés</span><b>{{ bilan.faits }}</b></li>
+        {% if bilan.reste > 0 %}<li><span>À compléter plus tard</span><b>{{ bilan.reste }}</b></li>{% endif %}
+        {% if bilan.retires > 0 %}<li><span>Produits retirés</span><b>{{ bilan.retires }}</b></li>{% endif %}
+      </ul>
+      {% if bilan.reste > 0 %}<a class="vp-lien" href="/vos-prix">Reprendre les produits passés</a>{% endif %}
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  {% if not p %}
+    <div class="actionbar">
+      <a class="btn grand" href="/catalogue">Catalogue</a>
+      <a class="btn primary grand" href="/">Mes offres</a>
+    </div>
+  {% endif %}
+{% endblock %}

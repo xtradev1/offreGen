@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Offre {{ offre.numero }} · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}Offre {{ offre.numero }}{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% if erreurs is not empty %}<p class="alerte bad" role="alert">L'offre n'est pas enregistrée&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  <form id="entete" method="post" action="/offres/{{ offre.id }}/modifier">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="titre">Objet de l'offre</label>
+      <input id="titre" name="titre" value="{{ champs.titre }}" maxlength="190" required{{ f.invalide(erreurs, 'titre') }}>
+      {{ f.erreur(erreurs, 'titre') }}
+    </div>
+    {# Modèles du bâtiment (2026-11-20) : le chantier. Tout est facultatif ; un champ vide ne paraît pas sur l'offre. #}
+    <fieldset class="groupe">
+      <legend>Chantier</legend>
+      <p class="muted petit">Facultatif&nbsp;: un champ laissé vide ne paraît pas sur l'offre.</p>
+      <div class="champ">
+        <label for="chantier_adresse">Adresse du chantier</label>
+        <input id="chantier_adresse" name="chantier_adresse" value="{{ champs.chantier_adresse }}" maxlength="255" autocomplete="off"{{ f.invalide(erreurs, 'chantier_adresse') }}>
+        {{ f.erreur(erreurs, 'chantier_adresse') }}
+      </div>
+      <div class="champ">
+        <label for="chantier_contact">Contact sur place</label>
+        <input id="chantier_contact" name="chantier_contact" value="{{ champs.chantier_contact }}" maxlength="190" placeholder="Nom, téléphone" autocomplete="off"{{ f.invalide(erreurs, 'chantier_contact') }}>
+        <span class="muted petit">Paraît sur l'offre dans le modèle «&nbsp;Chantier&nbsp;».</span>
+        {{ f.erreur(erreurs, 'chantier_contact') }}
+      </div>
+      <div class="champ">
+        <label for="chantier_acces">Accès</label>
+        <input id="chantier_acces" name="chantier_acces" value="{{ champs.chantier_acces }}" maxlength="255" placeholder="Clé, place de parc" autocomplete="off"{{ f.invalide(erreurs, 'chantier_acces') }}>
+        <span class="muted petit">Paraît sur l'offre dans le modèle «&nbsp;Chantier&nbsp;»&nbsp;: n'y notez pas un code de porte.</span>
+        {{ f.erreur(erreurs, 'chantier_acces') }}
+      </div>
+      <div class="duo">
+        <div class="champ">
+          <label for="debut_travaux">Début des travaux</label>
+          <input id="debut_travaux" name="debut_travaux" value="{{ champs.debut_travaux }}" maxlength="80" placeholder="semaine 3, 2027" autocomplete="off"{{ f.invalide(erreurs, 'debut_travaux') }}>
+          {{ f.erreur(erreurs, 'debut_travaux') }}
+        </div>
+        <div class="champ">
+          <label for="duree_travaux">Durée</label>
+          <input id="duree_travaux" name="duree_travaux" value="{{ champs.duree_travaux }}" maxlength="80" placeholder="6 jours ouvrables" autocomplete="off"{{ f.invalide(erreurs, 'duree_travaux') }}>
+          {{ f.erreur(erreurs, 'duree_travaux') }}
+        </div>
+      </div>
+      <div class="champ">
+        <label for="non_compris">Non compris dans l'offre</label>
+        <textarea id="non_compris" name="non_compris" rows="3" maxlength="1000"{{ f.invalide(erreurs, 'non_compris') }}>{{ champs.non_compris }}</textarea>
+        <span class="muted petit">Une ligne par élément, dix au plus. Par exemple&nbsp;: Peinture de finition.</span>
+        {{ f.erreur(erreurs, 'non_compris') }}
+      </div>
+      <div class="champ">
+        <label for="visite_le">Date de la visite</label>
+        <input id="visite_le" name="visite_le" type="date" value="{{ champs.visite_le }}"{{ f.invalide(erreurs, 'visite_le') }}>
+        <span class="muted petit">Citée dans le modèle «&nbsp;Lettre&nbsp;».</span>
+        {{ f.erreur(erreurs, 'visite_le') }}
+      </div>
+    </fieldset>
+  </form>
+  <p class="muted petit"><span class="mobile-seul">Le client se choisit en touchant son nom en haut de l'offre.</span><span class="pc-seul">Le client se choisit en cliquant sur son nom en haut de l'offre.</span></p>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/offres/{{ offre.id }}">Annuler</a>
+    <button class="btn primary" type="submit" form="entete">Enregistrer</button>
+  </div>
+{% endblock %}

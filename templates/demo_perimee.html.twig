@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% set sans_menu = true %}
+
+{# Un lien de démo sert une seule fois : une heure pour un code QR, 24 heures pour un message. #}
+{% block titre %}Lien expiré · {{ nom_application }}{% endblock %}
+{% block entete %}Lien expiré{% endblock %}
+
+{% block contenu %}
+  <p>Ce lien a expiré ou a déjà servi. Demandez-en un nouveau à la personne qui vous a présenté {{ nom_application }}.</p>
+{% endblock %}

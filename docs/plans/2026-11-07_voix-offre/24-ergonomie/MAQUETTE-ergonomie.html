@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ergonomie au pouce · offreGen</title>
+<style>
+:root { --ink:#1B1F24; --muted:#69717C; --line:#E4E7EB; --surface:#FFFFFF; --bg:#F3F4F6; --chip:#EFF1F4;
+  --accent:#2457C5; --accent-soft:#E8EEFB; --ok:#1E7F4F; --ok-soft:#E6F4EC; --warn:#9A5B00; --warn-soft:#FDF3E1; --bad:#B42318; --bad-soft:#FCE9E7;
+  --mk-ink:var(--ink); --mk-bg:var(--bg); --mk-surface:var(--surface); --mk-line:var(--line); --mk-accent:var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink:#E7EAEE; --muted:#9BA3AE; --line:#30363D; --surface:#1C2026; --bg:#121519; --chip:#272C33; --accent:#8AACF2; --accent-soft:#1F2C47; --ok:#5CC796; --ok-soft:#17301F; --warn:#E9B44C; --warn-soft:#362A12; } }
+:root[data-theme="dark"] { --ink:#E7EAEE; --muted:#9BA3AE; --line:#30363D; --surface:#1C2026; --bg:#121519; --chip:#272C33; --accent:#8AACF2; --accent-soft:#1F2C47; --ok:#5CC796; --ok-soft:#17301F; --warn:#E9B44C; --warn-soft:#362A12; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1080px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 26px; margin: 18px 0 6px; }
+h2 { font-size: 21px; margin: 40px 0 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-size: 17px; margin: 22px 0 8px; }
+p, li { max-width: 72ch; }
+.chapeau { color: var(--muted); }
+.carte { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin: 12px 0; }
+.deux { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; align-items: start; }
+.trois { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; align-items: start; }
+figure { margin: 0; } figure img { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+figcaption { font-size: 14px; color: var(--muted); margin-top: 6px; }
+.tel-img { max-width: 300px; }
+table.chiffres { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--surface); border-radius: 12px; overflow: hidden; }
+.chiffres th, .chiffres td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.chiffres th { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.chiffres td.n { text-align: center; font-weight: 700; }
+@media (max-width: 600px) { .chiffres { font-size: 13px; } .chiffres th, .chiffres td { padding: 6px; } .compteur { min-width: 0; } }
+.mieux { color: var(--ok); }
+.regle { border-left: 4px solid var(--accent); padding: 8px 14px; background: var(--accent-soft); border-radius: 0 10px 10px 0; }
+.decision { background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 14px 0 6px; }
+.decision .q { font-weight: 650; margin-bottom: 8px; }
+.decision .boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+.decision button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.decision button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.decision textarea { width: 100%; margin-top: 8px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); min-height: 44px; }
+.regle-ok { font-size: 14px; color: var(--ok); font-weight: 600; }
+.recap textarea { width: 100%; min-height: 160px; font: 14px/1.4 ui-monospace, monospace; }
+.btn-copier { font: inherit; min-height: 48px; padding: 8px 16px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
+/* Prototype */
+.proto-zone { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+.proto { width: 100%; max-width: 360px; height: 720px; border: 10px solid #111; border-radius: 36px; overflow: hidden; position: relative; background: #fff; color: #1B1F24; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.proto * { box-sizing: border-box; }
+.proto .ecr { position: absolute; inset: 0; display: none; flex-direction: column; background: #F3F4F6; }
+.proto .ecr.on { display: flex; }
+.proto .bar { min-height: 52px; display: flex; align-items: center; gap: 8px; padding: 4px 14px; background: #fff; border-bottom: 1px solid #E4E7EB; font-weight: 650; }
+.proto .bar .ret { color: #2457C5; font-weight: 500; min-width: 48px; min-height: 48px; display: flex; align-items: center; cursor: pointer; }
+.proto .corps { flex: 1; overflow: auto; padding: 10px 12px; }
+.proto .c { background: #fff; border: 1px solid #E4E7EB; border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; min-height: 60px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.proto .c.v { background: #fffaf0; border-color: #e7c27c; }
+.proto .c .d { flex: 1; } .proto .c .d b { display: block; font-size: 15px; } .proto .c .d span { font-size: 13px; color: #69717C; }
+.proto .c .m { font-weight: 700; white-space: nowrap; }
+.proto .pas { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #69717C; margin: 10px 2px 6px; }
+.proto .bas { background: #fff; border-top: 1px solid #E4E7EB; padding: 10px 12px 12px; }
+.proto .tot { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; } .proto .tot b { font-size: 20px; }
+.proto .r { display: flex; gap: 8px; }
+.proto .b { font: inherit; font-size: 16px; font-weight: 600; min-height: 58px; border-radius: 14px; border: 1px solid #E4E7EB; background: #fff; color: #1B1F24; flex: 1; cursor: pointer; }
+.proto .b.p { background: #2457C5; border-color: #2457C5; color: #fff; } .proto .b.o { background: #1E7F4F; border-color: #1E7F4F; color: #fff; } .proto .b.x { background: #B42318; border-color: #B42318; color: #fff; }
+.proto .tabs { display: flex; height: 66px; background: #fff; border-top: 1px solid #E4E7EB; align-items: flex-end; }
+.proto .tabs span { flex: 1; text-align: center; font-size: 11px; color: #69717C; padding-bottom: 8px; }
+.proto .tabs span.on { color: #2457C5; font-weight: 600; }
+.proto .tabs .mic { flex: 1.2; position: relative; height: 66px; }
+.proto .tabs .mic i { position: absolute; left: 50%; top: -26px; transform: translateX(-50%); width: 70px; height: 70px; border-radius: 50%; background: #2457C5; border: 5px solid #fff; box-shadow: 0 6px 16px rgba(36,87,197,.45); cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; font-style: normal; font-size: 26px; }
+.proto .voile { position: absolute; inset: 0; background: rgba(15,20,30,.45); display: none; }
+.proto .feuille { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 20px 20px 0 0; padding: 12px 14px 16px; display: none; }
+.proto .feuille.on, .proto .voile.on { display: block; }
+.proto .feuille h4 { margin: 0 0 6px; font-size: 18px; }
+.proto .ch { border: 2px solid #E4E7EB; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; min-height: 58px; cursor: pointer; }
+.proto .ch.on { border-color: #2457C5; background: #E8EEFB; } .proto .ch span { display: block; font-size: 13px; color: #69717C; }
+.proto .ent { background: #EFF1F4; border-radius: 12px; padding: 8px 10px; color: #69717C; font-size: 14px; margin: 8px 0; }
+.proto .champs { display: flex; gap: 8px; margin: 8px 0; } .proto .champs label { flex: 1; border: 2px solid #E4E7EB; border-radius: 14px; padding: 6px 10px; font-size: 12px; color: #69717C; }
+.proto .champs input { display: block; width: 100%; border: 0; font: inherit; font-size: 24px; font-weight: 700; color: #1B1F24; background: transparent; padding: 0; }
+.proto .toast { position: absolute; left: 12px; right: 12px; bottom: 140px; background: #1B1F24; color: #fff; border-radius: 12px; padding: 12px 14px; font-size: 15px; display: none; }
+.proto .toast.on { display: block; }
+.proto .note { font-size: 12px; color: #69717C; text-align: center; margin-top: 6px; }
+.compteur { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; min-width: 240px; flex: 1; }
+.compteur .gros { font-size: 40px; font-weight: 750; }
+.compteur ol { padding-left: 20px; font-size: 14px; color: var(--muted); max-height: 260px; overflow: auto; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Ergonomie au pouce</h1>
+<p class="chapeau">Sous-chantier 24 · 15.11.2026 · une main, moins de touchers, et une vraie version PC. Les écrans « avant » sont des captures de l'application actuelle (démo locale, 390 et 1280 px). Les écrans « après » sont dessinés aux couleurs de l'application. Ta réponse se pose sous chaque proposition, le bouton « Copier le texte » en fin de page les rassemble.</p>
+
+<h2 id="constat" data-toc="Constat">Ce que dit la mesure</h2>
+<div class="regle">Règle du projet (<code>CODING_RULES.md</code>) : actions principales dans le tiers bas, 44 px au moins par cible, le haut de l'écran réservé aux informations.</div>
+<p>Relevé automatique des 15 écrans en 390 px, 184 cibles mesurées :</p>
+<ul>
+  <li><b>Les tailles sont presque partout bonnes.</b> Huit cibles seulement passent sous 44 px, toutes dans l'offre : les deux liens d'en-tête (client et titre, 27 et 29 px de haut) et les six corbeilles (40 px de large, collées aux montants).</li>
+  <li><b>Le haut de l'écran porte des actions</b> sur 14 écrans sur 15 (cadres orange ci-dessous) : filtres de la liste, client et titre de l'offre, retour.</li>
+  <li><b>Le total de l'offre est sous le pli</b> : on ne le voit qu'en faisant défiler.</li>
+  <li><b>Les parcours longs coûtent cher</b> : facturer un acompte demande 7 touchers, puis il faut sortir de l'application pour envoyer le PDF.</li>
+  <li><b>Il n'y a pas de version PC</b> : à 1280 px, c'est la colonne du téléphone, centrée, avec 400 px vides de chaque côté.</li>
+</ul>
+<div class="deux">
+  <figure class="tel-img"><img src="MAQUETTE-ergonomie-img/avant-01-accueil-390.jpg" alt="Accueil actuel, cibles entourées : vert conforme, orange dans le tiers haut"><figcaption>Accueil actuel. Vert : conforme. Orange : action dans le tiers haut.</figcaption></figure>
+  <figure class="tel-img"><img src="MAQUETTE-ergonomie-img/avant-03-offre-390.jpg" alt="Offre actuelle, cibles entourées : rouge sous 44 px"><figcaption>Offre actuelle. Rouge : sous 44 px (corbeilles, client, titre). Le total est sous le pli.</figcaption></figure>
+</div>
+<figure style="margin-top:14px"><img src="MAQUETTE-ergonomie-img/avant-03-offre-1280.jpg" alt="Offre actuelle sur un écran de 1280 px : une colonne de téléphone au milieu"><figcaption>La même offre sur PC aujourd'hui : la colonne du téléphone.</figcaption></figure>
+
+<h3>Touchers des tâches courantes</h3>
+<table class="chiffres">
+  <tr><th>Tâche</th><th>Aujourd'hui</th><th>Proposé</th><th>Ce qui change</th></tr>
+  <tr><td>Envoyer l'offre au client</td><td class="n">2 + 3 hors de l'app</td><td class="n mieux">2</td><td>« Envoyer » ouvre le partage du téléphone (WhatsApp, e-mail…) avec le PDF joint.</td></tr>
+  <tr><td>Facturer un acompte et l'envoyer</td><td class="n">7 + 3 hors de l'app</td><td class="n mieux">3</td><td>Une feuille : le bon acompte est déjà choisi, « Émettre et envoyer ».</td></tr>
+  <tr><td>Relire 3 lignes « à vérifier »</td><td class="n">3, à chercher dans la page</td><td class="n">4, au pouce</td><td>Un toucher de plus, mais aucune recherche ni défilement : chaque ligne vient sous le pouce.</td></tr>
+  <tr><td>Dicter une offre depuis n'importe quel écran</td><td class="n">3</td><td class="n mieux">2</td><td>Le micro est au centre de la barre, sur tous les écrans.</td></tr>
+  <tr><td>Voir l'offre comme le client</td><td class="n">1 (HTML)</td><td class="n">1 (PDF)</td><td>Même nombre, mais c'est le vrai PDF.</td></tr>
+  <tr><td>Ranger une ligne hors catalogue</td><td class="n">3 et plus</td><td class="n mieux">1 ou 2</td><td>« Créer le produit » ou « Rattacher » sur la ligne même.</td></tr>
+</table>
+
+<h2 id="essayer" data-toc="Essayer">Essayer le téléphone</h2>
+<p>Prototype cliquable : offre, relecture, PDF, envoi, facture, dictée. Le compteur compte tes touchers. Sur ordinateur, clique comme avec le pouce.</p>
+<div class="proto-zone">
+  <div class="proto" id="proto">
+    <!-- Liste -->
+    <div class="ecr on" data-e="liste">
+      <div class="bar">Mes offres</div>
+      <div class="corps">
+        <div class="pas" data-titre-liste>À relire</div>
+        <div class="c" data-aller="offre"><div class="d"><b>Rafraîchissement du séjour</b><span>Famille Exemple · <span data-etat-liste>3 lignes à vérifier</span></span></div><div class="m">3'106.80</div></div>
+        <div class="pas">Prêtes</div>
+        <div class="c"><div class="d"><b>Façade de la maison</b><span>Monsieur Modèle · envoyée le 10.11</span></div><div class="m">8'496.65</div></div>
+        <div data-nouvelle-offre hidden><div class="pas">En préparation</div><div class="c"><div class="d"><b>Visite du 15.11</b><span>Transcription en cours…</span></div></div></div>
+      </div>
+      <div class="tabs"><span class="on">Offres</span><span>Clients</span><span class="mic"><i data-feuille="dicter">●</i></span><span>Factures</span><span>Plus</span></div>
+    </div>
+    <!-- Offre -->
+    <div class="ecr" data-e="offre">
+      <div class="bar"><span class="ret" data-aller="liste">‹ Offres</span>Offre 2</div>
+      <div class="corps">
+        <div class="c"><div class="d"><b>Famille Exemple</b><span>Chemin des Essais 4, 1700 Fribourg</span></div>›</div>
+        <div class="pas">Préparation</div>
+        <div class="c"><div class="d"><b>Protection des sols</b><span>1 forfait × 180.00</span></div><div class="m">180.00</div></div>
+        <div class="c v" data-l="0"><div class="d"><b>Rebouchage et ponçage</b><span data-q>42 m² × 9.00 · à vérifier</span></div><div class="m" data-m>378.00</div></div>
+        <div class="pas">Peinture intérieure</div>
+        <div class="c v" data-l="1"><div class="d"><b>Murs, 2 couches</b><span data-q>42 m² × 28.00 · à vérifier</span></div><div class="m" data-m>1'176.00</div></div>
+        <div class="c v" data-l="2"><div class="d"><b>Plafonds, 2 couches</b><span data-q>24 m² × 32.00 · à vérifier</span></div><div class="m" data-m>768.00</div></div>
+        <div class="c"><div class="d"><b>Laquage des plinthes</b><span>26 m × 12.00</span></div><div class="m">312.00</div></div>
+        <div class="c"><div class="d"><b>Déplacement</b><span>1 forfait × 60.00</span></div><div class="m">60.00</div></div>
+      </div>
+      <div class="bas"><div class="tot"><span style="color:#69717C">Total TTC</span><b data-total>CHF 3'106.80</b></div>
+        <div class="r"><button class="b" style="flex:0 0 58px" title="Ajouter une ligne">+</button><button class="b p" data-principal>Relire 3 lignes</button></div></div>
+    </div>
+    <!-- Relecture -->
+    <div class="ecr" data-e="relecture">
+      <div class="bar"><span class="ret" data-aller="offre">‹ Offre</span>Relecture<span style="margin-left:auto;font-weight:400;color:#69717C" data-rang>1 sur 3</span></div>
+      <div class="corps" style="background:#fff;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="font-size:13px;color:#69717C" data-sect></div>
+        <div style="font-size:22px;font-weight:700;line-height:1.2" data-nom></div>
+        <div class="ent" data-ent></div>
+        <div class="champs"><label>Quantité<input data-qte inputmode="decimal"></label><label>Prix<input data-prix inputmode="decimal"></label></div>
+        <div style="display:flex;justify-content:space-between;font-size:17px"><span>Montant</span><b data-montant></b></div>
+      </div>
+      <div class="bas"><div class="r"><button class="b" data-corriger>Corriger</button><button class="b o" style="flex:1.4" data-juste>C'est juste</button></div><div class="note">Corriger : change la quantité ou le prix, puis « C'est juste ».</div></div>
+    </div>
+    <!-- PDF -->
+    <div class="ecr" data-e="pdf">
+      <div class="bar"><span class="ret" data-aller="offre">‹ Offre</span>Offre n° 2 · PDF</div>
+      <div class="corps" style="background:#5f6670"><img src="MAQUETTE-ergonomie-img/pdf-offre-p1.jpg" alt="Le PDF de l'offre n° 2" data-no-zoom style="width:100%;display:block;box-shadow:0 6px 18px rgba(0,0,0,.35)"></div>
+      <div class="bas"><div class="r"><button class="b" data-aller="offre">Modifier</button><button class="b" data-feuille="facturer">Facturer</button><button class="b p" data-feuille="envoyer">Envoyer</button></div></div>
+    </div>
+    <div class="voile" data-voile></div>
+    <div class="feuille" data-f="envoyer"><h4>Envoyer l'offre n° 2</h4><div style="color:#69717C;font-size:14px">PDF prêt · CHF <span data-total-court>3'106.80</span></div>
+      <div class="r" style="margin:12px 0"><button class="b" data-envoye>WhatsApp</button><button class="b" data-envoye>E-mail</button><button class="b" data-envoye>SMS</button></div>
+      <div class="note">Le partage du téléphone propose les applications installées.</div></div>
+    <div class="feuille" data-f="facturer"><h4>Facturer l'offre n° 2</h4>
+      <div class="ch on" data-choix>Acompte 1 sur 3 (30 %)<span>CHF 932.05 TTC · 30 jours</span></div><div class="ch" data-choix>Facture finale<span>CHF 3'106.80 TTC</span></div>
+      <div style="font-size:14px;margin:6px 2px 10px">Facture n° <b>2026-001</b> · <span style="color:#2457C5">Modifier</span></div>
+      <button class="b p" style="width:100%" data-emettre>Émettre et envoyer</button></div>
+    <div class="feuille" data-f="dicter" style="text-align:center"><div style="font-size:40px;font-weight:300" data-minuteur>00:00</div><div style="color:#69717C">Parlez, pièce par pièce.</div>
+      <div style="height:50px"></div><button class="b x" style="width:100%;min-height:68px;font-size:18px" data-terminer>Terminer et créer l'offre</button>
+      <div class="r" style="margin-top:8px"><button class="b" data-fermer>Abandonner</button><button class="b" data-fermer>Importer un fichier</button></div></div>
+    <div class="toast" data-toast></div>
+  </div>
+  <div class="compteur"><div>Touchers</div><div class="gros" data-compte>0</div><button class="btn-copier" type="button" data-remise>Recommencer</button><ol data-journal></ol>
+    <p style="font-size:14px;color:var(--muted)">À essayer : relire les 3 lignes, puis envoyer, puis facturer l'acompte. Aujourd'hui, ce parcours demande 3 + 2 + 7 touchers, plus 6 hors de l'application.</p></div>
+</div>
+
+<h2 id="telephone" data-toc="Téléphone">Les écrans du téléphone</h2>
+
+<h3>1. Le micro au centre, sur tous les écrans</h3>
+<div class="mk-compare"><figure><img src="MAQUETTE-ergonomie-img/avant-01-accueil-390.jpg" alt="Accueil actuel"><figcaption>Avant : deux ronds sur l'accueil seulement (variante B du 12.11).</figcaption></figure><figure><img src="MAQUETTE-ergonomie-img/apres-a-accueil.jpg" alt="Accueil proposé, micro au centre de la barre d'onglets"><figcaption>Après : micro de 76 px au centre de la barre ; offres rangées par état (à relire, prêtes, en préparation).</figcaption></figure></div>
+<p>Le micro se trouve à l'endroit le plus facile à atteindre, sur tous les écrans. L'import d'un fichier passe dans la feuille du micro et dans « Plus ». <b>Cela remplace ton choix du 12.11</b> (deux ronds côte à côte sur l'accueil) : à toi de dire.</p>
+<div class="decision" data-id="D1"><div class="q">D1 · Micro au centre de la barre, sur tous les écrans</div><div class="boutons"><button>Valider</button><button>Garder la variante B</button></div><textarea placeholder="Commentaire"></textarea></div>
+<div class="trois" style="margin-top:12px"><figure class="tel-img"><img src="MAQUETTE-ergonomie-img/apres-f-dicter.jpg" alt="Feuille de dictée ouverte"><figcaption>La feuille du micro : un grand « Terminer et créer l'offre », 72 px.</figcaption></figure><figure class="tel-img"><img src="MAQUETTE-ergonomie-img/apres-g-plus.jpg" alt="Menu Plus"><figcaption>« Plus » : Catalogue, Réglages, Importer. La barre passe de 5 onglets à 4 plus le micro.</figcaption></figure></div>
+<div class="decision" data-id="D2"><div class="q">D2 · Catalogue et Réglages rangés dans « Plus »</div><div class="boutons"><button>Valider</button><button>Garder 5 onglets</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h3>2. L'offre : le total toujours visible, une seule action principale</h3>
+<div class="mk-compare"><figure><img src="MAQUETTE-ergonomie-img/avant-03-offre-390.jpg" alt="Offre actuelle"><figcaption>Avant : champs dans chaque ligne, corbeilles de 40 px collées aux montants, total sous le pli.</figcaption></figure><figure><img src="MAQUETTE-ergonomie-img/apres-b-offre.jpg" alt="Offre proposée"><figcaption>Après : client et objet en cartes de 60 px, lignes lisibles, total fixé en bas, une action qui suit l'état : Relire, puis Envoyer, puis Facturer.</figcaption></figure></div>
+<div class="decision" data-id="D3"><div class="q">D3 · Total fixé en bas et action principale qui change selon l'état</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+<p>Pour retirer une ligne, la corbeille quitte la ligne. Trois façons, ta décision du 06.11 (« un clic, avec Annuler ») tient dans les trois :</p>
+<div class="decision" data-id="D4"><div class="q">D4 · Retirer une ligne</div><div class="boutons"><button>A · corbeille gardée, 48 px, écartée du montant</button><button>B · glisser la ligne vers la gauche</button><button>C · dans la fiche de la ligne</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h3>3. Relire au pouce, une ligne après l'autre</h3>
+<div class="deux"><figure class="tel-img"><img src="MAQUETTE-ergonomie-img/apres-c-relecture.jpg" alt="Relecture d'une ligne"><figcaption>Ce que l'IA a entendu, la quantité et le prix en grand, deux boutons de 64 px. La ligne suivante vient d'elle-même.</figcaption></figure>
+<div><p>Les lignes « à vérifier » défilent une par une, tout en bas de l'écran. Un toucher de plus qu'aujourd'hui pour 3 lignes, mais plus aucune recherche dans la page. À essayer dans le prototype.</p>
+<div class="decision" data-id="D5"><div class="q">D5 · Relecture ligne par ligne</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div></div></div>
+
+<h3>4. Ligne hors catalogue : la ranger en un toucher (ta demande)</h3>
+<div class="deux"><figure class="tel-img"><img src="MAQUETTE-ergonomie-img/apres-m-ligne-libre.jpg" alt="Ligne hors catalogue avec deux boutons"><figcaption>Sur la ligne même : « Créer le produit » ou « Rattacher à un produit ».</figcaption></figure><figure class="tel-img"><img src="MAQUETTE-ergonomie-img/apres-n-rattacher.jpg" alt="Rattacher à un produit"><figcaption>En rattachant, le mot entendu devient un synonyme du produit : la prochaine dictée le reconnaîtra.</figcaption></figure></div>
+<div class="decision" data-id="D6"><div class="q">D6 · « Créer le produit » et « Rattacher », le mot entendu ajouté aux synonymes</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire (par exemple : prix repris de la ligne, catégorie proposée…)"></textarea></div>
+
+<h3>5. « Générer l'offre » montre le PDF (ta demande)</h3>
+<div class="mk-compare"><figure><img src="MAQUETTE-ergonomie-img/avant-07-apercu-offre-390.jpg" alt="Aperçu HTML actuel"><figcaption>Avant : la page HTML, resserrée à la largeur du téléphone.</figcaption></figure><figure><img src="MAQUETTE-ergonomie-img/apres-l-pdf.jpg" alt="Le PDF affiché dans l'application"><figcaption>Après : le vrai PDF (celui-ci sort de la démo), et en bas Modifier, Facturer, Envoyer.</figcaption></figure></div>
+<p>Sur iPhone, un PDF placé dans une page s'affiche mal (souvent la première page seulement). Deux façons de faire :</p>
+<div class="decision" data-id="D7"><div class="q">D7 · Afficher le PDF</div><div class="boutons"><button>A · dans l'application avec PDF.js, les boutons restent (recommandé)</button><button>B · la visionneuse du téléphone, plus simple, sans nos boutons</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h3>6. Envoyer et facturer sans sortir de l'application</h3>
+<div class="deux"><figure class="tel-img"><img src="MAQUETTE-ergonomie-img/apres-d-envoyer.jpg" alt="Feuille Envoyer"><figcaption>« Envoyer » : le partage du téléphone, PDF joint. L'offre passe à « Envoyée ».</figcaption></figure><figure class="tel-img"><img src="MAQUETTE-ergonomie-img/apres-e-facturer.jpg" alt="Feuille Facturer"><figcaption>« Facturer » : l'acompte suivant déjà choisi, « Émettre et envoyer ». 3 touchers au lieu de 7.</figcaption></figure></div>
+<div class="decision" data-id="D8"><div class="q">D8 · Envoyer par le partage du téléphone</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="D9"><div class="q">D9 · Facturer dans une seule feuille (« Vérifier avant d'émettre » reste possible)</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h3>7. Tailles</h3>
+<p>Règle proposée, plus généreuse que les 44 px actuels : <b>64 px</b> pour l'action principale, <b>56 px</b> pour les boutons, <b>48 px</b> pour tout le reste, et 8 px au moins entre deux cibles.</p>
+<div class="decision" data-id="D10"><div class="q">D10 · 64 / 56 / 48 px, écrit dans CODING_RULES.md</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h2 id="tva" data-toc="TVA">TVA : le taux de l'entreprise, l'exception sur la ligne</h2>
+<p class="regle-ok">Réglé par ta réponse du 15.11 : un taux pour l'entreprise (8,1, 2,6, 3,8 ou 0 %), une ligne peut en avoir un autre, le document détaille la TVA par taux. Reste l'aspect :</p>
+<div class="deux"><figure class="tel-img"><img src="MAQUETTE-ergonomie-img/apres-j-tva-entreprise.jpg" alt="Choix du taux de l'entreprise"><figcaption>Réglages, TVA : quatre choix de 64 px.</figcaption></figure><figure class="tel-img"><img src="MAQUETTE-ergonomie-img/apres-k-tva-ligne.jpg" alt="Taux d'une ligne"><figcaption>Sur la ligne : le taux de l'entreprise par défaut, un toucher pour un autre.</figcaption></figure></div>
+<div class="decision" data-id="D11"><div class="q">D11 · Écrans de la TVA</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire (le produit du catalogue porte-t-il aussi son taux ?)"></textarea></div>
+
+<h2 id="pc" data-toc="PC">La version PC</h2>
+<div class="mk-compare"><figure><img src="MAQUETTE-ergonomie-img/avant-03-offre-1280.jpg" alt="Offre actuelle sur PC"><figcaption>Avant : la colonne du téléphone.</figcaption></figure><figure><img src="MAQUETTE-ergonomie-img/apres-h-pc.jpg" alt="Offre proposée sur PC"><figcaption>Après : menu à gauche, liste au milieu, offre à droite. Tableau éditable au clavier (Tab, Entrée, J pour « juste »).</figcaption></figure></div>
+<div class="decision" data-id="D12"><div class="q">D12 · PC en trois colonnes : menu, liste, offre</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+<figure style="margin-top:14px"><img src="MAQUETTE-ergonomie-img/apres-i-pc-apercu.jpg" alt="Lignes à gauche, document à droite"><figcaption>Variante : les lignes à gauche, le document à droite, qui suit chaque correction.</figcaption></figure>
+<div class="decision" data-id="D13"><div class="q">D13 · Sur PC, le document à côté des lignes pendant la correction</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h2 id="hors" data-toc="Hors maquette">Hors maquette, déjà noté</h2>
+<ul>
+  <li>« Voir plus grand » sur un modèle d'offre : l'image s'agrandit dans la page. À faire tout de suite, sans décision.</li>
+  <li>Logo : <code>proc_open</code> est débloquée chez Infomaniak (15.11). La preuve sera ton prochain envoi de logo.</li>
+  <li>Plus tard, au programme : commandes vocales sur une offre ouverte (sous-chantier 06), statistiques et rejouer (23).</li>
+</ul>
+
+<h2 id="recap" data-toc="Copier">Copier tes réponses</h2>
+<div class="recap"><textarea readonly data-recap></textarea><p><button class="btn-copier" type="button" data-copier>Copier le texte</button></p></div>
+</main>
+
+<script>
+(() => {
+  const CLE = 'offregen-maquette-24';
+  let etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { etat = {}; }
+  const garder = () => { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} recap(); };
+  const decisions = [...document.querySelectorAll('.decision')];
+  function recap() {
+    const lignes = decisions.map((d) => {
+      const r = etat[d.dataset.id] || {};
+      return `${d.querySelector('.q').textContent} : ${r.choix || '(pas de réponse)'}${r.note ? ' · ' + r.note : ''}`;
+    });
+    document.querySelector('[data-recap]').value = 'Maquette 24, ergonomie au pouce\n' + lignes.join('\n');
+  }
+  decisions.forEach((d) => {
+    const r = etat[d.dataset.id] || {};
+    d.querySelectorAll('button').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.textContent === r.choix));
+      b.addEventListener('click', () => {
+        etat[d.dataset.id] = { ...(etat[d.dataset.id] || {}), choix: b.textContent };
+        d.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        garder();
+      });
+    });
+    const t = d.querySelector('textarea');
+    t.value = r.note || '';
+    t.addEventListener('input', () => { etat[d.dataset.id] = { ...(etat[d.dataset.id] || {}), note: t.value }; garder(); });
+  });
+  document.querySelector('[data-copier]').addEventListener('click', async () => {
+    const t = document.querySelector('[data-recap]');
+    try { await navigator.clipboard.writeText(t.value); } catch (e) { t.select(); document.execCommand('copy'); }
+  });
+  recap();
+
+  // Prototype
+  const P = document.getElementById('proto');
+  const $ = (s) => P.querySelector(s);
+  const $$ = (s) => [...P.querySelectorAll(s)];
+  const lignes = [
+    { sect: 'Préparation', nom: 'Rebouchage et ponçage des murs', ent: '« reboucher et poncer les murs, environ quarante-deux mètres »', q: 42, u: 'm²', p: 9 },
+    { sect: 'Peinture intérieure', nom: 'Peinture des murs, 2 couches', ent: '« les murs du salon, environ quarante-deux mètres carrés, deux couches »', q: 42, u: 'm²', p: 28 },
+    { sect: 'Peinture intérieure', nom: 'Peinture des plafonds, 2 couches', ent: '« le plafond, à peu près vingt-quatre mètres carrés »', q: 24, u: 'm²', p: 32 },
+  ];
+  const fixes = 180 + 312 + 60;
+  let rang = 0, relues = 0, envoyee = false, facturee = false, compte = 0;
+  const chf = (n) => n.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/’/g, "'");
+  const total = () => { const ht = fixes + lignes.reduce((s, l) => s + l.q * l.p, 0); const ttc = Math.round(ht * 1.081 * 20) / 20; return ttc; };
+  const journal = (t) => { compte++; document.querySelector('[data-compte]').textContent = compte; const li = document.createElement('li'); li.textContent = t; document.querySelector('[data-journal]').appendChild(li); };
+  const aller = (e) => { $$('.ecr').forEach((x) => x.classList.toggle('on', x.dataset.e === e)); fermer(); if (e === 'offre') majOffre(); };
+  const fermer = () => { $$('.feuille, .voile').forEach((x) => x.classList.remove('on')); clearInterval(minuteur); };
+  const toast = (t) => { const x = $('[data-toast]'); x.textContent = t; x.classList.add('on'); setTimeout(() => x.classList.remove('on'), 1800); };
+  let minuteur = null;
+  function majOffre() {
+    lignes.forEach((l, i) => {
+      const c = $(`[data-l="${i}"]`);
+      c.classList.toggle('v', i >= relues);
+      c.querySelector('[data-q]').textContent = `${l.q} ${l.u} × ${chf(l.p)}${i >= relues ? ' · à vérifier' : ''}`;
+      c.querySelector('[data-m]').textContent = chf(l.q * l.p);
+    });
+    $('[data-total]').textContent = 'CHF ' + chf(total());
+    $('[data-total-court]').textContent = chf(total());
+    const b = $('[data-principal]');
+    const reste = lignes.length - relues;
+    b.textContent = reste > 0 ? `Relire ${reste} ligne${reste > 1 ? 's' : ''}` : facturee ? 'Facture émise' : envoyee ? 'Facturer' : "Générer l'offre (PDF)";
+    document.querySelector('[data-etat-liste]').textContent = reste > 0 ? `${reste} lignes à vérifier` : facturee ? 'acompte facturé' : envoyee ? 'envoyée' : 'prête';
+    document.querySelector('[data-titre-liste]').textContent = reste > 0 ? 'À relire' : envoyee ? 'Envoyées' : 'Prêtes à envoyer';
+  }
+  function montrerLigne() {
+    const l = lignes[rang];
+    $('[data-rang]').textContent = `${rang + 1} sur ${lignes.length}`;
+    $('[data-sect]').textContent = l.sect; $('[data-nom]').textContent = l.nom; $('[data-ent]').textContent = 'Entendu : ' + l.ent;
+    $('[data-qte]').value = l.q; $('[data-prix]').value = chf(l.p); $('[data-montant]').textContent = 'CHF ' + chf(l.q * l.p);
+  }
+  P.addEventListener('click', (ev) => {
+    const t = ev.target.closest('[data-aller],[data-principal],[data-juste],[data-corriger],[data-feuille],[data-envoye],[data-emettre],[data-terminer],[data-fermer],[data-voile],[data-choix]');
+    if (!t) return;
+    if (t.matches('[data-voile]')) { fermer(); return; }
+    if (t.matches('[data-aller]')) { journal(t.dataset.aller === 'offre' && t.classList.contains('c') ? "Ouvrir l'offre" : t.textContent.trim()); aller(t.dataset.aller); return; }
+    if (t.matches('[data-principal]')) {
+      journal(t.textContent);
+      if (relues < lignes.length) { rang = relues; aller('relecture'); montrerLigne(); }
+      else if (!envoyee) aller('pdf');
+      else if (!facturee) { $('[data-voile]').classList.add('on'); $('[data-f="facturer"]').classList.add('on'); }
+      return;
+    }
+    if (t.matches('[data-corriger]')) { journal('Corriger'); $('[data-qte]').focus(); $('[data-qte]').select(); return; }
+    if (t.matches('[data-juste]')) {
+      journal("C'est juste");
+      const l = lignes[rang];
+      l.q = parseFloat(String($('[data-qte]').value).replace(',', '.')) || l.q;
+      l.p = parseFloat(String($('[data-prix]').value).replace(/'/g, '').replace(',', '.')) || l.p;
+      relues = Math.max(relues, rang + 1);
+      if (rang + 1 < lignes.length) { rang++; montrerLigne(); } else { aller('offre'); toast('Les 3 lignes sont relues'); }
+      return;
+    }
+    if (t.matches('[data-feuille]')) {
+      journal(t.textContent.trim() || 'micro');
+      $('[data-voile]').classList.add('on'); $(`[data-f="${t.dataset.feuille}"]`).classList.add('on');
+      if (t.dataset.feuille === 'dicter') { let s = 0; clearInterval(minuteur); minuteur = setInterval(() => { s++; $('[data-minuteur]').textContent = '00:' + String(s).padStart(2, '0'); }, 1000); }
+      return;
+    }
+    if (t.matches('[data-choix]')) { journal(t.firstChild.textContent.trim()); $$('[data-choix]').forEach((x) => x.classList.toggle('on', x === t)); return; }
+    if (t.matches('[data-envoye]')) { journal(t.textContent); envoyee = true; fermer(); aller('offre'); toast('Offre envoyée par ' + t.textContent); return; }
+    if (t.matches('[data-emettre]')) { journal('Émettre et envoyer'); facturee = true; fermer(); aller('offre'); toast('Facture 2026-001 émise et envoyée'); return; }
+    if (t.matches('[data-terminer]')) { journal('Terminer'); fermer(); aller('liste'); document.querySelector('[data-nouvelle-offre]').hidden = false; toast("L'offre se prépare"); return; }
+    if (t.matches('[data-fermer]')) { journal(t.textContent); fermer(); }
+  });
+  P.addEventListener('input', (ev) => {
+    if (!ev.target.matches('[data-qte],[data-prix]')) return;
+    const q = parseFloat(String($('[data-qte]').value).replace(',', '.')) || 0;
+    const p = parseFloat(String($('[data-prix]').value).replace(/'/g, '').replace(',', '.')) || 0;
+    $('[data-montant]').textContent = 'CHF ' + chf(q * p);
+  });
+  document.querySelector('[data-remise]').addEventListener('click', () => {
+    compte = 0; relues = 0; rang = 0; envoyee = false; facturee = false;
+    lignes[0].q = 42; lignes[0].p = 9; lignes[1].q = 42; lignes[1].p = 28; lignes[2].q = 24; lignes[2].p = 32;
+    document.querySelector('[data-compte]').textContent = '0'; document.querySelector('[data-journal]').innerHTML = '';
+    document.querySelector('[data-nouvelle-offre]').hidden = true; aller('liste');
+  });
+  majOffre();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends 'document/_base.html.twig' %}
+{% import 'document/_blocs.html.twig' as b %}
+{# Bandeau : une bande de couleur en tête, le logo sur un cartouche blanc qui en dépasse, les titres de colonnes et le
+   total sur fond de couleur, une bande au bas de chaque page. #}
+
+{% block fixes %}
+  <table class="doc-bas c-fond"><tr><td>{{ b.mentions(_context) }}</td><td class="n">{{ b.page(_context) }}</td></tr></table>
+{% endblock %}
+
+{% block corps %}
+  <div class="doc-bande c-fond">
+    <div class="doc-carte c-filet">{{ b.logo(_context) }}</div>
+    <div class="doc-coord">{{ b.coord(_context) }}</div>
+  </div>
+  <div class="doc-in">
+    {{ b.adresse(_context) }}
+    <div class="doc-sur c-texte">{{ doc_nom }} <span>n°&nbsp;{{ doc_numero }}</span></div>
+    <div class="doc-objet">{{ doc_objet }}</div>
+    {{ b.annulee(_context) }}
+    {{ b.infos(_context, {td: 'c-bord-gauche'}) }}
+    {{ b.lignes(_context, {th: 'c-fond', grp: 'c-texte'}) }}
+    {{ b.totaux(_context, {tt: 'c-fond'}) }}
+    <div class="doc-fin">
+      {{ b.conditions(_context) }}
+      {{ b.signatures(_context) }}
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,959 @@
+/* Dicta. Composants de la maquette v4 validée (docs/plans/2026-11-06_maquette-ux/MAQUETTE-offre-vocale.html) ;
+   couleurs, polices et marque de la charte (docs/identite/CHARTE.html, dicta-tokens.css).
+   Aucun style en ligne : la CSP du site les refuse. Chaque texte tient 7:1 sur son fond, chaque forme utile 3:1. */
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 500 700; font-display: swap; src: url("/fonts/archivo-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("/fonts/inter-latin.woff2") format("woff2"); }
+:root {
+  --ink: #23272D; --muted: #454B55; --line: #DDD8CC; --surface: #FFFFFF; --bg: #F4F1EA; --chip: #EBE7DE; --bord: #7C838C;
+  --accent: #23272D; --accent-soft: #E9E5DC; --on-accent: #FFFFFF;
+  --ok: #13553A; --ok-soft: #E1EFE6; --on-ok: #FFFFFF; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4; --on-bad: #FFFFFF;
+  --marque: #C4552D; --on-marque: #FFFFFF; --focus: #C4552D; --bande: #23272D; --on-bande: #FFFFFF; --bande-doux: #B9BDC3;
+  --titre: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+    --accent: #ECEAE6; --accent-soft: #2D3138; --on-accent: #15171A;
+    --ok: #7DD3A8; --ok-soft: #183126; --on-ok: #15171A; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; --on-bad: #15171A;
+    --bande: #0F1113; --bande-doux: #AAAFB6;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: inherit; text-underline-offset: 3px; }
+[hidden] { display: none !important; }
+svg.i { width: 20px; height: 20px; flex: none; }
+
+/* Une colonne de téléphone, centrée sur un grand écran. Les actions vivent en bas, au pouce. */
+.app { max-width: 480px; min-height: 100%; margin: 0 auto; background: var(--surface); display: flex; flex-direction: column; }
+.bar { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 16px; background: var(--bande); color: var(--on-bande); }
+.bar .logo { display: block; height: 30px; width: auto; }
+/* Le logo mène à la page du site (/decouvrir) : cible de 48 px au moins. */
+.bar .vers-site { display: inline-flex; align-items: center; min-height: 48px; border-radius: 8px; }
+.bar .vers-site:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.bar h1 { margin: 0; font-family: var(--titre); font-size: 17px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.screen { flex: 1; padding: 16px 16px 28px; }
+.bas { position: sticky; bottom: 0; z-index: 5; background: var(--surface); }
+.actionbar { display: flex; gap: 8px; padding: 10px 16px 10px; background: var(--surface); border-top: 1px solid var(--line); }
+.actionbar .btn { flex: 1; min-height: 52px; }
+.bas > :last-child { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+.tabs { display: flex; background: var(--surface); border-top: 1px solid var(--line); }
+.tabs a { flex: 1; font-size: 12px; color: var(--muted); text-decoration: none; padding: 7px 4px 9px; min-height: 56px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tabs a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+.tabs a:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
+/* Micro au centre de la barre, sur chaque écran (décision D1, 2026-11-15) : 72 px, au-dessus de la barre. */
+.tabs .micro-central { flex: 1.15; position: relative; border: 0; background: none; padding: 0; min-height: 56px; cursor: pointer; font: inherit; }
+.tabs .micro-central > span { position: absolute; left: 50%; top: -24px; transform: translateX(-50%); width: 72px; height: 72px; border-radius: 50%; background: var(--marque); color: var(--on-marque); display: grid; place-items: center; border: 5px solid var(--surface); }
+.tabs .micro-central svg { width: 30px; height: 30px; }
+.tabs .micro-central:focus-visible { outline: none; }
+.tabs .micro-central:focus-visible > span { outline: 3px solid var(--focus); outline-offset: 2px; }
+.btn > svg:not(.i) { width: 22px; height: 22px; flex: none; }
+/* « Plus » (D2) : ce qui sert rarement, en lignes de 64 px. */
+.plus { display: grid; gap: 10px; margin: 4px 0 24px; }
+.plus-ligne { display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.plus-ligne span { display: flex; flex-direction: column; }
+.plus-ligne small { color: var(--muted); font-size: 14px; }
+
+.btn { font: inherit; font-size: 15px; font-weight: 550; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 14px; min-height: 48px; cursor: pointer; text-align: center; text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: var(--on-bad); }
+/* Bouton pendant un envoi (B3, 2026-11-19) : couleur pleine, un rond qui tourne devant le mot d'attente, jamais délavé. */
+.btn[disabled] { cursor: progress; }
+.btn[aria-busy="true"]::before { content: ""; flex: none; width: 16px; height: 16px; box-sizing: border-box; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: tourne .8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .btn[aria-busy="true"]::before { animation: none; } }
+.btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.muted { color: var(--muted); font-size: 14px; }
+
+.champ { display: grid; gap: 6px; margin: 0 0 16px; }
+.champ label { font-size: 14px; font-weight: 600; }
+.champ input, .champ select { font: inherit; font-size: 16px; min-height: 48px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); width: 100%; min-width: 0; }
+.champ textarea { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); width: 100%; resize: vertical; }
+.champ input:focus-visible, .champ select:focus-visible, .champ textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.champ [aria-invalid="true"] { border-color: var(--bad); }
+/* Un lien sous un champ s'aligne sur son bord (une marge négative le faisait déborder, sonde du 2026-11-18). */
+.champ > .lien { justify-self: start; padding-left: 0; }
+/* Mot de passe avec l'œil qui le montre (P3 B, 2026-11-18). */
+.avec-oeil { position: relative; display: block; }
+.avec-oeil input { padding-right: 56px; }
+.oeil { position: absolute; top: 0; right: 0; width: 48px; height: 48px; display: grid; place-items: center; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: 12px; }
+.oeil svg { width: 22px; height: 22px; }
+.oeil[aria-pressed="true"] { color: var(--accent); }
+.oeil:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
+::placeholder { color: var(--muted); opacity: 1; font-style: italic; }
+.err { color: var(--bad); font-size: 13px; }
+/* Deux champs côte à côte : les colonnes peuvent rétrécir sous la largeur d'un champ date (R4). Chaque champ occupe
+   quatre rangées partagées (libellé, champ, erreur, aide) : les champs restent alignés quand un libellé se replie (R7)
+   et quand un message d'erreur s'affiche sous l'un d'eux (recette du 2026-11-19). */
+.duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: repeat(4, auto); column-gap: 10px; align-items: start; }
+.duo > .champ { grid-row: span 4; grid-template-rows: subgrid; row-gap: 0; }
+.duo > .champ > * + * { margin-top: 6px; }
+.duo > * { min-width: 0; }
+/* Ancré à gauche : dans le bas en ligne (colonne d'onglets), sa position par défaut le collait au bord droit, 1 px dehors. */
+.cache { position: absolute; left: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.alerte { border-radius: 10px; padding: 10px 14px; font-size: 14px; margin: 0 0 16px; }
+.alerte.bad { background: var(--bad-soft); color: var(--bad); }
+.alerte.info { background: var(--accent-soft); color: var(--ink); }
+.alerte.warn { background: var(--warn-soft); color: var(--warn); }
+.alerte a { color: inherit; font-weight: 600; }
+.centre { text-align: center; }
+.btn.large { width: 100%; min-height: 56px; margin: 8px 0; }
+
+/* Fenêtres du bas : elles montent à l'ouverture et redescendent à la fermeture (classe « ouvert »,
+   posée par app.js). Nouvelle offre pendant l'enregistrement et l'envoi ; fiche produit du catalogue. */
+.feuille-fond { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .4); display: flex; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity .25s ease; }
+.feuille-fond.ouvert { opacity: 1; }
+.feuille { position: relative; background: var(--surface); width: 100%; max-width: 480px; border-radius: 18px 18px 0 0; padding: 0 16px calc(16px + env(safe-area-inset-bottom)); max-height: 92%; overflow-y: auto; transform: translateY(100%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); box-shadow: 0 -6px 24px rgba(0, 0, 0, .18); }
+.feuille-fond.ouvert .feuille { transform: none; }
+.feuille-fond.pleine .feuille { min-height: 70%; display: flex; flex-direction: column; }
+/* Pendant l'enregistrement, « Terminer » descend sous le pouce (écran F de la maquette 24). */
+.feuille-fond.pleine .rec:not([hidden]) { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.feuille-fond.pleine .rec [data-terminer] { margin-top: auto; width: 100%; min-height: 72px; font-size: 19px; }
+.feuille:focus { outline: none; }
+.poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 8px auto 2px; }
+.x.coin { position: absolute; top: 4px; right: 14px; }
+/* Message sous la croix de fermeture : de la place pour elle. */
+.feuille [data-etat="court"], .feuille [data-etat="echec"], .feuille [data-etat="refus"] { padding-top: 40px; }
+/* Fiche dans une fenêtre : le corps défile, les boutons restent en bas, au pouce. */
+.feuille.cadre { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; }
+.sh-corps { overflow-y: auto; flex: 1 1 auto; padding: 4px 2px 8px; }
+.sh-pied .actionbar { padding: 10px 0 calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+.plus { margin: 0 0 16px; }
+.plus summary { font-size: 14px; font-weight: 600; color: var(--accent); cursor: pointer; min-height: 48px; display: flex; align-items: center; }
+.plus[open] summary { margin-bottom: 8px; }
+.plus summary, .libre-detail summary { gap: 8px; }
+.plus summary::-webkit-details-marker { display: none; }
+.plus summary { list-style: none; }
+.plus summary::after, .libre-detail summary::after { content: "›"; font-size: 20px; line-height: 1; transition: transform .2s; }
+.plus[open] summary::after, .libre-detail[open] summary::after { transform: rotate(90deg); }
+.crow.eclair { animation: flash 1.8s ease-out; }
+body.calque-ouvert { overflow: hidden; }
+
+/* Nouvelle offre sur l'accueil (choix de Xavier du 2026-11-12) : deux boutons ronds au centre, au pouce,
+   sans texte ; le micro à gauche, l'import à droite. Ils sautillent à l'arrivée et font une onde au toucher. */
+.screen.avec-rond { padding-bottom: 110px; }
+.fab-zone { position: absolute; left: 0; right: 0; bottom: calc(100% + 16px); z-index: 2; display: flex; justify-content: center; align-items: center; gap: 36px; pointer-events: none; }
+.fab-zone > * { pointer-events: auto; }
+.pastille { position: relative; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; text-decoration: none; border: 0; padding: 0; font: inherit; background: var(--surface); color: var(--ink); box-shadow: 0 4px 14px rgba(0, 0, 0, .22); transition: scale .12s ease; -webkit-tap-highlight-color: transparent; animation: arrivee .45s cubic-bezier(.3, 1.5, .5, 1) both; }
+.pastille svg { width: 28px; height: 28px; }
+.pastille.micro { width: 64px; height: 64px; background: var(--marque); color: var(--on-marque); }
+.pastille.micro svg { width: 30px; height: 30px; }
+.pastille:not(.micro) { animation-delay: .06s; }
+.pastille:active { scale: .88; }
+.pastille:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+@keyframes arrivee { from { opacity: 0; transform: translateY(20px) scale(.6); } to { opacity: 1; transform: none; } }
+/* Onde au toucher (classe posée par app.js). */
+.touche::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; animation: onde .5s ease-out; }
+@keyframes onde { from { box-shadow: 0 0 0 0 rgba(196, 85, 45, .5); } to { box-shadow: 0 0 0 22px rgba(196, 85, 45, 0); } }
+.dial-note { position: absolute; left: 50%; bottom: calc(100% + 12px); transform: translateX(-50%); width: min(300px, calc(100% - 32px)); margin: 0; background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 12px; font-size: 13px; text-align: center; box-shadow: 0 2px 10px rgba(0, 0, 0, .18); }
+@media (prefers-reduced-motion: reduce) {
+  .feuille-fond, .feuille, .pastille { transition: none !important; }
+  .touche::after, .pastille { animation: none; }
+}
+.sh-h { display: flex; align-items: center; justify-content: space-between; min-height: 48px; }
+.sh-h h2 { margin: 0; font-size: 17px; }
+.x { width: 48px; height: 48px; display: grid; place-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; margin-right: -12px; }
+.choix2 { display: flex; justify-content: center; gap: 36px; padding: 18px 0 10px; }
+.rond { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 8px; background: none; border: 0; color: var(--ink); cursor: pointer; font-size: 14px; font-weight: 600; }
+.rond svg { width: 34px; height: 34px; box-sizing: content-box; padding: 22px; border-radius: 50%; background: var(--chip); color: var(--ink); }
+.rond.micro svg { background: var(--marque); color: var(--on-marque); }
+.rond:focus-visible svg { outline: 3px solid var(--focus); outline-offset: 3px; }
+.nouvelle .rec { padding: 16px 0; }
+
+.erreur-code { font-size: 48px; font-weight: 700; color: var(--muted); margin: 24px 0 0; }
+.petit { font-size: 12.5px; }
+.sub { margin: 22px 0 4px; font-size: 15px; }
+
+/* Barre du haut : retour à gauche. */
+.back { display: inline-flex; align-items: center; font-size: 15px; color: inherit; text-decoration: none; min-height: 48px; padding: 0 6px 0 2px; white-space: nowrap; }
+.back::before { content: "‹"; font-size: 22px; line-height: 1; margin-right: 4px; }
+.screen.gris { background: var(--bg); }
+
+/* Bandeau du bas : confirmation, erreur, « Annuler ». */
+/* Au-dessus du bas de l'écran (boutons et onglets), quelle que soit sa hauteur : --bas est mesuré par app.js. */
+.snack { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(var(--bas, 120px) + 12px); width: min(456px, calc(100% - 24px)); background: var(--ink); color: var(--surface); border-radius: 12px; padding: 4px 6px 4px 14px; display: flex; align-items: center; gap: 10px; font-size: 14px; min-height: 48px; margin: 0; }
+.snack.bad { background: var(--bad); color: var(--on-bad); }
+.snack span { flex: 1; }
+.snack button { font: inherit; border: 0; background: transparent; color: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; min-height: 48px; padding: 0 10px; }
+
+/* Liste des offres. */
+.ent { margin: 14px 2px 8px; }
+.status { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); white-space: nowrap; }
+.status.pret { background: var(--accent-soft); color: var(--accent); }
+.status.a-verifier { background: var(--warn-soft); color: var(--warn); }
+.status.echec { background: var(--bad-soft); color: var(--bad); }
+.ocard { display: grid; gap: 4px; width: 100%; color: var(--ink); text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 8px 0; }
+.ocard:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.ocard .l1, .ocard .l2 { display: flex; justify-content: space-between; gap: 10px; align-items: center; min-width: 0; }
+.ocard .l1 b { min-width: 0; overflow-wrap: anywhere; }
+.ocard .l2 { font-size: 14px; color: var(--muted); }
+.ocard .l2 b { color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.status.relue { background: var(--ok-soft); color: var(--ok); }
+.status .tourne { display: inline-block; width: 11px; height: 11px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--accent-soft); border-top-color: var(--accent); animation: tourne .8s linear infinite; vertical-align: -1px; margin-right: 5px; }
+.compteur { margin: 0 2px 4px; font-size: 13.5px; color: var(--muted); }
+.screen:has([data-aucun]:not([hidden])) .compteur { display: none; }
+/* Échec : en rouge, avec Réessayer ou Retirer ; il ne compte pas. */
+.ocard.echec { border-color: var(--bad); background: var(--bad-soft); }
+.ocard.echec .l2 { color: var(--bad); }
+.ocard.echec .act { display: flex; gap: 8px; margin-top: 6px; }
+.ocard.echec .act form { margin: 0; }
+.ocard.echec .act button { font: inherit; font-size: 14px; font-weight: 600; min-height: 48px; border-radius: 10px; padding: 6px 14px; cursor: pointer; border: 1px solid var(--bad); background: var(--surface); color: var(--bad); }
+.ocard.echec .act button.prim { background: var(--bad); color: var(--on-bad); }
+/* Balayer une offre vers la gauche : la carte glisse et montre Archiver et Supprimer (app.js). */
+.glisse { position: relative; margin: 8px 0; border-radius: 14px; overflow: hidden; }
+.glisse > .ocard { position: relative; z-index: 1; margin: 0; transition: transform .22s ease; touch-action: pan-y; user-select: none; -webkit-user-drag: none; }
+.glisse.ouverte > .ocard, .actions-glisse:focus-within + .ocard { transform: translateX(-176px); }
+/* Cachés tant que la carte n'est ni balayée ni atteinte au clavier : sinon leur rouge déborde aux coins
+   arrondis (constaté le 2026-11-12). Opacité plutôt que visibilité : Tab doit les atteindre. */
+.actions-glisse { position: absolute; inset: 0 0 0 auto; display: flex; opacity: 0; transition: opacity 0s linear .22s; }
+.glisse.ouverte .actions-glisse, .glisse.tire .actions-glisse, .actions-glisse:focus-within { opacity: 1; transition-delay: 0s; }
+.actions-glisse form { margin: 0; display: flex; }
+.actions-glisse button { font: inherit; font-size: 14px; font-weight: 600; width: 88px; border: 0; cursor: pointer; }
+.actions-glisse .arch { background: var(--muted); color: var(--surface); }
+.actions-glisse .supp { background: var(--bad); color: var(--on-bad); }
+.actions-glisse button:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
+/* Archives repliées en bas : la liste ne grossit pas. */
+.archives { margin: 22px 0 0; border-top: 1px solid var(--line); }
+.archives summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 0 2px; font-size: 14px; color: var(--muted); }
+.archives summary::-webkit-details-marker { display: none; }
+.archives summary::after { content: "›"; font-size: 20px; transition: transform .2s; }
+.archives[open] summary::after { transform: rotate(90deg); }
+.archives summary span:last-child { margin-left: auto; margin-right: 10px; }
+.archive { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; }
+.archive .ocard { opacity: .8; }
+.archive form { margin: 0; }
+.cat.liste > span { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .glisse > .ocard { transition: none; } .status .tourne { animation: none; } }
+.vide { font-size: 13px; color: var(--muted); margin: 8px 0; }
+.pied { margin: 28px 0 0; text-align: center; }
+.lien { font: inherit; font-size: 14px; color: var(--muted); background: none; border: 0; text-decoration: underline; min-height: 48px; padding: 0 8px; cursor: pointer; display: inline-flex; align-items: center; }
+
+/* Import, enregistrement et préparation. */
+.intro { margin: 8px 0 16px; }
+.intro ul { padding-left: 18px; }
+.rec { text-align: center; padding: 32px 0; }
+.rec .dot { width: 110px; height: 110px; border-radius: 50%; margin: 14px auto 18px; background: var(--bad); }
+.rec .dot.on { animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.88); opacity: .75; } }
+@media (prefers-reduced-motion: reduce) { .rec .dot.on { animation: none; } }
+.timer { font: 600 34px ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+/* Étapes du traitement : un rond qui tourne sur l'étape en cours, une coche verte qui saute quand elle
+   est faite, un trait qui se colore de l'une à l'autre. */
+.suivi { padding: 4px 0 8px; }
+.suivi-titre { font-size: 17px; margin: 4px 0 6px; text-align: center; }
+.etapes { list-style: none; padding: 0; margin: 12px 0; }
+.etapes li { position: relative; display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: center; column-gap: 12px; row-gap: 6px; padding: 11px 0; color: var(--muted); transition: color .3s ease; }
+.etapes li:not(:last-child)::after { content: ""; position: absolute; left: 15px; top: calc(50% + 17px); height: calc(100% - 34px); width: 2px; background: var(--line); transition: background .4s ease; }
+.etapes li.done:not(:last-child)::after { background: var(--ok); }
+.etapes .marque { width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; position: relative; z-index: 1; }
+.etapes li.cur, .etapes li.done { color: var(--ink); }
+.etapes li.cur { font-weight: 600; }
+.etapes li.cur .marque { border-color: var(--accent-soft); border-top-color: var(--accent); animation: tourne .8s linear infinite; }
+.etapes li.done .marque { background: var(--ok); border-color: var(--ok); animation: saute .35s cubic-bezier(.3, 1.6, .5, 1); }
+.etapes li.done .marque::before { content: ""; width: 7px; height: 13px; border: solid var(--on-ok); border-width: 0 3px 3px 0; transform: translateY(-2px) rotate(45deg); }
+.etapes li.bad { color: var(--bad); font-weight: 600; }
+.etapes li.bad .marque { background: var(--bad); border-color: var(--bad); }
+.etapes li.bad .marque::before { content: "!"; color: var(--on-bad); font-weight: 700; }
+.etapes progress { grid-column: 2; width: 100%; height: 8px; accent-color: var(--accent); }
+@keyframes tourne { to { transform: rotate(360deg); } }
+@keyframes saute { from { transform: scale(.4); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .etapes li.cur .marque { animation: none; border-color: var(--accent); }
+  .etapes li.done .marque { animation: none; }
+}
+
+/* Offre. */
+.ohead { display: block; padding: 6px 0 6px; color: var(--ink); text-decoration: none; border-radius: 8px; }
+.ohead:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.ohead .who { display: block; font-size: 13px; color: var(--muted); }
+.ohead .manque-client { color: var(--warn); font-weight: 600; text-decoration: underline; }
+.ohead .t { display: block; font-size: 20px; font-weight: 700; margin: 2px 0 6px; overflow-wrap: anywhere; }
+.ohead .meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.cat { margin: 18px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.cat.liste { display: flex; justify-content: space-between; align-items: baseline; }
+.rows.une .cat { display: grid; grid-template-columns: subgrid; align-items: end; }
+.cat h5, .ccat h5 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+/* Offre par pièce (sous-chantier 28) : le sous-total de la pièce et « Renommer », hors des majuscules du titre. */
+.cat h5 .st { margin-left: 6px; letter-spacing: 0; text-transform: none; color: var(--ink); font-weight: 600; font-size: 12.5px; }
+.cat h5 .renommer { display: inline-flex; align-items: center; min-height: 48px; vertical-align: middle; margin-left: 6px; padding: 0 6px; letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--accent); text-decoration: none; }
+.cat .ch { font-size: 12px; color: var(--muted); text-align: right; }
+.row { border-bottom: 1px solid var(--line); }
+.rows.une .row { display: grid; grid-template-columns: subgrid; align-items: center; min-height: 52px; scroll-margin: 90px 0 160px; }
+/* Le formulaire de suppression se fond dans la grille ; ceux de la quantité (champ + unité) et du
+   prix restent chacun une seule cellule, sinon l'unité glisse dans la colonne Prix. */
+.row form { display: contents; }
+.row form.q { display: flex; }
+.row form.p { display: block; }
+.row.flag { box-shadow: inset 3px 0 0 var(--warn); padding-left: 10px; margin-left: -10px; }
+.row.miss { box-shadow: inset 3px 0 0 var(--bad); padding-left: 10px; margin-left: -10px; }
+.row:target { animation: flash 1.8s ease-out; }
+@keyframes flash { from { background: var(--accent-soft); } to { background: transparent; } }
+.nm { font-size: 14.5px; line-height: 1.3; padding: 9px 0; min-width: 0; overflow-wrap: break-word; color: var(--ink); text-decoration: none; }
+a.nm { min-height: 48px; display: block; }
+a.nm:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.nm small { display: block; font-size: 12px; line-height: 1.35; color: var(--muted); margin-top: 2px; }
+.tag { font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 5px; margin-right: 4px; }
+.q { display: flex; align-items: center; justify-content: flex-end; gap: 3px; font-size: 14px; }
+.u { font-size: 12px; color: var(--muted); }
+.rows .q .u { min-width: 40px; }
+.p { text-align: right; font-size: 14px; }
+/* Champ de quantité ou de prix (Xavier, 2026-11-19) : un cadre fin sans fond, à la largeur de son contenu (2 chiffres pour
+   la quantité, 3 pour le prix ; il s'élargit à la frappe, app.js prend le relais sans field-sizing). Le cadre se voit
+   sur 34 px, la zone à toucher fait 48 px. 16 px : Safari ne zoome pas la page au toucher (R5). */
+.saisie { font: inherit; font-size: 16px; color: var(--ink); background: transparent; border: 0; border-radius: 14px; min-height: 48px; padding: 0 12px; outline: 1px solid var(--bord); outline-offset: -7px; text-align: right; font-variant-numeric: tabular-nums; width: auto; field-sizing: content; }
+.q .saisie { min-width: max(48px, calc(2ch + 26px)); max-width: calc(7ch + 26px); }
+.p .saisie { min-width: calc(3ch + 26px); max-width: calc(9ch + 26px); }
+.saisie:hover { outline-color: var(--ink); }
+.saisie:focus { outline: 2px solid var(--accent); outline-offset: -7px; }
+.saisie.manque { outline-color: var(--bad); }
+.saisie.manque::placeholder { color: var(--bad); font-weight: 600; opacity: 1; }
+.tt { text-align: right; font-weight: 600; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.del { width: 48px; min-height: 48px; display: grid; place-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 0; }
+.del svg.i { width: 18px; height: 18px; }
+.del:hover, .del:focus-visible { color: var(--bad); }
+.note { grid-column: 1 / -1; font-size: 12.5px; line-height: 1.35; padding: 0 0 6px; display: flex; align-items: center; gap: 10px; }
+.row form.note { display: flex; }
+.note.warn { color: var(--warn); }
+.note.bad { color: var(--bad); }
+/* Prix dicté à côté du catalogue (Xavier, 2026-11-17) : une note discrète, les boutons à la façon de « C'est juste ». */
+.note.prix-dit { color: var(--muted); flex-wrap: wrap; row-gap: 0; }
+.okbtn { font: inherit; background: none; border: 0; padding: 0; min-height: 48px; cursor: pointer; }
+.okbtn span { display: inline-block; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 6px 12px; }
+.totals { margin-top: 14px; font-variant-numeric: tabular-nums; }
+.totals .r { display: flex; justify-content: space-between; align-items: center; min-height: 32px; color: var(--muted); font-size: 14px; }
+.totals .r.grand { color: var(--ink); font-size: 18px; font-weight: 700; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; }
+
+/* Catalogue et ajout. */
+.search { position: sticky; top: 0; z-index: 2; background: var(--surface); padding: 4px 0 6px; margin: 0; }
+.search .box { display: flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 12px; padding: 0 12px; color: var(--muted); }
+.search input { flex: 1; font: inherit; font-size: 16px; border: 0; background: none; color: var(--ink); outline: none; min-height: 48px; min-width: 0; }
+.search .box:focus-within { box-shadow: inset 0 0 0 2px var(--accent); }
+/* Filtres (R8) : au téléphone, la rangée défile ; un fondu au bord droit dit qu'il en reste, et s'efface au bout. */
+.fchips { display: flex; gap: 6px; overflow-x: auto; padding: 0 44px 4px 0; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent); }
+.fchips a { flex: none; min-height: 48px; display: inline-flex; align-items: center; text-decoration: none; }
+.fchips a span { display: inline-block; font-size: 13px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 12px; white-space: nowrap; }
+.fchips a[aria-current="true"] span { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.ccat { display: flex; justify-content: space-between; align-items: end; margin: 14px 0 0; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
+.ccat span { font-size: 12px; color: var(--muted); }
+.crow { display: grid; grid-template-columns: minmax(0, 1fr) auto 58px; align-items: center; column-gap: 6px; border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none; min-height: 52px; }
+.crow:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
+.crow:target { animation: flash 1.8s ease-out; }
+.crow .u { padding-left: 2px; }
+.num { font-size: 14px; font-variant-numeric: tabular-nums; text-align: right; }
+.num i { font-style: normal; background: var(--chip); border-radius: 6px; padding: 4px 6px; white-space: nowrap; }
+.num.manque i { background: var(--bad-soft); color: var(--bad); font-weight: 600; }
+.res { margin: 2px 0 10px; border-top: 1px solid var(--line); }
+.pick { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; width: 100%; font: inherit; font-size: 14.5px; text-align: left; color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--line); min-height: 52px; padding: 6px 2px; cursor: pointer; }
+.pick:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
+.pick span { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pick .pn { font-weight: 400; }
+.pick small { display: block; font-size: 12px; color: var(--muted); }
+/* Ajouter, sobre (maquette 25, E7) : la ligne entrée en une phrase, le texte tapé proposé en ligne libre, le détail
+   replié ; sur PC, une ligne de recherche au bas du tableau. */
+.ajoutee { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--ok); }
+.pick-libre .pick .pn { color: var(--accent); font-weight: 600; }
+.libre-detail { margin: 18px 0 8px; }
+.libre-detail summary { list-style: none; display: flex; align-items: center; min-height: 48px; font-size: 14px; font-weight: 600; color: var(--accent); cursor: pointer; }
+.libre-detail summary::-webkit-details-marker { display: none; }
+.libre-detail[open] summary { margin-bottom: 6px; }
+.libre-detail form > .btn { width: 100%; min-height: 48px; }
+.ajout-pc { position: relative; display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 0 12px; min-height: 48px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); }
+.ajout-pc:focus-within { border-style: solid; border-color: var(--accent); }
+.ajout-pc input { flex: 1; min-height: 48px; border: 0; background: none; font: inherit; font-size: 15px; color: var(--ink); outline: none; }
+.ajout-pc-liste { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 8; margin: 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, .14); }
+.ajout-pc-liste li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: 8px; font-size: 14.5px; color: var(--ink); cursor: pointer; }
+.ajout-pc-liste li small { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ajout-pc-liste li[aria-selected="true"] { background: var(--accent-soft); }
+
+/* Réglages. */
+.card { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 10px 0; background: var(--surface); }
+.card h6 { margin: 0 0 8px; font-size: 14px; }
+.card p { margin: 0 0 6px; }
+.card .champ { margin-bottom: 10px; }
+.radio, .check { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; min-height: 48px; font-size: 14px; cursor: pointer; }
+.radio input, .check input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: var(--accent); }
+.radio small, .check small { display: block; color: var(--muted); font-size: 12.5px; }
+.regle { margin: 0; padding-left: 18px; font-size: 14px; }
+/* Propositions d'un toucher : elles remplissent le champ qui suit. */
+.puces { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Pièce d'une ligne ajoutée (sous-chantier 28, P4) : des liens en puces, la pièce choisie en plein. */
+.pieces-ajout { margin: 0 0 12px; }
+.pieces-ajout .lbl { display: block; font-weight: 600; font-size: 14px; margin: 0 0 6px; }
+.puces-liens { display: flex; flex-wrap: wrap; gap: 8px; }
+.puce-lien { display: inline-flex; align-items: center; min-height: 48px; padding: 8px 14px; border: 1px solid var(--bord); border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: 14px; }
+.puce-lien[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.piece-autre { display: flex; gap: 8px; margin: 8px 0 0; }
+.piece-autre input { flex: 1; min-width: 0; font: inherit; font-size: 16px; min-height: 48px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); }
+.puce { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--bord); border-radius: 999px; padding: 8px 14px; min-height: 48px; cursor: pointer; transition: background .15s ease, color .15s ease, scale .12s ease; -webkit-tap-highlight-color: transparent; }
+.puces.trois, .puces.quatre, .puces.cinq { display: grid; gap: 6px; }
+.puces.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.puces.quatre { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.puces.cinq { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.puces.trois .puce, .puces.quatre .puce, .puces.cinq .puce { padding: 8px 2px; text-align: center; }
+.puces.quatre .puce, .puces.cinq .puce { white-space: nowrap; }
+/* Pastille qui porte un bouton radio : le rond est caché, la pastille cochée prend la couleur. */
+label.puce { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.puce input[type="radio"] { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.puce:has(input:checked) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.puce:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.groupe { border: 0; padding: 0; margin: 0 0 16px; min-width: 0; }
+.groupe legend { font-size: 14px; font-weight: 600; padding: 0; margin: 0 0 8px; }
+/* Ce qui suit un choix n'apparaît que quand il sert. */
+.si-autre, .si-delai, .si-acomptes { display: none; }
+.choix:has(> .puces input[value="autre"]:checked) > .si-autre,
+.choix:has(> .teintes input[value="autre"]:checked) > .si-autre { display: grid; margin: 10px 0 0; }
+.paiement:has(input[name="paiement_type"][value="jours"]:checked) .si-delai,
+.paiement:has(input[name="paiement_type"][value="net"]:checked) .si-delai,
+.paiement:has(input[name="paiement_type"][value="acomptes"]:checked) .si-acomptes { display: block; margin-top: 10px; }
+@supports not selector(:has(*)) { .si-autre, .si-delai, .si-acomptes { display: block; margin-top: 10px; } }
+/* Ma marque : logo, pastilles de couleur (SVG : la CSP refuse les styles en ligne), vignettes des modèles. */
+.logo-ligne { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.logo-apercu { max-height: 48px; max-width: 160px; border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 4px; }
+.teintes { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.teinte { position: relative; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; transition: scale .12s; }
+.teinte input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.teinte svg { width: 100%; height: 100%; display: block; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--bord); }
+.teinte:has(input:checked) svg { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
+.teinte:has(input:focus-visible) svg { outline: 3px solid var(--focus); outline-offset: 4px; }
+.teinte:active { scale: .9; }
+.teinte-autre { min-height: 48px; }
+/* Phrases de Lettre (2026-11-20) : visibles quand Lettre est coché ; sans :has, toujours visibles. */
+.si-lettre { display: none; }
+#marque:has(input[name="modele"][value="lettre"]:checked) .si-lettre { display: block; }
+@supports not selector(:has(*)) { .si-lettre { display: block; } }
+.lettre-appel { margin: 0 0 12px; }
+.lettre-titre { display: block; font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.tournures .puce[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+/* 2b : couleur tapée sous 7:1. Texte --warn sur --warn-soft, boutons sur la surface. Mesuré le 2026-11-20 sur les treize
+   textes de l'encadré : 8,2:1 au plus bas en clair, 7,7:1 en sombre. */
+.avis-couleur { margin: 12px 0 0; padding: 12px 14px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--warn); font-size: 15px; }
+.avis-couleur p { margin: 0 0 8px; }
+.choix-couleur { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; margin: 8px 0 0; padding: 8px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.choix-couleur svg { width: 32px; height: 32px; flex: none; border-radius: 50%; box-shadow: 0 0 0 1px var(--line); }
+.choix-couleur b { display: block; }
+.choix-couleur small { display: block; font-size: 13px; color: var(--muted); }
+.choix-couleur[aria-pressed="true"] { border: 2px solid var(--ink); }
+.choix-couleur:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.champ input[type="color"] { padding: 4px; min-height: 48px; max-width: 120px; }
+.modeles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.modele { position: relative; display: grid; gap: 4px; justify-items: center; font-size: 13px; cursor: pointer; padding: 6px 6px 0; }
+.modele input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.modele img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+/* Modèles du bâtiment (2026-11-20) : douze modèles en quatre familles ; celui du métier du compte est marqué. */
+.famille { margin: 14px 0 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.famille:first-of-type { margin-top: 0; }
+.badge.propose { margin: 2px 0 0; background: var(--accent-soft); color: var(--accent); text-align: center; line-height: 1.2; white-space: normal; }
+.modele:has(input:checked) { font-weight: 600; }
+.modele:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Modèles du bâtiment (2026-11-20) : douze modèles en quatre familles ; celui du métier du compte est marqué. */
+.famille { margin: 14px 0 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.famille:first-of-type { margin-top: 0; }
+.badge.propose { margin: 2px 0 0; background: var(--accent-soft); color: var(--accent); text-align: center; line-height: 1.2; white-space: normal; }
+.phrase { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
+.phrase span { color: var(--ink); }
+.puce:active { scale: .96; }
+.puce:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .puce { transition: none; } }
+
+/* Réglages rangés (sous-chantier 22) : sommaire par rubriques, rubrique seule, assistant du premier lancement. */
+.badge { display: inline-block; font-size: 12px; font-weight: 600; line-height: 1; padding: 4px 7px; border-radius: 999px; vertical-align: 2px; margin-left: 4px; }
+.badge.manque { background: var(--warn-soft); color: var(--warn); }
+.champ .manque { border-color: var(--warn); }
+.etat-reglages { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 14px; color: var(--muted); }
+.etat-reglages .points { display: inline-flex; gap: 4px; }
+.etat-reglages .points i { width: 18px; height: 6px; border-radius: 3px; background: var(--line); }
+.etat-reglages .points i.ok { background: var(--ok); }
+a.rubrique { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 12px 14px; margin: 0 0 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; }
+a.rubrique:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+a.rubrique .ic { flex: none; width: 40px; height: 40px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+a.rubrique .ic svg { width: 22px; height: 22px; }
+a.rubrique .corps { flex: 1; min-width: 0; display: grid; gap: 2px; }
+a.rubrique b { font-size: 15.5px; font-weight: 600; }
+a.rubrique small { font-size: 13.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a.rubrique .fl { flex: none; font-size: 22px; line-height: 1; color: var(--muted); }
+@media (hover: hover) { a.rubrique:hover { border-color: var(--accent); } }
+.compte .lien { padding-left: 0; }
+.compte { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; margin: 22px 0 0; padding: 12px 0 0; border-top: 1px solid var(--line); }
+.progression { display: flex; gap: 6px; margin: 0 0 8px; }
+.progression i { flex: 1; height: 5px; border-radius: 3px; background: var(--line); }
+.progression i.fait { background: var(--accent); }
+.etape-titre { font-size: 20px; margin: 2px 0 12px; }
+.auto-etat { min-height: 20px; margin: 0; font-size: 13px; color: var(--muted); text-align: right; }
+.auto-etat.ok { color: var(--ok); }
+.auto-etat.bad { color: var(--bad); }
+.actionbar .passer { flex: 1; display: flex; margin: 0; }
+/* « Voir en grand » sous chaque modèle, et sa page d'aperçu. */
+.modele-case { display: grid; align-content: start; border-radius: 10px; border: 2px solid transparent; }
+.modele-case:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+/* 2a (2026-11-19) : la vignette est le vrai document, posé sur 820 px et réduit à sa case (--echelle, app.js). */
+.vignette { position: relative; display: block; width: 100%; aspect-ratio: 180 / 255; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.vignette > .paper { position: absolute; top: 0; left: 0; width: 820px; padding: 40px 44px; border-radius: 0; box-shadow: none; overflow: hidden; transform: scale(var(--echelle, .13)); transform-origin: top left; pointer-events: none; }
+.agrandi-image > .paper { flex: none; width: 820px; max-width: none; padding: 40px 44px; box-shadow: 0 8px 28px rgba(0, 0, 0, .5); transform-origin: top center; }
+.agrandi-image:has(> .paper) { overflow-x: hidden; }
+.voir { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 48px; font-size: 12.5px; color: var(--accent); text-decoration: none; }
+.voir svg.i { width: 14px; height: 14px; }
+/* « Voir en grand » : l'image du modèle par-dessus la page, les boutons sous le pouce (2026-11-15). */
+.agrandi { position: fixed; inset: 0; z-index: 70; background: #0E1014; display: flex; flex-direction: column; color: #fff; }
+.agrandi[hidden] { display: none; }
+body.agrandi-ouvert { overflow: hidden; }
+.agrandi-haut { display: flex; align-items: center; gap: 12px; padding: 6px 8px 6px 16px; min-height: 56px; }
+.agrandi-haut b { flex: 1; font-size: 17px; }
+.agrandi-x { width: 48px; height: 48px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, .12); color: #fff; font-size: 28px; line-height: 1; cursor: pointer; }
+.agrandi-image { flex: 1; min-height: 0; overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 0 12px; }
+.agrandi-image img { width: 100%; max-width: 640px; height: auto; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .5); }
+.agrandi-bas { display: flex; gap: 8px; padding: 10px 12px 14px; max-width: 664px; width: 100%; margin: 0 auto; }
+.agrandi-bas .btn { min-height: 56px; font-size: 17px; }
+.agrandi-bas [data-pas] { flex: 0 0 56px; font-size: 26px; }
+.agrandi-bas [data-choisir] { flex: 1; min-height: 64px; }
+.modeles-nav { margin: 0 0 12px; }
+.actionbar .choisir { flex: 1; display: flex; margin: 0; }
+/* Clients (sous-chantier 17) : liste, fiche, « Client de l'offre ». */
+.klettre { margin: 14px 4px 4px; }
+.klettre h5 { margin: 0; font-size: 12px; font-weight: 700; color: var(--muted); }
+.krow { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 64px; padding: 10px 12px; margin: 0 0 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; }
+.krow:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.krow:target, .krow.eclair { animation: flash 1.8s ease-out; }
+.krow .ini { width: 38px; height: 38px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+.krow .corps { min-width: 0; display: grid; gap: 1px; }
+.krow b { font-size: 15.5px; font-weight: 600; }
+.krow small { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.krow .fl { font-size: 22px; line-height: 1; color: var(--muted); }
+.sous-titre { font-size: 14px; font-weight: 700; margin: 18px 0 8px; }
+.omini { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; padding: 10px 12px; margin: 0 0 6px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); text-decoration: none; font-size: 14px; }
+.omini small { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
+.supprimer-fiche { margin: 18px 0 0; }
+.btn.danger-texte { width: 100%; color: var(--bad); border-color: var(--bad); }
+.dicte { border: 1px dashed var(--warn); background: var(--warn-soft); border-radius: 12px; padding: 10px 12px 12px; }
+.dicte p { margin: 0 0 8px; }
+.dicte .btn { width: 100%; }
+.kchoix-f { margin: 0; }
+.kchoix { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: center; width: 100%; min-height: 56px; padding: 8px 2px; text-align: left; font: inherit; color: var(--ink); background: none; border: 0; border-top: 1px solid var(--line); cursor: pointer; }
+.kchoix .rond { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); }
+.kchoix.on .rond { border: 6px solid var(--accent); }
+.kchoix b { display: block; font-weight: 550; }
+.kchoix small { display: block; font-size: 13px; color: var(--muted); }
+.kchoix:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
+.box-seule { margin: 0 0 6px; }
+.etiquette { display: inline-block; font-size: 12px; font-weight: 600; line-height: 1.2; border-radius: 999px; padding: 2px 8px; margin-left: 2px; vertical-align: 1px; }
+.etiquette.nouveau { background: var(--warn-soft); color: var(--warn); }
+.ohead a.who { color: var(--muted); text-decoration: none; display: block; padding: 4px 0; }
+.ohead a.who b { color: var(--ink); font-weight: 600; }
+.ohead a.t { color: var(--ink); text-decoration: none; display: flex; align-items: center; min-height: 48px; }
+.ohead a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.screen.gris .search { background: var(--bg); }
+.screen.gris .search .box { background: var(--surface); border: 1px solid var(--line); }
+
+/* Factures (sous-chantier 18) : liste, facture figée, liens depuis l'offre, Nouvelle facture. */
+.frow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 64px; padding: 10px 12px; margin: 0 0 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; }
+.frow:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.frow .corps { min-width: 0; display: grid; gap: 3px; justify-items: start; }
+.frow b { font-size: 15.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.frow small { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.frow .montant { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.frow.annulee b, .frow.annulee .montant { text-decoration: line-through; color: var(--muted); }
+.status.annulee { background: var(--chip); color: var(--muted); }
+.factures-offre { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 6px; }
+.factures-offre .etiquette { display: inline-flex; align-items: center; min-height: 48px; padding: 0 14px; font-size: 13px; }
+.etiquette.facture { background: var(--accent-soft); color: var(--accent); text-decoration: none; margin-left: 0; }
+.etiquette.facture.annulee { background: var(--chip); color: var(--muted); text-decoration: line-through; }
+.ohead .who a { color: var(--accent); }
+.rows.figees .fige { text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; }
+.rows.figees .q.fige .u { color: var(--muted); font-size: 12px; }
+.client-facture { display: grid; gap: 2px; }
+.client-facture span:last-child { color: var(--muted); font-size: 14px; }
+.liste-factures { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; font-size: 14px; }
+.liste-factures a { display: inline-flex; align-items: center; min-height: 48px; }
+.liste-factures a.annulee { text-decoration: line-through; color: var(--muted); }
+
+/* Adresse en champs séparés (sous-chantier 18) : rue et numéro, NPA et localité, pays ; suggestions du registre. */
+fieldset.adresse { border: 0; padding: 0; margin: 0 0 8px; min-width: 0; position: relative; }
+fieldset.adresse legend { font-size: 14px; font-weight: 600; padding: 0; margin: 0 0 8px; }
+.rue-numero { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 10px; align-items: start; }
+.npa-localite { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: start; }
+.suggestions { list-style: none; margin: -8px 0 16px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
+.suggestions button { font: inherit; font-size: 15px; width: 100%; min-height: 48px; text-align: left; padding: 8px 10px; border: 0; border-radius: 8px; background: none; color: var(--ink); cursor: pointer; }
+.suggestions button:hover, .suggestions button:focus-visible { background: var(--chip); outline: none; }
+.adresse-etat { margin: -8px 0 12px; font-size: 13px; color: var(--muted); }
+.adresse-etat:empty { display: none; }
+.adresse-etat.ok { color: var(--ok); }
+.adresse-etat.warn { color: var(--warn); }
+
+/* Sous-chantier 24 (2026-11-15) : en fin de fichier, pour passer après les règles de base qu'il remplace. */
+/* Offre (décisions D3 et D4, 2026-11-15) : total en bas, action principale de 64 px, « + » carré. */
+.totalbar { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 16px 0; background: var(--surface); border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.totalbar span { color: var(--muted); font-size: 15px; }
+.totalbar b { font-size: 21px; }
+.totalbar + .actionbar { border-top: 0; padding-top: 8px; }
+.actionbar .btn.grand { min-height: 64px; font-size: 17px; flex: 1; }
+/* 9b (2026-11-19) : « + Ligne », le mot à côté du signe. */
+.actionbar .btn.ajout { flex: none; min-height: 64px; gap: 4px; padding: 0 16px 0 12px; }
+.actionbar .btn.ajout svg.i { width: 24px; height: 24px; }
+.ohead a.carte-lien { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 14px; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: 15px; font-weight: 400; color: var(--ink); }
+.ohead .carte-lien > span { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.ohead .carte-lien small { color: var(--muted); font-size: 14px; }
+.ohead .carte-lien .etiquette { align-self: flex-start; margin-top: 4px; }
+.ohead .carte-lien::after { content: '›'; color: var(--muted); font-size: 24px; line-height: 1; }
+.ohead a.who.carte-lien::after { content: none; }
+.ohead .carte-lien .loupe { flex: none; width: 22px; height: 22px; color: var(--muted); }
+.ohead a.t.carte-lien b { font-size: 17px; font-weight: 700; }
+.ohead a.who.carte-lien b { font-size: 16px; }
+/* Lignes : corbeille de 48 px écartée du montant (D4 A) ; glisser à gauche retire (D4 B). Les lignes et les titres
+   partagent les colonnes de .rows (sous-grille) : un prix plus long élargit sa colonne pour toute l'offre, en-tête
+   compris, sans empiéter sur la désignation (Xavier, 2026-11-19). */
+.rows { --cols: minmax(0, 1fr) minmax(96px, max-content) minmax(104px, max-content) 112px 52px; }
+.rows.une { display: grid; grid-template-columns: var(--cols); column-gap: 4px; }
+.rows.une > * { grid-column: 1 / -1; }
+.rows.une .row { min-height: 60px; }
+.del { margin-left: 4px; }
+@media (min-width: 700px) { .rows.une .cat .ch:nth-child(2) { padding-right: 43px; } }
+.del svg.i { width: 20px; height: 20px; }
+/* Téléphone, sous 700 px (L1 du 2026-11-17 ; R3, R9 et dessin des lignes du 2026-11-19) : l'écran est une colonne de
+   480 px au plus. La désignation prend la première rangée, la corbeille en face d'elle (choix B) ; quantité, prix et
+   total dessous. La désignation fait 48 px de haut, posée sur ses chiffres. Avant, le seuil de 420 px laissait la
+   quantité recouvrir la désignation sur un téléphone de 430 px. */
+@media (max-width: 699px) {
+  .rows { --cols: max-content max-content minmax(0, 1fr) 48px; }
+  .rows.une { column-gap: 10px; }
+  .rows.une .row { row-gap: 0; min-height: 0; }
+  .rows.une .cat h5 { grid-column: 1 / -1; }
+  .rows.une .cat .ch { text-align: left; padding-left: 7px; }
+  .rows.une .cat .ch:nth-child(4) { text-align: right; padding-left: 0; }
+  .rows.une .row > .nm { grid-column: 1 / 4; grid-row: 1; min-height: 48px; padding: 20px 0 0; }
+  .rows.une .row .q { grid-column: 1; grid-row: 2; justify-content: flex-start; gap: 4px; }
+  .rows.une .row .p { grid-column: 2; grid-row: 2; text-align: left; }
+  .rows.une .row .tt { grid-column: 3; grid-row: 2; }
+  .rows.une .row .del { grid-column: 4; grid-row: 1; align-self: start; justify-self: end; margin-left: 0; }
+}
+.row[data-glisse-ligne] { position: relative; touch-action: pan-y; }
+.row.tire { background: var(--bad-soft); }
+.row.tire > * { transform: translateX(var(--dx, 0)); }
+.row.tire::after { content: 'Retirer'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--bad); font-weight: 700; font-size: 15px; }
+.row.tire.assez::after { content: 'Lâcher pour retirer'; }
+/* Relecture (D5) : la ligne descend vers les boutons, sous le pouce. */
+.btn.ok { background: var(--ok); border-color: var(--ok); color: var(--on-ok); }
+.screen.relecture { display: flex; flex-direction: column; }
+.relu-reste { color: var(--muted); font-size: 15px; margin: 4px 0 auto; }
+.relu-carte { padding-top: 24px; }
+.relu-cat { color: var(--muted); font-size: 14px; margin: 0; }
+.relu-nom { font-size: 24px; line-height: 1.2; margin: 4px 0 10px; overflow-wrap: anywhere; }
+.relu-entendu { background: var(--chip); border-radius: 12px; padding: 10px 12px; color: var(--muted); font-size: 15px; margin: 0 0 12px; }
+.relu-champs { display: flex; gap: 10px; margin: 0 0 10px; }
+.relu-champ { flex: 1; min-width: 0; display: flex; flex-direction: column; border: 2px solid var(--line); border-radius: 14px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+.relu-champ small { font-size: 13px; }
+.relu-champ input { border: 0; background: transparent; font: inherit; font-size: 26px; font-weight: 700; color: var(--ink); padding: 2px 0; width: 100%; min-height: 44px; }
+.relu-champ input:focus { outline: none; }
+.relu-champ:focus-within { border-color: var(--accent); }
+.relu-champ.faux { border-color: var(--bad); }
+.relu-montant { display: flex; justify-content: space-between; align-items: baseline; font-size: 18px; margin: 4px 0 8px; font-variant-numeric: tabular-nums; }
+.relu-fin { text-align: center; margin: auto 0; }
+.relu-fin svg.i { width: 56px; height: 56px; color: var(--ok); }
+.relu-fin h2 { margin: 8px 0 4px; }
+/* Ligne hors catalogue (D6) : la ranger d'un toucher, deux boutons de 48 px sous la ligne. */
+.ranger-ligne { grid-column: 1 / -1; display: flex; gap: 8px; padding: 0 0 10px; }
+/* 4a (2026-11-20) : la ligne hors catalogue porte une bande blanche à bord gris, toute touchable, vers la fiche. */
+.vers-catalogue { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; min-height: 56px; margin: 4px 0 10px; padding: 6px 10px 6px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.vers-catalogue .vc-ic { display: grid; place-items: center; flex: none; color: var(--ink); }
+.vers-catalogue .vc-ic svg.i { width: 22px; height: 22px; }
+.vers-catalogue .vc-tx { flex: 1; display: flex; flex-direction: column; line-height: 1.25; }
+.vers-catalogue .vc-tx b { font-size: 15px; }
+.vers-catalogue .vc-tx small { font-size: 14px; color: var(--muted); }
+.vers-catalogue > svg.i { width: 20px; height: 20px; color: var(--muted); flex: none; }
+.row:has(.vers-catalogue) .nm .tag { display: none; }
+.rappel-ligne { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--chip); font-size: 15px; }
+.onglets-catalogue { margin: 0 0 14px; }
+.panneau-catalogue { display: none; }
+body:has(input[name="onglet_catalogue"][value="nouveau"]:checked) .panneau-catalogue[data-onglet="nouveau"],
+body:has(input[name="onglet_catalogue"][value="existant"]:checked) .panneau-catalogue[data-onglet="existant"] { display: block; }
+.panneau-catalogue .btn.grand { width: 100%; margin-top: 6px; }
+/* 3 A (2026-11-20) : le total sous le libellé du bouton principal de l'offre. */
+.libelle-total { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.libelle-total small { font-size: 14px; font-weight: 500; }
+/* 5 (2026-11-20) : icônes d'Archiver et Supprimer, montrées au PC seulement ; au téléphone, les mots. */
+.actions-glisse svg.i { display: none; }
+.ranger-ligne .ranger { display: contents; }
+.ranger-ligne .btn { flex: 1; min-height: 48px; font-size: 14px; padding: 6px 8px; }
+.rattacher-ligne { font-size: 18px; font-weight: 600; margin: 4px 0 10px; }
+/* Aperçu PDF (D7 A) : la page sur fond gris, comme une feuille posée. */
+.screen.apercu-pdf { background: #454B55; }
+.pdf-pages canvas { display: block; margin: 0 auto 12px; background: #fff; box-shadow: 0 6px 18px rgba(0, 0, 0, .35); max-width: 100%; }
+.pdf-attente { color: #fff; font-size: 13px; text-align: center; margin: 4px 0 12px; }
+.apercu-pdf noscript a { color: #fff; }
+
+/* Facturer (maquette 25, E1 à E8) : une feuille, l'aperçu de la facture, « Créer la facture » ; le PDF d'une facture
+   avec son panneau. */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.segments { display: flex; border: 0; margin: 0 0 14px; padding: 3px; border-radius: 12px; background: var(--chip); }
+.segments label { flex: 1; position: relative; }
+.segments input, .part input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.segments span { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 6px; border-radius: 9px; font-size: 15px; font-weight: 600; color: var(--muted); text-align: center; }
+.segments input:checked + span { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .14); }
+.segments input:focus-visible + span, .part input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+.genre-seul { margin: 0 0 12px; font-size: 16px; }
+.etiquette-champ { font-size: 14px; font-weight: 600; }
+.puces-part { display: flex; gap: 6px; }
+.part { flex: 1; position: relative; }
+.part span { display: flex; align-items: center; justify-content: center; min-height: 48px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.part input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.montant-chf { margin: 10px 0 0; }
+.finale .btn { width: 100%; min-height: 48px; margin: 2px 0 6px; }
+.finale p { margin: 0 0 6px; }
+.entete-facture { margin: 14px 0 6px; border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; background: var(--surface); }
+.entete-facture summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 48px; font-size: 14px; cursor: pointer; }
+.entete-facture summary::-webkit-details-marker { display: none; }
+.entete-facture summary .lien { color: var(--accent); font-weight: 600; flex: none; }
+.entete-facture[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.pour-client { margin: 6px 2px 14px; }
+.lien-apercu { display: inline-flex; align-items: center; min-height: 48px; font-size: 15px; font-weight: 600; color: var(--accent); }
+.facture-mini { position: relative; height: 220px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); cursor: zoom-in; }
+.facture-mini [data-apercu-mini] > .apercu-facture { width: 250%; transform: scale(.4); transform-origin: top left; pointer-events: none; }
+.facture-mini [data-apercu-mini] > .alerte { margin: 12px; }
+.facture-mini:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.legende { margin: 6px 2px 0; }
+.apercu-facture { position: relative; }
+.apercu-facture .filigrane { position: absolute; z-index: 2; top: 330px; left: 50%; transform: translateX(-50%) rotate(-16deg); font-size: 48px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: rgba(35, 39, 45, .15); pointer-events: none; white-space: nowrap; }
+.actionbar.avec-phrase { flex-wrap: wrap; }
+.actionbar .phrase { flex-basis: 100%; margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
+.apercu-grand { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: var(--bg); }
+.apercu-grand:focus { outline: none; }
+.apercu-grand-barre { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.apercu-grand-barre .btn { min-height: 48px; }
+.apercu-grand-corps { flex: 1; overflow: auto; padding: 12px; }
+.apercu-grand-corps .apercu-facture { max-width: 820px; margin: 0 auto; }
+.apercu-grand-pied { display: flex; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); }
+.apercu-grand-pied .btn { flex: 1; min-height: 52px; max-width: 520px; margin: 0 auto; }
+.panneau-facture { margin: 4px 0 12px; padding: 16px; border-radius: 14px; background: var(--surface); color: var(--ink); }
+.pf-montant { margin: 0 0 6px; font-size: 28px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.panneau-facture p { margin: 0; }
+.panneau-facture dl, .resume-facture dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 14px 0 6px; font-size: 14px; }
+.panneau-facture dt, .resume-facture dt { color: var(--muted); }
+.panneau-facture dd, .resume-facture dd { margin: 0; overflow-wrap: anywhere; }
+.panneau-facture dd a { display: inline-flex; align-items: center; min-height: 48px; }
+.lien-offre { display: inline-flex; align-items: center; min-height: 48px; }
+.panneau-facture small { color: var(--muted); }
+.lien-discret { display: inline-flex; align-items: center; min-height: 48px; font-size: 14px; color: var(--bad); }
+/* Annuler une facture (6a et 6b, 2026-11-19) : la facture résumée, ce qui suit, les deux façons d'annuler en rouge. */
+.resume-facture { padding: 16px; margin: 0 0 18px; }
+.resume-facture .rf-titre { margin: 0 0 2px; color: var(--muted); font-size: 14px; font-weight: 600; }
+.resume-facture dl { margin-bottom: 0; }
+.suites-annulation, .etapes-annulation { margin: 0; padding-left: 22px; font-size: 15px; line-height: 1.5; }
+.suites-annulation li + li, .etapes-annulation li + li { margin-top: 8px; }
+.actionbar.empile { flex-direction: column; align-items: stretch; }
+.actionbar.empile .btn { flex: none; width: 100%; }
+
+/* Version PC (décisions D12 et D13, 2026-11-15). Sous 1024 px, rien ne change : les éléments du PC sont cachés.
+   À partir de 1024 px : la barre du bas devient le menu de gauche ; l'écran d'une offre garde la liste des offres
+   dans une colonne ; « Document à côté » remplace la liste par le document, qui suit chaque correction.
+   Une tablette garde la vue du téléphone (Xavier, 2026-11-15) : la version PC demande aussi une souris ou un pavé
+   tactile, un iPad en paysage (1180 px) reste au pouce. */
+kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 2px 5px; background: var(--chip); color: var(--ink); }
+.colonne-liste, .colonne-doc { display: none; }
+/* Les cartes de la colonne des offres (PC, tablette en paysage). */
+.lcard { display: block; padding: 10px 12px; margin: 4px 0; border-radius: 12px; color: var(--ink); text-decoration: none; }
+.lcard .l1 { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.lcard b { font-size: 15px; font-weight: 650; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.lcard .montant { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lcard small { display: block; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lcard[aria-current="page"] { background: var(--accent-soft); }
+/* Le petit texte gris sur le fond de la carte ouverte donnait 6,99:1 (recette du 2026-11-19) : à l'encre. */
+.lcard[aria-current="page"] small { color: var(--ink); }
+.lcard:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
+@media not all and (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .bas:has([data-total-bouton]) .totalbar { display: none; }
+  .bas:has([data-total-bouton]) .totalbar + .actionbar { padding-top: 12px; border-top: 1px solid var(--line); }
+  .pc-seul { display: none !important; }
+  /* Le micro (72 px) dépasse de 24 px au-dessus des onglets : la barre d'actions lui réserve sa place (R1 A, 2026-11-19). */
+  .bas:has(.tabs:not(.pc-seul)) .actionbar { padding-bottom: 34px; }
+  .app:has(.bas > .tabs:not(.pc-seul)):not(:has(.bas .actionbar)) .snack { bottom: calc(var(--bas, 120px) + 36px); }
+}
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  body { --menu: 232px; --liste: 340px; --doc: min(42vw, 680px); }
+  .mobile-seul { display: none !important; }
+
+  /* Le menu de gauche */
+  .tabs { position: fixed; left: 0; top: 0; bottom: 0; width: var(--menu); z-index: 6; flex-direction: column; gap: 2px; padding: 14px 12px; border-top: 0; border-right: 1px solid var(--line); overflow-y: auto; }
+  .tabs .marque-pc { order: -1; font-size: 18px; font-weight: 750; padding: 4px 12px 16px; min-height: 48px; }
+  .tabs a { flex: none; flex-direction: row; align-items: center; gap: 12px; min-height: 48px; padding: 8px 12px; border-radius: 10px; font-size: 15px; color: var(--ink); }
+  .tabs a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+  .tabs .micro-central { order: 1; flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; margin-top: 18px; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-size: 15px; }
+  .tabs .micro-central > span { position: static; transform: none; width: auto; height: auto; border: 0; box-shadow: none; background: none; color: inherit; display: inline-flex; }
+  .tabs .micro-central svg { width: 20px; height: 20px; }
+  .tabs .micro-central:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .tabs a.importer { order: 2; justify-content: center; margin-top: 8px; border: 1px solid var(--line); font-weight: 550; }
+  .tabs .aide-micro { order: 3; padding: 8px 4px; font-size: 12px; color: var(--muted); }
+  @media (hover: hover) {
+    .tabs a:not([aria-current="page"]):hover { background: var(--chip); }
+    .tabs .micro-central:hover { filter: brightness(1.08); }
+  }
+
+  /* Les écrans qui ont le menu s'élargissent à sa droite ; les autres (fiches, formulaires) restent une colonne. */
+  body:has(.tabs) .app { max-width: 1040px; margin: 0 0 0 var(--menu); min-height: 100vh; }
+  body:not(:has(.tabs)) .app { max-width: 640px; }
+  .screen.avec-rond { padding-bottom: 28px; }
+  .bar { min-height: 60px; padding: 8px 28px; }
+  .screen { padding: 20px 28px 32px; }
+  .actionbar { padding: 12px 28px; justify-content: flex-end; }
+  .actionbar .btn { flex: 0 1 auto; min-width: 140px; }
+  .actionbar .btn.grand { flex: 0 1 320px; }
+  .actionbar.empile { flex-direction: row; align-items: center; }
+  .actionbar.empile .btn { width: auto; }
+  .actionbar.empile .btn.grand { flex: 0 1 320px; }
+  .actionbar.empile > .btn:not(.grand) { order: -1; }
+  .totalbar { padding: 10px 28px 0; }
+  /* La fenêtre de dictée, cachée, ne prend plus la marge du bas de l'écran : 10 px blancs sous chaque page. */
+  .bas > .nouvelle:last-child { padding-bottom: 0; }
+  /* À la souris, la ligne à relire suit son compteur : poussée en bas pour le pouce, elle laissait 310 à 620 px vides. */
+  .screen.relecture .relu-reste { margin-bottom: 16px; }
+  [data-total-bouton] { display: none; }
+  /* 5 (2026-11-20) : au survol de la carte (ou au clavier), Archiver et Supprimer en icônes dans la carte. */
+  .glisse { overflow: visible; }
+  .glisse > .ocard, .glisse.ouverte > .ocard, .actions-glisse:focus-within + .ocard { transform: none; transition: padding-right .15s; }
+  .glisse:hover > .ocard, .glisse:focus-within > .ocard { padding-right: 134px; }
+  .actions-glisse { inset: auto; top: 50%; right: 12px; transform: translateY(-50%); z-index: 2; gap: 2px; padding-left: 10px; border-left: 1px solid var(--line); opacity: 0; pointer-events: none; transition: opacity .15s; }
+  .glisse:hover .actions-glisse, .actions-glisse:focus-within { opacity: 1; pointer-events: auto; transition-delay: 0s; }
+  .actions-glisse button { position: relative; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: transparent; color: var(--muted); }
+  .actions-glisse .arch, .actions-glisse .supp { background: transparent; color: var(--muted); }
+  .actions-glisse button:hover, .actions-glisse button:focus-visible { background: var(--chip); color: var(--ink); }
+  .actions-glisse .supp:hover, .actions-glisse .supp:focus-visible { color: var(--bad); }
+  .actions-glisse svg.i { display: block; width: 22px; height: 22px; }
+  .actions-glisse button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .actions-glisse button:hover::after, .actions-glisse button:focus-visible::after { content: attr(data-t); position: absolute; top: 54px; left: 50%; transform: translateX(-50%); padding: 4px 8px; border-radius: 6px; background: var(--ink); color: var(--surface); font-size: 13px; font-weight: 500; white-space: nowrap; z-index: 3; }
+  /* 7a (2026-11-20) : le bandeau « Annuler » d'une ligne à la place de la ligne du total, aux mêmes marges, fond jaune. */
+  .snack.dans-total { position: static; transform: none; width: auto; min-height: 52px; margin: 0; padding: 4px 28px; border-radius: 0; border-top: 1px solid var(--line); background: var(--warn-soft); color: var(--ink); font-size: 15px; font-weight: 600; }
+  .snack.dans-total button { min-height: 44px; padding: 0 14px; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface); color: var(--ink); font-family: var(--titre); text-decoration: none; }
+  .bas:has(> .snack.dans-total) > .totalbar { display: none; }
+  @media (hover: hover) {
+    .ocard:hover, .krow:hover, .frow:hover, .omini:hover { border-color: var(--bord); }
+    .crow:hover, .pick:hover { background: var(--chip); }
+    .btn:not(.primary):not(.danger):not(.ok):not([disabled]):hover { background: var(--chip); }
+    .btn.primary:not([disabled]):hover, .btn.danger:not([disabled]):hover { filter: brightness(1.18); }
+  }
+
+  /* Les fenêtres s'ouvrent au milieu de l'écran plutôt qu'en bas. */
+  .feuille-fond { align-items: center; }
+  .feuille { max-width: 560px; border-radius: 18px; max-height: 88%; }
+
+  .fchips { flex-wrap: wrap; overflow: visible; padding-right: 0; -webkit-mask-image: none; mask-image: none; }
+
+  /* La colonne des offres (D12) et le document à côté (D13) demandent de la largeur : à partir de 1280 px.
+     Entre 1024 et 1279 px, le menu et l'offre seulement (à 1024 px, la désignation n'aurait plus que 30 px). */
+  .ohead .doc-cote { display: none; }
+  @media (min-width: 1280px) {
+    /* La colonne des offres (D12) */
+    .colonne-liste { display: block; position: fixed; top: 0; bottom: 0; left: var(--menu); width: var(--liste); z-index: 4; overflow-y: auto; padding: 12px; background: var(--surface); border-right: 1px solid var(--line); }
+    /* Au-delà de 1000 px, l'œil perd le lien entre la désignation et ses montants. */
+    body:has(.colonne-liste) .app { margin-left: calc(var(--menu) + var(--liste)); max-width: 1000px; }
+    @media (hover: hover) { .lcard:not([aria-current="page"]):hover { background: var(--chip); } }
+
+    /* Le document à côté des lignes (D13) */
+    body.doc-a-cote .colonne-liste { display: none; }
+    body.doc-a-cote:has(.colonne-liste) .app { margin-left: var(--menu); margin-right: var(--doc); }
+    .colonne-doc:not([hidden]) { display: block; position: fixed; top: 0; right: 0; bottom: 0; width: var(--doc); z-index: 4; overflow-y: auto; padding: 16px; background: var(--bg); border-left: 1px solid var(--line); }
+    .colonne-doc .paper { font-size: 11px; }
+    /* Document à côté : la colonne des lignes rétrécit, les champs reprennent leur taille du téléphone. */
+    body.doc-a-cote .rows { --cols: minmax(0, 1fr) minmax(62px, max-content) minmax(72px, max-content) 80px 52px; }
+    body.doc-a-cote .screen, body.doc-a-cote .bar { padding-left: 20px; padding-right: 20px; }
+    .ohead .doc-cote { display: inline-flex; min-height: 48px; padding: 6px 12px; font-size: 14px; margin-left: auto; }
+  }
+  /* Grand écran (R10 b C, 2026-11-19) : dès 1800 px, la liste des offres reste à côté du document. Trois volets : la
+     liste, l'offre, le document qui suit chaque correction. app.js l'ouvre d'office, sauf si l'artisan l'a fermé. */
+  @media (min-width: 1800px) {
+    body.doc-a-cote .colonne-liste { display: block; }
+    body.doc-a-cote:has(.colonne-liste) .app { margin-left: calc(var(--menu) + var(--liste)); margin-right: var(--doc); }
+  }
+  .aide-clavier { font-size: 13px; color: var(--muted); line-height: 2; }
+
+  /* Facturer en deux volets, la facture à droite ; le PDF d'une facture avec son panneau à droite (maquette 25, E8). */
+  .feuille.large { max-width: 1000px; }
+  .actionbar .phrase { text-align: right; }
+  .facturer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 24px; align-items: start; }
+  /* Point 8 (2026-11-19) : la facture sur 820 px, réduite à la largeur de sa colonne (--echelle, posée par app.js ;
+     0,64 sans JavaScript) ; « Agrandir la facture » réduit les réglages à 260 px. */
+  .facturer.large { grid-template-columns: minmax(260px, .5fr) minmax(0, 1.5fr); }
+  .apercu-outils { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+  .facture-mini { height: calc(1000px * var(--echelle, .64)); }
+  .facture-mini [data-apercu-mini] > .apercu-facture { width: 820px; transform: scale(var(--echelle, .64)); }
+  .pdf-zone:has(.panneau-facture) { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+  .panneau-facture { position: sticky; top: 16px; margin: 0; }
+  @media (min-width: 1280px) {
+    /* Le brouillon d'une facture n'a pas de colonne des offres : le document prend la droite. */
+    body.doc-a-cote:not(:has(.colonne-liste)) .app { margin-right: var(--doc); }
+  }
+}
+
+/* Tablette (Xavier, 2026-11-15 : « il faut un vrai responsive pour la tablette »), au doigt et sur toute la largeur :
+   les écrans du téléphone (barre du bas, micro au centre, cibles de 48 px et plus) prennent la largeur ; les fenêtres
+   s'ouvrent au milieu. Écran tactile seulement (pointer: coarse) : un PC à la souris a sa version, et la fenêtre
+   étroite d'un PC garde la colonne du téléphone. */
+@media (min-width: 700px) and (pointer: coarse) {
+  .app { max-width: none; }
+  .bar { min-height: 60px; padding: 8px 28px; }
+  .screen { padding: 20px 28px 32px; }
+  .actionbar { padding: 12px 28px; justify-content: flex-end; }
+  .actionbar .btn { flex: 0 1 auto; min-width: 160px; }
+  .actionbar .btn.grand { flex: 0 1 420px; }
+  .actionbar .phrase { text-align: right; }
+  .totalbar { padding: 10px 28px 0; }
+  .tabs a { font-size: 13px; }
+  .fchips { flex-wrap: wrap; overflow: visible; padding-right: 0; -webkit-mask-image: none; mask-image: none; }
+  /* Écrans sans lignes d'offre (R6, étendu après la recette du 2026-11-19) : 720 px au plus, au milieu, les boutons
+     alignés sur eux. L'offre, Facturer et la facture avec son panneau gardent la largeur. */
+  .screen:not(:has(.rows, .facturer, .panneau-facture)) > * { max-width: 720px; margin-left: auto; margin-right: auto; }
+  .app:not(:has(.screen .rows, .screen .facturer, .screen .panneau-facture)) .actionbar { padding-left: max(28px, calc((100% - 720px) / 2)); padding-right: max(28px, calc((100% - 720px) / 2)); }
+  .feuille-fond { align-items: center; }
+  .feuille { max-width: 640px; border-radius: 18px; max-height: 90%; }
+  .feuille.large { max-width: 760px; }
+  .facture-mini { height: 360px; }
+  .facture-mini [data-apercu-mini] > .apercu-facture { width: 200%; transform: scale(.5); }
+  .snack { width: min(560px, calc(100% - 48px)); }
+  /* 9h (2026-11-19) : la facture en tablette debout montrait son état et « Annuler » sous deux pages de PDF. */
+  .pdf-zone:has(.panneau-facture) { display: flex; flex-direction: column; }
+  .panneau-facture { order: -1; }
+}
+/* Tablette en paysage : la liste des offres à gauche, l'offre à droite ; Facturer en deux volets ; le panneau du PDF
+   d'une facture à droite. */
+@media (min-width: 1024px) and (pointer: coarse) {
+  body { --liste: 320px; }
+  .colonne-liste { display: block; position: fixed; top: 0; bottom: 0; left: 0; width: var(--liste); z-index: 4; overflow-y: auto; padding: 12px; background: var(--surface); border-right: 1px solid var(--line); }
+  .lcard { padding: 14px 12px; }
+  body:has(.colonne-liste) .app { margin-left: var(--liste); }
+  .feuille.large { max-width: 1000px; }
+  .facturer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 24px; align-items: start; }
+  .facture-mini { height: 460px; }
+  .pdf-zone:has(.panneau-facture) { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+  .panneau-facture { position: sticky; top: 16px; margin: 0; order: 0; }
+}
+
+/* Colonne d'onglets à gauche (R2 A et R10 a B, 2026-11-19) : téléphone couché (390 px de haut, la barre du bas en
+   prenait la moitié) et fenêtre étroite d'un PC. Le micro reste au milieu, dans l'ordre de la barre du téléphone, à
+   mi-hauteur sous le pouce. La barre de l'offre garde ses 64 px (B4). */
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse), (min-width: 700px) and (max-width: 1023px) and (hover: hover) and (pointer: fine) {
+  body:has(.tabs:not(.pc-seul)) .app { margin-left: 80px; }
+  .tabs:not(.pc-seul) { position: fixed; left: 0; top: 0; bottom: 0; width: 80px; z-index: 6; flex-direction: column; justify-content: center; gap: 2px; border-top: 0; border-right: 1px solid var(--line); padding: 4px 0 4px env(safe-area-inset-left); }
+  .tabs:not(.pc-seul) a { flex: none; min-height: 56px; justify-content: center; font-size: 11px; padding: 4px 2px; }
+  .tabs:not(.pc-seul) .micro-central { flex: none; min-height: 68px; margin: 6px 0; }
+  .tabs:not(.pc-seul) .micro-central > span { position: static; transform: none; margin: 0 auto; width: 60px; height: 60px; border: 0; }
+  .bas:has(.tabs:not(.pc-seul)) { display: flex; align-items: center; border-top: 1px solid var(--line); }
+  .bas .totalbar { border-top: 0; padding: 0 4px 0 20px; flex: none; gap: 12px; }
+  .bas:has(.tabs:not(.pc-seul)) .actionbar { flex: 1; border-top: 0; padding: 8px 16px; }
+}
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  .bar { min-height: 44px; padding: 2px 20px; }
+  .bar .logo { height: 24px; }
+  .rec { padding: 8px 0; }
+  .rec .dot { width: 64px; height: 64px; margin: 6px auto 8px; }
+}
+/* Fenêtre étroite d'un PC : la largeur sert aux lignes ; les fiches et formulaires restent une colonne. */
+@media (min-width: 700px) and (max-width: 1023px) and (hover: hover) and (pointer: fine) {
+  .app { max-width: none; }
+  body:not(:has(.tabs:not(.pc-seul))) .app { max-width: 640px; }
+  .screen { padding: 20px 28px 32px; }
+  .fchips { flex-wrap: wrap; overflow: visible; padding-right: 0; -webkit-mask-image: none; mask-image: none; }
+}
+
+/* Identité Dicta : titres et boutons en Archivo, liens soulignés (ils ont la couleur du texte), champs au bord gris. */
+h2, h3, .btn, .tabs .marque-pc, label { font-family: var(--titre); }
+.back:not(.bar .back), .voir, .lien, .lien-apercu, .ohead .who a, .cat h5 .renommer { text-decoration: underline; text-underline-offset: 3px; }
+.tabs .marque-pc img { display: block; height: 30px; width: auto; }
+.accueil-marque { display: block; height: 40px; width: auto; margin: 4px 0 18px; }
+.screen > picture { display: block; }

@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Import du catalogue, v1</title>
+<style>
+/* Charte Dicta du 19.11 : mêmes jetons que MAQUETTE-vos-prix.html (docs/plans/2026-11-19_metiers-demo). */
+@font-face { font-family: "Archivo"; font-weight: 500 700; font-display: swap; src: url("../../../public/fonts/archivo-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("../../../public/fonts/inter-latin.woff2") format("woff2"); }
+:root {
+  --mk-ink: #23272D; --mk-bg: #F4F1EA; --mk-surface: #FFFFFF; --mk-line: #DDD8CC; --mk-accent: #23272D;
+  --fond: #F4F1EA; --carte: #FFFFFF; --encre: #23272D; --doux: #454B55; --trait: #DDD8CC; --etiquette: #EBE7DE; --bord: #7C838C;
+  --bande: #23272D; --sur-bande: #FFFFFF; --bande-doux: #B9BDC3; --acc: #23272D; --sur-acc: #FFFFFF; --mic: #C4552D; --sur-mic: #FFFFFF;
+  --ok: #13553A; --ok-fond: #E1EFE6; --att: #5A4300; --att-fond: #FFF0B3; --err: #8C1D18; --err-fond: #FBE7E4;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --err: #FF9A91; --err-fond: #3B1613; } }
+:root[data-theme="dark"] {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --err: #FF9A91; --err-fond: #3B1613; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.55 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.doc { max-width: 1180px; margin: 0 auto; padding: 16px; }
+.doc > h1, .doc > h2 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.3px; }
+.doc > h1 { font-size: 28px; line-height: 1.2; margin: 18px 0 8px; }
+.doc > h2 { font-size: 22px; line-height: 1.25; margin: 40px 0 8px; }
+.doc > p, .doc > ul, .doc > ol { max-width: 820px; }
+.regle { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--ok); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+.regle b { color: var(--ok); }
+.moi { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--mic); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+table.qui { border-collapse: collapse; max-width: 820px; width: 100%; background: var(--carte); border: 1px solid var(--trait); }
+table.qui th, table.qui td { text-align: left; vertical-align: top; padding: 8px 10px; border-top: 1px solid var(--trait); font-size: 15px; }
+table.qui th { width: 120px; font-family: "Archivo", system-ui, sans-serif; }
+
+/* Les cadres */
+.scene { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin: 14px 0 6px; }
+.scene figure { margin: 0; max-width: 100%; }
+.scene figcaption { font-size: 14px; color: var(--doux); margin-top: 6px; max-width: 370px; }
+.tel { width: 370px; max-width: 100%; border: 1px solid var(--trait); border-radius: 22px; overflow: hidden; }
+.tel .app { height: 780px; }
+.tel.court .app { height: 600px; }
+.pc { width: 100%; max-width: 1148px; border: 1px solid var(--trait); border-radius: 12px; overflow: hidden; margin: 14px 0 6px; }
+.pc .app { height: 740px; }
+.outils { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.outil { font: inherit; font-size: 14px; min-height: 44px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--bord); background: var(--carte); color: var(--encre); cursor: pointer; }
+.pas { margin: 0; padding-left: 20px; max-width: 420px; }
+.pas li { margin: 4px 0; }
+
+/* L'application */
+.app { container: app / inline-size; background: var(--fond); color: var(--encre); font-size: 16px; line-height: 1.4; }
+.app h1, .app h2, .app h3, .app .btn, .app button { font-family: "Archivo", system-ui, sans-serif; }
+.app button { border: 0; cursor: pointer; color: inherit; font-size: inherit; }
+.app button:focus-visible, .app input:focus-visible, .app select:focus-visible, .app summary:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.cadre { display: grid; grid-template-columns: 1fr; height: 100%; }
+.menu { display: none; flex-direction: column; gap: 2px; padding: 18px 12px; background: var(--bande); color: var(--bande-doux); }
+.menu .marque { color: var(--sur-bande); font: 700 22px "Archivo", system-ui, sans-serif; padding: 0 10px 14px; }
+.menu span { padding: 11px 10px; border-radius: 10px; font-size: 15px; }
+.menu span.on { background: var(--carte); color: var(--encre); font-weight: 600; }
+.ecran { display: flex; flex-direction: column; min-height: 0; height: 100%; min-width: 0; }
+.bande { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 2px 16px; background: var(--bande); color: var(--sur-bande); }
+.bande .marque { font: 700 20px "Archivo", system-ui, sans-serif; }
+.bande .retour { display: inline-flex; align-items: center; background: transparent; color: var(--sur-bande); font-weight: 600; font-size: 15px; min-height: 48px; padding: 0; }
+.bande .qui { color: var(--bande-doux); font-size: 14px; }
+.fil { display: none; background: transparent; font-weight: 600; font-size: 14.5px; min-height: 48px; padding: 0; color: var(--doux); text-decoration: underline; text-underline-offset: 3px; }
+.tete { padding: 16px 16px 10px; }
+.tete h1 { font-size: 24px; font-weight: 600; letter-spacing: -.4px; line-height: 1.2; margin: 0; text-wrap: balance; }
+.tete .sous { margin: 6px 0 0; color: var(--doux); font-size: 15px; }
+.corps { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.corps > * { flex: none; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 16.5px; line-height: 1.2; min-height: 48px; padding: 6px 16px; border-radius: 12px; background: var(--carte); color: var(--encre); box-shadow: inset 0 0 0 1.5px var(--bord); text-align: center; }
+.app button.btn.principal { background: var(--acc); color: var(--sur-acc); box-shadow: none; }
+.btn.large { width: 100%; min-height: 56px; }
+.actionbar { display: flex; gap: 8px; padding: 10px 16px; background: var(--carte); border-top: 1px solid var(--trait); }
+.actionbar .btn { flex: 1; min-height: 64px; }
+.nav { height: 60px; flex: none; background: var(--carte); border-top: 1px solid var(--trait); display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; }
+.nav span { color: var(--doux); font-size: 12.5px; text-align: center; }
+.nav span.on { color: var(--encre); font-weight: 700; }
+.nav .rond { justify-self: center; width: 56px; height: 56px; margin-top: -22px; border-radius: 50%; background: var(--mic); color: var(--sur-mic); display: grid; place-items: center; border: 4px solid var(--carte); }
+.nav .rond svg { width: 24px; height: 24px; }
+.note { font-size: 14px; color: var(--doux); margin: 0; }
+.toast { margin: 0; background: var(--bande); color: var(--sur-bande); border-radius: 12px; padding: 12px 14px; font-size: 15px; }
+
+/* Catalogue */
+.rappel { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; background: var(--att-fond); color: var(--att); border-radius: 12px; padding: 12px; font-size: 14.5px; font-weight: 600; }
+.invite { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--carte); border: 1px solid var(--trait); border-left: 4px solid var(--mic); border-radius: 14px; padding: 10px 12px; }
+.invite b { display: block; font: 600 16px "Archivo", system-ui, sans-serif; }
+.invite span { color: var(--doux); font-size: 14px; }
+.liste { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.ccat { padding: 10px 14px 4px; margin: 0; font: 600 13px "Archivo", system-ui, sans-serif; text-transform: uppercase; letter-spacing: .5px; color: var(--doux); background: var(--etiquette); }
+.crow { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: baseline; padding: 12px 14px; border-top: 1px solid var(--trait); }
+.crow .num { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.crow .u { color: var(--doux); font-size: 14px; white-space: nowrap; min-width: 62px; }
+.crow.neuf .nm::after { content: "nouveau"; margin-left: 8px; font-size: 12.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--ok-fond); color: var(--ok); white-space: nowrap; }
+.manque { font-style: normal; color: var(--att); background: var(--att-fond); border-radius: 999px; padding: 2px 10px; font-size: 13px; }
+.vide-carte { display: grid; gap: 12px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 18px 16px; }
+.vide-carte b { font: 600 19px "Archivo", system-ui, sans-serif; }
+.vide-carte p { margin: 0; }
+
+/* Choix des fichiers */
+.depot { display: grid; gap: 6px; place-items: center; align-content: center; text-align: center; width: 100%; min-height: 132px; padding: 16px; border-radius: 14px; background: var(--carte); box-shadow: inset 0 0 0 2px var(--bord); }
+.depot b { font: 600 18px "Archivo", system-ui, sans-serif; }
+.depot > span { color: var(--doux); font-size: 14.5px; font-family: "Inter", system-ui, sans-serif; }
+.depot .gros { display: none; }
+.fich { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 6px 6px 6px 14px; border-top: 1px solid var(--trait); min-height: 60px; }
+.fich:first-child { border-top: 0; }
+.fich b { font-weight: 600; font-size: 15.5px; overflow-wrap: anywhere; }
+.fich small { display: block; color: var(--doux); font-size: 14px; }
+.fich .x { width: 48px; height: 48px; display: grid; place-items: center; background: transparent; border-radius: 12px; }
+.fich .x svg, .cr svg { width: 22px; height: 22px; }
+.fich .etat { font-size: 14px; font-weight: 600; white-space: nowrap; padding: 4px 10px; border-radius: 999px; background: var(--etiquette); margin-right: 8px; display: inline-flex; align-items: center; gap: 6px; }
+.fich .etat.lu { background: var(--ok-fond); color: var(--ok); }
+.fich .etat.ko { background: var(--err-fond); color: var(--err); }
+.fich small.ko { color: var(--err); font-weight: 600; }
+.tourne { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid var(--bord); border-top-color: var(--encre); animation: tourne .8s linear infinite; }
+@keyframes tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .tourne { animation: none; } }
+.demo { background: transparent; font: 500 14px "Inter", system-ui, sans-serif; color: var(--doux); min-height: 48px; padding: 0 12px; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--trait); text-align: left; }
+
+/* Relecture */
+.resume { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.resume span { font-size: 13.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--etiquette); white-space: nowrap; }
+.resume span.att { background: var(--att-fond); color: var(--att); }
+.resume span.fait { background: var(--ok-fond); color: var(--ok); }
+.bloc { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.bloc > h2 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0; padding: 12px 14px 8px; font-size: 17px; font-weight: 600; }
+.bloc > h2 span { font-size: 14px; color: var(--doux); font-weight: 600; }
+.bloc > h3 { margin: 0; padding: 8px 14px 4px; font: 600 13px "Archivo", system-ui, sans-serif; text-transform: uppercase; letter-spacing: .5px; color: var(--doux); background: var(--etiquette); }
+.bloc > p { margin: 0; padding: 0 14px 12px; font-size: 14.5px; color: var(--doux); }
+.rg { display: grid; grid-template-columns: 48px 1fr auto 48px; gap: 2px 6px; align-items: center; padding: 6px 4px; border-top: 1px solid var(--trait); min-height: 60px; }
+.rg.sans { grid-template-columns: 1fr auto; padding: 10px 14px; }
+.rg .cc { display: grid; place-items: center; width: 48px; height: 48px; cursor: pointer; }
+.rg input[type="checkbox"] { width: 24px; height: 24px; accent-color: var(--encre); }
+.rg .nm b { font-weight: 600; font-size: 15.5px; overflow-wrap: anywhere; }
+.rg .nm small { display: block; color: var(--doux); font-size: 13.5px; }
+.rg .px { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rg .px small { display: block; font-weight: 400; color: var(--doux); font-size: 13.5px; }
+.rg.off .nm b, .rg.off .px { color: var(--doux); }
+.rg.off.barre .nm b, .rg.off.barre .px { text-decoration: line-through; }
+.rg .cr { width: 48px; height: 48px; display: grid; place-items: center; background: transparent; border-radius: 12px; }
+.motif { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--etiquette); color: var(--encre); }
+.edit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--trait); background: var(--etiquette); }
+.edit .ch { display: grid; gap: 3px; font-size: 13.5px; font-weight: 600; }
+.edit .ch.tout { grid-column: 1 / -1; }
+.edit input, .edit select { width: 100%; min-height: 48px; font: 16px "Inter", system-ui, sans-serif; padding: 6px 10px; border: 1.5px solid var(--bord); border-radius: 10px; background: var(--carte); color: var(--encre); }
+.edit .btn { grid-column: 1 / -1; }
+.cf { padding: 10px 14px 12px; border-top: 1px solid var(--trait); }
+.cf.attente { box-shadow: inset 4px 0 0 var(--mic); }
+.cf p { margin: 0; }
+.cf .pourquoi { color: var(--doux); font-size: 14px; margin-bottom: 8px; }
+.prixs { display: flex; gap: 8px; }
+.prixs button { flex: 1; min-height: 56px; padding: 6px 10px; border-radius: 12px; background: var(--carte); box-shadow: inset 0 0 0 1.5px var(--bord); display: grid; gap: 0; text-align: left; }
+.prixs button b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.prixs button small { font: 400 13px "Inter", system-ui, sans-serif; color: var(--doux); }
+.app .prixs button[aria-pressed="true"] { background: var(--acc); color: var(--sur-acc); box-shadow: none; }
+.prixs button[aria-pressed="true"] small { color: var(--sur-acc); }
+.prixs button[aria-pressed="true"] b::before { content: "✓ "; }
+details.bloc summary { min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font: 600 16px "Archivo", system-ui, sans-serif; cursor: pointer; }
+details.bloc summary span { font-size: 14px; color: var(--doux); }
+
+/* Fin */
+.fin { align-items: center; text-align: center; padding-top: 28px; }
+.coche { width: 56px; height: 56px; border-radius: 50%; background: var(--ok-fond); color: var(--ok); display: grid; place-items: center; }
+.coche svg { width: 30px; height: 30px; }
+.bilan { list-style: none; margin: 0; padding: 0; width: 100%; max-width: 460px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; text-align: left; }
+.bilan li { display: flex; justify-content: space-between; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--trait); font-size: 15px; }
+.bilan li:first-child { border-top: 0; }
+.bilan b { font: 700 17px "Archivo", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+
+/* Variante carte par carte (image fixe) */
+.carte1 { display: grid; gap: 8px; }
+.carte1 .avance { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--doux); }
+.carte1 .barre { flex: 1; height: 6px; border-radius: 3px; background: var(--etiquette); }
+.carte1 .barre i { display: block; width: 25%; height: 100%; background: var(--encre); border-radius: 3px; }
+.carte1 .nom { font: 600 23px/1.2 "Archivo", system-ui, sans-serif; margin: 6px 0 0; }
+.carte1 .prix { display: flex; align-items: baseline; gap: 8px; padding: 8px 14px; border: 2px solid var(--mic); border-radius: 14px; background: var(--carte); }
+.carte1 .prix b { flex: 1; font: 700 38px/1.15 "Archivo", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.carte1 .prix span { color: var(--doux); font-weight: 600; }
+
+/* PC : même page, cadre large */
+@container app (min-width: 700px) {
+  .cadre { grid-template-columns: 208px 1fr; }
+  .menu { display: flex; }
+  .bande, .nav { display: none; }
+  .fil { display: inline-flex; align-items: center; }
+  .tete { padding: 14px 32px 12px; }
+  .tete h1 { font-size: 28px; }
+  .corps { padding: 0 32px 24px; }
+  .corps > * { max-width: 860px; width: 100%; }
+  .actionbar { justify-content: flex-end; padding: 12px 32px; }
+  .actionbar .btn { flex: 0 0 auto; min-height: 48px; min-width: 220px; }
+  .app .depot { min-height: 200px; box-shadow: none; border: 2px dashed var(--bord); }
+  .depot b { font-size: 21px; }
+  .depot .gros { display: inline; }
+  .depot .petit { display: none; }
+  .rg { grid-template-columns: 48px 1fr 150px 48px; padding: 4px 8px; }
+  .prixs button { flex: 0 0 240px; }
+  .edit { grid-template-columns: 2fr 1fr 1fr auto; align-items: end; }
+  .edit .ch.tout, .edit .btn { grid-column: auto; }
+  .fin { align-items: flex-start; text-align: left; }
+}
+
+/* Décisions */
+.choix { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 12px 14px; margin: 12px 0; max-width: 980px; }
+.choix .q { margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--bord); background: var(--carte); color: var(--encre); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--sur-acc); font-weight: 600; }
+.opts button:focus-visible, #copier:focus-visible, .outil:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.choix textarea, #texte { width: 100%; font: inherit; font-size: 15px; border: 1px solid var(--bord); border-radius: 10px; padding: 8px 10px; background: var(--carte); color: var(--encre); }
+#texte { min-height: 170px; }
+#copier { font: 600 16px "Archivo", system-ui, sans-serif; min-height: 52px; padding: 10px 20px; border-radius: 12px; border: 0; background: var(--acc); color: var(--sur-acc); cursor: pointer; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<div class="doc">
+<h1>Importer son catalogue depuis d'anciennes offres</h1>
+<p>Maquette cliquable, version 1, du 20 novembre 2026. L'artisan donne quelques offres en PDF, Dicta y lit ses produits, ses unités et ses prix, et il valide ce qui entre dans son catalogue. Les données sont inventées (un peintre). Rien n'est codé.</p>
+<nav id="mk-toc"></nav>
+
+<h2 id="regle" data-toc="Déjà tranché">Déjà tranché par Xavier, le 20 novembre</h2>
+<div class="regle"><b>PDF seulement.</b> « Un import PDF, pas de photo, juste du PDF. Les gens me donnent un PDF, parce que le PDF, ça se lit. »</div>
+<div class="regle"><b>La date de l'offre ne compte pas.</b> « C'est le gars qui va mettre ses offres. C'est lui qui choisit quelle offre il met dedans. »</div>
+<div class="regle"><b>Trois unités de plus :</b> mètre linéaire (ml), kilo (kg), jour. Elles figurent dans la liste des unités de la maquette.</div>
+<div class="regle"><b>Ensuite un prototype,</b> avec Qwen en local, sur les offres de test de Xavier.</div>
+
+<h2 id="tel" data-toc="Téléphone">Sur téléphone : le parcours à cliquer</h2>
+<div class="scene">
+  <figure>
+    <div class="tel"><div class="app" id="app-tel"></div></div>
+    <figcaption>Prototype : tout se clique. La lecture dure ici quatre secondes ; la vraie durée se mesurera au prototype.</figcaption>
+  </figure>
+  <div>
+    <ol class="pas">
+      <li>« Importer », dans le catalogue.</li>
+      <li>« Choisir des PDF » : trois offres arrivent.</li>
+      <li>« Lire mes 3 offres » : chaque fichier est lu, puis les produits sont regroupés.</li>
+      <li>« Voir les produits trouvés » : la liste de ce qui entre au catalogue.</li>
+      <li>Choisir les deux prix en question, décocher ce qui ne convient pas, corriger au crayon.</li>
+      <li>« Ajouter au catalogue », puis le bilan.</li>
+    </ol>
+    <div class="outils"><button type="button" class="outil" data-recommencer="app-tel">Recommencer le parcours</button></div>
+  </div>
+</div>
+
+<div class="choix" data-id="D1"><p class="q"><b>D1. L'entrée.</b> Une carte d'invitation en haut du catalogue tant que l'import n'a jamais servi, et un bouton « Importer des offres » en bas, à côté de « Nouveau produit ».</p>
+  <div class="opts"><button type="button" data-v="A">A : la carte et le bouton</button><button type="button" data-v="B">B : le bouton seulement</button><button type="button" data-v="C">C : dans « Plus » seulement</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+<div class="choix" data-id="D2"><p class="q"><b>D2. Combien de PDF à la fois ?</b> La maquette dit cinq.</p>
+  <div class="opts"><button type="button" data-v="A">A : 5</button><button type="button" data-v="B">B : 10</button><button type="button" data-v="C">C : 20</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+<div class="choix" data-id="D3"><p class="q"><b>D3. La relecture.</b> Tout sur un écran, à cocher (le prototype), ou un produit à la fois comme « Vos prix » (la variante, plus bas).</p>
+  <div class="opts"><button type="button" data-v="A">A : tout sur un écran</button><button type="button" data-v="B">B : un produit à la fois</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+<div class="choix" data-id="D4"><p class="q"><b>D4. Deux offres, deux prix pour le même produit.</b> Le prototype pose la question et attend la réponse avant d'ajouter.</p>
+  <div class="opts"><button type="button" data-v="A">A : question, sans prix choisi d'avance</button><button type="button" data-v="B">B : le prix le plus haut choisi d'avance, un toucher pour changer</button><button type="button" data-v="C">C : le prix vu le plus souvent choisi d'avance</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+<div class="choix" data-id="D5"><p class="q"><b>D5. Un produit déjà au catalogue, avec un autre prix dans les offres</b> (« Déplacement » : 60.00 au catalogue, 70.00 dans une offre).</p>
+  <div class="opts"><button type="button" data-v="A">A : poser la question</button><button type="button" data-v="B">B : garder le catalogue, sans rien demander</button><button type="button" data-v="C">C : prendre le prix de l'offre</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+<div class="choix" data-id="D6"><p class="q"><b>D6. Les lignes laissées de côté</b> (rabais, sous-total, acompte, travail propre à un client).</p>
+  <div class="opts"><button type="button" data-v="A">A : repliées en bas, « Ajouter » possible</button><button type="button" data-v="B">B : dans la liste, décochées</button><button type="button" data-v="C">C : jamais montrées</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+<div class="choix" data-id="D7"><p class="q"><b>D7. Les autres formulations deviennent des mots reconnus.</b> « Peinture murs 2 couches », vu dans une offre, s'ajoute aux mots reconnus de « Dispersion murs, 2 couches » : la dictée le retrouvera.</p>
+  <div class="opts"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+<div class="choix" data-id="D8"><p class="q"><b>D8. « Annuler cet import »</b> sur l'écran du bilan : le catalogue revient comme avant.</p>
+  <div class="opts"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+<div class="choix" data-id="D9"><p class="q"><b>D9. Les fichiers sont supprimés après la lecture.</b> Seuls les produits restent ; les noms et adresses des clients ne sont pas gardés. C'est la phrase affichée sous le choix des fichiers.</p>
+  <div class="opts"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+<div class="choix" data-id="D10"><p class="q"><b>D10. Mètre et mètre linéaire.</b> L'unité « m » existe déjà. Avec « ml » en plus, la liste propose deux fois la même mesure (ouvrir le crayon d'un produit pour voir la liste).</p>
+  <div class="opts"><button type="button" data-v="A">A : garder « m » et ajouter « ml »</button><button type="button" data-v="B">B : une seule unité, écrite « ml »</button><button type="button" data-v="C">C : une seule unité, écrite « m »</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+
+<h2 id="pc" data-toc="PC">Sur PC : le même parcours</h2>
+<p>Même page, cadre large : le menu passe à gauche, les PDF se glissent dans la zone, la liste s'élargit. Sur un écran étroit, ce cadre se replie en vue téléphone.</p>
+<div class="pc"><div class="app" id="app-pc"></div></div>
+<div class="outils"><button type="button" class="outil" data-recommencer="app-pc">Recommencer le parcours</button><button type="button" class="outil" data-aller="app-pc">Aller droit à la relecture</button></div>
+<div class="choix" data-id="D11"><p class="q"><b>D11. La vue PC.</b></p>
+  <div class="opts"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div><textarea rows="1" placeholder="Ce qui doit changer"></textarea></div>
+
+<h2 id="etats" data-toc="Autres états">Les autres états</h2>
+<div class="scene">
+  <figure><div class="tel court"><div class="app" id="app-vide"></div></div><figcaption>Catalogue vide : l'import est proposé en premier.</figcaption></figure>
+  <figure><div class="tel court"><div class="app" id="app-scan"></div></div><figcaption>Un PDF scanné parmi les trois : il est refusé avec sa raison, les autres sont lus.</figcaption></figure>
+  <figure><div class="tel court"><div class="app" id="app-rien"></div></div><figcaption>Aucun produit trouvé.</figcaption></figure>
+</div>
+<div class="choix" data-id="D12"><p class="q"><b>D12. Le PDF scanné.</b> Il est refusé avec la phrase « Photo ou scan, sans texte à lire », et la lecture continue avec les autres.</p>
+  <div class="opts"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div><textarea rows="1" placeholder="Commentaire"></textarea></div>
+
+<h2 id="variante" data-toc="Variante">Variante de D3 : un produit à la fois</h2>
+<div class="scene">
+  <figure><div class="tel court"><div class="app"><div class="cadre"><div class="ecran">
+    <header class="bande"><span class="retour">‹ Catalogue</span><span class="qui">Peinture Exemple</span></header>
+    <div class="corps" style="padding-top:14px">
+      <div class="carte1">
+        <div class="avance"><b>4 sur 16</b><span class="barre"><i></i></span></div>
+        <span class="note">Peinture, vu dans 2 offres</span>
+        <p class="nom">Peinture de plinthes</p>
+        <div class="prix"><span>CHF</span><b>7.50</b><span>/ ml</span></div>
+        <span class="note">Aussi écrit « Plinthes, 2 couches »</span>
+      </div>
+    </div>
+    <div class="actionbar"><span class="btn">Laisser</span><span class="btn principal" style="background:var(--acc);color:var(--sur-acc);box-shadow:none">Ajouter</span></div>
+  </div></div></div></div><figcaption>Image fixe. Seize produits demandent seize touchers ; la liste à cocher en demande un seul quand tout est juste.</figcaption></figure>
+  <div class="moi" style="max-width:420px"><b>Mon avis :</b> la liste (A). L'artisan vient de fournir ses propres offres, la plupart des lignes sont justes : il doit pouvoir tout accepter d'un toucher et ne s'arrêter que sur les exceptions.</div>
+</div>
+
+<h2 id="qui" data-toc="Qui fait quoi">Qui fait quoi</h2>
+<table class="qui">
+  <tr><th>Le navigateur</th><td>Sort le texte de chaque PDF. Un PDF sans texte est refusé sur place, rien n'est envoyé.</td></tr>
+  <tr><th>Le modèle</th><td>Relève dans chaque offre les lignes chiffrées : désignation, unité, prix unitaire. Il signale les rabais, les sous-totaux, les acomptes et les travaux propres à un client.</td></tr>
+  <tr><th>Le code</th><td>Regroupe les lignes qui disent la même chose, les compare au catalogue, prépare les questions de prix. Le prix écrit au catalogue est toujours un prix lu dans une offre.</td></tr>
+  <tr><th>L'artisan</th><td>Coche, choisit, corrige. Rien n'entre au catalogue avant son « Ajouter ».</td></tr>
+</table>
+<div class="moi"><b>Non mesuré :</b> la durée de lecture, le nombre de jetons par offre, la part de lignes justes, et la capacité du code à regrouper seul deux formulations proches. C'est l'objet du prototype.</div>
+
+<h2 id="reponses" data-toc="Réponses">Vos réponses</h2>
+<p>Les choix se gardent dans ce navigateur. « Copier le texte » les rassemble pour la conversation.</p>
+<textarea id="texte" readonly aria-label="Récapitulatif des réponses"></textarea>
+<p><button type="button" id="copier">Copier le texte</button></p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var UNITES = ['pce', 'm²', 'm', 'ml', 'm³', 'kg', 'h', 'jour', 'forfait'];
+  var CATS = ['Préparation', 'Peinture', 'Divers'];
+  var FICHIERS = [
+    { nom: 'offre-2025-014.pdf', pages: 2, lignes: 12 },
+    { nom: 'offre-2025-022.pdf', pages: 1, lignes: 8 },
+    { nom: 'offre-2026-003.pdf', pages: 2, lignes: 11 }
+  ];
+  var SCAN = { nom: 'offre-2019-scan.pdf', pages: 1, lignes: 0, illisible: true };
+  var BASE = [
+    { cat: 'Préparation', nom: 'Protection des sols et des meubles', u: 'forfait', p: 180 },
+    { cat: 'Peinture', nom: 'Dispersion murs, 2 couches', u: 'm²', p: 0 },
+    { cat: 'Peinture', nom: 'Dispersion plafonds, 2 couches', u: 'm²', p: 0 },
+    { cat: 'Peinture', nom: 'Vernis sur boiseries', u: 'm²', p: 0 },
+    { cat: 'Divers', nom: 'Déplacement', u: 'forfait', p: 60 }
+  ];
+  var CRAYON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg>';
+  var CROIX = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  var MICRO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  var COCHE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+
+  function chf(n) { return n.toFixed(2); }
+  function offres(n) { return 'vu dans ' + n + (n > 1 ? ' offres' : ' offre'); }
+
+  function produits(vide) {
+    var l = [
+      { id: 'c1', t: 'conflit', cat: 'Préparation', nom: 'Rebouchage et ponçage', u: 'm²', opts: [{ p: 6, s: 'offre 2025-014' }, { p: 6.5, s: 'offre 2026-003' }], choix: null, base: -1 },
+      { id: 'c2', t: 'conflit', cat: 'Divers', nom: 'Déplacement', u: 'forfait', opts: [{ p: 60, s: 'votre catalogue' }, { p: 70, s: 'offre 2026-003' }], choix: null, base: 4 },
+      { id: 'k1', t: 'complete', cat: 'Peinture', nom: 'Dispersion murs, 2 couches', u: 'm²', p: 18.5, vu: 3, aussi: 'Peinture murs 2 couches', on: true, base: 1 },
+      { id: 'k2', t: 'complete', cat: 'Peinture', nom: 'Dispersion plafonds, 2 couches', u: 'm²', p: 22, vu: 2, on: true, base: 2 },
+      { id: 'i1', t: 'identique', cat: 'Préparation', nom: 'Protection des sols et des meubles', u: 'forfait', p: 180, vu: 3, on: true },
+      { id: 'n1', t: 'nouveau', cat: 'Préparation', nom: 'Lessivage des murs', u: 'm²', p: 4.5, vu: 2, on: true },
+      { id: 'n2', t: 'nouveau', cat: 'Préparation', nom: 'Fourniture d\'enduit de rebouchage', u: 'kg', p: 4.2, vu: 1, on: true },
+      { id: 'n3', t: 'nouveau', cat: 'Peinture', nom: 'Émail sur portes, 2 faces', u: 'pce', p: 95, vu: 2, on: true },
+      { id: 'n4', t: 'nouveau', cat: 'Peinture', nom: 'Peinture de plinthes', u: 'ml', p: 7.5, vu: 2, aussi: 'Plinthes, 2 couches', on: true },
+      { id: 'n5', t: 'nouveau', cat: 'Peinture', nom: 'Peinture de radiateur', u: 'pce', p: 120, vu: 1, on: true },
+      { id: 'n6', t: 'nouveau', cat: 'Peinture', nom: 'Crépi de finition 1,5 mm', u: 'm²', p: 38, vu: 1, on: true },
+      { id: 'n7', t: 'nouveau', cat: 'Divers', nom: 'Évacuation des déchets', u: 'forfait', p: 150, vu: 2, on: true },
+      { id: 'n8', t: 'nouveau', cat: 'Divers', nom: 'Location d\'échafaudage roulant', u: 'jour', p: 85, vu: 1, on: true },
+      { id: 'n9', t: 'nouveau', cat: 'Divers', nom: 'Travaux en régie, peintre', u: 'h', p: 85, vu: 3, on: true },
+      { id: 'e1', t: 'ecarte', cat: 'Divers', nom: 'Réparation de la fissure du salon, selon discussion', u: 'forfait', p: 350, motif: 'propre à un client', on: false },
+      { id: 'e2', t: 'ecarte', cat: 'Divers', nom: 'Retouches après la pose de la cuisine', u: 'forfait', p: 200, motif: 'propre à un client', on: false },
+      { id: 'e3', t: 'ecarte', nom: 'Rabais de fidélité 5 %', motif: 'rabais' },
+      { id: 'e4', t: 'ecarte', nom: 'Sous-total peinture', motif: 'sous-total' },
+      { id: 'e5', t: 'ecarte', nom: 'Acompte de 30 % à la commande', motif: 'condition de paiement' }
+    ];
+    if (!vide) { return l; }
+    return l.map(function (x) {
+      if (x.t === 'complete' || x.t === 'identique') { x.t = 'nouveau'; x.base = -1; }
+      if (x.t === 'conflit' && x.base >= 0) { return { id: x.id, t: 'nouveau', cat: x.cat, nom: x.nom, u: x.u, p: x.opts[1].p, vu: 1, on: true }; }
+      return x;
+    });
+  }
+
+  function monter(racine, init) {
+    var depart = init || {};
+    var s, minuteries = [];
+
+    function zero() {
+      minuteries.forEach(clearTimeout); minuteries = [];
+      s = { etape: 'catalogue', vide: !!depart.vide, fichiers: [], etats: [], groupe: 0, items: produits(!!depart.vide), edit: null, ouvert: false, fait: false, toast: '' };
+      if (depart.etape === 'revue') { s.etape = 'revue'; s.fichiers = FICHIERS.slice(); if (depart.rien) { s.items = []; } }
+      if (depart.etape === 'lecture') { s.etape = 'lecture'; s.fichiers = FICHIERS.slice(0, 2).concat([SCAN]); s.etats = ['lu', 'lu', 'illisible']; s.groupe = 2; }
+    }
+
+    function parType(t) { return s.items.filter(function (x) { return x.t === t; }); }
+    function aChoisir() { return parType('conflit').filter(function (x) { return x.choix === null; }).length; }
+    function bilan() {
+      var b = { nouveaux: 0, completes: 0, changes: 0, cote: 0 };
+      s.items.forEach(function (x) {
+        if (x.t === 'nouveau') { if (x.on) { b.nouveaux++; } else { b.cote++; } }
+        if (x.t === 'complete') { if (x.on) { b.completes++; } else { b.cote++; } }
+        if (x.t === 'ecarte') { if (x.on) { b.nouveaux++; } else { b.cote++; } }
+        if (x.t === 'conflit' && x.choix !== null) { if (x.base < 0) { b.nouveaux++; } else if (x.choix === 1) { b.changes++; } }
+      });
+      b.total = b.nouveaux + b.completes + b.changes;
+      return b;
+    }
+    function lisibles() { return s.fichiers.filter(function (f) { return !f.illisible; }); }
+    function lignesLues() { return lisibles().reduce(function (n, f) { return n + f.lignes; }, 0); }
+
+    function catalogue() {
+      var l = s.vide ? [] : BASE.map(function (x) { return { cat: x.cat, nom: x.nom, u: x.u, p: x.p }; });
+      if (s.fait) {
+        s.items.forEach(function (x) {
+          if (x.t === 'complete' && x.on) { l[x.base].p = x.p; }
+          if (x.t === 'conflit' && x.choix !== null) {
+            if (x.base >= 0) { l[x.base].p = x.opts[x.choix].p; } else { l.push({ cat: x.cat, nom: x.nom, u: x.u, p: x.opts[x.choix].p, neuf: true }); }
+          }
+          if ((x.t === 'nouveau' || x.t === 'ecarte') && x.on) { l.push({ cat: x.cat || 'Divers', nom: x.nom, u: x.u, p: x.p, neuf: true }); }
+        });
+      }
+      return l;
+    }
+
+    function vueCatalogue() {
+      var l = catalogue(), sans = l.filter(function (x) { return !x.p; }).length, h = '';
+      if (s.toast) { h += '<p class="toast" role="status">' + s.toast + '</p>'; }
+      if (!l.length) {
+        h += '<div class="vide-carte"><b>Votre catalogue est vide</b><p>Vous avez d\'anciennes offres en PDF ? Dicta y lit vos produits, vos unités et vos prix.</p>' +
+          '<button type="button" class="btn principal large" data-a="importer">Importer mes anciennes offres</button>' +
+          '<p class="note">Ou créez vos produits un par un avec « Nouveau produit ».</p></div>';
+        return { titre: 'Mon catalogue', corps: h, actions: '<button type="button" class="btn principal">Nouveau produit</button>' };
+      }
+      if (sans) { h += '<p class="rappel"><span>' + sans + (sans > 1 ? ' produits' : ' produit') + ' sans prix</span><u>Compléter</u></p>'; }
+      if (!s.fait) {
+        h += '<div class="invite"><div><b>Vos anciennes offres en PDF</b><span>Dicta y lit vos produits et vos prix.</span></div><button type="button" class="btn" data-a="importer">Importer</button></div>';
+      }
+      h += '<div class="liste">';
+      CATS.forEach(function (c) {
+        var de = l.filter(function (x) { return x.cat === c; });
+        if (!de.length) { return; }
+        h += '<p class="ccat">' + c + '</p>';
+        de.forEach(function (x) {
+          h += '<div class="crow' + (x.neuf ? ' neuf' : '') + '"><span class="nm">' + x.nom + '</span><span class="num">' + (x.p ? chf(x.p) : '<i class="manque">Prix ?</i>') + '</span><span class="u">/ ' + x.u + '</span></div>';
+        });
+      });
+      h += '</div>';
+      return { titre: 'Mon catalogue', sous: l.length + ' produits', corps: h, actions: '<button type="button" class="btn" data-a="importer">Importer des offres</button><button type="button" class="btn principal">Nouveau produit</button>' };
+    }
+
+    function vueChoisir() {
+      var n = s.fichiers.length, h = '';
+      h += '<button type="button" class="depot" data-a="choisir"><b><span class="gros">Glissez vos PDF ici</span><span class="petit">Choisir des PDF</span></b>' +
+        '<span><span class="gros">ou cliquez pour les choisir. </span>5 fichiers au plus, 10 Mo chacun.</span></button>';
+      if (n) {
+        h += '<div class="liste">' + s.fichiers.map(function (f, i) {
+          return '<div class="fich"><span><b>' + f.nom + '</b><small>' + f.pages + (f.pages > 1 ? ' pages' : ' page') + '</small></span>' +
+            '<button type="button" class="x" data-a="retirer" data-i="' + i + '" aria-label="Retirer ' + f.nom + '">' + CROIX + '</button></div>';
+        }).join('') + '</div>';
+        if (!s.fichiers.some(function (f) { return f.illisible; })) {
+          h += '<button type="button" class="demo" data-a="scan">Maquette : ajouter un PDF scanné, pour voir le refus</button>';
+        }
+      }
+      h += '<p class="note">Dicta lit les produits, les unités et les prix. Les noms et les adresses de vos clients ne sont pas gardés, et les fichiers sont supprimés après la lecture.</p>';
+      return {
+        retour: true, titre: 'Importer d\'anciennes offres', sous: 'Des offres en PDF, créées par ordinateur : Word, Excel, logiciel d\'offres.', corps: h,
+        actions: n ? '<button type="button" class="btn principal" data-a="lire">Lire ' + (n > 1 ? 'mes ' + n + ' offres' : 'mon offre') + '</button>'
+          : '<button type="button" class="btn" data-a="choisir">Choisir des PDF</button>'
+      };
+    }
+
+    function vueLecture() {
+      var fini = s.groupe === 2, h = '<div class="liste">';
+      s.fichiers.forEach(function (f, i) {
+        var e = s.etats[i], badge, sous = f.pages + (f.pages > 1 ? ' pages' : ' page'), cl = '';
+        if (e === 'lu') { badge = '<span class="etat lu">' + f.lignes + ' lignes lues</span>'; }
+        else if (e === 'illisible') { badge = '<span class="etat ko">Refusé</span>'; sous = 'Photo ou scan, sans texte à lire.'; cl = ' class="ko"'; }
+        else if (e === 'lecture') { badge = '<span class="etat"><i class="tourne"></i>Lecture</span>'; }
+        else { badge = '<span class="etat">En attente</span>'; }
+        h += '<div class="fich"><span><b>' + f.nom + '</b><small' + cl + '>' + sous + '</small></span>' + badge + '</div>';
+      });
+      h += '<div class="fich"><span><b>Regroupement des produits</b><small>Les lignes qui disent la même chose sont réunies.</small></span>' +
+        (s.groupe === 2 ? '<span class="etat lu">Fait</span>' : s.groupe === 1 ? '<span class="etat"><i class="tourne"></i>En cours</span>' : '<span class="etat">En attente</span>') + '</div></div>';
+      if (!fini) { h += '<p class="note">Gardez cet écran ouvert.</p>'; }
+      return {
+        retour: true, titre: fini ? 'Lecture terminée' : 'Lecture de vos offres', sous: fini ? lisibles().length + ' offres lues, ' + lignesLues() + ' lignes.' : '', corps: h,
+        actions: fini ? '<button type="button" class="btn principal" data-a="voir">Voir les produits trouvés</button>' : '<button type="button" class="btn" data-a="retour">Arrêter</button>'
+      };
+    }
+
+    function ligne(x) {
+      if (s.edit === x.id) {
+        return '<div class="edit" data-id="' + x.id + '"><label class="ch tout">Désignation<input type="text" data-c="nom" value="' + x.nom + '"></label>' +
+          '<label class="ch">Unité<select data-c="u">' + UNITES.map(function (u) { return '<option' + (u === x.u ? ' selected' : '') + '>' + u + '</option>'; }).join('') + '</select></label>' +
+          '<label class="ch">Prix, CHF<input type="text" inputmode="decimal" data-c="p" value="' + chf(x.p) + '"></label>' +
+          '<button type="button" class="btn principal" data-a="ok" data-id="' + x.id + '">OK</button></div>';
+      }
+      var meta = x.t === 'complete' ? 'Au catalogue sans prix, ' + offres(x.vu) : x.t === 'ecarte' ? '<span class="motif">' + x.motif + '</span>' : offres(x.vu);
+      if (x.aussi) { meta += ', aussi écrit « ' + x.aussi + ' »'; }
+      if (x.p === undefined) { return '<div class="rg sans"><span class="nm"><b>' + x.nom + '</b><small>' + meta + '</small></span><span class="px"><small>sans prix</small></span></div>'; }
+      return '<div class="rg' + (x.on ? '' : x.t === 'ecarte' ? ' off' : ' off barre') + '"><label class="cc"><input type="checkbox" data-id="' + x.id + '"' + (x.on ? ' checked' : '') + ' aria-label="Intégrer ' + x.nom + '"></label>' +
+        '<span class="nm"><b>' + x.nom + '</b><small>' + meta + '</small></span><span class="px">' + chf(x.p) + '<small>/ ' + x.u + '</small></span>' +
+        (x.t === 'complete' ? '<span></span>' : '<button type="button" class="cr" data-a="modifier" data-id="' + x.id + '" aria-label="Modifier ' + x.nom + '">' + CRAYON + '</button>') + '</div>';
+    }
+
+    function question(x) {
+      return '<div class="cf' + (x.choix === null ? ' attente' : '') + '"><p><b>' + x.nom + '</b> <small>/ ' + x.u + '</small></p>' +
+        '<p class="pourquoi">' + (x.base >= 0 ? 'Votre catalogue et une offre ne donnent pas le même prix.' : 'Deux offres, deux prix.') + '</p><div class="prixs">' +
+        x.opts.map(function (o, i) {
+          return '<button type="button" data-a="prix" data-id="' + x.id + '" data-i="' + i + '" aria-pressed="' + (x.choix === i) + '"><b>' + chf(o.p) + '</b><small>' + o.s + '</small></button>';
+        }).join('') + '</div></div>';
+    }
+
+    function vueRevue() {
+      if (!s.items.length) {
+        return {
+          retour: true, titre: 'Aucun produit trouvé', sous: 'Ces PDF ne contiennent aucune ligne avec un prix.',
+          corps: '<div class="vide-carte"><p>Vérifiez qu\'il s\'agit bien d\'offres, créées par ordinateur. Une offre scannée ou photographiée ne se lit pas.</p></div>',
+          actions: '<button type="button" class="btn principal" data-a="importer">Choisir d\'autres PDF</button>'
+        };
+      }
+      var conf = parType('conflit'), comp = parType('complete'), ident = parType('identique'), nouv = parType('nouveau'), ecar = parType('ecarte');
+      var reste = aChoisir(), b = bilan(), h = '';
+      h += '<p class="resume"><span>' + lisibles().length + ' offres, ' + lignesLues() + ' lignes</span>' +
+        (reste ? '<span class="att">' + reste + ' prix à choisir' + '</span>' : (conf.length ? '<span class="fait">prix choisis</span>' : '')) +
+        '<span>' + b.total + ' à intégrer</span></p>';
+      if (conf.length) { h += '<section class="bloc"><h2>Quel prix garder ? <span>' + conf.length + '</span></h2>' + conf.map(question).join('') + '</section>'; }
+      if (comp.length) { h += '<section class="bloc"><h2>Prix trouvés pour vos produits <span>' + comp.length + '</span></h2>' + comp.map(ligne).join('') + '</section>'; }
+      h += '<section class="bloc"><h2>Nouveaux produits <span>' + nouv.length + '</span></h2>';
+      CATS.forEach(function (c) {
+        var de = nouv.filter(function (x) { return x.cat === c; });
+        if (de.length) { h += '<h3>' + c + '</h3>' + de.map(ligne).join(''); }
+      });
+      h += '</section>';
+      if (ident.length) { h += '<section class="bloc"><h2>Déjà au catalogue, même prix <span>rien à faire</span></h2><p>' + ident.map(function (x) { return x.nom + ', ' + chf(x.p) + ' / ' + x.u; }).join(' ; ') + '.</p></section>'; }
+      if (ecar.length) { h += '<details class="bloc"' + (s.ouvert ? ' open' : '') + '><summary>Lignes laissées de côté <span>' + ecar.length + '</span></summary>' + ecar.map(ligne).join('') + '</details>'; }
+      return {
+        retour: true, titre: 'Voici ce qu\'on intègre', sous: 'Décochez ce que vous ne voulez pas. Le crayon corrige une ligne.', corps: h,
+        actions: reste ? '<button type="button" class="btn" data-a="ajouter">' + reste + ' prix à choisir d\'abord</button>'
+          : '<button type="button" class="btn principal" data-a="ajouter">Ajouter ' + b.total + ' produits au catalogue</button>'
+      };
+    }
+
+    function vueFini() {
+      var b = bilan();
+      var h = '<span class="coche">' + COCHE + '</span><ul class="bilan"><li>Nouveaux produits<b>' + b.nouveaux + '</b></li><li>Prix complétés<b>' + b.completes + '</b></li>' +
+        '<li>Prix changés<b>' + b.changes + '</b></li><li>Lignes laissées de côté<b>' + b.cote + '</b></li></ul>' +
+        '<p class="note">Les fichiers ont été supprimés.</p>';
+      return {
+        fin: true, titre: b.total + ' produits intégrés', sous: 'Votre catalogue est à jour.', corps: h,
+        actions: '<button type="button" class="btn" data-a="defaire">Annuler cet import</button><button type="button" class="btn principal" data-a="catalogue">Voir mon catalogue</button>'
+      };
+    }
+
+    function rendre() {
+      var avant = racine.querySelector('.corps'), haut = avant ? avant.scrollTop : 0, meme = racine.getAttribute('data-etape') === s.etape;
+      var v = s.etape === 'choisir' ? vueChoisir() : s.etape === 'lecture' ? vueLecture() : s.etape === 'revue' ? vueRevue() : s.etape === 'fini' ? vueFini() : vueCatalogue();
+      racine.setAttribute('data-etape', s.etape);
+      racine.innerHTML = '<div class="cadre"><aside class="menu" aria-hidden="true"><b class="marque">Dicta</b>' +
+        ['Offres', 'Clients', 'Dicter une offre', 'Factures', 'Catalogue', 'Réglages'].map(function (m) { return '<span' + (m === 'Catalogue' ? ' class="on"' : '') + '>' + m + '</span>'; }).join('') + '</aside>' +
+        '<div class="ecran"><header class="bande">' + (v.retour ? '<button type="button" class="retour" data-a="retour">‹ Catalogue</button>' : '<b class="marque">Dicta</b>') + '<span class="qui">Peinture Exemple</span></header>' +
+        '<div class="tete">' + (v.retour ? '<button type="button" class="fil" data-a="retour">‹ Catalogue</button>' : '') + '<h1>' + v.titre + '</h1>' + (v.sous ? '<p class="sous">' + v.sous + '</p>' : '') + '</div>' +
+        '<div class="corps' + (v.fin ? ' fin' : '') + '">' + v.corps + '</div>' +
+        (v.actions ? '<div class="actionbar">' + v.actions + '</div>' : '') +
+        '<nav class="nav" aria-hidden="true"><span>Offres</span><span>Clients</span><span class="rond">' + MICRO + '</span><span>Factures</span><span class="on">Plus</span></nav></div></div>';
+      if (meme) { var apres = racine.querySelector('.corps'); if (apres) { apres.scrollTop = haut; } }
+    }
+
+    function lire() {
+      var i = 0;
+      s.etape = 'lecture'; s.etats = s.fichiers.map(function () { return 'attente'; }); s.groupe = 0; rendre();
+      function pas() {
+        if (i < s.fichiers.length) {
+          s.etats[i] = 'lecture'; rendre();
+          minuteries.push(setTimeout(function () { s.etats[i] = s.fichiers[i].illisible ? 'illisible' : 'lu'; i++; rendre(); minuteries.push(setTimeout(pas, 250)); }, 850));
+        } else {
+          s.groupe = 1; rendre();
+          minuteries.push(setTimeout(function () { s.groupe = 2; if (!lisibles().length) { s.items = []; } rendre(); }, 900));
+        }
+      }
+      minuteries.push(setTimeout(pas, 300));
+    }
+
+    function trouver(id) { return s.items.filter(function (x) { return x.id === id; })[0]; }
+
+    racine.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-a]');
+      if (!b || !racine.contains(b)) { return; }
+      var a = b.getAttribute('data-a'), x = trouver(b.getAttribute('data-id'));
+      if (a === 'importer') { s.etape = 'choisir'; s.toast = ''; if (!s.items.length) { s.items = produits(s.vide); s.fichiers = []; } }
+      else if (a === 'retour' || a === 'catalogue') { minuteries.forEach(clearTimeout); minuteries = []; s.etape = 'catalogue'; }
+      else if (a === 'choisir') { if (!s.fichiers.length) { s.fichiers = FICHIERS.slice(); } }
+      else if (a === 'scan') { s.fichiers.push(SCAN); }
+      else if (a === 'retirer') { s.fichiers.splice(+b.getAttribute('data-i'), 1); }
+      else if (a === 'lire') { lire(); return; }
+      else if (a === 'voir') { s.etape = 'revue'; }
+      else if (a === 'prix') { x.choix = +b.getAttribute('data-i'); }
+      else if (a === 'modifier') { s.edit = x.id; }
+      else if (a === 'ok') {
+        var boite = b.closest('.edit'), prix = parseFloat(boite.querySelector('[data-c="p"]').value.replace(',', '.'));
+        x.nom = boite.querySelector('[data-c="nom"]').value.trim() || x.nom; x.u = boite.querySelector('[data-c="u"]').value;
+        if (prix > 0) { x.p = prix; }
+        x.on = true; s.edit = null;
+      }
+      else if (a === 'ajouter') {
+        if (aChoisir()) { var q = racine.querySelector('.cf.attente'); if (q) { q.scrollIntoView({ block: 'center' }); } return; }
+        s.etape = 'fini'; s.fait = true;
+      }
+      else if (a === 'defaire') { zero(); s.toast = 'Import annulé : votre catalogue est revenu comme avant.'; }
+      rendre();
+    });
+    racine.addEventListener('change', function (e) {
+      if (e.target.type !== 'checkbox') { return; }
+      var x = trouver(e.target.getAttribute('data-id'));
+      if (x) { x.on = e.target.checked; rendre(); }
+    });
+    racine.addEventListener('toggle', function (e) { if (e.target.tagName === 'DETAILS') { s.ouvert = e.target.open; } }, true);
+
+    zero(); rendre();
+    return {
+      recommencer: function () { zero(); rendre(); },
+      relecture: function () { zero(); s.etape = 'revue'; s.fichiers = FICHIERS.slice(); rendre(); }
+    };
+  }
+
+  var apps = {
+    'app-tel': monter(document.getElementById('app-tel')),
+    'app-pc': monter(document.getElementById('app-pc')),
+    'app-vide': monter(document.getElementById('app-vide'), { vide: true }),
+    'app-scan': monter(document.getElementById('app-scan'), { etape: 'lecture' }),
+    'app-rien': monter(document.getElementById('app-rien'), { etape: 'revue', rien: true })
+  };
+  document.querySelectorAll('[data-recommencer]').forEach(function (b) { b.addEventListener('click', function () { apps[b.getAttribute('data-recommencer')].recommencer(); }); });
+  document.querySelectorAll('[data-aller]').forEach(function (b) { b.addEventListener('click', function () { apps[b.getAttribute('data-aller')].relecture(); }); });
+
+  /* Réponses */
+  var CLE = 'maquette-import-catalogue-v1', rep = {}, texte = document.getElementById('texte');
+  try { rep = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { rep = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(rep)); } catch (e) { /* navigation privée */ } }
+  function recap() {
+    var l = ['Import du catalogue, maquette v1, réponses :'];
+    document.querySelectorAll('.choix').forEach(function (c) {
+      var id = c.getAttribute('data-id'), r = rep[id] || {};
+      l.push(id + ' : ' + (r.v || 'sans réponse') + (r.c ? ' (' + r.c + ')' : ''));
+    });
+    texte.value = l.join('\n');
+  }
+  document.querySelectorAll('.choix').forEach(function (c) {
+    var id = c.getAttribute('data-id'), zone = c.querySelector('textarea');
+    rep[id] = rep[id] || {};
+    zone.value = rep[id].c || '';
+    c.querySelectorAll('.opts button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(rep[id].v === b.getAttribute('data-v')));
+      b.addEventListener('click', function () {
+        rep[id].v = rep[id].v === b.getAttribute('data-v') ? '' : b.getAttribute('data-v');
+        c.querySelectorAll('.opts button').forEach(function (o) { o.setAttribute('aria-pressed', String(rep[id].v === o.getAttribute('data-v'))); });
+        garder(); recap();
+      });
+    });
+    zone.addEventListener('input', function () { rep[id].c = zone.value.trim(); garder(); recap(); });
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    var b = this;
+    function dit() { b.textContent = 'Copié'; setTimeout(function () { b.textContent = 'Copier le texte'; }, 1500); }
+    try { navigator.clipboard.writeText(texte.value).then(dit, function () { texte.select(); }); } catch (e) { texte.select(); }
+  });
+  recap();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

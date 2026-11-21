@@ -1,0 +1,942 @@
+<!doctype html><html lang="fr-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Marque Easy Offre</title><style>
+:root{--mk-ink:#1c2430;--mk-bg:#f4f5f7;--mk-surface:#fff;--mk-line:#d8dce3;--mk-accent:#2f6fd6}
+[data-theme="dark"]{--mk-ink:#e8ebf0;--mk-bg:#12161c;--mk-surface:#1b2129;--mk-line:#323a45;--mk-accent:#7aa7ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--mk-ink:#e8ebf0;--mk-bg:#12161c;--mk-surface:#1b2129;--mk-line:#323a45;--mk-accent:#7aa7ff}}
+body{margin:0;background:var(--mk-bg);color:var(--mk-ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.page{max-width:1700px;margin:0 auto;padding:16px}
+h1{font-size:24px;margin:8px 0} h2{font-size:20px;margin:32px 0 4px}
+.ecrans{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.ecrans figure{margin:0;max-width:100%}
+.ecrans figcaption{font-size:13px;opacity:.8;margin-top:4px}
+iframe.tel{width:390px;max-width:100%;box-sizing:border-box;border:1px solid var(--mk-line);border-radius:22px;background:#fff}
+.courriel{width:390px;max-width:100%;box-sizing:border-box;background:#F2F2F0;border-radius:14px;overflow:hidden;font-size:15px;color:#1E2329;border:1px solid var(--mk-line)}
+.courriel .c-tete{display:flex;align-items:center;gap:10px;background:var(--t);color:var(--tt);padding:14px 18px;font-size:18px}
+.courriel .c-corps{background:#fff;margin:14px;border-radius:12px;padding:16px 18px}
+.courriel .c-objet{font-size:19px;font-weight:700;margin:0 0 12px}
+.courriel .c-bouton a{display:inline-block;background:var(--a);color:var(--o);text-decoration:none;font-weight:700;padding:13px 20px;border-radius:12px}
+.courriel .c-petit{font-size:13px;color:#5d6672}
+.courriel .c-pied{font-size:12px;color:#6b7280;padding:0 18px 14px}
+.choix{background:var(--mk-surface);border:1px solid var(--mk-line);border-radius:12px;padding:12px;margin:12px 0;max-width:820px}
+.choix .q{margin:0 0 8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.opts button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--mk-line);background:var(--mk-bg);color:var(--mk-ink);cursor:pointer}
+.opts button[aria-pressed="true"]{background:var(--mk-accent);border-color:var(--mk-accent);color:#fff}
+.choix textarea{width:100%;box-sizing:border-box;font:inherit;border:1px solid var(--mk-line);border-radius:10px;padding:8px;background:var(--mk-bg);color:var(--mk-ink)}
+#copier{font:inherit;min-height:48px;padding:10px 16px;border-radius:12px;border:0;background:var(--mk-accent);color:#fff;cursor:pointer}
+#texte{width:100%;box-sizing:border-box;min-height:120px;margin-top:8px;font:13px/1.4 ui-monospace,monospace}
+</style><style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head><body><div class="page"><h1>Easy Offre : trois directions de marque</h1><p>Ta remarque du 18.11 : « il manque un aspect de marque », « trop de blanc ». Chaque direction est appliquée aux vrais écrans de l'application (même feuille de style, mêmes pages) : seules changent les couleurs, l'en-tête et le fond. Le logo est le même pour les trois : une bulle de parole qui porte une coche, la dictée qui devient une offre juste. Une fois la direction choisie, je reprends les écrans refusés (P1, P2, P4, A2) dans cette marque.</p><nav id="mk-toc"></nav><h2 id="direction-a">A · Atelier</h2><p>Chaleur du bois et de la brique : fond sable, accent brique, en-tête brun profond. Évoque le métier, le chantier propre.</p><div class="ecrans"><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}:root{--bg:#F3ECE2;--surface:#FFFDF9;--chip:#EDE3D6;--line:#E3D7C7;--ink:#2B2119;--muted:#76675A;--accent:#B5502B;--accent-soft:#F5E1D7;--on-accent:#FFFFFF;}body{background:var(--bg)}.app{background:var(--bg)}header.bar{background:#3B2B21;color:#FBF1E8;border-bottom:0}header.bar h1{color:#FBF1E8}header.bar a,header.bar .back{color:#FBF1E8;opacity:.85}.screen{background:var(--bg)}.ocard,.card,.row,.ohead .carte-lien{background:var(--surface)}.tabs{background:var(--surface)}.tabs a[aria-current=&quot;page&quot;]{color:var(--accent);box-shadow:inset 0 3px 0 transparent}.tabs .micro-central&gt;span{box-shadow:0 6px 16px rgba(181,80,43,.38)}.marque-tete{display:flex;align-items:center;gap:12px;margin:8px 0 20px}.marque-tete b{font-size:24px;letter-spacing:-.3px}.marque-tete b span{font-weight:500;opacity:.8}.marque-tete small{display:block;color:var(--muted);font-size:14px}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Connexion&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;&lt;div class=&quot;marque-tete&quot;&gt;&lt;svg width=&quot;52&quot; height=&quot;52&quot; viewBox=&quot;0 0 48 48&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;2&quot; y=&quot;2&quot; width=&quot;44&quot; height=&quot;44&quot; rx=&quot;12&quot; fill=&quot;#B5502B&quot;/&gt;&lt;path d=&quot;M13 15h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H22l-6 5v-5h-3a3 3 0 0 1-3-3V18a3 3 0 0 1 3-3z&quot; fill=&quot;none&quot; stroke=&quot;#FFFFFF&quot; stroke-width=&quot;2.6&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;path d=&quot;m18 23.5 4 4 8-8&quot; fill=&quot;none&quot; stroke=&quot;#FFFFFF&quot; stroke-width=&quot;2.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;/svg&gt;&lt;div&gt;&lt;b&gt;Easy &lt;span&gt;Offre&lt;/span&gt;&lt;/b&gt;&lt;small&gt;Dictez la visite, l&#x27;offre suit.&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Courriel&lt;/label&gt;&lt;input type=&quot;email&quot; value=&quot;luigi@exemple.ch&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Mot de passe&lt;/label&gt;&lt;input type=&quot;password&quot; value=&quot;motdepasse&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Mot de passe oublié&amp;nbsp;?&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Se connecter&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe><figcaption>Connexion</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}:root{--bg:#F3ECE2;--surface:#FFFDF9;--chip:#EDE3D6;--line:#E3D7C7;--ink:#2B2119;--muted:#76675A;--accent:#B5502B;--accent-soft:#F5E1D7;--on-accent:#FFFFFF;}body{background:var(--bg)}.app{background:var(--bg)}header.bar{background:#3B2B21;color:#FBF1E8;border-bottom:0}header.bar h1{color:#FBF1E8}header.bar a,header.bar .back{color:#FBF1E8;opacity:.85}.screen{background:var(--bg)}.ocard,.card,.row,.ohead .carte-lien{background:var(--surface)}.tabs{background:var(--surface)}.tabs a[aria-current=&quot;page&quot;]{color:var(--accent);box-shadow:inset 0 3px 0 transparent}.tabs .micro-central&gt;span{box-shadow:0 6px 16px rgba(181,80,43,.38)}.marque-tete{display:flex;align-items:center;gap:12px;margin:8px 0 20px}.marque-tete b{font-size:24px;letter-spacing:-.3px}.marque-tete b span{font-weight:500;opacity:.8}.marque-tete small{display:block;color:var(--muted);font-size:14px}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Offres&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris avec-rond&quot;&gt;&lt;p class=&quot;muted ent&quot;&gt;Peinture Luigi&lt;/p&gt;&lt;p class=&quot;compteur&quot;&gt;3 offres ce mois&lt;/p&gt;
+&lt;div class=&quot;cat liste&quot;&gt;&lt;h5&gt;Offres&lt;/h5&gt;&lt;span&gt;3&lt;/span&gt;&lt;/div&gt;
+&lt;nav class=&quot;fchips tri&quot; aria-label=&quot;Trier les offres&quot;&gt;&lt;a href=&quot;#&quot; aria-current=&quot;true&quot;&gt;&lt;span&gt;Récentes&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Client&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Montant&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;À relire d&#x27;abord&lt;/span&gt;&lt;/a&gt;&lt;/nav&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Madame Exemple · Offre 3 · créée le 18.11.2026&lt;/span&gt;&lt;b&gt;CHF 3’377.05&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Façade de la maison&lt;/b&gt;&lt;span class=&quot;status&quot;&gt;À relire&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Monsieur Modèle · Offre 2 · créée le 17.11.2026&lt;/span&gt;&lt;b&gt;CHF 8’107.50&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Cage d&#x27;escalier&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Famille Test · Offre 1 · créée le 16.11.2026&lt;/span&gt;&lt;b&gt;CHF 2’140.00&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;Easy Offre&lt;/span&gt;
+  &lt;a href=&quot;/&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe><figcaption>Les offres</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}:root{--bg:#F3ECE2;--surface:#FFFDF9;--chip:#EDE3D6;--line:#E3D7C7;--ink:#2B2119;--muted:#76675A;--accent:#B5502B;--accent-soft:#F5E1D7;--on-accent:#FFFFFF;}body{background:var(--bg)}.app{background:var(--bg)}header.bar{background:#3B2B21;color:#FBF1E8;border-bottom:0}header.bar h1{color:#FBF1E8}header.bar a,header.bar .back{color:#FBF1E8;opacity:.85}.screen{background:var(--bg)}.ocard,.card,.row,.ohead .carte-lien{background:var(--surface)}.tabs{background:var(--surface)}.tabs a[aria-current=&quot;page&quot;]{color:var(--accent);box-shadow:inset 0 3px 0 transparent}.tabs .micro-central&gt;span{box-shadow:0 6px 16px rgba(181,80,43,.38)}.marque-tete{display:flex;align-items:center;gap:12px;margin:8px 0 20px}.marque-tete b{font-size:24px;letter-spacing:-.3px}.marque-tete b span{font-weight:500;opacity:.8}.marque-tete small{display:block;color:var(--muted);font-size:14px}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;a class=&quot;back&quot; href=&quot;#&quot;&gt;Offres&lt;/a&gt;&lt;h1&gt;Offre 3&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;      &lt;div class=&quot;ohead&quot;&gt;
+    &lt;a class=&quot;who carte-lien&quot; href=&quot;/offres/161/client&quot; data-en-feuille aria-label=&quot;Client de l&#x27;offre : chercher ou changer&quot;&gt;&lt;span&gt;&lt;b&gt;Monsieur Modèle&lt;/b&gt;&lt;small&gt;Route du Test 18, 2000 Neuchâtel&lt;/small&gt;&lt;/span&gt;
+      &lt;svg class=&quot;i loupe&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;11&quot; cy=&quot;11&quot; r=&quot;7&quot;/&gt;&lt;path d=&quot;m20 20-3.5-3.5&quot;/&gt;&lt;/svg&gt;&lt;/a&gt;
+    &lt;a class=&quot;t carte-lien&quot; href=&quot;/offres/161/modifier&quot; data-en-feuille-pc&gt;&lt;span&gt;&lt;b&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;small&gt;Objet de l&#x27;offre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;
+                &lt;span class=&quot;meta&quot;&gt;&lt;span class=&quot;status pret&quot;&gt;Prête&lt;/span&gt;&lt;span class=&quot;muted&quot; data-sauvegarde&gt;Enregistrée le 17.11.2026 16:20&lt;/span&gt;
+            &lt;button class=&quot;btn pc-seul doc-cote&quot; type=&quot;button&quot; data-doc-cote=&quot;/offres/161/document&quot; aria-pressed=&quot;false&quot; hidden&gt;Document à côté&lt;/button&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+    
+  &lt;div class=&quot;rows une&quot;&gt;
+          &lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Général &lt;span class=&quot;st&quot;&gt;180.00&lt;/span&gt;&lt;/h5&gt;&lt;span class=&quot;ch&quot;&gt;Qté&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Prix&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Total&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l717&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/717&quot; data-en-feuille-pc&gt;Protection des sols et des meubles&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/717&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;1&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Protection des sols et des meubles&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;forfait&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/717&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;180&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Protection des sols et des meubles&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;180.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/717/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Protection des sols et des meubles&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+              &lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Salon &lt;span class=&quot;st&quot;&gt;1’418.00&lt;/span&gt; &lt;a class=&quot;renommer&quot; href=&quot;/offres/161/pieces?nom=Salon&quot;&gt;Renommer&lt;/a&gt;&lt;/h5&gt;&lt;span class=&quot;ch&quot;&gt;Qté&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Prix&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Total&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l718&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/718&quot; data-en-feuille-pc&gt;Rebouchage et ponçage des murs&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/718&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;38&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Rebouchage et ponçage des murs&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/718&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;9&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Rebouchage et ponçage des murs&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;342.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/718/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Rebouchage et ponçage des murs&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l719&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/719&quot; data-en-feuille-pc&gt;Peinture des murs, 2 couches&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/719&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;38&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/719&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;28&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;1’064.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/719/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture des murs, 2 couches&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                                      &lt;form class=&quot;note prix-dit&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/719/prix-dicte&quot;&gt;
+              &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+              &lt;span&gt;Prix dicté 25.00, catalogue 28.00&lt;/span&gt;&lt;button class=&quot;okbtn&quot; type=&quot;submit&quot;&gt;&lt;span&gt;Prendre 25.00&lt;/span&gt;&lt;/button&gt;
+            &lt;/form&gt;
+                                &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l723&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/723&quot; data-en-feuille-pc&gt;Laquage des plinthes&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/723&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;1&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Laquage des plinthes&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/723&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;12&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Laquage des plinthes&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;12.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/723/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Laquage des plinthes&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+              &lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Chambre &lt;span class=&quot;st&quot;&gt;1’526.00&lt;/span&gt; &lt;a class=&quot;renommer&quot; href=&quot;/offres/161/pieces?nom=Chambre&quot;&gt;Renommer&lt;/a&gt;&lt;/h5&gt;&lt;span class=&quot;ch&quot;&gt;Qté&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Prix&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Total&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l720&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/720&quot; data-en-feuille-pc&gt;Peinture des murs, 2 couches&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/720&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;24&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/720&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;28&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;672.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/720/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture des murs, 2 couches&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l721&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/721&quot; data-en-feuille-pc&gt;Peinture des plafonds, 2 couches&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/721&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;16&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture des plafonds, 2 couches&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/721&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;32&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture des plafonds, 2 couches&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;512.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/721/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture des plafonds, 2 couches&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l722&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/722&quot; data-en-feuille-pc&gt;Peinture anti-moisissure&lt;small&gt;&lt;span class=&quot;tag&quot;&gt;Ligne libre&lt;/span&gt;&lt;/small&gt;&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/722&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;9&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture anti-moisissure&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/722&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;38&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture anti-moisissure&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;342.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/722/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture anti-moisissure&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                  &lt;div class=&quot;ranger-ligne&quot;&gt;
+            &lt;form class=&quot;ranger&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/722/produit&quot;&gt;
+              &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+              &lt;button class=&quot;btn&quot; type=&quot;submit&quot;&gt;Créer le produit&lt;/button&gt;
+            &lt;/form&gt;
+            &lt;a class=&quot;btn&quot; href=&quot;/offres/161/lignes/722/rattacher&quot;&gt;Rattacher à un produit&lt;/a&gt;
+          &lt;/div&gt;
+                                              &lt;/div&gt;
+      &lt;/div&gt;
+  &lt;form class=&quot;ajout-pc pc-seul&quot; method=&quot;get&quot; action=&quot;/offres/161/ajouter&quot; role=&quot;search&quot; data-ajout-pc data-poste=&quot;/offres/161/lignes&quot; data-csrf=&quot;f42445588.SJYLRHhp0cn8NgTv72HvxNCiSnfBOFC0ab_EHgBQSgM.A8ZkLjAeo7y4ZUnb1yucsp_nGg72SjnzUf2WXDc6DkAxpzwdDTGWgqZpSQ&quot;&gt;
+  &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 5v14M5 12h14&quot;/&gt;&lt;/svg&gt;
+  &lt;input name=&quot;q&quot; type=&quot;search&quot; placeholder=&quot;Ajouter une ligne : tapez un produit, puis Entrée&quot; autocomplete=&quot;off&quot; aria-label=&quot;Ajouter une ligne&quot; aria-autocomplete=&quot;list&quot; aria-controls=&quot;ajout-pc-liste&quot; aria-expanded=&quot;false&quot;&gt;
+  &lt;ul id=&quot;ajout-pc-liste&quot; class=&quot;ajout-pc-liste&quot; role=&quot;listbox&quot; hidden&gt;
+    &lt;li role=&quot;option&quot; data-id=&quot;951&quot; data-texte=&quot;deplacement divers deplacement&quot; hidden&gt;&lt;span&gt;Déplacement&lt;/span&gt;&lt;small&gt;60.00 /&amp;nbsp;forfait&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;952&quot; data-texte=&quot;heure de regie divers regie, heure&quot; hidden&gt;&lt;span&gt;Heure de régie&lt;/span&gt;&lt;small&gt;80.00 /&amp;nbsp;h&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;950&quot; data-texte=&quot;echafaudage, montage et location peinture exterieure echafaudage&quot; hidden&gt;&lt;span&gt;Échafaudage, montage et location&lt;/span&gt;&lt;small&gt;17.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;949&quot; data-texte=&quot;peinture de facade, 2 couches peinture exterieure facade&quot; hidden&gt;&lt;span&gt;Peinture de façade, 2 couches&lt;/span&gt;&lt;small&gt;45.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;947&quot; data-texte=&quot;laquage de porte, 2 faces peinture interieure porte&quot; hidden&gt;&lt;span&gt;Laquage de porte, 2 faces&lt;/span&gt;&lt;small&gt;160.00 /&amp;nbsp;pce&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;946&quot; data-texte=&quot;laquage des plinthes peinture interieure plinthes&quot; hidden&gt;&lt;span&gt;Laquage des plinthes&lt;/span&gt;&lt;small&gt;12.00 /&amp;nbsp;m&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;948&quot; data-texte=&quot;peinture anti-moisissure peinture interieure anti-moisissure&quot; hidden&gt;&lt;span&gt;Peinture anti-moisissure&lt;/span&gt;&lt;small&gt;prix&amp;nbsp;? /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;944&quot; data-texte=&quot;peinture des murs, 2 couches peinture interieure murs, dispersion&quot; hidden&gt;&lt;span&gt;Peinture des murs, 2 couches&lt;/span&gt;&lt;small&gt;28.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;945&quot; data-texte=&quot;peinture des plafonds, 2 couches peinture interieure plafond&quot; hidden&gt;&lt;span&gt;Peinture des plafonds, 2 couches&lt;/span&gt;&lt;small&gt;32.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;943&quot; data-texte=&quot;couche d&amp;#039;impression preparation fond, primaire&quot; hidden&gt;&lt;span&gt;Couche d&amp;#039;impression&lt;/span&gt;&lt;small&gt;5.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;941&quot; data-texte=&quot;protection des sols et des meubles preparation bacher, proteger&quot; hidden&gt;&lt;span&gt;Protection des sols et des meubles&lt;/span&gt;&lt;small&gt;180.00 /&amp;nbsp;forfait&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;942&quot; data-texte=&quot;rebouchage et poncage des murs preparation reboucher, enduit&quot; hidden&gt;&lt;span&gt;Rebouchage et ponçage des murs&lt;/span&gt;&lt;small&gt;9.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;    &lt;li role=&quot;option&quot; data-libre hidden&gt;&lt;span data-libre-texte&gt;&lt;/span&gt;&lt;small&gt;ligne libre&lt;/small&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/form&gt;
+
+      &lt;div class=&quot;totals&quot;&gt;
+    &lt;div class=&quot;r&quot;&gt;&lt;span&gt;Sous-total HT&lt;/span&gt;&lt;span&gt;CHF 3’124.00&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;r&quot;&gt;&lt;span&gt;TVA 8,1 %&lt;/span&gt;&lt;span&gt;CHF 253.04&lt;/span&gt;&lt;/div&gt;    &lt;div class=&quot;r&quot;&gt;&lt;span&gt;Arrondi&lt;/span&gt;&lt;span&gt;CHF 0.01&lt;/span&gt;&lt;/div&gt;    &lt;div class=&quot;r grand&quot;&gt;&lt;span&gt;Total TTC&lt;/span&gt;&lt;span&gt;CHF 3’377.05&lt;/span&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;p class=&quot;muted petit mobile-seul&quot;&gt;Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.&lt;/p&gt;
+  &lt;p class=&quot;aide-clavier pc-seul&quot;&gt;&lt;kbd&gt;Tab&lt;/kbd&gt; champ suivant · &lt;kbd&gt;Entrée&lt;/kbd&gt; ligne suivante · &lt;kbd&gt;J&lt;/kbd&gt; c&#x27;est juste · &lt;kbd&gt;Suppr&lt;/kbd&gt; retirer la ligne (avec Annuler) · &lt;kbd&gt;D&lt;/kbd&gt; dicter une offre&lt;/p&gt;
+&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;Easy Offre&lt;/span&gt;
+  &lt;a href=&quot;/&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe><figcaption>Une offre</figcaption></figure><figure><div class="courriel" style="--a:#B5502B;--t:#3B2B21;--tt:#FBF1E8;--o:#FFFFFF">
+<div class="c-tete"><svg width="32" height="32" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="12" fill="#B5502B"/><path d="M13 15h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H22l-6 5v-5h-3a3 3 0 0 1-3-3V18a3 3 0 0 1 3-3z" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round"/><path d="m18 23.5 4 4 8-8" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Easy Offre</b></div>
+<div class="c-corps"><p class="c-objet">Votre nouveau mot de passe</p><p>Bonjour,</p><p>Pour choisir un nouveau mot de passe, touchez le bouton dans l'heure.</p>
+<p class="c-bouton"><a href="#">Choisir mon mot de passe</a></p>
+<p class="c-petit">Vous n'avez rien demandé&nbsp;? Ignorez ce courriel, votre mot de passe ne change pas.</p></div>
+<div class="c-pied">Easy Offre · notifications@easy-offre.ch</div></div><figcaption>Le courriel</figcaption></figure></div><h2 id="direction-b">B · Signal</h2><p>Le jaune des panneaux de chantier sur un anthracite : vif, très lisible en plein soleil. Le jaune sert aux actions, le texte reste sombre.</p><div class="ecrans"><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}:root{--bg:#ECEEF1;--surface:#FFFFFF;--chip:#E1E5EA;--line:#D5DAE0;--ink:#1E2329;--muted:#5D6672;--accent:#F2B416;--accent-soft:#FFF2C6;--on-accent:#1E2329;}body{background:var(--bg)}.app{background:var(--bg)}header.bar{background:#22272E;color:#FFFFFF;border-bottom:0}header.bar h1{color:#FFFFFF}header.bar a,header.bar .back{color:#FFFFFF;opacity:.85}.screen{background:var(--bg)}.ocard,.card,.row,.ohead .carte-lien{background:var(--surface)}.tabs{background:var(--surface)}.tabs a[aria-current=&quot;page&quot;]{color:var(--ink);box-shadow:inset 0 3px 0 #F2B416}.tabs .micro-central&gt;span{box-shadow:0 6px 16px rgba(242,180,22,.45)}.marque-tete{display:flex;align-items:center;gap:12px;margin:8px 0 20px}.marque-tete b{font-size:24px;letter-spacing:-.3px}.marque-tete b span{font-weight:500;opacity:.8}.marque-tete small{display:block;color:var(--muted);font-size:14px}.cat h5 .renommer,.renommer,.status.pret,.lien-apercu{color:#7A5600}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Connexion&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;&lt;div class=&quot;marque-tete&quot;&gt;&lt;svg width=&quot;52&quot; height=&quot;52&quot; viewBox=&quot;0 0 48 48&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;2&quot; y=&quot;2&quot; width=&quot;44&quot; height=&quot;44&quot; rx=&quot;12&quot; fill=&quot;#F2B416&quot;/&gt;&lt;path d=&quot;M13 15h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H22l-6 5v-5h-3a3 3 0 0 1-3-3V18a3 3 0 0 1 3-3z&quot; fill=&quot;none&quot; stroke=&quot;#1E2329&quot; stroke-width=&quot;2.6&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;path d=&quot;m18 23.5 4 4 8-8&quot; fill=&quot;none&quot; stroke=&quot;#1E2329&quot; stroke-width=&quot;2.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;/svg&gt;&lt;div&gt;&lt;b&gt;Easy &lt;span&gt;Offre&lt;/span&gt;&lt;/b&gt;&lt;small&gt;Dictez la visite, l&#x27;offre suit.&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Courriel&lt;/label&gt;&lt;input type=&quot;email&quot; value=&quot;luigi@exemple.ch&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Mot de passe&lt;/label&gt;&lt;input type=&quot;password&quot; value=&quot;motdepasse&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Mot de passe oublié&amp;nbsp;?&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Se connecter&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe><figcaption>Connexion</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}:root{--bg:#ECEEF1;--surface:#FFFFFF;--chip:#E1E5EA;--line:#D5DAE0;--ink:#1E2329;--muted:#5D6672;--accent:#F2B416;--accent-soft:#FFF2C6;--on-accent:#1E2329;}body{background:var(--bg)}.app{background:var(--bg)}header.bar{background:#22272E;color:#FFFFFF;border-bottom:0}header.bar h1{color:#FFFFFF}header.bar a,header.bar .back{color:#FFFFFF;opacity:.85}.screen{background:var(--bg)}.ocard,.card,.row,.ohead .carte-lien{background:var(--surface)}.tabs{background:var(--surface)}.tabs a[aria-current=&quot;page&quot;]{color:var(--ink);box-shadow:inset 0 3px 0 #F2B416}.tabs .micro-central&gt;span{box-shadow:0 6px 16px rgba(242,180,22,.45)}.marque-tete{display:flex;align-items:center;gap:12px;margin:8px 0 20px}.marque-tete b{font-size:24px;letter-spacing:-.3px}.marque-tete b span{font-weight:500;opacity:.8}.marque-tete small{display:block;color:var(--muted);font-size:14px}.cat h5 .renommer,.renommer,.status.pret,.lien-apercu{color:#7A5600}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Offres&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris avec-rond&quot;&gt;&lt;p class=&quot;muted ent&quot;&gt;Peinture Luigi&lt;/p&gt;&lt;p class=&quot;compteur&quot;&gt;3 offres ce mois&lt;/p&gt;
+&lt;div class=&quot;cat liste&quot;&gt;&lt;h5&gt;Offres&lt;/h5&gt;&lt;span&gt;3&lt;/span&gt;&lt;/div&gt;
+&lt;nav class=&quot;fchips tri&quot; aria-label=&quot;Trier les offres&quot;&gt;&lt;a href=&quot;#&quot; aria-current=&quot;true&quot;&gt;&lt;span&gt;Récentes&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Client&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Montant&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;À relire d&#x27;abord&lt;/span&gt;&lt;/a&gt;&lt;/nav&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Madame Exemple · Offre 3 · créée le 18.11.2026&lt;/span&gt;&lt;b&gt;CHF 3’377.05&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Façade de la maison&lt;/b&gt;&lt;span class=&quot;status&quot;&gt;À relire&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Monsieur Modèle · Offre 2 · créée le 17.11.2026&lt;/span&gt;&lt;b&gt;CHF 8’107.50&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Cage d&#x27;escalier&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Famille Test · Offre 1 · créée le 16.11.2026&lt;/span&gt;&lt;b&gt;CHF 2’140.00&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;Easy Offre&lt;/span&gt;
+  &lt;a href=&quot;/&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe><figcaption>Les offres</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}:root{--bg:#ECEEF1;--surface:#FFFFFF;--chip:#E1E5EA;--line:#D5DAE0;--ink:#1E2329;--muted:#5D6672;--accent:#F2B416;--accent-soft:#FFF2C6;--on-accent:#1E2329;}body{background:var(--bg)}.app{background:var(--bg)}header.bar{background:#22272E;color:#FFFFFF;border-bottom:0}header.bar h1{color:#FFFFFF}header.bar a,header.bar .back{color:#FFFFFF;opacity:.85}.screen{background:var(--bg)}.ocard,.card,.row,.ohead .carte-lien{background:var(--surface)}.tabs{background:var(--surface)}.tabs a[aria-current=&quot;page&quot;]{color:var(--ink);box-shadow:inset 0 3px 0 #F2B416}.tabs .micro-central&gt;span{box-shadow:0 6px 16px rgba(242,180,22,.45)}.marque-tete{display:flex;align-items:center;gap:12px;margin:8px 0 20px}.marque-tete b{font-size:24px;letter-spacing:-.3px}.marque-tete b span{font-weight:500;opacity:.8}.marque-tete small{display:block;color:var(--muted);font-size:14px}.cat h5 .renommer,.renommer,.status.pret,.lien-apercu{color:#7A5600}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;a class=&quot;back&quot; href=&quot;#&quot;&gt;Offres&lt;/a&gt;&lt;h1&gt;Offre 3&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;      &lt;div class=&quot;ohead&quot;&gt;
+    &lt;a class=&quot;who carte-lien&quot; href=&quot;/offres/161/client&quot; data-en-feuille aria-label=&quot;Client de l&#x27;offre : chercher ou changer&quot;&gt;&lt;span&gt;&lt;b&gt;Monsieur Modèle&lt;/b&gt;&lt;small&gt;Route du Test 18, 2000 Neuchâtel&lt;/small&gt;&lt;/span&gt;
+      &lt;svg class=&quot;i loupe&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;11&quot; cy=&quot;11&quot; r=&quot;7&quot;/&gt;&lt;path d=&quot;m20 20-3.5-3.5&quot;/&gt;&lt;/svg&gt;&lt;/a&gt;
+    &lt;a class=&quot;t carte-lien&quot; href=&quot;/offres/161/modifier&quot; data-en-feuille-pc&gt;&lt;span&gt;&lt;b&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;small&gt;Objet de l&#x27;offre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;
+                &lt;span class=&quot;meta&quot;&gt;&lt;span class=&quot;status pret&quot;&gt;Prête&lt;/span&gt;&lt;span class=&quot;muted&quot; data-sauvegarde&gt;Enregistrée le 17.11.2026 16:20&lt;/span&gt;
+            &lt;button class=&quot;btn pc-seul doc-cote&quot; type=&quot;button&quot; data-doc-cote=&quot;/offres/161/document&quot; aria-pressed=&quot;false&quot; hidden&gt;Document à côté&lt;/button&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+    
+  &lt;div class=&quot;rows une&quot;&gt;
+          &lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Général &lt;span class=&quot;st&quot;&gt;180.00&lt;/span&gt;&lt;/h5&gt;&lt;span class=&quot;ch&quot;&gt;Qté&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Prix&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Total&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l717&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/717&quot; data-en-feuille-pc&gt;Protection des sols et des meubles&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/717&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;1&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Protection des sols et des meubles&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;forfait&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/717&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;180&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Protection des sols et des meubles&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;180.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/717/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Protection des sols et des meubles&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+              &lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Salon &lt;span class=&quot;st&quot;&gt;1’418.00&lt;/span&gt; &lt;a class=&quot;renommer&quot; href=&quot;/offres/161/pieces?nom=Salon&quot;&gt;Renommer&lt;/a&gt;&lt;/h5&gt;&lt;span class=&quot;ch&quot;&gt;Qté&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Prix&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Total&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l718&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/718&quot; data-en-feuille-pc&gt;Rebouchage et ponçage des murs&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/718&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;38&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Rebouchage et ponçage des murs&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/718&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;9&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Rebouchage et ponçage des murs&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;342.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/718/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Rebouchage et ponçage des murs&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l719&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/719&quot; data-en-feuille-pc&gt;Peinture des murs, 2 couches&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/719&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;38&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/719&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;28&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;1’064.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/719/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture des murs, 2 couches&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                                      &lt;form class=&quot;note prix-dit&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/719/prix-dicte&quot;&gt;
+              &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+              &lt;span&gt;Prix dicté 25.00, catalogue 28.00&lt;/span&gt;&lt;button class=&quot;okbtn&quot; type=&quot;submit&quot;&gt;&lt;span&gt;Prendre 25.00&lt;/span&gt;&lt;/button&gt;
+            &lt;/form&gt;
+                                &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l723&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/723&quot; data-en-feuille-pc&gt;Laquage des plinthes&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/723&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;1&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Laquage des plinthes&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/723&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;12&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Laquage des plinthes&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;12.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/723/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Laquage des plinthes&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+              &lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Chambre &lt;span class=&quot;st&quot;&gt;1’526.00&lt;/span&gt; &lt;a class=&quot;renommer&quot; href=&quot;/offres/161/pieces?nom=Chambre&quot;&gt;Renommer&lt;/a&gt;&lt;/h5&gt;&lt;span class=&quot;ch&quot;&gt;Qté&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Prix&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Total&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l720&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/720&quot; data-en-feuille-pc&gt;Peinture des murs, 2 couches&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/720&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;24&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/720&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;28&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;672.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/720/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture des murs, 2 couches&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l721&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/721&quot; data-en-feuille-pc&gt;Peinture des plafonds, 2 couches&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/721&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;16&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture des plafonds, 2 couches&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/721&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;32&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture des plafonds, 2 couches&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;512.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/721/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture des plafonds, 2 couches&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l722&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/722&quot; data-en-feuille-pc&gt;Peinture anti-moisissure&lt;small&gt;&lt;span class=&quot;tag&quot;&gt;Ligne libre&lt;/span&gt;&lt;/small&gt;&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/722&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;9&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture anti-moisissure&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/722&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;38&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture anti-moisissure&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;342.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/722/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture anti-moisissure&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                  &lt;div class=&quot;ranger-ligne&quot;&gt;
+            &lt;form class=&quot;ranger&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/722/produit&quot;&gt;
+              &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+              &lt;button class=&quot;btn&quot; type=&quot;submit&quot;&gt;Créer le produit&lt;/button&gt;
+            &lt;/form&gt;
+            &lt;a class=&quot;btn&quot; href=&quot;/offres/161/lignes/722/rattacher&quot;&gt;Rattacher à un produit&lt;/a&gt;
+          &lt;/div&gt;
+                                              &lt;/div&gt;
+      &lt;/div&gt;
+  &lt;form class=&quot;ajout-pc pc-seul&quot; method=&quot;get&quot; action=&quot;/offres/161/ajouter&quot; role=&quot;search&quot; data-ajout-pc data-poste=&quot;/offres/161/lignes&quot; data-csrf=&quot;f42445588.SJYLRHhp0cn8NgTv72HvxNCiSnfBOFC0ab_EHgBQSgM.A8ZkLjAeo7y4ZUnb1yucsp_nGg72SjnzUf2WXDc6DkAxpzwdDTGWgqZpSQ&quot;&gt;
+  &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 5v14M5 12h14&quot;/&gt;&lt;/svg&gt;
+  &lt;input name=&quot;q&quot; type=&quot;search&quot; placeholder=&quot;Ajouter une ligne : tapez un produit, puis Entrée&quot; autocomplete=&quot;off&quot; aria-label=&quot;Ajouter une ligne&quot; aria-autocomplete=&quot;list&quot; aria-controls=&quot;ajout-pc-liste&quot; aria-expanded=&quot;false&quot;&gt;
+  &lt;ul id=&quot;ajout-pc-liste&quot; class=&quot;ajout-pc-liste&quot; role=&quot;listbox&quot; hidden&gt;
+    &lt;li role=&quot;option&quot; data-id=&quot;951&quot; data-texte=&quot;deplacement divers deplacement&quot; hidden&gt;&lt;span&gt;Déplacement&lt;/span&gt;&lt;small&gt;60.00 /&amp;nbsp;forfait&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;952&quot; data-texte=&quot;heure de regie divers regie, heure&quot; hidden&gt;&lt;span&gt;Heure de régie&lt;/span&gt;&lt;small&gt;80.00 /&amp;nbsp;h&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;950&quot; data-texte=&quot;echafaudage, montage et location peinture exterieure echafaudage&quot; hidden&gt;&lt;span&gt;Échafaudage, montage et location&lt;/span&gt;&lt;small&gt;17.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;949&quot; data-texte=&quot;peinture de facade, 2 couches peinture exterieure facade&quot; hidden&gt;&lt;span&gt;Peinture de façade, 2 couches&lt;/span&gt;&lt;small&gt;45.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;947&quot; data-texte=&quot;laquage de porte, 2 faces peinture interieure porte&quot; hidden&gt;&lt;span&gt;Laquage de porte, 2 faces&lt;/span&gt;&lt;small&gt;160.00 /&amp;nbsp;pce&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;946&quot; data-texte=&quot;laquage des plinthes peinture interieure plinthes&quot; hidden&gt;&lt;span&gt;Laquage des plinthes&lt;/span&gt;&lt;small&gt;12.00 /&amp;nbsp;m&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;948&quot; data-texte=&quot;peinture anti-moisissure peinture interieure anti-moisissure&quot; hidden&gt;&lt;span&gt;Peinture anti-moisissure&lt;/span&gt;&lt;small&gt;prix&amp;nbsp;? /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;944&quot; data-texte=&quot;peinture des murs, 2 couches peinture interieure murs, dispersion&quot; hidden&gt;&lt;span&gt;Peinture des murs, 2 couches&lt;/span&gt;&lt;small&gt;28.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;945&quot; data-texte=&quot;peinture des plafonds, 2 couches peinture interieure plafond&quot; hidden&gt;&lt;span&gt;Peinture des plafonds, 2 couches&lt;/span&gt;&lt;small&gt;32.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;943&quot; data-texte=&quot;couche d&amp;#039;impression preparation fond, primaire&quot; hidden&gt;&lt;span&gt;Couche d&amp;#039;impression&lt;/span&gt;&lt;small&gt;5.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;941&quot; data-texte=&quot;protection des sols et des meubles preparation bacher, proteger&quot; hidden&gt;&lt;span&gt;Protection des sols et des meubles&lt;/span&gt;&lt;small&gt;180.00 /&amp;nbsp;forfait&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;942&quot; data-texte=&quot;rebouchage et poncage des murs preparation reboucher, enduit&quot; hidden&gt;&lt;span&gt;Rebouchage et ponçage des murs&lt;/span&gt;&lt;small&gt;9.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;    &lt;li role=&quot;option&quot; data-libre hidden&gt;&lt;span data-libre-texte&gt;&lt;/span&gt;&lt;small&gt;ligne libre&lt;/small&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/form&gt;
+
+      &lt;div class=&quot;totals&quot;&gt;
+    &lt;div class=&quot;r&quot;&gt;&lt;span&gt;Sous-total HT&lt;/span&gt;&lt;span&gt;CHF 3’124.00&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;r&quot;&gt;&lt;span&gt;TVA 8,1 %&lt;/span&gt;&lt;span&gt;CHF 253.04&lt;/span&gt;&lt;/div&gt;    &lt;div class=&quot;r&quot;&gt;&lt;span&gt;Arrondi&lt;/span&gt;&lt;span&gt;CHF 0.01&lt;/span&gt;&lt;/div&gt;    &lt;div class=&quot;r grand&quot;&gt;&lt;span&gt;Total TTC&lt;/span&gt;&lt;span&gt;CHF 3’377.05&lt;/span&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;p class=&quot;muted petit mobile-seul&quot;&gt;Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.&lt;/p&gt;
+  &lt;p class=&quot;aide-clavier pc-seul&quot;&gt;&lt;kbd&gt;Tab&lt;/kbd&gt; champ suivant · &lt;kbd&gt;Entrée&lt;/kbd&gt; ligne suivante · &lt;kbd&gt;J&lt;/kbd&gt; c&#x27;est juste · &lt;kbd&gt;Suppr&lt;/kbd&gt; retirer la ligne (avec Annuler) · &lt;kbd&gt;D&lt;/kbd&gt; dicter une offre&lt;/p&gt;
+&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;Easy Offre&lt;/span&gt;
+  &lt;a href=&quot;/&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe><figcaption>Une offre</figcaption></figure><figure><div class="courriel" style="--a:#F2B416;--t:#22272E;--tt:#FFFFFF;--o:#1E2329">
+<div class="c-tete"><svg width="32" height="32" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="12" fill="#F2B416"/><path d="M13 15h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H22l-6 5v-5h-3a3 3 0 0 1-3-3V18a3 3 0 0 1 3-3z" fill="none" stroke="#1E2329" stroke-width="2.6" stroke-linejoin="round"/><path d="m18 23.5 4 4 8-8" fill="none" stroke="#1E2329" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Easy Offre</b></div>
+<div class="c-corps"><p class="c-objet">Votre nouveau mot de passe</p><p>Bonjour,</p><p>Pour choisir un nouveau mot de passe, touchez le bouton dans l'heure.</p>
+<p class="c-bouton"><a href="#">Choisir mon mot de passe</a></p>
+<p class="c-petit">Vous n'avez rien demandé&nbsp;? Ignorez ce courriel, votre mot de passe ne change pas.</p></div>
+<div class="c-pied">Easy Offre · notifications@easy-offre.ch</div></div><figcaption>Le courriel</figcaption></figure></div><h2 id="direction-c">C · Sapin</h2><p>Vert profond et fond vert très pâle : calme, sérieux, « ça tombe juste ». Le moins chargé des trois, le plus éloigné du bleu actuel.</p><div class="ecrans"><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}:root{--bg:#E8EFEB;--surface:#FBFDFC;--chip:#DCE7E1;--line:#D0DDD6;--ink:#17241E;--muted:#596A62;--accent:#1F6B52;--accent-soft:#DAEDE4;--on-accent:#FFFFFF;}body{background:var(--bg)}.app{background:var(--bg)}header.bar{background:#173F32;color:#EFF7F3;border-bottom:0}header.bar h1{color:#EFF7F3}header.bar a,header.bar .back{color:#EFF7F3;opacity:.85}.screen{background:var(--bg)}.ocard,.card,.row,.ohead .carte-lien{background:var(--surface)}.tabs{background:var(--surface)}.tabs a[aria-current=&quot;page&quot;]{color:var(--accent);box-shadow:inset 0 3px 0 transparent}.tabs .micro-central&gt;span{box-shadow:0 6px 16px rgba(31,107,82,.38)}.marque-tete{display:flex;align-items:center;gap:12px;margin:8px 0 20px}.marque-tete b{font-size:24px;letter-spacing:-.3px}.marque-tete b span{font-weight:500;opacity:.8}.marque-tete small{display:block;color:var(--muted);font-size:14px}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Connexion&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;&lt;div class=&quot;marque-tete&quot;&gt;&lt;svg width=&quot;52&quot; height=&quot;52&quot; viewBox=&quot;0 0 48 48&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;2&quot; y=&quot;2&quot; width=&quot;44&quot; height=&quot;44&quot; rx=&quot;12&quot; fill=&quot;#1F6B52&quot;/&gt;&lt;path d=&quot;M13 15h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H22l-6 5v-5h-3a3 3 0 0 1-3-3V18a3 3 0 0 1 3-3z&quot; fill=&quot;none&quot; stroke=&quot;#FFFFFF&quot; stroke-width=&quot;2.6&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;path d=&quot;m18 23.5 4 4 8-8&quot; fill=&quot;none&quot; stroke=&quot;#FFFFFF&quot; stroke-width=&quot;2.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;/svg&gt;&lt;div&gt;&lt;b&gt;Easy &lt;span&gt;Offre&lt;/span&gt;&lt;/b&gt;&lt;small&gt;Dictez la visite, l&#x27;offre suit.&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Courriel&lt;/label&gt;&lt;input type=&quot;email&quot; value=&quot;luigi@exemple.ch&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Mot de passe&lt;/label&gt;&lt;input type=&quot;password&quot; value=&quot;motdepasse&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Mot de passe oublié&amp;nbsp;?&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Se connecter&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe><figcaption>Connexion</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}:root{--bg:#E8EFEB;--surface:#FBFDFC;--chip:#DCE7E1;--line:#D0DDD6;--ink:#17241E;--muted:#596A62;--accent:#1F6B52;--accent-soft:#DAEDE4;--on-accent:#FFFFFF;}body{background:var(--bg)}.app{background:var(--bg)}header.bar{background:#173F32;color:#EFF7F3;border-bottom:0}header.bar h1{color:#EFF7F3}header.bar a,header.bar .back{color:#EFF7F3;opacity:.85}.screen{background:var(--bg)}.ocard,.card,.row,.ohead .carte-lien{background:var(--surface)}.tabs{background:var(--surface)}.tabs a[aria-current=&quot;page&quot;]{color:var(--accent);box-shadow:inset 0 3px 0 transparent}.tabs .micro-central&gt;span{box-shadow:0 6px 16px rgba(31,107,82,.38)}.marque-tete{display:flex;align-items:center;gap:12px;margin:8px 0 20px}.marque-tete b{font-size:24px;letter-spacing:-.3px}.marque-tete b span{font-weight:500;opacity:.8}.marque-tete small{display:block;color:var(--muted);font-size:14px}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Offres&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris avec-rond&quot;&gt;&lt;p class=&quot;muted ent&quot;&gt;Peinture Luigi&lt;/p&gt;&lt;p class=&quot;compteur&quot;&gt;3 offres ce mois&lt;/p&gt;
+&lt;div class=&quot;cat liste&quot;&gt;&lt;h5&gt;Offres&lt;/h5&gt;&lt;span&gt;3&lt;/span&gt;&lt;/div&gt;
+&lt;nav class=&quot;fchips tri&quot; aria-label=&quot;Trier les offres&quot;&gt;&lt;a href=&quot;#&quot; aria-current=&quot;true&quot;&gt;&lt;span&gt;Récentes&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Client&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Montant&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;À relire d&#x27;abord&lt;/span&gt;&lt;/a&gt;&lt;/nav&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Madame Exemple · Offre 3 · créée le 18.11.2026&lt;/span&gt;&lt;b&gt;CHF 3’377.05&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Façade de la maison&lt;/b&gt;&lt;span class=&quot;status&quot;&gt;À relire&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Monsieur Modèle · Offre 2 · créée le 17.11.2026&lt;/span&gt;&lt;b&gt;CHF 8’107.50&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Cage d&#x27;escalier&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Famille Test · Offre 1 · créée le 16.11.2026&lt;/span&gt;&lt;b&gt;CHF 2’140.00&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;Easy Offre&lt;/span&gt;
+  &lt;a href=&quot;/&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe><figcaption>Les offres</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}:root{--bg:#E8EFEB;--surface:#FBFDFC;--chip:#DCE7E1;--line:#D0DDD6;--ink:#17241E;--muted:#596A62;--accent:#1F6B52;--accent-soft:#DAEDE4;--on-accent:#FFFFFF;}body{background:var(--bg)}.app{background:var(--bg)}header.bar{background:#173F32;color:#EFF7F3;border-bottom:0}header.bar h1{color:#EFF7F3}header.bar a,header.bar .back{color:#EFF7F3;opacity:.85}.screen{background:var(--bg)}.ocard,.card,.row,.ohead .carte-lien{background:var(--surface)}.tabs{background:var(--surface)}.tabs a[aria-current=&quot;page&quot;]{color:var(--accent);box-shadow:inset 0 3px 0 transparent}.tabs .micro-central&gt;span{box-shadow:0 6px 16px rgba(31,107,82,.38)}.marque-tete{display:flex;align-items:center;gap:12px;margin:8px 0 20px}.marque-tete b{font-size:24px;letter-spacing:-.3px}.marque-tete b span{font-weight:500;opacity:.8}.marque-tete small{display:block;color:var(--muted);font-size:14px}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;a class=&quot;back&quot; href=&quot;#&quot;&gt;Offres&lt;/a&gt;&lt;h1&gt;Offre 3&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;      &lt;div class=&quot;ohead&quot;&gt;
+    &lt;a class=&quot;who carte-lien&quot; href=&quot;/offres/161/client&quot; data-en-feuille aria-label=&quot;Client de l&#x27;offre : chercher ou changer&quot;&gt;&lt;span&gt;&lt;b&gt;Monsieur Modèle&lt;/b&gt;&lt;small&gt;Route du Test 18, 2000 Neuchâtel&lt;/small&gt;&lt;/span&gt;
+      &lt;svg class=&quot;i loupe&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;11&quot; cy=&quot;11&quot; r=&quot;7&quot;/&gt;&lt;path d=&quot;m20 20-3.5-3.5&quot;/&gt;&lt;/svg&gt;&lt;/a&gt;
+    &lt;a class=&quot;t carte-lien&quot; href=&quot;/offres/161/modifier&quot; data-en-feuille-pc&gt;&lt;span&gt;&lt;b&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;small&gt;Objet de l&#x27;offre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;
+                &lt;span class=&quot;meta&quot;&gt;&lt;span class=&quot;status pret&quot;&gt;Prête&lt;/span&gt;&lt;span class=&quot;muted&quot; data-sauvegarde&gt;Enregistrée le 17.11.2026 16:20&lt;/span&gt;
+            &lt;button class=&quot;btn pc-seul doc-cote&quot; type=&quot;button&quot; data-doc-cote=&quot;/offres/161/document&quot; aria-pressed=&quot;false&quot; hidden&gt;Document à côté&lt;/button&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+    
+  &lt;div class=&quot;rows une&quot;&gt;
+          &lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Général &lt;span class=&quot;st&quot;&gt;180.00&lt;/span&gt;&lt;/h5&gt;&lt;span class=&quot;ch&quot;&gt;Qté&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Prix&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Total&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l717&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/717&quot; data-en-feuille-pc&gt;Protection des sols et des meubles&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/717&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;1&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Protection des sols et des meubles&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;forfait&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/717&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;180&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Protection des sols et des meubles&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;180.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/717/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Protection des sols et des meubles&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+              &lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Salon &lt;span class=&quot;st&quot;&gt;1’418.00&lt;/span&gt; &lt;a class=&quot;renommer&quot; href=&quot;/offres/161/pieces?nom=Salon&quot;&gt;Renommer&lt;/a&gt;&lt;/h5&gt;&lt;span class=&quot;ch&quot;&gt;Qté&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Prix&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Total&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l718&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/718&quot; data-en-feuille-pc&gt;Rebouchage et ponçage des murs&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/718&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;38&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Rebouchage et ponçage des murs&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/718&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;9&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Rebouchage et ponçage des murs&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;342.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/718/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Rebouchage et ponçage des murs&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l719&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/719&quot; data-en-feuille-pc&gt;Peinture des murs, 2 couches&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/719&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;38&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/719&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;28&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;1’064.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/719/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture des murs, 2 couches&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                                      &lt;form class=&quot;note prix-dit&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/719/prix-dicte&quot;&gt;
+              &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+              &lt;span&gt;Prix dicté 25.00, catalogue 28.00&lt;/span&gt;&lt;button class=&quot;okbtn&quot; type=&quot;submit&quot;&gt;&lt;span&gt;Prendre 25.00&lt;/span&gt;&lt;/button&gt;
+            &lt;/form&gt;
+                                &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l723&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/723&quot; data-en-feuille-pc&gt;Laquage des plinthes&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/723&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;1&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Laquage des plinthes&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/723&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;12&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Laquage des plinthes&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;12.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/723/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Laquage des plinthes&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+              &lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Chambre &lt;span class=&quot;st&quot;&gt;1’526.00&lt;/span&gt; &lt;a class=&quot;renommer&quot; href=&quot;/offres/161/pieces?nom=Chambre&quot;&gt;Renommer&lt;/a&gt;&lt;/h5&gt;&lt;span class=&quot;ch&quot;&gt;Qté&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Prix&lt;/span&gt;&lt;span class=&quot;ch&quot;&gt;Total&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l720&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/720&quot; data-en-feuille-pc&gt;Peinture des murs, 2 couches&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/720&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;24&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/720&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;28&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture des murs, 2 couches&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;672.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/720/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture des murs, 2 couches&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l721&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/721&quot; data-en-feuille-pc&gt;Peinture des plafonds, 2 couches&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/721&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;16&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture des plafonds, 2 couches&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/721&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;32&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture des plafonds, 2 couches&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;512.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/721/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture des plafonds, 2 couches&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                                              &lt;/div&gt;
+                            &lt;div class=&quot;row&quot; id=&quot;l722&quot; data-glisse-ligne&gt;
+                  &lt;a class=&quot;nm&quot; href=&quot;/offres/161/lignes/722&quot; data-en-feuille-pc&gt;Peinture anti-moisissure&lt;small&gt;&lt;span class=&quot;tag&quot;&gt;Ligne libre&lt;/span&gt;&lt;/small&gt;&lt;/a&gt;
+          &lt;form class=&quot;q&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/722&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;quantite&quot; value=&quot;9&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; required aria-label=&quot;Quantité, Peinture anti-moisissure&quot; data-envoi-change&gt;
+            &lt;span class=&quot;u&quot;&gt;m²&lt;/span&gt;
+          &lt;/form&gt;
+          &lt;form class=&quot;p&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/722&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;input class=&quot;saisie&quot; name=&quot;prix&quot; value=&quot;38&quot; inputmode=&quot;decimal&quot; autocomplete=&quot;off&quot; placeholder=&quot;Prix&amp;nbsp;?&quot; aria-label=&quot;Prix unitaire en francs, Peinture anti-moisissure&quot; data-envoi-change&gt;
+          &lt;/form&gt;
+          &lt;div class=&quot;tt&quot;&gt;342.00&lt;/div&gt;
+          &lt;form method=&quot;post&quot; action=&quot;/offres/161/lignes/722/supprimer&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+            &lt;button class=&quot;del&quot; type=&quot;submit&quot; aria-label=&quot;Supprimer la ligne Peinture anti-moisissure&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;
+          &lt;/form&gt;
+                                  &lt;div class=&quot;ranger-ligne&quot;&gt;
+            &lt;form class=&quot;ranger&quot; method=&quot;post&quot; action=&quot;/offres/161/lignes/722/produit&quot;&gt;
+              &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;&quot;&gt;
+              &lt;button class=&quot;btn&quot; type=&quot;submit&quot;&gt;Créer le produit&lt;/button&gt;
+            &lt;/form&gt;
+            &lt;a class=&quot;btn&quot; href=&quot;/offres/161/lignes/722/rattacher&quot;&gt;Rattacher à un produit&lt;/a&gt;
+          &lt;/div&gt;
+                                              &lt;/div&gt;
+      &lt;/div&gt;
+  &lt;form class=&quot;ajout-pc pc-seul&quot; method=&quot;get&quot; action=&quot;/offres/161/ajouter&quot; role=&quot;search&quot; data-ajout-pc data-poste=&quot;/offres/161/lignes&quot; data-csrf=&quot;f42445588.SJYLRHhp0cn8NgTv72HvxNCiSnfBOFC0ab_EHgBQSgM.A8ZkLjAeo7y4ZUnb1yucsp_nGg72SjnzUf2WXDc6DkAxpzwdDTGWgqZpSQ&quot;&gt;
+  &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 5v14M5 12h14&quot;/&gt;&lt;/svg&gt;
+  &lt;input name=&quot;q&quot; type=&quot;search&quot; placeholder=&quot;Ajouter une ligne : tapez un produit, puis Entrée&quot; autocomplete=&quot;off&quot; aria-label=&quot;Ajouter une ligne&quot; aria-autocomplete=&quot;list&quot; aria-controls=&quot;ajout-pc-liste&quot; aria-expanded=&quot;false&quot;&gt;
+  &lt;ul id=&quot;ajout-pc-liste&quot; class=&quot;ajout-pc-liste&quot; role=&quot;listbox&quot; hidden&gt;
+    &lt;li role=&quot;option&quot; data-id=&quot;951&quot; data-texte=&quot;deplacement divers deplacement&quot; hidden&gt;&lt;span&gt;Déplacement&lt;/span&gt;&lt;small&gt;60.00 /&amp;nbsp;forfait&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;952&quot; data-texte=&quot;heure de regie divers regie, heure&quot; hidden&gt;&lt;span&gt;Heure de régie&lt;/span&gt;&lt;small&gt;80.00 /&amp;nbsp;h&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;950&quot; data-texte=&quot;echafaudage, montage et location peinture exterieure echafaudage&quot; hidden&gt;&lt;span&gt;Échafaudage, montage et location&lt;/span&gt;&lt;small&gt;17.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;949&quot; data-texte=&quot;peinture de facade, 2 couches peinture exterieure facade&quot; hidden&gt;&lt;span&gt;Peinture de façade, 2 couches&lt;/span&gt;&lt;small&gt;45.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;947&quot; data-texte=&quot;laquage de porte, 2 faces peinture interieure porte&quot; hidden&gt;&lt;span&gt;Laquage de porte, 2 faces&lt;/span&gt;&lt;small&gt;160.00 /&amp;nbsp;pce&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;946&quot; data-texte=&quot;laquage des plinthes peinture interieure plinthes&quot; hidden&gt;&lt;span&gt;Laquage des plinthes&lt;/span&gt;&lt;small&gt;12.00 /&amp;nbsp;m&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;948&quot; data-texte=&quot;peinture anti-moisissure peinture interieure anti-moisissure&quot; hidden&gt;&lt;span&gt;Peinture anti-moisissure&lt;/span&gt;&lt;small&gt;prix&amp;nbsp;? /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;944&quot; data-texte=&quot;peinture des murs, 2 couches peinture interieure murs, dispersion&quot; hidden&gt;&lt;span&gt;Peinture des murs, 2 couches&lt;/span&gt;&lt;small&gt;28.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;945&quot; data-texte=&quot;peinture des plafonds, 2 couches peinture interieure plafond&quot; hidden&gt;&lt;span&gt;Peinture des plafonds, 2 couches&lt;/span&gt;&lt;small&gt;32.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;943&quot; data-texte=&quot;couche d&amp;#039;impression preparation fond, primaire&quot; hidden&gt;&lt;span&gt;Couche d&amp;#039;impression&lt;/span&gt;&lt;small&gt;5.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;941&quot; data-texte=&quot;protection des sols et des meubles preparation bacher, proteger&quot; hidden&gt;&lt;span&gt;Protection des sols et des meubles&lt;/span&gt;&lt;small&gt;180.00 /&amp;nbsp;forfait&lt;/small&gt;&lt;/li&gt;&lt;li role=&quot;option&quot; data-id=&quot;942&quot; data-texte=&quot;rebouchage et poncage des murs preparation reboucher, enduit&quot; hidden&gt;&lt;span&gt;Rebouchage et ponçage des murs&lt;/span&gt;&lt;small&gt;9.00 /&amp;nbsp;m²&lt;/small&gt;&lt;/li&gt;    &lt;li role=&quot;option&quot; data-libre hidden&gt;&lt;span data-libre-texte&gt;&lt;/span&gt;&lt;small&gt;ligne libre&lt;/small&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/form&gt;
+
+      &lt;div class=&quot;totals&quot;&gt;
+    &lt;div class=&quot;r&quot;&gt;&lt;span&gt;Sous-total HT&lt;/span&gt;&lt;span&gt;CHF 3’124.00&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;r&quot;&gt;&lt;span&gt;TVA 8,1 %&lt;/span&gt;&lt;span&gt;CHF 253.04&lt;/span&gt;&lt;/div&gt;    &lt;div class=&quot;r&quot;&gt;&lt;span&gt;Arrondi&lt;/span&gt;&lt;span&gt;CHF 0.01&lt;/span&gt;&lt;/div&gt;    &lt;div class=&quot;r grand&quot;&gt;&lt;span&gt;Total TTC&lt;/span&gt;&lt;span&gt;CHF 3’377.05&lt;/span&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;p class=&quot;muted petit mobile-seul&quot;&gt;Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.&lt;/p&gt;
+  &lt;p class=&quot;aide-clavier pc-seul&quot;&gt;&lt;kbd&gt;Tab&lt;/kbd&gt; champ suivant · &lt;kbd&gt;Entrée&lt;/kbd&gt; ligne suivante · &lt;kbd&gt;J&lt;/kbd&gt; c&#x27;est juste · &lt;kbd&gt;Suppr&lt;/kbd&gt; retirer la ligne (avec Annuler) · &lt;kbd&gt;D&lt;/kbd&gt; dicter une offre&lt;/p&gt;
+&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;Easy Offre&lt;/span&gt;
+  &lt;a href=&quot;/&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe><figcaption>Une offre</figcaption></figure><figure><div class="courriel" style="--a:#1F6B52;--t:#173F32;--tt:#EFF7F3;--o:#FFFFFF">
+<div class="c-tete"><svg width="32" height="32" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="12" fill="#1F6B52"/><path d="M13 15h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H22l-6 5v-5h-3a3 3 0 0 1-3-3V18a3 3 0 0 1 3-3z" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round"/><path d="m18 23.5 4 4 8-8" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Easy Offre</b></div>
+<div class="c-corps"><p class="c-objet">Votre nouveau mot de passe</p><p>Bonjour,</p><p>Pour choisir un nouveau mot de passe, touchez le bouton dans l'heure.</p>
+<p class="c-bouton"><a href="#">Choisir mon mot de passe</a></p>
+<p class="c-petit">Vous n'avez rien demandé&nbsp;? Ignorez ce courriel, votre mot de passe ne change pas.</p></div>
+<div class="c-pied">Easy Offre · notifications@easy-offre.ch</div></div><figcaption>Le courriel</figcaption></figure></div><h2 id="choix">Ton choix</h2><div class="choix" data-cle="M1"><p class="q"><b>M1</b> · La direction de marque</p><div class="opts"><button type="button" data-q="M1" data-v="A">A</button><button type="button" data-q="M1" data-v="B">B</button><button type="button" data-q="M1" data-v="C">C</button></div><textarea data-c="M1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><div class="choix" data-cle="M2"><p class="q"><b>M2</b> · Le logo (bulle de parole et coche)</p><div class="opts"><button type="button" data-q="M2" data-v="Valider">Valider</button><button type="button" data-q="M2" data-v="Pas valider">Pas valider</button></div><textarea data-c="M2" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><div class="choix" data-cle="M3"><p class="q"><b>M3</b> · Moins de blanc : fond teinté, en-tête de couleur, cartes blanches</p><div class="opts"><button type="button" data-q="M3" data-v="Valider">Valider</button><button type="button" data-q="M3" data-v="Pas valider">Pas valider</button></div><textarea data-c="M3" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><h2 id="copier-texte">Copier le texte</h2><p><button id="copier" type="button">Copier le texte</button></p><textarea id="texte" readonly></textarea></div><script>
+(function(){
+  var CLE='maquette-marque-2026-11-18', etat={};
+  try{etat=JSON.parse(localStorage.getItem(CLE)||'{}')}catch(e){etat={}}
+  function garder(){try{localStorage.setItem(CLE,JSON.stringify(etat))}catch(e){}}
+  document.querySelectorAll('.opts button').forEach(function(b){
+    var q=b.dataset.q; if(etat[q]&&etat[q].v===b.dataset.v){b.setAttribute('aria-pressed','true')}
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.opts button[data-q="'+q+'"]').forEach(function(x){x.setAttribute('aria-pressed','false')});
+      b.setAttribute('aria-pressed','true'); etat[q]=etat[q]||{}; etat[q].v=b.dataset.v; garder();
+    });
+  });
+  document.querySelectorAll('textarea[data-c]').forEach(function(t){
+    var q=t.dataset.c; if(etat[q]&&etat[q].c){t.value=etat[q].c}
+    t.addEventListener('input',function(){etat[q]=etat[q]||{}; etat[q].c=t.value; garder();});
+  });
+  document.getElementById('copier').addEventListener('click',function(){
+    var lignes=['Maquette Marque Easy Offre'];
+    document.querySelectorAll('.choix').forEach(function(c){
+      var k=c.dataset.cle, e=etat[k]||{}; lignes.push(k+' : '+(e.v||'(sans réponse)')+(e.c?' · '+e.c:''));
+    });
+    var txt=lignes.join('\\n'), zone=document.getElementById('texte'); zone.value=txt; zone.select();
+    try{navigator.clipboard.writeText(txt)}catch(e){}
+  });
+})();
+</script><script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body></html>

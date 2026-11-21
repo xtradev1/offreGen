@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  {% block entete_html %}{% endblock %}
+  <title>{% block titre %}{{ nom_application }}{% endblock %}</title>
+  <meta name="theme-color" content="#23272D">
+  <link rel="icon" type="image/svg+xml" href="/img/dicta-icone.svg">
+  <link rel="apple-touch-icon" href="/img/dicta-icone-180.png">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/js/app.js" defer></script>
+</head>
+{# data-compte : le navigateur range les dictées à l'abri sous ce compte (sous-chantier 27). #}
+{% set compte_courant = compte() %}
+<body{% if compte_courant %} data-compte="{{ compte_courant }}"{% endif %}>
+  {# Sur PC, une colonne à côté de l'écran (la liste des offres, D12) ; le téléphone ne la montre pas. #}
+  {% block colonne %}{% endblock %}
+  {# « app-seule » : connexion, mot de passe, erreur. Sur grand écran, la feuille connexion.css en fait une carte centrée. #}
+  <div class="app{% if sans_menu ?? false %} app-seule{% endif %}">
+    <header class="bar">{% block retour %}{% endblock %}<h1>{% block entete %}<a href="/decouvrir" class="vers-site" aria-label="{{ nom_application }}, le site"><img class="logo" src="/img/dicta-logo-sombre.svg" alt="" width="177" height="64"></a>{% endblock %}</h1>
+      {#- Au téléphone, le logo à droite de la barre mène au site (Xavier, 2026-11-20) ; sur PC, il est en tête du menu de gauche. -#}
+      {% if not (sans_menu ?? false) %}<a class="vers-site mobile-seul" href="/decouvrir" aria-label="{{ nom_application }}, le site"><img class="logo" src="/img/dicta-logo-sombre.svg" alt="" width="177" height="64"></a>{% endif %}</header>
+    {% include '_ruban_demo.html.twig' %}
+    <main class="screen{% block ecran_classe %}{% endblock %}">{% block contenu %}{% endblock %}</main>
+    {% set msg = messages() %}
+    {% for texte in msg.info ?? [] %}<div class="snack" role="status"><span>{{ texte }}</span></div>{% endfor %}
+    {% for texte in msg.erreur ?? [] %}<div class="snack bad" role="alert"><span>{{ texte }}</span></div>{% endfor %}
+    {# « Annuler » : une ligne supprimée (offre, ligne, designation) ou une offre rangée (action, texte). #}
+    {% for a in msg.annuler ?? [] %}
+      <form class="snack" role="status" method="post" action="{{ a.action ?? ('/offres/' ~ a.offre ~ '/lignes/' ~ a.ligne ~ '/restaurer') }}" data-disparait>
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <span>{% if a.texte is defined %}{{ a.texte }}{% else %}«&nbsp;{{ a.designation }}&nbsp;» supprimée{% endif %}</span><button type="submit">Annuler</button>
+      </form>
+    {% endfor %}
+    {% for id in msg.focus ?? [] %}<span hidden data-focus-ligne="{{ id }}"></span>{% endfor %}
+    <div class="bas">
+      {% block actions %}{% endblock %}
+      {# Sur PC, le menu reste sur tous les écrans (maquette 25, E8) ; au téléphone, un écran sans onglets garde sa
+         seule barre d'actions (pc_seul). « onglet » : la rubrique allumée ; « sans_menu » : connexion, inscription,
+         erreur. Les écrans à onglets remplacent ce bloc. #}
+      {% block onglets %}{% if not (sans_menu ?? false) %}{% include '_onglets.html.twig' with {actif: onglet ?? 'offres', pc_seul: true} %}{% endif %}{% endblock %}
+    </div>
+  </div>
+</body>
+</html>

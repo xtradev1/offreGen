@@ -1,0 +1,64 @@
+/* « Vos prix » : l'écran qui complète les prix d'un catalogue d'exemple, son bandeau sur « Mes offres » et son
+   rappel dans le catalogue (docs/plans/2026-11-19_metiers-demo). Feuille à part, chargée par ces trois écrans
+   avant app.css : chaque règle porte une classe vp- ou .vos-prix, aucune ne redéfinit une règle d'app.css.
+   Couleurs : les variables d'app.css, thème sombre compris. */
+
+.screen.vos-prix { display: flex; flex-direction: column; }
+/* Le message « Annuler » monte sur le bandeau du haut : en bas, le clavier du téléphone le cacherait ; sous le
+   bandeau, il couvrirait « Je ne fais pas ça ». Clair sur le bandeau sombre ; en thème sombre, le message
+   d'app.css l'est déjà. */
+.screen.vos-prix ~ .snack { top: 6px; bottom: auto; z-index: 60; background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--bord), 0 6px 18px rgba(0, 0, 0, .3); }
+@media (prefers-color-scheme: dark) {
+  .screen.vos-prix ~ .snack { background: var(--ink); color: var(--surface); }
+}
+.screen.vos-prix ~ .snack button { min-height: 48px; }
+
+.vp-quitter { margin: 0; display: flex; }
+.vp-quitter .back { background: none; border: 0; font: inherit; color: inherit; cursor: pointer; min-height: 48px; }
+
+.vp-avance { display: flex; align-items: center; gap: 12px; margin: 4px 0 0; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.vp-avance b { color: var(--ink); }
+.vp-barre { flex: 1; min-width: 0; height: 6px; border: 0; border-radius: 3px; background: var(--chip); overflow: hidden; -webkit-appearance: none; appearance: none; }
+.vp-barre::-webkit-progress-bar { background: var(--chip); }
+.vp-barre::-webkit-progress-value { background: var(--ink); border-radius: 3px; }
+.vp-barre::-moz-progress-bar { background: var(--ink); border-radius: 3px; }
+
+/* Ordre à l'écran : catégorie et retrait, nom, champ, prix de la démo ou erreur, « Passer » et « Suivant ». */
+.vp-carte { display: flex; flex-direction: column; gap: 8px; margin: 0; touch-action: pan-y; }
+.vp-carte.vp-glisse { transition: transform .18s; }
+.vp-haut { order: -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; }
+.vp-cat { color: var(--muted); font-size: 14px; }
+.vp-pas { font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); background: transparent; border: 1.5px solid var(--bord); border-radius: 12px; min-height: 48px; padding: 0 12px; white-space: nowrap; cursor: pointer; }
+.vp-nom { font-size: 23px; font-weight: 600; line-height: 1.2; margin: 0; overflow-wrap: anywhere; text-wrap: balance; }
+.vp-prix { display: flex; align-items: baseline; gap: 8px; padding: 8px 14px; border: 2px solid var(--marque); border-radius: 14px; background: var(--surface); }
+.vp-prix.faux { border-color: var(--bad); }
+.vp-prix .chf, .vp-prix .unite { font-size: 15px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.vp-prix input { flex: 1; min-width: 0; width: 100%; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 40px; font-weight: 700; line-height: 1.15; letter-spacing: -1px; font-variant-numeric: tabular-nums; padding: 0; min-height: 48px; }
+.vp-prix input:focus { outline: none; }
+.vp-prix input::placeholder { color: var(--bord); }
+.vp-sous { order: 1; min-height: 48px; }
+.vp-sugg { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 0 12px; border: 0; border-radius: 12px; background: var(--chip); color: var(--ink); font: inherit; font-size: 14.5px; text-align: left; cursor: pointer; }
+.vp-sugg u { font-weight: 600; text-underline-offset: 3px; white-space: nowrap; }
+.vp-err { min-height: 48px; display: flex; align-items: center; margin: 0; font-size: 14px; font-weight: 600; color: var(--bad); background: var(--bad-soft); border-radius: 10px; padding: 8px 12px; }
+.vp-gestes { order: 2; display: flex; flex-direction: row-reverse; gap: 8px; }
+.vp-gestes .btn { flex: 1; min-height: 64px; font-size: 17px; }
+/* Pendant l'envoi d'un geste. */
+.vp-carte.vp-envoi { opacity: .6; }
+.vp-pas:focus-visible, .vp-sugg:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Bilan de fin. */
+.vp-bilan { list-style: none; margin: 16px 0 8px; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; text-align: left; }
+.vp-bilan li { display: flex; justify-content: space-between; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--line); font-size: 15px; }
+.vp-bilan li:first-child { border-top: 0; }
+.vp-bilan b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.vp-lien { display: inline-flex; align-items: center; min-height: 48px; color: var(--ink); font-weight: 600; text-underline-offset: 3px; }
+
+/* Bandeau de « Mes offres », et rappel d'une ligne (accueil après « Plus tard », catalogue). */
+.vp-bandeau { display: flex; flex-direction: column; gap: 6px; background: var(--warn-soft); color: var(--warn); border-radius: 14px; padding: 14px; margin: 8px 0 12px; }
+.vp-bandeau b { font-size: 17px; }
+.vp-bandeau span { font-size: 14px; }
+.vp-bandeau-gestes { display: flex; gap: 8px; margin-top: 6px; }
+.vp-bandeau-gestes form { margin: 0; display: flex; flex: 1; }
+.vp-bandeau-gestes .btn { flex: 1; }
+.vp-rappel { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 0 6px 0 12px; margin: 8px 0; font-size: 14px; font-weight: 600; }
+.vp-rappel a { display: inline-flex; align-items: center; min-height: 48px; padding: 0 10px; color: inherit; font-weight: 700; text-underline-offset: 3px; }

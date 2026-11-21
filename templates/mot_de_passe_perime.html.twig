@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+{% set sans_menu = true %}
+{% block entete_html %}<link rel="stylesheet" href="/css/connexion.css">{% endblock %}
+
+{% block titre %}Lien expiré · {{ nom_application }}{% endblock %}
+{% block entete %}Lien expiré{% endblock %}
+
+{% block contenu %}
+  <p>Ce lien a expiré ou a déjà servi. Un nouveau lien part en une minute.</p>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><a class="btn primary" href="/mot-de-passe/oubli">Demander un nouveau lien</a></div>
+{% endblock %}

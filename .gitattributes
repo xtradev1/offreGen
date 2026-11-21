@@ -10,3 +10,6 @@
 *.woff2 binary
 *.pdf binary
 *.docx binary
+*.ttf binary
+# Licences des polices : octets de la source gardés tels quels, leur empreinte est dans public/fonts/SOURCES.md.
+public/fonts/*.txt -text

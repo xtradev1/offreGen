@@ -1,0 +1,24 @@
+{% extends 'document/_base.html.twig' %}
+{% import 'document/_blocs.html.twig' as b %}
+{# Moderne : un grand titre, les références sur fond teinté, une ligne sur deux dans la teinte, le total de chaque poste
+   sur sa ligne de titre. Le total de l'offre est sur la teinte de l'artisan, en anthracite (Xavier, 2026-11-19 : le
+   bloc noir faisait « gros point noir »). #}
+
+{% block fixes %}{{ b.pied(_context) }}{% endblock %}
+
+{% block corps %}
+  <div class="doc-in">
+    {{ b.tete(_context) }}
+    {{ b.adresse(_context) }}
+    <div class="doc-titre">{{ doc_nom }}</div>
+    <div class="doc-objet c-texte">{{ doc_objet }}</div>
+    {{ b.annulee(_context) }}
+    {{ b.infos(_context, {numero: true, td: 'c-teinte'}) }}
+    {{ b.lignes(_context, {zebre: true, grp_tot: true, grp: 'c-texte'}) }}
+    {{ b.totaux(_context, {tt: 'c-teinte-forte'}) }}
+    <div class="doc-fin">
+      {{ b.conditions(_context) }}
+      {{ b.signatures(_context) }}
+    </div>
+  </div>
+{% endblock %}

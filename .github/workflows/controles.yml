@@ -1,0 +1,84 @@
+# Contrôles de chaque PR et de chaque poussée (docs/DEPLOIEMENT.md, Parcours, étape 1) :
+# tests (test d'isolation route par route et contrôle du SQL hors de src/Donnees compris), analyse statique,
+# audit des dépendances. Aucun secret : la base est créée sur la machine du job, avec des mots de passe jetables.
+name: Contrôles
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Audit quotidien des dépendances, même sans commit (docs/SECURITE.md).
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: controles-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  controles:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      DB_APP_MDP: ci-app-jetable
+      DB_STRUCT_MDP: ci-structure-jetable
+    steps:
+      # actions/checkout v7.0.1, SHA vérifié sur github.com/actions/checkout le 2026-11-18.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      # shivammathur/setup-php 2.40.0, SHA du commit de l'étiquette, vérifié le 2026-11-18.
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962
+        with:
+          php-version: '8.5'
+          extensions: bcmath, intl, pdo_mysql, fileinfo, mbstring
+          coverage: none
+          tools: composer:v2
+
+      - name: MariaDB et ffmpeg
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q mariadb-server ffmpeg
+          sudo service mariadb start
+          sudo mariadb <<SQL
+          CREATE DATABASE offregen_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          CREATE USER 'offregen_app'@'localhost' IDENTIFIED BY '${DB_APP_MDP}';
+          CREATE USER 'offregen_structure'@'localhost' IDENTIFIED BY '${DB_STRUCT_MDP}';
+          GRANT SELECT, INSERT, UPDATE, DELETE ON offregen_test.* TO 'offregen_app'@'localhost';
+          GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER ON offregen_test.* TO 'offregen_structure'@'localhost';
+          SQL
+
+      - name: Environnement de test
+        run: |
+          cp .env.example .env
+          {
+            echo "DB_SOCKET=/run/mysqld/mysqld.sock"
+            echo "DB_NOM=offregen_test"
+            echo "DB_MOT_DE_PASSE=${DB_APP_MDP}"
+            echo "DB_STRUCTURE_MOT_DE_PASSE=${DB_STRUCT_MDP}"
+            echo "TRANSCRIPTION=factice"
+            echo "EXTRACTION=factice"
+            echo "ADRESSES="
+          } > .env.test.local
+
+      - name: Dépendances (versions du composer.lock)
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Audit des dépendances
+        run: composer audit --locked --no-interaction
+
+      - name: Migrations
+        run: APP_ENV=test vendor/bin/doctrine-migrations migrate --no-interaction
+
+      - name: Analyse statique
+        if: github.event_name != 'schedule'
+        run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Tests
+        if: github.event_name != 'schedule'
+        run: APP_ENV=test vendor/bin/phpunit

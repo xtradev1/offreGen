@@ -1,0 +1,10 @@
+{# Étapes du traitement : envoi, transcription, création de l'offre, offre prête. app.js les fait avancer
+   (data-etapes) en interrogeant /enregistrements/{uuid}/etat chaque seconde. #}
+<ol class="etapes" data-etapes{% if uuid is defined and uuid %} data-uuid="{{ uuid }}"{% endif %}>
+  {% for etape in etapes %}
+    <li class="{{ etape.etat }}"><span class="marque" aria-hidden="true"></span><span class="lib">{{ etape.libelle }}</span>
+      {% if loop.first %}<progress max="100" value="0" data-progression hidden></progress>{% endif %}
+    </li>
+  {% endfor %}
+</ol>
+<p class="muted petit centre" data-etapes-message aria-live="polite"></p>

@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+{% set sans_menu = true %}
+{% block entete_html %}<link rel="stylesheet" href="/css/connexion.css">{% endblock %}
+
+{# La même page, que le compte existe ou non : personne ne peut savoir qui est client. #}
+{% block titre %}Lien envoyé · {{ nom_application }}{% endblock %}
+{% block entete %}Lien envoyé{% endblock %}
+
+{% block contenu %}
+  <p>Si un compte existe pour <b>{{ courriel }}</b>, un lien vient d'y partir. Il vaut une heure et ne sert qu'une fois.</p>
+  <p class="muted">Rien reçu dans quelques minutes&nbsp;? Regardez dans les courriels indésirables, puis vérifiez l'adresse et refaites la demande.</p>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><a class="btn" href="/connexion">Retour à la connexion</a></div>
+{% endblock %}

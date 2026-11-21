@@ -1,0 +1,5 @@
+/* Ruban d'une démo créée par l'équipe (N1, Xavier, 2026-11-19 ; « Passer à l'essai » visible en haut, 2026-11-20).
+   Chargé seulement dans une démo. Couleurs de app.css : encre sur carte, au-dessus de 7:1. Le terracotta ne porte
+   qu'une forme, le filet de gauche, comme le veut la charte. */
+.ruban-demo { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 60px; padding: 6px 16px; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: inset 4px 0 0 var(--marque); font-size: 15px; color: var(--ink); }
+.ruban-demo .btn { flex: none; min-height: 48px; font-weight: 600; border-color: var(--ink); }

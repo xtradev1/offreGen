@@ -1,0 +1,177 @@
+{# Les blocs communs aux modèles de la feuille A4. Chaque macro reçoit « d », le contexte du gabarit (_context, avec
+   les variables de _base.html.twig), et « o », ses réglages propres au modèle. dompdf : tableaux, pas de grille.
+   Pas de balise p dans la feuille : sa marge d'office l'emporterait sur celle que pose le modèle. #}
+
+{# Le logo de l'artisan, ou le nom de son entreprise s'il n'en a pas. #}
+{% macro logo(d) %}{% if d.logo_src %}<img class="doc-logo" src="{{ d.logo_src }}" alt="{{ d.r.entreprise }}">{% else %}<span class="doc-nom">{{ d.r.entreprise }}</span>{% endif %}{% endmacro %}
+
+{# Les coordonnées de l'entreprise, une par ligne. #}
+{% macro coord(d) %}<b>{{ d.r.entreprise }}</b>{% for l in d.coord %}<br>{{ l }}{% endfor %}{% if d.r.telephone %}<br>{{ d.r.telephone }}{% endif %}{% if d.r.courrielContact %}<br>{{ d.r.courrielContact }}{% endif %}{% endmacro %}
+
+{# L'en-tête courant : le logo à gauche, les coordonnées à droite. Sa hauteur ne dépend pas du nombre de lignes des
+   coordonnées (document.css, .doc-haut) : l'adresse du client reste à la hauteur de la fenêtre de l'enveloppe. #}
+{% macro tete(d) %}<div class="doc-haut"><table class="doc-tete"><tr><td>{{ _self.logo(d) }}</td><td class="doc-coord">{{ _self.coord(d) }}</td></tr></table></div>{% endmacro %}
+
+{# D'où vient la facture. #}
+{% macro ref(d) %}selon offre n°&nbsp;{{ d.f.offre_numero }} du {{ d.f.offre_cree_le|jour }}{% endmacro %}
+
+{# La ligne d'informations sous le titre : une case par information, les cases vides absentes.
+   o : numero (case « N° » en tête), td (classes des cases). #}
+{% macro infos(d, o = {}) %}
+  {% set cases = (o.numero ?? false) ? [['N°', d.doc_numero]] : [] %}
+  {% set cases = cases|merge([['Date', d.doc_date]]) %}
+  {% if d.facture %}{% set cases = cases|merge([['Échéance', d.f.echeance|jour], ['Référence', _self.ref(d)]]) %}
+  {% else %}
+    {% set cases = cases|merge([["Valable jusqu'au", d.valable_jusqu_au]]) %}
+    {% if d.chantier and d.chantier.adresse %}{% set cases = cases|merge([['Chantier', d.chantier.adresse]]) %}{% endif %}
+    {% if d.r.contactNom %}{% set cases = cases|merge([['Votre contact', d.r.contactNom]]) %}{% endif %}
+  {% endif %}
+  <table class="doc-infos"><tr>{% for case in cases %}<td class="{{ o.td ?? '' }}"><div class="doc-lab">{{ case[0] }}</div>{{ case[1] }}</td>{% endfor %}</tr></table>
+{% endmacro %}
+
+{# L'adresse du client, à la place de la fenêtre de l'enveloppe. #}
+{% macro adresse(d) %}<div class="doc-adresse">{% if d.client_nom %}{{ d.client_nom }}{% for l in d.client_adresse %}<br>{{ l }}{% endfor %}{% else %}&nbsp;{% endif %}</div>{% endmacro %}
+
+{# Le tampon d'une facture annulée (1 C, 2026-11-19), dans le flux : rien ne chevauche. #}
+{% macro annulee(d) %}{% if d.annulee %}<div><span class="doc-annulee">Annulée le {{ d.f.annulee_le|jour }}</span></div>{% endif %}{% endmacro %}
+
+{# Les références du document sur une ligne, pour les modèles sans cases : date, validité ou échéance, chantier.
+   o : lieu (« Delémont, le … »), contact (« votre contact : … »). #}
+{% macro meta(d, o = {}) %}
+  {%- if (o.lieu ?? false) and d.r.localite %}{{ d.r.localite }}, le {% endif %}{{ d.doc_date -}}
+  {%- if d.facture %} · échéance le {{ d.f.echeance|jour }} · {{ _self.ref(d) -}}
+  {%- else %} · valable jusqu'au {{ d.valable_jusqu_au -}}
+    {%- if d.chantier and d.chantier.adresse %} · chantier&nbsp;: {{ d.chantier.adresse }}{% endif -%}
+    {%- if (o.contact ?? false) and d.r.contactNom %} · votre contact&nbsp;: {{ d.r.contactNom }}{% endif -%}
+  {%- endif -%}
+{% endmacro %}
+
+{# Les lignes, par groupe. o : pos (numéros de position), unite (colonne à part), st (sous-total sous le groupe, vrai
+   d'office), grp_tot (total du groupe sur sa ligne de titre), zebre (une ligne sur deux dans la teinte), lettres
+   (chaque groupe porte sa lettre, comme dans le récapitulatif), th, grp et grp_n (classes de couleur).
+   « Général », sur une offre par pièce, n'a ni sous-total ni total sur sa ligne de titre : il se lirait comme le total
+   de l'offre (sous-chantier 28). #}
+{% macro lignes(d, o = {}) %}
+  {% set pos = o.pos ?? false %}{% set unite = o.unite ?? false %}{% set grp_tot = o.grp_tot ?? false %}
+  {% set colonnes = 4 + (pos ? 1 : 0) + (unite ? 1 : 0) %}
+  {% set th = o.th ?? '' %}
+  <table class="doc-lig">
+    <thead><tr>
+      {% if pos %}<th class="doc-pos {{ th }}">Pos.</th>{% endif %}
+      <th class="{{ th }}">Désignation</th><th class="n {{ th }}">Quantité</th>{% if unite %}<th class="doc-u {{ th }}">Un.</th>{% endif %}<th class="n {{ th }}">Prix unit.</th><th class="n {{ th }}">Montant</th>
+    </tr></thead>
+    <tbody>
+      {% for g in d.groupes %}
+        {% set gi = loop.index %}
+        <tr class="doc-grp"><td class="{{ o.grp ?? '' }}" colspan="{{ grp_tot ? colonnes - 1 : colonnes }}">{% if pos %}{{ gi }}&nbsp;&nbsp;{% endif %}{% if o.lettres ?? false %}{{ _self.lettre(loop.index0) }}&nbsp;·&nbsp;{% endif %}{{ g.nom }}</td>{% if grp_tot %}<td class="n {{ o.grp_n ?? '' }}">{% if not ((g.par_piece ?? false) and g.piece is null) %}{{ g.total|montant }}{% endif %}</td>{% endif %}</tr>
+        {% for x in g.lignes %}
+          {% set z = (o.zebre ?? false) and loop.index0 is even ? ' c-teinte' : '' %}
+          <tr>
+            {% if pos %}<td class="doc-pos{{ z }}">{{ gi }}.{{ loop.index }}</td>{% endif %}
+            {# Plusieurs taux : la ligne à un autre taux que l'entreprise le dit (LTVA, art. 26 ; D11). #}
+            <td class="{{ z|trim }}">{{ x.l.designation }}{% if d.t.par_taux|length > 1 and (x.l.tva_pour_dix_mille ?? d.t.taux) != d.t.taux %}<span class="doc-tva"> · TVA {{ x.l.tva_pour_dix_mille|taux }}</span>{% endif %}</td>
+            <td class="n{{ z }}">{{ x.l.quantite_milliemes|quantite }}{% if not unite %}&nbsp;{{ x.l.unite }}{% endif %}</td>
+            {% if unite %}<td class="doc-u{{ z }}">{{ x.l.unite }}</td>{% endif %}
+            <td class="n{{ z }}">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.l.prix_centimes|montant }}{% endif %}</td>
+            <td class="n{{ z }}">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.total|montant }}{% endif %}</td>
+          </tr>
+        {% endfor %}
+        {# « Général » n'a pas de sous-total : « Total général » se confondrait avec le total de l'offre (sous-chantier 28). #}
+        {% if (o.st ?? true) and not grp_tot and g.lignes|length > 1 and not ((g.par_piece ?? false) and g.piece is null) %}<tr class="doc-st"><td colspan="{{ colonnes - 1 }}">Total {{ g.nom|lower }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+{% endmacro %}
+
+{# La lettre d'un poste, de A à Z ; au-delà, son rang. #}
+{% macro lettre(rang) %}{{ rang < 26 ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'|slice(rang, 1) : rang + 1 }}{% endmacro %}
+
+{# Les lignes de Marge : le poste et son total dans la marge de gauche. Sans cellule fusionnée : dompdf décale les
+   colonnes quand une fusion passe d'une page à l'autre (essai du 2026-11-20). Le nom du poste est sur sa première
+   ligne, son total sur la deuxième (sous le nom s'il n'a qu'une ligne). #}
+{% macro lignes_marge(d) %}
+  <table class="doc-lig">
+    <thead><tr><th class="doc-po">Poste</th><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix unit.</th><th class="n">Montant</th></tr></thead>
+    <tbody>
+      {% for g in d.groupes %}
+        {% set avec_total = not ((g.par_piece ?? false) and g.piece is null) %}
+        {% for x in g.lignes %}
+          <tr class="{{ loop.first ? 'doc-prem' : '' }}{{ loop.last ? ' doc-der' : '' }}">
+            <td class="doc-po">{% if loop.first %}<b class="c-texte">{{ g.nom }}</b>{% if loop.last and avec_total %}<br>{{ g.total|montant }}{% endif %}{% elseif loop.index == 2 and avec_total %}{{ g.total|montant }}{% endif %}</td>
+            <td>{{ x.l.designation }}{% if d.t.par_taux|length > 1 and (x.l.tva_pour_dix_mille ?? d.t.taux) != d.t.taux %}<span class="doc-tva"> · TVA {{ x.l.tva_pour_dix_mille|taux }}</span>{% endif %}</td>
+            <td class="n">{{ x.l.quantite_milliemes|quantite }}&nbsp;{{ x.l.unite }}</td>
+            <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.l.prix_centimes|montant }}{% endif %}</td>
+            <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.total|montant }}{% endif %}</td>
+          </tr>
+        {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+{% endmacro %}
+
+{# Les totaux. o : classe (du tableau, « doc-totaux » d'office), tt (classes de couleur des cellules du total). #}
+{% macro totaux(d, o = {}) %}
+  {% set t = d.t %}{% set ttc = d.avec_tva ? ' TTC' : '' %}
+  {% set rangs = [['Sous-total' ~ (d.avec_tva ? ' HT' : ''), t.ht|montant]] %}
+  {% if t.par_taux|length > 1 %}{% for g in t.par_taux %}{% set rangs = rangs|merge([['TVA ' ~ g.taux|taux ~ ' sur ' ~ g.ht|montant, g.tva|montant]]) %}{% endfor %}
+  {% elseif d.avec_tva %}{% set rangs = rangs|merge([['TVA ' ~ t.par_taux[0].taux|taux, t.tva|montant]]) %}{% endif %}
+  {% if t.arrondi != 0 %}{% set rangs = rangs|merge([['Arrondi', t.arrondi|montant]]) %}{% endif %}
+  {% if t.deja > 0 %}{% set rangs = rangs|merge([['Total' ~ ttc, t.ttc|montant], ['Acomptes déjà facturés', t.deja|montant, true]]) %}{% endif %}
+  <table class="{{ o.classe ?? 'doc-totaux' }}">
+    {% for rang in rangs %}<tr{% if loop.last %} class="doc-av"{% endif %}><td>{{ rang[0] }}</td><td class="n">{% if rang[2] ?? false %}−&nbsp;{% endif %}{{ rang[1] }}</td></tr>{% endfor %}
+    <tr class="doc-tt"><td class="{{ o.tt ?? '' }}">{{ t.deja > 0 ? 'À payer' : 'Total' ~ ttc }}</td><td class="n {{ o.tt ?? '' }}">{{ (t.deja > 0 ? t.a_payer : t.ttc)|chf }}</td></tr>
+  </table>
+{% endmacro %}
+
+{# Les conditions de l'offre, ou les mentions de la facture. o : pile (l'une sous l'autre, pour une colonne étroite),
+   delais (faux : le modèle dit ailleurs le début et la durée des travaux). #}
+{% macro conditions(d, o = {}) %}
+  {% set liste %}
+    {% if d.facture %}
+      {% if d.annulee %}<li><b>Facture annulée le {{ d.f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b></li>{% else %}
+      <li>Payable jusqu'au {{ d.f.echeance|jour }}{% if d.qr %} avec la section de paiement {{ (d.qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}. Merci de votre confiance.</li>{% endif %}
+      <li>Montants en francs suisses{% if d.avec_tva %}, TVA comprise dans le total{% endif %}.</li>
+    {% else %}
+      <li>Paiement&nbsp;: {{ d.r.conditionsPaiement }}</li>
+      {# Texte libre de l'artisan : son point final, s'il en a mis un, ne double pas le nôtre. #}
+      {% set debut = d.chantier ? d.chantier.debut|trim('.', 'right') : '' %}{% set duree = d.chantier ? d.chantier.duree|trim('.', 'right') : '' %}
+      {% if (o.delais ?? true) and (debut or duree) %}<li>{% if debut %}Début des travaux&nbsp;: {{ debut }}.{% endif %}{% if debut and duree %} {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}.{% endif %}</li>{% endif %}
+      <li>Offre valable jusqu'au {{ d.valable_jusqu_au }}. Prix en francs suisses{% if d.avec_tva %}, TVA comprise dans le total{% endif %}.</li>
+    {% endif %}
+  {% endset %}
+  {# Une facture n'a pas de conditions à accepter : ses deux mentions vont sans titre. #}
+  {% set titre %}{% if not d.facture %}<div class="doc-lab">Conditions</div>{% endif %}{% endset %}
+  {% set non %}{% if d.chantier and d.chantier.nonCompris %}<div class="doc-lab">Non compris</div><ul>{% for x in d.chantier.nonCompris %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}{% endset %}
+  {% if o.pile ?? false %}
+    <div class="doc-condp">{{ titre }}<ul>{{ liste }}</ul>{{ non }}</div>
+  {% else %}
+    <table class="doc-cond"><tr><td>{{ titre }}<ul>{{ liste }}</ul></td>{% if non|trim %}<td>{{ non }}</td>{% endif %}</tr></table>
+  {% endif %}
+  {# Facture d'une page : la section de paiement prend la place du pied (document_pdf.html.twig) ; le nom et le
+     numéro IDE de l'entreprise, que le pied portait, se disent ici. L'IBAN est dans la section. #}
+  {% if d.facture and d.qr and (not d.pdf or (d.qr_place ?? null) in ['essai', 'bas']) %}<div class="doc-mentions">{{ d.r.entreprise }}{% if d.r.ide %} · {{ d.r.ide }}{% if d.avec_tva %} TVA{% endif %}{% endif %}</div>{% endif %}
+{% endmacro %}
+
+{# La place du client pour signer l'offre. #}
+{% macro accord() %}<div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div>{% endmacro %}
+
+{# Les deux signatures de l'offre : l'entreprise, puis le client. Une facture ne se signe pas. #}
+{% macro signatures(d) %}
+  {% if not d.facture %}
+    <table class="doc-sign"><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom">{{ d.r.contactNom }}</div><div class="doc-sig-l"></div><div class="doc-sig-s">{{ d.r.entreprise }}{% if d.r.localite %}, {{ d.r.localite }}{% endif %}, le {{ d.doc_date }}</div></td>
+      <td>{{ _self.accord() }}</td>
+    </tr></table>
+  {% endif %}
+{% endmacro %}
+
+{# « Page n / N » : le numéro vient du compteur de dompdf (document.css), le total du premier rendu (d.pages). À l'écran,
+   la feuille n'a pas de pages. #}
+{% macro page(d) %}{% if d.pdf %}<span class="doc-page">{{ d.pages ?? 1 }}</span>{% endif %}{% endmacro %}
+
+{# Ce que le pied dit de l'entreprise : nom, IDE, IBAN. Une facture ne répète pas l'IBAN des réglages : le sien, figé à
+   l'émission, est dans sa section de paiement. #}
+{% macro mentions(d) %}{{ d.r.entreprise }}{% if d.r.ide %} · {{ d.r.ide }}{% if d.avec_tva %} TVA{% endif %}{% endif %}{% if d.r.iban and not d.facture %} · IBAN {{ d.r.iban|iban }}{% endif %}{% endmacro %}
+
+{# Le pied de page, répété sur chaque page du PDF. #}
+{% macro pied(d) %}<table class="doc-pied"><tr><td>{{ _self.mentions(d) }}</td><td class="n">{{ _self.page(d) }}</td></tr></table>{% endmacro %}

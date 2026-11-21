@@ -1,0 +1,29 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Donne ou retire le droit administrateur d'un compte (pages d'administration, décision A1 du 2026-11-18).
+// Usage : bin/administrateur <courriel> oui|non
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$courriel = $argv[1] ?? '';
+$choix = $argv[2] ?? '';
+if ($courriel === '' || !in_array($choix, ['oui', 'non'], true)) {
+    fwrite(STDERR, "Usage : bin/administrateur <courriel> oui|non\n");
+    exit(2);
+}
+
+try {
+    Conteneur::depuisEnvironnement(dirname(__DIR__))->comptes()->changerAdministrateur($courriel, $choix === 'oui');
+} catch (\InvalidArgumentException $e) {
+    fwrite(STDERR, $e->getMessage() . "\n");
+    exit(1);
+}
+echo $choix === 'oui' ? "$courriel est administrateur.\n" : "$courriel n'est plus administrateur.\n";

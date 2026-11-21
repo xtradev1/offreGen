@@ -43,8 +43,10 @@ Sans objet seulement pour une application à client unique, avec la raison écri
 - [ ] Journal des connexions et journal des modifications, séparés et exportables.
 - [ ] Données sensibles chiffrées au repos quand elles le justifient. Clés hors de la base.
 - [ ] Sauvegardes chiffrées, sur un support hors de l'hébergement, restauration testée et chronométrée.
-- [ ] Données réelles uniquement en production. Le développement et le test utilisent des données fictives.
+- [ ] Données réelles uniquement en production. Le développement et le test utilisent des données fictives. Exception : le banc de mesure du chantier « de la voix à l'offre » (entorse du 2026-11-07 au roadmap), aux conditions écrites dans `docs/plans/2026-11-07_voix-offre/SPEC.md`.
 - [ ] Fichiers audio importés : type vérifié sur le contenu et non sur le nom, taille plafonnée, stockés hors de `public/`, supprimés selon une durée de conservation écrite.
+- [x] Dictée à l'abri dans le navigateur (sous-chantier 27, 2026-11-18) : l'audio d'une dictée est gardé en clair dans le stockage du navigateur (IndexedDB) du téléphone, jusqu'à ce que son offre soit prête, puis effacé. Rangé sous le compte qui l'a faite : un autre compte sur le même appareil ne le voit pas (test cliqué). Limites connues : quiconque tient le téléphone déverrouillé peut le lire avec les outils du navigateur ; la déconnexion ne l'efface pas (une dictée non envoyée serait perdue) ; Safari peut effacer ce stockage après 7 jours sans visite. À écrire dans la politique de confidentialité.
+- [x] Liens d'accès par courriel : jeton de 256 bits, seule son empreinte SHA-256 est en base, une heure (oubli) ou 7 jours (accès), un seul usage, 3 demandes par heure et par compte, même réponse que le compte existe ou non, courriel parti après la réponse. Changer le mot de passe ferme les sessions des autres appareils et les liens encore ouverts (`tests/Compte/LiensAccesTest.php`). Le jeton est dans l'adresse de la page : il passe dans le journal d'accès du serveur web, d'où la durée courte et l'usage unique.
 
 ## 6. Modèles de langue
 Sans objet si l'application n'appelle aucun modèle.
@@ -53,6 +55,13 @@ Sans objet si l'application n'appelle aucun modèle.
 - [ ] Une action irréversible ou sortante demande une confirmation humaine. Supprimer une ligne d'offre se rattrape : une annulation peut remplacer la confirmation, selon les tests d'utilisation. Envoyer une offre au client est sortant : confirmation.
 - [ ] Le texte libre (voix, documents, courriels) peut contenir des instructions : il ne donne jamais de droit.
 - [ ] Fournisseur, lieu de traitement, conservation et entraînement vérifiés dans ses conditions, puis écrits ici.
+
+## 6 bis. Registre des adresses (swisstopo)
+- [x] Choix de Xavier du 2026-11-13 (variante B) : les adresses tapées partent vers le service de recherche de geo.admin.ch (swisstopo, Confédération), pour proposer et vérifier une adresse.
+- [x] Notre serveur fait l'appel, jamais le navigateur : swisstopo reçoit le texte de l'adresse, sans le nom du client ni l'adresse IP de l'artisan. Rien n'est gardé ni journalisé chez nous (`RegistreSwisstopo`).
+- [x] Au plus 20 appels par session et par minute (`AdresseControleur::APPELS_PAR_MINUTE`), testé.
+- [x] Les tests n'appellent jamais swisstopo, même si le `.env` le demande (`BaseDeTest::env`, testé).
+- [ ] Le mentionner dans la politique de confidentialité, avant la mise en production (décision et texte de Xavier).
 
 ## 7. Preuve automatique
 - [ ] `scripts/securite/sonde-exposition.sh` tourne à chaque déploiement avec ses fichiers témoins. Une sonde rouge bloque la suite.

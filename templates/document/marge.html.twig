@@ -1,0 +1,22 @@
+{% extends 'document/_base.html.twig' %}
+{% import 'document/_blocs.html.twig' as b %}
+{# Marge : le nom de chaque poste et son total dans la marge de gauche, les lignes à droite. #}
+
+{% block fixes %}{{ b.pied(_context) }}{% endblock %}
+
+{% block corps %}
+  <div class="doc-in">
+    {{ b.tete(_context) }}
+    <div class="doc-filet"></div>
+    {{ b.adresse(_context) }}
+    <div class="doc-titre"><span class="c-texte">{{ doc_nom }} n°&nbsp;{{ doc_numero }}</span> · {{ doc_objet }}</div>
+    {{ b.annulee(_context) }}
+    {{ b.infos(_context) }}
+    {{ b.lignes_marge(_context) }}
+    {{ b.totaux(_context) }}
+    <div class="doc-fin">
+      {{ b.conditions(_context) }}
+      {{ b.signatures(_context) }}
+    </div>
+  </div>
+{% endblock %}

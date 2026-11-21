@@ -1,0 +1,24 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Envoyer la démo par message (E2 de Xavier, 2026-11-19 : WhatsApp ou courriel). Le lien émis ici vaut 24 heures et
+   sert une seule fois. Les deux envois sont de simples liens : le message part de l'appareil du commercial. #}
+{% block retour %}<a class="back" href="/admin/artisans/{{ compte.id }}">{{ compte.entreprise }}</a>{% endblock %}
+{% block sous %}<p>Démo{% if metier %} · {{ metier }}{% endif %}</p>{% endblock %}
+
+{% block contenu %}
+  <div class="carte-admin">
+    <div class="champ">
+      <label for="message">Message</label>
+      <textarea id="message" rows="7" readonly>{{ message }}</textarea>
+    </div>
+    <a class="btn primary large" href="https://wa.me/?text={{ message|url_encode }}" target="_blank" rel="noopener noreferrer">Envoyer par WhatsApp</a>
+    <a class="btn large" href="mailto:{{ (compte.courriel_saisi ?? '')|url_encode }}?subject={{ ('Votre démo ' ~ nom_application)|url_encode }}&amp;body={{ message|url_encode }}">Envoyer par courriel</a>
+    <button class="btn large" type="button" data-copier="#message" hidden>Copier le message</button>
+    <p class="muted">Le lien est valable 24&nbsp;heures et sert une seule fois.</p>
+    <a class="btn large pc-seul" href="/admin/artisans/{{ compte.id }}">Terminé</a>
+  </div>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar mobile-seul"><a class="btn" href="/admin/artisans/{{ compte.id }}">Terminé</a></div>
+{% endblock %}

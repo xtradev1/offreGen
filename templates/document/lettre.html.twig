@@ -1,0 +1,43 @@
+{% extends 'document/_base.html.twig' %}
+{% import 'document/_blocs.html.twig' as b %}
+{# Lettre : l'offre écrite comme un courrier, en empattements, pour une enveloppe à fenêtre à gauche. Les conditions
+   se disent en phrases après le tableau. Formule d'appel, début et fin : réglés dans « Ma marque » (PhrasesLettre). #}
+
+{% block fixes %}{{ b.pied(_context) }}{% endblock %}
+
+{% block corps %}
+  <div class="doc-in">
+    {{ b.tete(_context) }}
+    <table class="doc-env"><tr>
+      <td><div class="doc-exp">{{ r.entreprise }}{% for l in coord %} · {{ l }}{% endfor %}</div>{{ b.adresse(_context) }}</td>
+      <td class="doc-lieu">{% if r.localite %}{{ r.localite }}, le {% else %}Le {% endif %}{{ (facture ? f.date_facture : (offre.modifiee_le ?? offre.cree_le))|date_longue }}</td>
+    </tr></table>
+    <div class="doc-concerne"><span class="c-texte">{{ doc_nom }} n°&nbsp;{{ doc_numero }}</span>&nbsp;: {{ doc_objet }}</div>
+    {{ b.annulee(_context) }}
+    {# Phrases réglées par l'artisan (Compte\PhrasesLettre, réponses de Xavier du 2026-11-20) ; après elles, ce que
+       l'application tire de l'offre (L2) : la visite et le chantier, ou l'offre d'où vient la facture. #}
+    <div class="doc-txt">{{ r.lettre.appel(client_nom) }}</div>
+    {% if facture %}
+      <div class="doc-txt">{{ r.lettre.texte('facture_debut', client_nom) }} Selon notre offre n°&nbsp;{{ f.offre_numero }} du {{ f.offre_cree_le|jour }}.</div>
+    {% else %}
+      <div class="doc-txt">{{ r.lettre.texte('offre_debut', client_nom) }}{% if chantier and chantier.visite %} Visite du {{ chantier.visite|date_longue }}.{% endif %}{% if chantier and chantier.adresse %} Chantier&nbsp;: {{ chantier.adresse|trim('.', 'right') }}.{% endif %}</div>
+    {% endif %}
+    {{ b.lignes(_context) }}
+    {{ b.totaux(_context) }}
+    <div class="doc-fin">
+      {% if facture %}
+        <div class="doc-txt doc-apres">{% if annulee %}<b>Facture annulée le {{ f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b>{% else %}Payable jusqu'au {{ f.echeance|jour }}{% if qr %} avec la section de paiement {{ (qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}.{% endif %} Montants en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.</div>
+        <div class="doc-txt">{{ r.lettre.texte('facture_fin', client_nom) }}</div>
+        {% if qr and (not pdf or (qr_place ?? null) in ['essai', 'bas']) %}<div class="doc-mentions">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if avec_tva %} TVA{% endif %}{% endif %}</div>{% endif %}
+      {% else %}
+        {% set debut = chantier ? chantier.debut|trim('.', 'right') : '' %}{% set duree = chantier ? chantier.duree|trim('.', 'right') : '' %}
+        <div class="doc-txt doc-apres">{% if debut %}Début des travaux&nbsp;: {{ debut }}. {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}. {% endif %}Paiement&nbsp;: {{ r.conditionsPaiement|first|lower }}{{ r.conditionsPaiement|slice(1) }} Cette offre est valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.{% if chantier and chantier.nonCompris %} {{ chantier.nonCompris|length > 1 ? 'Ne sont pas compris' : "N'est pas compris" }}&nbsp;: {% for x in chantier.nonCompris %}{{ x|trim('.', 'right') }}{% if not loop.last %}&nbsp;; {% endif %}{% endfor %}.{% endif %}</div>
+        <div class="doc-txt">{{ r.lettre.texte('offre_fin', client_nom) }}</div>
+      {% endif %}
+      <table class="doc-sign"><tr>
+        <td>{{ r.entreprise }}<div class="doc-sig-nom">{{ r.contactNom }}</div></td>
+        <td>{% if not facture %}{{ b.accord() }}{% endif %}</td>
+      </tr></table>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+  <meta charset="utf-8">
+  <title>{% if f is defined %}Facture {{ f.numero }}{% else %}Offre {{ offre.numero }}{% endif %}, {{ r.entreprise }}</title>
+  <style>{{ css|raw }}</style>
+  {# qr_place, pour une facture avec sa section de paiement : « essai » (premier rendu, qui compte les pages), « bas »
+     (la section au bas de la page 1) ou « apart » (sur sa page). Facture d'une page : la marge basse de la page est
+     celle de la section et de sa consigne « À détacher » (110 mm, soit 415.75 px), qui prend la place du pied
+     (document.css). #}
+  {% set place = qr_place ?? null %}
+  {% if place in ['essai', 'bas'] %}<style>@page { margin-bottom: 415.75px; }</style>{% endif %}
+</head>
+{# La classe du modèle est sur body : pied, bande et colonne sortent de la feuille (document/_base.html.twig). #}
+<body class="pdf m-{{ m.modele }}{% if place %} qr-{{ place }}{% endif %}">
+  {% include '_document.html.twig' %}
+</body>
+</html>

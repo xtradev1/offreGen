@@ -1,0 +1,64 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Transforme un compte de démonstration en compte d'essai : les deux offres d'exemple et leurs clients inventés
+// partent, les produits d'exemple dont le prix n'a pas changé repartent au prix 0, ce que l'artisan a dicté, créé
+// ou modifié reste. Le compte reçoit N offres (10 par défaut) en plus de celles déjà dictées.
+// Le compte prend l'adresse de l'artisan, à la place de l'adresse inventée de la démonstration ; le mot de passe
+// de la démonstration ne sert plus et les sessions ouvertes tombent. Avec --acces, l'artisan reçoit un courriel
+// et choisit son mot de passe (lien valable 7 jours) ; sans --acces, un mot de passe neuf s'affiche une seule fois.
+// Refuse un compte qui n'est pas de démonstration, et une démonstration posée avant les marques d'exemple.
+// Attention : les visites dictées sur cette démonstration restent dans l'essai, quel que soit le visiteur.
+// Usage : bin/passer-en-essai <courriel de la démo> <courriel de l'artisan> [--offres=N] [--acces]
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$positionnels = [];
+$offres = 10;
+$acces = false;
+foreach (array_slice($argv, 1) as $arg) {
+    if ($arg === '--acces') {
+        $acces = true;
+    } elseif (preg_match('/^--offres=(\d{1,6})$/', $arg, $m) === 1) {
+        $offres = (int) $m[1];
+    } else {
+        $positionnels[] = $arg;
+    }
+}
+if (count($positionnels) !== 2) {
+    fwrite(STDERR, "Usage : bin/passer-en-essai <courriel de la démo> <courriel de l'artisan> [--offres=N] [--acces]\n");
+    exit(2);
+}
+[$demo, $courriel] = $positionnels;
+
+try {
+    $c = Conteneur::depuisEnvironnement(dirname(__DIR__));
+    $bilan = $c->comptes()->passerEnEssai($demo, $courriel, $offres);
+} catch (\InvalidArgumentException | \RuntimeException $e) {
+    fwrite(STDERR, $e->getMessage() . "\n");
+    exit(1);
+}
+
+echo "$demo est devenu le compte d'essai de $courriel : {$bilan['offres']} offre(s) d'exemple et {$bilan['clients']} client(s) d'exemple retirés, "
+    . "{$bilan['produits']} produit(s) d'exemple remis au prix 0, {$bilan['dictees']} visite(s) dictée(s) gardée(s), $offres offre(s) à dicter.\n";
+if (!$acces) {
+    echo "Mot de passe, affiché une seule fois : {$bilan['mot_de_passe']}\n";
+    exit(0);
+}
+try {
+    $c->liensAcces()->envoyerAcces($courriel);
+} catch (\Throwable $e) {
+    // Le passage est fait : il suffit de relancer l'envoi par « mot de passe oublié » une fois la messagerie réparée.
+    fwrite(STDERR, "Courriel d'accès non envoyé : {$e->getMessage()}\nL'artisan peut demander un lien depuis « Mot de passe oublié ».\n");
+    exit(1);
+}
+echo $c->messagerieReelle()
+    ? "Courriel d'accès envoyé (lien valable 7 jours).\n"
+    : "Courriel d'accès écrit dans var/courriels, rien n'est parti : MESSAGERIE n'est pas « smtp » dans le .env.\n";
