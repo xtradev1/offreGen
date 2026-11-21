@@ -5,10 +5,10 @@
 - Goal : application d'offres vocales pour artisans. L'artisan décrit les travaux à voix haute pendant la visite, l'application produit une offre à partir de son catalogue, il la corrige à la voix ou à l'écran.
 - Owner : Xavier Frelechoz (XtraDev)
 - Created : 2026-11-05
-- Last updated : 2026-11-18
+- Last updated : 2026-11-21
 
 ## Executive summary
-- L'application tourne de bout en bout sur le site de test (`easy-offres.xtradev.ch`) : dictée ou import, Whisper et Qwen 27B chez Infomaniak, offre rangée par pièce, corrections, catalogue, clients, PDF, facture avec QR-facture. 509 tests verts, PHPStan sans erreur.
+- L'application tourne de bout en bout sur le site de test (`easy-offres.xtradev.ch`) : dictée ou import, Whisper et Qwen 27B chez Infomaniak, offre rangée par pièce, corrections, catalogue, clients, PDF, facture avec QR-facture. 981 tests verts le 2026-11-20, PHPStan sans erreur. La page d'accueil de Dicta est en ligne sur le test (`/`, `/decouvrir`).
 - Tout est sur la branche `chantier-voix-offre` (PR #3, ouverte le 12.11, 77 commits hors de `main`). Rien n'est recetté par Xavier : une recette regroupée l'attend.
 - Chantier en cours : la mise en production (`docs/plans/2026-11-17_mise-en-production/`), 13 points bloquants, plan en 9 étapes. Première production visée : comptes d'essai plafonnés créés par Xavier ; le paiement suit vite (demande de Xavier du 18.11).
 - Premier artisan intéressé : Luigi, peintre, 20 offres d'essai (`docs/terrain/2026-11-17_luigi-peintre.md`).
@@ -21,9 +21,7 @@
 - Règles opposables : `CODING_RULES.md`, `docs/SECURITE.md`, `docs/DEPLOIEMENT.md`.
 
 ## Decisions
-- Décisions du 2026-11-05 au 2026-11-07 (pile, socle, maquette, environnement) → `docs/roadmap-archive-decisions.md`.
-- [2026-11-06] **Entorse au socle :** audit externe reporté. Xavier : « tant que l'app ne tourne pas chez au moins 4-5 artisans ça ne vaut pas la peine ». Déclencheur : l'application en service chez 4 à 5 artisans. Le pilote tourne donc avec de vraies données sans audit externe.
-- [2026-11-07] Connexion réelle dès le squelette, et comptes de démo pour présenter offreGen et le faire tester (Xavier). Détail dans `docs/plans/2026-11-07_voix-offre/SPEC.md`.
+- Décisions du 2026-11-05 au 2026-11-07 (pile, socle, maquette, environnement, report de l'audit externe) → `docs/roadmap-archive-decisions.md`.
 - [2026-11-07] Traitement d'un audio : démarré tout de suite après l'import, puis cron chaque minute pour vérifier et terminer ce qui n'a pas été fait (Xavier).
 - [2026-11-07] **Entorse au socle :** de vraies visites au banc de mesure, avec l'accord des clients, en plus de visites rejouées (Xavier : « on peut bosser avec de vraies données, c'est le mieux »). Compensations : stockage dans WSL hors dépôt et hors SynologyDrive, envoi seulement à Infomaniak, Claude ne lit ni l'audio ni la transcription d'une vraie visite, suppression en fin de banc. Conditions dans la SPEC du chantier.
 - [2026-11-07] Dépendances ajoutées : `symfony/security-core` et `symfony/password-hasher` figées en 7.4, parce que `security-csrf` 7.4 les tirait en 8.1, hors de la branche LTS. `twig/twig` 3, PHPUnit 12, PHPStan 2.
@@ -42,6 +40,8 @@
 - [2026-11-18] Mise en production : relecture de la connexion et de l'isolation par Fable acceptée par Xavier (« oui va pour fable pour de la relecture »), en plus de la revue par Opus. Domaine envisagé par Xavier : `easy-offre.ch`. Le paiement doit suivre vite la première production.
 - [2026-11-18] Identité (Xavier) : le produit s'appelle **Dicta** (`dicta.ch` réservé d'après sa charte), en-tête et boutons anthracite `#23272D`, terracotta `#C4552D` en accent, mot « offre », logo « le cône et la bulle », encore modifiable. Charte, verbatim, jetons CSS et logos dans `docs/identite/`. Reste à l'appliquer à l'application (feuille de style en bleu, nom « offreGen » dans les courriels).
 - [2026-11-19] Identité appliquée à l'application (branche `chantier-voix-offre`, non déployée) : couleurs et polices de la charte dans `app.css`, nom par défaut « Dicta » (`APP_NOM`). Dépendance ajoutée : polices Archivo et Inter (licence OFL) hébergées dans `public/fonts/`, parce que la CSP refuse toute police externe. Les tailles de `CODING_RULES.md` (64, 56, 48 px) priment sur la charte, qui a été corrigée.
+- [2026-11-20] Page d'accueil de Dicta (variante B, version 3) servie à `/` au visiteur sans session, à `/decouvrir` pour tous ; le logo de l'application y mène. Formulaire « Bon pour essai » : le courriel du visiteur part à `info@xtradev.ch` tant que l'inscription n'existe pas. Premier mois offert, puis 44.90 HT par mois. Détail : `docs/plans/2026-11-17_mise-en-production/ETAT.md`.
+- [2026-11-20] **Affirmations maintenues par Xavier contre l'avis du relecteur :** « 100% » dans la croix du tampon, « 100 % conçue en Suisse », « l'une des seules applications de ce genre dont l'IA tourne en Suisse ». À faire relire par un juriste avant la production, avec la croix suisse.
 
 ## Current state
 ### Done
@@ -50,7 +50,7 @@
 - [x] Inventaire de ce qui manque avant la production, plan en 9 étapes, recette regroupée (`docs/plans/2026-11-17_mise-en-production/`).
 
 ### In progress
-- [ ] Mise en production : étapes 1 et 2 faites, contrôles GitHub en place. Le 18.11 : courriels, liens d'accès et mot de passe, droit administrateur, purge écrite et éteinte, alertes, dictée à l'abri, livrés en code et revus (588 tests), commit `475ef57` déployé sur le test (`PLAN-completer.md`, `REVUE.md`). Écrans en attente de la marque (gate visuel).
+- [ ] Mise en production : étapes 1 et 2 faites, contrôles GitHub en place. Le 18.11 : courriels, liens d'accès et mot de passe, droit administrateur, purge écrite et éteinte, alertes, dictée à l'abri, livrés en code et revus (588 tests), commit `475ef57` déployé sur le test (`PLAN-completer.md`, `REVUE.md`). Écrans en attente de la marque (gate visuel). Le 20.11 : page d'accueil de Dicta validée par Xavier (« je te valide le tout ») et déployée sur le test, connexion en carte sur grand écran, `/decouvrir`, logo de l'application vers le site (`2091e9b`).
 
 ### Next
 - [ ] Recette regroupée par Xavier sur le test (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
@@ -59,6 +59,7 @@
 - [ ] Paiement (Stripe), juste après la première production : compte Stripe et situation TVA de Xavier.
 - [ ] Corpus de vraies dictées (sous-chantier 29) ; journal des appels IA (sous-chantier 26).
 - [ ] Convention de sous-traitance (art. 9 LPD) prête avant le premier artisan pilote.
+- [ ] Page d'accueil avant la production : pages légales (mentions, protection des données, conditions), vraies vignettes des douze modèles, réglage d'envoi de courriels du test (sinon les demandes d'essai ne partent pas).
 
 ### Blocked
 - [ ] Mesure de la qualité réelle (sous-chantier 29).
@@ -88,6 +89,9 @@
 - Title : Mise en production
 - Link : docs/plans/2026-11-17_mise-en-production/
 - Notes : `INVENTAIRE.md` (A1 à A13, B, C, D), `PLAN.md`, `RECETTE.md`, `ETAT.md`.
+- Title : Page d'accueil de Dicta, maquette v3
+- Link : docs/plans/2026-11-17_mise-en-production/MAQUETTE-site-v3.html
+- Notes : planche et page ; la page de l'application est générée hors dépôt (`templates/presentation.html.twig`, `public/css/site.css`, `public/js/site.js`), questions ouvertes S1, R5, R6.
 
 ## Risks / points to clarify
 - 2026-11-18 : trois concurrents romands en français déjà en ligne (Chiffr, SecretarIA, Opus), moins chers que les CHF 39 prévus ; prix, périmètre et objectif de clients à revoir. Détail : `docs/strategie/concurrents.md`.
@@ -108,6 +112,7 @@
 - Allemand : aucune couche de traduction dans le code (constaté le 2026-11-17), qualité de la dictée en dialecte inconnue (banc, Origin 476).
 - TWINT chez Stripe est indiqué « B2C » : à confirmer pour des entreprises. TVA de XtraDev (assujetti ou non) à clarifier avec un fiduciaire.
 - Domaine : le test s'appelle `easy-offres` (avec un s), la production envisagée `easy-offre.ch` (sans). Une seule orthographe à choisir.
+- 2026-11-20 : la phrase de la page d'accueil « Vos dictées ne sont ni conservées ni utilisées pour entraîner ses modèles » (mots de Xavier) est fausse : l'audio reste sur le serveur (`PURGE_AUDIO=0`) et la transcription est gardée. Question S1 ouverte.
 - Obsolètes (résolus) : accès de Claude au test (accordé le 14.11) ; jeton Infomaniak (fourni le 14.11) ; format `data` et envoi multipart de Whisper (vérifiés le 14.11) ; ffmpeg sur le test (déposé le 14.11).
 
 ## Archives
@@ -129,3 +134,7 @@
 - [2026-11-18] **Mise en production ouverte**
   - Inventaire, plan, recette regroupée ; `ETAT.md` des sous-chantiers remis à jour ; démo du test remise à zéro, compte `essai-recette` créé.
   - Détail : `docs/plans/2026-11-17_mise-en-production/`.
+- [2026-11-20] **Page d'accueil de Dicta en ligne sur le test**
+  - Page à `/` (visiteur) et `/decouvrir`, formulaire d'essai, connexion en carte, logo de l'application vers le site, scène qui avance aussi avec « Réduire les animations ».
+  - Validée par Xavier ; restent la phrase « ni conservées », les pages légales, les vignettes.
+  - Détail : `docs/plans/2026-11-17_mise-en-production/ETAT.md`.
