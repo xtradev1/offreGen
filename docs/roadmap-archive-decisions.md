@@ -28,3 +28,4 @@ Déplacées telles quelles de `PROJECT_ROADMAP.md` le 2026-11-18 (les ~20 plus r
 - [2026-11-07] Règles de code complétées par Xavier : arborescence, nommage en français pour le métier, CSRF (`CODING_RULES.md`).
 - [2026-11-06] **Entorse au socle :** audit externe reporté. Xavier : « tant que l'app ne tourne pas chez au moins 4-5 artisans ça ne vaut pas la peine ». Déclencheur : l'application en service chez 4 à 5 artisans. Le pilote tourne donc avec de vraies données sans audit externe.
 - [2026-11-07] Connexion réelle dès le squelette, et comptes de démo pour présenter offreGen et le faire tester (Xavier). Détail dans `docs/plans/2026-11-07_voix-offre/SPEC.md`.
+- [2026-11-07] Traitement d'un audio : démarré tout de suite après l'import, puis cron chaque minute pour vérifier et terminer ce qui n'a pas été fait (Xavier).

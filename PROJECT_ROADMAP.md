@@ -5,7 +5,7 @@
 - Goal : application d'offres vocales pour artisans. L'artisan décrit les travaux à voix haute pendant la visite, l'application produit une offre à partir de son catalogue, il la corrige à la voix ou à l'écran.
 - Owner : Xavier Frelechoz (XtraDev)
 - Created : 2026-11-05
-- Last updated : 2026-11-21
+- Last updated : 2026-11-22
 
 ## Executive summary
 - L'application tourne de bout en bout sur le site de test (`easy-offres.xtradev.ch`) : dictée ou import, Whisper et Qwen 27B chez Infomaniak, offre rangée par pièce, corrections, catalogue, clients, PDF, facture avec QR-facture. 981 tests verts le 2026-11-20, PHPStan sans erreur. La page d'accueil de Dicta est en ligne sur le test (`/`, `/decouvrir`).
@@ -17,12 +17,11 @@
 - Données : adresses et état des logements des clients de l'artisan, transmis à Infomaniak. Une dictée peut contenir par accident des données sensibles (santé d'un occupant, par exemple).
 - Hébergement Infomaniak, serveur Cloud. IA chez Infomaniak (produit 357) : Whisper pour la transcription, Qwen 3.8 27B (bêta) pour l'extraction.
 - Dépôt GitHub privé `xtradev1/offreGen`, plan Free. Copie de travail dans WSL (`~/offreGen`) ; la copie de SynologyDrive n'est plus tenue à jour.
-- Suivi du temps : projet Origin 44. Chantier de la voix à l'offre : tâches 315, 400, 403, 414, 422, 428, 434, 438, 442, 447, 452. Mise en production : tâche 458, sous-tâche 459.
+- Suivi du temps : projet Origin 44. Chantier de la voix à l'offre : tâches 315, 400, 403, 414, 422, 428, 434, 438, 442, 447, 452. Mise en production : tâche 458, sous-tâche 459. Responsive : tâche 478.
 - Règles opposables : `CODING_RULES.md`, `docs/SECURITE.md`, `docs/DEPLOIEMENT.md`.
 
 ## Decisions
 - Décisions du 2026-11-05 au 2026-11-07 (pile, socle, maquette, environnement, report de l'audit externe) → `docs/roadmap-archive-decisions.md`.
-- [2026-11-07] Traitement d'un audio : démarré tout de suite après l'import, puis cron chaque minute pour vérifier et terminer ce qui n'a pas été fait (Xavier).
 - [2026-11-07] **Entorse au socle :** de vraies visites au banc de mesure, avec l'accord des clients, en plus de visites rejouées (Xavier : « on peut bosser avec de vraies données, c'est le mieux »). Compensations : stockage dans WSL hors dépôt et hors SynologyDrive, envoi seulement à Infomaniak, Claude ne lit ni l'audio ni la transcription d'une vraie visite, suppression en fin de banc. Conditions dans la SPEC du chantier.
 - [2026-11-07] Dépendances ajoutées : `symfony/security-core` et `symfony/password-hasher` figées en 7.4, parce que `security-csrf` 7.4 les tirait en 8.1, hors de la branche LTS. `twig/twig` 3, PHPUnit 12, PHPStan 2.
 - [2026-11-07] Dépendances ajoutées au sous-chantier 01 : `doctrine/migrations` 3.9 (DBAL 4), `monolog/monolog` 3, `symfony/clock` 7.4 (horloge que les tests figent). `symfony/string` et `symfony/console`, tirés par les migrations, figés en 7.4. Audit sans alerte.
@@ -42,11 +41,13 @@
 - [2026-11-19] Identité appliquée à l'application (branche `chantier-voix-offre`, non déployée) : couleurs et polices de la charte dans `app.css`, nom par défaut « Dicta » (`APP_NOM`). Dépendance ajoutée : polices Archivo et Inter (licence OFL) hébergées dans `public/fonts/`, parce que la CSP refuse toute police externe. Les tailles de `CODING_RULES.md` (64, 56, 48 px) priment sur la charte, qui a été corrigée.
 - [2026-11-20] Page d'accueil de Dicta (variante B, version 3) servie à `/` au visiteur sans session, à `/decouvrir` pour tous ; le logo de l'application y mène. Formulaire « Bon pour essai » : le courriel du visiteur part à `info@xtradev.ch` tant que l'inscription n'existe pas. Premier mois offert, puis 44.90 HT par mois. Détail : `docs/plans/2026-11-17_mise-en-production/ETAT.md`.
 - [2026-11-20] **Affirmations maintenues par Xavier contre l'avis du relecteur :** « 100% » dans la croix du tampon, « 100 % conçue en Suisse », « l'une des seules applications de ce genre dont l'IA tourne en Suisse ». À faire relire par un juriste avant la production, avec la croix suisse.
+- [2026-11-20] Responsive (téléphone, tablette, PC) : décisions de Xavier en cinq tours de maquette (R1 à R10, B2 à B4, points 1 à 9, 2b, 3 A, 4a B, 4b, 5, 7a), consignées telles quelles dans `docs/plans/2026-11-19_responsive/ETAT.md`. Notables : champs de l'offre à 16 px (zoom de l'iPhone), cibles de 48 px, facture annulée avec PDF « Annulée » et date d'envoi, pastilles de marque à 7:1.
 
 ## Current state
 ### Done
 - Livré avant le 2026-11-12 (socle, maquette, environnement, sous-chantiers 01 et 10) → `docs/roadmap-archive-done.md`.
 - [x] Sous-chantiers 11 à 18, 21, 22, 24, 25, 28 livrés en code sur la branche, déployés sur le test (dernier code : 9fe1570, sonde verte). État de chacun : `docs/plans/2026-11-07_voix-offre/ETAT.md` et les `ETAT.md` des sous-chantiers, remis à jour le 2026-11-18.
+- [x] Responsive (tâche 478) : cinq tours livrés sur le test (`57068d7`, sonde verte), 7a validé, « tout bon pour l'instant » (Xavier, 2026-11-22). Détail : `docs/plans/2026-11-19_responsive/ETAT.md`.
 - [x] Inventaire de ce qui manque avant la production, plan en 9 étapes, recette regroupée (`docs/plans/2026-11-17_mise-en-production/`).
 
 ### In progress
@@ -113,6 +114,7 @@
 - TWINT chez Stripe est indiqué « B2C » : à confirmer pour des entreprises. TVA de XtraDev (assujetti ou non) à clarifier avec un fiduciaire.
 - Domaine : le test s'appelle `easy-offres` (avec un s), la production envisagée `easy-offre.ch` (sans). Une seule orthographe à choisir.
 - 2026-11-20 : la phrase de la page d'accueil « Vos dictées ne sont ni conservées ni utilisées pour entraîner ses modèles » (mots de Xavier) est fausse : l'audio reste sur le serveur (`PURGE_AUDIO=0`) et la transcription est gardée. Question S1 ouverte.
+- 2026-11-20 : plusieurs sessions dans `~/offreGen` ; une session a construit sur les fichiers non commités d'une autre puis commité sans eux. `~/offreGen` garde en double les fichiers non commités des tours 1 à 4 du responsive, mêlés à d'autres : ne pas les commiter depuis là. Une copie propre par chantier.
 - Obsolètes (résolus) : accès de Claude au test (accordé le 14.11) ; jeton Infomaniak (fourni le 14.11) ; format `data` et envoi multipart de Whisper (vérifiés le 14.11) ; ffmpeg sur le test (déposé le 14.11).
 
 ## Archives
@@ -138,3 +140,7 @@
   - Page à `/` (visiteur) et `/decouvrir`, formulaire d'essai, connexion en carte, logo de l'application vers le site, scène qui avance aussi avec « Réduire les animations ».
   - Validée par Xavier ; restent la phrase « ni conservées », les pages légales, les vignettes.
   - Détail : `docs/plans/2026-11-17_mise-en-production/ETAT.md`.
+- [2026-11-22] **Responsive livré sur le test**
+  - Audit, cinq tours de maquette et de décisions, corrections au téléphone, sur tablette et au PC ; recette par l'écran, 980 tests.
+  - Reporté depuis une copie propre après le commit des modèles ; 2a et 2b gardés dans leur version du chantier des modèles.
+  - Détail : `docs/plans/2026-11-19_responsive/ETAT.md`.

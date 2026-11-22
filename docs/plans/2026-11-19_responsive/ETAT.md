@@ -2,15 +2,13 @@
 chantier: Responsive du site de test (téléphone, tablette, PC)
 slug: 2026-11-19_responsive
 phase: 3
-statut: gate_ouvert
-gate_attendu: accord de Xavier pour déployer sur le test, puis commit
+statut: livre_sur_test
+gate_attendu: aucun
 ---
 
 ## Prochaine action
 
-7a validé par Xavier le 2026-11-20 (« 7a Bandeau sur le test : Valider »). Reste sa recette du reste sur le site de test : ce qui cloche, il le dira. Ensuite : corrections éventuelles depuis la copie propre `~/offreGen-responsive` (branche locale `responsive-tour5`, recalée sur la tête avant chaque poussée), puis `/roadmap-sync`.
-
-À ranger à la clôture : base `offregen_responsive_test` (en root : `DROP DATABASE offregen_responsive_test`), copie `~/offreGen-responsive` (`git worktree remove`), serveur local du port 8001. Dans `~/offreGen`, mes fichiers des tours 1 à 4 restent modifiés en double de ce qui est commité (mêlés au travail d'autres sessions) : ne pas les commiter depuis là.
+Livré sur le test (`57068d7`), 7a validé ; Xavier, 2026-11-22 : « tout bon pour l'instant ». Rien en cours. Si Xavier signale un défaut : corriger depuis `~/offreGen-responsive` (recaler sur la tête avant chaque poussée, tests sur `offregen_responsive_test`). À ranger quand Xavier fermera le chantier : base `offregen_responsive_test` (root : `DROP DATABASE offregen_responsive_test`), copie `~/offreGen-responsive` (`git worktree remove`). Dans `~/offreGen`, mes fichiers des tours 1 à 4 restent modifiés en double : ne pas les commiter depuis là.
 
 ## Réponses de Xavier au 5e tour (MAQUETTE-tour5.html, 2026-11-20, texte collé tel quel)
 
@@ -213,3 +211,4 @@ Ajouts de Claude, à confirmer par Xavier : textes indicatifs (`::placeholder`) 
 - 2026-11-20 : 5e tour codé (3 A, 4a B, 4b avec le prix gardé en note et la ligne à vérifier, 5, 7a fond jaune, pastilles à 7:1). Base de test privée `offregen_responsive_test` (droits copiés de `offregen_test`) : la suite partagée était percutée par une autre session. 925 tests, PHPStan sans erreur. Recette locale par l'écran (port 8001) : les six points tiennent, sondes de contraste à zéro ; écriture : produit « Ponçage des radiateurs anciens » créé en catégorie « Radiateurs » depuis la ligne 771 (`recette-tel`, `offregen_dev`).
 - 2026-11-20 : poussé sur `chantier-voix-offre` (257d800, recalé sur 79abbd6) et déployé sur le test par `outils/deployer-test.sh` depuis la copie propre : sonde verte, `/sante` sur 257d800. Captures sur le test avec `audit-responsive` : une connexion refusée d'abord (ma lecture du fichier du mot de passe, ligne 1 au lieu de 2), puis deux envois bloqués par le navigateur (courriel mal extrait, rien n'est parti), puis connecté. Écritures par l'écran : une ligne de l'offre 17 supprimée puis restaurée (6 lignes avant et après) ; couleur orange puis bleu remis (vérifié). Maquette `MAQUETTE-test.html`.
 - 2026-11-20 : réponse de Xavier sur `MAQUETTE-test.html`, telle quelle : « 7a Bandeau sur le test : Valider », avec « tu peux commit et push et mettre en test ». Commit, poussée et déploiement de la tête de la branche depuis la copie propre.
+- 2026-11-22 : Xavier, « tout bon pour l'instant /roadmap-sync ». Roadmap mis à jour (décision, état livré, risque des copies partagées, journal).
