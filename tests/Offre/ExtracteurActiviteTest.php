@@ -14,11 +14,13 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 /**
  * La consigne et le rangement suivent l'activité du compte (docs/plans/2026-11-22_familles-activite, SPEC points 3 et 4).
  * Le Bâtiment garde, au caractère près, les deux consignes mesurées au banc : leurs empreintes ont été relevées sur
- * le commit 8385e78, avant ce chantier.
+ * le commit 8385e78, avant ce chantier. La consigne principale a changé le 2026-11-22 (chantier des options : une option
+ * ou une variante dite est une ligne à part), après le banc du corpus écrit, moitié de contrôle : dictées sans option
+ * 100 % comme avant, dictées à options 94,7 % au lieu de 57 % (docs/plans/2026-11-22_options-variantes/ETAT.md, Preuves).
  */
 final class ExtracteurActiviteTest extends TestCase
 {
-    private const CONSIGNE_DU_BANC = 'a3cdb155739cd552d9ec4f6469f5fd37c6036dd99f26ce4467b28c6476308b9a';
+    private const CONSIGNE_DU_BANC = 'f5a0605c845b025c505a509a37399a6372113e6427c74679d07caedec7a67f95';
     private const CONSIGNE_PIECES_DU_BANC = 'f83d5c17b9fd19b7cde96dc168ef42fe1f1191b86d63b0fd720d928ddf53b456';
 
     private const CATALOGUE = [

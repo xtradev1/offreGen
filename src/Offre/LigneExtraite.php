@@ -23,6 +23,10 @@ final readonly class LigneExtraite
         public ?int $prixDicteCentimes = null,
         /** Pièce dictée (sous-chantier 28) ; null : tout le chantier, ou pas de pièce dite. Voir Piece. */
         public ?string $piece = null,
+        /** Options et variantes (chantier 2026-11-22) : ligne, option ou variante. Voir Options. */
+        public string $nature = Options::LIGNE,
+        /** Pour une variante : le rang (0-based) de la ligne qu'elle remplace, dans la même liste. */
+        public ?int $remplace = null,
     ) {
         if (trim($designation) === '') {
             throw new \InvalidArgumentException('Ligne sans désignation.');

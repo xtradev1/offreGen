@@ -82,14 +82,31 @@ final class DepotOffres implements SupportLignes
                  'q' => Dates::versBase($quand), 'pc' => min(max(0, $postesCoupes), 65535), 'ex' => $exemple ? 1 : 0],
             );
             $offreId = $this->base->dernierId();
+            $ids = [];
             foreach ($lignes as $rang => $l) {
                 $this->base->ecrire(
-                    'INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier, entendu, produit_id, prix_dicte_centimes, piece)
-                     VALUES (:a, :o, :r, :d, :q, :u, :p, :v, :e, :pr, :pd, :pi)',
+                    'INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier, entendu, produit_id, prix_dicte_centimes, piece, nature)
+                     VALUES (:a, :o, :r, :d, :q, :u, :p, :v, :e, :pr, :pd, :pi, :n)',
                     ['a' => $this->portee->artisanId, 'o' => $offreId, 'r' => $rang + 1, 'd' => mb_substr($l->designation, 0, 255),
                      'q' => $l->quantiteMilliemes, 'u' => mb_substr($l->unite, 0, 20), 'p' => $l->prixCentimes, 'v' => $l->aVerifier ? 1 : 0,
                      'e' => $l->entendu === null ? null : mb_substr($l->entendu, 0, 500),
-                     'pr' => $this->produitDeLArtisan($l->produitId), 'pd' => $l->prixDicteCentimes, 'pi' => $l->piece],
+                     'pr' => $this->produitDeLArtisan($l->produitId), 'pd' => $l->prixDicteCentimes, 'pi' => $l->piece,
+                     'n' => in_array($l->nature, Options::NATURES, true) ? $l->nature : Options::LIGNE],
+                );
+                $ids[$rang] = $this->base->dernierId();
+            }
+            // Une variante désigne sa ligne par son rang dans la liste : son identifiant n'existe qu'une fois tout inséré.
+            // Une base qui n'est pas une ligne du total : la variante reste une option à vérifier (O3).
+            foreach ($lignes as $rang => $l) {
+                if ($l->nature !== Options::VARIANTE) {
+                    continue;
+                }
+                $base = $l->remplace;
+                $valable = $base !== null && $base !== $rang && isset($ids[$base]) && ($lignes[$base]->nature ?? null) === Options::LIGNE;
+                $this->base->ecrire(
+                    $valable ? 'UPDATE ligne SET remplace_id = :b WHERE id = :l AND artisan_id = :a'
+                        : "UPDATE ligne SET nature = 'option', a_verifier = 1 WHERE id = :l AND artisan_id = :a",
+                    ($valable ? ['b' => $ids[$base]] : []) + ['l' => $ids[$rang], 'a' => $this->portee->artisanId],
                 );
             }
             return $offreId;

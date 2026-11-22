@@ -16,7 +16,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 7 de `PLAN.md` (le banc du sous-chantier 29 : `outils/banc-corpus.php`, `outils/banc/NoteExtraction.php`, corpus écrit dans `OffreGen/corpus/`) dans `~/offreGen-options`. Lots 1 à 6 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`, offre 1 semée).
+Phase 6 et 7 : parcours complet sur le serveur local (dictée d'une option jusqu'à la facture), puis revue lourde (appels au modèle, couche d'accès aux données, droits par route). Lots 1 à 8 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`, offre 1 semée).
 
 ## En attente de toi
 
@@ -47,6 +47,9 @@ Lot 7 de `PLAN.md` (le banc du sous-chantier 29 : `outils/banc-corpus.php`, `ou
 - 2026-11-22 : lot 4 poussé (`395f621`). Lot 5 fait (le document). `OffreControleur::grouper` a un mode document : une option retenue entre dans les lignes de sa pièce (point 2) ; `vueDocument` rend `groupes_document`, lu par `_blocs.html.twig` et Récapitulatif ; une facture n'a que `groupes`. Macros `lignes` et `lignes_marge` : la variante retenue à la place de sa ligne, les autres dessous avec la case et l'écart ; macros `case`, `ecart`, `options`. Les douze modèles appellent `b.options` sous leur total (Récapitulatif : sous le détail des lignes, son total est dans une colonne étroite). Écart au plan : le bloc des options n'est pas dans la macro `totaux`, pour cette raison.
 - 2026-11-22 : défaut trouvé au premier rendu : la variante de Technique sortait illisible dans le PDF (IBM Plex n'a pas de face italique ; repli de dompdf). Corrigé : droite dans Technique ; le test refuse toute police de repli dans les douze PDF. Constat à montrer à Xavier : avec six lignes, une variante et deux options, la plupart des modèles laissent les conditions et les signatures seules en page 2 (le bloc de fin ne se coupe pas).
 - 2026-11-22 : lot 5 poussé (`6974330`). Lot 6 fait (facturer). La finale copie `Options::lignesDuTotal` ; défaut d'avant prouvé par le test : sans ce lot, la finale copiait aussi la ligne remplacée et les options libres (`Totaux` comptait juste, la copie non). Feuille « Facturer » : « Choix du client » hors du formulaire de facture, une case-bouton par option ou variante qui poste sur `ligne_retenue` avec `retour=facturer` ; dans la feuille, la réponse remplace le contenu et l'aperçu suit (vérifié au clic). Texte de la finale : « Les lignes de l'offre et ce que le client a retenu » quand il y a des options.
+- 2026-11-22 : lot 6 poussé (`5eacf1a`). Lot 7 fait (le banc). `outils/banc-corpus.php` (passes, moitié, réglage `service` ou `sans-options`, jetons et coût en centimes, rapport JSON dans `corpus/<dossier>/rapports/`) ; la notation dans `src/Offre/NoteExtraction.php` (écart au plan : `phpstan` n'analyse pas `outils/`, et le test doit charger la classe). Corpus écrit : `OffreGen/corpus/ecrit/`, quinze dictées inventées (six sans option, neuf avec, dont un piège « elle a l'option de… »), catalogues de démonstration peintre, menuisier, plâtrier exportés dans `corpus/catalogues/`. Fiches 21 à 28 ajoutées à `corpus/FICHES.md` pour les vraies dictées de Xavier.
+- 2026-11-22 : lot 8 fait (l'extraction). Troisième appel `classer_lignes`, lancé seulement si la dictée contient un mot déclencheur (`MOTS_OPTIONS`, en mode Unicode : sans lui « à la place » ne se reconnaissait pas) ; `validerOptions` traite la sortie comme non fiable ; une variante sans quantité dite prend celle de sa ligne ; `DepotOffres::creer` relie la variante à sa ligne, ou en fait une option à vérifier. Décision fragile n° 2 du plan contredite par le banc : l'appel principal perdait des variantes (la lessivable devenait un second « Peinture des murs », le prix du PVC passait sur la fenêtre bois). Règle ajoutée à sa consigne, puis précisée (une option garde son produit du catalogue) ; consigne du troisième appel durcie contre les fausses options. Empreinte de `ExtracteurActiviteTest` mise à jour avec la mesure qui la justifie.
+- 2026-11-22 : reste au banc : la 12 (« ou alors on vitrifie le parquet à la place », parquet absent de l'offre) reste dans le total au lieu d'une option ; la 13 garde une erreur de l'appel principal présente avant le chantier (« murs » rangés en plafond). Le corpus est écrit par Claude et connu pour être optimiste : les vraies dictées de Xavier (fiches 21 à 28) passent au banc avant la mise en service.
 
 ## Décisions
 
@@ -69,6 +72,8 @@ Lot 7 de `PLAN.md` (le banc du sous-chantier 29 : `outils/banc-corpus.php`, `ou
 | 2026-11-22 | `remplace_id` sans clé étrangère. | Cascade de la suppression d'une offre sur une table qui se référence elle-même ; la cohérence se vérifie dans `DepotOffres::changerNature`. |
 | 2026-11-22 | Dans Technique, la variante reste droite (pas d'italique). | IBM Plex n'a pas de face italique dans le document : le PDF retombait sur une police de repli, texte illisible. Ajouter la face italique (fichier, empreinte, `SOURCES.md`) reste possible si Xavier y tient (O2 dit « en italique »). |
 | 2026-11-22 | À l'écran, une option retenue reste dans le groupe « Options » ; sur le document, elle entre dans les lignes de sa pièce. | E2 A (écran comme le prototype) et point 2 (document). |
+| 2026-11-22 | La consigne principale reçoit une règle (option ou variante dite : ligne à part ; l'option garde son produit, la variante sa désignation et son prix). | Banc : sans elle, l'appel principal perdait trois variantes sur neuf dictées ; avec elle, moitié de contrôle 94,7 % au lieu de 57 %, dictées sans option inchangées (100 %). |
+| 2026-11-22 | Les options et variantes viennent d'un troisième appel, lancé seulement sur un mot déclencheur. | Une offre ordinaire ne coûte que la règle de plus (+0,007 ct) ; une offre à options +0,06 ct (+30 %). |
 
 ## Artefacts
 
@@ -239,4 +244,40 @@ $ node ecran6.js   (local, port 8041, feuille ouverte par-dessus l'offre 1)
 390 remis | largeur 390/390 | erreurs JS aucune
 1280 : mêmes valeurs, largeur 1280/1280, erreurs JS aucune
 Capture regardée : ecran6-facturer-390.
+```
+
+### Lots 7 et 8
+
+```
+$ phpunit --filter NoteExtractionTest   (premier passage)
+Failed asserting that 1 is identical to 1.0.   (taux entier, corrigé)
+OK (5 tests, 14 assertions)
+$ phpunit --filter ExtracteurOptionsTest   (code du lot 8 mis de côté par git stash)
+Tests: 6, Assertions: 5, Errors: 3, Failures: 2, Warnings: 2.
+$ phpunit --filter 'ExtracteurOptionsTest|ExtracteurApiTest|ExtracteurActiviteTest|TraiteurTest'   (code remis)
+OK (61 tests, 228 assertions)
+
+Banc, Qwen/Qwen3.8-27B-FP8, trois passes par dictée, corpus écrit (OffreGen/corpus/ecrit), tarif 0.40 / 3.00 CHF par million de jetons :
+Référence (code d'avant le lot 8), les quinze dictées :
+  Dictées sans option : taux 93.3 % (84 justes sur 90), 0.33 corrections par offre
+  Dictées avec options : taux 58.3 % (84 justes sur 144), 2.22 corrections par offre, natures 0/42
+  Coût moyen 0.20 ct par offre, durée moyenne 9.0 s (45 passes)
+Troisième appel seul (consigne principale inchangée), dictées 07 à 15 :
+  Dictées avec options : taux 73.0 % (108 justes sur 148), 1.48 corrections par offre, natures 26/42
+Règles ajoutées, moitié de réglage (01, 03, 05, 07, 09, 11, 13, 15), dernière version :
+  Dictées sans option : taux 87.5 % (42 justes sur 48)   (référence sur ces trois dictées : 42 sur 48)
+  Dictées avec options : taux 88.9 % (72 justes sur 81), 0.60 corrections par offre, natures 24/24
+Moitié de contrôle (02, 04, 06, 08, 10, 12, 14), jamais vue pendant le réglage :
+  Dictées sans option : taux 100.0 % (42 justes sur 42)   (référence : 42 sur 42)
+  Dictées avec options : taux 94.7 % (54 justes sur 57), 0.25 corrections par offre, natures 15/18   (référence : 36 sur 63, 57 %)
+  seule faute : 12, « Vitrification du parquet : nature », trois passes sur trois
+Coût par offre, moitié de contrôle : sans option 0.200 ct avant, 0.207 ct après (+0.007 ct, +3.5 %, la règle de plus dans la consigne) ;
+  avec options 0.198 ct avant, 0.258 ct après (+0.06 ct, +30 %, le troisième appel).
+Rapports JSON : corpus/ecrit/rapports/2026-11-22-2020-service-toutes.json (référence), 2026-11-22-2032-service-reglage.json, 2026-11-22-2034-service-controle.json.
+
+$ vendor/bin/phpstan analyse
+[OK] No errors
+$ APP_ENV=test vendor/bin/phpunit
+OK (1246 tests, 10562 assertions)
+BOM et tirets longs dans les fichiers touchés : aucun.
 ```

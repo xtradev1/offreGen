@@ -38,6 +38,7 @@ final class ExtracteurApi implements Extracteur
         - Un prix donné seul juste après un poste (« en bloc 500 francs », « bloc 500 francs », « le tout 500 francs ») est le prix forfaitaire de ce poste : ne crée pas de ligne à part.
         - Une précision sur l'ordre ou l'état des travaux (« après remise en état du plafond ») n'est pas un poste, sauf si une quantité ou un prix lui est donné.
         - Chaque travail ou frais dicté devient une ligne, même sans quantité ni prix : quantité 1 et unité « forfait » quand aucune quantité n'est dictée.
+        - Une option ou une variante dite (« en option », « variante », « ou alors », « à la place de ») est une ligne à part. Une option prend son produit du catalogue comme toute ligne. Une variante garde sa propre désignation et son propre prix : ne lui donne pas le produit de la ligne qu'elle remplacerait et ne reporte pas son prix sur cette ligne.
         - certitude « a_verifier » dès que la quantité est approximative (environ, à peu près, une douzaine), déduite ou mal comprise ; sinon « sure ».
         - extrait : les mots exacts de la dictée d'où vient la ligne.
         - titre : court, la nature des travaux et le lieu, sans prix.
@@ -75,6 +76,26 @@ final class ExtracteurApi implements Extracteur
         ],
     ];
 
+    /**
+     * Troisième appel (options et variantes, chantier 2026-11-22) : dire quelles lignes trouvées sont des options ou des
+     * variantes, sans toucher à l'appel principal, mesuré au banc (leçon du sous-chantier 28). Lancé seulement quand la
+     * dictée contient un mot déclencheur (MOTS_OPTIONS) : une offre ordinaire ne change pas et ne coûte rien de plus.
+     */
+    private const CONSIGNE_OPTIONS = <<<'TXT'
+        Tu relis les lignes d'une offre d'artisan, tirées de la dictée de sa visite, et tu dis lesquelles sont des options ou des variantes.
+        Règles :
+        - Une option est un travail en plus que le client peut prendre ou laisser : « en option », « option », « si le client veut », « éventuellement », « à voir avec le client ».
+        - Une variante est une autre façon de faire un travail qui est déjà une ligne de l'offre, à sa place : « variante », « en variante », « ou alors », « à la place de ». Donne le numéro de la ligne qu'elle remplace.
+        - Une variante dont le travail remplacé n'est pas une ligne de l'offre est une option.
+        - Une quantité approximative (« peut-être 20 ») ou le mot option dans un autre sens (« elle a l'option de nous laisser la clé ») ne font pas une option.
+        - Une ligne n'est une option ou une variante que si la dictée le dit pour ce travail-là. La plupart des offres n'en ont aucune : dans le doute, ne cite pas la ligne ; une liste vide est une réponse normale.
+        - Ne cite que les options et les variantes ; toutes les autres lignes restent dans le total.
+        - Jamais de tiret long : une virgule à la place.
+        TXT;
+
+    /** Les mots qui déclenchent le troisième appel ; leur absence le saute (mesuré au banc, décision fragile n° 2 du plan). */
+    public const MOTS_OPTIONS = '/(*UCP)\b(options?|variantes?|ou alors|à la place|au choix|éventuel(?:le)?(?:ment)?|à voir avec|si (?:le|la|les) clients?)\b/iu';
+
     /** Le second appel de l'Extérieur : la zone du terrain à la place de la pièce. Jamais mesuré au banc. */
     private const CONSIGNE_ZONES = <<<'TXT'
         Tu ranges les lignes d'une offre de jardinier ou de paysagiste dans les zones du terrain où se font les travaux, d'après la dictée de sa visite.
@@ -106,6 +127,8 @@ final class ExtracteurApi implements Extracteur
         private readonly bool $sansRaisonnement = true,
         /** Modèle du second appel (pièces) ; null : le même que l'extraction. */
         private readonly ?string $modelePieces = null,
+        /** Troisième appel des options et variantes ; faux : le banc mesure l'extraction sans lui. */
+        private readonly bool $classerOptions = true,
     ) {
     }
 
@@ -146,7 +169,107 @@ final class ExtracteurApi implements Extracteur
         }
         $resultat = $this->valider($proposition, $catalogue);
         // Une prestation ne se range ni par pièce ni par zone : l'offre sort par catégorie du catalogue, sans second appel.
-        return $resultat->lignes === [] || !$activite->rangeParGroupe() ? $resultat : $this->rangerParPiece($transcription, $resultat, $activite);
+        if ($resultat->lignes !== [] && $activite->rangeParGroupe()) {
+            $resultat = $this->rangerParPiece($transcription, $resultat, $activite);
+        }
+        return $resultat->lignes !== [] && $this->classerOptions && self::aDesMotsDOption($transcription) ? $this->classerOptions($transcription, $resultat) : $resultat;
+    }
+
+    /** La dictée parle peut-être d'options ou de variantes : le troisième appel vaut la peine. */
+    public static function aDesMotsDOption(string $transcription): bool
+    {
+        return preg_match(self::MOTS_OPTIONS, $transcription) === 1;
+    }
+
+    /**
+     * Les options et variantes parmi les lignes trouvées, par un troisième appel sans catalogue. Un échec ne coûte que
+     * cette information : l'offre sort avec toutes ses lignes dans le total, comme avant.
+     */
+    private function classerOptions(string $transcription, ResultatExtraction $resultat): ResultatExtraction
+    {
+        $liste = [];
+        foreach ($resultat->lignes as $i => $l) {
+            $liste[] = ($i + 1) . '. ' . $l->designation . ($l->entendu === null ? '' : ' (« ' . $l->entendu . ' »)');
+        }
+        $corps = [
+            'model' => $this->modelePieces ?? $this->modele,
+            'temperature' => 0,
+            'messages' => [
+                ['role' => 'system', 'content' => self::CONSIGNE_OPTIONS],
+                ['role' => 'user', 'content' => "Dictée :\n" . $transcription . "\n\nLignes :\n" . implode("\n", $liste)],
+            ],
+            'tools' => [self::outilOptions()],
+            'tool_choice' => ['type' => 'function', 'function' => ['name' => 'classer_lignes']],
+            'max_tokens' => self::JETONS_SORTIE_PIECES,
+        ];
+        if ($this->sansRaisonnement) {
+            $corps['reasoning_effort'] = 'none';
+        }
+        try {
+            $reponse = $this->http->request('POST', rtrim($this->url, '/') . '/chat/completions', [
+                'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
+                'json' => $corps,
+                'timeout' => 120,
+                'max_duration' => 180,
+            ]);
+            $donnees = ReponseApi::lire($reponse, 'Options');
+            $this->noterJetons($donnees, 'options', $this->modelePieces ?? $this->modele);
+            $arguments = self::argumentsDeLOutil($donnees, 'classer_lignes') ?? [];
+        } catch (\Throwable $e) {
+            $this->journal->warning('offreGen, options : troisième appel en échec, toutes les lignes dans le total (' . $e::class . ').');
+            return $resultat;
+        }
+        return new ResultatExtraction($resultat->titre, $this->validerOptions($arguments, $resultat->lignes), $resultat->client, $resultat->lieu, $resultat->postesCoupes);
+    }
+
+    /**
+     * La sortie du troisième appel, traitée comme non fiable : un numéro hors de la liste ou une nature inconnue sont
+     * ignorés ; une variante sans ligne de base valable devient une option à vérifier (O3) ; une variante sans quantité
+     * dite (1, à vérifier) prend la quantité et l'unité de sa ligne (O2), et sa pièce.
+     *
+     * @param array<string, mixed> $arguments
+     * @param list<LigneExtraite> $lignes
+     * @return list<LigneExtraite>
+     */
+    public function validerOptions(array $arguments, array $lignes): array
+    {
+        $choix = [];
+        foreach (is_array($arguments['lignes'] ?? null) ? $arguments['lignes'] : [] as $x) {
+            $i = is_array($x) && is_int($x['ligne'] ?? null) ? $x['ligne'] - 1 : -1;
+            $nature = is_array($x) ? ($x['nature'] ?? null) : null;
+            if (!isset($lignes[$i]) || !in_array($nature, [Options::OPTION, Options::VARIANTE], true) || isset($choix[$i])) {
+                continue;
+            }
+            $base = is_int($x['remplace'] ?? null) ? $x['remplace'] - 1 : null;
+            $choix[$i] = [$nature, $base];
+        }
+        $sortie = [];
+        foreach ($lignes as $i => $l) {
+            [$nature, $base] = $choix[$i] ?? [Options::LIGNE, null];
+            $doute = $l->aVerifier;
+            $quantite = $l->quantiteMilliemes;
+            $unite = $l->unite;
+            $piece = $l->piece;
+            if ($nature === Options::VARIANTE) {
+                // La ligne remplacée doit être une ligne du total de la liste, une autre que la variante.
+                if ($base === null || $base === $i || !isset($lignes[$base]) || isset($choix[$base])) {
+                    $this->journal->info("offreGen, options : variante $i sans ligne de base valable, gardée en option à vérifier.");
+                    $nature = Options::OPTION;
+                    $base = null;
+                    $doute = true;
+                } else {
+                    $b = $lignes[$base];
+                    if ($quantite === 1000 && $l->aVerifier && $b->quantiteMilliemes !== 1000 && ($unite === 'forfait' || $unite === $b->unite)) {
+                        $quantite = $b->quantiteMilliemes;
+                        $unite = $b->unite;
+                    }
+                    $piece = $b->piece;
+                }
+            }
+            $sortie[] = new LigneExtraite($l->designation, $quantite, $unite, $l->prixCentimes, $doute, $l->produitId, $l->entendu, $l->prixDicteCentimes,
+                $piece, $nature, $nature === Options::VARIANTE ? $base : null);
+        }
+        return $sortie;
     }
 
     /**
@@ -196,7 +319,7 @@ final class ExtracteurApi implements Extracteur
         $lignes = [];
         foreach ($resultat->lignes as $i => $l) {
             $lignes[] = new LigneExtraite($l->designation, $l->quantiteMilliemes, $l->unite, $l->prixCentimes, $l->aVerifier, $l->produitId,
-                $l->entendu, $l->prixDicteCentimes, $pieces[$i] ?? null);
+                $l->entendu, $l->prixDicteCentimes, $pieces[$i] ?? null, $l->nature, $l->remplace);
         }
         return new ResultatExtraction($resultat->titre, $lignes, $resultat->client, $resultat->lieu, $resultat->postesCoupes);
     }
@@ -353,6 +476,30 @@ final class ExtracteurApi implements Extracteur
                         'properties' => [
                             'ligne' => ['type' => 'integer', 'description' => 'Numéro de la ligne'],
                             'piece' => ['type' => 'string', 'description' => $zone ? 'Zone dite, ou « général »' : 'Pièce dite, ou « général »'],
+                        ],
+                    ]],
+                ],
+            ],
+        ]];
+    }
+
+    /** @return array<string, mixed> */
+    private static function outilOptions(): array
+    {
+        return ['type' => 'function', 'function' => [
+            'name' => 'classer_lignes',
+            'description' => 'Donne les lignes de l\'offre qui sont des options ou des variantes.',
+            'parameters' => [
+                'type' => 'object',
+                'required' => ['lignes'],
+                'properties' => [
+                    'lignes' => ['type' => 'array', 'items' => [
+                        'type' => 'object',
+                        'required' => ['ligne', 'nature'],
+                        'properties' => [
+                            'ligne' => ['type' => 'integer', 'description' => 'Numéro de la ligne'],
+                            'nature' => ['type' => 'string', 'enum' => ['option', 'variante']],
+                            'remplace' => ['type' => ['integer', 'null'], 'description' => 'Pour une variante : numéro de la ligne qu\'elle remplace'],
                         ],
                     ]],
                 ],
