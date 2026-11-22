@@ -2,7 +2,7 @@
 chantier: Modèles d'offre du bâtiment
 slug: 2026-11-19_modeles-offre
 phase: 8
-statut: en_cours
+statut: gate_ouvert
 gate_attendu: visuel
 profil: .claude/atoz-profile.md
 ---
@@ -12,17 +12,16 @@ profil: .claude/atoz-profile.md
 - Projet 44 (offreGen), tâche 488 (Douze modèles d'offre pour le bâtiment), créée le 2026-11-20 à la demande de Xavier.
 - Sous-tâches : 489 analyse et maquettes ; 490 essai dompdf ; 491 plan ; 492 lots 0 à 2 ; 493 lots 3 et 4 ; 494 lot 5 ; 495 lot 6 ; 496 lot 7 ; 497 lot 8 ; 498 revue et recette.
 - Tâche 499 : options et variantes, à cadrer dans son propre chantier (décision O6).
-- Conversation rattachée à 498 (revue et recette) le 2026-11-20, après 492 à 497 ; puis à 511 (maquette des phrases de Lettre, tâche 510), puis à 512 (code) le même jour.
+- Conversation rattachée à 498 (revue et recette) le 2026-11-20, après 492 à 497 ; puis à 511 (maquette des phrases de Lettre, tâche 510), à 512 (code), et de nouveau à 511 le 2026-11-22 (maquette des phrases de l'application).
 
 ## Prochaine action
 
-Déployer sur le test la tête de la branche (encadré de couleur, glissement, phrases de Lettre ; deux migrations) quand Xavier le dit. Puis sa recette (`RECETTE.md`, scénarios 2, 2 bis, 8 bis). Trancher avec lui le commentaire de L1. À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
+Attendre les réponses de Xavier à `MAQUETTE-lettre-phrases-auto.html` (M1 à M5), puis coder les phrases de l'application réglables, test d'abord, par-dessus le travail du chantier `2026-11-21_lignes-conditions` (escompte, texte propre à l'offre). Déployer quand Xavier le dit. À la clôture : `/roadmap-sync`, avec les deux lignes à reporter au `PROJECT_ROADMAP.md` (polices du document et leur source ; dossier de polices de dompdf sous `var/cache/pdf`), suppression de la base `offregen_modeles_test` et de la copie `~/offreGen-modeles`.
 
 ## En attente de toi
 
-- Dire si je déploie sur le test (données toujours inventées ?) : encadré de couleur, glissement au doigt, phrases de Lettre. Deux migrations partent : la mienne (`Version20261120220001`) et `Version20261120210001` d'une autre session, déjà sur la branche.
-- Préciser le commentaire de L1 (« doit pouvoir être modifié (écrit par l'application, à partir de l'offre) ») : les mots que l'application ajoute (« Visite du », « Chantier : », la phrase des conditions) doivent-ils devenir réglables, ou bien cela vise-t-il les données elles-mêmes, déjà modifiables dans l'en-tête de l'offre et dans les réglages ?
-- Dérouler `RECETTE.md`, scénarios 2, 2 bis et 8 bis.
+- Répondre à `MAQUETTE-lettre-phrases-auto.html` (M1 à M5 : comment réécrire, phrase vidée, où sur l'écran, autres modèles, facture annulée), puis coller le texte de « Copier mes réponses ».
+- Dire si je déploie sur le test ce qui attend déjà (encadré de couleur, glissement au doigt, phrases de Lettre L1 à L6), données toujours inventées.
 
 ## Journal
 
@@ -69,6 +68,7 @@ Déployer sur le test la tête de la branche (encadré de couleur, glissement, p
 - 2026-11-20 : réponses de Xavier : « A oui, B au choix du client, C souventz le chantier, D pourquoi pas pouvoir changer fais une maquette ». A : la facture d'une page reste sans pied. B, lecture de Claude : l'artisan choisit dans l'encadré 2b (« Bien visible » ou « Visible ») ; sans choix, 4,5:1 ; les six pastilles ne changent pas. C : le lieu dicté reste recopié dans l'adresse du chantier. D : maquette `MAQUETTE-lettre-phrases.html` (lettre réelle d'aujourd'hui, démo cliquable du réglage, six décisions L1 à L6) ; tâche Origin 510 créée (sous-tâches 511 à 513). Gate visuel ouvert pour ce morceau.
 - 2026-11-20 : réponses de Xavier à la maquette des phrases : « L1 : A. Dans Ma marque, sous Lettre. Commentaire : doit pouvoir etre modifié (écrit par l'application, à partir de l'offre) ; L2 : A. Ajoutés après la phrase ; L3 : Les deux, au choix de l'artisan (comme la démo) ; L4 : A. Non ; L5 : A. Phrases réglables aussi ; L6 : Valider ». Gate visuel franchi. Codé : `Compte\PhrasesLettre` (formule d'appel la même pour tous ou selon le client, quatre phrases, trois tournures chacune, vide = la phrase d'avant), dans `Reglages` (dernier paramètre) ; migration `Version20261120220001` (cinq colonnes facultatives sur `artisan`) ; groupe « 4. Les phrases de la lettre » dans « Ma marque », visible quand Lettre est coché ; gabarit Lettre : la phrase de l'artisan, puis « Visite du … » et « Chantier : … » (offre) ou « Selon notre offre n° … du … » (facture). Le commentaire de L1 est ambigu : question posée, rien de codé pour lui.
 - 2026-11-20 : défauts trouvés en route : un client sans nom (offre au client à choisir) faisait tomber « Ma marque » en erreur 500, `appel()` refusant null (corrigé, cas ajouté au test) ; la migration `Version20261120210001` d'une autre session manquait sur ma base de test (jouée) ; champs de trois lignes trop courts à 390 px (quatre). Sur la base de développement, seule ma migration a été jouée, par son nom.
+- 2026-11-22 : Xavier, sur le commentaire de L1 : « l'idée c'est qu'on peut changer le texte pour écrire autrement ». Ce sont donc les mots que la lettre écrit d'elle-même qui deviennent réglables. Recensement dans le gabarit actuel (avec les ajouts du chantier `2026-11-21_lignes-conditions`, commit d9f61e5 : escompte, texte avant et après les lignes propre à l'offre) : quatorze phrases, dix sur l'offre (visite, chantier, début, durée, paiement, escompte, validité, prix avec et sans TVA, non compris), quatre sur la facture (offre d'origine, échéance, montants avec et sans TVA). Maquette `MAQUETTE-lettre-phrases-auto.html` : chaque phrase réécrite autour de pastilles qui portent la donnée, la phrase disparaît quand sa donnée manque, pastille inconnue signalée ; cinq décisions M1 à M5. Gate visuel ouvert pour ce morceau.
 
 ## Décisions
 
@@ -202,4 +202,5 @@ phase 8, couleur trop claire et glissement : tests avant le code : Errors: 3 (Ma
 phase 3 (Lettre) : check.js : bureau 1440/1440 et téléphone 390/390, images 1, cassées 0, kit oui ; demo-lettre.js : « Selon le client » + Madame Exemple donne « Madame, » et « vous prions d'agréer, Madame, nos salutations » ; sans visite : « Chantier : Rue du Test 9 » seul ; champ vidé : phrase actuelle ; débordement 0 ; aucune erreur JS ; captures regardées (haut de page aux deux largeurs, démo aux deux largeurs)
 phase 5 et 6, phrases de Lettre : tests avant le code : Errors 5 (PhrasesLettre absente), colonnes absentes, 3 échecs d'écran ; après : OK (989 tests, 8649 assertions) ; phpstan : [OK] No errors
   lettre-ecran.js (local, demo-peintre, état d'origine remis : bandeau, fixe, phrases identiques) : groupe 4 caché avant Lettre, visible après ; Tournure 3 marquée ; « Enregistré » ; document : « Monsieur, », « Comme convenu, voici notre offre pour les travaux suivants. » ; PDF : « Recevez, Monsieur, nos meilleures salutations. » ; sonde du groupe 4 : 0 débordement, 0 chevauchement, 0 texte coupé ; aucune erreur JS ; deux captures regardées
+phase 3 (phrases de l'application) : check.js : bureau 1440/1440, téléphone 390/390, kit oui ; demo-auto.js aux deux largeurs : « Nous débuterons les travaux la [début des travaux], sauf intempéries. » donne « … la semaine 3, 2027, sauf intempéries. » ; « [date visite] » signalé « Pastille inconnue » ; sans visite, la phrase disparaît ; un non compris : « N'est pas compris : peinture de finition. » ; facture, section à part : « … de la page suivante. » ; débordement 0 ; aucune erreur JS ; deux captures regardées
 ```
