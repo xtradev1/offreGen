@@ -30,7 +30,7 @@
 {% endmacro %}
 
 {# L'adresse du client, à la place de la fenêtre de l'enveloppe. #}
-{% macro adresse(d) %}<div class="doc-adresse">{% if d.client_nom %}{{ d.client_nom }}{% for l in d.client_adresse %}<br>{{ l }}{% endfor %}{% else %}&nbsp;{% endif %}</div>{% endmacro %}
+{% macro adresse(d) %}<div class="doc-adresse">{% if d.client_nom %}{{ d.client_nom }}{% for l in d.client_adresse %}<br>{{ l }}{% endfor %}{% else %}&nbsp;{% endif %}</div>{% if d.mention_representant %}<div class="doc-representant">{{ d.mention_representant }}</div>{% endif %}{% endmacro %}
 
 {# Le tampon d'une facture annulée (1 C, 2026-11-19), dans le flux : rien ne chevauche. #}
 {% macro annulee(d) %}{% if d.annulee %}<div><span class="doc-annulee">Annulée le {{ d.f.annulee_le|jour }}</span></div>{% endif %}{% endmacro %}
@@ -114,14 +114,27 @@
   </table>
 {% endmacro %}
 
+{# Le texte avant ou après les lignes d'une offre (D5 A, 2026-11-21) ; une facture n'en a pas. ou : « avant », « apres ». #}
+{% macro texte(d, ou) %}
+  {% set t = d.facture ? null : d.offre['texte_' ~ ou] ?? null %}
+  {% if t %}<div class="doc-texte doc-texte-{{ ou }}">{{ t|nl2br }}</div>{% endif %}
+{% endmacro %}
+
 {# Les totaux. o : classe (du tableau, « doc-totaux » d'office), tt (classes de couleur des cellules du total). #}
 {% macro totaux(d, o = {}) %}
   {% set t = d.t %}{% set ttc = d.avec_tva ? ' TTC' : '' %}
-  {% set rangs = [['Sous-total' ~ (d.avec_tva ? ' HT' : ''), t.ht|montant]] %}
+  {# Rabais sous le sous-total, avant la TVA (D4 B, D15 A, 2026-11-21). #}
+  {% set rangs = [['Sous-total' ~ (d.avec_tva and t.rabais is empty ? ' HT' : ''), t.sous_total|montant]] %}
+  {% for r in t.rabais %}{% set rangs = rangs|merge([[r.libelle ~ (r.pour_dix_mille ? ' ' ~ r.pour_dix_mille|taux : ''), r.montant|montant, true]]) %}{% endfor %}
+  {% if t.rabais is not empty %}{% set rangs = rangs|merge([['Total' ~ (d.avec_tva ? ' HT' : ''), t.ht|montant]]) %}{% endif %}
   {% if t.par_taux|length > 1 %}{% for g in t.par_taux %}{% set rangs = rangs|merge([['TVA ' ~ g.taux|taux ~ ' sur ' ~ g.ht|montant, g.tva|montant]]) %}{% endfor %}
   {% elseif d.avec_tva %}{% set rangs = rangs|merge([['TVA ' ~ t.par_taux[0].taux|taux, t.tva|montant]]) %}{% endif %}
   {% if t.arrondi != 0 %}{% set rangs = rangs|merge([['Arrondi', t.arrondi|montant]]) %}{% endif %}
-  {% if t.deja > 0 %}{% set rangs = rangs|merge([['Total' ~ ttc, t.ttc|montant], ['Acomptes déjà facturés', t.deja|montant, true]]) %}{% endif %}
+  {# La finale liste chaque acompte déduit (D12 A, 2026-11-21) ; sans la liste, une seule ligne. #}
+  {% if t.deja > 0 %}{% set rangs = rangs|merge([['Total' ~ ttc, t.ttc|montant]]) %}
+    {% if d.acomptes ?? [] %}{% for a in d.acomptes %}{% set rangs = rangs|merge([[(a.libelle ?? ('Acompte ' ~ a.acompte_rang)) ~ ', facture ' ~ a.numero ~ ' du ' ~ a.date_facture|jour, a.ttc|montant, true]]) %}{% endfor %}
+    {% else %}{% set rangs = rangs|merge([['Acomptes déjà facturés', t.deja|montant, true]]) %}{% endif %}
+  {% endif %}
   <table class="{{ o.classe ?? 'doc-totaux' }}">
     {% for rang in rangs %}<tr{% if loop.last %} class="doc-av"{% endif %}><td>{{ rang[0] }}</td><td class="n">{% if rang[2] ?? false %}−&nbsp;{% endif %}{{ rang[1] }}</td></tr>{% endfor %}
     <tr class="doc-tt"><td class="{{ o.tt ?? '' }}">{{ t.deja > 0 ? 'À payer' : 'Total' ~ ttc }}</td><td class="n {{ o.tt ?? '' }}">{{ (t.deja > 0 ? t.a_payer : t.ttc)|chf }}</td></tr>
@@ -134,10 +147,13 @@
   {% set liste %}
     {% if d.facture %}
       {% if d.annulee %}<li><b>Facture annulée le {{ d.f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b></li>{% else %}
-      <li>Payable jusqu'au {{ d.f.echeance|jour }}{% if d.qr %} avec la section de paiement {{ (d.qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}. Merci de votre confiance.</li>{% endif %}
+      <li>Payable jusqu'au {{ d.f.echeance|jour }}{% if d.qr %} avec la section de paiement {{ (d.qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}. Merci de votre confiance.</li>
+      {# Escompte (D13 A, D14 A, 2026-11-21) : en mention ; la section de paiement garde le montant plein. #}
+      {% if d.escompte ?? null %}<li>{{ d.escompte }}</li>{% endif %}{% endif %}
       <li>Montants en francs suisses{% if d.avec_tva %}, TVA comprise dans le total{% endif %}.</li>
     {% else %}
       <li>Paiement&nbsp;: {{ d.r.conditionsPaiement }}</li>
+      {% if d.r.phraseEscompte %}<li>{{ d.r.phraseEscompte }}</li>{% endif %}
       {# Texte libre de l'artisan : son point final, s'il en a mis un, ne double pas le nôtre. #}
       {% set debut = d.chantier ? d.chantier.debut|trim('.', 'right') : '' %}{% set duree = d.chantier ? d.chantier.duree|trim('.', 'right') : '' %}
       {% if (o.delais ?? true) and (debut or duree) %}<li>{% if debut %}Début des travaux&nbsp;: {{ debut }}.{% endif %}{% if debut and duree %} {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}.{% endif %}</li>{% endif %}

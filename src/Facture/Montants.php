@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Facture;
 
 use OffreGen\Compte\Reglages;
+use OffreGen\Offre\Rabais;
 use OffreGen\Offre\Totaux;
 
 /**
@@ -15,10 +16,12 @@ use OffreGen\Offre\Totaux;
 final class Montants
 {
     /**
-     * @param array{statut: string, genre: string, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, deja_facture: int|null} $facture
+     * Les rabais sont ceux que la facture a copiés de l'offre (une finale), jamais ceux de l'offre aujourd'hui.
+     *
+     * @param array{statut: string, genre: string, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, deja_facture: int|null, rabais?: string|null} $facture
      * @param list<array{quantite_milliemes: int, prix_centimes: int, tva_pour_dix_mille?: int|null}> $lignes
      * @param int $dejaFactureVivant le TTC des acomptes émis de l'offre aujourd'hui (DepotFactures::dejaFacture)
-     * @return array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>, taux: int, deja: int, a_payer: int}
+     * @return array{lignes: list<int>, sous_total: int, rabais: list<array{libelle: string, pour_dix_mille: int|null, montant: int}>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>, taux: int, deja: int, a_payer: int}
      */
     public static function de(array $facture, array $lignes, Reglages $r, int $dejaFactureVivant): array
     {
@@ -26,7 +29,7 @@ final class Montants
         $taux = $figee ? (int) $facture['tva_pour_dix_mille'] : $r->tvaPourDixMille;
         $arrondi = $figee ? $facture['arrondi_cinq'] === 1 : $r->arrondiCinqCentimes;
         $deja = $figee ? (int) $facture['deja_facture'] : ($facture['genre'] === 'finale' ? $dejaFactureVivant : 0);
-        $t = Totaux::calculer($lignes, $taux, $arrondi);
+        $t = Totaux::calculer($lignes, $taux, $arrondi, Rabais::liste($facture['rabais'] ?? null));
         return $t + ['taux' => $taux, 'deja' => $deja, 'a_payer' => $t['ttc'] - $deja];
     }
 }

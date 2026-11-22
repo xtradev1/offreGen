@@ -3,7 +3,7 @@ chantier: Lignes offertes, rabais, conditions par offre, représentant, libellé
 slug: 2026-11-21_lignes-conditions
 phase: 5
 statut: en_cours
-gate_attendu: aucun (lot 1 livré en code, déploiement sur le test à l'accord de Xavier)
+gate_attendu: aucun (lots 2 à 7 livrés en code, non commités ; commit, push et déploiement sur le test à l'accord de Xavier)
 ---
 
 ## Suivi Origin
@@ -12,14 +12,16 @@ gate_attendu: aucun (lot 1 livré en code, déploiement sur le test à l'accord 
 
 ## Prochaine action
 
-Lot 1 (ligne offerte, ouverture de la ligne au toucher, plus de « ? ») livré en code dans `~/offreGen-lignes`, non commité. Sur l'accord de Xavier : commit, push sur `chantier-voix-offre`, déploiement sur le test (migration `Version20261122000001` comprise), recette de Xavier. Puis lot 2 (rabais). `SPEC.md` et `PLAN.md` écrits le 2026-11-22.
+Lots 2 à 7 livrés en code dans `~/offreGen-lignes`, non commités (revue faite, `REVUE.md`). Sur l'accord de Xavier : commit, push sur `chantier-voix-offre`, déploiement sur le test (migrations `…0002` à `…0006`), recette de Xavier. Ensuite : clôture (supprimer les bases `offregen_lignes_test` et `offregen_lignes_dev`, `/roadmap-sync`).
 
 ## En attente de Xavier
 
 - D17 : « Offert » sans prix = taper 0 ; la bascule « Prix barré / Offert seul » de la v2 disparaît (D1 C tenue autrement).
 - D18 : offre baissée sous les acomptes déjà facturés : facture finale refusée avec l'écart (prototype) ou facture finale négative (note de crédit).
 - Création de la tâche Origin.
-- Accord pour commit, push et déploiement sur le test du lot 1 (des artisans d'essai utilisent ce site).
+- Accord pour commit, push et déploiement des lots 2 à 7 sur le test.
+- M2 de la revue : « Représenté par » sur une facture adressée au client chez lui, garder ou retirer.
+- M5 de la revue : refuser un escompte dont le délai dépasse celui du paiement ?
 
 ## Constats sur le code (e48eab4, vérifiés le 2026-11-21)
 
@@ -60,6 +62,8 @@ Lot 1 (ligne offerte, ouverture de la ligne au toucher, plus de « ? ») livré 
 
 ## Journal
 
+- 2026-11-22 : recette du lot 1 sur le test par Xavier : « ça marche, attaque le lot 2 et les autres lot ». Lots 2 à 7 codés (contrat et décisions fragiles dans `PLAN.md`). Défaut du lot 1 trouvé et corrigé : « Annuler et refaire » une facture perdait la marque « offerte » (test rouge sans le correctif, vert avec). Revue indépendante (Opus) : deux défauts importants (rabais sous les acomptes émis, rabais au-delà du sous-total) et quatre mineurs corrigés, le reste noté (`REVUE.md`). D18 : la finale négative est déjà refusée à l'émission (code d'avant le chantier).
+
 - 2026-11-22 : Xavier veut la vraie interface (« j'ai besoin d'avoir la vraie interface pour voir comment ça s'intègre ») ; toucher une ligne l'ouvre partout sauf au défilement ; la fenêtre de la ligne reçoit les nouveaux réglages. Gate intention tenu pour franchi par ses réponses D1 à D16 et ses règles du 21 : `SPEC.md` les rassemble sans choix nouveau. Phase 2 (décomposition) sautée : un seul chantier, découpé en lots dans `PLAN.md`. Phase 3 faite (maquettes v1 à v3). Copie avancée sur 77954ce, bases `offregen_lignes_test` et `offregen_lignes_dev` créées. Lot 1 codé ; modèle retenu : colonne `offerte`, pas de prix NULL (décision fragile n° 1 du plan). L'étiquette « Offerte » à côté du nom, vue sur capture, retirée : elle répétait le « Offert » du total.
 
 - 2026-11-21 : demande de Xavier (ligne à 0, ligne offerte ou négative, conditions et textes par offre, client et mandant, libellé d'acompte, escompte). Constats dans le code, `MAQUETTE-lignes-conditions.html` (D1 à D15), réponses de Xavier, puis prototype `MAQUETTE-lignes-conditions-v2.html` à sa demande (« je fais les clics puis je vois avec un exemple prédéterminé »).
@@ -67,6 +71,10 @@ Lot 1 (ligne offerte, ouverture de la ligne au toucher, plus de « ? ») livré 
 
 ## Preuves
 
+- 2026-11-22, lots 2 à 7, base `offregen_lignes_test` : avant la revue `Tests: 1069, Assertions: 9198, Failures: 1` (FacturesEcranTest attendait l'ancienne ligne « Acomptes déjà facturés », remplacée par D12 A ; test mis à jour, `OK (25 tests, 298 assertions)`). Après les corrections de la revue : `OK (1074 tests, 9233 assertions)`. phpstan `[OK]` (aucune erreur). 60 fichiers touchés, aucun BOM ni tiret long.
+- Parcours Playwright local (serveur 8031, base `offregen_lignes_dev`) : largeur 390/390 ; valeur du rabais cachée à 5 %, visible pour « Autre % » ; rabais « Rabais fidélité 7,5 % − CHF 173.70 » à l'écran ; carte « Valable 60 jours, à 30 jours / Escompte 2 % à 10 jours » ; texte avant gardé après rechargement ; représentant choisi ; document : rabais, Total HT, escompte, texte avant, « Pour le compte de », aucun « ? » ; puce de libellé d'acompte remplit le champ ; PC : fenêtre du rabais par-dessus l'offre ; aucune erreur JS. Captures regardées : défauts trouvés et corrigés (carte Conditions sans cadre, champs d'escompte sans style). Non vérifié : sur le site de test lui-même.
+
+- 2026-11-22, déploiement : commit 814750a poussé sur `chantier-voix-offre`, `outils/deployer-test.sh` : `DÉPLOYÉ : 814750a1ae2e90c6699f6ea1923702f95a856c02`, `/sante` `{"commit":"814750a…","base":"ok","migrations":"ok"}`, `SONDE VERTE`. Parcours cliqué sur le test lui-même : non fait (seulement en local).
 - 2026-11-22, avant le lot 1, base `offregen_lignes_test` : `OK (989 tests, 8649 assertions)`.
 - Tests du lot écrits d'abord : `Tests: 30, Assertions: 37, Errors: 13, Failures: 4` (rouge attendu), puis `OK (30 tests, 77 assertions)`.
 - Après le lot : `OK (1006 tests, 8711 assertions)` ; phpstan `[OK] No errors` ; aucun BOM ni tiret long dans les 23 fichiers touchés.

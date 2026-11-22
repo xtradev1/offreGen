@@ -30,6 +30,7 @@ final class ReglagesControleur
 {
     private const CHAMPS = ['entreprise', 'contact_nom', 'adresse_rue', 'adresse_numero', 'adresse_npa', 'adresse_localite', 'adresse_pays', 'telephone', 'courriel_contact', 'ide', 'iban', 'tva', 'validite_choix', 'validite_jours',
                             'paiement_type', 'paiement_jours_choix', 'paiement_jours', 'paiement_acomptes_choix', 'paiement_acomptes',
+                            'escompte_pourcent', 'escompte_jours',
                             'modele', 'couleur_choix', 'couleur',
                             'lettre_appel', 'lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin'];
 
@@ -164,14 +165,15 @@ final class ReglagesControleur
     /**
      * Une petite offre de peintre, pour l'aperçu d'un compte qui n'a encore rien dicté.
      *
-     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_id: null, client_nom: string, client_adresse: string, client_dicte: null, lieu_dicte: null, cree_le: string, modifiee_le: null, envoyee_le: null, postes_coupes: int, chantier_adresse: null, chantier_contact: null, chantier_acces: null, debut_travaux: null, duree_travaux: null, non_compris: null, visite_le: null}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, a_verifier: int, entendu: null, produit_id: null, categorie: string, tva_pour_dix_mille: null, tva_ligne: null, prix_dicte_centimes: null, prix_catalogue: null, piece: null}>}
+     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_id: null, client_nom: string, client_adresse: string, client_dicte: null, lieu_dicte: null, cree_le: string, modifiee_le: null, envoyee_le: null, postes_coupes: int, chantier_adresse: null, chantier_contact: null, chantier_acces: null, debut_travaux: null, duree_travaux: null, non_compris: null, visite_le: null, rabais: null, conditions: null, texte_avant: null, texte_apres: null, representant_id: null, representant_nom: null, representant_adresse: null, offre_adressee: string, factures_adressees: string}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, a_verifier: int, entendu: null, produit_id: null, categorie: string, tva_pour_dix_mille: null, tva_ligne: null, prix_dicte_centimes: null, prix_catalogue: null, piece: null}>}
      */
     private static function exemple(\DateTimeImmutable $maintenant): array
     {
         $offre = ['id' => 0, 'numero' => 1, 'enregistrement_id' => null, 'titre' => 'Rafraîchissement du séjour', 'client_id' => null,
                   'client_nom' => 'Madame Exemple', 'client_adresse' => "Rue de l'Exemple 1\n2800 Delémont", 'client_dicte' => null, 'lieu_dicte' => null,
                   'cree_le' => $maintenant->format('Y-m-d H:i:s'), 'modifiee_le' => null, 'envoyee_le' => null, 'postes_coupes' => 0,
-                  'chantier_adresse' => null, 'chantier_contact' => null, 'chantier_acces' => null, 'debut_travaux' => null, 'duree_travaux' => null, 'non_compris' => null, 'visite_le' => null];
+                  'chantier_adresse' => null, 'chantier_contact' => null, 'chantier_acces' => null, 'debut_travaux' => null, 'duree_travaux' => null, 'non_compris' => null, 'visite_le' => null, 'rabais' => null, 'conditions' => null, 'texte_avant' => null, 'texte_apres' => null,
+            'representant_id' => null, 'representant_nom' => null, 'representant_adresse' => null, 'offre_adressee' => 'representant', 'factures_adressees' => 'pa'];
         $lignes = [];
         foreach ([['Préparation', 'Protection des sols et des meubles', 1000, 'forfait', 18000],
                   ['Préparation', 'Ponçage et rebouchage des murs', 42000, 'm²', 900],
@@ -278,8 +280,6 @@ final class ReglagesControleur
     {
         $r = $this->c->reglages($portee)->lire();
         $m = $this->c->reglages($portee)->lireMarque();
-        $acomptes = implode(',', $r->paiementAcomptes);
-        $proposes = array_map(static fn (array $a): string => implode(',', $a), Reglages::ACOMPTES_PROPOSES);
         return ['entreprise' => $r->entreprise, 'contact_nom' => $r->contactNom,
                 'adresse_rue' => $r->adresse->rue, 'adresse_numero' => $r->adresse->numero, 'adresse_npa' => $r->adresse->npa,
                 'adresse_localite' => $r->adresse->localite, 'adresse_pays' => $r->adresse->pays,
@@ -287,17 +287,9 @@ final class ReglagesControleur
                 'adresse_ancienne' => $this->c->reglages($portee)->adresseAReprendre(),
                 'telephone' => $r->telephone, 'courriel_contact' => $r->courrielContact,
                 'ide' => $r->ide, 'iban' => Iban::lisible($r->iban), 'tva' => (string) $r->tvaPourDixMille,
-                // Une valeur proposée se montre cochée ; une autre, sous « Autre ».
-                'validite_choix' => in_array($r->validiteJours, Reglages::VALIDITES_PROPOSEES, true) ? (string) $r->validiteJours : 'autre',
-                'validite_jours' => (string) $r->validiteJours,
-                'paiement_type' => $r->paiementType,
-                'paiement_jours_choix' => in_array($r->paiementJours, Reglages::DELAIS_PROPOSES, true) ? (string) $r->paiementJours : 'autre',
-                'paiement_jours' => (string) $r->paiementJours,
-                'paiement_acomptes_choix' => $acomptes === '' ? '30,70' : (in_array($acomptes, $proposes, true) ? $acomptes : 'autre'),
-                'paiement_acomptes' => str_replace(',', ', ', $acomptes),
                 'modele' => $m->modele,
                 'couleur_choix' => in_array($m->couleur(), self::teintes($m), true) ? $m->couleur() : 'autre',
-                'couleur' => $m->couleur()] + $r->lettre->versChamps();
+                'couleur' => $m->couleur()] + $r->conditions()->versChamps() + $r->lettre->versChamps();
     }
 
     private function portee(Request $requete): Portee

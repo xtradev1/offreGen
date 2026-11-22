@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{# Les conditions d'une offre (D5 A, 2026-11-21) : les mêmes choix que dans Réglages, remplis avec ceux de l'offre ou
+   du compte ; enregistrées ici, elles ne valent que pour cette offre. #}
+{% block titre %}Conditions · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}Conditions de cette offre{% endblock %}
+
+{% block contenu %}
+  {% if erreurs is not empty %}<p class="alerte bad" role="alert">Pas enregistré&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  <p class="muted petit">Remplies avec vos réglages&nbsp;; changées ici, elles ne valent que pour cette offre.</p>
+  <form id="conditions" method="post" action="/offres/{{ offre.id }}/conditions">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    {% include '_reglages_conditions.html.twig' %}
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/offres/{{ offre.id }}">Annuler</a>
+    <button class="btn primary" type="submit" form="conditions">Enregistrer</button>
+  </div>
+{% endblock %}

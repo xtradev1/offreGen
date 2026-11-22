@@ -16,12 +16,13 @@ use OffreGen\Adresse\Adresse;
  * et le même calcul des totaux les servent.
  *
  * L'adresse du client est copiée à la création, en texte (client_adresse, pour le document) et en champs
- * (client_rue… client_pays, pour la section de paiement).
+ * (client_rue… client_pays, pour la section de paiement). Une offre représentée (D10 C, 2026-11-21) : client_adresse
+ * peut être « p.a. » le représentant ; les champs restent ceux du client, qui paie (« Payable par »).
  *
- * @phpstan-type Facture array{id: int, offre_id: int, offre_numero: int, offre_cree_le: string, numero: string|null, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, statut: string, date_facture: string, echeance: string, titre: string, client_nom: string, client_adresse: string|null, client_rue: string|null, client_numero: string|null, client_npa: string|null, client_localite: string|null, client_pays: string|null, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, iban: string|null, reference: string|null, ht: int|null, tva: int|null, arrondi: int|null, ttc: int|null, deja_facture: int|null, a_payer: int|null, cree_le: string, modifiee_le: string|null, emise_le: string|null, annulee_le: string|null, refaite_depuis: int|null, envoyee_le: string|null}
+ * @phpstan-type Facture array{id: int, offre_id: int, offre_numero: int, offre_cree_le: string, numero: string|null, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, statut: string, date_facture: string, echeance: string, titre: string, client_nom: string, client_adresse: string|null, client_rue: string|null, client_numero: string|null, client_npa: string|null, client_localite: string|null, client_pays: string|null, tva_pour_dix_mille: int|null, arrondi_cinq: int|null, iban: string|null, reference: string|null, ht: int|null, tva: int|null, arrondi: int|null, ttc: int|null, deja_facture: int|null, a_payer: int|null, cree_le: string, modifiee_le: string|null, emise_le: string|null, annulee_le: string|null, refaite_depuis: int|null, envoyee_le: string|null, rabais: string|null, representant_nom: string|null, libelle: string|null, escompte_pour_dix_mille: int, escompte_jours: int}
  * @phpstan-type FactureLigne array{id: int, facture_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, a_verifier: int, entendu: null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null}
  * @phpstan-type LigneACopier array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, categorie: string|null, produit_id: int|null, tva_pour_dix_mille?: int|null, offerte?: int}
- * @phpstan-type Entete array{offre_id: int, numero: string|null, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, date_facture: \DateTimeImmutable, echeance: \DateTimeImmutable, titre: string, client_nom: string, client_adresse: string|null, client_postale: Adresse, refaite_depuis?: int|null}
+ * @phpstan-type Entete array{offre_id: int, numero: string|null, genre: string, acompte_rang: int|null, acompte_nombre: int|null, acompte_pourcent: int|null, date_facture: \DateTimeImmutable, echeance: \DateTimeImmutable, titre: string, client_nom: string, client_adresse: string|null, client_postale: Adresse, refaite_depuis?: int|null, rabais?: string|null, representant_nom?: string|null, libelle?: string|null, escompte_pour_dix_mille?: int, escompte_jours?: int}
  */
 final class DepotFactures implements SupportLignes
 {
@@ -32,7 +33,7 @@ final class DepotFactures implements SupportLignes
     private const SELECT_FACTURE = 'SELECT f.id, f.offre_id, o.numero AS offre_numero, o.cree_le AS offre_cree_le, f.numero, f.genre,
             f.acompte_rang, f.acompte_nombre, f.acompte_pourcent, f.statut, f.date_facture, f.echeance, f.titre, f.client_nom,
             f.client_adresse, f.client_rue, f.client_numero, f.client_npa, f.client_localite, f.client_pays, f.tva_pour_dix_mille, f.arrondi_cinq, f.iban, f.reference, f.ht, f.tva, f.arrondi, f.ttc,
-            f.deja_facture, f.a_payer, f.cree_le, f.modifiee_le, f.emise_le, f.annulee_le, f.refaite_depuis, f.envoyee_le
+            f.deja_facture, f.a_payer, f.cree_le, f.modifiee_le, f.emise_le, f.annulee_le, f.refaite_depuis, f.envoyee_le, f.rabais, f.representant_nom, f.libelle, f.escompte_pour_dix_mille, f.escompte_jours
          FROM facture f JOIN offre o ON o.id = f.offre_id AND o.artisan_id = f.artisan_id';
 
     private const COLONNES_LIGNE = 'l.id, l.facture_id, l.rang, l.designation, l.quantite_milliemes, l.unite, l.prix_centimes, l.offerte,
@@ -63,15 +64,19 @@ final class DepotFactures implements SupportLignes
             $this->base->ecrire(
                 'INSERT INTO facture (artisan_id, offre_id, numero, genre, acompte_rang, acompte_nombre, acompte_pourcent, statut,
                      date_facture, echeance, titre, client_nom, client_adresse, client_rue, client_numero, client_npa, client_localite,
-                     client_pays, cree_le, refaite_depuis)
+                     client_pays, cree_le, refaite_depuis, rabais, representant_nom, libelle, escompte_pour_dix_mille, escompte_jours)
                  VALUES (:a, :o, :n, :g, :ar, :an, :ap, :s, :d, :ec, :t, :cn, :ca, :client_rue, :client_numero, :client_npa, :client_localite,
-                     :client_pays, :q, :rd)',
+                     :client_pays, :q, :rd, :rb, :rn, :lb, :ep, :ej)',
                 $e['client_postale']->versBase('client_') + ['a' => $this->portee->artisanId, 'o' => $e['offre_id'], 'n' => $e['numero'], 'g' => $e['genre'],
                  'ar' => $e['acompte_rang'], 'an' => $e['acompte_nombre'], 'ap' => $e['acompte_pourcent'], 's' => self::BROUILLON,
                  'd' => $e['date_facture']->format('Y-m-d'), 'ec' => $e['echeance']->format('Y-m-d'),
                  't' => mb_substr($e['titre'], 0, 190), 'cn' => mb_substr($e['client_nom'], 0, 190),
                  'ca' => $e['client_adresse'] === null ? null : mb_substr($e['client_adresse'], 0, 255),
-                 'q' => Dates::versBase($quand), 'rd' => $this->factureDeLArtisan($e['refaite_depuis'] ?? null)],
+                 'q' => Dates::versBase($quand), 'rd' => $this->factureDeLArtisan($e['refaite_depuis'] ?? null),
+                 'rb' => $e['rabais'] ?? null,
+                 'rn' => isset($e['representant_nom']) ? mb_substr($e['representant_nom'], 0, 190) : null,
+                 'lb' => isset($e['libelle']) ? mb_substr($e['libelle'], 0, 255) : null,
+                 'ep' => $e['escompte_pour_dix_mille'] ?? 0, 'ej' => $e['escompte_jours'] ?? 0],
             );
             $id = $this->base->dernierId();
             foreach ($lignes as $rang => $l) {
@@ -161,6 +166,23 @@ final class DepotFactures implements SupportLignes
             "SELECT id FROM facture WHERE offre_id = :o AND artisan_id = :a AND genre = 'finale' AND statut <> 'annulee' LIMIT 1",
             ['o' => $offreId, 'a' => $this->portee->artisanId],
         ) !== false;
+    }
+
+    /**
+     * Les acomptes émis de l'offre, du premier au dernier, que la facture finale liste (D12 A, 2026-11-21). Avec $avant,
+     * ceux émis jusqu'à ce moment : ceux qu'une finale émise a déduits.
+     *
+     * @return list<array{numero: string|null, libelle: string|null, acompte_rang: int|null, date_facture: string, ttc: int}>
+     */
+    public function acomptesEmis(int $offreId, ?string $avant = null): array
+    {
+        /** @var list<array{numero: string|null, libelle: string|null, acompte_rang: int|null, date_facture: string, ttc: int}> */
+        return $this->base->lire(
+            "SELECT numero, libelle, acompte_rang, date_facture, COALESCE(ttc, 0) AS ttc FROM facture
+             WHERE offre_id = :o AND artisan_id = :a AND genre = 'acompte' AND statut = 'emise' AND (:avant IS NULL OR emise_le <= :avant2)
+             ORDER BY emise_le, id",
+            ['o' => $offreId, 'a' => $this->portee->artisanId, 'avant' => $avant, 'avant2' => $avant],
+        );
     }
 
     /** Le TTC des acomptes émis de l'offre, que la facture finale déduit. */

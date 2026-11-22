@@ -8,6 +8,7 @@ use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
 use OffreGen\Donnees\Statut;
 use OffreGen\Http\Conteneur;
+use OffreGen\Offre\Rabais;
 use OffreGen\Offre\Totaux;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -90,7 +91,7 @@ final class AccueilControleur
         $aRelire = [];
         foreach ($offres as $o) {
             $lesLignes = $lignes[$o['id']] ?? [];
-            $totaux[$o['id']] = Totaux::calculer($lesLignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes)['ttc'];
+            $totaux[$o['id']] = Totaux::calculer($lesLignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes, Rabais::liste($o['rabais']))['ttc'];
             $aRelire[$o['id']] = count(array_filter($lesLignes, static fn (array $l): bool => $l['a_verifier'] === 1));
         }
         return [$totaux, $aRelire];

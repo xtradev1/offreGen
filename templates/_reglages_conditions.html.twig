@@ -45,4 +45,17 @@
     </div>
     <p class="phrase">Sur l'offre&nbsp;: «&nbsp;<span data-phrase>{{ phrase }}</span>&nbsp;»</p>
   </fieldset>
+
+  {# Escompte (D13, D14, 2026-11-21) : sur l'offre et sur chaque facture, en mention ; vide, pas d'escompte. #}
+  <fieldset class="groupe escompte">
+    <legend>Escompte</legend>
+    <div class="ligne-cond">
+      <input id="escompte_pourcent" name="escompte_pourcent" value="{{ champs.escompte_pourcent ?? '' }}" inputmode="decimal" autocomplete="off" aria-label="Escompte en pour cent"{{ f.invalide(erreurs, 'escompte_pourcent') }}>
+      <span>%&nbsp;à</span>
+      <input id="escompte_jours" name="escompte_jours" value="{{ champs.escompte_jours ?? '' }}" inputmode="numeric" autocomplete="off" aria-label="Escompte, délai en jours"{{ f.invalide(erreurs, 'escompte_jours') }}>
+      <span>jours</span>
+    </div>
+    {{ f.erreur(erreurs, 'escompte_pourcent') }}{{ f.erreur(erreurs, 'escompte_jours') }}
+    <p class="muted petit">Vide&nbsp;: pas d'escompte.</p>
+  </fieldset>
 </div>

@@ -18,7 +18,7 @@ use OffreGen\Client\Rapprochement;
  *
  * @phpstan-type Client array{id: int, nom: string, adresse: string|null, rue: string|null, numero: string|null, npa: string|null, localite: string|null, pays: string|null, telephone: string|null, courriel: string|null}
  * @phpstan-type ClientListe array{id: int, nom: string, adresse: string|null, rue: string|null, numero: string|null, npa: string|null, localite: string|null, pays: string|null, telephone: string|null, courriel: string|null, nb_offres: int, derniere: string|null}
- * @phpstan-type OffreDuClient array{id: int, numero: int, titre: string, cree_le: string, archivee_le: string|null}
+ * @phpstan-type OffreDuClient array{id: int, numero: int, titre: string, cree_le: string, archivee_le: string|null, rabais: string|null}
  * @phpstan-type FicheClient array{nom: string, adresse: Adresse, ancienne?: string|null, telephone: string|null, courriel: string|null, exemple?: bool}
  */
 final class DepotClients
@@ -67,7 +67,7 @@ final class DepotClients
     {
         /** @var list<OffreDuClient> */
         return $this->base->lire(
-            'SELECT id, numero, titre, cree_le, archivee_le FROM offre
+            'SELECT id, numero, titre, cree_le, archivee_le, rabais FROM offre
              WHERE client_id = :c AND artisan_id = :a AND supprimee_le IS NULL ORDER BY cree_le DESC, id DESC',
             ['c' => $id, 'a' => $this->portee->artisanId],
         );
@@ -140,6 +140,7 @@ final class DepotClients
                  WHERE o.client_id = :id AND o.artisan_id = :a',
                 ['id' => $id, 'a' => $this->portee->artisanId],
             );
+            $this->base->ecrire('UPDATE offre SET representant_id = NULL WHERE representant_id = :id AND artisan_id = :a', ['id' => $id, 'a' => $this->portee->artisanId]);
             $this->base->ecrire('DELETE FROM client WHERE id = :id AND artisan_id = :a', ['id' => $id, 'a' => $this->portee->artisanId]);
             return true;
         });
@@ -155,7 +156,7 @@ final class DepotClients
     {
         $effacees = $this->base->ecrire(
             'DELETE FROM client WHERE artisan_id = :a AND exemple = 1
-             AND NOT EXISTS (SELECT 1 FROM offre o WHERE o.client_id = client.id AND o.artisan_id = client.artisan_id)',
+             AND NOT EXISTS (SELECT 1 FROM offre o WHERE (o.client_id = client.id OR o.representant_id = client.id) AND o.artisan_id = client.artisan_id)',
             ['a' => $this->portee->artisanId],
         );
         $this->base->ecrire('UPDATE client SET exemple = 0 WHERE artisan_id = :a AND exemple = 1', ['a' => $this->portee->artisanId]);
@@ -165,7 +166,7 @@ final class DepotClients
     /** Toutes les fiches de l'artisan, après ses offres (réinitialisation d'un compte de démonstration). */
     public function toutEffacer(): void
     {
-        $this->base->ecrire('UPDATE offre SET client_id = NULL WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
+        $this->base->ecrire('UPDATE offre SET client_id = NULL, representant_id = NULL WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
         $this->base->ecrire('DELETE FROM client WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);
     }
 }

@@ -24,12 +24,14 @@
 
   <div class="totals">
     {% set avec_tva = montants.par_taux|filter(g => g.taux > 0)|length > 0 %}
-    <div class="r"><span>Sous-total{% if avec_tva %} HT{% endif %}</span><span>{{ montants.ht|chf }}</span></div>
+    <div class="r"><span>Sous-total{% if avec_tva and montants.rabais is empty %} HT{% endif %}</span><span>{{ montants.sous_total|chf }}</span></div>
+    {% for r in montants.rabais %}<div class="r"><span>{{ r.libelle }}{% if r.pour_dix_mille %} {{ r.pour_dix_mille|taux }}{% endif %}</span><span>−&nbsp;{{ r.montant|chf }}</span></div>{% endfor %}
+    {% if montants.rabais is not empty %}<div class="r"><span>Total{% if avec_tva %} HT{% endif %}</span><span>{{ montants.ht|chf }}</span></div>{% endif %}
     {% if montants.par_taux|length > 1 %}{% for g in montants.par_taux %}<div class="r"><span>TVA {{ g.taux|taux }} sur {{ g.ht|chf }}</span><span>{{ g.tva|chf }}</span></div>{% endfor %}{% elseif avec_tva %}<div class="r"><span>TVA {{ montants.par_taux[0].taux|taux }}</span><span>{{ montants.tva|chf }}</span></div>{% endif %}
     {% if montants.arrondi != 0 %}<div class="r"><span>Arrondi</span><span>{{ montants.arrondi|chf }}</span></div>{% endif %}
     {% if montants.deja > 0 %}
       <div class="r"><span>Total{% if avec_tva %} TTC{% endif %}</span><span>{{ montants.ttc|chf }}</span></div>
-      <div class="r"><span>Acomptes déjà facturés</span><span>−&nbsp;{{ montants.deja|chf }}</span></div>
+      {% for a in acomptes %}<div class="r"><span>{{ a.libelle ?? ('Acompte ' ~ a.acompte_rang) }}, facture {{ a.numero }}</span><span>−&nbsp;{{ a.ttc|chf }}</span></div>{% else %}<div class="r"><span>Acomptes déjà facturés</span><span>−&nbsp;{{ montants.deja|chf }}</span></div>{% endfor %}
       <div class="r grand"><span>À payer</span><span data-a-payer>{{ montants.a_payer|chf }}</span></div>
     {% else %}
       <div class="r grand"><span>Total{% if avec_tva %} TTC{% endif %}</span><span data-a-payer>{{ montants.ttc|chf }}</span></div>

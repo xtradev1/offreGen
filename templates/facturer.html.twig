@@ -58,6 +58,17 @@
                 <input id="montant" name="montant" value="{{ champs.montant }}" inputmode="decimal" autocomplete="off" placeholder="1500"{{ f.invalide(erreurs, 'montant') }}>
                 {{ f.erreur(erreurs, 'montant') }}
               </div>
+              {# Libellé libre (D11 A, 2026-11-21) : vide, celui des conditions ; trois puces le remplissent d'un toucher. #}
+              <div class="champ">
+                <label for="libelle">Libellé sur la facture</label>
+                <input id="libelle" name="libelle" value="{{ champs.libelle }}" maxlength="200" autocomplete="off" placeholder="Celui des conditions, par exemple «&nbsp;Acompte 1, selon offre n°&nbsp;{{ offre_numero }}&nbsp;»"{{ f.invalide(erreurs, 'libelle') }}>
+                <div class="puces">
+                  {% for court, long in {'À la commande': 'Acompte à la commande', 'Au début des travaux': 'Acompte au début des travaux', 'À mi-chantier': 'Acompte à mi-chantier'} %}
+                    <button class="puce" type="button" data-libelle-puce="{{ long }}, selon offre n°&nbsp;{{ offre_numero }}">{{ court }}</button>
+                  {% endfor %}
+                </div>
+                {{ f.erreur(erreurs, 'libelle') }}
+              </div>
             </div>
           {% endif %}
 

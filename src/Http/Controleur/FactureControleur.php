@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Adresse\Adresse;
+use OffreGen\Compte\Conditions;
 use OffreGen\Compte\Reglages;
 use OffreGen\Donnees\Dates;
 use OffreGen\Donnees\DepotClients;
@@ -24,6 +25,7 @@ use OffreGen\Http\Formats;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
 use OffreGen\Offre\Offerte;
+use OffreGen\Offre\Rabais;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\Totaux;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -62,7 +64,7 @@ final class FactureControleur
         $rangees = [];
         foreach ($factures as $f) {
             $montants = Montants::de($f, $lignes[$f['id']] ?? [], $r, $f['statut'] === DepotFactures::BROUILLON ? $depot->dejaFacture($f['offre_id']) : 0);
-            $localite = self::localite($f['client_adresse']);
+            $localite = $f['client_localite'] !== null && $f['client_localite'] !== '' ? $f['client_localite'] : self::localite($f['client_adresse']);
             $rangees[] = $f + [
                 'a_payer_vue' => $montants['a_payer'],
                 'localite' => $localite,
@@ -82,7 +84,7 @@ final class FactureControleur
     {
         $offre = $this->offre($requete, $parametres);
         $possibles = $this->possibles($requete, $offre);
-        return $this->formulaireNouvelle($requete, $offre, $possibles, $this->champsProposes($requete, $possibles), [], 200);
+        return $this->formulaireNouvelle($requete, $offre, $possibles, $this->champsProposes($requete, $offre, $possibles), [], 200);
     }
 
     /**
@@ -96,9 +98,10 @@ final class FactureControleur
         $offre = $this->offre($requete, $parametres);
         $possibles = $this->possibles($requete, $offre);
         $q = $requete->query;
-        $champs = array_merge($this->champsProposes($requete, $possibles), array_filter([
+        $champs = array_merge($this->champsProposes($requete, $offre, $possibles), array_filter([
             'genre' => $q->getString('genre'), 'pourcent' => $q->getString('pourcent'), 'montant' => $q->getString('montant'),
             'numero' => $q->getString('numero'), 'date' => $q->getString('date'), 'echeance' => $q->getString('echeance'),
+            'libelle' => $q->getString('libelle'),
         ], static fn (string $v): bool => $v !== ''));
         if (!$q->has('montant')) {
             $champs['montant'] = '';
@@ -139,7 +142,8 @@ final class FactureControleur
             return new RedirectResponse('/factures/' . $deja . ($f['statut'] === DepotFactures::BROUILLON ? '' : '/apercu'), 303);
         }
         $champs = ['genre' => $r->getString('genre'), 'pourcent' => $r->getString('pourcent'), 'montant' => $r->getString('montant'),
-                   'numero' => $r->getString('numero'), 'date' => $r->getString('date'), 'echeance' => $r->getString('echeance')];
+                   'numero' => $r->getString('numero'), 'date' => $r->getString('date'), 'echeance' => $r->getString('echeance'),
+                   'libelle' => $r->getString('libelle')];
         $corriger = $r->getString('suite') === 'corriger';
         if (trim($champs['numero']) === '') {
             // Numéro laissé vide : le suivant, comme le propose la feuille.
@@ -171,8 +175,9 @@ final class FactureControleur
                         'offre_id' => $offre['id'], 'numero' => $numero, 'genre' => $choisi['genre'],
                         'acompte_rang' => $choisi['rang'], 'acompte_nombre' => $choisi['nombre'], 'acompte_pourcent' => $choisi['pourcent'],
                         'date_facture' => $entete['date'], 'echeance' => $entete['echeance'],
-                        'titre' => $offre['titre'], 'client_nom' => (string) $offre['client_nom'], 'client_adresse' => $offre['client_adresse'],
-                        'client_postale' => $this->adresseClient($requete, $offre),
+                        'titre' => $offre['titre'], 'client_nom' => (string) $offre['client_nom'], 'client_adresse' => self::adresseDeFacture($offre),
+                        'client_postale' => $this->adresseClient($requete, $offre), 'rabais' => $pret['rabais'], 'representant_nom' => $offre['representant_nom'],
+                        'libelle' => $pret['libelle'], 'escompte_pour_dix_mille' => $pret['escompte'][0], 'escompte_jours' => $pret['escompte'][1],
                     ], $pret['lignes'], $this->c->horloge()->now());
                 } catch (\PDOException $e) {
                     // Deux factures créées au même instant avec le même numéro : l'index unique tranche.
@@ -212,10 +217,11 @@ final class FactureControleur
      * Les choix proposés à l'ouverture de la feuille : la première facture possible, le pourcentage du plan, le numéro
      * suivant, la date du jour et l'échéance des conditions.
      *
+     * @param Offre $offre
      * @param list<Genre> $possibles
      * @return array{genre: string, pourcent: string, montant: string, numero: string, date: string, echeance: string}
      */
-    private function champsProposes(Request $requete, array $possibles): array
+    private function champsProposes(Request $requete, array $offre, array $possibles): array
     {
         $date = $this->aujourdhui();
         $genre = $possibles[0]['genre'] ?? 'finale';
@@ -226,7 +232,7 @@ final class FactureControleur
             'montant' => '',
             'numero' => $this->numeroPropose($requete),
             'date' => $date->format('Y-m-d'),
-            'echeance' => PlanAcomptes::echeance($this->c->reglages($this->portee($requete))->lire(), $genre, $date)->format('Y-m-d'),
+            'echeance' => PlanAcomptes::echeance($this->c->reglages($this->portee($requete))->lire()->pourOffre($offre['conditions']), $genre, $date)->format('Y-m-d'),
         ];
     }
 
@@ -237,7 +243,7 @@ final class FactureControleur
      * @param Offre $offre
      * @param list<Genre> $possibles
      * @param array<string, string> $champs genre, pourcent (nombre ou « chf »), montant (CHF TTC), numero, date, echeance
-     * @return array{array{choisi: Genre, entete: array{numero: string, date: \DateTimeImmutable, echeance: \DateTimeImmutable}, lignes: list<array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, categorie: string|null, produit_id: int|null}>}|null, array<string, string>}
+     * @return array{array{choisi: Genre, entete: array{numero: string, date: \DateTimeImmutable, echeance: \DateTimeImmutable}, lignes: list<array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, categorie: string|null, produit_id: int|null}>, rabais: string|null, libelle: string|null, escompte: array{int, int}}|null, array<string, string>}
      */
     private function lireFacturer(Request $requete, array $offre, array $possibles, array $champs): array
     {
@@ -254,10 +260,16 @@ final class FactureControleur
             return [null, $erreurs];
         }
         $r = $this->c->reglages($portee)->lire();
+        // L'escompte des conditions de l'offre, sur chaque facture, acomptes compris (D14 A) ; copié, il ne bouge plus.
+        $escompte = $r->pourOffre($offre['conditions'])->conditions();
+        $escompte = $escompte->aEscompte() ? $escompte : new Conditions();
         $lignesOffre = $this->c->offres($portee)->lignes($offre['id']);
-        $parTaux = Totaux::parTaux($lignesOffre, $r->tvaPourDixMille);
-        $reste = Totaux::calculer($lignesOffre, $r->tvaPourDixMille, $r->arrondiCinqCentimes)['ttc'] - $this->c->factures($portee)->dejaFacture($offre['id']);
+        // Les acomptes se comptent sur l'offre après ses rabais (D15 A) ; la finale les copie.
+        $rabais = Rabais::liste($offre['rabais']);
+        $parTaux = Totaux::parTaux($lignesOffre, $r->tvaPourDixMille, $rabais);
+        $reste = Totaux::calculer($lignesOffre, $r->tvaPourDixMille, $r->arrondiCinqCentimes, $rabais)['ttc'] - $this->c->factures($portee)->dejaFacture($offre['id']);
         $lignes = [];
+        $libelle = null;
         if ($choisi['genre'] === 'acompte') {
             $pourcent = trim($champs['pourcent'] ?? '');
             if ($pourcent === 'chf') {
@@ -291,8 +303,17 @@ final class FactureControleur
                 }
                 $parts = PlanAcomptes::parts($parTaux, (int) $choisi['pourcent'], $r->tvaPourDixMille);
             }
-            // Une ligne par taux de TVA de l'offre (D11) ; une seule quand l'offre n'en a qu'un.
+            // Une ligne par taux de TVA de l'offre (D11) ; une seule quand l'offre n'en a qu'un. Le libellé tapé, ou une
+            // puce, remplace celui des conditions (D11 A, 2026-11-21).
             $designation = PlanAcomptes::designation((int) $choisi['rang'], $choisi['nombre'], $choisi['pourcent'], $offre['numero']);
+            // Les espaces réduites, les insécables gardées (« n° 1 » d'une puce).
+            $tape = (string) preg_replace(['/[^\S\x{00A0}\x{202F}]+/u', '/^\s+|\s+$/u'], [' ', ''], $champs['libelle'] ?? '');
+            if (mb_strlen($tape) > 200) {
+                $erreurs['libelle'] = 'Libellé de 200 caractères au plus.';
+                return [null, $erreurs];
+            }
+            $libelle = $tape === '' ? $designation : $tape;
+            $designation = $libelle;
             foreach ($parts as $p) {
                 $lignes[] = ['designation' => $designation . (count($parts) > 1 ? ', prestations à ' . Formats::taux((int) $p['taux']) : ''),
                     'quantite_milliemes' => 1000, 'unite' => 'forfait', 'prix_centimes' => $p['ht'], 'tva_pour_dix_mille' => $p['taux'],
@@ -313,7 +334,8 @@ final class FactureControleur
         if ($entete === null || $erreurs !== []) {
             return [null, $erreurs];
         }
-        return [['choisi' => $choisi, 'entete' => $entete, 'lignes' => $lignes], []];
+        return [['choisi' => $choisi, 'entete' => $entete, 'lignes' => $lignes, 'rabais' => $choisi['genre'] === 'finale' ? Rabais::versJson($rabais) : null,
+            'libelle' => $libelle ?? null, 'escompte' => [$escompte->escomptePourDixMille, $escompte->escompteJours]], []];
     }
 
     /**
@@ -331,7 +353,7 @@ final class FactureControleur
      * Le document de la facture qui serait créée : une facture et des lignes en mémoire, jamais écrites.
      *
      * @param Offre $offre
-     * @param array{choisi: Genre, entete: array{numero: string, date: \DateTimeImmutable, echeance: \DateTimeImmutable}, lignes: list<array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, categorie: string|null, produit_id: int|null}>} $pret
+     * @param array{choisi: Genre, entete: array{numero: string, date: \DateTimeImmutable, echeance: \DateTimeImmutable}, lignes: list<array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, categorie: string|null, produit_id: int|null}>, rabais: string|null, libelle: string|null, escompte: array{int, int}} $pret
      * @return array<string, mixed>
      */
     private function vueApercu(Request $requete, array $offre, array $pret): array
@@ -342,10 +364,12 @@ final class FactureControleur
             'numero' => $pret['entete']['numero'], 'genre' => $pret['choisi']['genre'], 'acompte_rang' => $pret['choisi']['rang'],
             'acompte_nombre' => $pret['choisi']['nombre'], 'acompte_pourcent' => $pret['choisi']['pourcent'], 'statut' => DepotFactures::BROUILLON,
             'date_facture' => $pret['entete']['date']->format('Y-m-d'), 'echeance' => $pret['entete']['echeance']->format('Y-m-d'),
-            'titre' => $offre['titre'], 'client_nom' => (string) $offre['client_nom'], 'client_adresse' => $offre['client_adresse'],
+            'titre' => $offre['titre'], 'client_nom' => (string) $offre['client_nom'], 'client_adresse' => self::adresseDeFacture($offre),
             'tva_pour_dix_mille' => null, 'arrondi_cinq' => null, 'iban' => null, 'reference' => null, 'ht' => null, 'tva' => null,
             'arrondi' => null, 'ttc' => null, 'deja_facture' => null, 'a_payer' => null, 'cree_le' => $maintenant, 'modifiee_le' => null,
-            'emise_le' => null, 'annulee_le' => null, 'refaite_depuis' => null, 'envoyee_le' => null] + $this->adresseClient($requete, $offre)->versBase('client_');
+            'emise_le' => null, 'annulee_le' => null, 'refaite_depuis' => null, 'envoyee_le' => null, 'rabais' => $pret['rabais'],
+            'representant_nom' => $offre['representant_nom'], 'libelle' => $pret['libelle'],
+            'escompte_pour_dix_mille' => $pret['escompte'][0], 'escompte_jours' => $pret['escompte'][1]] + $this->adresseClient($requete, $offre)->versBase('client_');
         $lignes = [];
         foreach ($pret['lignes'] as $i => $l) {
             $lignes[] = $l + ['id' => -1 - $i, 'facture_id' => 0, 'rang' => $i + 1, 'a_verifier' => 0, 'entendu' => null, 'tva_ligne' => $l['tva_pour_dix_mille']];
@@ -566,14 +590,15 @@ final class FactureControleur
         $lignes = array_map(static fn (array $l): array => [
             'designation' => $l['designation'], 'quantite_milliemes' => $l['quantite_milliemes'], 'unite' => $l['unite'],
             'prix_centimes' => $l['prix_centimes'], 'tva_pour_dix_mille' => $l['tva_pour_dix_mille'],
-            'categorie' => $l['categorie'], 'produit_id' => $l['produit_id'],
+            'categorie' => $l['categorie'], 'produit_id' => $l['produit_id'], 'offerte' => $l['offerte'],
         ], $depot->lignes($f['id']));
         $id = $depot->creer([
             'offre_id' => $f['offre_id'], 'numero' => null, 'genre' => $f['genre'],
             'acompte_rang' => $f['acompte_rang'], 'acompte_nombre' => $f['acompte_nombre'], 'acompte_pourcent' => $f['acompte_pourcent'],
             'date_facture' => $date, 'echeance' => $date->modify("+$delai days"),
             'titre' => $f['titre'], 'client_nom' => $f['client_nom'], 'client_adresse' => $f['client_adresse'],
-            'client_postale' => Adresse::depuisBase($f, 'client_'), 'refaite_depuis' => $f['id'],
+            'client_postale' => Adresse::depuisBase($f, 'client_'), 'refaite_depuis' => $f['id'], 'rabais' => $f['rabais'], 'representant_nom' => $f['representant_nom'], 'libelle' => $f['libelle'],
+            'escompte_pour_dix_mille' => $f['escompte_pour_dix_mille'], 'escompte_jours' => $f['escompte_jours'],
         ], $lignes, $quand);
         Flash::dire($requete, 'info', 'Facture ' . $f['numero'] . ' annulée ; corrigez la nouvelle, puis « Créer la facture »');
         return new RedirectResponse('/factures/' . $id, 303);
@@ -721,6 +746,15 @@ final class FactureControleur
         $r = $this->c->reglages($portee)->lire();
         $montants = Montants::de($f, $lignes, $r, $depot->dejaFacture($f['offre_id']));
         $groupes = OffreControleur::grouper($lignes, $montants['lignes']);
+        // D12 A (2026-11-21) : la finale liste chaque acompte déduit ; une liste qui ne fait pas la déduction figée (un
+        // acompte d'avant ce chantier, une base corrigée à la main) laisse la seule ligne du total.
+        $acomptes = [];
+        if ($f['genre'] === 'finale' && $montants['deja'] > 0) {
+            $acomptes = $depot->acomptesEmis($f['offre_id'], $f['statut'] === DepotFactures::BROUILLON ? null : $f['emise_le']);
+            if (array_sum(array_column($acomptes, 'ttc')) !== $montants['deja']) {
+                $acomptes = [];
+            }
+        }
         if ($f['genre'] === 'acompte') {
             foreach ($groupes as $i => $g) {
                 $groupes[$i]['nom'] = $g['nom'] === OffreControleur::HORS_CATALOGUE ? 'Acompte' : $g['nom'];
@@ -742,6 +776,8 @@ final class FactureControleur
             'numero_prevu' => $numero,
             'groupes' => $groupes,
             'montants' => $montants,
+            'acomptes' => $acomptes,
+            'escompte' => self::mentionEscompte($f, $montants['a_payer'], $r->arrondiCinqCentimes),
             'r' => $r,
             'qr' => $qr instanceof SectionPaiement ? $qr : null,
             'qr_raison' => is_string($qr) ? $qr : null,
@@ -752,6 +788,23 @@ final class FactureControleur
             'etat' => self::etat($f, $this->aujourdhui()->format('Y-m-d')),
             'manque' => count(array_filter($lignes, static fn (array $l): bool => Offerte::prixManquant($l))),
         ];
+    }
+
+    /**
+     * « Escompte 2 % si payé jusqu'au 17.11.2026 : CHF 245.00. », ou null : sans escompte, rien à payer, facture annulée.
+     * La date court dès celle de la facture.
+     *
+     * @param Facture $f
+     */
+    private static function mentionEscompte(array $f, int $aPayer, bool $arrondiCinq): ?string
+    {
+        if ($f['escompte_pour_dix_mille'] <= 0 || $f['escompte_jours'] <= 0 || $aPayer <= 0 || $f['statut'] === DepotFactures::ANNULEE) {
+            return null;
+        }
+        $arrondi = $f['statut'] === DepotFactures::BROUILLON ? $arrondiCinq : $f['arrondi_cinq'] === 1;
+        $jusquau = (new \DateTimeImmutable($f['date_facture']))->modify('+' . $f['escompte_jours'] . ' days')->format('d.m.Y');
+        return 'Escompte ' . Conditions::pourcent($f['escompte_pour_dix_mille']) . "\u{00A0}% si payé jusqu'au $jusquau\u{00A0}: "
+            . Formats::chf(Totaux::escompte($aPayer, $f['escompte_pour_dix_mille'], $arrondi)) . '.';
     }
 
     /**
@@ -777,6 +830,19 @@ final class FactureControleur
     }
 
     /** Dernière ligne de l'adresse sans le numéro postal. */
+    /**
+     * L'adresse de la facture, sous le nom du client : la sienne, ou « p.a. » son représentant (D10 C, 2026-11-21).
+     *
+     * @param Offre $offre
+     */
+    private static function adresseDeFacture(array $offre): ?string
+    {
+        if ($offre['representant_nom'] === null || $offre['factures_adressees'] !== 'pa') {
+            return $offre['client_adresse'];
+        }
+        return trim('p.a. ' . $offre['representant_nom'] . "\n" . ($offre['representant_adresse'] ?? ''));
+    }
+
     private static function localite(?string $adresse): string
     {
         $lignes = $adresse === null || $adresse === '' ? [] : explode("\n", $adresse);
@@ -890,7 +956,7 @@ final class FactureControleur
     private function possibles(Request $requete, array $offre): array
     {
         $portee = $this->portee($requete);
-        $r = $this->c->reglages($portee)->lire();
+        $r = $this->c->reglages($portee)->lire()->pourOffre($offre['conditions']);
         $depot = $this->c->factures($portee);
         $tranches = $r->paiementType === 'acomptes' ? $r->paiementAcomptes : [];
         return PlanAcomptes::possibles($tranches, $depot->acomptesFaits($offre['id']), $depot->finaleFaite($offre['id']));
@@ -972,14 +1038,15 @@ final class FactureControleur
             'pourcentages' => PlanAcomptes::pourcentages($plan),
             'factures' => $this->c->factures($portee)->deOffre($offre['id']),
             'deja' => $this->c->factures($portee)->dejaFacture($offre['id']),
-            'champs' => $champs + ['montant' => ''],
+            'champs' => $champs + ['montant' => '', 'libelle' => ''],
             'erreurs' => $erreurs,
+            'offre_numero' => $offre['numero'],
             'apercu' => $apercu,
             'm' => $this->c->reglages($portee)->lireMarque(),
             'jeton' => bin2hex(random_bytes(16)),
             // L'échéance proposée suit le genre choisi (revue du 25) : un acompte à 30 jours, la finale selon les conditions.
             'echeances' => [
-                'acompte' => PlanAcomptes::echeance($r = $this->c->reglages($portee)->lire(), 'acompte', $this->aujourdhui())->format('Y-m-d'),
+                'acompte' => PlanAcomptes::echeance($r = $this->c->reglages($portee)->lire()->pourOffre($offre['conditions']), 'acompte', $this->aujourdhui())->format('Y-m-d'),
                 'finale' => PlanAcomptes::echeance($r, 'finale', $this->aujourdhui())->format('Y-m-d'),
             ],
         ]), $code);

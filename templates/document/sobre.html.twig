@@ -14,8 +14,10 @@
     <div class="doc-objet">{{ doc_objet }}</div>
     {{ b.annulee(_context) }}
     {{ b.infos(_context) }}
+    {{ b.texte(_context, 'avant') }}
     {{ b.lignes(_context, {th: 'c-texte c-filet'}) }}
     {{ b.totaux(_context, {tt: 'c-filet'}) }}
+    {{ b.texte(_context, 'apres') }}
     <div class="doc-fin">
       {{ b.conditions(_context) }}
       {{ b.signatures(_context) }}

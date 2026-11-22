@@ -40,7 +40,8 @@ final class OffreDEssai
         return $plus + ['id' => 0, 'numero' => 42, 'enregistrement_id' => null, 'titre' => "Peinture complète de l'appartement", 'client_id' => null,
             'client_nom' => 'Famille Exemple', 'client_adresse' => "Chemin des Essais 4\n1700 Fribourg", 'client_dicte' => null, 'lieu_dicte' => null,
             'cree_le' => '2026-11-07 10:00:00', 'modifiee_le' => null, 'envoyee_le' => null, 'postes_coupes' => 0,
-            'chantier_adresse' => null, 'chantier_contact' => null, 'chantier_acces' => null, 'debut_travaux' => null, 'duree_travaux' => null, 'non_compris' => null, 'visite_le' => null];
+            'chantier_adresse' => null, 'chantier_contact' => null, 'chantier_acces' => null, 'debut_travaux' => null, 'duree_travaux' => null, 'non_compris' => null, 'visite_le' => null, 'rabais' => null, 'conditions' => null, 'texte_avant' => null, 'texte_apres' => null,
+            'representant_id' => null, 'representant_nom' => null, 'representant_adresse' => null, 'offre_adressee' => 'representant', 'factures_adressees' => 'pa'];
     }
 
     /**

@@ -328,6 +328,30 @@ a.nm:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .okbtn span { display: inline-block; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 6px 12px; }
 .totals { margin-top: 14px; font-variant-numeric: tabular-nums; }
 .totals .r { display: flex; justify-content: space-between; align-items: center; min-height: 32px; color: var(--muted); font-size: 14px; }
+/* Rabais (D4 B, 2026-11-21) : chaque rabais est une rangée qu'on touche pour la modifier ; « + Rabais » en ajoute un. */
+.totals a.r { color: var(--ink); text-decoration: none; min-height: 48px; }
+.totals a.r .etiquette { margin-left: 6px; }
+.totals .plus { padding-left: 0; color: var(--accent); font-weight: 600; text-decoration: none; }
+form[data-rabais]:has(input[name="choix"][value="5"]:checked) [data-rabais-valeur],
+form[data-rabais]:has(input[name="choix"][value="10"]:checked) [data-rabais-valeur],
+form[data-rabais]:has(input[name="choix"][value="chf"]:checked) .si-pct,
+form[data-rabais]:has(input[name="choix"][value="pct"]:checked) .si-chf { display: none; }
+.si-pct + .si-chf::before { content: " / "; }
+form[data-rabais]:has(input[name="choix"]:checked) .si-pct + .si-chf::before { content: none; }
+/* « Modifiée depuis l'envoi · Renvoyer » (2026-11-21) : au-dessus des boutons, visible sans défiler. */
+.bandeau-renvoi { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 12px; background: var(--warn-soft); color: var(--warn); font-size: 14px; border-top: 1px solid var(--line); }
+.bandeau-renvoi .btn { min-height: 48px; }
+/* Textes et conditions propres à l'offre (D5 A, 2026-11-21). */
+.texte-offre { display: grid; gap: 4px; margin: 12px 0; }
+.texte-offre label { font-size: 14px; color: var(--muted); }
+.texte-offre textarea { font: inherit; font-size: 15px; width: 100%; min-height: 64px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+a.carte-lien.conditions { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 14px; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: 15px; }
+a.carte-lien.conditions > span { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+a.carte-lien.conditions small { color: var(--muted); font-size: 14px; }
+a.carte-lien.conditions::after { content: '›'; color: var(--muted); font-size: 24px; line-height: 1; }
+.ligne-cond { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ligne-cond input { font: inherit; font-size: 16px; width: 6em; min-height: 48px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); }
+.ligne-cond input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .totals .r.grand { color: var(--ink); font-size: 18px; font-weight: 700; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; }
 
 /* Catalogue et ajout. */
@@ -394,6 +418,7 @@ a.nm:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .puce { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--bord); border-radius: 999px; padding: 8px 14px; min-height: 48px; cursor: pointer; transition: background .15s ease, color .15s ease, scale .12s ease; -webkit-tap-highlight-color: transparent; }
 .puces.trois, .puces.quatre, .puces.cinq { display: grid; gap: 6px; }
 .puces.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.puces.deux { display: grid; gap: 6px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .puces.quatre { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .puces.cinq { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .puces.trois .puce, .puces.quatre .puce, .puces.cinq .puce { padding: 8px 2px; text-align: center; }

@@ -14,6 +14,21 @@
 {% set doc_date = facture ? f.date_facture|jour : (offre.modifiee_le ?? offre.cree_le)|jour %}
 {% set client_nom = facture ? f.client_nom : offre.client_nom %}
 {% set client_adresse = (facture ? (f.client_adresse ?? '') : (offre.client_adresse ?? ''))|split("\n")|filter(l => l != '') %}
+{# Représenté par (D8 A, D9 C, D10 C, 2026-11-21) : l'offre va au représentant par défaut, pour le compte du client ; une
+   facture va au client, chez lui ou « p.a. » le représentant (déjà dans son adresse copiée). #}
+{% set representant = facture ? (f.representant_nom ?? null) : (offre.representant_nom ?? null) %}
+{% set mention_representant = null %}
+{% if representant and facture %}
+  {% set mention_representant = 'Représenté par ' ~ representant %}
+{% elseif representant and offre.offre_adressee == 'client' %}
+  {% set mention_representant = "Par l'intermédiaire de " ~ representant %}
+{% elseif representant and client_nom %}
+  {% set mention_representant = 'Pour le compte de ' ~ ([client_nom]|merge(client_adresse)|filter(l => l)|join(', ')) %}
+{% endif %}
+{% if representant and not facture and offre.offre_adressee != 'client' %}
+  {% set client_nom = representant %}
+  {% set client_adresse = (offre.representant_adresse ?? '')|split("\n")|filter(l => l != '') %}
+{% endif %}
 {% set t = facture ? montants : totaux|merge({taux: tva, deja: 0, a_payer: totaux.ttc}) %}
 {# La TVA par taux dès que le document en a plusieurs (D11, 2026-11-15). #}
 {% set avec_tva = t.par_taux|filter(g => g.taux > 0)|length > 0 %}

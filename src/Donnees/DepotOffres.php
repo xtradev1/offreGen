@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace OffreGen\Donnees;
 
+use OffreGen\Compte\Conditions;
 use OffreGen\Offre\Chantier;
 use OffreGen\Offre\LigneExtraite;
+use OffreGen\Offre\Rabais;
 
 /**
  * Les offres d'un artisan et leurs lignes. Une ligne supprimée garde sa place (supprimee_le) :
@@ -15,7 +17,11 @@ use OffreGen\Offre\LigneExtraite;
  * Le client d'une offre : sa fiche (client_id), sinon le nom et le lieu dictés, proposition à confirmer.
  * client_nom et client_adresse donnent l'un ou l'autre, pour l'écran et le document.
  *
- * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null, postes_coupes: int, chantier_adresse: string|null, chantier_contact: string|null, chantier_acces: string|null, debut_travaux: string|null, duree_travaux: string|null, non_compris: string|null, visite_le: string|null}
+ * Le représentant (régie, gérance, architecte : D8 A, 2026-11-21) est une autre fiche de l'artisan. offre_adressee :
+ * « representant » (D9 C, par défaut) ou « client » ; factures_adressees : « pa » (au client, p.a. le représentant,
+ * par défaut) ou « client » (chez lui) (D10 C).
+ *
+ * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null, postes_coupes: int, chantier_adresse: string|null, chantier_contact: string|null, chantier_acces: string|null, debut_travaux: string|null, duree_travaux: string|null, non_compris: string|null, visite_le: string|null, rabais: string|null, conditions: string|null, texte_avant: string|null, texte_apres: string|null, representant_id: int|null, representant_nom: string|null, representant_adresse: string|null, offre_adressee: string, factures_adressees: string}
  * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null, prix_dicte_centimes: int|null, prix_catalogue: int|null, piece: string|null}
  */
 final class DepotOffres implements SupportLignes
@@ -23,8 +29,10 @@ final class DepotOffres implements SupportLignes
     private const SELECT_OFFRE = 'SELECT o.id, o.numero, o.enregistrement_id, o.titre, o.client_id,
             COALESCE(c.nom, o.client_dicte) AS client_nom, CASE WHEN c.id IS NULL THEN o.lieu_dicte ELSE c.adresse END AS client_adresse,
             o.client_dicte, o.lieu_dicte, o.cree_le, o.modifiee_le, o.envoyee_le, o.postes_coupes,
-            o.chantier_adresse, o.chantier_contact, o.chantier_acces, o.debut_travaux, o.duree_travaux, o.non_compris, o.visite_le
-         FROM offre o LEFT JOIN client c ON c.id = o.client_id AND c.artisan_id = o.artisan_id';
+            o.chantier_adresse, o.chantier_contact, o.chantier_acces, o.debut_travaux, o.duree_travaux, o.non_compris, o.visite_le, o.rabais, o.conditions, o.texte_avant, o.texte_apres,
+            rp.id AS representant_id, rp.nom AS representant_nom, rp.adresse AS representant_adresse, o.offre_adressee, o.factures_adressees
+         FROM offre o LEFT JOIN client c ON c.id = o.client_id AND c.artisan_id = o.artisan_id
+         LEFT JOIN client rp ON rp.id = o.representant_id AND rp.artisan_id = o.artisan_id';
 
     /** Colonnes d'une ligne ; la catégorie vient du produit du catalogue, s'il existe encore. */
     private const COLONNES_LIGNE = 'l.id, l.offre_id, l.rang, l.designation, l.quantite_milliemes, l.unite, l.prix_centimes, l.offerte, l.a_verifier, l.entendu, l.produit_id, p.categorie,
@@ -183,6 +191,72 @@ final class DepotOffres implements SupportLignes
         return true;
     }
 
+    /**
+     * Les rabais de l'offre (Offre\Rabais), tous ensemble ; une liste vide retourne à NULL. Faux si l'offre n'est pas à lui.
+     *
+     * @param list<Rabais> $rabais
+     */
+    public function changerRabais(int $id, array $rabais, \DateTimeImmutable $quand): bool
+    {
+        if ($this->parId($id) === null) {
+            return false;
+        }
+        $this->base->ecrire(
+            'UPDATE offre SET rabais = :r, modifiee_le = :q WHERE id = :id AND artisan_id = :a',
+            ['r' => Rabais::versJson(array_slice($rabais, 0, Rabais::MAX)), 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
+    /** Les conditions propres à l'offre (Compte\Conditions en JSON) ; null, celles du compte. Faux si l'offre n'est pas à lui. */
+    public function changerConditions(int $id, ?Conditions $c, \DateTimeImmutable $quand): bool
+    {
+        if ($this->parId($id) === null) {
+            return false;
+        }
+        $this->base->ecrire(
+            'UPDATE offre SET conditions = :c, modifiee_le = :q WHERE id = :id AND artisan_id = :a',
+            ['c' => $c?->versJson(), 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
+    /** Le texte avant ou après les lignes (« avant », « apres ») ; vide, NULL. Faux si l'offre n'est pas à lui. */
+    public function changerTexte(int $id, string $ou, string $texte, \DateTimeImmutable $quand): bool
+    {
+        if ($this->parId($id) === null) {
+            return false;
+        }
+        $colonne = $ou === 'avant' ? 'texte_avant' : 'texte_apres';
+        $this->base->ecrire(
+            "UPDATE offre SET $colonne = :t, modifiee_le = :q WHERE id = :id AND artisan_id = :a",
+            ['t' => $texte === '' ? null : $texte, 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
+    public const ADRESSEE = ['representant', 'client'];
+    public const FACTURES_ADRESSEES = ['pa', 'client'];
+
+    /**
+     * Le représentant du client et à qui vont l'offre et les factures. Faux si l'offre ou la fiche n'est pas à l'artisan,
+     * ou si la fiche est celle du client de l'offre.
+     */
+    public function changerRepresentant(int $id, ?int $representantId, string $offreAdressee, string $facturesAdressees, \DateTimeImmutable $quand): bool
+    {
+        $offre = $this->parId($id);
+        $fiche = $this->clientDeLArtisan($representantId);
+        if ($offre === null || ($representantId !== null && ($fiche === null || $fiche === $offre['client_id']))
+            || !in_array($offreAdressee, self::ADRESSEE, true) || !in_array($facturesAdressees, self::FACTURES_ADRESSEES, true)) {
+            return false;
+        }
+        $this->base->ecrire(
+            'UPDATE offre SET representant_id = :r, offre_adressee = :oa, factures_adressees = :fa, modifiee_le = :q WHERE id = :id AND artisan_id = :a',
+            ['r' => $fiche, 'oa' => $offreAdressee, 'fa' => $facturesAdressees, 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+        );
+        return true;
+    }
+
     /** L'offre désigne cette fiche. Faux si l'offre ou la fiche n'est pas à l'artisan. */
     public function rattacherClient(int $id, int $clientId, \DateTimeImmutable $quand): bool
     {
@@ -191,8 +265,9 @@ final class DepotOffres implements SupportLignes
             return false;
         }
         $this->base->ecrire(
-            'UPDATE offre SET client_id = :c, modifiee_le = :q WHERE id = :id AND artisan_id = :a',
-            ['c' => $client, 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
+            // La fiche devenue client ne reste pas son propre représentant.
+            'UPDATE offre SET client_id = :c, representant_id = IF(representant_id = :c2, NULL, representant_id), modifiee_le = :q WHERE id = :id AND artisan_id = :a',
+            ['c' => $client, 'c2' => $client, 'q' => Dates::versBase($quand), 'id' => $id, 'a' => $this->portee->artisanId],
         );
         return true;
     }

@@ -11,6 +11,7 @@ use OffreGen\Http\Controleur\AdminControleur;
 use OffreGen\Http\Controleur\AdresseControleur;
 use OffreGen\Http\Controleur\CatalogueControleur;
 use OffreGen\Http\Controleur\ClientControleur;
+use OffreGen\Http\Controleur\ConditionsControleur;
 use OffreGen\Http\Controleur\LigneCatalogueControleur;
 use OffreGen\Http\Controleur\LigneControleur;
 use OffreGen\Http\Controleur\ReglagesControleur;
@@ -24,8 +25,10 @@ use OffreGen\Http\Controleur\ImportControleur;
 use OffreGen\Http\Controleur\MotDePasseControleur;
 use OffreGen\Http\Controleur\OffreControleur;
 use OffreGen\Http\Controleur\PieceControleur;
+use OffreGen\Http\Controleur\RabaisControleur;
 use OffreGen\Http\Controleur\RangementControleur;
 use OffreGen\Http\Controleur\RelectureControleur;
+use OffreGen\Http\Controleur\RepresentantControleur;
 use OffreGen\Http\Controleur\SanteControleur;
 use OffreGen\Http\Controleur\VosPrixControleur;
 use OffreGen\Http\Route;
@@ -107,6 +110,19 @@ return static function (Conteneur $c): array {
         new Route('offre', '/offres/{id}', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->afficher($r, $p), Route::ARTISAN),
         new Route('offre_entete', '/offres/{id}/modifier', ['GET'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->entete($r, $p), Route::ARTISAN),
         new Route('offre_entete_enregistrer', '/offres/{id}/modifier', ['POST'], static fn (Request $r, array $p): Response => (new OffreControleur($c))->modifierEntete($r, $p), Route::ARTISAN),
+        // Rabais sous le sous-total (chantier 2026-11-21_lignes-conditions, D4 B) : un nouveau, puis chacun par sa place.
+        new Route('offre_rabais', '/offres/{id}/rabais', ['GET'], static fn (Request $r, array $p): Response => (new RabaisControleur($c))->fenetre($r, $p), Route::ARTISAN),
+        new Route('offre_rabais_ajouter', '/offres/{id}/rabais', ['POST'], static fn (Request $r, array $p): Response => (new RabaisControleur($c))->enregistrer($r, $p), Route::ARTISAN),
+        new Route('offre_rabais_voir', '/offres/{id}/rabais/{rang}', ['GET'], static fn (Request $r, array $p): Response => (new RabaisControleur($c))->fenetre($r, $p), Route::ARTISAN),
+        new Route('offre_rabais_modifier', '/offres/{id}/rabais/{rang}', ['POST'], static fn (Request $r, array $p): Response => (new RabaisControleur($c))->enregistrer($r, $p), Route::ARTISAN),
+        new Route('offre_rabais_retirer', '/offres/{id}/rabais/{rang}/retirer', ['POST'], static fn (Request $r, array $p): Response => (new RabaisControleur($c))->retirer($r, $p), Route::ARTISAN),
+        // Représenté par (D8 A, D9 C, D10 C, 2026-11-21).
+        new Route('offre_representant', '/offres/{id}/representant', ['GET'], static fn (Request $r, array $p): Response => (new RepresentantControleur($c))->fenetre($r, $p), Route::ARTISAN),
+        new Route('offre_representant_choisir', '/offres/{id}/representant', ['POST'], static fn (Request $r, array $p): Response => (new RepresentantControleur($c))->choisir($r, $p), Route::ARTISAN),
+        // Conditions et textes propres à l'offre (D5 A, D6 A, D16 A, 2026-11-21).
+        new Route('offre_conditions', '/offres/{id}/conditions', ['GET'], static fn (Request $r, array $p): Response => (new ConditionsControleur($c))->fenetre($r, $p), Route::ARTISAN),
+        new Route('offre_conditions_enregistrer', '/offres/{id}/conditions', ['POST'], static fn (Request $r, array $p): Response => (new ConditionsControleur($c))->enregistrer($r, $p), Route::ARTISAN),
+        new Route('offre_texte', '/offres/{id}/textes', ['POST'], static fn (Request $r, array $p): Response => (new ConditionsControleur($c))->texte($r, $p), Route::ARTISAN),
         // Renommer une pièce de l'offre (sous-chantier 28, P5).
         new Route('offre_piece', '/offres/{id}/pieces', ['GET'], static fn (Request $r, array $p): Response => (new PieceControleur($c))->page($r, $p), Route::ARTISAN),
         new Route('offre_piece_renommer', '/offres/{id}/pieces', ['POST'], static fn (Request $r, array $p): Response => (new PieceControleur($c))->renommer($r, $p), Route::ARTISAN),

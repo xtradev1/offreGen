@@ -13,8 +13,10 @@
     <div class="doc-objet">{{ doc_objet }}</div>
     <div class="doc-meta">{{ b.meta(_context, {contact: true}) }}</div>
     {{ b.annulee(_context) }}
+    {{ b.texte(_context, 'avant') }}
     {{ b.lignes(_context, {grp_tot: true}) }}
     {{ b.totaux(_context) }}
+    {{ b.texte(_context, 'apres') }}
     <div class="doc-fin">
       {{ b.conditions(_context) }}
       {{ b.signatures(_context) }}

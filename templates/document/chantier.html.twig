@@ -36,8 +36,10 @@
     </tr></table>
     <div class="doc-titre"><span class="c-texte">{{ doc_nom }}</span> · {{ doc_objet }}</div>
     {{ b.annulee(_context) }}
+    {{ b.texte(_context, 'avant') }}
     {{ b.lignes(_context, {grp_tot: true, grp: 'c-teinte c-texte', grp_n: 'c-teinte'}) }}
     {{ b.totaux(_context) }}
+    {{ b.texte(_context, 'apres') }}
     <div class="doc-fin">
       {{ b.conditions(_context, {delais: not fiche}) }}
       {{ b.signatures(_context) }}

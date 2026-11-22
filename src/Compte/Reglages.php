@@ -21,20 +21,10 @@ final readonly class Reglages
     /** Taux proposés à l'écran, en dix-millièmes : les taux suisses (Offre\Tva::TAUX), ou non assujetti. */
     public const TAUX_PERMIS = [810, 260, 380, 0];
 
-    /**
-     * Durées de validité proposées d'un toucher ; « Autre » ouvre un nombre de 1 à 365 jours. Une offre sans
-     * validité (vide ou 0) est refusée : Xavier la juge dangereuse (2026-11-12).
-     */
-    public const VALIDITES_PROPOSEES = [15, 30, 60];
-
-    /** Types de paiement : à N jours dès la fin des travaux, net à N jours dès la facture, ou par acomptes. */
-    public const TYPES_PAIEMENT = ['jours' => 'À … jours', 'net' => 'Net à … jours', 'acomptes' => 'Acomptes'];
-
-    /** Délais proposés d'un toucher pour « à N jours » et « net à N jours » ; « Autre » ouvre de 1 à 120 jours. */
-    public const DELAIS_PROPOSES = [10, 15, 20, 30];
-
-    /** Acomptes proposés d'un toucher, en pour-cent ; « Autre » ouvre 2 à 4 tranches qui font 100. */
-    public const ACOMPTES_PROPOSES = [[30, 70], [50, 50], [30, 30, 40]];
+    public const VALIDITES_PROPOSEES = Conditions::VALIDITES_PROPOSEES;
+    public const TYPES_PAIEMENT = Conditions::TYPES_PAIEMENT;
+    public const DELAIS_PROPOSES = Conditions::DELAIS_PROPOSES;
+    public const ACOMPTES_PROPOSES = Conditions::ACOMPTES_PROPOSES;
 
     /** @param list<int> $paiementAcomptes en pour-cent, vide sauf pour le type « acomptes » */
     public function __construct(
@@ -52,76 +42,65 @@ final readonly class Reglages
         public string $iban = '',
         public string $contactNom = '',
         public PhrasesLettre $lettre = new PhrasesLettre(),
+        public int $escomptePourDixMille = 0,
+        public int $escompteJours = 0,
     ) {
+    }
+
+    /** Validité, paiement et escompte du compte : ceux que prend une offre qui n'a pas les siens. */
+    public function conditions(): Conditions
+    {
+        return new Conditions($this->validiteJours, $this->paiementType, $this->paiementJours, $this->paiementAcomptes,
+            $this->escomptePourDixMille, $this->escompteJours);
+    }
+
+    /** Les mêmes réglages, avec ces conditions-là. */
+    public function avecConditions(Conditions $c): self
+    {
+        return new self($this->entreprise, $this->tvaPourDixMille, $this->arrondiCinqCentimes, $this->adresse, $this->telephone,
+            $this->courrielContact, $this->ide, $c->validiteJours, $c->paiementType, $c->paiementJours, $c->paiementAcomptes,
+            $this->iban, $this->contactNom, $this->lettre, $c->escomptePourDixMille, $c->escompteJours);
+    }
+
+    /**
+     * Les réglages qui valent pour une offre : ses conditions à elle (colonne conditions, D5 A du 2026-11-21), sinon
+     * celles du compte.
+     */
+    public function pourOffre(?string $conditions): self
+    {
+        return $conditions === null ? $this : $this->avecConditions(Conditions::depuisJson($conditions, $this->conditions()));
     }
 
     /** La phrase « Paiement : … » du document, fabriquée ici seulement. */
     public function conditionsPaiement(): string
     {
-        return match ($this->paiementType) {
-            'net' => "Net à {$this->paiementJours} jours dès réception de la facture.",
-            'acomptes' => self::phraseAcomptes($this->paiementAcomptes),
-            default => "À {$this->paiementJours} jours dès la fin des travaux.",
-        };
+        return $this->conditions()->conditionsPaiement();
+    }
+
+    /** « Escompte 2 % à 10 jours. », ou null sans escompte. */
+    public function phraseEscompte(): ?string
+    {
+        return $this->conditions()->phraseEscompte();
     }
 
     /** Le paiement en quelques mots, pour le sommaire des réglages (une ligne de téléphone). */
     public function resumePaiement(): string
     {
-        return match ($this->paiementType) {
-            'net' => "net à {$this->paiementJours} jours",
-            'acomptes' => 'acomptes ' . implode(' / ', $this->paiementAcomptes) . ' %',
-            default => "à {$this->paiementJours} jours",
-        };
+        $escompte = $this->conditions()->aEscompte()
+            ? ', escompte ' . Conditions::pourcent($this->escomptePourDixMille) . "\u{00A0}% à {$this->escompteJours} jours" : '';
+        return $this->conditions()->resumePaiement() . $escompte;
     }
 
-    /**
-     * La première tranche à la commande, la dernière à la fin des travaux, celles du milieu en cours de travaux.
-     *
-     * @param list<int> $tranches
-     */
+    /** @param list<int> $tranches */
     public static function phraseAcomptes(array $tranches): string
     {
-        $n = count($tranches);
-        $morceaux = [];
-        foreach ($tranches as $i => $pourcent) {
-            $moment = $i === 0 ? 'à la commande' : ($i === $n - 1 ? 'à la fin des travaux' : 'en cours de travaux');
-            $morceaux[] = "$pourcent\u{00A0}% $moment";
-        }
-        return implode(', ', $morceaux) . '.';
+        return Conditions::phraseAcomptes($tranches);
     }
 
-    /**
-     * « 30, 30, 40 », « 30/30/40 » ou « 30 % 70 % » donnent [30, 30, 40] ; null s'il n'y a pas 2 à 4 tranches
-     * de 1 à 99 qui font 100.
-     *
-     * @return list<int>|null
-     */
+    /** @return list<int>|null voir Conditions::acomptes */
     public static function acomptes(string $saisie): ?array
     {
-        preg_match_all('/\d+/', $saisie, $trouves);
-        $tranches = array_map('intval', $trouves[0]);
-        $bornees = array_filter($tranches, static fn (int $t): bool => $t >= 1 && $t <= 99);
-        if (count($tranches) < 2 || count($tranches) > 4 || count($bornees) !== count($tranches) || array_sum($tranches) !== 100) {
-            return null;
-        }
-        return $tranches;
-    }
-
-    /** Un choix proposé l'emporte ; « autre » ou pas de choix : la valeur tapée. */
-    private static function choix(string $choix, string $tape): string
-    {
-        return $choix === '' || $choix === 'autre' ? $tape : $choix;
-    }
-
-    /** Un entier de $min à $max, sinon null. */
-    private static function entier(string $saisie, int $min, int $max): ?int
-    {
-        $t = trim($saisie);
-        if (preg_match('/^\d{1,3}$/', $t) !== 1) {
-            return null;
-        }
-        return (int) $t >= $min && (int) $t <= $max ? (int) $t : null;
+        return Conditions::acomptes($saisie);
     }
 
     /**
@@ -130,8 +109,8 @@ final readonly class Reglages
      * @param array<string, string> $champs entreprise, contact_nom, adresse_rue, adresse_numero, adresse_npa, adresse_localite,
      *        adresse_pays, telephone, courriel_contact, ide, iban, tva,
      *        validite_choix et validite_jours, paiement_type, paiement_jours_choix et paiement_jours,
-     *        paiement_acomptes_choix et paiement_acomptes. Un « …_choix » proposé l'emporte ; « autre » ou
-     *        absent : la valeur tapée. Les phrases de Lettre : voir PhrasesLettre::depuisSaisie.
+     *        paiement_acomptes_choix et paiement_acomptes, escompte_pourcent et escompte_jours (voir
+     *        Conditions::depuisSaisie). Les phrases de Lettre : voir PhrasesLettre::depuisSaisie.
      */
     public static function depuisSaisie(array $champs, bool $arrondi): self
     {
@@ -167,35 +146,14 @@ final readonly class Reglages
         if (!in_array($taux, self::TAUX_PERMIS, true)) {
             $erreurs['tva'] = 'Choisissez un taux de TVA.';
         }
-        $choixValidite = $c('validite_choix');
-        $validite = $choixValidite !== '' && $choixValidite !== 'autre' && !in_array((int) $choixValidite, self::VALIDITES_PROPOSEES, true)
-            ? null
-            : self::entier(self::choix($choixValidite, $c('validite_jours')), 1, 365);
-        if ($validite === null) {
-            $erreurs['validite_jours'] = "L'offre doit avoir une durée de validité : de 1 à 365 jours.";
-        }
-        $type = $c('paiement_type') === '' ? 'jours' : $c('paiement_type');
-        $jours = 30;
-        $acomptes = [];
-        if (!array_key_exists($type, self::TYPES_PAIEMENT)) {
-            $erreurs['paiement_type'] = 'Choisissez comment le client paie.';
-        } elseif ($type === 'acomptes') {
-            $acomptes = self::acomptes(self::choix($c('paiement_acomptes_choix'), $c('paiement_acomptes')));
-            if ($acomptes === null) {
-                $erreurs['paiement_acomptes'] = 'De 2 à 4 acomptes qui font 100 %, par exemple 30, 30, 40.';
-            }
-        } else {
-            $jours = self::entier(self::choix($c('paiement_jours_choix'), $c('paiement_jours')), 1, 120);
-            if ($jours === null) {
-                $erreurs['paiement_jours'] = 'Un délai de 1 à 120 jours.';
-            }
-        }
+        [$conditions, $erreursConditions] = Conditions::depuisSaisie($champs);
+        $erreurs += $erreursConditions;
         [$lettre, $erreursLettre] = PhrasesLettre::depuisSaisie($champs);
         $erreurs += $erreursLettre;
-        if ($nom === null || $adresse === null || $ide === null || $iban === null || $validite === null || $jours === null || $acomptes === null || $lettre === null || $erreurs !== []) {
+        if ($nom === null || $adresse === null || $ide === null || $iban === null || $conditions === null || $lettre === null || $erreurs !== []) {
             throw new SaisieRefusee($erreurs);
         }
-        return new self($nom, $taux, $arrondi, $adresse, $telephone, $courriel, $ide, $validite, $type, $jours, $acomptes, $iban, $contact, $lettre);
+        return (new self($nom, $taux, $arrondi, $adresse, $telephone, $courriel, $ide, iban: $iban, contactNom: $contact, lettre: $lettre))->avecConditions($conditions);
     }
 
     /** « che 123 456 789 tva » donne « CHE-123.456.789 » ; vide reste vide ; null si ce n'est pas un IDE. */

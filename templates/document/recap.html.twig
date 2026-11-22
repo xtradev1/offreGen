@@ -14,6 +14,7 @@
     <div class="doc-titre"><span class="c-texte">{{ doc_nom }} n°&nbsp;{{ doc_numero }}</span> · {{ doc_objet }}</div>
     <div class="doc-meta">{{ b.meta(_context, {contact: true}) }}</div>
     {{ b.annulee(_context) }}
+    {{ b.texte(_context, 'avant') }}
     <table class="doc-duo2"><tr>
       <td class="doc-g">
         <div class="doc-h2">Récapitulatif</div>
@@ -23,6 +24,7 @@
     </tr></table>
     <div class="doc-h2 doc-detail">Détail des travaux</div>
     {{ b.lignes(_context, {st: false, lettres: true, grp: 'c-texte'}) }}
+    {{ b.texte(_context, 'apres') }}
     <div class="doc-fin">
       {{ b.conditions(_context) }}
       {{ b.signatures(_context) }}

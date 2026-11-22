@@ -14,6 +14,7 @@ use OffreGen\Http\Conteneur;
 use OffreGen\Http\Flash;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
+use OffreGen\Offre\Rabais;
 use OffreGen\Offre\SaisieRefusee;
 use OffreGen\Offre\Totaux;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -220,7 +221,7 @@ final class ClientControleur
             $r = $this->c->reglages(self::portee($requete))->lire();
             $lignes = $this->offres($requete)->lignesDe(array_column($leurs, 'id'));
             foreach ($leurs as $o) {
-                $offres[] = $o + ['total' => Totaux::calculer($lignes[$o['id']] ?? [], $r->tvaPourDixMille, $r->arrondiCinqCentimes)['ttc']];
+                $offres[] = $o + ['total' => Totaux::calculer($lignes[$o['id']] ?? [], $r->tvaPourDixMille, $r->arrondiCinqCentimes, Rabais::liste($o['rabais']))['ttc']];
             }
         }
         return new Response($this->c->twig()->render('client.html.twig', [

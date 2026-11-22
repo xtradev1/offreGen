@@ -12,8 +12,10 @@
     <div class="doc-titre"><span class="c-texte">{{ doc_nom }} n°&nbsp;{{ doc_numero }}</span> · {{ doc_objet }}</div>
     {{ b.annulee(_context) }}
     {{ b.infos(_context) }}
+    {{ b.texte(_context, 'avant') }}
     {{ b.lignes_marge(_context) }}
     {{ b.totaux(_context) }}
+    {{ b.texte(_context, 'apres') }}
     <div class="doc-fin">
       {{ b.conditions(_context) }}
       {{ b.signatures(_context) }}

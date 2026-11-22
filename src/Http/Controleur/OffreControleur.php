@@ -15,6 +15,7 @@ use OffreGen\Http\Parametres;
 use OffreGen\Offre\Chantier;
 use OffreGen\Offre\Piece;
 use OffreGen\Offre\Offerte;
+use OffreGen\Offre\Rabais;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\Totaux;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -218,8 +219,8 @@ final class OffreControleur
      */
     public function vueDocument(Portee $portee, array $offre, array $lignes, Marque $m): array
     {
-        $r = $this->c->reglages($portee)->lire();
-        $totaux = Totaux::calculer($lignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes);
+        $r = $this->c->reglages($portee)->lire()->pourOffre($offre['conditions']);
+        $totaux = Totaux::calculer($lignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes, Rabais::liste($offre['rabais']));
         $date = new \DateTimeImmutable($offre['modifiee_le'] ?? $offre['cree_le'], new \DateTimeZone('UTC'));
         $valable = $date->setTimezone(new \DateTimeZone('Europe/Zurich'))->modify('+' . $r->validiteJours . ' days')->format('d.m.Y');
         return [

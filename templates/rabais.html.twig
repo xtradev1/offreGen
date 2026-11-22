@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Rabais · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}{{ rang ? 'Modifier le rabais' : 'Nouveau rabais' }}{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% set action = '/offres/' ~ offre.id ~ '/rabais' ~ (rang ? '/' ~ rang : '') %}
+  {% if erreurs is not empty %}<p class="alerte bad" role="alert">Le rabais n'est pas enregistré&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  {# Rabais sous le sous-total, avant la TVA (D4 B, D15 A, 2026-11-21) : 5 % et 10 % en un geste, sinon une valeur tapée. #}
+  <form id="rabais" method="post" action="{{ action }}" data-rabais>
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="libelle">Libellé sur l'offre</label>
+      <input id="libelle" name="libelle" value="{{ champs.libelle }}" maxlength="120" autocomplete="off"{{ f.invalide(erreurs, 'libelle') }}>
+      {{ f.erreur(erreurs, 'libelle') }}
+    </div>
+    <fieldset class="groupe choix">
+      <legend>Montant</legend>
+      <div class="puces quatre">
+        {# Des textes fixes : |raw garde l'espace insécable avant « % ». #}
+        {% for v, texte in {'5': '5&nbsp;%', '10': '10&nbsp;%', 'pct': 'Autre&nbsp;%', 'chf': 'CHF'} %}
+          <label class="puce"><input type="radio" name="choix" value="{{ v }}"{% if champs.choix == v %} checked{% endif %}>{{ texte|raw }}</label>
+        {% endfor %}
+      </div>
+      {{ f.erreur(erreurs, 'choix') }}
+    </fieldset>
+    <div class="champ" data-rabais-valeur>
+      {# Le champ ne paraît que pour « Autre % » et « CHF », avec son étiquette (app.css, :has) ; sans :has, les deux restent. #}
+      <label for="valeur"><span class="si-pct">Pourcentage</span><span class="si-chf">Montant (CHF, hors TVA)</span></label>
+      <input id="valeur" name="valeur" value="{{ champs.valeur }}" inputmode="decimal" autocomplete="off"{{ f.invalide(erreurs, 'valeur') }}>
+      {{ f.erreur(erreurs, 'valeur') }}
+    </div>
+    <p class="muted petit">Sous-total des lignes&nbsp;: {{ sous_total|chf }}. Le rabais se déduit avant la TVA.</p>
+    {% if deja > 0 %}<p class="alerte warn">Des acomptes sont déjà facturés ({{ deja|chf }})&nbsp;: les suivants et la facture finale suivront le nouveau total.</p>{% endif %}
+  </form>
+  {% if rang %}
+    <form class="pied" method="post" action="{{ action }}/retirer">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <button class="lien" type="submit">Retirer ce rabais</button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/offres/{{ offre.id }}">Annuler</a>
+    <button class="btn primary" type="submit" form="rabais">{{ rang ? 'Enregistrer' : 'Ajouter' }}</button>
+  </div>
+{% endblock %}

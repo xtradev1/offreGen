@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Tests\Offre;
 
+use OffreGen\Offre\Rabais;
 use OffreGen\Offre\Totaux;
 use PHPUnit\Framework\TestCase;
 
@@ -121,13 +122,79 @@ final class TotauxTest extends TestCase
         Totaux::arrondir(1, 0);
     }
 
+    /** Rabais sous le sous-total, avant la TVA (D4 B, D15 A, 2026-11-21). */
+    public function testUnRabaisEnPourCentBaisseLaBaseDeLaTva(): void
+    {
+        // 10 × 100.00 = 1000.00 ; rabais 5 % : 50.00 ; HT 950.00 ; TVA 8,1 % : 76.95 ; 1026.95 → 1026.95 (déjà aux 5 ct).
+        $t = Totaux::calculer([['quantite_milliemes' => 10000, 'prix_centimes' => 10000]], 810, true, [Rabais::pourcent('Rabais fidélité', 500)]);
+        self::assertSame(100000, $t['sous_total']);
+        self::assertSame([['libelle' => 'Rabais fidélité', 'pour_dix_mille' => 500, 'montant' => 5000]], $t['rabais']);
+        self::assertSame(['lignes' => [100000], 'ht' => 95000, 'tva' => 7695, 'arrondi' => 0, 'ttc' => 102695], self::sansDetail($t));
+        self::assertSame([['taux' => 810, 'ht' => 95000, 'tva' => 7695]], $t['par_taux']);
+    }
+
+    public function testDeuxRabaisSeComptentSurLeMemeSousTotal(): void
+    {
+        // 1000.00 ; 10 % : 100.00 ; 150.00 en francs ; HT 750.00 ; TVA 60.75 ; 810.75 → 810.75.
+        $t = Totaux::calculer([['quantite_milliemes' => 1000, 'prix_centimes' => 100000]], 810, true,
+            [Rabais::pourcent('Rabais', 1000), Rabais::montant('Geste commercial', 15000)]);
+        self::assertSame([10000, 15000], array_column($t['rabais'], 'montant'));
+        self::assertSame(75000, $t['ht']);
+        self::assertSame(81075, $t['ttc']);
+    }
+
+    public function testLesRabaisNeDepassentJamaisLeSousTotal(): void
+    {
+        // 100.00 ; 80.00 en francs, puis 50.00 : le second est ramené à 20.00 ; HT 0.
+        $t = Totaux::calculer([['quantite_milliemes' => 1000, 'prix_centimes' => 10000]], 810, true,
+            [Rabais::montant('A', 8000), Rabais::montant('B', 5000)]);
+        self::assertSame([8000, 2000], array_column($t['rabais'], 'montant'));
+        self::assertSame(0, $t['ht']);
+        self::assertSame(0, $t['ttc']);
+    }
+
+    public function testUnRabaisSeRepartitEntreLesTauxAuProrata(): void
+    {
+        // 300.00 à 8,1 % et 100.00 à 2,6 % ; 40.00 de rabais : 30.00 et 10.00.
+        // HT 270.00 (TVA 21.87) et 90.00 (TVA 2.34) ; HT 360.00, TVA 24.21, 384.21 → 384.20.
+        $lignes = [['quantite_milliemes' => 1000, 'prix_centimes' => 30000], ['quantite_milliemes' => 1000, 'prix_centimes' => 10000, 'tva_pour_dix_mille' => 260]];
+        $t = Totaux::calculer($lignes, 810, true, [Rabais::montant('Rabais', 4000)]);
+        self::assertSame([['taux' => 810, 'ht' => 27000, 'tva' => 2187], ['taux' => 260, 'ht' => 9000, 'tva' => 234]], $t['par_taux']);
+        self::assertSame(36000, $t['ht']);
+        self::assertSame(38420, $t['ttc']);
+    }
+
+    public function testLeResteDArrondiDuProrataVaAuPlusGrosTaux(): void
+    {
+        // 1.00, 1.00, 1.00 à trois taux ; 0.10 de rabais : 0.0333 → 0.03 trois fois, 0.01 de reste au plus gros (le premier rencontré).
+        $t = Totaux::parTaux([['quantite_milliemes' => 1000, 'prix_centimes' => 100], ['quantite_milliemes' => 1000, 'prix_centimes' => 100, 'tva_pour_dix_mille' => 260],
+            ['quantite_milliemes' => 1000, 'prix_centimes' => 100, 'tva_pour_dix_mille' => 380]], 810, [Rabais::montant('R', 10)]);
+        self::assertSame(290, array_sum(array_column($t, 'ht')), 'la somme des HT par taux est le HT après rabais');
+        self::assertSame([96, 97, 97], array_column($t, 'ht'));
+    }
+
+    public function testUnRabaisSansLigneNeCreeRien(): void
+    {
+        $t = Totaux::calculer([], 810, true, [Rabais::pourcent('Rabais', 500)]);
+        self::assertSame(0, $t['ttc']);
+        self::assertSame(0, $t['rabais'][0]['montant']);
+    }
+
+    /** Une ligne offerte compte 0 : le rabais en pour cent ne la compte pas. */
+    public function testLeRabaisEnPourCentIgnoreLesLignesOffertes(): void
+    {
+        $t = Totaux::calculer([['quantite_milliemes' => 1000, 'prix_centimes' => 10000], ['quantite_milliemes' => 1000, 'prix_centimes' => 10000, 'offerte' => 1]],
+            810, true, [Rabais::pourcent('Rabais', 1000)]);
+        self::assertSame(1000, $t['rabais'][0]['montant']);
+    }
+
     /**
-     * @param array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>} $t
+     * @param array{lignes: list<int>, sous_total: int, rabais: list<array{libelle: string, pour_dix_mille: int|null, montant: int}>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>} $t
      * @return array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int}
      */
     private static function sansDetail(array $t): array
     {
-        unset($t['par_taux']);
+        unset($t['par_taux'], $t['sous_total'], $t['rabais']);
         return $t;
     }
 }

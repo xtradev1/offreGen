@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{# « Représenté par » (D8 A, D9 C, D10 C, 2026-11-21) : une fiche de l'artisan, puis à qui va l'offre et où vont les
+   factures. Un toucher sur une fiche la choisit ; les deux choix gardent leur valeur. #}
+{% block titre %}Représenté par · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}Représenté par{% endblock %}
+
+{% macro puces(nom, valeur, choix) %}
+  <div class="puces deux">
+    {% for v, texte in choix %}<label class="puce"><input type="radio" name="{{ nom }}" value="{{ v }}"{% if valeur == v %} checked{% endif %}>{{ texte }}</label>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% block contenu %}
+  {% import _self as m %}
+  {% set client = offre.client_nom ?? 'le client' %}
+  {% if offre.representant_nom %}
+    <form id="representant" method="post" action="/offres/{{ offre.id }}/representant">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <p><b>{{ offre.representant_nom }}</b>{% if offre.representant_adresse %}<br><small class="muted">{{ offre.representant_adresse|replace({"\n": ', '}) }}</small>{% endif %}</p>
+      <fieldset class="groupe choix">
+        <legend>L'offre est adressée à</legend>
+        {{ m.puces('offre_adressee', offre.offre_adressee, {'representant': offre.representant_nom, 'client': client}) }}
+      </fieldset>
+      <fieldset class="groupe choix">
+        <legend>Les factures sont adressées à</legend>
+        {{ m.puces('factures_adressees', offre.factures_adressees, {'pa': client ~ ', p.a. le représentant', 'client': client ~ ', chez lui'}) }}
+        <p class="muted petit">«&nbsp;Payable par&nbsp;» porte toujours le client.</p>
+      </fieldset>
+    </form>
+    <form class="pied" method="post" action="/offres/{{ offre.id }}/representant">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}"><input type="hidden" name="retirer" value="1">
+      <button class="lien" type="submit">Retirer le représentant</button>
+    </form>
+    <h3 class="sous-titre">Changer de représentant</h3>
+  {% else %}
+    <p class="muted petit">Une régie, une gérance, un architecte&nbsp;: choisissez sa fiche. L'offre lui sera adressée, pour le compte de {{ client }}.</p>
+  {% endif %}
+
+  {% if fiches is not empty %}
+    <div class="search box-seule">
+      <div class="box">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="rc" type="search" placeholder="Chercher une fiche" autocomplete="off" aria-label="Chercher une fiche" data-filtre="#rchoix">
+      </div>
+    </div>
+    <div id="rchoix">
+      {% for k in fiches %}
+        <div data-texte="{{ k.texte }}">
+          <form method="post" action="/offres/{{ offre.id }}/representant" class="kchoix-f">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}"><input type="hidden" name="representant" value="{{ k.id }}">
+            <button class="kchoix{% if offre.representant_id == k.id %} on{% endif %}" type="submit"{% if offre.representant_id == k.id %} aria-current="true"{% endif %}>
+              <span class="rond" aria-hidden="true"></span><span><b>{{ k.nom }}</b><small>{{ k.lieu }}</small></span>
+            </button>
+          </form>
+        </div>
+      {% endfor %}
+      <p class="vide" data-aucun hidden>Aucune fiche ne correspond.</p>
+    </div>
+  {% else %}
+    <p class="muted petit">Aucune autre fiche. Créez celle du représentant dans l'onglet Clients.</p>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/offres/{{ offre.id }}">{{ offre.representant_nom ? 'Annuler' : 'Fermer' }}</a>
+    {% if offre.representant_nom %}<button class="btn primary" type="submit" form="representant">Enregistrer</button>{% endif %}
+  </div>
+{% endblock %}

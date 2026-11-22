@@ -287,10 +287,12 @@ final class FacturesEcranTest extends TestCase
         self::assertSame(1, BaseDeTest::compter('facture', "id = $acompte AND statut = 'emise' AND ttc = 12500"));
         $finale = $this->brouillon();
         $page = $this->page("/factures/$finale/document");
-        self::assertStringContainsString('Acomptes déjà facturés', $page);
+        // D12 A (2026-11-21) : chaque acompte sur sa ligne, avec son libellé, son numéro et sa date.
+        self::assertStringContainsString("Acompte 1 sur 2 (50\u{00A0}%), selon offre n°\u{00A0}1, facture 2026-001 du 07.11.2026", $page);
+        self::assertStringNotContainsString('Acomptes déjà facturés', $page);
         self::assertStringContainsString('125.00', $page);
         self::assertMatchesRegularExpression('#À payer</td><td class="n[^"]*">CHF\x{00A0}125\.00#u', $page, '250.00 moins 125.00.');
-        self::assertStringContainsString('Acomptes déjà facturés', $this->page("/factures/$finale"), 'L\'écran de la facture aussi.');
+        self::assertStringContainsString('facture 2026-001', $this->page("/factures/$finale"), 'L\'écran de la facture aussi.');
     }
 
     /** « Créer la facture » depuis le brouillon : sans page de confirmation (E3), puis son PDF. */

@@ -20,18 +20,21 @@
     {% if facture %}
       <div class="doc-txt">{{ r.lettre.texte('facture_debut', client_nom) }} Selon notre offre n°&nbsp;{{ f.offre_numero }} du {{ f.offre_cree_le|jour }}.</div>
     {% else %}
-      <div class="doc-txt">{{ r.lettre.texte('offre_debut', client_nom) }}{% if chantier and chantier.visite %} Visite du {{ chantier.visite|date_longue }}.{% endif %}{% if chantier and chantier.adresse %} Chantier&nbsp;: {{ chantier.adresse|trim('.', 'right') }}.{% endif %}</div>
+      {# Le texte avant les lignes de l'offre remplace la phrase de Ma marque (D6 A, 2026-11-21). #}
+      <div class="doc-txt">{% if offre.texte_avant %}{{ offre.texte_avant|nl2br }}{% else %}{{ r.lettre.texte('offre_debut', client_nom) }}{% endif %}{% if chantier and chantier.visite %} Visite du {{ chantier.visite|date_longue }}.{% endif %}{% if chantier and chantier.adresse %} Chantier&nbsp;: {{ chantier.adresse|trim('.', 'right') }}.{% endif %}</div>
     {% endif %}
     {{ b.lignes(_context) }}
     {{ b.totaux(_context) }}
     <div class="doc-fin">
       {% if facture %}
-        <div class="doc-txt doc-apres">{% if annulee %}<b>Facture annulée le {{ f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b>{% else %}Payable jusqu'au {{ f.echeance|jour }}{% if qr %} avec la section de paiement {{ (qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}.{% endif %} Montants en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.</div>
+        <div class="doc-txt doc-apres">{% if annulee %}<b>Facture annulée le {{ f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b>{% else %}Payable jusqu'au {{ f.echeance|jour }}{% if qr %} avec la section de paiement {{ (qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}.{% if escompte ?? null %} {{ escompte }}{% endif %}{% endif %} Montants en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.</div>
         <div class="doc-txt">{{ r.lettre.texte('facture_fin', client_nom) }}</div>
         {% if qr and (not pdf or (qr_place ?? null) in ['essai', 'bas']) %}<div class="doc-mentions">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if avec_tva %} TVA{% endif %}{% endif %}</div>{% endif %}
       {% else %}
         {% set debut = chantier ? chantier.debut|trim('.', 'right') : '' %}{% set duree = chantier ? chantier.duree|trim('.', 'right') : '' %}
-        <div class="doc-txt doc-apres">{% if debut %}Début des travaux&nbsp;: {{ debut }}. {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}. {% endif %}Paiement&nbsp;: {{ r.conditionsPaiement|first|lower }}{{ r.conditionsPaiement|slice(1) }} Cette offre est valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.{% if chantier and chantier.nonCompris %} {{ chantier.nonCompris|length > 1 ? 'Ne sont pas compris' : "N'est pas compris" }}&nbsp;: {% for x in chantier.nonCompris %}{{ x|trim('.', 'right') }}{% if not loop.last %}&nbsp;; {% endif %}{% endfor %}.{% endif %}</div>
+        <div class="doc-txt doc-apres">{% if debut %}Début des travaux&nbsp;: {{ debut }}. {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}. {% endif %}Paiement&nbsp;: {{ r.conditionsPaiement|first|lower }}{{ r.conditionsPaiement|slice(1) }}{% if r.phraseEscompte %} {{ r.phraseEscompte }}{% endif %} Cette offre est valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.{% if chantier and chantier.nonCompris %} {{ chantier.nonCompris|length > 1 ? 'Ne sont pas compris' : "N'est pas compris" }}&nbsp;: {% for x in chantier.nonCompris %}{{ x|trim('.', 'right') }}{% if not loop.last %}&nbsp;; {% endif %}{% endfor %}.{% endif %}</div>
+        {# Le texte après les lignes, avant la formule de politesse, qui reste (D16 A). #}
+        {% if offre.texte_apres %}<div class="doc-txt">{{ offre.texte_apres|nl2br }}</div>{% endif %}
         <div class="doc-txt">{{ r.lettre.texte('offre_fin', client_nom) }}</div>
       {% endif %}
       <table class="doc-sign"><tr>

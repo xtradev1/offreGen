@@ -36,6 +36,12 @@ function corrections() {
         const vieux = document.querySelector(s);
         if (neuf && vieux) vieux.replaceWith(neuf);
       });
+      // « Modifiée depuis l'envoi » paraît dès la première correction d'une offre envoyée.
+      const renvoi = page.querySelector('[data-renvoi]');
+      if (renvoi && !document.querySelector('[data-renvoi]')) {
+        const total = document.querySelector('[data-total-fixe]');
+        if (total) total.after(renvoi);
+      }
       enCours.forEach(([ligneId, nom, valeur]) => {
         const c = document.querySelector('#' + ligneId + ' input[name=' + nom + ']');
         if (c) c.value = valeur;
@@ -1574,6 +1580,31 @@ function montantRelu() {
   p.addEventListener('input', maj);
 }
 
+// Textes avant et après les lignes (D5 A, 2026-11-21) : envoyés seuls quand le champ change, comme une quantité.
+// Sans JavaScript, leur bouton les envoie.
+function textesOffre() {
+  const formulaires = document.querySelectorAll('form[data-texte-offre]');
+  if (!formulaires.length) return;
+  const etat = () => document.querySelector('[data-sauvegarde]');
+  formulaires.forEach((form) => {
+    form.querySelectorAll('[data-sans-js]').forEach((b) => { b.hidden = true; });
+    const champ = form.querySelector('textarea');
+    const envoyer = () => {
+      if (champ.value === champ.defaultValue) return;
+      champ.defaultValue = champ.value;
+      if (etat()) etat().textContent = 'Enregistrement…';
+      fetch(form.action, { method: 'POST', body: new URLSearchParams(new FormData(form)), keepalive: true, credentials: 'same-origin' })
+        .then((r) => {
+          if (etat()) etat().textContent = r.ok ? 'Enregistrée' : 'Non enregistré, réessayez';
+          if (r.ok) document.dispatchEvent(new Event('offre-modifiee'));
+        })
+        .catch(() => { if (etat()) etat().textContent = 'Non enregistré : pas de connexion'; champ.defaultValue = ''; });
+    };
+    champ.addEventListener('change', envoyer);
+    window.addEventListener('pagehide', envoyer);
+  });
+}
+
 // Les feuilles de style d'une page chargée à côté (document de facture, couleur de l'artisan) : ajoutées une fois.
 function importerStyles(page) {
   page.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
@@ -1621,7 +1652,7 @@ function brancherFacturer(form) {
       return;
     }
     const params = new URLSearchParams();
-    ['genre', 'pourcent', 'montant', 'numero', 'date', 'echeance'].forEach((n) => params.set(n, valeur(n)));
+    ['genre', 'pourcent', 'montant', 'numero', 'date', 'echeance', 'libelle'].forEach((n) => params.set(n, valeur(n)));
     fetch(form.dataset.apercu + '?' + params, { credentials: 'same-origin' })
       .then((r) => r.text())
       .then((html) => {
@@ -1658,7 +1689,15 @@ function brancherFacturer(form) {
     }
     recharger();
   });
-  form.addEventListener('input', (e) => { if (e.target.matches('#montant, #numero')) plusTard(); });
+  form.addEventListener('input', (e) => { if (e.target.matches('#montant, #numero, #libelle')) plusTard(); });
+  // Libellé d'acompte (D11 A, 2026-11-21) : une puce le remplit.
+  form.addEventListener('click', (e) => {
+    const puce = e.target.closest('[data-libelle-puce]');
+    const champ = form.querySelector('#libelle');
+    if (!puce || !champ) return;
+    champ.value = puce.dataset.libellePuce;
+    recharger();
+  });
   form.addEventListener('keydown', (e) => {
     // Entrée, même sur un bouton radio, recalcule : elle ne crée rien et n'envoie pas « Corriger des lignes », premier
     // bouton du formulaire (revue du 25).
@@ -1982,6 +2021,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ouvrirLaLigne();
   zeroOffreLaLigne();
   montantRelu();
+  textesOffre();
   adresses();
   enregistrementsAutomatiques();
   envoisAutomatiques();

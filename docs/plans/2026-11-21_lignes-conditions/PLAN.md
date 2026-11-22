@@ -54,14 +54,25 @@ public function changerOfferte(int $parentId, int $ligneId, bool $offerte): bool
   rend manquant ; facture finale copiée avec `offerte`.
 - Vérification : `vendor/bin/phpunit` vert sur `offregen_lignes_test`, puis parcours Playwright sur le test.
 
-## Lots suivants (à détailler à leur tour)
+## Lots 2 à 7 (codés le 2026-11-22)
 
-| Lot | Objet | Dépend de |
-|---|---|---|
-| 2 | Rabais sous le sous-total (table `offre_rabais`), calcul, document, facture finale | 1 |
-| 3 | Textes avant et après, validité, paiement, escompte propres à l'offre ; Lettre (D6, D16) | 1 |
-| 4 | Représenté par : fiche, offre et factures adressées | 1 |
-| 5 | Libellé d'acompte libre ; acomptes listés sur la facture finale (vérifier l'existant) | 1 |
-| 6 | Escompte en mention sur chaque facture, QR au montant plein | 3, 5 |
-| 7 | Bandeau « Modifiée depuis l'envoi · Renvoyer » | 1 |
-| 8 | Revue, recette sur le test | tous |
+| Lot | Objet | Code | Tests |
+|---|---|---|---|
+| 2 | Rabais sous le sous-total, % ou CHF, cinq au plus | `src/Offre/Rabais.php`, `Totaux` (`rabais`, `repartir`), `RabaisControleur`, `templates/rabais.html.twig`, migration `…0002` (`offre.rabais`, `facture.rabais`) | `RabaisTest`, `TotauxTest`, `RabaisEcranTest` |
+| 3 | Conditions et textes propres à l'offre ; escompte du compte | `src/Compte/Conditions.php`, `Reglages::pourOffre`, `ConditionsControleur`, `conditions_offre.html.twig`, macro `texte` des 12 modèles, migration `…0003` | `ConditionsTest`, `ConditionsOffreTest` |
+| 4 | Représenté par | `RepresentantControleur`, `representant.html.twig`, `_base.html.twig` (mention), migration `…0004` | `RepresentantTest` |
+| 5 | Libellé d'acompte libre ; la finale liste chaque acompte | `FactureControleur::lireFacturer`, `DepotFactures::acomptesEmis`, `facturer.html.twig`, migration `…0005` | `LibelleAcompteTest`, `FacturesEcranTest` (mis à jour) |
+| 6 | Escompte en mention sur chaque facture, QR au montant plein | `Totaux::escompte`, `FactureControleur::mentionEscompte`, migration `…0006` | `EscompteFactureTest` |
+| 7 | Bandeau « Modifiée depuis l'envoi · Renvoyer » | `offre.html.twig`, `app.js` (corrections) | `RenvoiOffreTest` |
+| 8 | Revue, recette sur le test | `REVUE.md` | |
+
+### Décisions fragiles des lots 2 à 7
+
+- Rabais et conditions en JSON sur l'offre (pas de table) : toujours lus et écrits avec leur offre, la portée de l'artisan est celle de l'offre. Un rabais se désigne par sa place (1 à 5) : deux fenêtres ouvertes en même temps sur la même offre peuvent modifier le mauvais.
+- Chaque rabais se compte sur le même sous-total (pas en cascade), comme la maquette v3 ; réparti entre les taux de TVA au prorata, le reste d'arrondi au plus gros.
+- Une offre sans conditions à elle suit le compte, comme avant (une offre envoyée change si le compte change). Enregistrées dans la fenêtre, elles sont figées pour l'offre.
+- L'escompte n'existait nulle part : ajouté aussi aux réglages du compte (rubrique Conditions), pour « remplies avec les réglages » (D5 A).
+- Libellé d'acompte : le champ est vide, celui des conditions paraît en indice ; vide, c'est lui. Écart à « prérempli » (D11 A) : un champ prérempli ne suivrait pas un changement de pourcentage.
+- Factures d'une offre représentée : « p.a. » le représentant par défaut (D10 C laisse le choix).
+- Escompte : « si payé jusqu'au » = date de la facture + N jours ; montant aux 5 centimes si le compte arrondit ainsi.
+- D18 non tranchée par Xavier : une offre baissée (rabais, ligne offerte) sous les acomptes déjà facturés donne une finale à payer négative, que l'émission refuse déjà avec la raison (`FactureControleur::raisonsDeNePasEmettre`, code d'avant le chantier). C'est l'option « refus » du prototype ; la note de crédit n'est pas faite.
