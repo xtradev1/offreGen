@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lignes offertes, rabais, conditions</title>
+<style>
+/* Couleurs de l'application (public/css/app.css, tête de chantier-voix-offre, e48eab4). */
+:root {
+  --ink: #23272D; --muted: #454B55; --line: #DDD8CC; --surface: #FFFFFF; --bg: #F4F1EA; --chip: #EBE7DE; --bord: #7C838C;
+  --accent: #23272D; --accent-soft: #E9E5DC; --on-accent: #FFFFFF;
+  --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4;
+  --marque: #C4552D; --on-marque: #FFFFFF; --focus: #C4552D; --bande: #23272D; --on-bande: #FFFFFF;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+    --accent: #ECEAE6; --accent-soft: #2D3138; --on-accent: #15171A;
+    --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+  --accent: #ECEAE6; --accent-soft: #2D3138; --on-accent: #15171A;
+  --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 6px; scroll-margin-top: 70px; }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 800px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; margin: 22px 0; }
+.constat { background: var(--bad-soft); color: var(--ink); border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
+.constat b { color: var(--bad); }
+.critique { background: var(--warn-soft); color: var(--ink); border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
+.critique b { color: var(--warn); }
+.tranche { background: var(--ok-soft); border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
+.regle { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.regle li { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 15px; }
+.regle li b { color: var(--ok); }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; }
+figcaption { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+.reference { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 700px) { .reference { grid-template-columns: 1fr; } }
+code { font-size: 14px; background: var(--chip); border-radius: 4px; padding: 0 4px; }
+
+/* Démo : le téléphone à gauche, le document du client à droite. */
+.demo { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 20px; margin: 14px 0 6px; align-items: start; }
+@media (max-width: 860px) { .demo { grid-template-columns: 1fr; } }
+.legende { font-size: 13px; font-weight: 650; color: var(--muted); margin: 0 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+.bascule { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+.bascule button { font: inherit; font-size: 14px; min-height: 40px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); cursor: pointer; }
+.bascule button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+/* Le téléphone reprend les composants de l'application. */
+.tel { position: relative; width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,.08); display: flex; flex-direction: column; min-height: 560px; }
+.tel .bar { display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 6px 16px; background: var(--bande); color: var(--on-bande); }
+.tel .bar b { font-size: 16px; font-weight: 600; flex: 1; }
+.tel .bar small { font-size: 13px; opacity: .8; }
+.tel .ecran { flex: 1; padding: 10px 16px 16px; }
+.cartes { display: grid; gap: 8px; margin: 0 0 6px; }
+.carte { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; width: 100%; cursor: pointer; }
+.carte > span { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.carte small { color: var(--muted); font-size: 13px; }
+.carte .role { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.carte.vide { border-style: dashed; color: var(--muted); }
+.carte > .fl { flex: none; font-size: 20px; color: var(--muted); }
+.carte:focus-visible, .row .nm:focus-visible, .del:focus-visible, .btn:focus-visible, .puce:focus-visible, .seg button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.cat { margin: 14px 0 0; padding-bottom: 4px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+.row { border-bottom: 1px solid var(--line); padding: 6px 0 8px; position: relative; }
+.row .haut { display: flex; align-items: center; gap: 6px; }
+.row .nm { flex: 1; font: inherit; font-size: 15.5px; text-align: left; background: none; border: 0; color: var(--ink); padding: 6px 0; min-height: 44px; cursor: pointer; }
+.row .vals { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 8px; }
+.row .q { display: flex; align-items: center; gap: 8px; }
+.box { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 8px; border: 1px solid var(--bord); border-radius: 10px; font-variant-numeric: tabular-nums; }
+.box.barre { text-decoration: line-through; color: var(--muted); }
+.box.manque { border-color: var(--bad); color: var(--muted); font-style: italic; }
+.u { font-size: 13px; color: var(--muted); min-width: 40px; }
+.tt { text-align: right; font-weight: 600; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tt.offert { color: var(--ok); }
+.tt.moins { color: var(--ink); }
+.del { width: 44px; min-height: 44px; display: grid; place-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; }
+.del svg { width: 18px; height: 18px; }
+.row.miss { box-shadow: inset 3px 0 0 var(--bad); padding-left: 10px; margin-left: -10px; }
+.row.cadeau { box-shadow: inset 3px 0 0 var(--ok); padding-left: 10px; margin-left: -10px; }
+.note { font-size: 12.5px; padding: 4px 0 0; }
+.note.bad { color: var(--bad); }
+.tag { font-size: 12px; font-weight: 600; border-radius: 4px; padding: 1px 6px; margin-left: 4px; }
+.tag.ok { color: var(--ok); background: var(--ok-soft); }
+.tag.neutre { color: var(--accent); background: var(--accent-soft); }
+.totals { margin-top: 12px; font-variant-numeric: tabular-nums; }
+.totals .r { display: flex; justify-content: space-between; align-items: center; min-height: 30px; color: var(--muted); font-size: 14px; }
+.totals .r.fort { color: var(--ink); font-weight: 600; }
+.bas { border-top: 1px solid var(--line); background: var(--surface); }
+.actionbar { display: flex; gap: 8px; padding: 10px 16px 12px; }
+.btn { font: inherit; font-size: 15px; font-weight: 550; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 14px; min-height: 48px; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.actionbar .btn { flex: 1; }
+.actionbar .btn.grand { flex: 2; flex-direction: column; gap: 0; line-height: 1.2; }
+.actionbar .btn.grand small { font-size: 13px; font-weight: 600; }
+.lien { font: inherit; font-size: 14px; font-weight: 600; background: none; border: 0; color: var(--accent); text-decoration: underline; cursor: pointer; padding: 0; min-height: 44px; }
+
+/* Fenêtre du bas, dans le téléphone. */
+.voile { position: absolute; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: flex-end; z-index: 5; }
+.voile.ouvert { display: flex; }
+.feuille { width: 100%; max-height: 92%; overflow-y: auto; background: var(--surface); border-radius: 18px 18px 0 0; padding: 0 16px 14px; }
+.poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 8px auto 6px; }
+.feuille h4 { margin: 4px 0 10px; font-size: 17px; }
+.champ { display: grid; gap: 5px; margin: 0 0 12px; }
+.champ > label, .champ > .lab { font-size: 14px; font-weight: 600; }
+.champ input, .champ textarea, .champ select { font: inherit; font-size: 16px; min-height: 46px; padding: 9px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); width: 100%; min-width: 0; }
+.champ textarea { min-height: 84px; resize: vertical; }
+.champ input:focus-visible, .champ textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.aide { font-size: 13px; color: var(--muted); }
+.propre { font-size: 12.5px; color: var(--warn); font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.propre .lien { font-size: 12.5px; min-height: 32px; }
+.duo { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; }
+.seg { display: flex; border: 1px solid var(--bord); border-radius: 12px; overflow: hidden; }
+.seg button { flex: 1; font: inherit; font-size: 14.5px; min-height: 46px; border: 0; background: var(--surface); color: var(--ink); cursor: pointer; padding: 6px 8px; }
+.seg button + button { border-left: 1px solid var(--bord); }
+.seg button:disabled { color: var(--muted); cursor: not-allowed; text-decoration: line-through; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.puce { font: inherit; font-size: 14px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.puce[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.onglets-aj { display: flex; gap: 4px; margin: 0 0 12px; border-bottom: 1px solid var(--line); }
+.onglets-aj span { padding: 8px 10px; font-size: 14px; color: var(--muted); }
+.onglets-aj span.actif { color: var(--ink); font-weight: 700; box-shadow: inset 0 -3px 0 var(--marque); }
+
+/* Le document du client : du papier, blanc dans les deux thèmes (modèle Sobre). */
+.doc { background: #fff; color: #222; border: 1px solid var(--line); border-radius: 6px; padding: 22px 22px 18px; font: 11.5px/1.45 Roboto, "Segoe UI", system-ui, sans-serif; box-shadow: 0 4px 18px rgba(0,0,0,.08); max-width: 640px; }
+.doc .d-tete { display: flex; justify-content: space-between; gap: 12px; }
+.doc .d-tete b { font-size: 15px; }
+.doc .d-exp { text-align: right; font-size: 10.5px; color: #444; }
+.doc .d-fen { margin: 16px 0 14px auto; width: 52%; min-height: 64px; font-size: 11.5px; }
+.doc .d-fen .pa { color: #444; }
+.doc .d-titre { color: #2E7D32; font-size: 18px; font-weight: 700; margin: 0; }
+.doc .d-objet { font-weight: 600; margin: 0 0 10px; }
+.doc .d-meta { display: flex; flex-wrap: wrap; gap: 6px 22px; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 6px 0; margin: 0 0 10px; font-size: 10.5px; }
+.doc .d-meta span { display: flex; flex-direction: column; }
+.doc .d-meta i { font-style: normal; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #666; }
+.doc .d-texte { margin: 0 0 10px; white-space: pre-line; }
+.doc table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.doc th { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #2E7D32; text-align: left; border-bottom: 1.5px solid #2E7D32; padding: 4px 3px; }
+.doc td { border-bottom: 1px solid #e6e6e6; padding: 5px 3px; vertical-align: top; }
+.doc .n { text-align: right; white-space: nowrap; }
+.doc .barre { text-decoration: line-through; color: #777; }
+.doc .offert { color: #2E7D32; font-weight: 600; }
+.doc .rab td { color: #222; }
+.doc .grp td { font-weight: 700; border-bottom: 0; padding-top: 9px; }
+.doc .d-tot { margin: 8px 0 0 auto; width: 62%; font-variant-numeric: tabular-nums; }
+.doc .d-tot div { display: flex; justify-content: space-between; padding: 2px 0; }
+.doc .d-tot .g { font-weight: 700; font-size: 13px; border-top: 1.5px solid #222; margin-top: 3px; padding-top: 4px; }
+.doc .d-cond { margin: 12px 0 0; font-size: 10.5px; }
+.doc .d-cond .lab { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #666; margin: 0 0 2px; }
+.doc .d-cond ul { margin: 0; padding-left: 16px; }
+.doc .qr { margin: 14px 0 0; border-top: 1px dashed #999; padding-top: 10px; display: grid; grid-template-columns: 90px 1fr; gap: 12px; font-size: 10.5px; }
+.doc .qr .code { width: 90px; height: 90px; background: repeating-conic-gradient(#222 0 25%, #fff 0 50%) 0 0 / 15px 15px; border: 4px solid #fff; outline: 1px solid #222; }
+.doc .qr b { display: block; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #666; font-weight: 600; }
+.doc .qr .mt { font-size: 13px; font-weight: 700; }
+.doc .qr .vide { display: inline-block; width: 110px; height: 34px; border: 1.5px solid #222; border-radius: 2px; }
+.doc mark { background: #FFF0B3; color: inherit; padding: 0 2px; border-radius: 2px; }
+
+/* Décisions : la réponse sous ce qui la demande. */
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; max-width: 100%; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 650; }
+.opts button .reco { display: block; font-size: 12px; font-weight: 650; color: var(--ok); }
+.opts button[aria-pressed="true"] .reco { color: inherit; }
+.opts button:focus-visible, .decision textarea:focus-visible, .copier:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+.decision textarea, .recap textarea { width: 100%; min-height: 60px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 180px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+.calcul { counter-reset: e; list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.calcul li { counter-increment: e; display: flex; gap: 10px; align-items: baseline; }
+.calcul li::before { content: counter(e); flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Lignes offertes, rabais, conditions, représentant, acompte, escompte</h1>
+<p class="chapeau">Six demandes du 21 novembre, maquettées dans l'application telle qu'elle est sur la branche <code>chantier-voix-offre</code> (commit e48eab4). Chaque démo se touche : le téléphone à gauche, le document que reçoit le client à droite. Les démos partagent la même offre : un rabais ajouté plus haut se retrouve dans la facture plus bas. Les réponses se posent sous chaque point ; « Copier le texte », tout en bas, les rassemble.</p>
+
+<section class="point" id="etat">
+<h2 id="aujourdhui" data-toc="Aujourd'hui">Ce que fait l'application aujourd'hui</h2>
+<div class="reference">
+  <figure><img src="MAQUETTE-lignes-conditions-img/offre-telephone.jpg" alt="Écran d'une offre au téléphone : lignes avec quantité et prix en cases, sous-total, TVA, arrondi, bouton Générer l'offre avec le total"><figcaption>L'écran de l'offre au téléphone (capture du chantier responsive, 2026-11-20). La maquette reprend ses composants.</figcaption></figure>
+  <div>
+    <ul class="regle">
+      <li><b>Prix 0 :</b> un champ vide vaut 0 (<code>Saisie.php:30</code>). Un 0 s'affiche « Prix manquant », compte dans « Relire N lignes » et sort « ? » sur le document (<code>_blocs.html.twig:75</code>). Une ligne gratuite est donc impossible.</li>
+      <li><b>Prix négatif :</b> refusé à la saisie (<code>Saisie.php:78</code>, aucun signe moins). Quantité 0 ou négative : refusée.</li>
+      <li><b>Rabais, escompte :</b> aucune trace dans le code. Les totaux font lignes, HT, TVA par taux, arrondi (<code>Totaux.php:32-39</code>).</li>
+      <li><b>Conditions :</b> validité et paiement sont des réglages du compte. Début, durée et « Non compris » sont déjà propres à chaque offre (écran « Objet de l'offre »).</li>
+      <li><b>Phrases de début et de fin :</b> modèle Lettre seulement, réglées une fois dans Ma marque. Le 20 novembre, tu as répondu « L4 : A. Non » à une phrase propre à une offre.</li>
+      <li><b>Client :</b> un seul par offre (nom et adresse recopiés sur l'offre). Le chantier a déjà une adresse et un « Contact sur place ».</li>
+      <li><b>Acompte :</b> libellé figé, « Acompte 1 sur 3 (30 %), selon offre n° 42 » (<code>PlanAcomptes.php:155</code>).</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ============ 1. Ligne à 0, ligne offerte ============ -->
+<section class="point" id="s-offert">
+<h2 id="offerte" data-toc="1. Offerte">1. Ligne à 0 et ligne offerte</h2>
+<p class="constat"><b>Ta question : une ligne à 0, est-ce possible ?</b> Aujourd'hui, la réponse est non : 0 veut dire « prix pas encore connu ». Pour qu'un 0 devienne un cadeau, l'application doit distinguer les deux. Le prix d'une ligne devient « vide » (inconnu, à relire) ou un nombre (0 compris). C'est une migration : les 0 actuels deviennent « vide », puisque tous sont des prix manquants par construction.</p>
+<p>Ensuite, une ligne à 0 et une ligne offerte sont le même objet : un interrupteur « Offerte » dans la fenêtre de la ligne. La ligne garde son prix, que le document peut montrer barré. Touche « Déplacement » ou « Laquage des plinthes » pour l'essayer, ou tape 0 dans un prix.</p>
+<div class="demo">
+  <div>
+    <p class="legende">Téléphone</p>
+    <div class="tel" id="tel1">
+      <div class="bar"><b>Offre 42</b><small>Rafraîchissement</small></div>
+      <div class="ecran"><div data-rows="1"></div><div data-totals></div></div>
+      <div class="bas"><div class="actionbar"><button class="btn" type="button" data-ajout>+ Ligne</button><button class="btn primary grand" type="button"><span>Générer l'offre</span><small data-ttc></small></button></div></div>
+      <div class="voile" id="f-ligne" role="dialog" aria-modal="true" aria-label="Ligne"><div class="feuille">
+        <div class="poignee"></div>
+        <h4 data-l-titre>Ligne</h4>
+        <div class="duo">
+          <div class="champ"><label for="l-q">Quantité</label><input id="l-q" inputmode="decimal" data-l-q></div>
+          <div class="champ"><label for="l-p">Prix unitaire (CHF)</label><input id="l-p" inputmode="decimal" placeholder="Prix ?" data-l-p></div>
+        </div>
+        <div class="champ"><span class="lab">Prix de la ligne</span>
+          <div class="seg" data-l-mode><button type="button" data-v="normal">Facturée</button><button type="button" data-v="offert">Offerte</button></div>
+        </div>
+        <div class="champ" data-l-montrer-champ><span class="lab">Sur le document</span>
+          <div class="seg" data-l-montrer><button type="button" data-v="barre">Prix barré</button><button type="button" data-v="seul">« Offert » seul</button></div>
+          <span class="aide" data-l-aide></span>
+        </div>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn primary" type="button" data-fermer>Enregistrer</button></div>
+      </div></div>
+      <div class="voile" id="f-ajout" role="dialog" aria-modal="true" aria-label="Ajouter"><div class="feuille">
+        <div class="poignee"></div>
+        <div class="onglets-aj"><span>Catalogue</span><span>Ligne libre</span><span class="actif">Rabais</span></div>
+        <div class="champ"><label for="r-lib">Libellé sur le document</label><input id="r-lib" value="Rabais" maxlength="120" data-r-lib></div>
+        <div class="champ"><span class="lab">Montant</span>
+          <div class="puces" data-r-puces><button class="puce" type="button" data-v="5">5 %</button><button class="puce" type="button" data-v="10">10 %</button><button class="puce" type="button" data-v="pct">Autre %</button><button class="puce" type="button" data-v="chf">CHF</button></div>
+        </div>
+        <div class="champ" data-r-val-champ hidden><label for="r-val" data-r-val-lab>Valeur</label><input id="r-val" inputmode="decimal" data-r-val></div>
+        <p class="aide" data-r-apercu></p>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-fermer>Annuler</button><button class="btn primary" type="button" data-r-ok>Ajouter le rabais</button></div>
+      </div></div>
+    </div>
+  </div>
+  <div>
+    <p class="legende">Document du client</p>
+    <div class="doc" data-doc="offre"></div>
+  </div>
+</div>
+<ul class="regle">
+  <li><b>Offrir garde le prix :</b> la ligne montre sa valeur barrée, son total vaut 0. Taper 0 dans le prix donne une ligne offerte sans valeur à barrer (« Offert » seul).</li>
+  <li><b>Prix vide = à relire :</b> seul un prix vide compte dans « Relire N lignes ». Une ligne offerte se génère sans relecture.</li>
+  <li><b>TVA :</b> une ligne offerte ne porte aucun montant, donc aucune TVA. Elle n'entre dans aucun total ni dans le calcul des acomptes.</li>
+  <li><b>Facture finale :</b> la ligne offerte y est recopiée telle quelle, barrée ou « Offert ».</li>
+  <li><b>Catalogue :</b> « Offerte » vaut pour cette offre seulement ; le prix du catalogue ne change pas.</li>
+  <li><b>Dictée :</b> « le déplacement est offert » se branchera plus tard sur le même interrupteur (une correction vocale a toujours son geste à l'écran, l'inverse suit).</li>
+</ul>
+<div class="decision" data-id="D1"><p class="q">D1. Sur le document, une ligne offerte montre :</p><div class="opts">
+  <button type="button" data-v="A">A. Toujours le prix barré</button>
+  <button type="button" data-v="B">B. Toujours « Offert » seul</button>
+  <button type="button" data-v="C">C. Au choix, ligne par ligne (prix barré par défaut)<span class="reco">Recommandé : c'est la démo</span></button>
+</div><textarea aria-label="Commentaire D1" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="D2"><p class="q">D2. Taper 0 dans le prix :</p><div class="opts">
+  <button type="button" data-v="A">A. Rend la ligne offerte (même rendu)<span class="reco">Recommandé</span></button>
+  <button type="button" data-v="B">B. Affiche 0.00, sans mention</button>
+</div><textarea aria-label="Commentaire D2" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="D3"><p class="q">D3. Sous le total, une ligne « Dont offert : CHF 312.00 » ?</p><div class="opts">
+  <button type="button" data-v="A">A. Oui, quand une ligne montre son prix barré</button>
+  <button type="button" data-v="B">B. Non<span class="reco">Recommandé : le barré suffit</span></button>
+</div><textarea aria-label="Commentaire D3" placeholder="Commentaire"></textarea></div>
+</section>
+
+<!-- ============ 2. Rabais ============ -->
+<section class="point" id="s-rabais">
+<h2 id="rabais" data-toc="2. Rabais">2. Rabais : la ligne en moins</h2>
+<p>« + Ligne » ouvre la fenêtre d'ajout, avec un troisième onglet « Rabais » : un libellé, puis 5 %, 10 %, un autre pourcentage ou un montant en CHF (comme l'acompte). Le calcul est le même partout ; seule la place sur le document change. Ajoute un rabais dans le téléphone du point 1, puis compare les deux places.</p>
+<div class="bascule" role="group" aria-label="Place du rabais sur le document">Place du rabais : <button type="button" data-place="sous" aria-pressed="true">B. Sous le sous-total</button><button type="button" data-place="liste" aria-pressed="false">A. Dans la liste, en négatif</button></div>
+<div class="demo">
+  <div>
+    <p class="legende">Téléphone</p>
+    <div class="tel" id="tel2">
+      <div class="bar"><b>Offre 42</b><small>Rafraîchissement</small></div>
+      <div class="ecran"><div data-rows="2"></div><div data-totals></div></div>
+      <div class="bas"><div class="actionbar"><button class="btn" type="button" data-ajout>+ Ligne</button><button class="btn primary grand" type="button"><span>Générer l'offre</span><small data-ttc></small></button></div></div>
+    </div>
+  </div>
+  <div>
+    <p class="legende">Document du client</p>
+    <div class="doc" data-doc="offre"></div>
+  </div>
+</div>
+<ul class="regle">
+  <li><b>Ordre de calcul :</b> lignes, sous-total, rabais, total HT, TVA, arrondi aux 5 centimes. Un pourcentage se calcule sur le sous-total des lignes, avant tout autre rabais.</li>
+  <li><b>Plafond :</b> la somme des rabais ne dépasse jamais le sous-total ; le total ne descend pas sous 0.</li>
+  <li><b>Plusieurs taux de TVA :</b> le rabais se répartit entre les taux au prorata de leur montant HT, et le document le dit (« dont 2'800.00 à 8,1 %, 200.00 à 2,6 % »).</li>
+  <li><b>Acomptes et facture finale :</b> calculés sur le total après rabais. La facture finale recopie le rabais.</li>
+  <li><b>Hors catalogue :</b> un rabais ne se met pas au catalogue et n'a pas la bande « Pas dans votre catalogue ».</li>
+  <li><b>Place A :</b> le rabais reste en bas de la liste, sous la dernière pièce. Un rabais sur un seul poste se fait déjà en baissant son prix.</li>
+</ul>
+<div class="decision" data-id="D4"><p class="q">D4. Où le rabais paraît-il sur le document ?</p><div class="opts">
+  <button type="button" data-v="A">A. Dans la liste, comme une ligne en négatif</button>
+  <button type="button" data-v="B">B. Sous le sous-total, avant la TVA<span class="reco">Recommandé : présentation habituelle d'un devis, TVA lisible</span></button>
+  <button type="button" data-v="C">C. Au choix de l'artisan, dans ses réglages</button>
+</div><textarea aria-label="Commentaire D4" placeholder="Commentaire"></textarea></div>
+</section>
+
+<!-- ============ 3. Conditions et textes ============ -->
+<section class="point" id="s-cond">
+<h2 id="conditions" data-toc="3. Conditions">3. Conditions et textes de l'offre</h2>
+<p class="critique"><b>Contradiction à lever.</b> Le 20 novembre, sur la maquette des phrases de Lettre, tu as répondu « L4 : A. Non » à une phrase propre à une offre. Ta demande d'aujourd'hui la renverse. Je la traite comme un changement de décision : D5 la confirme.</p>
+<p>Une carte « Conditions et textes » sous le total résume ce qui vaut pour l'offre. Elle ouvre une fenêtre : texte avant les lignes, texte après, validité, paiement, escompte. Tout part rempli avec les réglages du compte ; un champ changé porte « Propre à cette offre », avec « Revenir au réglage ». Début, durée et « Non compris » restent dans « Objet de l'offre », où ils sont déjà.</p>
+<div class="demo">
+  <div>
+    <p class="legende">Téléphone</p>
+    <div class="tel" id="tel3">
+      <div class="bar"><b>Offre 42</b><small>Rafraîchissement</small></div>
+      <div class="ecran">
+        <div data-totals></div>
+        <div class="cartes" style="margin-top:10px"><button class="carte" type="button" data-ouvrir="f-cond"><span><span class="role">Conditions et textes</span><b data-cond-resume></b><small data-cond-resume2></small></span><span class="fl">›</span></button></div>
+      </div>
+      <div class="bas"><div class="actionbar"><button class="btn" type="button">+ Ligne</button><button class="btn primary grand" type="button"><span>Générer l'offre</span><small data-ttc></small></button></div></div>
+      <div class="voile" id="f-cond" role="dialog" aria-modal="true" aria-label="Conditions et textes"><div class="feuille">
+        <div class="poignee"></div>
+        <h4>Conditions et textes de l'offre</h4>
+        <div class="champ"><label for="c-avant">Texte avant les lignes</label><textarea id="c-avant" maxlength="1000" placeholder="Vide : rien au-dessus des lignes" data-c="avant"></textarea>
+          <div class="puces"><button class="puce" type="button" data-c-puce="avant" data-t="Suite à notre visite du 18 novembre, nous avons le plaisir de vous remettre notre offre.">Suite à notre visite…</button><button class="puce" type="button" data-c-puce="avant" data-t="Comme convenu, voici notre offre pour les travaux suivants.">Comme convenu…</button></div></div>
+        <div class="champ"><label for="c-apres">Texte après les lignes</label><textarea id="c-apres" maxlength="1000" placeholder="Vide : rien sous les conditions" data-c="apres"></textarea>
+          <div class="puces"><button class="puce" type="button" data-c-puce="apres" data-t="Les travaux peuvent se faire en deux étapes si vous le souhaitez. Nous restons à votre disposition.">Deux étapes…</button></div></div>
+        <div class="champ"><span class="lab">Offre valable</span>
+          <div class="puces" data-c-validite><button class="puce" type="button" data-v="15">15 jours</button><button class="puce" type="button" data-v="30">30 jours</button><button class="puce" type="button" data-v="60">60 jours</button></div>
+          <span class="propre" data-propre="validite" hidden>Propre à cette offre <button class="lien" type="button" data-revenir="validite">Revenir au réglage (30 jours)</button></span></div>
+        <div class="champ"><label for="c-jours">Paiement net à (jours)</label><input id="c-jours" inputmode="numeric" data-c-jours>
+          <span class="propre" data-propre="jours" hidden>Propre à cette offre <button class="lien" type="button" data-revenir="jours">Revenir au réglage (30 jours)</button></span></div>
+        <div class="champ"><span class="lab">Escompte</span>
+          <div class="puces" data-c-esc><button class="puce" type="button" data-v="0">Aucun</button><button class="puce" type="button" data-v="2-10">2 % à 10 jours</button><button class="puce" type="button" data-v="3-10">3 % à 10 jours</button></div>
+          <span class="propre" data-propre="esc" hidden>Propre à cette offre <button class="lien" type="button" data-revenir="esc">Revenir au réglage (aucun)</button></span></div>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn primary" type="button" data-fermer>Fermer</button></div>
+      </div></div>
+    </div>
+  </div>
+  <div>
+    <p class="legende">Document du client</p>
+    <div class="doc" data-doc="offre"></div>
+  </div>
+</div>
+<ul class="regle">
+  <li><b>Texte brut :</b> les retours à la ligne sont gardés, sans gras ni liste. 1000 caractères au plus par texte.</li>
+  <li><b>Vide = rien :</b> un texte vide n'ajoute rien au document. Les conditions vides reprennent le réglage du compte.</li>
+  <li><b>Figé à l'envoi :</b> comme les lignes, les textes et conditions d'une offre envoyée ne bougent plus, même si le réglage du compte change.</li>
+  <li><b>Facture :</b> elle reprend le délai de paiement et l'escompte de l'offre, jamais ses textes (la facture a ses phrases à elle, dans Lettre).</li>
+</ul>
+<div class="decision" data-id="D5"><p class="q">D5. Des textes et conditions propres à chaque offre (tu avais dit non le 20 novembre pour Lettre) :</p><div class="opts">
+  <button type="button" data-v="A">A. Oui, comme dans la démo</button>
+  <button type="button" data-v="B">B. Conditions seulement (validité, paiement, escompte), sans textes</button>
+  <button type="button" data-v="C">C. Non, les réglages du compte suffisent</button>
+</div><textarea aria-label="Commentaire D5" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="D6"><p class="q">D6. Dans le modèle Lettre, le texte avant les lignes :</p><div class="opts">
+  <button type="button" data-v="A">A. Remplace la phrase réglée dans Ma marque, pour cette offre<span class="reco">Recommandé : sinon deux introductions se suivent</span></button>
+  <button type="button" data-v="B">B. S'ajoute après la phrase réglée</button>
+</div><textarea aria-label="Commentaire D6" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="D7"><p class="q">D7. Un bouton « Utiliser pour toutes mes offres » dans la fenêtre ?</p><div class="opts">
+  <button type="button" data-v="A">A. Oui</button>
+  <button type="button" data-v="B">B. Non, le réglage par défaut se change dans Réglages<span class="reco">Recommandé : un seul endroit pour le défaut</span></button>
+</div><textarea aria-label="Commentaire D7" placeholder="Commentaire"></textarea></div>
+</section>
+
+<!-- ============ 4. Client et représentant ============ -->
+<section class="point" id="s-mandant">
+<h2 id="representant" data-toc="4. Représentant">4. Le client et son représentant</h2>
+<p class="critique"><b>Le mot « mandant » désigne l'inverse de ce que tu décris.</b> Le mandant donne le mandat : c'est en général le propriétaire, celui qui paie. La personne mandatée (régie, gérance, architecte) est le mandataire. Pour éviter le contresens sur un document officiel, la maquette dit « Client » (qui paie) et « Représenté par » (qui commande pour lui). D8 tranche les mots.</p>
+<p>L'en-tête de l'offre gagne une seconde carte, facultative, sous le client. Les deux se choisissent dans la liste des clients. Une fenêtre décide à qui le document est adressé ; l'autre nom figure dans le cartouche.</p>
+<div class="demo">
+  <div>
+    <p class="legende">Téléphone</p>
+    <div class="tel" id="tel4">
+      <div class="bar"><b>Offre 42</b><small>Rafraîchissement</small></div>
+      <div class="ecran">
+        <div class="cartes" data-cartes-clients></div>
+        <div class="cartes"><div class="carte" style="cursor:default"><span><b>Rafraîchissement de l'appartement</b><small>Objet de l'offre</small></span></div></div>
+        <p class="aide">Touche « Représenté par » pour choisir à qui va le document.</p>
+      </div>
+      <div class="bas"><div class="actionbar"><button class="btn" type="button">+ Ligne</button><button class="btn primary grand" type="button"><span>Générer l'offre</span><small data-ttc></small></button></div></div>
+      <div class="voile" id="f-rep" role="dialog" aria-modal="true" aria-label="Représentant"><div class="feuille">
+        <div class="poignee"></div>
+        <h4>Représenté par</h4>
+        <div class="carte" style="cursor:default;margin-bottom:12px"><span><b>Régie du Lac SA</b><small>Rue du Port 12, 2000 Neuchâtel</small></span></div>
+        <div class="champ"><span class="lab">L'offre est adressée à</span>
+          <div class="seg" data-docva><button type="button" data-v="rep">Régie du Lac SA</button><button type="button" data-v="client">Famille Rochat</button></div>
+          <span class="aide">Le courriel de l'offre part à la même adresse.</span></div>
+        <div class="champ"><span class="lab">Les factures sont adressées à</span>
+          <div class="seg" data-factva><button type="button" data-v="pa">Rochat, p.a. la régie</button><button type="button" data-v="client">Rochat, chez eux</button></div>
+          <span class="aide">Le client paie toujours : son nom est sur la section de paiement.</span></div>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-retirer-rep>Retirer</button><button class="btn primary" type="button" data-fermer>Fermer</button></div>
+      </div></div>
+    </div>
+  </div>
+  <div>
+    <p class="legende">Document du client</p>
+    <div class="doc" data-doc="offre"></div>
+  </div>
+</div>
+<ul class="regle">
+  <li><b>Le client reste obligatoire :</b> sans lui, pas de « Générer l'offre » (règle actuelle). Le représentant est facultatif.</li>
+  <li><b>Recopiés et figés :</b> nom et adresse du représentant sont copiés sur l'offre et sur chaque facture, comme ceux du client aujourd'hui.</li>
+  <li><b>Contact sur place :</b> il reste dans « Objet de l'offre » (la personne qui ouvre la porte). Le représentant est celui qui commande et reçoit le document.</li>
+  <li><b>Section de paiement :</b> « Payable par » porte toujours le client ; l'adresse suit D10.</li>
+  <li><b>Isolation :</b> le représentant est une fiche client de l'artisan ; le test d'isolation entre comptes couvre la nouvelle route.</li>
+</ul>
+<div class="decision" data-id="D8"><p class="q">D8. Les mots, à l'écran et sur le document :</p><div class="opts">
+  <button type="button" data-v="A">A. « Client » et « Représenté par »<span class="reco">Recommandé : les mots de l'artisan</span></button>
+  <button type="button" data-v="B">B. « Maître d'ouvrage » et « Mandataire »</button>
+  <button type="button" data-v="C">C. « Facturé à » et « Commandé par »</button>
+</div><textarea aria-label="Commentaire D8" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="D9"><p class="q">D9. À qui l'offre est-elle adressée ?</p><div class="opts">
+  <button type="button" data-v="A">A. Toujours au représentant, « Pour le compte de » le client</button>
+  <button type="button" data-v="B">B. Toujours au client, « Par l'intermédiaire de » le représentant</button>
+  <button type="button" data-v="C">C. Au choix par offre, au représentant par défaut<span class="reco">Recommandé : c'est la démo</span></button>
+</div><textarea aria-label="Commentaire D9" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="D10"><p class="q">D10. Les factures :</p><div class="opts">
+  <button type="button" data-v="A">A. Au client, à son adresse</button>
+  <button type="button" data-v="B">B. Au client, « p.a. » l'adresse du représentant</button>
+  <button type="button" data-v="C">C. Au choix par offre, comme dans la démo<span class="reco">Recommandé</span></button>
+</div><textarea aria-label="Commentaire D10" placeholder="Commentaire"></textarea></div>
+</section>
+
+<!-- ============ 5. Libellé de l'acompte ============ -->
+<section class="point" id="s-acompte">
+<h2 id="acompte" data-toc="5. Acompte">5. Le libellé de l'acompte</h2>
+<p>Dans la fenêtre « Facturer », sous la part de l'offre, un champ « Libellé sur la facture » part rempli avec le texte d'aujourd'hui. Trois puces proposent les moments usuels. La référence à l'offre reste dans la case « Référence » du document (décision du 20 novembre), le libellé peut donc s'en passer.</p>
+<div class="demo">
+  <div>
+    <p class="legende">Téléphone, fenêtre « Facturer »</p>
+    <div class="tel" id="tel5">
+      <div class="bar"><b>Facturer l'offre 42</b></div>
+      <div class="ecran">
+        <div class="seg" style="margin-bottom:12px"><button type="button" aria-pressed="true">Acompte</button><button type="button" aria-pressed="false">Facture finale</button></div>
+        <div class="champ"><span class="lab">Part de l'offre</span>
+          <div class="puces" data-a-pct><button class="puce" type="button" data-v="20">20 %</button><button class="puce" type="button" data-v="30">30 %</button><button class="puce" type="button" data-v="40">40 %</button><button class="puce" type="button" data-v="50">50 %</button></div></div>
+        <div class="champ"><label for="a-lib">Libellé sur la facture</label><input id="a-lib" maxlength="255" data-a-lib>
+          <div class="puces"><button class="puce" type="button" data-a-puce="Acompte à la commande">À la commande</button><button class="puce" type="button" data-a-puce="Acompte au début des travaux">Au début des travaux</button><button class="puce" type="button" data-a-puce="Acompte à mi-chantier">À mi-chantier</button></div>
+          <button class="lien" type="button" data-a-defaut style="justify-self:start">Texte d'origine</button></div>
+      </div>
+      <div class="bas"><div class="actionbar"><button class="btn primary" type="button">Créer la facture</button></div></div>
+    </div>
+  </div>
+  <div>
+    <p class="legende">Facture d'acompte</p>
+    <div class="doc" data-doc="acompte"></div>
+  </div>
+</div>
+<ul class="regle">
+  <li><b>Champ vide = texte d'origine :</b> « Acompte 1 sur 3 (30 %), selon offre n° 42 ». 255 caractères au plus.</li>
+  <li><b>Figé à la création :</b> le libellé ne change plus une fois la facture créée (même règle que le numéro).</li>
+  <li><b>Plusieurs taux de TVA :</b> la mention « , prestations à 8,1 % » s'ajoute après le libellé, comme aujourd'hui.</li>
+</ul>
+<div class="decision" data-id="D11"><p class="q">D11. Le libellé se choisit :</p><div class="opts">
+  <button type="button" data-v="A">A. Champ libre prérempli, avec les trois puces<span class="reco">Recommandé : c'est la démo</span></button>
+  <button type="button" data-v="B">B. Les puces seulement, sans champ libre</button>
+</div><textarea aria-label="Commentaire D11" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="D12"><p class="q">D12. Sur la facture finale, les acomptes déjà facturés :</p><div class="opts">
+  <button type="button" data-v="A">A. Une ligne par acompte, avec son libellé, son numéro et son montant<span class="reco">Recommandé : le client retrouve ses paiements</span></button>
+  <button type="button" data-v="B">B. Une seule ligne « Acomptes déjà facturés » (aujourd'hui)</button>
+</div><textarea aria-label="Commentaire D12" placeholder="Commentaire"></textarea></div>
+</section>
+
+<!-- ============ 6. Escompte ============ -->
+<section class="point" id="s-escompte">
+<h2 id="escompte" data-toc="6. Escompte">6. L'escompte</h2>
+<p>L'escompte récompense un paiement rapide : « 2 % si vous payez dans les 10 jours ». Il laisse le total de l'offre intact (le rabais le baisse) et ne vaut qu'au paiement. Il se règle une fois dans Réglages, Conditions, et se change par offre dans la fenêtre du point 3. Choisis un escompte ici ou au point 3 : l'offre et la facture suivent.</p>
+<div class="bascule" role="group" aria-label="Escompte">Escompte : <button type="button" data-esc="0">Aucun</button><button type="button" data-esc="2-10">2 % à 10 jours</button><button type="button" data-esc="3-10">3 % à 10 jours</button></div>
+<div class="bascule" role="group" aria-label="Montant du code QR">Montant du code QR : <button type="button" data-qr="plein" aria-pressed="true">A. Montant plein</button><button type="button" data-qr="vide" aria-pressed="false">B. Sans montant</button></div>
+<div class="demo">
+  <div>
+    <p class="legende">Offre (conditions)</p>
+    <div class="doc" data-doc="offre-cond"></div>
+  </div>
+  <div>
+    <p class="legende">Facture d'acompte</p>
+    <div class="doc" data-doc="acompte"></div>
+  </div>
+</div>
+<p class="critique"><b>Limite du code QR suisse :</b> il porte un seul montant. Le client qui prend l'escompte doit corriger le montant dans son e-banking (A), ou le taper lui-même (B). Mettre le montant escompté dans le code ferait payer moins à celui qui paie en retard. offreGen ne suit pas les paiements : l'artisan voit l'écart dans son compte.</p>
+<ul class="regle">
+  <li><b>Bornes :</b> de 0,5 à 5 %, de 1 à 30 jours, toujours avant l'échéance de la facture.</li>
+  <li><b>Calcul :</b> sur le montant à payer de la facture (après acomptes déjà facturés), arrondi aux 5 centimes si l'arrondi est réglé.</li>
+  <li><b>TVA :</b> un escompte pris réduit la TVA due. La correction se fait en comptabilité ; à faire confirmer par une fiduciaire avant de l'écrire dans l'aide.</li>
+  <li><b>Offre :</b> une phrase dans les conditions, sous « Paiement ». Rien dans les totaux.</li>
+</ul>
+<div class="decision" data-id="D13"><p class="q">D13. Le code QR d'une facture avec escompte :</p><div class="opts">
+  <button type="button" data-v="A">A. Montant plein, le client déduit lui-même<span class="reco">Recommandé : celui qui paie tard paie juste</span></button>
+  <button type="button" data-v="B">B. Sans montant, le client le tape</button>
+</div><textarea aria-label="Commentaire D13" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="D14"><p class="q">D14. L'escompte s'applique :</p><div class="opts">
+  <button type="button" data-v="A">A. À chaque facture, acomptes compris<span class="reco">Recommandé : une seule règle pour le client</span></button>
+  <button type="button" data-v="B">B. À la facture finale seulement</button>
+</div><textarea aria-label="Commentaire D14" placeholder="Commentaire"></textarea></div>
+</section>
+
+<!-- ============ 7. Calcul commun ============ -->
+<section class="point" id="s-calcul">
+<h2 id="calcul" data-toc="7. Calcul">7. Le calcul complet et ce que ça touche</h2>
+<ol class="calcul">
+  <li>Chaque ligne : quantité × prix, au centime. Ligne offerte : 0. Prix vide : à relire, bloque « Générer l'offre ».</li>
+  <li>Sous-total des lignes.</li>
+  <li>Rabais (pourcentages sur le sous-total, montants tels quels), plafonnés au sous-total.</li>
+  <li>Total HT, réparti par taux de TVA ; TVA par taux.</li>
+  <li>Arrondi aux 5 centimes : total TTC de l'offre.</li>
+  <li>Factures : acomptes sur ce total, facture finale moins les acomptes.</li>
+  <li>Escompte : sur le montant à payer de chaque facture, en mention seulement.</li>
+</ol>
+<ul class="regle">
+  <li><b>Base de données :</b> <code>ligne.prix_centimes</code> accepte NULL (les 0 actuels y passent), <code>ligne.offerte</code> et sa façon de s'afficher ; une table des rabais de l'offre ; sur <code>offre</code> : textes avant et après, validité, délai, escompte, représentant (fiche et copie) ; sur <code>facture</code> : libellé, représentant, escompte. Migrations additives seulement.</li>
+  <li><b>Extraction :</b> l'IA renvoie aujourd'hui 0 pour un prix inconnu ; elle devra renvoyer « vide », sinon chaque prix inconnu deviendrait un cadeau. C'est le piège principal du chantier.</li>
+  <li><b>Douze modèles :</b> le prix barré, le bloc des rabais, les textes et le représentant passent dans chacun ; les tests de gabarits (une page, place de l'adresse) sont à refaire tourner.</li>
+  <li><b>Tests :</b> totaux (offerte, rabais en %, plafond, deux taux, arrondi), saisie (vide contre 0), facture finale avec rabais et acomptes, isolation de la route du représentant.</li>
+</ul>
+<div class="decision" data-id="D15"><p class="q">D15. L'ordre de calcul ci-dessus :</p><div class="opts">
+  <button type="button" data-v="A">A. Valider</button>
+  <button type="button" data-v="B">B. À corriger (commentaire)</button>
+</div><textarea aria-label="Commentaire D15" placeholder="Commentaire"></textarea></div>
+</section>
+
+<section class="point recap" id="s-recap">
+<h2 id="recap" data-toc="Copier">Copier le texte</h2>
+<p class="chapeau">Ce récapitulatif sert à copier les réponses dans la conversation. Les réponses se posent sous chaque point.</p>
+<textarea readonly aria-label="Réponses rassemblées" data-recap></textarea>
+<p><button class="copier" type="button" data-copier>Copier le texte</button><span class="copie-ok" data-copie-ok hidden>Copié</span></p>
+</section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var NB = ' ';
+  var S = {
+    lignes: [
+      { id: 1, piece: 'Séjour', des: 'Peinture des murs, 2 couches', q: 42, u: 'm²', p: 2800, offert: false, montrer: 'barre' },
+      { id: 2, piece: 'Séjour', des: 'Peinture des plafonds, 2 couches', q: 24, u: 'm²', p: 3200, offert: false, montrer: 'barre' },
+      { id: 3, piece: 'Séjour', des: 'Laquage des plinthes', q: 26, u: 'm', p: 1200, offert: true, montrer: 'barre' },
+      { id: 4, piece: 'Divers', des: 'Déplacement', q: 1, u: 'forfait', p: 6000, offert: false, montrer: 'barre' },
+      { id: 5, piece: 'Divers', des: 'Protection des sols et des meubles', q: 1, u: 'forfait', p: null, offert: false, montrer: 'barre' }
+    ],
+    rabais: [{ lib: 'Rabais fidélité', mode: 'pct', val: 5 }],
+    place: 'sous',
+    avant: '', apres: '',
+    validite: 30, jours: 30, esc: '0',
+    rep: true, docva: 'rep', factva: 'pa',
+    acPct: 30, acLib: '',
+    qr: 'plein'
+  };
+  var REGLAGE = { validite: 30, jours: 30, esc: '0' };
+  var ligneOuverte = null;
+  var rabaisChoix = '5';
+
+  function chf(c) {
+    var neg = c < 0; c = Math.abs(Math.round(c));
+    var f = Math.floor(c / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '’');
+    var s = (neg ? '-' : '') + f + '.' + String(c % 100).padStart(2, '0');
+    return s;
+  }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]; }); }
+  function totalLigne(l) { return (l.offert || l.p === null) ? 0 : Math.round(l.q * l.p); }
+  function escompte() { if (S.esc === '0') return null; var a = S.esc.split('-'); return { pct: +a[0], jours: +a[1] }; }
+
+  function calcul() {
+    var sous = 0, offert = 0, manque = 0;
+    S.lignes.forEach(function (l) { sous += totalLigne(l); if (l.offert && l.p) offert += Math.round(l.q * l.p); if (l.p === null && !l.offert) manque++; });
+    var rab = [], somme = 0;
+    S.rabais.forEach(function (r) {
+      var m = r.mode === 'pct' ? Math.round(sous * r.val / 100) : r.val;
+      m = Math.min(m, sous - somme); somme += m;
+      rab.push({ lib: r.lib, mode: r.mode, val: r.val, m: m });
+    });
+    var ht = sous - somme, tva = Math.round(ht * 0.081), brut = ht + tva, ttc = Math.round(brut / 5) * 5;
+    return { sous: sous, rab: rab, rabTotal: somme, ht: ht, tva: tva, arr: ttc - brut, ttc: ttc, offert: offert, manque: manque };
+  }
+
+  var POUBELLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
+
+  function rangsTel(t) {
+    var h = '', piece = null;
+    S.lignes.forEach(function (l) {
+      if (l.piece !== piece) { piece = l.piece; h += '<div class="cat"><span>' + esc(piece) + '</span><span>Qté · Prix · Total</span></div>'; }
+      var manque = l.p === null && !l.offert;
+      var cls = manque ? ' miss' : (l.offert ? ' cadeau' : '');
+      var prix = l.p === null ? '<span class="box manque">Prix' + NB + '?</span>' : '<span class="box' + (l.offert && l.p ? ' barre' : '') + '">' + chf(l.p).replace(/\.00$/, '') + '</span>';
+      var tot = manque ? '' : (l.offert ? '<span class="tt offert">Offert</span>' : '<span class="tt">' + chf(totalLigne(l)) + '</span>');
+      h += '<div class="row' + cls + '"><div class="haut"><button class="nm" type="button" data-ligne="' + l.id + '">' + esc(l.des) + (l.offert ? '<span class="tag ok">Offerte</span>' : '') + '</button><button class="del" type="button" aria-label="Supprimer (démo)">' + POUBELLE + '</button></div>'
+        + '<div class="vals"><span class="q"><span class="box">' + l.q + '</span><span class="u">' + esc(l.u) + '</span></span>' + prix + tot + '</div>'
+        + (manque ? '<div class="note bad">Prix manquant</div>' : '') + '</div>';
+    });
+    /* À l'écran, les rabais ont leur groupe sous les lignes (pour les retirer), quelle que soit leur place sur le document. */
+    t.rab.forEach(function (r, i) {
+      if (i === 0) h += '<div class="cat"><span>Rabais</span><span></span></div>';
+      h += '<div class="row"><div class="haut"><span class="nm" style="cursor:default">' + esc(r.lib) + '<span class="tag neutre">' + (r.mode === 'pct' ? r.val + NB + '%' : 'CHF') + '</span></span><button class="del" type="button" data-suppr-rabais="' + i + '" aria-label="Retirer le rabais ' + esc(r.lib) + '">' + POUBELLE + '</button></div>'
+        + '<div class="vals"><span></span><span></span><span class="tt moins">' + chf(-r.m) + '</span></div></div>';
+    });
+    return h;
+  }
+  function totauxTel(t) {
+    var h = '<div class="totals"><div class="r"><span>Sous-total des lignes</span><span>' + chf(t.sous) + '</span></div>';
+    if (t.rab.length) h += '<div class="r"><span>Rabais</span><span>' + chf(-t.rabTotal) + '</span></div><div class="r fort"><span>Total HT</span><span>' + chf(t.ht) + '</span></div>';
+    h += '<div class="r"><span>TVA 8,1' + NB + '%</span><span>' + chf(t.tva) + '</span></div>';
+    if (t.arr) h += '<div class="r"><span>Arrondi</span><span>' + chf(t.arr) + '</span></div>';
+    return h + '</div>';
+  }
+
+  function enteteDoc(kind) {
+    var cli = { nom: 'Famille Rochat', adr: ['Chemin des Vignes 4', '1700 Fribourg'] };
+    var rep = { nom: 'Régie du Lac SA', adr: ['Rue du Port 12', '2000 Neuchâtel'] };
+    var fen, meta = '';
+    if (kind === 'offre') {
+      if (S.rep && S.docva === 'rep') { fen = rep.nom + '<br>' + rep.adr.join('<br>'); meta = '<span><i>Pour le compte de</i>' + cli.nom + ', ' + cli.adr.join(', ') + '</span>'; }
+      else if (S.rep) { fen = cli.nom + '<br>' + cli.adr.join('<br>'); meta = '<span><i>Par l’intermédiaire de</i>' + rep.nom + '</span>'; }
+      else fen = cli.nom + '<br>' + cli.adr.join('<br>');
+    } else {
+      if (S.rep && S.factva === 'pa') fen = cli.nom + '<br><span class="pa">p.a. ' + rep.nom + '</span><br>' + rep.adr.join('<br>');
+      else fen = cli.nom + '<br>' + cli.adr.join('<br>');
+      if (S.rep) meta = '<span><i>Représenté par</i>' + rep.nom + '</span>';
+    }
+    return '<div class="d-tete"><b>Peinture Morel Sàrl</b><div class="d-exp">Rue de l’Exemple 12<br>2800 Delémont<br>032' + NB + '000' + NB + '00' + NB + '01</div></div><div class="d-fen">' + fen + '</div>' + (meta ? '<!--meta-->' + meta : '');
+  }
+  function lignesDoc(t) {
+    var h = '<table><thead><tr><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix unit.</th><th class="n">Montant</th></tr></thead><tbody>', piece = null;
+    S.lignes.forEach(function (l) {
+      if (l.piece !== piece) { piece = l.piece; h += '<tr class="grp"><td colspan="4">' + esc(piece) + '</td></tr>'; }
+      var pu, mt;
+      if (l.offert) {
+        if (l.montrer === 'barre' && l.p) { pu = '<span class="barre">' + chf(l.p) + '</span>'; mt = '<span class="barre">' + chf(Math.round(l.q * l.p)) + '</span> <span class="offert">Offert</span>'; }
+        else { pu = ''; mt = '<span class="offert">Offert</span>'; }
+      } else if (l.p === null) { pu = '?'; mt = '?'; }
+      else { pu = chf(l.p); mt = chf(totalLigne(l)); }
+      h += '<tr><td>' + esc(l.des) + '</td><td class="n">' + l.q + NB + esc(l.u) + '</td><td class="n">' + pu + '</td><td class="n">' + mt + '</td></tr>';
+    });
+    if (S.place === 'liste') t.rab.forEach(function (r) { h += '<tr class="rab"><td>' + esc(r.lib) + (r.mode === 'pct' ? ' (' + r.val + NB + '%)' : '') + '</td><td></td><td></td><td class="n">' + chf(-r.m) + '</td></tr>'; });
+    h += '</tbody></table>';
+    h += '<div class="d-tot">';
+    if (S.place === 'sous' || !t.rab.length) {
+      h += '<div><span>Sous-total</span><span>' + chf(t.sous) + '</span></div>';
+      t.rab.forEach(function (r) { h += '<div><span>' + esc(r.lib) + (r.mode === 'pct' ? ' ' + r.val + NB + '%' : '') + '</span><span>' + chf(-r.m) + '</span></div>'; });
+    }
+    h += '<div><span>Total HT</span><span>' + chf(t.ht) + '</span></div><div><span>TVA 8,1' + NB + '%</span><span>' + chf(t.tva) + '</span></div>';
+    if (t.arr) h += '<div><span>Arrondi</span><span>' + chf(t.arr) + '</span></div>';
+    return h + '<div class="g"><span>Total TTC</span><span>CHF ' + chf(t.ttc) + '</span></div></div>';
+  }
+  function conditionsDoc(t, marquer) {
+    var e = escompte();
+    var pay = 'Paiement' + NB + ': net à ' + S.jours + ' jours dès réception de la facture.';
+    var escTxt = e ? ' Escompte ' + e.pct + NB + '% si paiement dans les ' + e.jours + ' jours.' : '';
+    if (escTxt && marquer) escTxt = ' <mark>' + escTxt.trim() + '</mark>';
+    return '<div class="d-cond"><div class="lab">Conditions</div><ul><li>' + pay + escTxt + '</li><li>Début des travaux' + NB + ': semaine 3, 2027. Durée' + NB + ': 6 jours ouvrables.</li><li>Offre valable jusqu’au ' + (S.validite === 15 ? '6.12.2026' : S.validite === 60 ? '20.1.2027' : '21.12.2026') + '. Prix en francs suisses, TVA comprise dans le total.</li></ul></div>';
+  }
+  function docOffre(cond) {
+    var t = calcul(), ent = enteteDoc('offre'), parts = ent.split('<!--meta-->');
+    var meta = '<div class="d-meta"><span><i>Date</i>21.11.2026</span><span><i>Chantier</i>Chemin des Vignes 4, Fribourg</span>' + (parts[1] || '') + '</div>';
+    var h = parts[0] + '<p class="d-titre">Offre n°' + NB + '42</p><p class="d-objet">Rafraîchissement de l’appartement</p>' + meta;
+    if (cond) return h.replace(/<p class="d-titre">[\s\S]*$/, '<p class="d-titre">Offre n°' + NB + '42</p>') + '<p class="aide" style="color:#666;font-size:10.5px;margin:6px 0 0">[lignes et totaux]</p>' + '<div class="d-tot"><div class="g"><span>Total TTC</span><span>CHF ' + chf(t.ttc) + '</span></div></div>' + conditionsDoc(t, true);
+    if (S.avant) h += '<p class="d-texte">' + esc(S.avant) + '</p>';
+    h += lignesDoc(t) + conditionsDoc(t, false);
+    if (S.apres) h += '<p class="d-texte" style="margin-top:10px">' + esc(S.apres) + '</p>';
+    return h;
+  }
+  function libelleAcompte() { return S.acLib.trim() || ('Acompte 1 sur 3 (' + S.acPct + NB + '%), selon offre n°' + NB + '42'); }
+  function docAcompte() {
+    var t = calcul(), ent = enteteDoc('facture'), parts = ent.split('<!--meta-->');
+    var mt = Math.round(t.ttc * S.acPct / 100 / 5) * 5, ht = Math.round(mt / 1.081), tva = mt - ht;
+    var h = parts[0] + '<p class="d-titre">Facture n°' + NB + '2026-031</p><p class="d-objet">Rafraîchissement de l’appartement</p>'
+      + '<div class="d-meta"><span><i>Date</i>21.11.2026</span><span><i>Échéance</i>21.12.2026</span><span><i>Référence</i>selon offre n°' + NB + '42 du 21.11.2026</span>' + (parts[1] || '') + '</div>'
+      + '<table><thead><tr><th>Désignation</th><th class="n">Montant</th></tr></thead><tbody><tr><td><mark>' + esc(libelleAcompte()) + '</mark></td><td class="n">' + chf(mt) + '</td></tr></tbody></table>'
+      + '<div class="d-tot"><div><span>Total HT</span><span>' + chf(ht) + '</span></div><div><span>TVA 8,1' + NB + '%</span><span>' + chf(tva) + '</span></div><div class="g"><span>À payer</span><span>CHF ' + chf(mt) + '</span></div></div>';
+    var e = escompte(), li = '<li>Payable jusqu’au 21.12.2026 avec la section de paiement ci-dessous.</li>';
+    if (e) { var es = Math.round(mt * e.pct / 100), net = Math.round((mt - es) / 5) * 5; li += '<li><mark>Escompte ' + e.pct + NB + '% si payé jusqu’au 1.12.2026' + NB + ': CHF ' + chf(net) + ' au lieu de CHF ' + chf(mt) + '.</mark></li>'; }
+    h += '<div class="d-cond"><ul>' + li + '<li>Montants en francs suisses, TVA comprise dans le total.</li></ul></div>';
+    var montant = S.qr === 'vide' && e ? '<span class="vide"></span>' : '<span class="mt">CHF ' + chf(mt) + '</span>';
+    h += '<div class="qr"><div class="code" role="img" aria-label="Code QR (figuré)"></div><div><b>Compte</b>CH44 3199 9123 0008 8901 2<br>Peinture Morel Sàrl<br><b style="margin-top:6px">Payable par</b>Famille Rochat' + (S.rep && S.factva === 'pa' ? ', p.a. Régie du Lac SA, Rue du Port 12, 2000 Neuchâtel' : ', Chemin des Vignes 4, 1700 Fribourg') + '<br><b style="margin-top:6px">Montant</b>' + montant + '</div></div>';
+    return h;
+  }
+
+  function cartesClients() {
+    var h = '<div class="carte" style="cursor:default"><span><span class="role">Client</span><b>Famille Rochat</b><small>Chemin des Vignes 4, 1700 Fribourg</small></span><span class="fl">›</span></div>';
+    if (S.rep) h += '<button class="carte" type="button" data-ouvrir="f-rep"><span><span class="role">Représenté par</span><b>Régie du Lac SA</b><small>' + (S.docva === 'rep' ? 'L’offre lui est adressée' : 'L’offre va au client') + '</small></span><span class="fl">›</span></button>';
+    else h += '<button class="carte vide" type="button" data-ajout-rep><span><span class="role">Représenté par</span><span>Ajouter une régie, un architecte…</span></span><span class="fl">+</span></button>';
+    return h;
+  }
+  function resumeCond() {
+    var e = escompte();
+    return ['Net à ' + S.jours + ' jours' + (e ? ', escompte ' + e.pct + NB + '%' : '') + ', valable ' + S.validite + ' jours',
+      (S.avant ? 'Texte avant' : 'Pas de texte avant') + ' · ' + (S.apres ? 'texte après' : 'pas de texte après')];
+  }
+
+  function rendre() {
+    var t = calcul();
+    document.querySelectorAll('[data-rows]').forEach(function (el) { el.innerHTML = rangsTel(t); });
+    document.querySelectorAll('[data-totals]').forEach(function (el) { el.innerHTML = totauxTel(t); });
+    document.querySelectorAll('[data-ttc]').forEach(function (el) { el.textContent = 'CHF ' + chf(t.ttc); });
+    document.querySelectorAll('[data-doc="offre"]').forEach(function (el) { el.innerHTML = docOffre(false); });
+    document.querySelectorAll('[data-doc="offre-cond"]').forEach(function (el) { el.innerHTML = docOffre(true); });
+    document.querySelectorAll('[data-doc="acompte"]').forEach(function (el) { el.innerHTML = docAcompte(); });
+    document.querySelectorAll('[data-cartes-clients]').forEach(function (el) { el.innerHTML = cartesClients(); });
+    var r = resumeCond();
+    document.querySelectorAll('[data-cond-resume]').forEach(function (el) { el.textContent = r[0]; });
+    document.querySelectorAll('[data-cond-resume2]').forEach(function (el) { el.textContent = r[1]; });
+    presser('[data-place]', 'place', S.place);
+    presser('[data-esc]', 'esc', S.esc);
+    presser('[data-qr]', 'qr', S.qr);
+    presserIn('[data-c-validite]', String(S.validite));
+    presserIn('[data-c-esc]', S.esc);
+    presserIn('[data-docva]', S.docva);
+    presserIn('[data-factva]', S.factva);
+    presserIn('[data-a-pct]', String(S.acPct));
+    document.querySelectorAll('[data-propre="validite"]').forEach(function (el) { el.hidden = S.validite === REGLAGE.validite; });
+    document.querySelectorAll('[data-propre="jours"]').forEach(function (el) { el.hidden = S.jours === REGLAGE.jours; });
+    document.querySelectorAll('[data-propre="esc"]').forEach(function (el) { el.hidden = S.esc === REGLAGE.esc; });
+    var a = document.querySelector('[data-a-lib]'); if (a && document.activeElement !== a) a.value = libelleAcompte();
+    var j = document.querySelector('[data-c-jours]'); if (j && document.activeElement !== j) j.value = S.jours;
+  }
+  function presser(sel, attr, v) { document.querySelectorAll(sel).forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-' + attr) === v)); }); }
+  function presserIn(sel, v) { document.querySelectorAll(sel + ' button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === v)); }); }
+
+  /* Fenêtres du bas : une par téléphone, ouverte dans le téléphone touché. */
+  var tel1 = document.getElementById('tel1');
+  function ouvrir(id, tel) {
+    var f = document.getElementById(id);
+    if (tel && f.parentNode !== tel) tel.appendChild(f);
+    f.classList.add('ouvert');
+    var x = f.querySelector('input, textarea, button'); if (x) x.focus();
+  }
+  function fermer(f) { f.classList.remove('ouvert'); rendre(); }
+
+  function remplirLigne() {
+    var l = S.lignes.find(function (x) { return x.id === ligneOuverte; }); if (!l) return;
+    var f = document.getElementById('f-ligne');
+    f.querySelector('[data-l-titre]').textContent = l.des;
+    f.querySelector('[data-l-q]').value = l.q;
+    if (document.activeElement !== f.querySelector('[data-l-p]')) f.querySelector('[data-l-p]').value = l.p === null ? '' : (l.p / 100).toString();
+    f.querySelectorAll('[data-l-mode] button').forEach(function (b) { b.setAttribute('aria-pressed', String((b.dataset.v === 'offert') === l.offert)); });
+    f.querySelector('[data-l-montrer-champ]').hidden = !l.offert;
+    f.querySelectorAll('[data-l-montrer] button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (l.p ? l.montrer : 'seul'))); b.disabled = !l.p && b.dataset.v === 'barre'; });
+    f.querySelector('[data-l-aide]').textContent = l.p ? 'Le client voit la valeur de ce qui lui est offert.' : 'Prix 0 : rien à barrer, le document écrit « Offert ».';
+  }
+
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    var tel = b.closest('.tel');
+    if (b.dataset.ligne) { ligneOuverte = +b.dataset.ligne; remplirLigne(); ouvrir('f-ligne', tel); return; }
+    if (b.hasAttribute('data-ajout')) { rabaisChoix = '5'; majRabais(); ouvrir('f-ajout', tel); return; }
+    if (b.dataset.ouvrir) { ouvrir(b.dataset.ouvrir, tel); return; }
+    if (b.hasAttribute('data-fermer')) { fermer(b.closest('.voile')); return; }
+    if (b.dataset.supprRabais !== undefined) { S.rabais.splice(+b.dataset.supprRabais, 1); rendre(); return; }
+    if (b.closest('[data-l-mode]')) { var l = S.lignes.find(function (x) { return x.id === ligneOuverte; }); l.offert = b.dataset.v === 'offert'; if (!l.offert && l.p === 0) l.p = null; remplirLigne(); rendre(); return; }
+    if (b.closest('[data-l-montrer]')) { var l2 = S.lignes.find(function (x) { return x.id === ligneOuverte; }); l2.montrer = b.dataset.v; remplirLigne(); rendre(); return; }
+    if (b.closest('[data-r-puces]')) { rabaisChoix = b.dataset.v; majRabais(); return; }
+    if (b.hasAttribute('data-r-ok')) {
+      var f = document.getElementById('f-ajout'), lib = f.querySelector('[data-r-lib]').value.trim() || 'Rabais';
+      var r = rabaisLu(); if (!r) { f.querySelector('[data-r-val]').focus(); return; }
+      S.rabais.push({ lib: lib, mode: r.mode, val: r.val }); fermer(f); return;
+    }
+    if (b.dataset.place) { S.place = b.dataset.place; rendre(); return; }
+    if (b.dataset.esc) { S.esc = b.dataset.esc; rendre(); return; }
+    if (b.dataset.qr) { S.qr = b.dataset.qr; rendre(); return; }
+    if (b.closest('[data-c-validite]')) { S.validite = +b.dataset.v; rendre(); return; }
+    if (b.closest('[data-c-esc]')) { S.esc = b.dataset.v; rendre(); return; }
+    if (b.dataset.revenir) { if (b.dataset.revenir === 'validite') S.validite = REGLAGE.validite; if (b.dataset.revenir === 'jours') S.jours = REGLAGE.jours; if (b.dataset.revenir === 'esc') S.esc = REGLAGE.esc; rendre(); return; }
+    if (b.dataset.cPuce) { S[b.dataset.cPuce] = b.dataset.t; document.querySelector('[data-c="' + b.dataset.cPuce + '"]').value = b.dataset.t; rendre(); return; }
+    if (b.closest('[data-docva]')) { S.docva = b.dataset.v; rendre(); return; }
+    if (b.closest('[data-factva]')) { S.factva = b.dataset.v; rendre(); return; }
+    if (b.hasAttribute('data-retirer-rep')) { S.rep = false; fermer(b.closest('.voile')); return; }
+    if (b.hasAttribute('data-ajout-rep')) { S.rep = true; S.docva = 'rep'; rendre(); return; }
+    if (b.closest('[data-a-pct]')) { S.acPct = +b.dataset.v; rendre(); return; }
+    if (b.dataset.aPuce) { S.acLib = b.dataset.aPuce; rendre(); return; }
+    if (b.hasAttribute('data-a-defaut')) { S.acLib = ''; document.querySelector('[data-a-lib]').value = ''; rendre(); return; }
+  });
+  document.querySelectorAll('.voile').forEach(function (v) { v.addEventListener('click', function (ev) { if (ev.target === v) fermer(v); }); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') document.querySelectorAll('.voile.ouvert').forEach(fermer); });
+
+  function rabaisLu() {
+    if (rabaisChoix === '5' || rabaisChoix === '10') return { mode: 'pct', val: +rabaisChoix };
+    var v = parseFloat(String(document.querySelector('[data-r-val]').value).replace(',', '.'));
+    if (!(v > 0)) return null;
+    if (rabaisChoix === 'pct') return v <= 100 ? { mode: 'pct', val: v } : null;
+    return { mode: 'chf', val: Math.round(v * 100) };
+  }
+  function majRabais() {
+    var f = document.getElementById('f-ajout');
+    f.querySelectorAll('[data-r-puces] button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === rabaisChoix)); });
+    var libre = rabaisChoix === 'pct' || rabaisChoix === 'chf';
+    f.querySelector('[data-r-val-champ]').hidden = !libre;
+    f.querySelector('[data-r-val-lab]').textContent = rabaisChoix === 'chf' ? 'Montant (CHF, hors TVA)' : 'Pourcentage';
+    var r = rabaisLu(), t = calcul();
+    f.querySelector('[data-r-apercu]').textContent = r ? 'Soit CHF ' + chf(r.mode === 'pct' ? Math.round(t.sous * r.val / 100) : r.val) + ' sur un sous-total de CHF ' + chf(t.sous) + '.' : '';
+  }
+  document.addEventListener('input', function (ev) {
+    var el = ev.target;
+    if (el.matches('[data-l-p]')) {
+      var l = S.lignes.find(function (x) { return x.id === ligneOuverte; }), v = el.value.trim().replace(',', '.');
+      if (v === '') { l.p = null; l.offert = false; }
+      else if (!isNaN(+v)) { l.p = Math.round(+v * 100); if (l.p === 0) { l.offert = true; l.montrer = 'seul'; } }
+      remplirLigne(); rendre();
+    }
+    if (el.matches('[data-l-q]')) { var l3 = S.lignes.find(function (x) { return x.id === ligneOuverte; }), q = +el.value.replace(',', '.'); if (q > 0) { l3.q = q; rendre(); } }
+    if (el.matches('[data-r-val]')) majRabais();
+    if (el.matches('[data-c]')) { S[el.dataset.c] = el.value; rendre(); }
+    if (el.matches('[data-c-jours]')) { var n = parseInt(el.value, 10); if (n >= 1 && n <= 120) { S.jours = n; rendre(); } }
+    if (el.matches('[data-a-lib]')) { S.acLib = el.value; rendre(); }
+  });
+
+  /* Réponses : sous chaque point, gardées dans le navigateur, rassemblées pour la copie. */
+  var CLE = 'maquette-lignes-conditions-2026-11-21';
+  var rep = {};
+  try { rep = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { rep = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(rep)); } catch (e) { /* stockage refusé : la page marche sans */ } }
+  function recap() {
+    var lignes = [];
+    document.querySelectorAll('.decision').forEach(function (d) {
+      var id = d.dataset.id, r = rep[id] || {};
+      if (!r.v && !r.c) return;
+      lignes.push(id + ' : ' + (r.v || '?') + (r.c ? '. ' + r.c : ''));
+    });
+    document.querySelector('[data-recap]').value = lignes.length ? lignes.join('\n') : '(aucune réponse encore)';
+  }
+  document.querySelectorAll('.decision').forEach(function (d) {
+    var id = d.dataset.id, r = rep[id] || {};
+    d.querySelectorAll('.opts button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.v === r.v));
+      b.addEventListener('click', function () {
+        rep[id] = rep[id] || {}; rep[id].v = rep[id].v === b.dataset.v ? '' : b.dataset.v;
+        d.querySelectorAll('.opts button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.v === rep[id].v)); });
+        garder(); recap();
+      });
+    });
+    var ta = d.querySelector('textarea'); ta.value = r.c || '';
+    ta.addEventListener('input', function () { rep[id] = rep[id] || {}; rep[id].c = ta.value.trim(); garder(); recap(); });
+  });
+  document.querySelector('[data-copier]').addEventListener('click', function () {
+    var ta = document.querySelector('[data-recap]'), ok = document.querySelector('[data-copie-ok]');
+    function fait() { ok.hidden = false; setTimeout(function () { ok.hidden = true; }, 2000); }
+    if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(fait, function () { ta.select(); document.execCommand('copy'); fait(); });
+    else { ta.select(); document.execCommand('copy'); fait(); }
+  });
+
+  rendre(); recap();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

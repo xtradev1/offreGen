@@ -15,6 +15,7 @@ use OffreGen\Http\Flash;
 use OffreGen\Http\Formats;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
+use OffreGen\Offre\Offerte;
 use OffreGen\Offre\Piece;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\SaisieRefusee;
@@ -29,7 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Aucune ne coûte d'appel au modèle (CODING_RULES, Ergonomie). Une facture émise ou annulée répond 409.
  *
  * @phpstan-type Cible array{id: int, base: string, retour: string, document: string, ce: string}
- * @phpstan-type LigneVue array{id: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null}
+ * @phpstan-type LigneVue array{id: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null}
  */
 final class LigneControleur
 {
@@ -46,8 +47,9 @@ final class LigneControleur
     {
         [$cible, $l] = $this->ligne($requete, $parametres);
         $champs = ['designation' => $l['designation'], 'quantite' => Formats::saisieQuantite($l['quantite_milliemes']), 'unite' => $l['unite'],
-                   'prix' => Formats::saisiePrix($l['prix_centimes']), 'categorie' => '', 'nouvelle_categorie' => '',
+                   'prix' => Formats::saisiePrixLigne($l), 'categorie' => '', 'nouvelle_categorie' => '',
                    'tva' => $l['tva_ligne'] === null ? '' : (string) $l['tva_ligne'],
+                   'offerte' => Offerte::est($l) ? Offerte::CHOIX_OFFERTE : Offerte::CHOIX_FACTUREE,
                    // Une ligne de facture n'a pas de pièce ; celle d'une offre se lit dans le dépôt des offres.
                    'piece' => $this->genre === self::OFFRE ? ($this->c->offres($this->portee($requete))->ligne($cible['id'], $l['id'])['piece'] ?? '') : ''];
         return $this->formulaire($requete, $cible, $l, $champs, [], 200);
@@ -79,8 +81,11 @@ final class LigneControleur
         }
         $prix = $r->has('prix') ? Saisie::centimes($r->getString('prix')) : $l['prix_centimes'];
         if ($prix === null) {
-            $erreurs['prix'] = 'Prix en francs, par exemple 28 ou 28.50.';
+            $erreurs['prix'] = "Prix en francs, par exemple 28 ou 28.50\u{00A0}; 0 pour l'offrir.";
         }
+        // « Facturée / Offerte » vient de la fenêtre de la ligne seulement ; une autre valeur est ignorée.
+        $choix = $r->has('offerte') && in_array($r->getString('offerte'), [Offerte::CHOIX_OFFERTE, Offerte::CHOIX_FACTUREE], true)
+            ? $r->getString('offerte') : null;
         // Le taux, depuis la page seulement (D11) ; absent, il ne change pas.
         $tva = $r->has('tva') ? Tva::lire($r->getString('tva')) : $l['tva_ligne'];
         if ($tva === false) {
@@ -106,6 +111,10 @@ final class LigneControleur
 
         $support = $this->support($requete);
         $support->corrigerLigne($cible['id'], $l['id'], $designation, $quantite, $unite, $prix);
+        $offerte = Offerte::apresSaisie(Offerte::est($l), $l['prix_centimes'], $r->has('prix') ? $r->getString('prix') : null, $prix, $choix);
+        if ($offerte !== Offerte::est($l)) {
+            $support->changerOfferte($cible['id'], $l['id'], $offerte);
+        }
         if ($tva !== $l['tva_ligne']) {
             $support->changerTauxLigne($cible['id'], $l['id'], $tva);
         }
@@ -223,6 +232,9 @@ final class LigneControleur
         }
         $produitId = $produit === null ? null : $produits->creer($produit);
         $id = $support->ajouterLigne($cible['id'], $designation, $quantite, $unite, $prix, $produitId);
+        if (Offerte::apresSaisie(false, 0, $champs['prix'], $prix, null)) {
+            $support->changerOfferte($cible['id'], $id, true);
+        }
         $this->rangerDansLaPiece($requete, $cible['id'], $id, $piece);
         $this->modifiee($requete, $cible['id']);
         if ($produit !== null) {
@@ -335,13 +347,14 @@ final class LigneControleur
         return new RedirectResponse($cible['base'] . '#l' . $ligneId, 303);
     }
 
-    /** @return array{designation: string, quantite: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, tva: string, piece: string} */
+    /** @return array{designation: string, quantite: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, tva: string, piece: string, offerte: string} */
     private static function champs(Request $requete): array
     {
         $r = $requete->request;
         return ['designation' => $r->getString('designation'), 'quantite' => $r->getString('quantite'), 'unite' => $r->getString('unite'),
                 'prix' => $r->getString('prix'), 'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie'),
-                'tva' => $r->getString('tva'), 'piece' => $r->getString('piece')];
+                'tva' => $r->getString('tva'), 'piece' => $r->getString('piece'),
+                'offerte' => $r->getString('offerte') === Offerte::CHOIX_OFFERTE ? Offerte::CHOIX_OFFERTE : Offerte::CHOIX_FACTUREE];
     }
 
     /**

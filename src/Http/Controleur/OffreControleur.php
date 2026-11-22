@@ -14,6 +14,7 @@ use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
 use OffreGen\Offre\Chantier;
 use OffreGen\Offre\Piece;
+use OffreGen\Offre\Offerte;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\Totaux;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -232,8 +233,8 @@ final class OffreControleur
             'tva' => $r->tvaPourDixMille,
             'r' => $r,
             'valable_jusqu_au' => $valable,
-            'manque' => count(array_filter($lignes, static fn (array $l): bool => $l['prix_centimes'] === 0)),
-            'doute' => count(array_filter($lignes, static fn (array $l): bool => $l['prix_centimes'] !== 0 && $l['a_verifier'] === 1)),
+            'manque' => count(array_filter($lignes, static fn (array $l): bool => Offerte::prixManquant($l))),
+            'doute' => count(array_filter($lignes, static fn (array $l): bool => !Offerte::prixManquant($l) && $l['a_verifier'] === 1)),
         ];
     }
 
@@ -242,10 +243,12 @@ final class OffreControleur
      * Par pièce dès qu'une ligne en a une, « Général » en tête ; sinon par catégorie du catalogue (sous-chantier 28,
      * décisions P1 A et P2 A de Xavier, 2026-11-17). Sert aussi aux lignes d'une facture, qui n'ont pas de pièce.
      *
-     * @template T of array{categorie: string|null, piece?: string|null}
+     * « barre » : le montant qu'une ligne offerte montre barré (D1, 2026-11-21), null pour une ligne facturée.
+     *
+     * @template T of array{categorie: string|null, piece?: string|null, quantite_milliemes: int, prix_centimes: int, offerte?: int}
      * @param list<T> $lignes
      * @param list<int> $totauxLignes total de chaque ligne, dans le même ordre
-     * @return list<array{nom: string, lignes: list<array{l: T, total: int}>, total: int, piece: string|null, par_piece: bool}>
+     * @return list<array{nom: string, lignes: list<array{l: T, total: int, barre: int|null}>, total: int, piece: string|null, par_piece: bool}>
      */
     public static function grouper(array $lignes, array $totauxLignes): array
     {
@@ -273,7 +276,7 @@ final class OffreControleur
                 $piece = null;
             }
             $groupes[$cle] ??= ['nom' => $nom, 'lignes' => [], 'total' => 0, 'piece' => $piece, 'par_piece' => $parPiece];
-            $groupes[$cle]['lignes'][] = ['l' => $l, 'total' => $totauxLignes[$i] ?? 0];
+            $groupes[$cle]['lignes'][] = ['l' => $l, 'total' => $totauxLignes[$i] ?? 0, 'barre' => Offerte::est($l) ? Totaux::brut($l) : null];
             $groupes[$cle]['total'] += $totauxLignes[$i] ?? 0;
         }
         return array_values($groupes);

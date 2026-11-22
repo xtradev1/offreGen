@@ -29,7 +29,7 @@
             <input name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?" data-relu-prix></label>
         </div>
         {% for e in erreurs %}<p class="err" role="alert">{{ e }}</p>{% endfor %}
-        <p class="relu-montant"><span>Montant</span><b data-relu-montant>{% if l.prix_centimes > 0 %}{{ (l.quantite_milliemes * l.prix_centimes / 1000)|round|chf }}{% else %}?{% endif %}</b></p>
+        <p class="relu-montant"><span>Montant</span><b data-relu-montant>{% if l.offerte ?? false %}Offert{% elseif l.prix_centimes > 0 %}{{ (l.quantite_milliemes * l.prix_centimes / 1000)|round|chf }}{% endif %}</b></p>
       </form>
     </div>
   {% endif %}

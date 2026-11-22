@@ -309,6 +309,12 @@ a.nm:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .saisie.manque { outline-color: var(--bad); }
 .saisie.manque::placeholder { color: var(--bad); font-weight: 600; opacity: 1; }
 .tt { text-align: right; font-weight: 600; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* Ligne offerte (D1, 2026-11-21) : le prix reste lisible, barré ; « Offert » en vert à la place du total. */
+.saisie.barre, .p.fige.barre { text-decoration: line-through; color: var(--muted); }
+.tt.offert { color: var(--ok); }
+/* Toute la ligne ouvre sa fenêtre (Xavier, 2026-11-22), sauf ses champs et ses boutons (app.js, ouvrirLaLigne). */
+.rows.une .row[data-glisse-ligne] { cursor: pointer; }
+.rows.une .row[data-glisse-ligne] .saisie { cursor: text; }
 .del { width: 48px; min-height: 48px; display: grid; place-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 0; }
 .del svg.i { width: 18px; height: 18px; }
 .del:hover, .del:focus-visible { color: var(--bad); }

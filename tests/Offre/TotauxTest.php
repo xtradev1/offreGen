@@ -23,6 +23,16 @@ final class TotauxTest extends TestCase
         self::assertSame([['taux' => 810, 'ht' => 10000, 'tva' => 810], ['taux' => 260, 'ht' => 5000, 'tva' => 130]], Totaux::parTaux($lignes, 810));
     }
 
+    /** Ligne offerte (D1, 2026-11-21) : elle garde son prix pour le document, elle compte 0 partout. */
+    public function testUneLigneOfferteCompteZero(): void
+    {
+        // 1 × 100.00 facturée, 1 × 50.00 offerte à 2,6 % : HT 100.00, TVA 8.10, aucun groupe à 2,6 %.
+        $lignes = [['quantite_milliemes' => 1000, 'prix_centimes' => 10000],
+                   ['quantite_milliemes' => 1000, 'prix_centimes' => 5000, 'tva_pour_dix_mille' => 260, 'offerte' => 1]];
+        self::assertSame(['lignes' => [10000, 0], 'ht' => 10000, 'tva' => 810, 'arrondi' => 0, 'ttc' => 10810], self::sansDetail(Totaux::calculer($lignes, 810)));
+        self::assertSame([['taux' => 810, 'ht' => 10000, 'tva' => 810]], Totaux::parTaux($lignes, 810), 'pas de groupe « TVA 2,6 % : 0.00 » sur le document');
+    }
+
     public function testChaqueTauxSArrondiAuCentime(): void
     {
         // 3.33 à 8,1 % : 0.26973 → 0.27 ; 3.33 à 2,6 % : 0.08658 → 0.09 ; TVA 0.36.

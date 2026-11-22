@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http;
 
 use OffreGen\Compte\Iban;
+use OffreGen\Offre\Offerte;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
@@ -27,6 +28,7 @@ final class Formats extends AbstractExtension
             new TwigFilter('taux', [self::class, 'taux']),
             new TwigFilter('saisie_quantite', [self::class, 'saisieQuantite']),
             new TwigFilter('saisie_prix', [self::class, 'saisiePrix']),
+            new TwigFilter('saisie_prix_ligne', [self::class, 'saisiePrixLigne']),
             new TwigFilter('iban', [Iban::class, 'lisible']),
             new TwigFilter('date_longue', [self::class, 'dateLongue']),
         ];
@@ -87,6 +89,17 @@ final class Formats extends AbstractExtension
     }
 
     /** Valeur d'un champ de prix : « 28 », « 28.50 », vide pour un prix manquant. */
+    /**
+     * Le prix d'une ligne dans son champ : vide s'il manque, « 0 » pour une ligne offerte à 0 (D2, 2026-11-21) ; un
+     * champ vide se lirait « Prix manquant ».
+     *
+     * @param array{prix_centimes: int, offerte?: int|bool} $ligne
+     */
+    public static function saisiePrixLigne(array $ligne): string
+    {
+        return Offerte::est($ligne) && $ligne['prix_centimes'] === 0 ? '0' : self::saisiePrix($ligne['prix_centimes']);
+    }
+
     public static function saisiePrix(int $centimes): string
     {
         if ($centimes === 0) {

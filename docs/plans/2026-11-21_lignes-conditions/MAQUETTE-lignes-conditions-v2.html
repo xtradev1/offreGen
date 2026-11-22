@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype offre et factures</title>
+<style>
+/* Couleurs de l'application (public/css/app.css, branche chantier-voix-offre, e48eab4). */
+:root {
+  --ink: #23272D; --muted: #454B55; --line: #DDD8CC; --surface: #FFFFFF; --bg: #F4F1EA; --chip: #EBE7DE; --bord: #7C838C;
+  --accent: #23272D; --accent-soft: #E9E5DC; --on-accent: #FFFFFF;
+  --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4;
+  --marque: #C4552D; --on-marque: #FFFFFF; --focus: #C4552D; --bande: #23272D; --on-bande: #FFFFFF;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+    --accent: #ECEAE6; --accent-soft: #2D3138; --on-accent: #15171A;
+    --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+  --accent: #ECEAE6; --accent-soft: #2D3138; --on-accent: #15171A;
+  --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1240px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 8px; scroll-margin-top: 70px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 820px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin: 22px 0; }
+
+/* Le prototype : téléphone, document, guide. */
+.proto { display: grid; grid-template-columns: 380px minmax(0, 1fr) 260px; gap: 18px; align-items: start; }
+@media (max-width: 1180px) { .proto { grid-template-columns: 380px minmax(0, 1fr); } .guide { grid-column: 1 / -1; } }
+@media (max-width: 820px) { .proto { grid-template-columns: 1fr; } }
+.legende { font-size: 13px; font-weight: 650; color: var(--muted); margin: 0 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+.colle { position: sticky; top: 64px; }
+@media (max-width: 820px) { .colle { position: static; } }
+
+.tel { position: relative; width: 100%; max-width: 380px; height: 760px; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,.08); display: flex; flex-direction: column; }
+@media (max-width: 820px) { .tel { height: 700px; margin: 0 auto; } }
+.tel .bar { display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 6px 12px; background: var(--bande); color: var(--on-bande); flex: none; }
+.tel .bar b { font-size: 16px; font-weight: 600; flex: 1; }
+.tel .bar .retour { font: inherit; font-size: 14px; color: inherit; background: none; border: 0; min-height: 44px; padding: 0 6px; cursor: pointer; }
+.tel .ecran { flex: 1; overflow-y: auto; padding: 10px 16px 18px; }
+.cartes { display: grid; gap: 8px; margin: 0 0 6px; }
+.carte { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; width: 100%; cursor: pointer; }
+.carte[disabled] { cursor: default; }
+.carte > span:first-child { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.carte small { color: var(--muted); font-size: 13px; }
+.carte .role { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.carte.vide { border-style: dashed; color: var(--muted); }
+.carte > .fl { flex: none; font-size: 20px; color: var(--muted); }
+.statut { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0 2px; font-size: 13px; color: var(--muted); }
+.status { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); }
+.status.a-verifier { background: var(--warn-soft); color: var(--warn); }
+.status.pret { background: var(--ok-soft); color: var(--ok); }
+.status.envoyee { background: var(--accent-soft); color: var(--accent); }
+.cat { margin: 14px 0 0; padding-bottom: 4px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+.row { border-bottom: 1px solid var(--line); padding: 4px 0 8px; }
+.row .haut { display: flex; align-items: center; gap: 6px; }
+.row .nm { flex: 1; font: inherit; font-size: 15.5px; text-align: left; background: none; border: 0; color: var(--ink); padding: 6px 0; min-height: 44px; cursor: pointer; }
+.row .nm[disabled] { cursor: default; }
+.row .vals { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 8px; }
+.row .q { display: flex; align-items: center; gap: 8px; }
+.saisie { font: inherit; font-size: 16px; width: 64px; min-height: 44px; padding: 0 8px; text-align: center; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface); color: var(--ink); font-variant-numeric: tabular-nums; }
+.saisie.barre { text-decoration: line-through; color: var(--muted); }
+.saisie.manque { border-color: var(--bad); }
+.saisie[disabled] { border-color: var(--line); opacity: 1; color: var(--ink); -webkit-text-fill-color: currentColor; }
+.saisie.barre[disabled] { color: var(--muted); }
+.u { font-size: 13px; color: var(--muted); min-width: 40px; }
+.tt { text-align: right; font-weight: 600; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tt.offert { color: var(--ok); }
+.del { width: 44px; min-height: 44px; display: grid; place-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; }
+.del svg { width: 18px; height: 18px; }
+.row.miss { box-shadow: inset 3px 0 0 var(--bad); padding-left: 10px; margin-left: -10px; }
+.row.cadeau { box-shadow: inset 3px 0 0 var(--ok); padding-left: 10px; margin-left: -10px; }
+.note { font-size: 12.5px; padding: 2px 0 0; }
+.note.bad { color: var(--bad); }
+.tag { font-size: 12px; font-weight: 600; border-radius: 4px; padding: 1px 6px; margin-left: 4px; }
+.tag.ok { color: var(--ok); background: var(--ok-soft); }
+.tag.neutre { color: var(--accent); background: var(--accent-soft); }
+.totals { margin-top: 12px; font-variant-numeric: tabular-nums; }
+.totals .r { display: flex; justify-content: space-between; align-items: center; min-height: 30px; color: var(--muted); font-size: 14px; }
+.totals .r.fort { color: var(--ink); font-weight: 600; }
+.bas { border-top: 1px solid var(--line); background: var(--surface); flex: none; }
+.actionbar { display: flex; gap: 8px; padding: 10px 14px; }
+.btn { font: inherit; font-size: 15px; font-weight: 550; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 14px; min-height: 48px; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.actionbar .btn { flex: 1; }
+.actionbar .btn.grand { flex: 2; flex-direction: column; gap: 0; line-height: 1.2; }
+.actionbar .btn.grand small { font-size: 13px; font-weight: 600; }
+.tabs { display: flex; border-top: 1px solid var(--line); }
+.tabs button { flex: 1; font: inherit; font-size: 12px; color: var(--muted); background: none; border: 0; min-height: 52px; cursor: pointer; }
+.tabs button[aria-current="page"] { color: var(--accent); font-weight: 700; }
+.tabs .micro { flex: 1.1; position: relative; }
+.tabs .micro span { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); width: 60px; height: 60px; border-radius: 50%; background: var(--marque); color: var(--on-marque); display: grid; place-items: center; border: 4px solid var(--surface); font-size: 22px; }
+.lien { font: inherit; font-size: 14px; font-weight: 600; background: none; border: 0; color: var(--accent); text-decoration: underline; cursor: pointer; padding: 0; min-height: 44px; }
+.toast { position: absolute; left: 12px; right: 12px; top: 60px; background: var(--accent); color: var(--on-accent); border-radius: 12px; padding: 10px 14px; font-size: 14px; z-index: 9; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.vu { opacity: 1; }
+.carte:focus-visible, .row .nm:focus-visible, .del:focus-visible, .btn:focus-visible, .puce:focus-visible, .seg button:focus-visible, .tabs button:focus-visible, .saisie:focus-visible, .lien:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Fenêtres du bas, dans le téléphone. */
+.voile { position: absolute; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: flex-end; z-index: 5; }
+.voile.ouvert { display: flex; }
+.feuille { width: 100%; max-height: 90%; overflow-y: auto; background: var(--surface); border-radius: 18px 18px 0 0; padding: 0 16px 14px; }
+.poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 8px auto 6px; }
+.feuille h4 { margin: 4px 0 10px; font-size: 17px; }
+.champ { display: grid; gap: 5px; margin: 0 0 12px; }
+.champ > label, .champ > .lab { font-size: 14px; font-weight: 600; }
+.champ input, .champ textarea { font: inherit; font-size: 16px; min-height: 46px; padding: 9px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); width: 100%; min-width: 0; }
+.champ textarea { min-height: 80px; resize: vertical; }
+.champ input:focus-visible, .champ textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.aide { font-size: 13px; color: var(--muted); }
+.propre { font-size: 12.5px; color: var(--warn); font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.propre .lien { font-size: 12.5px; min-height: 32px; }
+.duo { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; }
+.seg { display: flex; border: 1px solid var(--bord); border-radius: 12px; overflow: hidden; }
+.seg button { flex: 1; font: inherit; font-size: 14.5px; min-height: 46px; border: 0; background: var(--surface); color: var(--ink); cursor: pointer; padding: 6px 8px; }
+.seg button + button { border-left: 1px solid var(--bord); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.seg button:disabled { color: var(--muted); cursor: not-allowed; text-decoration: line-through; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.puce { font: inherit; font-size: 14px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.puce[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.puce:disabled { opacity: .4; cursor: not-allowed; }
+.onglets-aj { display: flex; gap: 4px; margin: 0 0 12px; border-bottom: 1px solid var(--line); }
+.onglets-aj span { padding: 8px 10px; font-size: 14px; color: var(--muted); }
+.onglets-aj span.actif { color: var(--ink); font-weight: 700; box-shadow: inset 0 -3px 0 var(--marque); }
+.err { color: var(--bad); font-size: 13px; }
+.facture-carte { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+
+/* Barre au-dessus du document. */
+.vues { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; align-items: center; }
+.vues button { font: inherit; font-size: 14px; min-height: 40px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); cursor: pointer; }
+.vues button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.vues .sep { width: 1px; height: 26px; background: var(--line); margin: 0 4px; }
+
+/* Le document du client : du papier, blanc dans les deux thèmes. */
+.doc { background: #fff; color: #222; border: 1px solid var(--line); border-radius: 6px; padding: 22px 22px 18px; font: 11.5px/1.45 Roboto, "Segoe UI", system-ui, sans-serif; box-shadow: 0 4px 18px rgba(0,0,0,.08); max-width: 660px; }
+.doc .d-tete { display: flex; justify-content: space-between; gap: 12px; }
+.doc .d-tete b { font-size: 15px; }
+.doc .d-exp { text-align: right; font-size: 10.5px; color: #444; }
+.doc .d-fen { margin: 16px 0 14px auto; width: 52%; min-height: 64px; }
+.doc .d-fen.gauche { margin-left: 0; }
+.doc .d-titre { color: var(--doc-c, #2E7D32); font-size: 18px; font-weight: 700; margin: 0; }
+.doc .d-objet { font-weight: 600; margin: 0 0 10px; }
+.doc .d-meta { display: flex; flex-wrap: wrap; gap: 6px 22px; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 6px 0; margin: 0 0 10px; font-size: 10.5px; }
+.doc .d-meta span { display: flex; flex-direction: column; }
+.doc .d-meta i { font-style: normal; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #666; }
+.doc .d-texte { margin: 0 0 10px; white-space: pre-line; }
+.doc table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.doc th { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #2E7D32; text-align: left; border-bottom: 1.5px solid #2E7D32; padding: 4px 3px; }
+.doc td { border-bottom: 1px solid #e6e6e6; padding: 5px 3px; vertical-align: top; }
+.doc .n { text-align: right; white-space: nowrap; }
+.doc .barre { text-decoration: line-through; color: #777; }
+.doc .offert { color: #2E7D32; font-weight: 600; }
+.doc .grp td { font-weight: 700; border-bottom: 0; padding-top: 9px; }
+.doc .d-tot { margin: 8px 0 0 auto; width: 64%; font-variant-numeric: tabular-nums; }
+.doc .d-tot div { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; }
+.doc .d-tot .g { font-weight: 700; font-size: 13px; border-top: 1.5px solid #222; margin-top: 3px; padding-top: 4px; }
+.doc .d-cond { margin: 12px 0 0; font-size: 10.5px; }
+.doc .d-cond .lab { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #666; margin: 0 0 2px; }
+.doc .d-cond ul { margin: 0; padding-left: 16px; }
+.doc .sign { margin: 14px 0 0; }
+.doc .qr { margin: 14px 0 0; border-top: 1px dashed #999; padding-top: 10px; display: grid; grid-template-columns: 90px 1fr; gap: 12px; font-size: 10.5px; }
+.doc .qr .code { width: 90px; height: 90px; background: repeating-conic-gradient(#222 0 25%, #fff 0 50%) 0 0 / 15px 15px; border: 4px solid #fff; outline: 1px solid #222; }
+.doc .qr b { display: block; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #666; font-weight: 600; margin-top: 4px; }
+.doc .qr .mt { font-size: 13px; font-weight: 700; }
+.doc .brouillon { display: inline-block; font-size: 10px; font-weight: 700; color: #8C1D18; border: 1.5px solid #8C1D18; border-radius: 3px; padding: 1px 6px; margin-left: 8px; vertical-align: 3px; }
+
+/* Guide et décisions. */
+.guide ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.guide li { display: flex; gap: 8px; align-items: flex-start; font-size: 14.5px; line-height: 1.35; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.guide li::before { content: ""; flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--bord); margin-top: 1px; }
+.guide li.fait { background: var(--ok-soft); border-color: transparent; }
+.guide li.fait::before { background: var(--ok); border-color: var(--ok); box-shadow: inset 0 0 0 3px var(--ok-soft); }
+.guide .compte { font-size: 14px; color: var(--muted); margin: 8px 0; }
+.regle { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.regle li { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14.5px; }
+.regle li b { color: var(--ok); }
+.hyp { background: var(--warn-soft); border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
+.hyp b { color: var(--warn); }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 650; }
+.opts button .reco { display: block; font-size: 12px; font-weight: 650; color: var(--ok); }
+.opts button[aria-pressed="true"] .reco { color: inherit; }
+.opts button:focus-visible, .decision textarea:focus-visible, .copier:focus-visible, .vues button:focus-visible, .btn-reset:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+.decision textarea, .recap textarea { width: 100%; min-height: 60px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 140px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier, .btn-reset { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+.btn-reset { background: var(--surface); color: var(--ink); border: 1px solid var(--bord); margin-top: 10px; width: 100%; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+table.tranche { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+table.tranche td { border-bottom: 1px solid var(--line); padding: 6px 8px; vertical-align: top; }
+table.tranche td:first-child { font-weight: 700; white-space: nowrap; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Prototype : de l'offre à la facture finale</h1>
+<p class="chapeau">Tes réponses du 21 novembre (D1 à D15) sont appliquées. Une offre d'exemple est chargée : touche le téléphone comme dans l'application, le document du client suit à droite. Le guide propose un parcours ; tu peux en sortir. « Recommencer l'exemple » remet tout à zéro.</p>
+
+<section class="point" id="s-proto">
+<h2 id="prototype" data-toc="Prototype">Le prototype</h2>
+<div class="proto">
+  <div>
+    <p class="legende">Téléphone</p>
+    <div class="tel" id="tel">
+      <div class="bar"><button class="retour" type="button" data-nav="offre" data-retour hidden>‹ Offre</button><b data-titre-ecran>Offre 42</b></div>
+      <div class="ecran" data-ecran></div>
+      <div class="bas"><div class="actionbar" data-actions></div>
+        <div class="tabs"><button type="button" data-nav="offre" data-tab="offre">Offres</button><button type="button" disabled>Clients</button><button type="button" class="micro" disabled aria-label="Dicter (hors prototype)"><span>●</span></button><button type="button" data-nav="factures" data-tab="factures">Factures</button><button type="button" disabled>Plus</button></div></div>
+      <div class="toast" data-toast role="status"></div>
+
+      <div class="voile" id="f-ligne" role="dialog" aria-modal="true" aria-label="Ligne"><div class="feuille">
+        <div class="poignee"></div>
+        <h4 data-l-titre>Ligne</h4>
+        <div class="duo">
+          <div class="champ"><label for="l-q">Quantité</label><input id="l-q" inputmode="decimal" data-l-q></div>
+          <div class="champ"><label for="l-p">Prix unitaire (CHF)</label><input id="l-p" inputmode="decimal" placeholder="Prix ?" data-l-p></div>
+        </div>
+        <div class="champ"><span class="lab">Prix de la ligne</span>
+          <div class="seg" data-l-mode><button type="button" data-v="normal">Facturée</button><button type="button" data-v="offert">Offerte</button></div></div>
+        <div class="champ" data-l-montrer-champ><span class="lab">Sur le document</span>
+          <div class="seg" data-l-montrer><button type="button" data-v="barre">Prix barré</button><button type="button" data-v="seul">« Offert » seul</button></div>
+          <span class="aide" data-l-aide></span></div>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn primary" type="button" data-fermer>Enregistrer</button></div>
+      </div></div>
+
+      <div class="voile" id="f-ajout" role="dialog" aria-modal="true" aria-label="Ajouter un rabais"><div class="feuille">
+        <div class="poignee"></div>
+        <div class="onglets-aj"><span>Catalogue</span><span>Ligne libre</span><span class="actif">Rabais</span></div>
+        <div class="champ"><label for="r-lib">Libellé sur le document</label><input id="r-lib" value="Rabais" maxlength="120" data-r-lib></div>
+        <div class="champ"><span class="lab">Montant</span>
+          <div class="puces" data-r-puces><button class="puce" type="button" data-v="5">5 %</button><button class="puce" type="button" data-v="10">10 %</button><button class="puce" type="button" data-v="pct">Autre %</button><button class="puce" type="button" data-v="chf">CHF</button></div></div>
+        <div class="champ" data-r-val-champ hidden><label for="r-val" data-r-val-lab>Valeur</label><input id="r-val" inputmode="decimal" data-r-val></div>
+        <p class="aide" data-r-apercu></p>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-fermer>Annuler</button><button class="btn primary" type="button" data-r-ok>Ajouter le rabais</button></div>
+      </div></div>
+
+      <div class="voile" id="f-cond" role="dialog" aria-modal="true" aria-label="Conditions et textes"><div class="feuille">
+        <div class="poignee"></div>
+        <h4>Conditions et textes de l'offre</h4>
+        <div class="champ"><label for="c-avant">Texte avant les lignes</label><textarea id="c-avant" maxlength="1000" placeholder="Vide : la phrase habituelle (Lettre) ou rien" data-c="avant"></textarea></div>
+        <div class="champ"><label for="c-apres">Texte après les lignes</label><textarea id="c-apres" maxlength="1000" placeholder="Vide : rien sous les conditions" data-c="apres"></textarea>
+          <div class="puces"><button class="puce" type="button" data-c-puce="apres" data-t="Les travaux peuvent se faire en deux étapes si vous le souhaitez.">Deux étapes…</button></div></div>
+        <div class="champ"><span class="lab">Offre valable</span>
+          <div class="puces" data-c-validite><button class="puce" type="button" data-v="15">15 jours</button><button class="puce" type="button" data-v="30">30 jours</button><button class="puce" type="button" data-v="60">60 jours</button></div>
+          <span class="propre" data-propre="validite" hidden>Propre à cette offre <button class="lien" type="button" data-revenir="validite">Revenir au réglage (30 jours)</button></span></div>
+        <div class="champ"><label for="c-jours">Paiement net à (jours, 1 à 120)</label><input id="c-jours" inputmode="numeric" data-c-jours>
+          <span class="propre" data-propre="jours" hidden>Propre à cette offre <button class="lien" type="button" data-revenir="jours">Revenir au réglage (30 jours)</button></span></div>
+        <div class="champ"><span class="lab">Escompte</span>
+          <div class="puces" data-c-esc><button class="puce" type="button" data-v="0">Aucun</button><button class="puce" type="button" data-v="2-10">2 % à 10 jours</button><button class="puce" type="button" data-v="3-10">3 % à 10 jours</button></div>
+          <span class="propre" data-propre="esc" hidden>Propre à cette offre <button class="lien" type="button" data-revenir="esc">Revenir au réglage (aucun)</button></span></div>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn primary" type="button" data-fermer>Fermer</button></div>
+      </div></div>
+
+      <div class="voile" id="f-rep" role="dialog" aria-modal="true" aria-label="Représenté par"><div class="feuille">
+        <div class="poignee"></div>
+        <h4>Représenté par</h4>
+        <div class="carte" style="cursor:default;margin-bottom:12px"><span><b>Régie du Lac SA</b><small>Rue du Port 12, 2000 Neuchâtel</small></span></div>
+        <div class="champ"><span class="lab">L'offre est adressée à</span>
+          <div class="seg" data-docva><button type="button" data-v="rep">Régie du Lac SA</button><button type="button" data-v="client">Famille Rochat</button></div>
+          <span class="aide">Le courriel de l'offre part à la même adresse.</span></div>
+        <div class="champ"><span class="lab">Les factures sont adressées à</span>
+          <div class="seg" data-factva><button type="button" data-v="pa">Rochat, p.a. la régie</button><button type="button" data-v="client">Rochat, chez eux</button></div>
+          <span class="aide">« Payable par » porte toujours le client.</span></div>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-retirer-rep>Retirer</button><button class="btn primary" type="button" data-fermer>Fermer</button></div>
+      </div></div>
+
+      <div class="voile" id="f-envoi" role="dialog" aria-modal="true" aria-label="Envoyer l'offre"><div class="feuille">
+        <div class="poignee"></div>
+        <h4>Envoyer l'offre 42 ?</h4>
+        <p data-envoi-a></p>
+        <p class="aide">Une offre envoyée ne change plus : lignes, textes et conditions sont figés.</p>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-fermer>Annuler</button><button class="btn primary" type="button" data-envoyer>Envoyer</button></div>
+      </div></div>
+
+      <div class="voile" id="f-facturer" role="dialog" aria-modal="true" aria-label="Facturer"><div class="feuille">
+        <div class="poignee"></div>
+        <h4>Facturer l'offre 42</h4>
+        <div class="seg" data-f-genre style="margin-bottom:12px"><button type="button" data-v="acompte">Acompte</button><button type="button" data-v="finale">Facture finale</button></div>
+        <div data-si-acompte>
+          <div class="champ"><span class="lab">Part de l'offre</span>
+            <div class="puces" data-f-pct><button class="puce" type="button" data-v="20">20 %</button><button class="puce" type="button" data-v="30">30 %</button><button class="puce" type="button" data-v="40">40 %</button><button class="puce" type="button" data-v="50">50 %</button><button class="puce" type="button" data-v="chf">CHF</button></div>
+            <span class="aide" data-f-reste></span></div>
+          <div class="champ" data-f-chf-champ hidden><label for="f-chf">Montant, TVA comprise (CHF)</label><input id="f-chf" inputmode="decimal" data-f-chf></div>
+          <div class="champ"><label for="f-lib">Libellé sur la facture</label><input id="f-lib" maxlength="255" data-f-lib>
+            <div class="puces"><button class="puce" type="button" data-f-puce="Acompte à la commande">À la commande</button><button class="puce" type="button" data-f-puce="Acompte au début des travaux">Au début des travaux</button><button class="puce" type="button" data-f-puce="Acompte à mi-chantier">À mi-chantier</button></div>
+            <button class="lien" type="button" data-f-origine style="justify-self:start">Texte d'origine</button></div>
+        </div>
+        <div data-si-finale hidden><p class="aide" data-f-finale></p></div>
+        <p class="err" data-f-err hidden></p>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-fermer>Annuler</button><button class="btn primary" type="button" data-creer>Créer la facture</button></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="colle">
+    <p class="legende">Document du client</p>
+    <div class="vues" data-vues></div>
+    <div class="doc" data-doc></div>
+  </div>
+
+  <div class="guide colle">
+    <p class="legende">Parcours proposé</p>
+    <ol data-guide></ol>
+    <p class="compte" data-guide-compte></p>
+    <button class="btn-reset" type="button" data-reset>Recommencer l'exemple</button>
+  </div>
+</div>
+</section>
+
+<section class="point" id="s-ouvert">
+<h2 id="ouvert" data-toc="Reste ouvert">Ce qui reste ouvert</h2>
+<div class="decision" data-id="D4"><p class="q">D4. Où le rabais paraît-il sur le document ? (sans réponse le 21 novembre ; le prototype montre l'un ou l'autre selon ton choix)</p><div class="opts">
+  <button type="button" data-v="A">A. Dans la liste, comme une ligne en négatif</button>
+  <button type="button" data-v="B">B. Sous le sous-total, avant la TVA<span class="reco">Recommandé : présentation habituelle d'un devis, TVA lisible</span></button>
+  <button type="button" data-v="C">C. Au choix de l'artisan, dans ses réglages</button>
+</div><textarea aria-label="Commentaire D4" placeholder="Commentaire"></textarea></div>
+<p class="hyp"><b>Hypothèse de ma part (à confirmer, D16) :</b> D6 ne parlait que du texte avant. Dans Lettre, j'ai placé le texte après les lignes avant la formule de politesse habituelle, sans la remplacer : la remplacer ferait disparaître les salutations.</p>
+<div class="decision" data-id="D16"><p class="q">D16. Dans Lettre, le texte après les lignes :</p><div class="opts">
+  <button type="button" data-v="A">A. Se place avant la formule de politesse, qui reste<span class="reco">Recommandé : c'est le prototype</span></button>
+  <button type="button" data-v="B">B. Remplace la formule de politesse</button>
+</div><textarea aria-label="Commentaire D16" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="R"><p class="q">Ce qui ne va pas dans le prototype (écran, mot, calcul) :</p><textarea aria-label="Remarques sur le prototype" placeholder="Par exemple : le bouton Facturer devrait…"></textarea></div>
+</section>
+
+<section class="point" id="s-tranche">
+<h2 id="tranche" data-toc="Réglé">Ce qui est réglé (tes réponses du 21 novembre)</h2>
+<table class="tranche"><tbody>
+<tr><td>D1 C</td><td>Ligne offerte : prix barré ou « Offert » seul, au choix ligne par ligne, prix barré par défaut.</td></tr>
+<tr><td>D2 A</td><td>Taper 0 dans un prix rend la ligne offerte. Un prix vide reste « Prix manquant ».</td></tr>
+<tr><td>D3 B</td><td>Pas de ligne « Dont offert » sous le total.</td></tr>
+<tr><td>D5 A</td><td>Textes et conditions propres à chaque offre (remplace ta réponse L4 du 20 novembre).</td></tr>
+<tr><td>D6 A</td><td>Dans Lettre, le texte avant les lignes remplace la phrase réglée dans Ma marque.</td></tr>
+<tr><td>D7 B</td><td>Pas de « Utiliser pour toutes mes offres » : le défaut se change dans Réglages.</td></tr>
+<tr><td>D8 A</td><td>« Client » et « Représenté par ».</td></tr>
+<tr><td>D9 C</td><td>L'offre va au représentant par défaut, au client si on le choisit.</td></tr>
+<tr><td>D10 C</td><td>Factures au client chez lui, ou au client « p.a. » le représentant, au choix par offre.</td></tr>
+<tr><td>D11 A</td><td>Libellé d'acompte libre, prérempli, avec trois puces.</td></tr>
+<tr><td>D12 A</td><td>La facture finale liste chaque acompte avec son libellé, son numéro et son montant.</td></tr>
+<tr><td>D13 A</td><td>Code QR au montant plein ; le client déduit l'escompte lui-même.</td></tr>
+<tr><td>D14 A</td><td>L'escompte vaut pour chaque facture, acomptes compris.</td></tr>
+<tr><td>D15 A</td><td>Ordre de calcul : lignes, sous-total, rabais, HT, TVA, arrondi, acomptes, escompte en mention.</td></tr>
+</tbody></table>
+<ul class="regle">
+  <li><b>Plafond des acomptes :</b> leur somme ne dépasse pas le total de l'offre ; « Créer la facture » le refuse.</li>
+  <li><b>Offre figée :</b> après l'envoi, plus aucun champ ne bouge ; le prototype le montre.</li>
+  <li><b>Rabais plafonné :</b> la somme des rabais ne dépasse pas le sous-total.</li>
+  <li><b>Escompte :</b> calculé sur le montant à payer de chaque facture, arrondi aux 5 centimes.</li>
+</ul>
+</section>
+
+<section class="point recap" id="s-recap">
+<h2 id="recap" data-toc="Copier">Copier le texte</h2>
+<p class="chapeau">Rassemble D4, D16 et tes remarques pour la conversation.</p>
+<textarea readonly aria-label="Réponses rassemblées" data-recap></textarea>
+<p><button class="copier" type="button" data-copier>Copier le texte</button><span class="copie-ok" data-copie-ok hidden>Copié</span></p>
+</section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var NB = ' ';
+  var REGLAGE = { validite: 30, jours: 30, esc: '0' };
+  var CLI = { nom: 'Famille Rochat', adr: ['Chemin des Vignes 4', '1700 Fribourg'] };
+  var REP = { nom: 'Régie du Lac SA', adr: ['Rue du Port 12', '2000 Neuchâtel'] };
+  var S, ligneOuverte = null, rabaisChoix = '5';
+
+  function exemple() {
+    return {
+      ecran: 'offre', envoyee: false, vue: 'offre', modele: 'sobre', place: 'sous',
+      lignes: [
+        { id: 1, piece: 'Séjour', des: 'Peinture des murs, 2 couches', q: 42, u: 'm²', p: 2800, offert: false, montrer: 'barre' },
+        { id: 2, piece: 'Séjour', des: 'Peinture des plafonds, 2 couches', q: 24, u: 'm²', p: 3200, offert: false, montrer: 'barre' },
+        { id: 3, piece: 'Séjour', des: 'Laquage des plinthes', q: 26, u: 'm', p: 1200, offert: true, montrer: 'barre' },
+        { id: 4, piece: 'Divers', des: 'Déplacement', q: 1, u: 'forfait', p: 6000, offert: false, montrer: 'barre' },
+        { id: 5, piece: 'Divers', des: 'Protection des sols et des meubles', q: 1, u: 'forfait', p: null, offert: false, montrer: 'barre' }
+      ],
+      rabais: [{ lib: 'Rabais fidélité', mode: 'pct', val: 5 }],
+      avant: 'Suite à notre visite du 18 novembre, nous avons le plaisir de vous remettre notre offre.', apres: '',
+      validite: 30, jours: 30, esc: '2-10',
+      rep: true, docva: 'rep', factva: 'pa',
+      factures: [],
+      fact: { genre: 'acompte', pct: '30', chf: '', lib: '' },
+      vu: {}
+    };
+  }
+
+  function chf(c) {
+    var neg = c < 0; c = Math.abs(Math.round(c));
+    return (neg ? '-' : '') + Math.floor(c / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '’') + '.' + String(c % 100).padStart(2, '0');
+  }
+  function prixSaisi(c) { return c === null ? '' : (c % 100 === 0 ? String(c / 100) : (c / 100).toFixed(2)); }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]; }); }
+  function r5(c) { return Math.round(c / 5) * 5; }
+  function totalLigne(l) { return (l.offert || l.p === null) ? 0 : Math.round(l.q * l.p); }
+  function escompte() { if (S.esc === '0') return null; var a = S.esc.split('-'); return { pct: +a[0], jours: +a[1] }; }
+  function ligne(id) { return S.lignes.find(function (x) { return x.id === id; }); }
+
+  function calcul() {
+    var sous = 0, manque = 0;
+    S.lignes.forEach(function (l) { sous += totalLigne(l); if (l.p === null && !l.offert) manque++; });
+    var rab = [], somme = 0;
+    S.rabais.forEach(function (r) {
+      var m = r.mode === 'pct' ? Math.round(sous * r.val / 100) : r.val;
+      m = Math.max(0, Math.min(m, sous - somme)); somme += m;
+      rab.push({ lib: r.lib, mode: r.mode, val: r.val, m: m });
+    });
+    var ht = sous - somme, tva = Math.round(ht * 0.081), brut = ht + tva, ttc = r5(brut);
+    return { sous: sous, rab: rab, rabTotal: somme, ht: ht, tva: tva, arr: ttc - brut, ttc: ttc, manque: manque };
+  }
+  function dejaAcomptes() { return S.factures.filter(function (f) { return f.genre === 'acompte'; }).reduce(function (s, f) { return s + f.mt; }, 0); }
+  function aFinale() { return S.factures.some(function (f) { return f.genre === 'finale'; }); }
+  function libOrigine(rang, pct) { return 'Acompte ' + rang + (pct ? ' (' + pct + NB + '%)' : '') + ', selon offre n°' + NB + '42'; }
+  function rangAcompte() { return S.factures.filter(function (f) { return f.genre === 'acompte'; }).length + 1; }
+  function montantBrouillon(t) {
+    if (S.fact.genre === 'finale') return t.ttc - dejaAcomptes();
+    if (S.fact.pct === 'chf') { var v = parseFloat(String(S.fact.chf).replace(',', '.')); return v > 0 ? Math.round(v * 100) : 0; }
+    return r5(t.ttc * (+S.fact.pct) / 100);
+  }
+  function numeroSuivant() { return '2026-' + String(31 + S.factures.length).padStart(3, '0'); }
+
+  /* ---------- Téléphone ---------- */
+  var POUBELLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
+  function ecranOffre(t) {
+    var fige = S.envoyee, dis = fige ? ' disabled' : '';
+    var h = '<div class="cartes"><button class="carte" type="button" data-toast-fige' + dis + '><span><span class="role">Client</span><b>' + CLI.nom + '</b><small>' + CLI.adr.join(', ') + '</small></span><span class="fl">›</span></button>';
+    if (S.rep) h += '<button class="carte" type="button" data-ouvrir="f-rep"' + dis + '><span><span class="role">Représenté par</span><b>' + REP.nom + '</b><small>' + (S.docva === 'rep' ? 'L’offre lui est adressée' : 'L’offre va au client') + '</small></span><span class="fl">›</span></button>';
+    else if (!fige) h += '<button class="carte vide" type="button" data-ajout-rep><span><span class="role">Représenté par</span><span>Ajouter une régie, un architecte…</span></span><span class="fl">+</span></button>';
+    h += '<div class="carte" style="cursor:default"><span><b>Rafraîchissement de l’appartement</b><small>Objet de l’offre</small></span></div></div>';
+    var st = fige ? '<span class="status envoyee">Envoyée le 21.11.2026</span>' : (t.manque ? '<span class="status a-verifier">À relire</span>' : '<span class="status pret">Prête</span>');
+    h += '<div class="statut">' + st + '<span>' + (fige ? 'Figée' : 'Enregistrée à l’instant') + '</span></div>';
+    var piece = null;
+    S.lignes.forEach(function (l) {
+      if (l.piece !== piece) { piece = l.piece; h += '<div class="cat"><span>' + esc(piece) + '</span><span>Qté · Prix · Total</span></div>'; }
+      var manque = l.p === null && !l.offert, cls = manque ? ' miss' : (l.offert ? ' cadeau' : '');
+      var tot = manque ? '<span></span>' : (l.offert ? '<span class="tt offert">Offert</span>' : '<span class="tt">' + chf(totalLigne(l)) + '</span>');
+      h += '<div class="row' + cls + '" id="l' + l.id + '"><div class="haut"><button class="nm" type="button" data-ligne="' + l.id + '"' + dis + '>' + esc(l.des) + (l.offert ? '<span class="tag ok">Offerte</span>' : '') + '</button>' + (fige ? '' : '<button class="del" type="button" data-toast-msg="Supprimer une ligne : hors de ce prototype." aria-label="Supprimer la ligne ' + esc(l.des) + '">' + POUBELLE + '</button>') + '</div>'
+        + '<div class="vals"><span class="q"><input class="saisie" inputmode="decimal" value="' + l.q + '" data-q="' + l.id + '" aria-label="Quantité, ' + esc(l.des) + '"' + dis + '><span class="u">' + esc(l.u) + '</span></span>'
+        + '<input class="saisie' + (manque ? ' manque' : '') + (l.offert && l.p ? ' barre' : '') + '" inputmode="decimal" placeholder="Prix' + NB + '?" value="' + prixSaisi(l.p) + '" data-p="' + l.id + '" aria-label="Prix unitaire, ' + esc(l.des) + '"' + dis + '>' + tot + '</div>'
+        + (manque ? '<div class="note bad">Prix manquant : tapez un prix, ou 0 pour l’offrir</div>' : '') + '</div>';
+    });
+    t.rab.forEach(function (r, i) {
+      if (i === 0) h += '<div class="cat"><span>Rabais</span><span></span></div>';
+      h += '<div class="row"><div class="haut"><span class="nm" style="cursor:default">' + esc(r.lib) + '<span class="tag neutre">' + (r.mode === 'pct' ? r.val + NB + '%' : 'CHF') + '</span></span>' + (fige ? '' : '<button class="del" type="button" data-suppr-rabais="' + i + '" aria-label="Retirer le rabais ' + esc(r.lib) + '">' + POUBELLE + '</button>') + '</div><div class="vals"><span></span><span></span><span class="tt">' + chf(-r.m) + '</span></div></div>';
+    });
+    h += '<div class="totals"><div class="r"><span>Sous-total des lignes</span><span>' + chf(t.sous) + '</span></div>';
+    if (t.rab.length) h += '<div class="r"><span>Rabais</span><span>' + chf(-t.rabTotal) + '</span></div><div class="r fort"><span>Total HT</span><span>' + chf(t.ht) + '</span></div>';
+    h += '<div class="r"><span>TVA 8,1' + NB + '%</span><span>' + chf(t.tva) + '</span></div>' + (t.arr ? '<div class="r"><span>Arrondi</span><span>' + chf(t.arr) + '</span></div>' : '') + '</div>';
+    var e = escompte(), propre = S.validite !== REGLAGE.validite || S.jours !== REGLAGE.jours || S.esc !== REGLAGE.esc || S.avant || S.apres;
+    h += '<div class="cartes" style="margin-top:10px"><button class="carte" type="button" data-ouvrir="f-cond"' + dis + '><span><span class="role">Conditions et textes' + (propre ? ' · propres à l’offre' : '') + '</span><b>Net à ' + S.jours + ' jours' + (e ? ', escompte ' + e.pct + NB + '%' : '') + ', valable ' + S.validite + ' jours</b><small>' + (S.avant ? 'Texte avant' : 'Pas de texte avant') + ' · ' + (S.apres ? 'texte après' : 'pas de texte après') + '</small></span><span class="fl">›</span></button></div>';
+    return h;
+  }
+  function ecranFactures() {
+    if (!S.factures.length) return '<p class="aide" style="margin-top:12px">Aucune facture. Envoyez l’offre, puis « Facturer ».</p>';
+    var h = '<div class="cat"><span>Offre 42</span><span></span></div><div class="cartes" style="margin-top:8px">';
+    S.factures.forEach(function (f, i) {
+      h += '<button class="carte" type="button" data-voir="' + i + '"><span><span class="role">Facture ' + f.num + '</span><b>' + esc(f.genre === 'finale' ? 'Facture finale' : f.lib) + '</b><small>À payer CHF ' + chf(f.aPayer) + ' · échéance 21.12.2026</small></span><span class="fl">›</span></button>';
+    });
+    return h + '</div>';
+  }
+  function actions(t) {
+    if (S.ecran === 'factures') return '<button class="btn" type="button" data-nav="offre">Retour à l’offre</button>';
+    var a = '<button class="btn" type="button" data-ajout' + (S.envoyee ? ' disabled' : '') + '>+ Ligne</button>';
+    if (t.manque) return a + '<button class="btn primary grand" type="button" data-relire><span>Relire ' + t.manque + ' ligne' + (t.manque > 1 ? 's' : '') + '</span><small>CHF ' + chf(t.ttc) + '</small></button>';
+    if (!S.envoyee) return a + '<button class="btn primary grand" type="button" data-generer><span>Générer l’offre</span><small>CHF ' + chf(t.ttc) + '</small></button>';
+    if (aFinale()) return a + '<button class="btn primary grand" type="button" data-nav="factures"><span>Voir les factures</span><small>Offre facturée</small></button>';
+    return a + '<button class="btn primary grand" type="button" data-facturer><span>Facturer</span><small>CHF ' + chf(t.ttc) + '</small></button>';
+  }
+
+  /* ---------- Document ---------- */
+  function fenetre(kind) {
+    if (kind === 'offre') {
+      if (S.rep && S.docva === 'rep') return { fen: REP.nom + '<br>' + REP.adr.join('<br>'), meta: '<span><i>Pour le compte de</i>' + CLI.nom + ', ' + CLI.adr.join(', ') + '</span>' };
+      return { fen: CLI.nom + '<br>' + CLI.adr.join('<br>'), meta: S.rep ? '<span><i>Par l’intermédiaire de</i>' + REP.nom + '</span>' : '' };
+    }
+    var fen = (S.rep && S.factva === 'pa') ? CLI.nom + '<br>p.a. ' + REP.nom + '<br>' + REP.adr.join('<br>') : CLI.nom + '<br>' + CLI.adr.join('<br>');
+    return { fen: fen, meta: S.rep ? '<span><i>Représenté par</i>' + REP.nom + '</span>' : '' };
+  }
+  function tete() { return '<div class="d-tete"><b>Peinture Morel Sàrl</b><div class="d-exp">Rue de l’Exemple 12<br>2800 Delémont<br>032' + NB + '000' + NB + '00' + NB + '01</div></div>'; }
+  function tableLignes(t) {
+    var h = '<table><thead><tr><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix unit.</th><th class="n">Montant</th></tr></thead><tbody>', piece = null;
+    S.lignes.forEach(function (l) {
+      if (l.piece !== piece) { piece = l.piece; h += '<tr class="grp"><td colspan="4">' + esc(piece) + '</td></tr>'; }
+      var pu, mt;
+      if (l.offert) {
+        if (l.montrer === 'barre' && l.p) { pu = '<span class="barre">' + chf(l.p) + '</span>'; mt = '<span class="barre">' + chf(Math.round(l.q * l.p)) + '</span> <span class="offert">Offert</span>'; }
+        else { pu = ''; mt = '<span class="offert">Offert</span>'; }
+      } else if (l.p === null) { pu = '?'; mt = '?'; }
+      else { pu = chf(l.p); mt = chf(totalLigne(l)); }
+      h += '<tr><td>' + esc(l.des) + '</td><td class="n">' + l.q + NB + esc(l.u) + '</td><td class="n">' + pu + '</td><td class="n">' + mt + '</td></tr>';
+    });
+    if (S.place === 'liste') t.rab.forEach(function (r) { h += '<tr><td>' + esc(r.lib) + (r.mode === 'pct' ? ' (' + r.val + NB + '%)' : '') + '</td><td></td><td></td><td class="n">' + chf(-r.m) + '</td></tr>'; });
+    return h + '</tbody></table>';
+  }
+  function totauxDoc(t, suite) {
+    var h = '<div class="d-tot">';
+    if (S.place === 'sous' || !t.rab.length) {
+      h += '<div><span>Sous-total</span><span>' + chf(t.sous) + '</span></div>';
+      t.rab.forEach(function (r) { h += '<div><span>' + esc(r.lib) + (r.mode === 'pct' ? ' ' + r.val + NB + '%' : '') + '</span><span>' + chf(-r.m) + '</span></div>'; });
+    }
+    h += '<div><span>Total HT</span><span>' + chf(t.ht) + '</span></div><div><span>TVA 8,1' + NB + '%</span><span>' + chf(t.tva) + '</span></div>';
+    if (t.arr) h += '<div><span>Arrondi</span><span>' + chf(t.arr) + '</span></div>';
+    h += '<div class="g"><span>Total TTC</span><span>CHF ' + chf(t.ttc) + '</span></div>';
+    return h + (suite || '') + '</div>';
+  }
+  function validiteTxt() { return S.validite === 15 ? '6.12.2026' : S.validite === 60 ? '20.1.2027' : '21.12.2026'; }
+  function phraseEscompte() { var e = escompte(); return e ? ' Escompte ' + e.pct + NB + '% si paiement dans les ' + e.jours + ' jours.' : ''; }
+
+  function docOffre() {
+    var t = calcul(), f = fenetre('offre'), lettre = S.modele === 'lettre';
+    var h = tete();
+    if (lettre) {
+      h += '<div class="d-fen">' + f.fen + '</div><p>Delémont, le 21 novembre 2026</p><p class="d-titre" style="font-size:14px">Offre n°' + NB + '42 : rafraîchissement de l’appartement</p>'
+        + (f.meta ? '<p style="color:#555">' + f.meta.replace(/<\/?span>/g, '').replace('<i>', '').replace('</i>', NB + ': ') + '</p>' : '')
+        + '<p>Madame, Monsieur,</p><p class="d-texte">' + esc(S.avant || 'Nous vous remettons notre offre pour les travaux suivants.') + '</p>';
+      h += tableLignes(t) + totauxDoc(t);
+      h += '<p class="d-texte" style="margin-top:12px">Paiement' + NB + ': net à ' + S.jours + ' jours dès réception de la facture.' + phraseEscompte() + ' Début des travaux' + NB + ': semaine 3, 2027. Durée' + NB + ': 6 jours ouvrables. Cette offre est valable jusqu’au ' + validiteTxt() + '.</p>';
+      if (S.apres) h += '<p class="d-texte">' + esc(S.apres) + '</p>';
+      h += '<p class="d-texte">Nous restons à votre disposition pour toute question et vous adressons, Madame, Monsieur, nos salutations les meilleures.</p><p class="sign">Luc Morel<br>Peinture Morel Sàrl</p>';
+      return h;
+    }
+    h += '<div class="d-fen">' + f.fen + '</div><p class="d-titre">Offre n°' + NB + '42</p><p class="d-objet">Rafraîchissement de l’appartement</p>'
+      + '<div class="d-meta"><span><i>Date</i>21.11.2026</span><span><i>Valable jusqu’au</i>' + validiteTxt() + '</span><span><i>Chantier</i>Chemin des Vignes 4, Fribourg</span>' + f.meta + '</div>';
+    if (S.avant) h += '<p class="d-texte">' + esc(S.avant) + '</p>';
+    h += tableLignes(t) + totauxDoc(t);
+    h += '<div class="d-cond"><div class="lab">Conditions</div><ul><li>Paiement' + NB + ': net à ' + S.jours + ' jours dès réception de la facture.' + phraseEscompte() + '</li><li>Début des travaux' + NB + ': semaine 3, 2027. Durée' + NB + ': 6 jours ouvrables.</li><li>Offre valable jusqu’au ' + validiteTxt() + '. Prix en francs suisses, TVA comprise dans le total.</li></ul></div>';
+    if (S.apres) h += '<p class="d-texte" style="margin-top:10px">' + esc(S.apres) + '</p>';
+    return h;
+  }
+
+  function docFacture(f, brouillon) {
+    var t = calcul(), fe = fenetre('facture'), lettre = S.modele === 'lettre', h = tete();
+    h += '<div class="d-fen">' + fe.fen + '</div>';
+    var titre = 'Facture n°' + NB + f.num + (brouillon ? '<span class="brouillon">APERÇU</span>' : '');
+    if (lettre) h += '<p>Delémont, le 21 novembre 2026</p>';
+    h += '<p class="d-titre"' + (lettre ? ' style="font-size:14px"' : '') + '>' + titre + '</p><p class="d-objet">Rafraîchissement de l’appartement</p>'
+      + '<div class="d-meta"><span><i>Date</i>21.11.2026</span><span><i>Échéance</i>21.12.2026</span><span><i>Référence</i>selon offre n°' + NB + '42 du 21.11.2026</span>' + fe.meta + '</div>';
+    if (lettre) h += '<p>Madame, Monsieur,</p><p class="d-texte">' + (f.genre === 'finale' ? 'Les travaux étant terminés, voici notre facture.' : 'Nous vous adressons notre facture d’acompte.') + '</p>';
+    if (f.genre === 'acompte') {
+      var ht = Math.round(f.mt / 1.081), tva = f.mt - ht;
+      h += '<table><thead><tr><th>Désignation</th><th class="n">Montant</th></tr></thead><tbody><tr><td>' + esc(f.lib) + '</td><td class="n">' + chf(f.mt) + '</td></tr></tbody></table>'
+        + '<div class="d-tot"><div><span>Total HT</span><span>' + chf(ht) + '</span></div><div><span>TVA 8,1' + NB + '%</span><span>' + chf(tva) + '</span></div><div class="g"><span>À payer</span><span>CHF ' + chf(f.mt) + '</span></div></div>';
+    } else {
+      var suite = '';
+      f.acomptes.forEach(function (a) { suite += '<div><span>' + esc(a.lib) + ', facture ' + a.num + ' du 21.11.2026</span><span>' + chf(-a.mt) + '</span></div>'; });
+      suite += '<div class="g"><span>À payer</span><span>CHF ' + chf(f.aPayer) + '</span></div>';
+      h += tableLignes(t) + totauxDoc(t, suite);
+    }
+    var e = escompte(), li = '<li>Payable jusqu’au 21.12.2026 avec la section de paiement ci-dessous.</li>';
+    if (e && f.aPayer > 0) { var net = r5(f.aPayer - Math.round(f.aPayer * e.pct / 100)); li += '<li>Escompte ' + e.pct + NB + '% si payé jusqu’au 1.12.2026' + NB + ': CHF ' + chf(net) + ' au lieu de CHF ' + chf(f.aPayer) + '.</li>'; }
+    h += '<div class="d-cond"><ul>' + li + '<li>Montants en francs suisses, TVA comprise dans le total.</li></ul></div>';
+    if (lettre) h += '<p class="d-texte" style="margin-top:10px">Nous vous remercions de votre confiance et vous adressons, Madame, Monsieur, nos salutations les meilleures.</p>';
+    h += '<div class="qr"><div class="code" role="img" aria-label="Code QR (figuré)"></div><div><b>Compte</b>CH44 3199 9123 0008 8901 2<br>Peinture Morel Sàrl<b>Payable par</b>' + CLI.nom + (S.rep && S.factva === 'pa' ? ', p.a. ' + REP.nom + ', ' + REP.adr.join(', ') : ', ' + CLI.adr.join(', ')) + '<b>Montant</b><span class="mt">CHF ' + chf(f.aPayer) + '</span></div></div>';
+    return h;
+  }
+  function factureBrouillon() {
+    var t = calcul(), mt = montantBrouillon(t), num = numeroSuivant();
+    if (S.fact.genre === 'finale') {
+      var ac = S.factures.filter(function (f) { return f.genre === 'acompte'; });
+      return { num: num, genre: 'finale', acomptes: ac, aPayer: t.ttc - dejaAcomptes(), mt: t.ttc };
+    }
+    var lib = S.fact.lib.trim() || libOrigine(rangAcompte(), S.fact.pct === 'chf' ? null : S.fact.pct);
+    return { num: num, genre: 'acompte', lib: lib, mt: mt, aPayer: mt };
+  }
+
+  /* ---------- Guide ---------- */
+  var ETAPES = [
+    ['Protection des sols : tapez 0 dans le prix (elle devient offerte, D2) ou un prix.', function () { return !ligne(5).offert ? ligne(5).p !== null : true; }],
+    ['Touchez « Déplacement » et offrez-le.', function () { return ligne(4).offert; }],
+    ['Touchez « Laquage des plinthes » et choisissez « Offert » seul (D1).', function () { return ligne(3).offert && ligne(3).montrer === 'seul'; }],
+    ['« + Ligne » : ajoutez un rabais en CHF.', function () { return S.rabais.some(function (r) { return r.mode === 'chf'; }); }],
+    ['« Conditions et textes » : écrivez un texte après les lignes.', function () { return !!S.apres.trim(); }],
+    ['« Représenté par » : adressez l’offre au client (D9).', function () { return S.docva === 'client'; }],
+    ['Passez le document en modèle Lettre, au-dessus du document (D6).', function () { return S.vu.lettre; }],
+    ['Générez et envoyez l’offre : elle se fige.', function () { return S.envoyee; }],
+    ['« Facturer » : un acompte de 30 % « au début des travaux » (D11).', function () { return S.factures.some(function (f) { return f.genre === 'acompte' && /début/.test(f.lib); }); }],
+    ['Un second acompte en CHF, avec votre libellé.', function () { return S.factures.filter(function (f) { return f.genre === 'acompte'; }).length >= 2; }],
+    ['La facture finale : chaque acompte y figure (D12), escompte et QR (D13, D14).', function () { return aFinale(); }]
+  ];
+
+  /* ---------- Rendu ---------- */
+  function rendre() {
+    var t = calcul();
+    var ecran = document.querySelector('[data-ecran]'), haut = ecran.scrollTop;
+    ecran.innerHTML = S.ecran === 'factures' ? ecranFactures() : ecranOffre(t);
+    ecran.scrollTop = haut;
+    document.querySelector('[data-titre-ecran]').textContent = S.ecran === 'factures' ? 'Factures' : 'Offre 42';
+    document.querySelector('[data-actions]').innerHTML = actions(t);
+    document.querySelectorAll('[data-tab]').forEach(function (b) { if (b.dataset.tab === S.ecran) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    // Vues du document
+    var v = '<button type="button" data-vue="offre" aria-pressed="' + (S.vue === 'offre') + '">Offre 42</button>';
+    S.factures.forEach(function (f, i) { v += '<button type="button" data-vue="' + i + '" aria-pressed="' + (S.vue === String(i)) + '">Facture ' + f.num + '</button>'; });
+    if (document.getElementById('f-facturer').classList.contains('ouvert')) v += '<button type="button" data-vue="brouillon" aria-pressed="' + (S.vue === 'brouillon') + '">Aperçu de la facture</button>';
+    v += '<span class="sep"></span><button type="button" data-modele="sobre" aria-pressed="' + (S.modele === 'sobre') + '">Sobre</button><button type="button" data-modele="lettre" aria-pressed="' + (S.modele === 'lettre') + '">Lettre</button>';
+    v += '<span class="sep"></span><button type="button" data-place="sous" aria-pressed="' + (S.place === 'sous') + '">Rabais sous le sous-total</button><button type="button" data-place="liste" aria-pressed="' + (S.place === 'liste') + '">Rabais dans la liste</button>';
+    document.querySelector('[data-vues]').innerHTML = v;
+    var doc = document.querySelector('[data-doc]');
+    if (S.vue === 'brouillon') doc.innerHTML = docFacture(factureBrouillon(), true);
+    else if (S.vue !== 'offre' && S.factures[+S.vue]) doc.innerHTML = docFacture(S.factures[+S.vue], false);
+    else doc.innerHTML = docOffre();
+    // Fenêtres
+    presserIn('[data-c-validite]', String(S.validite)); presserIn('[data-c-esc]', S.esc);
+    presserIn('[data-docva]', S.docva); presserIn('[data-factva]', S.factva);
+    presserIn('[data-f-genre]', S.fact.genre); presserIn('[data-f-pct]', S.fact.pct);
+    document.querySelector('[data-propre="validite"]').hidden = S.validite === REGLAGE.validite;
+    document.querySelector('[data-propre="jours"]').hidden = S.jours === REGLAGE.jours;
+    document.querySelector('[data-propre="esc"]').hidden = S.esc === REGLAGE.esc;
+    majFacturer(t);
+    // Guide
+    var faits = 0, g = '';
+    ETAPES.forEach(function (e) { var ok = e[1](); if (ok) faits++; g += '<li' + (ok ? ' class="fait"' : '') + '>' + e[0] + '</li>'; });
+    document.querySelector('[data-guide]').innerHTML = g;
+    document.querySelector('[data-guide-compte]').textContent = faits + ' sur ' + ETAPES.length + ' faites';
+  }
+  function presserIn(sel, v) { document.querySelectorAll(sel + ' button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === v)); }); }
+
+  function majFacturer(t) {
+    var f = document.getElementById('f-facturer'), deja = dejaAcomptes(), reste = t.ttc - deja;
+    f.querySelector('[data-si-acompte]').hidden = S.fact.genre !== 'acompte';
+    f.querySelector('[data-si-finale]').hidden = S.fact.genre !== 'finale';
+    f.querySelector('[data-f-chf-champ]').hidden = S.fact.pct !== 'chf';
+    f.querySelector('[data-f-reste]').textContent = deja ? 'Déjà facturé en acomptes' + NB + ': CHF ' + chf(deja) + '. Reste CHF ' + chf(reste) + '.' : 'Total de l’offre' + NB + ': CHF ' + chf(t.ttc) + '.';
+    f.querySelector('[data-f-finale]').textContent = 'Toutes les lignes de l’offre' + (deja ? ', moins les acomptes déjà facturés (CHF ' + chf(deja) + '), chacun sur sa ligne.' : '.');
+    var lib = f.querySelector('[data-f-lib]');
+    if (document.activeElement !== lib) lib.value = S.fact.lib || libOrigine(rangAcompte(), S.fact.pct === 'chf' ? null : S.fact.pct);
+  }
+
+  /* ---------- Gestes ---------- */
+  var tel = document.getElementById('tel'), minuteur;
+  function toast(m) { var el = tel.querySelector('[data-toast]'); el.textContent = m; el.classList.add('vu'); clearTimeout(minuteur); minuteur = setTimeout(function () { el.classList.remove('vu'); }, 2600); }
+  function ouvrir(id) { var f = document.getElementById(id); f.classList.add('ouvert'); var x = f.querySelector('input, textarea, button'); if (x) x.focus(); rendre(); }
+  function fermer(f) {
+    f.classList.remove('ouvert');
+    if (f.id === 'f-facturer' && S.vue === 'brouillon') S.vue = 'offre';
+    rendre();
+  }
+  function remplirLigne() {
+    var l = ligne(ligneOuverte); if (!l) return;
+    var f = document.getElementById('f-ligne');
+    f.querySelector('[data-l-titre]').textContent = l.des;
+    f.querySelector('[data-l-q]').value = l.q;
+    if (document.activeElement !== f.querySelector('[data-l-p]')) f.querySelector('[data-l-p]').value = prixSaisi(l.p);
+    f.querySelectorAll('[data-l-mode] button').forEach(function (b) { b.setAttribute('aria-pressed', String((b.dataset.v === 'offert') === l.offert)); });
+    f.querySelector('[data-l-montrer-champ]').hidden = !l.offert;
+    f.querySelectorAll('[data-l-montrer] button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (l.p ? l.montrer : 'seul'))); b.disabled = !l.p && b.dataset.v === 'barre'; });
+    f.querySelector('[data-l-aide]').textContent = l.p ? 'Prix barré : le client voit la valeur de ce qui lui est offert.' : 'Prix 0 : rien à barrer, le document écrit « Offert ».';
+  }
+  function poserPrix(l, brut) {
+    var v = String(brut).trim().replace(',', '.');
+    if (v === '') { l.p = null; l.offert = false; return; }
+    if (isNaN(+v) || +v < 0) return;
+    l.p = Math.round(+v * 100);
+    if (l.p === 0) { l.offert = true; l.montrer = 'seul'; }
+  }
+  function rabaisLu() {
+    if (rabaisChoix === '5' || rabaisChoix === '10') return { mode: 'pct', val: +rabaisChoix };
+    var v = parseFloat(String(document.querySelector('[data-r-val]').value).replace(',', '.'));
+    if (!(v > 0)) return null;
+    if (rabaisChoix === 'pct') return v <= 100 ? { mode: 'pct', val: v } : null;
+    return { mode: 'chf', val: Math.round(v * 100) };
+  }
+  function majRabais() {
+    var f = document.getElementById('f-ajout');
+    f.querySelectorAll('[data-r-puces] button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === rabaisChoix)); });
+    f.querySelector('[data-r-val-champ]').hidden = !(rabaisChoix === 'pct' || rabaisChoix === 'chf');
+    f.querySelector('[data-r-val-lab]').textContent = rabaisChoix === 'chf' ? 'Montant (CHF, hors TVA)' : 'Pourcentage';
+    var r = rabaisLu(), t = calcul();
+    f.querySelector('[data-r-apercu]').textContent = r ? 'Soit CHF ' + chf(r.mode === 'pct' ? Math.round(t.sous * r.val / 100) : r.val) + ' sur un sous-total de CHF ' + chf(t.sous) + '.' : '';
+  }
+
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b || b.disabled) return;
+    var d = b.dataset;
+    if (d.ligne) { ligneOuverte = +d.ligne; remplirLigne(); ouvrir('f-ligne'); return; }
+    if (b.hasAttribute('data-relire')) { var m = S.lignes.find(function (x) { return x.p === null && !x.offert; }); var inp = tel.querySelector('[data-p="' + m.id + '"]'); inp.scrollIntoView({ block: 'center' }); inp.focus(); toast('Tapez un prix, ou 0 pour offrir la ligne.'); return; }
+    if (b.hasAttribute('data-ajout')) { rabaisChoix = '5'; document.querySelector('[data-r-lib]').value = 'Rabais'; document.querySelector('[data-r-val]').value = ''; majRabais(); ouvrir('f-ajout'); return; }
+    if (d.ouvrir) { ouvrir(d.ouvrir); return; }
+    if (b.hasAttribute('data-fermer')) { fermer(b.closest('.voile')); return; }
+    if (d.toastMsg) { toast(d.toastMsg); return; }
+    if (b.hasAttribute('data-toast-fige')) { toast('Changer de client : hors de ce prototype.'); return; }
+    if (d.supprRabais !== undefined) { S.rabais.splice(+d.supprRabais, 1); rendre(); return; }
+    if (b.closest('[data-l-mode]')) { var l = ligne(ligneOuverte); l.offert = d.v === 'offert'; if (l.offert && l.p === null) { l.p = 0; l.montrer = 'seul'; } if (!l.offert && l.p === 0) l.p = null; remplirLigne(); rendre(); return; }
+    if (b.closest('[data-l-montrer]')) { ligne(ligneOuverte).montrer = d.v; remplirLigne(); rendre(); return; }
+    if (b.closest('[data-r-puces]')) { rabaisChoix = d.v; majRabais(); if (rabaisChoix === 'pct' || rabaisChoix === 'chf') document.querySelector('[data-r-val]').focus(); return; }
+    if (b.hasAttribute('data-r-ok')) {
+      var r = rabaisLu(); if (!r) { document.querySelector('[data-r-val]').focus(); return; }
+      S.rabais.push({ lib: document.querySelector('[data-r-lib]').value.trim() || 'Rabais', mode: r.mode, val: r.val }); fermer(document.getElementById('f-ajout')); return;
+    }
+    if (b.closest('[data-c-validite]')) { S.validite = +d.v; rendre(); return; }
+    if (b.closest('[data-c-esc]')) { S.esc = d.v; rendre(); return; }
+    if (d.revenir) { S[d.revenir] = REGLAGE[d.revenir]; if (d.revenir === 'jours') document.querySelector('[data-c-jours]').value = S.jours; rendre(); return; }
+    if (d.cPuce) { S[d.cPuce] = d.t; document.querySelector('[data-c="' + d.cPuce + '"]').value = d.t; rendre(); return; }
+    if (b.closest('[data-docva]')) { S.docva = d.v; S.vue = 'offre'; rendre(); return; }
+    if (b.closest('[data-factva]')) { S.factva = d.v; rendre(); return; }
+    if (b.hasAttribute('data-retirer-rep')) { S.rep = false; fermer(b.closest('.voile')); return; }
+    if (b.hasAttribute('data-ajout-rep')) { S.rep = true; S.docva = 'rep'; rendre(); return; }
+    if (b.hasAttribute('data-generer')) { S.vue = 'offre'; document.querySelector('[data-envoi-a]').textContent = 'Par courriel à ' + (S.rep && S.docva === 'rep' ? REP.nom : CLI.nom) + ', avec le PDF (modèle ' + (S.modele === 'lettre' ? 'Lettre' : 'Sobre') + ').'; ouvrir('f-envoi'); return; }
+    if (b.hasAttribute('data-envoyer')) { S.envoyee = true; fermer(document.getElementById('f-envoi')); tel.querySelector('[data-ecran]').scrollTop = 0; toast('Offre envoyée. Elle ne change plus.'); return; }
+    if (b.hasAttribute('data-facturer')) {
+      var t = calcul(), reste = t.ttc - dejaAcomptes();
+      S.fact = { genre: reste > 0 && S.factures.length < 3 ? 'acompte' : 'finale', pct: '30', chf: '', lib: '' };
+      document.querySelector('[data-f-chf]').value = ''; document.querySelector('[data-f-err]').hidden = true;
+      S.vue = 'brouillon'; ouvrir('f-facturer'); return;
+    }
+    if (b.closest('[data-f-genre]')) { S.fact.genre = d.v; S.vue = 'brouillon'; document.querySelector('[data-f-err]').hidden = true; rendre(); return; }
+    if (b.closest('[data-f-pct]')) { S.fact.pct = d.v; if (d.v === 'chf') document.querySelector('[data-f-chf]').focus(); rendre(); return; }
+    if (d.fPuce) { S.fact.lib = d.fPuce; document.querySelector('[data-f-lib]').value = d.fPuce; rendre(); return; }
+    if (b.hasAttribute('data-f-origine')) { S.fact.lib = ''; document.querySelector('[data-f-lib]').value = ''; rendre(); return; }
+    if (b.hasAttribute('data-creer')) {
+      var t2 = calcul(), f = factureBrouillon(), err = document.querySelector('[data-f-err]');
+      if (f.genre === 'acompte') {
+        if (!(f.mt > 0)) { err.textContent = 'Tapez un montant.'; err.hidden = false; return; }
+        if (f.mt + dejaAcomptes() > t2.ttc) { err.textContent = 'Les acomptes dépasseraient le total de l’offre (CHF ' + chf(t2.ttc) + ').'; err.hidden = false; return; }
+      }
+      S.factures.push(f); S.vue = String(S.factures.length - 1); fermer(document.getElementById('f-facturer'));
+      S.vue = String(S.factures.length - 1); rendre(); toast('Facture ' + f.num + ' créée.'); return;
+    }
+    if (d.nav) { S.ecran = d.nav; document.querySelectorAll('.voile.ouvert').forEach(function (v) { v.classList.remove('ouvert'); }); rendre(); return; }
+    if (d.voir !== undefined) { S.vue = d.voir; rendre(); return; }
+    if (d.vue !== undefined) { S.vue = d.vue; rendre(); return; }
+    if (d.modele) { S.modele = d.modele; if (d.modele === 'lettre') S.vu.lettre = true; rendre(); return; }
+    if (d.place) { S.place = d.place; rendre(); return; }
+    if (b.hasAttribute('data-reset')) { S = exemple(); document.querySelectorAll('.voile.ouvert').forEach(function (v) { v.classList.remove('ouvert'); }); remplirChamps(); rendre(); return; }
+  });
+  document.querySelectorAll('.voile').forEach(function (v) { v.addEventListener('click', function (ev) { if (ev.target === v) fermer(v); }); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') document.querySelectorAll('.voile.ouvert').forEach(fermer); });
+
+  document.addEventListener('change', function (ev) {
+    var el = ev.target;
+    if (el.dataset.p) { poserPrix(ligne(+el.dataset.p), el.value); rendre(); }
+    if (el.dataset.q) { var q = +String(el.value).replace(',', '.'); if (q > 0) ligne(+el.dataset.q).q = q; rendre(); }
+  });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && ev.target.matches('.saisie')) ev.target.blur(); });
+  document.addEventListener('input', function (ev) {
+    var el = ev.target;
+    if (el.matches('[data-l-p]')) { poserPrix(ligne(ligneOuverte), el.value); remplirLigne(); rendre(); }
+    if (el.matches('[data-l-q]')) { var q = +el.value.replace(',', '.'); if (q > 0) { ligne(ligneOuverte).q = q; rendre(); } }
+    if (el.matches('[data-r-val]')) majRabais();
+    if (el.matches('[data-c]')) { S[el.dataset.c] = el.value; rendre(); }
+    if (el.matches('[data-c-jours]')) { var n = parseInt(el.value, 10); if (n >= 1 && n <= 120) { S.jours = n; rendre(); } }
+    if (el.matches('[data-f-chf]')) { S.fact.chf = el.value; rendre(); }
+    if (el.matches('[data-f-lib]')) { S.fact.lib = el.value; rendre(); }
+  });
+  function remplirChamps() {
+    document.querySelector('[data-c="avant"]').value = S.avant;
+    document.querySelector('[data-c="apres"]').value = S.apres;
+    document.querySelector('[data-c-jours]').value = S.jours;
+  }
+
+  /* ---------- Réponses : sous chaque question, gardées dans le navigateur ---------- */
+  var CLE = 'maquette-lignes-conditions-v2-2026-11-21', rep = {};
+  try { rep = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { rep = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(rep)); } catch (e) { /* stockage refusé : la page marche sans */ } }
+  function recap() {
+    var l = [];
+    document.querySelectorAll('.decision').forEach(function (dv) { var id = dv.dataset.id, r = rep[id] || {}; if (!r.v && !r.c) return; l.push((id === 'R' ? 'Remarques' : id) + ' : ' + (r.v || (id === 'R' ? '' : '?')) + (r.c ? (r.v ? '. ' : '') + r.c : '')); });
+    document.querySelector('[data-recap]').value = l.length ? l.join('\n') : '(aucune réponse encore)';
+  }
+  document.querySelectorAll('.decision').forEach(function (dv) {
+    var id = dv.dataset.id, r = rep[id] || {};
+    dv.querySelectorAll('.opts button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.v === r.v));
+      b.addEventListener('click', function () {
+        rep[id] = rep[id] || {}; rep[id].v = rep[id].v === b.dataset.v ? '' : b.dataset.v;
+        dv.querySelectorAll('.opts button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.v === rep[id].v)); });
+        if (id === 'D4' && (rep[id].v === 'A' || rep[id].v === 'B')) { S.place = rep[id].v === 'A' ? 'liste' : 'sous'; rendre(); }
+        garder(); recap();
+      });
+    });
+    var ta = dv.querySelector('textarea'); ta.value = r.c || '';
+    ta.addEventListener('input', function () { rep[id] = rep[id] || {}; rep[id].c = ta.value.trim(); garder(); recap(); });
+  });
+  document.querySelector('[data-copier]').addEventListener('click', function () {
+    var ta = document.querySelector('[data-recap]'), ok = document.querySelector('[data-copie-ok]');
+    function fait() { ok.hidden = false; setTimeout(function () { ok.hidden = true; }, 2000); }
+    if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(fait, function () { ta.select(); document.execCommand('copy'); fait(); });
+    else { ta.select(); document.execCommand('copy'); fait(); }
+  });
+
+  S = exemple(); remplirChamps(); rendre(); recap();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

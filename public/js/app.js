@@ -1533,6 +1533,29 @@ function glisserLignes() {
   });
 }
 
+// Toucher une ligne l'ouvre, où qu'on la touche (Xavier, 2026-11-22), sauf ses champs, ses boutons, ses liens et ses
+// notes. Un défilement ne produit pas de clic, et glisserLignes arrête celui qui finit un glissé. Écouté sur le
+// document : les lignes remplacées après un enregistrement (envoyer) le gardent.
+function ouvrirLaLigne() {
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0) return;
+    const row = e.target.closest('.rows.une .row[data-glisse-ligne]');
+    if (!row || e.target.closest('input, button, select, textarea, label, a, form.q, form.p, .note')) return;
+    const nom = row.querySelector('a.nm');
+    if (nom) nom.click();
+  });
+}
+
+// Fenêtre de la ligne : un 0 tapé coche « Offerte » (D2, 2026-11-21), comme le serveur le fera à l'enregistrement.
+function zeroOffreLaLigne() {
+  document.addEventListener('input', (e) => {
+    const prix = e.target.closest('#ligne input[name="prix"]');
+    if (!prix) return;
+    const offerte = prix.form.querySelector('input[name="offerte"][value="offerte"]');
+    if (offerte && /^0+([.,]0*)?$/.test(prix.value.trim())) offerte.checked = true;
+  });
+}
+
 // Relecture (D5) : le montant suit la quantité et le prix pendant la frappe. Le serveur refait le calcul.
 function montantRelu() {
   const q = document.querySelector('[data-relu-quantite]');
@@ -1542,9 +1565,10 @@ function montantRelu() {
   const nombre = (v) => parseFloat(String(v).replace(/[\s'’]/g, '').replace(',', '.'));
   const maj = () => {
     const centimes = Math.round(nombre(q.value) * nombre(p.value) * 100);
+    // Jamais de « ? » (Xavier, 2026-11-21) : un 0 tapé offre la ligne (D2), un prix vide laisse la case vide.
     sortie.textContent = Number.isFinite(centimes) && centimes > 0
       ? 'CHF ' + (centimes / 100).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/'/g, '’')
-      : '?';
+      : (nombre(p.value) === 0 ? 'Offert' : '');
   };
   q.addEventListener('input', maj);
   p.addEventListener('input', maj);
@@ -1955,6 +1979,8 @@ document.addEventListener('DOMContentLoaded', () => {
   papiers();
   modelesEnGrand();
   glisserLignes();
+  ouvrirLaLigne();
+  zeroOffreLaLigne();
   montantRelu();
   adresses();
   enregistrementsAutomatiques();

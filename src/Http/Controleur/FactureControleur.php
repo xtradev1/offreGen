@@ -23,6 +23,7 @@ use OffreGen\Http\Flash;
 use OffreGen\Http\Formats;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
+use OffreGen\Offre\Offerte;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\Totaux;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -306,7 +307,7 @@ final class FactureControleur
             foreach ($lignesOffre as $l) {
                 $lignes[] = ['designation' => $l['designation'], 'quantite_milliemes' => $l['quantite_milliemes'], 'unite' => $l['unite'],
                     'prix_centimes' => $l['prix_centimes'], 'tva_pour_dix_mille' => $l['tva_pour_dix_mille'],
-                    'categorie' => $l['categorie'], 'produit_id' => $l['produit_id']];
+                    'categorie' => $l['categorie'], 'produit_id' => $l['produit_id'], 'offerte' => $l['offerte']];
             }
         }
         if ($entete === null || $erreurs !== []) {
@@ -749,7 +750,7 @@ final class FactureControleur
             'pdf' => false,
             'modifiable' => $f['statut'] === DepotFactures::BROUILLON,
             'etat' => self::etat($f, $this->aujourdhui()->format('Y-m-d')),
-            'manque' => count(array_filter($lignes, static fn (array $l): bool => $l['prix_centimes'] === 0)),
+            'manque' => count(array_filter($lignes, static fn (array $l): bool => Offerte::prixManquant($l))),
         ];
     }
 

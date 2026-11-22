@@ -164,7 +164,7 @@ final class ReglagesControleur
     /**
      * Une petite offre de peintre, pour l'aperçu d'un compte qui n'a encore rien dicté.
      *
-     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_id: null, client_nom: string, client_adresse: string, client_dicte: null, lieu_dicte: null, cree_le: string, modifiee_le: null, envoyee_le: null, postes_coupes: int, chantier_adresse: null, chantier_contact: null, chantier_acces: null, debut_travaux: null, duree_travaux: null, non_compris: null, visite_le: null}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: null, produit_id: null, categorie: string, tva_pour_dix_mille: null, tva_ligne: null, prix_dicte_centimes: null, prix_catalogue: null, piece: null}>}
+     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_id: null, client_nom: string, client_adresse: string, client_dicte: null, lieu_dicte: null, cree_le: string, modifiee_le: null, envoyee_le: null, postes_coupes: int, chantier_adresse: null, chantier_contact: null, chantier_acces: null, debut_travaux: null, duree_travaux: null, non_compris: null, visite_le: null}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, a_verifier: int, entendu: null, produit_id: null, categorie: string, tva_pour_dix_mille: null, tva_ligne: null, prix_dicte_centimes: null, prix_catalogue: null, piece: null}>}
      */
     private static function exemple(\DateTimeImmutable $maintenant): array
     {
@@ -178,7 +178,7 @@ final class ReglagesControleur
                   ['Peinture', 'Peinture murale, deux couches', 42000, 'm²', 1850],
                   ['Peinture', 'Peinture du plafond', 18000, 'm²', 2100]] as $i => [$categorie, $designation, $quantite, $unite, $prix]) {
             $lignes[] = ['id' => $i + 1, 'offre_id' => 0, 'rang' => $i + 1, 'designation' => $designation, 'quantite_milliemes' => $quantite,
-                         'unite' => $unite, 'prix_centimes' => $prix, 'a_verifier' => 0, 'entendu' => null, 'produit_id' => null, 'categorie' => $categorie, 'tva_pour_dix_mille' => null, 'tva_ligne' => null, 'prix_dicte_centimes' => null, 'prix_catalogue' => null, 'piece' => null];
+                         'unite' => $unite, 'prix_centimes' => $prix, 'offerte' => 0, 'a_verifier' => 0, 'entendu' => null, 'produit_id' => null, 'categorie' => $categorie, 'tva_pour_dix_mille' => null, 'tva_ligne' => null, 'prix_dicte_centimes' => null, 'prix_catalogue' => null, 'piece' => null];
         }
         return [$offre, $lignes];
     }

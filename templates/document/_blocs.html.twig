@@ -72,8 +72,8 @@
             <td class="{{ z|trim }}">{{ x.l.designation }}{% if d.t.par_taux|length > 1 and (x.l.tva_pour_dix_mille ?? d.t.taux) != d.t.taux %}<span class="doc-tva"> · TVA {{ x.l.tva_pour_dix_mille|taux }}</span>{% endif %}</td>
             <td class="n{{ z }}">{{ x.l.quantite_milliemes|quantite }}{% if not unite %}&nbsp;{{ x.l.unite }}{% endif %}</td>
             {% if unite %}<td class="doc-u{{ z }}">{{ x.l.unite }}</td>{% endif %}
-            <td class="n{{ z }}">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.l.prix_centimes|montant }}{% endif %}</td>
-            <td class="n{{ z }}">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.total|montant }}{% endif %}</td>
+            <td class="n{{ z }}">{{ _self.prix_unitaire(x) }}</td>
+            <td class="n{{ z }}">{{ _self.montant_ligne(x) }}</td>
           </tr>
         {% endfor %}
         {# « Général » n'a pas de sous-total : « Total général » se confondrait avec le total de l'offre (sous-chantier 28). #}
@@ -82,6 +82,11 @@
     </tbody>
   </table>
 {% endmacro %}
+
+{# Prix et montant d'une ligne (Xavier, 2026-11-21) : jamais de « ? », un prix manquant laisse la case vide ; une ligne
+   offerte montre son prix barré, ou « Offert » seul quand il est à 0 (D1). #}
+{% macro prix_unitaire(x) %}{% if x.l.offerte ?? false %}{% if x.l.prix_centimes > 0 %}<s>{{ x.l.prix_centimes|montant }}</s>{% endif %}{% elseif x.l.prix_centimes > 0 %}{{ x.l.prix_centimes|montant }}{% endif %}{% endmacro %}
+{% macro montant_ligne(x) %}{% if x.l.offerte ?? false %}{% if x.l.prix_centimes > 0 %}<s>{{ x.barre|montant }}</s> {% endif %}<b>Offert</b>{% elseif x.l.prix_centimes > 0 %}{{ x.total|montant }}{% endif %}{% endmacro %}
 
 {# La lettre d'un poste, de A à Z ; au-delà, son rang. #}
 {% macro lettre(rang) %}{{ rang < 26 ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'|slice(rang, 1) : rang + 1 }}{% endmacro %}
@@ -100,8 +105,8 @@
             <td class="doc-po">{% if loop.first %}<b class="c-texte">{{ g.nom }}</b>{% if loop.last and avec_total %}<br>{{ g.total|montant }}{% endif %}{% elseif loop.index == 2 and avec_total %}{{ g.total|montant }}{% endif %}</td>
             <td>{{ x.l.designation }}{% if d.t.par_taux|length > 1 and (x.l.tva_pour_dix_mille ?? d.t.taux) != d.t.taux %}<span class="doc-tva"> · TVA {{ x.l.tva_pour_dix_mille|taux }}</span>{% endif %}</td>
             <td class="n">{{ x.l.quantite_milliemes|quantite }}&nbsp;{{ x.l.unite }}</td>
-            <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.l.prix_centimes|montant }}{% endif %}</td>
-            <td class="n">{% if x.l.prix_centimes == 0 %}?{% else %}{{ x.total|montant }}{% endif %}</td>
+            <td class="n">{{ _self.prix_unitaire(x) }}</td>
+            <td class="n">{{ _self.montant_ligne(x) }}</td>
           </tr>
         {% endfor %}
       {% endfor %}

@@ -33,9 +33,18 @@
     </div>
     <div class="champ">
       <label for="prix">Prix unitaire (CHF)</label>
-      <input id="prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?"{{ f.invalide(erreurs, 'prix') }}>
+      <input id="prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix"{{ f.invalide(erreurs, 'prix') }}>
       {{ f.erreur(erreurs, 'prix') }}
     </div>
+    {# Ligne offerte (D1, D17, 2026-11-21) : « Offerte » garde le prix, barré sur le document ; un 0 tapé donne « Offert » seul. #}
+    <fieldset class="groupe choix">
+      <legend>Prix de la ligne</legend>
+      <div class="puces">
+        <label class="puce"><input type="radio" name="offerte" value="facturee"{% if champs.offerte != 'offerte' %} checked{% endif %}>Facturée</label>
+        <label class="puce"><input type="radio" name="offerte" value="offerte"{% if champs.offerte == 'offerte' %} checked{% endif %}>Offerte</label>
+      </div>
+      <p class="muted petit">Offerte&nbsp;: le prix reste sur {{ cible.document }}, barré. Pour «&nbsp;Offert&nbsp;» sans prix, tapez 0.</p>
+    </fieldset>
     {# Offre rangée par pièce (sous-chantier 28, P5) : la ligne se déplace d'une pièce à l'autre ; vide, « Général ». #}
     {% if pieces is not empty %}
       <div class="champ">

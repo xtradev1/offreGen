@@ -16,7 +16,7 @@
     <a class="t carte-lien" href="/offres/{{ offre.id }}/modifier" data-en-feuille-pc><span><b>{{ offre.titre }}</b><small>Objet de l'offre</small></span></a>
     {% if factures is not empty %}<span class="factures-offre">{% for f in factures %}<a class="etiquette facture{% if f.statut == 'annulee' %} annulee{% endif %}" href="/factures/{{ f.id }}{{ f.statut != 'brouillon' ? '/apercu' }}">{{ f.numero ? 'Facture ' ~ f.numero : 'Brouillon de facture' }}</a>{% endfor %}</span>{% endif %}
     {% set a_relire = 0 %}
-    {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or r.l.prix_centimes == 0 %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
+    {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or (r.l.prix_centimes == 0 and not r.l.offerte) %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
     <span class="meta"><span class="status {{ a_relire > 0 ? 'a-verifier' : (offre.envoyee_le ? 'pret' : 'relue') }}">{% if a_relire > 0 %}À relire{% elseif offre.envoyee_le %}Envoyée le {{ offre.envoyee_le|date_locale|slice(0, 10) }}{% else %}Prête{% endif %}</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span>
       {# Sur PC, le document à côté des lignes, qui suit chaque correction (D13). Sans JavaScript, le bouton reste caché. #}
       <button class="btn pc-seul doc-cote" type="button" data-doc-cote="/offres/{{ offre.id }}/document" aria-pressed="false" hidden>Document à côté</button></span>
@@ -48,7 +48,7 @@
   {# Décision D3 (2026-11-15) : le total reste visible en bas ; l'action principale suit l'état de l'offre.
      Une ligne à vérifier ou sans prix demande d'abord la relecture, une à la fois (D5). #}
   {% set a_relire = 0 %}
-  {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or r.l.prix_centimes == 0 %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
+  {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or (r.l.prix_centimes == 0 and not r.l.offerte) %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
   {% set avec_tva = totaux.par_taux|filter(g => g.taux > 0)|length > 0 %}
   <div class="totalbar" data-total-fixe><span>Total{% if avec_tva %} TTC{% endif %}</span><b>{{ totaux.ttc|chf }}</b></div>
   <div class="actionbar">

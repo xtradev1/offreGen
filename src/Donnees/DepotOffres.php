@@ -16,7 +16,7 @@ use OffreGen\Offre\LigneExtraite;
  * client_nom et client_adresse donnent l'un ou l'autre, pour l'écran et le document.
  *
  * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null, postes_coupes: int, chantier_adresse: string|null, chantier_contact: string|null, chantier_acces: string|null, debut_travaux: string|null, duree_travaux: string|null, non_compris: string|null, visite_le: string|null}
- * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null, prix_dicte_centimes: int|null, prix_catalogue: int|null, piece: string|null}
+ * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null, prix_dicte_centimes: int|null, prix_catalogue: int|null, piece: string|null}
  */
 final class DepotOffres implements SupportLignes
 {
@@ -27,7 +27,7 @@ final class DepotOffres implements SupportLignes
          FROM offre o LEFT JOIN client c ON c.id = o.client_id AND c.artisan_id = o.artisan_id';
 
     /** Colonnes d'une ligne ; la catégorie vient du produit du catalogue, s'il existe encore. */
-    private const COLONNES_LIGNE = 'l.id, l.offre_id, l.rang, l.designation, l.quantite_milliemes, l.unite, l.prix_centimes, l.a_verifier, l.entendu, l.produit_id, p.categorie,
+    private const COLONNES_LIGNE = 'l.id, l.offre_id, l.rang, l.designation, l.quantite_milliemes, l.unite, l.prix_centimes, l.offerte, l.a_verifier, l.entendu, l.produit_id, p.categorie,
             COALESCE(l.tva_pour_dix_mille, p.tva_pour_dix_mille) AS tva_pour_dix_mille, l.tva_pour_dix_mille AS tva_ligne,
             l.prix_dicte_centimes, p.prix_centimes AS prix_catalogue, l.piece
          FROM ligne l LEFT JOIN produit p ON p.id = l.produit_id AND p.artisan_id = l.artisan_id';
@@ -400,7 +400,15 @@ final class DepotOffres implements SupportLignes
         });
     }
 
-    /** Une ligne libre gardée au catalogue devient la ligne de ce produit. */
+    /** Ligne offerte ou facturée (D1, 2026-11-21) ; le prix ne change pas. */
+    public function changerOfferte(int $offreId, int $ligneId, bool $offerte): bool
+    {
+        return $this->base->ecrire(
+            'UPDATE ligne SET offerte = :v WHERE id = :l AND offre_id = :o AND artisan_id = :a AND supprimee_le IS NULL',
+            ['v' => $offerte ? 1 : 0, 'l' => $ligneId, 'o' => $offreId, 'a' => $this->portee->artisanId],
+        ) === 1 || $this->ligne($offreId, $ligneId) !== null;
+    }
+
     /** Le taux d'exception d'une ligne (D11) ; null : celui de son produit, ou de l'entreprise. */
     public function changerTauxLigne(int $offreId, int $ligneId, ?int $tauxPourDixMille): bool
     {
@@ -422,6 +430,7 @@ final class DepotOffres implements SupportLignes
         );
     }
 
+    /** Une ligne libre gardée au catalogue devient la ligne de ce produit. */
     public function rattacherProduit(int $offreId, int $ligneId, int $produitId): void
     {
         $this->base->ecrire(
