@@ -23,7 +23,7 @@
   {% if d.facture %}{% set cases = cases|merge([['Échéance', d.f.echeance|jour], ['Référence', _self.ref(d)]]) %}
   {% else %}
     {% set cases = cases|merge([["Valable jusqu'au", d.valable_jusqu_au]]) %}
-    {% if d.chantier and d.chantier.adresse %}{% set cases = cases|merge([['Chantier', d.chantier.adresse]]) %}{% endif %}
+    {% if d.chantier and d.chantier.adresse %}{% set cases = cases|merge([[d.mots.doc_lieu, d.chantier.adresse]]) %}{% endif %}
     {% if d.r.contactNom %}{% set cases = cases|merge([['Votre contact', d.r.contactNom]]) %}{% endif %}
   {% endif %}
   <table class="doc-infos"><tr>{% for case in cases %}<td class="{{ o.td ?? '' }}"><div class="doc-lab">{{ case[0] }}</div>{{ case[1] }}</td>{% endfor %}</tr></table>
@@ -41,7 +41,7 @@
   {%- if (o.lieu ?? false) and d.r.localite %}{{ d.r.localite }}, le {% endif %}{{ d.doc_date -}}
   {%- if d.facture %} · échéance le {{ d.f.echeance|jour }} · {{ _self.ref(d) -}}
   {%- else %} · valable jusqu'au {{ d.valable_jusqu_au -}}
-    {%- if d.chantier and d.chantier.adresse %} · chantier&nbsp;: {{ d.chantier.adresse }}{% endif -%}
+    {%- if d.chantier and d.chantier.adresse %} · {{ d.mots.doc_lieu|lower }}&nbsp;: {{ d.chantier.adresse }}{% endif -%}
     {%- if (o.contact ?? false) and d.r.contactNom %} · votre contact&nbsp;: {{ d.r.contactNom }}{% endif -%}
   {%- endif -%}
 {% endmacro %}
@@ -152,11 +152,11 @@
       {% if d.escompte ?? null %}<li>{{ d.escompte }}</li>{% endif %}{% endif %}
       <li>Montants en francs suisses{% if d.avec_tva %}, TVA comprise dans le total{% endif %}.</li>
     {% else %}
-      <li>Paiement&nbsp;: {{ d.r.conditionsPaiement }}</li>
+      <li>Paiement&nbsp;: {{ d.activite.dire(d.r.conditionsPaiement) }}</li>
       {% if d.r.phraseEscompte %}<li>{{ d.r.phraseEscompte }}</li>{% endif %}
       {# Texte libre de l'artisan : son point final, s'il en a mis un, ne double pas le nôtre. #}
       {% set debut = d.chantier ? d.chantier.debut|trim('.', 'right') : '' %}{% set duree = d.chantier ? d.chantier.duree|trim('.', 'right') : '' %}
-      {% if (o.delais ?? true) and (debut or duree) %}<li>{% if debut %}Début des travaux&nbsp;: {{ debut }}.{% endif %}{% if debut and duree %} {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}.{% endif %}</li>{% endif %}
+      {% if (o.delais ?? true) and (debut or duree) %}<li>{% if debut %}{{ d.mots.debut }}&nbsp;: {{ debut }}.{% endif %}{% if debut and duree %} {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}.{% endif %}</li>{% endif %}
       <li>Offre valable jusqu'au {{ d.valable_jusqu_au }}. Prix en francs suisses{% if d.avec_tva %}, TVA comprise dans le total{% endif %}.</li>
     {% endif %}
   {% endset %}

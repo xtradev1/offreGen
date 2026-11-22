@@ -22,8 +22,13 @@ final class CatalogueFictif
         'sanitaire' => 'Sanitaire',
         'menuisier' => 'Menuisier',
         'sols' => 'Poseur de sols',
-        'paysagiste' => 'Paysagiste',
+        'paysagiste' => 'Jardinier, paysagiste',
         'autre' => 'Autre métier',
+        // Prestations (décision de Xavier du 2026-11-22) : leur activité est fixée par Compte\Activite::duMetier.
+        'informatique' => 'Informatique',
+        'conseil' => 'Conseil',
+        'marketing' => 'Marketing',
+        'prestation' => 'Autre prestation',
     ];
 
     /** [catégorie, désignation, unité, prix en francs, synonymes] */
@@ -155,6 +160,64 @@ final class CatalogueFictif
             ['Finitions', 'Nettoyage de fin de chantier', 'forfait', 220, 'nettoyage'],
             ['Divers', 'Déplacement', 'forfait', 60, 'déplacement'],
         ],
+        // Prestations : repères du 2026-11-22 dans CATALOGUES.md (S16 à S18), tarifs d'indépendants et de petites agences.
+        'informatique' => [
+            ['Conseil', 'Analyse des besoins et cahier des charges', 'forfait', 900, 'analyse, cahier des charges, besoins'],
+            ['Conseil', 'Heure de conseil', 'h', 160, 'conseil, heure de conseil'],
+            ['Développement', 'Heure de développement', 'h', 140, 'développement, programmation'],
+            ['Développement', 'Journée de développement', 'jour', 1100, 'journée, jour de développement'],
+            ['Développement', 'Site vitrine, cinq pages', 'forfait', 3500, 'site vitrine, site web, site internet'],
+            ['Installation', "Installation d'un poste de travail", 'pce', 250, 'poste, ordinateur, PC'],
+            ['Installation', 'Migration de la messagerie, par boîte', 'pce', 90, 'messagerie, boîte, mail'],
+            ['Maintenance', 'Maintenance et mises à jour', 'mois', 180, 'maintenance, mises à jour, contrat'],
+            ['Maintenance', 'Hébergement et nom de domaine', 'mois', 35, 'hébergement, domaine'],
+            ['Maintenance', 'Sauvegarde externalisée', 'mois', 45, 'sauvegarde, backup'],
+            ['Formation', 'Formation des utilisateurs, demi-journée', 'forfait', 650, 'formation'],
+            ['Divers', 'Déplacement', 'forfait', 80, 'déplacement'],
+        ],
+        'conseil' => [
+            ['Diagnostic', 'Entretien de cadrage', 'forfait', 450, 'cadrage, premier entretien'],
+            ['Diagnostic', 'État des lieux et rapport', 'forfait', 2400, 'état des lieux, diagnostic, audit'],
+            ['Accompagnement', 'Heure de conseil', 'h', 180, 'heure, conseil'],
+            ['Accompagnement', 'Journée de conseil', 'jour', 1500, 'journée, jour'],
+            ['Accompagnement', 'Demi-journée de conseil', 'pce', 800, 'demi-journée'],
+            ['Accompagnement', 'Suivi mensuel', 'mois', 900, 'suivi, accompagnement'],
+            ['Ateliers', "Animation d'un atelier, demi-journée", 'forfait', 1200, 'atelier, animation'],
+            ['Ateliers', "Préparation d'un atelier", 'forfait', 600, 'préparation'],
+            ['Livrables', 'Rédaction du rapport final', 'forfait', 1200, 'rapport final, rédaction'],
+            ['Livrables', 'Présentation à la direction', 'forfait', 600, 'présentation, restitution'],
+            ['Formation', 'Journée de formation', 'jour', 1800, 'formation'],
+            ['Divers', 'Déplacement', 'forfait', 80, 'déplacement, frais'],
+        ],
+        'marketing' => [
+            ['Stratégie', 'Plan de communication', 'forfait', 2400, 'plan de communication, stratégie'],
+            ['Stratégie', 'Heure de conseil', 'h', 140, 'conseil, heure'],
+            ['Création', 'Logo et identité visuelle', 'forfait', 2800, 'logo, identité, charte graphique'],
+            ['Création', 'Flyer ou affiche, création', 'pce', 450, 'flyer, affiche, dépliant'],
+            ['Création', 'Heure de graphisme', 'h', 120, 'graphisme, mise en page'],
+            ['Contenus', "Rédaction d'un article", 'pce', 350, 'article, rédaction, texte'],
+            ['Contenus', 'Reportage photo, demi-journée', 'forfait', 900, 'photo, reportage'],
+            ['Contenus', "Lettre d'information, création et envoi", 'pce', 400, "newsletter, lettre d'information"],
+            ['Réseaux sociaux', 'Gestion des réseaux sociaux', 'mois', 1500, 'réseaux sociaux, publications'],
+            ['Réseaux sociaux', 'Publication, texte et visuel', 'pce', 120, 'publication, post'],
+            ['Publicité', 'Gestion des campagnes en ligne', 'mois', 1200, 'campagne, publicité en ligne'],
+            ['Divers', 'Déplacement', 'forfait', 80, 'déplacement'],
+        ],
+        // Général des prestations, pour « Autre prestation » : des estimations, comme le général du bâtiment.
+        'prestation' => [
+            ['Prestations', 'Heure de travail', 'h', 120, 'heure'],
+            ['Prestations', 'Demi-journée', 'pce', 480, 'demi-journée'],
+            ['Prestations', 'Journée', 'jour', 950, 'journée, jour'],
+            ['Préparation', 'Premier entretien', 'forfait', 150, 'entretien, rencontre'],
+            ['Préparation', 'Analyse de la demande', 'forfait', 400, 'analyse, étude'],
+            ['Suivi', 'Suivi mensuel', 'mois', 300, 'suivi, abonnement'],
+            ['Suivi', 'Séance de suivi', 'pce', 150, 'séance, point'],
+            ['Livrables', 'Rapport écrit', 'forfait', 500, 'rapport, document'],
+            ['Livrables', 'Présentation', 'forfait', 350, 'présentation'],
+            ['Formation', 'Formation, demi-journée', 'forfait', 600, 'formation, cours'],
+            ['Frais', 'Frais et fournitures', 'forfait', 80, 'frais, fournitures'],
+            ['Frais', 'Déplacement', 'forfait', 80, 'déplacement'],
+        ],
     ];
 
     /** @return list<string> les clés des métiers, dans l'ordre d'affichage */
@@ -266,18 +329,44 @@ final class CatalogueFictif
                 'Installation de chantier' => 1, 'Benne, pose et enlèvement' => 1, 'Heure de travail' => 12,
                 'Location de machine, par jour' => 2, 'Nettoyage de fin de chantier' => 1, 'Déplacement' => 1]],
         ],
+        'informatique' => [
+            ['Site vitrine de la boutique', self::MADAME, 2, [
+                'Analyse des besoins et cahier des charges' => 1, 'Site vitrine, cinq pages' => 1, 'Hébergement et nom de domaine' => 12,
+                'Formation des utilisateurs, demi-journée' => 1]],
+            ['Trois postes et la messagerie', self::MONSIEUR, 6, [
+                "Installation d'un poste de travail" => 3, 'Migration de la messagerie, par boîte' => 3, 'Sauvegarde externalisée' => 12,
+                'Heure de conseil' => 2, 'Déplacement' => 1]],
+        ],
+        'conseil' => [
+            ["État des lieux de l'organisation", self::MONSIEUR, 2, [
+                'Entretien de cadrage' => 1, 'État des lieux et rapport' => 1, 'Présentation à la direction' => 1, 'Déplacement' => 2]],
+            ['Accompagnement de six mois', self::MADAME, 6, [
+                'Journée de conseil' => 4, "Animation d'un atelier, demi-journée" => 2, "Préparation d'un atelier" => 2, 'Suivi mensuel' => 6]],
+        ],
+        'marketing' => [
+            ['Identité visuelle et flyer', self::MADAME, 2, [
+                'Logo et identité visuelle' => 1, 'Flyer ou affiche, création' => 2, 'Heure de graphisme' => 3]],
+            ['Communication du trimestre', self::MONSIEUR, 6, [
+                'Plan de communication' => 1, 'Gestion des réseaux sociaux' => 3, "Rédaction d'un article" => 3, 'Reportage photo, demi-journée' => 1]],
+        ],
+        'prestation' => [
+            ['Mission de deux jours', self::MONSIEUR, 2, [
+                'Premier entretien' => 1, 'Journée' => 2, 'Rapport écrit' => 1, 'Déplacement' => 2]],
+            ['Suivi du semestre', self::MADAME, 6, [
+                'Analyse de la demande' => 1, 'Suivi mensuel' => 6, 'Séance de suivi' => 2, 'Présentation' => 1]],
+        ],
     ];
 
     /** @return list<array{titre: string, client: string, adresse: string, il_y_a_jours: int, lignes: array<string, int>}> */
     public static function offres(string $metier): array
     {
         self::produits($metier);
-        return array_values(array_map(static fn (array $o): array => [
+        return array_map(static fn (array $o): array => [
             'titre' => $o[0],
             'client' => $o[1][0],
             'adresse' => $o[1][1],
             'il_y_a_jours' => $o[2],
             'lignes' => $o[3],
-        ], self::OFFRES[$metier]));
+        ], self::OFFRES[$metier]);
     }
 }

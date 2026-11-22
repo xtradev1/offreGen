@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Catalogue\CatalogueFictif;
+use OffreGen\Compte\Activite;
 use OffreGen\Compte\Demos;
 use OffreGen\Compte\LiensAcces;
 use OffreGen\Donnees\Dates;
@@ -38,6 +39,8 @@ final class DemoControleur
         return $this->page('demo_entrer.html.twig', [
             'action' => '/d/' . $p['jeton'],
             'metier' => $metier,
+            // « visite » ou « offre » : le visiteur n'a pas encore de session, l'activité vient du métier de la démo.
+            'premiere' => Activite::duMetier($demo['metier'])->mots()['premiere'],
             'courriel' => $saisi ?? $demo['courriel_saisi'] ?? '',
             'par_courriel' => $this->c->messagerieReelle(),
             'erreur' => $erreur,

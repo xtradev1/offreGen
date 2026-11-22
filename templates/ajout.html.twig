@@ -18,15 +18,17 @@
   {# Offre rangée par pièce (sous-chantier 28, P4) : la pièce de la ligne. Des liens et un petit formulaire : sans
      JavaScript ; la pièce choisie part avec chaque ajout, en champ caché. #}
   {% if pieces is not empty %}
-    <nav class="pieces-ajout" aria-label="Pièce de la ligne">
-      <span class="lbl">Pièce</span>
+    {# « Pièce » ou « Zone », selon l'activité du compte (Compte\Activite). #}
+    {% set groupe = mots().groupe %}
+    <nav class="pieces-ajout" aria-label="{{ groupe|capitalize }} de la ligne">
+      <span class="lbl">{{ groupe|capitalize }}</span>
       <div class="puces-liens">
         {% for nom in [''] | merge(pieces) %}
           <a class="puce-lien" href="{{ cible.base }}/ajouter?piece={{ nom|url_encode }}"{% if nom == piece_choisie %} aria-current="true"{% endif %}>{{ nom == '' ? 'Général' : nom }}</a>
         {% endfor %}
       </div>
       <form class="piece-autre" method="get" action="{{ cible.base }}/ajouter">
-        <input name="piece" placeholder="Autre pièce" aria-label="Autre pièce" maxlength="80" autocomplete="off">
+        <input name="piece" placeholder="Autre {{ groupe }}" aria-label="Autre {{ groupe }}" maxlength="80" autocomplete="off">
         <button class="btn" type="submit">Choisir</button>
       </form>
     </nav>

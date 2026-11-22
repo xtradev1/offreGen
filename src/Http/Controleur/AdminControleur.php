@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Catalogue\CatalogueFictif;
+use OffreGen\Compte\Activite;
 use OffreGen\Compte\ArtisansEquipe;
 use OffreGen\Compte\Demos;
 use OffreGen\Compte\Equipe;
@@ -112,7 +113,8 @@ final class AdminControleur
         return $this->page('admin/demo_nouvelle.html.twig', [
             'actif' => 'artisans',
             'titre' => 'Nouvelle démo',
-            'metiers' => CatalogueFictif::libelles(),
+            // Les métiers sous leur activité : Bâtiment, Extérieur, Prestations (Compte\Activite, 2026-11-22).
+            'groupes' => Activite::grouper(CatalogueFictif::libelles()),
             'saisie' => $saisie ?? ['metier' => '', 'metier_saisi' => '', 'entreprise' => '', 'courriel' => ''],
             'erreur' => $erreur,
         ], $code);
@@ -157,7 +159,9 @@ final class AdminControleur
     {
         $demo = $this->demo((int) $p['id']);
         $lien = $this->c->liensAcces()->emettreDemo($demo['id'], LiensAcces::DEMO_MSG);
-        $message = "Bonjour, voici votre démo {$this->c->nomApplication()}\u{00A0}: $lien\nLe lien est valable 24 heures et sert une seule fois. Ouvrez-le sur votre téléphone, indiquez votre courriel et dictez votre première visite.";
+        // « première visite » ou « première offre » : le prospect lit ce message, dans les mots de l'activité de son métier.
+        $premiere = Activite::duMetier($demo['metier'])->mots()['premiere'];
+        $message = "Bonjour, voici votre démo {$this->c->nomApplication()}\u{00A0}: $lien\nLe lien est valable 24 heures et sert une seule fois. Ouvrez-le sur votre téléphone, indiquez votre courriel et dictez votre première $premiere.";
         return $this->page('admin/demo_message.html.twig', ['actif' => 'artisans', 'titre' => $demo['entreprise'], 'compte' => $demo, 'metier' => self::metier($demo), 'message' => $message]);
     }
 

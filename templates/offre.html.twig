@@ -39,7 +39,7 @@
   {# Textes avant et après les lignes (D5 A) ; dans Lettre, le texte avant remplace la phrase de Ma marque (D6 A), le
      texte après se place avant la formule de politesse (D16 A). #}
   {% import _self as o %}{% set lettre = m.modele == 'lettre' %}
-  {{ o.texte(offre, 'avant', "Texte avant les lignes", lettre ? r.lettre.texte('offre_debut', offre.client_nom) : 'Facultatif') }}
+  {{ o.texte(offre, 'avant', "Texte avant les lignes", lettre ? r.lettre.texte('offre_debut', offre.client_nom, activite()) : 'Facultatif') }}
   {% include '_lignes.html.twig' with {base: '/offres/' ~ offre.id, modifiable: true, ranger: true, vide:"Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un."} %}
   {% include '_ajout_pc.html.twig' with {base: '/offres/' ~ offre.id} %}
 

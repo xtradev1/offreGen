@@ -63,8 +63,10 @@
                 <label for="libelle">Libellé sur la facture</label>
                 <input id="libelle" name="libelle" value="{{ champs.libelle }}" maxlength="200" autocomplete="off" placeholder="Celui des conditions, par exemple «&nbsp;Acompte 1, selon offre n°&nbsp;{{ offre_numero }}&nbsp;»"{{ f.invalide(erreurs, 'libelle') }}>
                 <div class="puces">
+                  {# Les mots de l'activité du compte (Compte\Activite::dire) : « Au début de la prestation », « À mi-parcours ». #}
+                  {% set a = activite() %}
                   {% for court, long in {'À la commande': 'Acompte à la commande', 'Au début des travaux': 'Acompte au début des travaux', 'À mi-chantier': 'Acompte à mi-chantier'} %}
-                    <button class="puce" type="button" data-libelle-puce="{{ long }}, selon offre n°&nbsp;{{ offre_numero }}">{{ court }}</button>
+                    <button class="puce" type="button" data-libelle-puce="{{ a.dire(long) }}, selon offre n°&nbsp;{{ offre_numero }}">{{ a.dire(court) }}</button>
                   {% endfor %}
                 </div>
                 {{ f.erreur(erreurs, 'libelle') }}
@@ -76,7 +78,7 @@
             <div class="finale" data-si-finale{% if champs.genre != 'finale' %} hidden{% endif %}>
               <p class="muted petit">Toutes les lignes de l'offre{% if deja > 0 %}, moins les acomptes déjà facturés ({{ deja|chf }}){% endif %}.</p>
               <button class="btn" type="submit" name="suite" value="corriger">Corriger des lignes d'abord</button>
-              <p class="muted petit">Quantités réelles, travaux en plus&nbsp;: la facture prendra son numéro à la création.</p>
+              <p class="muted petit">Quantités réelles, {{ mots().travaux }} en plus&nbsp;: la facture prendra son numéro à la création.</p>
             </div>
           {% endif %}
 

@@ -207,3 +207,109 @@ Pages ouvertes le 2026-11-19. Les deux listes Hornbach (S8, S14) sont lues dans 
 | S13 | https://www.vs.ch/de/web/energie/die-fenster-ersetzen | fenêtre bois double vitrage environ 1 200 CHF, porte-fenêtre environ 1 800 CHF, sans dimension donnée |
 | S14 | https://media.hornbach.ch/cmsm/ch/fr-ch/innentueren.pdf | pose d'une porte intérieure 149 à 189 CHF, démontage 60 CHF (liste du 13.10.2022) |
 | S15 | https://www.ikea.com/ch/en/customer-service/services/kitchen-installation/ | pose d'une petite cuisine (moins de 2,5 m) dès 500 CHF, prix moyens de 2018 d'un partenaire |
+
+## Prestations (activités, décision de Xavier du 2026-11-22)
+
+Trois métiers et un catalogue général, pour l'activité « Prestations » (`docs/plans/2026-11-22_familles-activite/`). Les prix sont inventés, placés dans les fourchettes des sources S16 à S18 quand elles en donnent une. Ces sources sont des sites de vendeurs et des blogs : aucune statistique officielle n'existe sur ces tarifs. Les forfaits (site vitrine, logo, état des lieux) sont des estimations de Claude sans repère publié : Xavier les corrige à la recette.
+
+### Informatique
+
+Repères : développeur confirmé 100 à 150 CHF/h (S16) ; ingénierie en indépendant 100 à 250 CHF/h (S17).
+
+| Catégorie | Désignation | Unité | Prix | Synonymes |
+|---|---|---|---|---|
+| Conseil | Analyse des besoins et cahier des charges | forfait | 900 | analyse, cahier des charges, besoins |
+| Conseil | Heure de conseil | h | 160 | conseil, heure de conseil |
+| Développement | Heure de développement | h | 140 | développement, programmation |
+| Développement | Journée de développement | jour | 1100 | journée, jour de développement |
+| Développement | Site vitrine, cinq pages | forfait | 3500 | site vitrine, site web, site internet |
+| Installation | Installation d'un poste de travail | pce | 250 | poste, ordinateur, PC |
+| Installation | Migration de la messagerie, par boîte | pce | 90 | messagerie, boîte, mail |
+| Maintenance | Maintenance et mises à jour | mois | 180 | maintenance, mises à jour, contrat |
+| Maintenance | Hébergement et nom de domaine | mois | 35 | hébergement, domaine |
+| Maintenance | Sauvegarde externalisée | mois | 45 | sauvegarde, backup |
+| Formation | Formation des utilisateurs, demi-journée | forfait | 650 | formation |
+| Divers | Déplacement | forfait | 80 | déplacement |
+
+Offres d'exemple :
+- « Site vitrine de la boutique », Madame Essai, il y a 2 jours : analyse 1, site vitrine 1, hébergement 12 mois, formation 1.
+- « Trois postes et la messagerie », Monsieur Modèle, il y a 6 jours : postes 3, boîtes 3, sauvegarde 12 mois, heure de conseil 2, déplacement 1.
+
+### Conseil
+
+Repères : journée d'un généraliste 960 à 1 120 CHF, d'un spécialiste 1 440 à 1 760 CHF, heure à 100 CHF au moins (S17) ; journée de 800 à 2 800 CHF selon l'expérience (S16).
+
+| Catégorie | Désignation | Unité | Prix | Synonymes |
+|---|---|---|---|---|
+| Diagnostic | Entretien de cadrage | forfait | 450 | cadrage, premier entretien |
+| Diagnostic | État des lieux et rapport | forfait | 2400 | état des lieux, diagnostic, audit |
+| Accompagnement | Heure de conseil | h | 180 | heure, conseil |
+| Accompagnement | Journée de conseil | jour | 1500 | journée, jour |
+| Accompagnement | Demi-journée de conseil | pce | 800 | demi-journée |
+| Accompagnement | Suivi mensuel | mois | 900 | suivi, accompagnement |
+| Ateliers | Animation d'un atelier, demi-journée | forfait | 1200 | atelier, animation |
+| Ateliers | Préparation d'un atelier | forfait | 600 | préparation |
+| Livrables | Rédaction du rapport final | forfait | 1200 | rapport final, rédaction |
+| Livrables | Présentation à la direction | forfait | 600 | présentation, restitution |
+| Formation | Journée de formation | jour | 1800 | formation |
+| Divers | Déplacement | forfait | 80 | déplacement, frais |
+
+Offres d'exemple :
+- « État des lieux de l'organisation », Monsieur Modèle, il y a 2 jours : cadrage 1, état des lieux 1, présentation 1, déplacement 2.
+- « Accompagnement de six mois », Madame Essai, il y a 6 jours : journée de conseil 4, animation d'atelier 2, préparation 2, suivi mensuel 6.
+
+### Marketing
+
+Repères : petite agence 120 à 160 CHF/h (S17) ; gestion des réseaux sociaux 1 500 à 4 000 CHF par mois, gestion des campagnes 1 200 à 4 000 CHF par mois hors budget publicitaire (S18). Aucun repère en francs pour un logo, un flyer ou un article.
+
+| Catégorie | Désignation | Unité | Prix | Synonymes |
+|---|---|---|---|---|
+| Stratégie | Plan de communication | forfait | 2400 | plan de communication, stratégie |
+| Stratégie | Heure de conseil | h | 140 | conseil, heure |
+| Création | Logo et identité visuelle | forfait | 2800 | logo, identité, charte graphique |
+| Création | Flyer ou affiche, création | pce | 450 | flyer, affiche, dépliant |
+| Création | Heure de graphisme | h | 120 | graphisme, mise en page |
+| Contenus | Rédaction d'un article | pce | 350 | article, rédaction, texte |
+| Contenus | Reportage photo, demi-journée | forfait | 900 | photo, reportage |
+| Contenus | Lettre d'information, création et envoi | pce | 400 | newsletter, lettre d'information |
+| Réseaux sociaux | Gestion des réseaux sociaux | mois | 1500 | réseaux sociaux, publications |
+| Réseaux sociaux | Publication, texte et visuel | pce | 120 | publication, post |
+| Publicité | Gestion des campagnes en ligne | mois | 1200 | campagne, publicité en ligne |
+| Divers | Déplacement | forfait | 80 | déplacement |
+
+Offres d'exemple :
+- « Identité visuelle et flyer », Madame Essai, il y a 2 jours : logo 1, flyer 2, heure de graphisme 3.
+- « Communication du trimestre », Monsieur Modèle, il y a 6 jours : plan de communication 1, réseaux sociaux 3 mois, article 3, reportage photo 1.
+
+### Général des prestations (pour « Autre prestation »)
+
+Tous les prix sont des estimations : le métier est inconnu, aucun repère ne s'applique.
+
+| Catégorie | Désignation | Unité | Prix | Synonymes |
+|---|---|---|---|---|
+| Prestations | Heure de travail | h | 120 | heure |
+| Prestations | Demi-journée | pce | 480 | demi-journée |
+| Prestations | Journée | jour | 950 | journée, jour |
+| Préparation | Premier entretien | forfait | 150 | entretien, rencontre |
+| Préparation | Analyse de la demande | forfait | 400 | analyse, étude |
+| Suivi | Suivi mensuel | mois | 300 | suivi, abonnement |
+| Suivi | Séance de suivi | pce | 150 | séance, point |
+| Livrables | Rapport écrit | forfait | 500 | rapport, document |
+| Livrables | Présentation | forfait | 350 | présentation |
+| Formation | Formation, demi-journée | forfait | 600 | formation, cours |
+| Frais | Frais et fournitures | forfait | 80 | frais, fournitures |
+| Frais | Déplacement | forfait | 80 | déplacement |
+
+Offres d'exemple :
+- « Mission de deux jours », Monsieur Modèle, il y a 2 jours : premier entretien 1, journée 2, rapport écrit 1, déplacement 2.
+- « Suivi du semestre », Madame Essai, il y a 6 jours : analyse de la demande 1, suivi mensuel 6, séance de suivi 2, présentation 1.
+
+### Sources des prestations
+
+Résultats d'une recherche du 2026-11-22, lus par Claude dans le résumé de la recherche : les pages n'ont pas été ouvertes une à une. À revérifier avant de citer un chiffre hors de ce dossier.
+
+| | Source | Ce qu'elle donne |
+|---|---|---|
+| S16 | https://www.jobbers.io/?p=122021 | développeur web junior 70 à 100 CHF/h, confirmé 100 à 150 CHF/h ; consultant en stratégie junior 800 à 1 280 CHF par jour, senior 1 440 à 2 800 CHF par jour |
+| S17 | https://magicheidi.ch/fr/hourly-rates | ingénierie en indépendant 100 à 250 CHF/h ; conseil, généraliste 960 à 1 120 CHF par jour, spécialiste 1 440 à 1 760 CHF par jour ; heure à 100 CHF au moins ; petites agences 120 à 160 CHF/h, grandes 160 à 200 CHF/h |
+| S18 | https://ewm.swiss/en/blog/digital-agencies-prices-switzerland-complete-guide | gestion des réseaux sociaux en agence 1 500 à 4 000 CHF par mois ; référencement 1 000 à 5 000 CHF par mois ; gestion publicitaire 1 200 à 4 000 CHF par mois, hors budget média |

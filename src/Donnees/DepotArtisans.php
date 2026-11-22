@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace OffreGen\Donnees;
 
+use OffreGen\Compte\Activite;
+
 /**
  * Les comptes. Hors portée par nature : on cherche un compte avant de savoir qui est connecté.
  * Sert la connexion et les commandes de bin/, jamais une page qui liste des comptes.
  *
- * @phpstan-type Artisan array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null, administrateur: int, version_session: int, role: string|null, cree_par: int|null, demo_fin: string|null, offres_offertes: int, metier: string|null, metier_saisi: string|null}
+ * @phpstan-type Artisan array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null, administrateur: int, version_session: int, role: string|null, cree_par: int|null, demo_fin: string|null, offres_offertes: int, metier: string|null, metier_saisi: string|null, activite: string}
  */
 final class DepotArtisans
 {
-    private const COLONNES = 'id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max, administrateur, version_session, role, cree_par, demo_fin, offres_offertes, metier, metier_saisi';
+    private const COLONNES = 'id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max, administrateur, version_session, role, cree_par, demo_fin, offres_offertes, metier, metier_saisi, activite';
 
     public function __construct(private readonly Base $base)
     {
@@ -80,10 +82,16 @@ final class DepotArtisans
         $this->base->ecrire('UPDATE artisan SET administrateur = :a WHERE id = :id', ['a' => $administrateur ? 1 : 0, 'id' => $id]);
     }
 
-    /** Le métier du compte (clé de CatalogueFictif) et, sous « autre », le texte tapé. */
-    public function changerMetier(int $id, ?string $metier, ?string $metierSaisi): void
+    /** Le métier du compte (clé de CatalogueFictif), sous « autre » le texte tapé, et l'activité que ce métier fixe. */
+    public function changerMetier(int $id, ?string $metier, ?string $metierSaisi, Activite $activite): void
     {
-        $this->base->ecrire('UPDATE artisan SET metier = :m, metier_saisi = :s WHERE id = :id', ['m' => $metier, 's' => $metierSaisi, 'id' => $id]);
+        $this->base->ecrire('UPDATE artisan SET metier = :m, metier_saisi = :s, activite = :a WHERE id = :id', ['m' => $metier, 's' => $metierSaisi, 'a' => $activite->value, 'id' => $id]);
+    }
+
+    /** L'activité choisie par le titulaire dans ses réglages : ni le métier ni le catalogue ne changent. */
+    public function changerActivite(int $id, Activite $activite): void
+    {
+        $this->base->ecrire('UPDATE artisan SET activite = :a WHERE id = :id', ['a' => $activite->value, 'id' => $id]);
     }
 
     /**

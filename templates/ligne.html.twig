@@ -48,7 +48,7 @@
     {# Offre rangée par pièce (sous-chantier 28, P5) : la ligne se déplace d'une pièce à l'autre ; vide, « Général ». #}
     {% if pieces is not empty %}
       <div class="champ">
-        <label for="piece">Pièce</label>
+        <label for="piece">{{ mots().groupe|capitalize }}</label>
         <input id="piece" name="piece" value="{{ champs.piece ?? '' }}" maxlength="80" list="pieces-offre" autocomplete="off" placeholder="Général">
         <datalist id="pieces-offre">{% for p in pieces %}<option value="{{ p }}">{% endfor %}</datalist>
       </div>

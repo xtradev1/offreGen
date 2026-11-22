@@ -11,7 +11,7 @@ namespace OffreGen\Offre;
 final class Saisie
 {
     /** Unités proposées à l'écran (maquette v4) ; « ml », « kg » et « jour » ajoutées à la demande de Xavier (2026-11-20). */
-    public const UNITES = ['pce', 'm²', 'm', 'ml', 'm³', 'kg', 'h', 'jour', 'forfait'];
+    public const UNITES = ['pce', 'm²', 'm', 'ml', 'm³', 'kg', 'h', 'jour', 'mois', 'passage', 'forfait'];
 
     public const QUANTITE_MAX_MILLIEMES = 1_000_000_000;
     public const PRIX_MAX_CENTIMES = 100_000_000;

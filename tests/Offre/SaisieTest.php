@@ -84,7 +84,8 @@ final class SaisieTest extends TestCase
         foreach (['ml', 'kg', 'jour'] as $u) {
             self::assertSame($u, Saisie::unite($u), $u);
         }
-        self::assertSame(['pce', 'm²', 'm', 'ml', 'm³', 'kg', 'h', 'jour', 'forfait'], Saisie::UNITES);
+        // « mois » et « passage » : prestations et entretien (activités, 2026-11-22). Une seule liste pour tous les comptes.
+        self::assertSame(['pce', 'm²', 'm', 'ml', 'm³', 'kg', 'h', 'jour', 'mois', 'passage', 'forfait'], Saisie::UNITES);
     }
 
     public function testTexteReduitLesEspacesEtRefuseLeVide(): void

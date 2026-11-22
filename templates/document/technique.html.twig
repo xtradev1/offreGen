@@ -11,7 +11,7 @@
   {% if facture %}{% set cases = cases|merge([['Échéance', f.echeance|jour], ['Référence', b.ref(_context)]]) %}
   {% else %}
     {% set cases = cases|merge([["Valable jusqu'au", valable_jusqu_au]]) %}
-    {% if chantier and chantier.adresse %}{% set cases = cases|merge([['Chantier', chantier.adresse]]) %}{% endif %}
+    {% if chantier and chantier.adresse %}{% set cases = cases|merge([[mots.doc_lieu, chantier.adresse]]) %}{% endif %}
     {% if r.contactNom %}{% set cases = cases|merge([['Contact', r.contactNom]]) %}{% endif %}
   {% endif %}
   <div class="doc-in">

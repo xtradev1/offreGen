@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Catalogue\Recherche;
+use OffreGen\Compte\Activite;
 use OffreGen\Compte\Marque;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
@@ -201,7 +202,7 @@ final class OffreControleur
      * Tout ce que montrent l'écran de l'offre et son document.
      *
      * @param array<string, string> $parametres
-     * @return array{m: Marque, logo_src: string|null, offre: Offre, chantier: Chantier, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     * @return array{activite: Activite, mots: array<string, string>, m: Marque, logo_src: string|null, offre: Offre, chantier: Chantier, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
      */
     private function donnees(Request $requete, array $parametres): array
     {
@@ -215,7 +216,7 @@ final class OffreControleur
      *
      * @param Offre $offre
      * @param list<Ligne> $lignes
-     * @return array{m: Marque, logo_src: string|null, offre: Offre, chantier: Chantier, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     * @return array{activite: Activite, mots: array<string, string>, m: Marque, logo_src: string|null, offre: Offre, chantier: Chantier, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
      */
     public function vueDocument(Portee $portee, array $offre, array $lignes, Marque $m): array
     {
@@ -223,7 +224,11 @@ final class OffreControleur
         $totaux = Totaux::calculer($lignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes, Rabais::liste($offre['rabais']));
         $date = new \DateTimeImmutable($offre['modifiee_le'] ?? $offre['cree_le'], new \DateTimeZone('UTC'));
         $valable = $date->setTimezone(new \DateTimeZone('Europe/Zurich'))->modify('+' . $r->validiteJours . ' days')->format('d.m.Y');
+        // L'activité du compte de la portée donne ses mots au document (Compte\Activite) : « Chantier » ou « Lieu », etc.
+        $activite = Activite::lire($this->c->artisans()->parId($portee->artisanId)['activite'] ?? null);
         return [
+            'activite' => $activite,
+            'mots' => $activite->mots(),
             'm' => $m,
             // Aperçu à l'écran : le logo par son adresse (la CSP refuse les images en data:) ; pdf() le remplace.
             'logo_src' => $m->logo === null ? null : '/reglages/logo?v=' . $m->logo,

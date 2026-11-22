@@ -37,3 +37,16 @@
     {{ f.erreur(erreurs, 'courriel_contact') }}
   </div>
 </div>
+{# Votre activité (Compte\Activite, décision de Xavier du 2026-11-22) : bâtiment, extérieur ou prestations. Le métier
+   choisi à la création du compte la fixe ; le titulaire la change ici. #}
+<div class="card">
+  <fieldset class="groupe">
+    <legend>Votre activité</legend>
+    {% for a in activites %}
+      <label class="radio"><input type="radio" name="activite" value="{{ a.value }}"{% if champs.activite == a.value %} checked{% endif %}>
+        <span>{{ a.libelle }}<small>{{ a.exemples }}</small></span></label>
+    {% endfor %}
+    {{ f.erreur(erreurs, 'activite') }}
+  </fieldset>
+  <p class="muted petit">Elle règle les mots de l'application et de vos documents, et le rangement de vos prochaines offres. Votre catalogue et vos offres ne changent pas.</p>
+</div>

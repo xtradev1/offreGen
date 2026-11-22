@@ -69,8 +69,9 @@ final readonly class PhrasesLettre
      * formule du client : la fin de la lettre suit la formule d'appel.
      *
      * @param 'offre_debut'|'offre_fin'|'facture_debut'|'facture_fin' $cle
+     * @param Activite $activite celle du compte : elle donne ses mots à la phrase actuelle
      */
-    public function texte(string $cle, ?string $client): string
+    public function texte(string $cle, ?string $client, Activite $activite = Activite::Batiment): string
     {
         $reglee = match ($cle) {
             'offre_debut' => $this->offreDebut,
@@ -78,7 +79,8 @@ final readonly class PhrasesLettre
             'facture_debut' => $this->factureDebut,
             'facture_fin' => $this->factureFin,
         };
-        $t = $reglee === '' ? self::ACTUELLES[$cle] : $reglee;
+        // La phrase de l'application suit l'activité du compte (« travaux » ou « prestations ») ; celle de l'artisan reste la sienne.
+        $t = $reglee === '' ? $activite->dire(self::ACTUELLES[$cle]) : $reglee;
         $t = $this->appelSelonClient ? str_replace(self::APPEL, $this->nom($client), $t) : $t;
         return (string) preg_replace(['/ ([:;!?»])/u', '/« /u'], ["\u{00A0}$1", "«\u{00A0}"], $t);
     }
@@ -90,7 +92,7 @@ final readonly class PhrasesLettre
      * @param array<string, string> $champs
      * @return array{0: self|null, 1: array<string, string>} les phrases, ou les erreurs par champ
      */
-    public static function depuisSaisie(array $champs): array
+    public static function depuisSaisie(array $champs, Activite $activite = Activite::Batiment): array
     {
         $erreurs = [];
         $textes = ['offre_debut' => '', 'offre_fin' => '', 'facture_debut' => '', 'facture_fin' => ''];
@@ -104,7 +106,8 @@ final readonly class PhrasesLettre
             if (mb_strlen($t) > self::LONGUEUR) {
                 $erreurs[$champ] = self::LONGUEUR . ' caractères au plus.';
             }
-            $textes[$cle] = $t === self::ACTUELLES[$cle] ? '' : $t;
+            // La phrase actuelle, telle que l'écran la montre à cette activité, n'est pas recopiée.
+            $textes[$cle] = $t === $activite->dire(self::ACTUELLES[$cle]) ? '' : $t;
         }
         if ($erreurs !== []) {
             return [null, $erreurs];
@@ -113,13 +116,35 @@ final readonly class PhrasesLettre
     }
 
     /** @return array<string, string> les champs de l'écran : chaque phrase telle que la lettre l'écrit, sans les insécables */
-    public function versChamps(): array
+    public function versChamps(Activite $activite = Activite::Batiment): array
     {
+        $actuelles = self::actuelles($activite);
         return ['lettre_appel' => $this->appelSelonClient ? 'client' : 'fixe',
-            'lettre_offre_debut' => $this->offreDebut === '' ? self::ACTUELLES['offre_debut'] : $this->offreDebut,
-            'lettre_offre_fin' => $this->offreFin === '' ? self::ACTUELLES['offre_fin'] : $this->offreFin,
-            'lettre_facture_debut' => $this->factureDebut === '' ? self::ACTUELLES['facture_debut'] : $this->factureDebut,
-            'lettre_facture_fin' => $this->factureFin === '' ? self::ACTUELLES['facture_fin'] : $this->factureFin];
+            'lettre_offre_debut' => $this->offreDebut === '' ? $actuelles['offre_debut'] : $this->offreDebut,
+            'lettre_offre_fin' => $this->offreFin === '' ? $actuelles['offre_fin'] : $this->offreFin,
+            'lettre_facture_debut' => $this->factureDebut === '' ? $actuelles['facture_debut'] : $this->factureDebut,
+            'lettre_facture_fin' => $this->factureFin === '' ? $actuelles['facture_fin'] : $this->factureFin];
+    }
+
+    /**
+     * Les phrases actuelles dans les mots de l'activité (Activite::dire) : celles d'un compte qui n'a rien réglé.
+     *
+     * @return array{offre_debut: string, offre_fin: string, facture_debut: string, facture_fin: string}
+     */
+    public static function actuelles(Activite $activite): array
+    {
+        return ['offre_debut' => $activite->dire(self::ACTUELLES['offre_debut']), 'offre_fin' => $activite->dire(self::ACTUELLES['offre_fin']),
+            'facture_debut' => $activite->dire(self::ACTUELLES['facture_debut']), 'facture_fin' => $activite->dire(self::ACTUELLES['facture_fin'])];
+    }
+
+    /**
+     * Les tournures proposées, dans les mots de l'activité.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function tournures(Activite $activite): array
+    {
+        return array_map(static fn (array $phrases): array => array_map($activite->dire(...), $phrases), self::TOURNURES);
     }
 
     /** « Madame », « Monsieur », ou « Madame, Monsieur » : selon le début du nom du client, si l'artisan l'a choisi. */

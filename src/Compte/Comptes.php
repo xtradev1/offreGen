@@ -74,7 +74,7 @@ final class Comptes
             }
             // Un essai part des désignations de son métier, tous les prix à 0 ; le prix de la démonstration attend
             // à côté, proposé par l'écran « Vos prix ».
-            $this->artisans->changerMetier($id, $metier, $metierSaisi);
+            $this->artisans->changerMetier($id, $metier, $metierSaisi, Activite::duMetier($metier));
             (new DepotProduits($this->base, new Portee($id)))->remplacerTout(self::exemples(CatalogueFictif::produits($metier), true));
         });
         return $motDePasse;
@@ -226,7 +226,7 @@ final class Comptes
 
         $exemples = CatalogueFictif::offres($metier);
         $this->base->transaction(function () use ($artisan, $metier, $metierSaisi, $portee, $enregistrements, $catalogue, $exemples): void {
-            $this->artisans->changerMetier($artisan['id'], $metier, $metierSaisi);
+            $this->artisans->changerMetier($artisan['id'], $metier, $metierSaisi, Activite::duMetier($metier));
             // La démonstration montre le modèle d'offre proposé pour son métier ; elle garde sa couleur et son logo.
             $reglages = new DepotReglages($this->base, $portee);
             $reglages->enregistrerMarque(Marque::pourMetier($metier), $reglages->lireMarque()->couleurChoisie);

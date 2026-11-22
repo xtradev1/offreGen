@@ -39,7 +39,7 @@ final class ConditionsControleur
     {
         $offre = $this->offre($requete, $parametres);
         $r = $this->c->reglages($this->portee($requete))->lire()->pourOffre($offre['conditions']);
-        return $this->formulaire($offre, $r->conditions()->versChamps(), [], 200, $r->conditionsPaiement());
+        return $this->formulaire($offre, $r->conditions()->versChamps(), [], 200, $this->c->activiteCourante()->dire($r->conditionsPaiement()));
     }
 
     /** @param array<string, string> $parametres */

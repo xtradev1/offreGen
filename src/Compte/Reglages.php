@@ -111,8 +111,9 @@ final readonly class Reglages
      *        validite_choix et validite_jours, paiement_type, paiement_jours_choix et paiement_jours,
      *        paiement_acomptes_choix et paiement_acomptes, escompte_pourcent et escompte_jours (voir
      *        Conditions::depuisSaisie). Les phrases de Lettre : voir PhrasesLettre::depuisSaisie.
+     * @param Activite $activite celle du compte, pour reconnaître une phrase de Lettre laissée telle que l'écran la montre
      */
-    public static function depuisSaisie(array $champs, bool $arrondi): self
+    public static function depuisSaisie(array $champs, bool $arrondi, Activite $activite = Activite::Batiment): self
     {
         $c = static fn (string $cle): string => $champs[$cle] ?? '';
         $erreurs = [];
@@ -148,7 +149,7 @@ final readonly class Reglages
         }
         [$conditions, $erreursConditions] = Conditions::depuisSaisie($champs);
         $erreurs += $erreursConditions;
-        [$lettre, $erreursLettre] = PhrasesLettre::depuisSaisie($champs);
+        [$lettre, $erreursLettre] = PhrasesLettre::depuisSaisie($champs, $activite);
         $erreurs += $erreursLettre;
         if ($nom === null || $adresse === null || $ide === null || $iban === null || $conditions === null || $lettre === null || $erreurs !== []) {
             throw new SaisieRefusee($erreurs);

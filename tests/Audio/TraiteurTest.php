@@ -10,6 +10,7 @@ use OffreGen\Audio\StockageAudio;
 use OffreGen\Audio\Traiteur;
 use OffreGen\Audio\Transcripteur;
 use OffreGen\Audio\TranscripteurFactice;
+use OffreGen\Compte\Activite;
 use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotClients;
@@ -262,7 +263,7 @@ final class TraiteurTest extends TestCase
             {
             }
 
-            public function extraire(string $transcription, array $catalogue): ResultatExtraction
+            public function extraire(string $transcription, array $catalogue, Activite $activite = Activite::Batiment): ResultatExtraction
             {
                 return new ResultatExtraction('Cuisine', [], $this->nom, 'Delémont');
             }
@@ -367,7 +368,7 @@ final class TraiteurTest extends TestCase
     public function testLesPostesCoupesSontNotesSurLOffre(): void
     {
         $coupe = new class implements Extracteur {
-            public function extraire(string $transcription, array $catalogue): ResultatExtraction
+            public function extraire(string $transcription, array $catalogue, Activite $activite = Activite::Batiment): ResultatExtraction
             {
                 return new ResultatExtraction('Immeuble', [new LigneExtraite('Poste 1', 1000, 'pce', 100, false, null)], null, null, 12);
             }
@@ -375,6 +376,40 @@ final class TraiteurTest extends TestCase
         self::assertSame(Statut::PRET, $this->traiteur(x: $coupe)->avancer(self::UUID));
         $offre = BaseDeTest::ligne("SELECT o.postes_coupes FROM offre o JOIN enregistrement e ON e.id = o.enregistrement_id WHERE e.uuid = '" . self::UUID . "'");
         self::assertSame(12, (int) $offre['postes_coupes']);
+    }
+
+    /**
+     * Activité du compte (2026-11-22) : le traitement la donne à l'extracteur, et le titre d'une offre sans titre dicté
+     * la suit (« Visite du … » au Bâtiment, « Offre du … » pour une prestation).
+     *
+     * @return array{0: Activite, 1: string} l'activité reçue par l'extracteur, le titre de l'offre
+     */
+    private function traiterSansTitre(): array
+    {
+        $temoin = new class implements Extracteur {
+            public ?Activite $recue = null;
+
+            public function extraire(string $transcription, array $catalogue, Activite $activite = Activite::Batiment): ResultatExtraction
+            {
+                $this->recue = $activite;
+                return new ResultatExtraction(null, [new LigneExtraite('Poste 1', 1000, 'pce', 100, false, null)]);
+            }
+        };
+        self::assertSame(Statut::PRET, $this->traiteur(x: $temoin)->avancer(self::UUID));
+        $titre = BaseDeTest::ligne("SELECT o.titre FROM offre o JOIN enregistrement e ON e.id = o.enregistrement_id WHERE e.uuid = '" . self::UUID . "'")['titre'];
+        self::assertNotNull($temoin->recue);
+        return [$temoin->recue, (string) $titre];
+    }
+
+    public function testLeTraitementDonneLeBatimentParDefaut(): void
+    {
+        self::assertSame([Activite::Batiment, 'Visite du 07.11.2026'], $this->traiterSansTitre());
+    }
+
+    public function testLeTraitementDonneLActiviteDuCompteALExtracteur(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET activite = 'prestations' WHERE id = {$this->jeu->a}");
+        self::assertSame([Activite::Prestations, 'Offre du 07.11.2026'], $this->traiterSansTitre());
     }
 
     /** Règle de Xavier (2026-11-12) : à plus de 80 % de ressemblance, l'offre rejoint la fiche. */
@@ -518,7 +553,7 @@ final class ExtracteurCapricieux implements Extracteur
     {
     }
 
-    public function extraire(string $transcription, array $catalogue): \OffreGen\Offre\ResultatExtraction
+    public function extraire(string $transcription, array $catalogue, Activite $activite = Activite::Batiment): \OffreGen\Offre\ResultatExtraction
     {
         if ($this->echecsRestants > 0) {
             $this->echecsRestants--;

@@ -37,7 +37,7 @@
       <div class="r grand"><span>Total{% if avec_tva %} TTC{% endif %}</span><span data-a-payer>{{ montants.ttc|chf }}</span></div>
     {% endif %}
   </div>
-  <p class="muted petit">Corrigez les quantités réelles, ajoutez les travaux en plus. L'offre ne change pas.</p>
+  <p class="muted petit">Corrigez les quantités réelles, ajoutez les {{ mots().travaux }} en plus. L'offre ne change pas.</p>
   <a class="lien-apercu mobile-seul" href="/factures/{{ f.id }}/document">Voir l'aperçu de la facture</a>
   <form id="creer-facture" method="post" action="/factures/{{ f.id }}/emettre">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">

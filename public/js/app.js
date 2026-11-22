@@ -628,7 +628,8 @@ function nouvelleOffre() {
     const deux = (n) => String(n).padStart(2, '0');
     affichage.textContent = '00:00';
     const consigne = el('[data-consigne]');
-    consigne.textContent = 'Parlez, pièce par pièce.';
+    // La phrase de l'activité du compte, écrite par le serveur dans l'attribut (_nouvelle_offre.html.twig).
+    consigne.textContent = consigne.dataset.consigne;
     minuteur = setInterval(() => {
       const s = Math.floor((Date.now() - debut) / 1000);
       const h = Math.floor(s / 3600);
@@ -1007,7 +1008,11 @@ function choixDesReglages() {
   const form = bloc.closest('form');
   const coche = (nom) => { const c = form.querySelector('input[name="' + nom + '"]:checked'); return c ? c.value : ''; };
   const tape = (nom) => (form.elements[nom] ? form.elements[nom].value.trim() : '');
-  // Même règle que Reglages::conditionsPaiement(), qui reste celle du document.
+  // Même règle que Reglages::conditionsPaiement(), qui reste celle du document. « la fin des travaux » et « en cours
+  // de travaux » viennent du serveur, dans les mots de l'activité du compte (attributs du paragraphe de la phrase).
+  const mots = sortie.parentElement.dataset;
+  const fin = mots.fin || 'la fin des travaux';
+  const cours = mots.cours || 'en cours de travaux';
   const phrase = () => {
     if (coche('paiement_type') === 'acomptes') {
       const choix = coche('paiement_acomptes_choix');
@@ -1015,12 +1020,12 @@ function choixDesReglages() {
       const n = t.length;
       const juste = n >= 2 && n <= 4 && t.every((x) => x >= 1 && x <= 99) && t.reduce((s, x) => s + x, 0) === 100;
       if (!juste) return 'acomptes à compléter, ils doivent faire 100 %';
-      return t.map((p, i) => p + ' % ' + (i === 0 ? 'à la commande' : i === n - 1 ? 'à la fin des travaux' : 'en cours de travaux')).join(', ') + '.';
+      return t.map((p, i) => p + ' % ' + (i === 0 ? 'à la commande' : i === n - 1 ? 'à ' + fin : cours)).join(', ') + '.';
     }
     const choix = coche('paiement_jours_choix');
     const j = choix === 'autre' ? tape('paiement_jours') : choix;
     if (!/^\d{1,3}$/.test(j) || +j < 1 || +j > 120) return 'délai à compléter, de 1 à 120 jours';
-    return coche('paiement_type') === 'net' ? 'Net à ' + +j + ' jours dès réception de la facture.' : 'À ' + +j + ' jours dès la fin des travaux.';
+    return coche('paiement_type') === 'net' ? 'Net à ' + +j + ' jours dès réception de la facture.' : 'À ' + +j + ' jours dès ' + fin + '.';
   };
   form.addEventListener('input', () => { sortie.textContent = phrase(); });
   form.addEventListener('change', (e) => {

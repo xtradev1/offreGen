@@ -6,6 +6,7 @@
 {% block entete_html %}{% if vos_prix.nombre > 0 %}<link rel="stylesheet" href="/css/vos-prix.css"><script src="/js/vos-prix.js" defer></script>{% endif %}{% endblock %}
 
 {% block contenu %}
+  {% set m = mots() %}
   <p class="muted ent">{{ entreprise }}{% if demo %} (compte de démonstration){% endif %}</p>
   {% set essai_compte = essai() %}{% if essai_compte %}<p class="muted ent">{{ demo ? essai_compte.reste|replace({"Compte d'essai": 'Démo'}) : essai_compte.reste }}</p>{% endif %}
   {# Archivées et supprimées comprises ; un échec n'a pas donné d'offre et ne compte pas. #}
@@ -31,14 +32,14 @@
     <div class="cat liste"><h5>En préparation</h5></div>
     {% for e in en_preparation %}
       <a class="ocard" href="/enregistrements/{{ e.uuid }}">
-        <span class="l1"><b>Visite du {{ e.recu_le|date_locale }}</b>
+        <span class="l1"><b>{{ m.dictee_nom }} du {{ e.recu_le|date_locale }}</b>
           <span class="status"><span class="tourne" aria-hidden="true"></span>{{ e.statut == 'transcrit' ? 'Création de l\'offre' : 'Transcription' }}</span></span>
         <span class="l2"><span>{{ e.nom_origine }}</span></span>
       </a>
     {% endfor %}
     {% for e in echecs %}
       <div class="ocard echec">
-        <span class="l1"><b>Visite du {{ e.recu_le|date_locale }}</b></span>
+        <span class="l1"><b>{{ m.dictee_nom }} du {{ e.recu_le|date_locale }}</b></span>
         <span class="l2"><span>Échec · ne compte pas dans vos offres</span></span>
         <span class="act">
           <form method="post" action="/enregistrements/{{ e.uuid }}/reessayer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="prim" type="submit">Réessayer</button></form>
@@ -72,7 +73,7 @@
     {% if archives is not empty %}
       <p class="vide">Aucune offre en cours&nbsp;: les autres sont dans les archives, en bas.</p>
     {% else %}
-      <p class="vide">Aucune offre pour l'instant. Le micro, en bas, enregistre la visite&nbsp;; la flèche importe un fichier.</p>
+      <p class="vide">Aucune offre pour l'instant. Le micro, en bas, enregistre {{ m.dictee_objet }}&nbsp;; la flèche importe un fichier.</p>
     {% endif %}
   {% endfor %}
 

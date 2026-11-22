@@ -6,7 +6,7 @@
 {% block titre %}Votre démo · {{ nom_application }}{% endblock %}
 
 {% block contenu %}
-  <p><b>Votre démo est prête.</b> Un catalogue d'exemple{% if metier %} ({{ metier|lower }}){% endif %} et deux offres vous attendent. Indiquez votre courriel, puis dictez votre première visite.</p>
+  <p><b>Votre démo est prête.</b> Un catalogue d'exemple{% if metier %} ({{ metier|lower }}){% endif %} et deux offres vous attendent. Indiquez votre courriel, puis dictez votre première {{ premiere }}.</p>
   {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
   <form id="demo" method="post" action="{{ action }}">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">

@@ -120,7 +120,8 @@ final class MarqueTest extends TestCase
     public function testPourMetier(): void
     {
         $attendus = ['peintre' => 'marge', 'platrier' => 'chantier', 'carreleur' => 'sobre', 'macon' => 'bandeau', 'sanitaire' => 'technique',
-            'menuisier' => 'atelier', 'sols' => 'moderne', 'paysagiste' => 'epure', 'autre' => 'sobre'];
+            'menuisier' => 'atelier', 'sols' => 'moderne', 'paysagiste' => 'epure', 'autre' => 'sobre',
+            'informatique' => 'technique', 'conseil' => 'lettre', 'marketing' => 'moderne', 'prestation' => 'sobre'];
         self::assertSame(\OffreGen\Catalogue\CatalogueFictif::metiers(), array_keys($attendus), 'un modèle pour chaque métier du catalogue');
         foreach ($attendus as $metier => $modele) {
             self::assertSame($modele, Marque::pourMetier($metier), $metier);

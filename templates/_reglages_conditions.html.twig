@@ -43,7 +43,8 @@
       </div>
       {{ f.erreur(erreurs, 'paiement_acomptes') }}
     </div>
-    <p class="phrase">Sur l'offre&nbsp;: «&nbsp;<span data-phrase>{{ phrase }}</span>&nbsp;»</p>
+    {# data-fin, data-cours : les mots de l'activité du compte (Compte\Activite::dire), pour la phrase refaite par app.js. #}
+    <p class="phrase" data-fin="{{ activite().dire('la fin des travaux') }}" data-cours="{{ activite().dire('en cours de travaux') }}">Sur l'offre&nbsp;: «&nbsp;<span data-phrase>{{ phrase }}</span>&nbsp;»</p>
   </fieldset>
 
   {# Escompte (D13, D14, 2026-11-21) : sur l'offre et sur chaque facture, en mention ; vide, pas d'escompte. #}

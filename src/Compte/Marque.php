@@ -32,7 +32,9 @@ final readonly class Marque
 
     /** Le modèle proposé pour chaque métier du catalogue (Catalogue\CatalogueFictif) ; tout autre métier : Sobre. */
     private const PAR_METIER = ['peintre' => 'marge', 'platrier' => 'chantier', 'carreleur' => 'sobre', 'macon' => 'bandeau', 'sanitaire' => 'technique',
-        'menuisier' => 'atelier', 'sols' => 'moderne', 'paysagiste' => 'epure'];
+        'menuisier' => 'atelier', 'sols' => 'moderne', 'paysagiste' => 'epure',
+        // Prestations (2026-11-22), choix de Claude : la fiche technique, la lettre du conseil, le modèle en couleur.
+        'informatique' => 'technique', 'conseil' => 'lettre', 'marketing' => 'moderne'];
 
     /** Couleurs proposées d'un toucher, après celle du logo. */
     // Toutes à 7:1 au moins sur le blanc (2b, 2026-11-20) : vert, rouge, brun et pétrole assombris au pas de principale().

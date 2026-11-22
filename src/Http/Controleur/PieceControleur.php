@@ -42,14 +42,16 @@ final class PieceControleur
         $offre = $this->offre($requete, $parametres);
         $ancienne = $this->pieceExistante($requete, $offre['id'], $requete->request->getString('ancienne'));
         $saisie = $requete->request->getString('nouvelle');
+        // « pièce » ou « zone », selon l'activité du compte : les deux sont au féminin (Compte\Activite::mots).
+        $groupe = $this->c->activiteCourante()->mots()['groupe'];
         $nouvelle = Piece::lire($saisie);
         if ($nouvelle === null) {
-            return $this->formulaire($offre, $ancienne, $saisie, 'Indiquez le nom de la pièce (' . Piece::LONGUEUR_MAX . ' caractères au plus).', 422);
+            return $this->formulaire($offre, $ancienne, $saisie, "Indiquez le nom de la $groupe (" . Piece::LONGUEUR_MAX . ' caractères au plus).', 422);
         }
         $offres = $this->offres($requete);
         $offres->renommerPiece($offre['id'], $ancienne, $nouvelle);
         $offres->marquerModifiee($offre['id'], $this->c->horloge()->now());
-        Flash::dire($requete, 'info', 'Pièce renommée');
+        Flash::dire($requete, 'info', mb_strtoupper(mb_substr($groupe, 0, 1)) . mb_substr($groupe, 1) . ' renommée');
         return new RedirectResponse('/offres/' . $offre['id'], 303);
     }
 

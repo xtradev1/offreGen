@@ -3,7 +3,7 @@
   <fieldset class="groupe">
     <legend>TVA de l'entreprise</legend>
     <label class="radio"><input type="radio" name="tva" value="810"{% if champs.tva == '810' %} checked{% endif %}>
-      <span>8,1&nbsp;%, taux normal<small>La plupart des travaux et des fournitures.</small></span></label>
+      <span>8,1&nbsp;%, taux normal<small>La plupart des {{ mots().travaux }} et des fournitures.</small></span></label>
     <label class="radio"><input type="radio" name="tva" value="260"{% if champs.tva == '260' %} checked{% endif %}>
       <span>2,6&nbsp;%, taux réduit<small>Denrées alimentaires, livres, médicaments, plantes.</small></span></label>
     <label class="radio"><input type="radio" name="tva" value="380"{% if champs.tva == '380' %} checked{% endif %}>

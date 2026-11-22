@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Offre;
 
+use OffreGen\Compte\Activite;
 use OffreGen\Ia\ReponseApi;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -58,6 +59,44 @@ final class ExtracteurApi implements Extracteur
         - Jamais de tiret long : une virgule à la place.
         TXT;
 
+    /**
+     * Les phrases de CONSIGNE qui changent avec l'activité du compte (décision de Xavier du 2026-11-22) : qui dicte et
+     * dans quelle situation, et de quoi est fait le titre. Tout le reste est commun. Le Bâtiment garde CONSIGNE au
+     * caractère près : c'est le texte mesuré au banc (tests/Offre/ExtracteurActiviteTest.php en garde l'empreinte).
+     * Jamais mesuré hors bâtiment : cinq dictées par activité sont prévues à la recette du chantier.
+     */
+    private const PHRASES = [
+        'exterieur' => [
+            'pour un artisan suisse, à partir de la dictée de sa visite chez le client.' => 'pour un jardinier ou un paysagiste suisse, à partir de la dictée de sa visite chez le client.',
+        ],
+        'prestations' => [
+            'pour un artisan suisse, à partir de la dictée de sa visite chez le client.' => "pour un prestataire de services suisse (informatique, conseil, marketing), à partir de ce qu'il dicte après son échange avec le client.",
+            '- titre : court, la nature des travaux et le lieu, sans prix.' => '- titre : court, la nature de la prestation, sans prix.',
+        ],
+    ];
+
+    /** Le second appel de l'Extérieur : la zone du terrain à la place de la pièce. Jamais mesuré au banc. */
+    private const CONSIGNE_ZONES = <<<'TXT'
+        Tu ranges les lignes d'une offre de jardinier ou de paysagiste dans les zones du terrain où se font les travaux, d'après la dictée de sa visite.
+        Règles :
+        - Il dicte zone par zone (« devant la maison », « la haie côté route », « le talus ») : une zone annoncée vaut pour les postes qui suivent, jusqu'à la suivante.
+        - Pour chaque ligne, donne son numéro et la zone telle qu'elle est dite.
+        - « général » pour une ligne qui vaut pour tout le chantier, ou quand aucune zone n'est dite.
+        - Jamais de tiret long : une virgule à la place.
+        TXT;
+
+    /** La consigne de l'appel principal, pour l'activité du compte. */
+    public static function consigne(Activite $activite): string
+    {
+        return strtr(self::CONSIGNE, self::PHRASES[$activite->value] ?? []);
+    }
+
+    /** La consigne du second appel : par pièce, ou par zone en Extérieur. Les Prestations n'ont pas de second appel. */
+    public static function consigneGroupes(Activite $activite): string
+    {
+        return $activite === Activite::Exterieur ? self::CONSIGNE_ZONES : self::CONSIGNE_PIECES;
+    }
+
     public function __construct(
         private readonly HttpClientInterface $http,
         private readonly string $url,
@@ -70,7 +109,7 @@ final class ExtracteurApi implements Extracteur
     ) {
     }
 
-    public function extraire(string $transcription, array $catalogue): ResultatExtraction
+    public function extraire(string $transcription, array $catalogue, Activite $activite = Activite::Batiment): ResultatExtraction
     {
         if (trim($transcription) === '') {
             return new ResultatExtraction(null, []);
@@ -79,7 +118,7 @@ final class ExtracteurApi implements Extracteur
             'model' => $this->modele,
             'temperature' => 0,
             'messages' => [
-                ['role' => 'system', 'content' => self::CONSIGNE],
+                ['role' => 'system', 'content' => self::consigne($activite)],
                 ['role' => 'user', 'content' => "Catalogue :\n" . self::catalogueEnTexte($catalogue) . "\n\nDictée :\n" . $transcription],
             ],
             'tools' => [self::outil()],
@@ -106,14 +145,15 @@ final class ExtracteurApi implements Extracteur
             return new ResultatExtraction(null, []);
         }
         $resultat = $this->valider($proposition, $catalogue);
-        return $resultat->lignes === [] ? $resultat : $this->rangerParPiece($transcription, $resultat);
+        // Une prestation ne se range ni par pièce ni par zone : l'offre sort par catégorie du catalogue, sans second appel.
+        return $resultat->lignes === [] || !$activite->rangeParGroupe() ? $resultat : $this->rangerParPiece($transcription, $resultat, $activite);
     }
 
     /**
-     * Range les lignes dans leurs pièces par un second appel, sans le catalogue (de quelques dixièmes de centime). Un
-     * échec ne coûte que les pièces : l'offre sort comme avant, rangée par catégorie.
+     * Range les lignes dans leurs pièces (leurs zones, en Extérieur) par un second appel, sans le catalogue (de quelques
+     * dixièmes de centime). Un échec ne coûte que les pièces : l'offre sort comme avant, rangée par catégorie.
      */
-    private function rangerParPiece(string $transcription, ResultatExtraction $resultat): ResultatExtraction
+    private function rangerParPiece(string $transcription, ResultatExtraction $resultat, Activite $activite): ResultatExtraction
     {
         $liste = [];
         foreach ($resultat->lignes as $i => $l) {
@@ -123,10 +163,10 @@ final class ExtracteurApi implements Extracteur
             'model' => $this->modelePieces ?? $this->modele,
             'temperature' => 0,
             'messages' => [
-                ['role' => 'system', 'content' => self::CONSIGNE_PIECES],
+                ['role' => 'system', 'content' => self::consigneGroupes($activite)],
                 ['role' => 'user', 'content' => "Dictée :\n" . $transcription . "\n\nLignes :\n" . implode("\n", $liste)],
             ],
-            'tools' => [self::outilPieces()],
+            'tools' => [self::outilPieces($activite)],
             'tool_choice' => ['type' => 'function', 'function' => ['name' => 'ranger_par_piece']],
             'max_tokens' => self::JETONS_SORTIE_PIECES,
         ];
@@ -292,12 +332,17 @@ final class ExtracteurApi implements Extracteur
         return implode("\n", $lignes);
     }
 
-    /** @return array<string, mixed> */
-    private static function outilPieces(): array
+    /**
+     * Le nom de l'outil et de son champ restent ceux de la pièce : seuls les mots lus par le modèle suivent l'activité.
+     *
+     * @return array<string, mixed>
+     */
+    private static function outilPieces(Activite $activite): array
     {
+        $zone = $activite === Activite::Exterieur;
         return ['type' => 'function', 'function' => [
             'name' => 'ranger_par_piece',
-            'description' => 'Donne la pièce de chaque ligne de l\'offre.',
+            'description' => $zone ? 'Donne la zone de chaque ligne de l\'offre.' : 'Donne la pièce de chaque ligne de l\'offre.',
             'parameters' => [
                 'type' => 'object',
                 'required' => ['pieces'],
@@ -307,7 +352,7 @@ final class ExtracteurApi implements Extracteur
                         'required' => ['ligne', 'piece'],
                         'properties' => [
                             'ligne' => ['type' => 'integer', 'description' => 'Numéro de la ligne'],
-                            'piece' => ['type' => 'string', 'description' => 'Pièce dite, ou « général »'],
+                            'piece' => ['type' => 'string', 'description' => $zone ? 'Zone dite, ou « général »' : 'Pièce dite, ou « général »'],
                         ],
                     ]],
                 ],

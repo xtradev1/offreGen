@@ -1,6 +1,10 @@
 {# Le document remis au client, offre ou facture : aperçu à l'écran et PDF (dompdf). Chaque modèle (m.modele) a son
    gabarit, templates/document/<modèle>.html.twig, dessiné sur la feuille A4 de document/_base.html.twig.
    Ni marge, ni fournisseur, ni « à vérifier » (CODING_RULES, Ergonomie). #}
+{# Les mots du document suivent l'activité du compte (Compte\Activite). La vue d'une offre les donne
+   (OffreControleur::vueDocument) ; une facture ou un aperçu prend ceux du compte de la session. #}
+{% set activite = activite is defined ? activite : activite() %}
+{% set mots = mots is defined ? mots : activite.mots %}
 {% include 'document/' ~ m.modele ~ '.html.twig' %}
 {# Section de paiement (lot 6b) : hors de la feuille. Absente du premier rendu PDF (« essai »), qui ne sert qu'à compter
    les pages. #}

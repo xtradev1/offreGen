@@ -22,6 +22,7 @@ use OffreGen\Audio\Transcripteur;
 use OffreGen\Audio\TranscripteurApi;
 use OffreGen\Audio\TranscripteurFactice;
 use OffreGen\Audio\ValidateurAudio;
+use OffreGen\Compte\Activite;
 use OffreGen\Compte\Authentification;
 use OffreGen\Compte\Comptes;
 use OffreGen\Compte\DemandesEssai;
@@ -411,8 +412,18 @@ final class Conteneur
                 $id = $this->garde()->artisanCourant();
                 return $id === null ? null : $this->plafondEssai($id);
             }));
+            // Les mots des écrans selon l'activité du compte connecté (Compte\Activite) ; sans session, le Bâtiment.
+            $twig->addFunction(new TwigFunction('activite', fn (): Activite => $this->activiteCourante()));
+            $twig->addFunction(new TwigFunction('mots', fn (): array => $this->activiteCourante()->mots()));
             return $twig;
         });
+    }
+
+    /** L'activité du compte de la session ; le Bâtiment sans session (pages publiques). Relue à chaque appel : elle change dans les réglages. */
+    public function activiteCourante(): Activite
+    {
+        $id = $this->garde()->artisanCourant();
+        return $id === null ? Activite::Batiment : Activite::lire($this->artisans()->parId($id)['activite'] ?? null);
     }
 
     public function traitementLogo(): TraitementLogo

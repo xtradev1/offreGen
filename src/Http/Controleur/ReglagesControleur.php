@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Compte\Activite;
 use OffreGen\Compte\LogoRefuse;
 use OffreGen\Compte\Iban;
 use OffreGen\Compte\Marque;
@@ -32,7 +33,8 @@ final class ReglagesControleur
                             'paiement_type', 'paiement_jours_choix', 'paiement_jours', 'paiement_acomptes_choix', 'paiement_acomptes',
                             'escompte_pourcent', 'escompte_jours',
                             'modele', 'couleur_choix', 'couleur',
-                            'lettre_appel', 'lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin'];
+                            'lettre_appel', 'lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin',
+                            'activite'];
 
     /** Les rubriques du sommaire, dans l'ordre de la maquette validée le 2026-11-12. */
     public const RUBRIQUES = ['entreprise' => 'Mon entreprise', 'marque' => 'Ma marque', 'conditions' => "Conditions de l'offre", 'tva' => 'TVA et arrondi'];
@@ -226,6 +228,9 @@ final class ReglagesControleur
     private function sauver(Request $requete, Portee $portee): array
     {
         $champs = $this->champsActuels($portee);
+        // L'activité d'avant cet envoi : les phrases de Lettre de l'écran, reçues ou reprises, sont dans ses mots. Les
+        // comparer à celles d'une activité qui change ici les ferait enregistrer comme tapées (revue du 2026-11-22).
+        $activiteAvant = Activite::lire($champs['activite']);
         $recus = $requete->request;
         foreach (self::CHAMPS as $nom) {
             if ($recus->has($nom)) {
@@ -248,10 +253,15 @@ final class ReglagesControleur
         $arrondi = $recus->has('arrondi') ? $recus->getString('arrondi') === '1' : $r->arrondiCinqCentimes;
         $erreurs = [];
         $reglages = null;
+        // L'activité du compte (Compte\Activite) : une des trois, rien d'autre. Elle vit sur le compte, pas dans Reglages.
+        $activite = Activite::tryFrom($champs['activite']);
         try {
-            $reglages = Reglages::depuisSaisie($champs, $arrondi);
+            $reglages = Reglages::depuisSaisie($champs, $arrondi, $activiteAvant);
         } catch (SaisieRefusee $e) {
             $erreurs = $e->erreurs;
+        }
+        if ($activite === null) {
+            $erreurs['activite'] = 'Choisissez votre activité.';
         }
         $couleur = Marque::couleurValide($champs['couleur_choix'] === 'autre' ? $champs['couleur'] : $champs['couleur_choix']);
         if ($couleur === null) {
@@ -260,6 +270,10 @@ final class ReglagesControleur
         if ($reglages !== null && $erreurs === []) {
             $this->c->reglages($portee)->enregistrer($reglages);
             $this->c->reglages($portee)->enregistrerMarque(Marque::modeleValide($champs['modele']), $couleur);
+            // Le compte de la session, et lui seul. Ni le métier, ni le catalogue, ni les offres ne changent.
+            if ($activite !== null && $recus->has('activite')) {
+                $this->c->artisans()->changerActivite($portee->artisanId, $activite);
+            }
         }
         return [$erreurs, $champs, $arrondi];
     }
@@ -280,7 +294,8 @@ final class ReglagesControleur
     {
         $r = $this->c->reglages($portee)->lire();
         $m = $this->c->reglages($portee)->lireMarque();
-        return ['entreprise' => $r->entreprise, 'contact_nom' => $r->contactNom,
+        $activite = Activite::lire($this->c->artisans()->parId($portee->artisanId)['activite'] ?? null);
+        return ['entreprise' => $r->entreprise, 'contact_nom' => $r->contactNom, 'activite' => $activite->value,
                 'adresse_rue' => $r->adresse->rue, 'adresse_numero' => $r->adresse->numero, 'adresse_npa' => $r->adresse->npa,
                 'adresse_localite' => $r->adresse->localite, 'adresse_pays' => $r->adresse->pays,
                 // Montrée seulement (elle n'est pas dans CHAMPS) : l'adresse d'avant, à reporter dans les champs.
@@ -289,7 +304,7 @@ final class ReglagesControleur
                 'ide' => $r->ide, 'iban' => Iban::lisible($r->iban), 'tva' => (string) $r->tvaPourDixMille,
                 'modele' => $m->modele,
                 'couleur_choix' => in_array($m->couleur(), self::teintes($m), true) ? $m->couleur() : 'autre',
-                'couleur' => $m->couleur()] + $r->conditions()->versChamps() + $r->lettre->versChamps();
+                'couleur' => $m->couleur()] + $r->conditions()->versChamps() + $r->lettre->versChamps($activite);
     }
 
     private function portee(Request $requete): Portee
@@ -436,7 +451,7 @@ final class ReglagesControleur
             'types' => Reglages::TYPES_PAIEMENT,
             'delais' => Reglages::DELAIS_PROPOSES,
             'acomptes' => array_map(static fn (array $a): string => implode(',', $a), Reglages::ACOMPTES_PROPOSES),
-            'phrase' => $this->c->reglages($portee)->lire()->conditionsPaiement(),
+            'phrase' => $this->c->activiteCourante()->dire($this->c->reglages($portee)->lire()->conditionsPaiement()),
             'marque' => $marque,
             'teintes' => self::teintes($marque),
             'modeles' => Marque::MODELES,
@@ -444,7 +459,8 @@ final class ReglagesControleur
             'propose' => $this->modelePropose($portee),
             'vignettes' => in_array('marque', $sections, true) ? $this->vignettes($portee, $marque) : [],
             'proposees' => Marque::TEINTES,
-            'tournures' => PhrasesLettre::TOURNURES,
+            'tournures' => PhrasesLettre::tournures($this->c->activiteCourante()),
+            'activites' => Activite::cases(),
             'avis' => self::avisCouleur($champs),
         ]), $code);
     }

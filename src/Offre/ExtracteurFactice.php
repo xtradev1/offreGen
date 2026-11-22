@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OffreGen\Offre;
 
+use OffreGen\Compte\Activite;
+
 /**
  * Extracteur de développement : ne lit pas la transcription. Les trois premiers produits du catalogue,
  * quantités fixes, le troisième marqué « à vérifier ». Sans catalogue, deux lignes libres sans prix.
@@ -12,7 +14,7 @@ final class ExtracteurFactice implements Extracteur
 {
     private const QUANTITES = [12500, 3000, 1000];
 
-    public function extraire(string $transcription, array $catalogue): ResultatExtraction
+    public function extraire(string $transcription, array $catalogue, Activite $activite = Activite::Batiment): ResultatExtraction
     {
         if ($catalogue === []) {
             return new ResultatExtraction(null, [

@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace OffreGen\Tests\Catalogue;
 
 use OffreGen\Catalogue\CatalogueFictif;
+use OffreGen\Compte\Activite;
 use OffreGen\Offre\Saisie;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Les neuf catalogues de démonstration (huit métiers et le général, décision de Xavier du 2026-11-19) :
- * contenu dans docs/plans/2026-11-19_metiers-demo/CATALOGUES.md.
+ * Les catalogues de démonstration : huit métiers et le général (décision de Xavier du 2026-11-19), puis trois métiers
+ * de prestations et leur général (décision du 2026-11-22). Contenu dans docs/plans/2026-11-19_metiers-demo/CATALOGUES.md.
  */
 final class CatalogueFictifTest extends TestCase
 {
-    private const CLES = ['peintre', 'platrier', 'carreleur', 'macon', 'sanitaire', 'menuisier', 'sols', 'paysagiste', 'autre'];
+    private const CLES = ['peintre', 'platrier', 'carreleur', 'macon', 'sanitaire', 'menuisier', 'sols', 'paysagiste', 'autre',
+        'informatique', 'conseil', 'marketing', 'prestation'];
 
-    public function testNeufMetiersDansLOrdreDAffichage(): void
+    public function testLesMetiersDansLOrdreDAffichage(): void
     {
         self::assertSame(self::CLES, CatalogueFictif::metiers());
         self::assertSame(self::CLES, array_keys(CatalogueFictif::libelles()));
@@ -30,6 +32,33 @@ final class CatalogueFictifTest extends TestCase
         }
         self::assertSame('Poseur de sols', CatalogueFictif::libelle('sols'));
         self::assertSame('Autre métier', CatalogueFictif::libelle('autre'));
+        self::assertSame('Jardinier, paysagiste', CatalogueFictif::libelle('paysagiste'));
+        self::assertSame('Autre prestation', CatalogueFictif::libelle('prestation'));
+    }
+
+    /** Activités (2026-11-22) : chaque métier hors du bâtiment est connu de Compte\Activite, et réciproquement. */
+    public function testChaqueMetierASonActivite(): void
+    {
+        $horsBatiment = array_values(array_filter(self::CLES, static fn (string $cle): bool => Activite::duMetier($cle) !== Activite::Batiment));
+        self::assertSame(['paysagiste', 'informatique', 'conseil', 'marketing', 'prestation'], $horsBatiment);
+        self::assertSame(['Bâtiment', 'Extérieur', 'Prestations'], array_column(Activite::grouper(CatalogueFictif::libelles()), 'nom'));
+        self::assertSame(['informatique' => 'Informatique', 'conseil' => 'Conseil', 'marketing' => 'Marketing', 'prestation' => 'Autre prestation'],
+            Activite::grouper(CatalogueFictif::libelles())[2]['metiers']);
+    }
+
+    /** Un catalogue de prestations ne vend ni chantier ni travaux, et compte au mois, au jour ou à l'heure. */
+    public function testLesCataloguesDePrestationsParlentDePrestations(): void
+    {
+        foreach (['informatique', 'conseil', 'marketing', 'prestation'] as $metier) {
+            $produits = CatalogueFictif::produits($metier);
+            foreach ($produits as $p) {
+                self::assertDoesNotMatchRegularExpression('/chantier|travaux|visite/iu', $p['categorie'] . ' ' . $p['designation'] . ' ' . $p['synonymes'], "$metier : {$p['designation']}");
+            }
+            self::assertNotSame([], array_intersect(['h', 'jour', 'mois'], array_column($produits, 'unite')), $metier);
+            foreach (CatalogueFictif::offres($metier) as $o) {
+                self::assertDoesNotMatchRegularExpression('/chantier|travaux|visite/iu', $o['titre'], $metier);
+            }
+        }
     }
 
     public function testLibelleDUnMetierInconnuRefuse(): void

@@ -11,7 +11,9 @@
   <div class="rec" data-etat="enregistrement" hidden>
     <div class="timer" data-minuteur>00:00</div>
     <div class="dot on" aria-hidden="true"></div>
-    <p data-consigne>Parlez, pièce par pièce.</p>
+    {# La phrase de l'activité du compte ; l'attribut la garde pour app.js, qui la remet à chaque enregistrement. #}
+    {% set dictee = mots().dictee %}
+    <p data-consigne="{{ dictee }}">{{ dictee }}</p>
     <button class="btn danger large" type="button" data-terminer>
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>Terminer et créer l'offre</button>
     <button class="lien" type="button" data-abandonner>Abandonner sans envoyer</button>

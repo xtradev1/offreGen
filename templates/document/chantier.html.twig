@@ -9,7 +9,7 @@
 {% block corps %}
   {% set fiche = [] %}
   {% if chantier %}
-    {% for rang in [['Adresse', chantier.adresse], ['Contact sur place', chantier.contact], ['Accès', chantier.acces], ['Début des travaux', chantier.debut], ['Durée estimée', chantier.duree]] %}
+    {% for rang in [[mots.doc_adresse, chantier.adresse], [mots.bloc_contact, chantier.contact], ['Accès', chantier.acces], [mots.debut, chantier.debut], ['Durée estimée', chantier.duree]] %}
       {% if rang[1] %}{% set fiche = fiche|merge([rang]) %}{% endif %}
     {% endfor %}
   {% endif %}
@@ -25,7 +25,7 @@
     <table class="doc-duo"><tr>
       <td>
         <table class="doc-fiche c-filet">
-          <tr><th colspan="2" class="c-fond">{{ fiche ? 'Chantier' : 'Références' }}</th></tr>
+          <tr><th colspan="2" class="c-fond">{{ fiche ? mots.doc_fiche : 'Références' }}</th></tr>
           {% for rang in fiche ?: references %}<tr><td class="c-teinte">{{ rang[0] }}</td><td>{{ rang[1] }}</td></tr>{% endfor %}
         </table>
       </td>

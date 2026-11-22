@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Audio;
 
+use OffreGen\Compte\Activite;
 use OffreGen\Donnees\Base;
 use OffreGen\Donnees\Dates;
 use OffreGen\Donnees\DepotArtisans;
@@ -167,12 +168,14 @@ final class Traiteur
     private function creerOffre(array $e, string $jeton): int
     {
         $portee = new Portee($e['artisan_id']);
+        // L'activité du compte règle la consigne, le rangement des lignes et le titre d'une offre sans titre dicté.
+        $activite = Activite::lire($this->artisans->parId($e['artisan_id'])['activite'] ?? null);
         // L'extraction (un appel de modèle, plusieurs secondes) se fait hors transaction.
-        $resultat = $this->extracteur->extraire((string) $e['transcription'], (new DepotProduits($this->base, $portee))->tous());
+        $resultat = $this->extracteur->extraire((string) $e['transcription'], (new DepotProduits($this->base, $portee))->tous(), $activite);
         $lignes = $resultat->lignes;
         $offres = new DepotOffres($this->base, $portee);
         $maintenant = $this->horloge->now();
-        $titre = $resultat->titre ?? 'Visite du ' . $maintenant->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y');
+        $titre = $resultat->titre ?? $activite->mots()['titre_defaut'] . ' du ' . $maintenant->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y');
         // Plus de 80 % de ressemblance avec une fiche : l'offre la désigne. Sinon le nom dicté reste une
         // proposition, que l'artisan confirme ou remplace (règle de Xavier du 2026-11-12).
         $clientId = $resultat->client === null ? null : Rapprochement::meilleur($resultat->client, (new DepotClients($this->base, $portee))->pourRapprochement(), $resultat->lieu);

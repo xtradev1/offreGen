@@ -11,7 +11,7 @@
     {% if facture %}<div class="doc-bloc"><div class="doc-lab">Échéance</div>{{ f.echeance|jour }}</div>
     <div class="doc-bloc"><div class="doc-lab">Référence</div>{{ b.ref(_context) }}</div>
     {% else %}<div class="doc-bloc"><div class="doc-lab">Valable jusqu'au</div>{{ valable_jusqu_au }}</div>
-    {% if chantier and chantier.adresse %}<div class="doc-bloc"><div class="doc-lab">Chantier</div>{{ chantier.adresse }}</div>{% endif %}{% endif %}
+    {% if chantier and chantier.adresse %}<div class="doc-bloc"><div class="doc-lab">{{ mots.doc_lieu }}</div>{{ chantier.adresse }}</div>{% endif %}{% endif %}
     {% set contact = [r.contactNom, r.telephone, r.courrielContact]|filter(x => x != '') %}
     {% if contact %}<div class="doc-bloc"><div class="doc-lab">Votre contact</div>{% for x in contact %}{{ x }}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>{% endif %}
     <div class="doc-fond"><b>{{ r.entreprise }}</b>{% for l in coord %}<br>{{ l }}{% endfor %}{% if r.ide %}<br>{{ r.ide }}{% if avec_tva %} TVA{% endif %}{% endif %}{% if r.iban and not facture %}<br>IBAN {{ r.iban|iban }}{% endif %}</div>
