@@ -431,6 +431,17 @@ a.carte-lien.conditions::after { content: '›'; color: var(--muted); font-size:
 .puce-lien[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 .piece-autre { display: flex; gap: 8px; margin: 8px 0 0; }
 .piece-autre input { flex: 1; min-width: 0; font: inherit; font-size: 16px; min-height: 48px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); }
+/* Choix du client dans « Facturer » (E1 A) : une case par option ou variante, un bouton de 56 px qui envoie le choix. */
+.choix-client { display: grid; gap: 6px; margin: 0 0 16px; }
+.choix-client form { margin: 0; }
+.case-client { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 6px 12px; font: inherit; text-align: left; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+.case-client:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.case-visuel { flex: none; width: 26px; height: 26px; border: 2px solid var(--bord); border-radius: 6px; display: grid; place-items: center; }
+.case-client[aria-pressed="true"] .case-visuel { background: var(--ok); border-color: var(--ok); }
+.case-client[aria-pressed="true"] .case-visuel::after { content: ''; width: 7px; height: 13px; border: solid var(--surface); border-width: 0 3px 3px 0; transform: translateY(-2px) rotate(45deg); }
+.case-texte { flex: 1; min-width: 0; display: grid; }
+.case-texte small { color: var(--muted); font-size: 12.5px; }
+.case-montant { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }
 /* Variante (O4) : la ligne remplacée, sur sa propre rangée sous le libellé ; la liste prend la place qui reste. */
 .remplace-choix { flex-wrap: wrap; }
 .remplace-choix .lbl { flex-basis: 100%; margin: 0; }

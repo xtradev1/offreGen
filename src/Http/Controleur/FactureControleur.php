@@ -25,6 +25,7 @@ use OffreGen\Http\Formats;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
 use OffreGen\Offre\Offerte;
+use OffreGen\Offre\Options;
 use OffreGen\Offre\Rabais;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\Totaux;
@@ -325,7 +326,8 @@ final class FactureControleur
             }
         } else {
             // La finale copie le taux de chaque ligne, celui du produit compris : changer le catalogue ensuite ne la change pas.
-            foreach ($lignesOffre as $l) {
+            // Options et variantes (O5, point 2) : seulement ce qui est dans le total, la variante retenue au rang de sa ligne.
+            foreach (Options::lignesDuTotal($lignesOffre) as $l) {
                 $lignes[] = ['designation' => $l['designation'], 'quantite_milliemes' => $l['quantite_milliemes'], 'unite' => $l['unite'],
                     'prix_centimes' => $l['prix_centimes'], 'tva_pour_dix_mille' => $l['tva_pour_dix_mille'],
                     'categorie' => $l['categorie'], 'produit_id' => $l['produit_id'], 'offerte' => $l['offerte']];
@@ -1042,6 +1044,7 @@ final class FactureControleur
             'erreurs' => $erreurs,
             'offre_numero' => $offre['numero'],
             'apercu' => $apercu,
+            'choix_client' => $this->choixDuClient($portee, $offre['id']),
             'm' => $this->c->reglages($portee)->lireMarque(),
             'jeton' => bin2hex(random_bytes(16)),
             // L'échéance proposée suit le genre choisi (revue du 25) : un acompte à 30 jours, la finale selon les conditions.
@@ -1050,6 +1053,28 @@ final class FactureControleur
                 'finale' => PlanAcomptes::echeance($r, 'finale', $this->aujourdhui())->format('Y-m-d'),
             ],
         ]), $code);
+    }
+
+    /**
+     * Les options et variantes de l'offre, pour les cases « Choix du client » de la feuille (E1 A) : les mêmes que sur
+     * l'offre, envoyées à la même route (ligne_retenue, retour=facturer).
+     *
+     * @return list<array{id: int, designation: string, montant: int, retenue: bool, libelle: string}>
+     */
+    private function choixDuClient(Portee $portee, int $offreId): array
+    {
+        $lignes = $this->c->offres($portee)->lignes($offreId);
+        $noms = array_column($lignes, 'designation', 'id');
+        $choix = [];
+        foreach ($lignes as $l) {
+            $nature = Options::natureEffective($l, $lignes);
+            if ($nature === Options::LIGNE) {
+                continue;
+            }
+            $choix[] = ['id' => $l['id'], 'designation' => $l['designation'], 'montant' => Offerte::est($l) ? 0 : Totaux::brut($l), 'retenue' => $l['retenue'] === 1,
+                'libelle' => $nature === Options::OPTION ? 'Option' : "Variante de «\u{00A0}" . ($noms[$l['remplace_id'] ?? 0] ?? '') . "\u{00A0}»"];
+        }
+        return $choix;
     }
 
     /**

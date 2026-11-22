@@ -16,7 +16,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 6 de `PLAN.md` (facturer : acompte et finale sur ce qui est coché, cases dans « Facturer », E1) dans `~/offreGen-options`. Lots 1 à 5 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`, offre 1 semée).
+Lot 7 de `PLAN.md` (le banc du sous-chantier 29 : `outils/banc-corpus.php`, `outils/banc/NoteExtraction.php`, corpus écrit dans `OffreGen/corpus/`) dans `~/offreGen-options`. Lots 1 à 6 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`, offre 1 semée).
 
 ## En attente de toi
 
@@ -46,6 +46,7 @@ Lot 6 de `PLAN.md` (facturer : acompte et finale sur ce qui est coché, cases d
 - 2026-11-22 : écart au plan : le choix par défaut de la fenêtre d'une ligne est la dernière ligne du total de l'offre (celle de la pièce dans la feuille d'ajout). Défaut vu sur capture et corrigé : la rangée « Elle remplace » de la feuille d'ajout débordait de 6 px à 390 px. Fausse alerte écartée par mesure : deux puces grises sur une capture, prise pendant le fondu de 0,15 s.
 - 2026-11-22 : lot 4 poussé (`395f621`). Lot 5 fait (le document). `OffreControleur::grouper` a un mode document : une option retenue entre dans les lignes de sa pièce (point 2) ; `vueDocument` rend `groupes_document`, lu par `_blocs.html.twig` et Récapitulatif ; une facture n'a que `groupes`. Macros `lignes` et `lignes_marge` : la variante retenue à la place de sa ligne, les autres dessous avec la case et l'écart ; macros `case`, `ecart`, `options`. Les douze modèles appellent `b.options` sous leur total (Récapitulatif : sous le détail des lignes, son total est dans une colonne étroite). Écart au plan : le bloc des options n'est pas dans la macro `totaux`, pour cette raison.
 - 2026-11-22 : défaut trouvé au premier rendu : la variante de Technique sortait illisible dans le PDF (IBM Plex n'a pas de face italique ; repli de dompdf). Corrigé : droite dans Technique ; le test refuse toute police de repli dans les douze PDF. Constat à montrer à Xavier : avec six lignes, une variante et deux options, la plupart des modèles laissent les conditions et les signatures seules en page 2 (le bloc de fin ne se coupe pas).
+- 2026-11-22 : lot 5 poussé (`6974330`). Lot 6 fait (facturer). La finale copie `Options::lignesDuTotal` ; défaut d'avant prouvé par le test : sans ce lot, la finale copiait aussi la ligne remplacée et les options libres (`Totaux` comptait juste, la copie non). Feuille « Facturer » : « Choix du client » hors du formulaire de facture, une case-bouton par option ou variante qui poste sur `ligne_retenue` avec `retour=facturer` ; dans la feuille, la réponse remplace le contenu et l'aperçu suit (vérifié au clic). Texte de la finale : « Les lignes de l'offre et ce que le client a retenu » quand il y a des options.
 
 ## Décisions
 
@@ -219,4 +220,23 @@ Planches regardées (pdf5.php, PyMuPDF à 70 dpi) : douze modèles avant le choi
   Avant : variantes sous « Peinture des murs » (+252.00, −84.00), bloc « Options », total avec toutes les options CHF 3'890.50.
   Après : « Peinture lessivable » à la place de sa ligne, minérale −336.00, portail dans les lignes, total CHF 4'071.05
   (3'766.00 + TVA 305.046 → 305.05), radiateur seul dans les options, CHF 4'162.95.
+```
+
+### Lot 6
+
+```
+$ phpunit --filter FacturerOptionsTest   (code du lot mis de côté par git stash)
+Tests: 6, Assertions: 31, Failures: 4.   (cases absentes ; finale avec la ligne remplacée et les options : testSansChoixLaFinaleGardeLaLigne rouge)
+$ phpunit --filter FacturerOptionsTest   (code remis, test corrigé pour phpstan)
+OK (6 tests, 37 assertions)
+$ vendor/bin/phpstan analyse
+[OK] No errors
+$ APP_ENV=test vendor/bin/phpunit   (avant la correction de typage du test)
+OK (1235 tests, 10527 assertions)
+$ node ecran6.js   (local, port 8041, feuille ouverte par-dessus l'offre 1)
+390 cases 3 | bouton Créer la facture · CHF 8'496.65
+390 après la case : cochées 1 | bouton Créer la facture · CHF 9'404.70 | feuille ouverte true
+390 remis | largeur 390/390 | erreurs JS aucune
+1280 : mêmes valeurs, largeur 1280/1280, erreurs JS aucune
+Capture regardée : ecran6-facturer-390.
 ```

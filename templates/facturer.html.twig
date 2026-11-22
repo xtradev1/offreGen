@@ -28,6 +28,20 @@
     {% elseif erreurs is not empty %}
       <p class="alerte bad" role="alert">La facture n'est pas créée&nbsp;: corrigez ce qui est signalé.</p>
     {% endif %}
+    {# Le choix du client (O5, E1 A) : les mêmes cases que sur l'offre. Hors du formulaire de la facture : chaque case est
+       un bouton qui l'envoie, la feuille revient avec l'aperçu à jour (avec ou sans JavaScript). #}
+    {% if choix_client is not empty %}
+      <div class="choix-client">
+        <span class="etiquette-champ">Choix du client</span>
+        {% for x in choix_client %}
+          <form method="post" action="/offres/{{ offre.id }}/lignes/{{ x.id }}/retenue">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}"><input type="hidden" name="retour" value="facturer"><input type="hidden" name="retenue" value="{{ x.retenue ? 0 : 1 }}">
+            <button class="case-client" type="submit" aria-pressed="{{ x.retenue ? 'true' : 'false' }}"><span class="case-visuel" aria-hidden="true"></span><span class="case-texte"><b>{{ x.designation }}</b><small>{{ x.libelle }}</small></span><span class="case-montant">{{ x.montant|montant }}</span></button>
+          </form>
+        {% endfor %}
+        <p class="muted petit">Les mêmes cases que sur l'offre. Ce qui est coché entre dans la facture.</p>
+      </div>
+    {% endif %}
     <form id="facturer" method="post" action="/offres/{{ offre.id }}/facturer" data-facturer data-apercu="/offres/{{ offre.id }}/facturer/apercu" data-sortir>
       <input type="hidden" name="_csrf" value="{{ csrf() }}">
       {# Un double toucher ne crée qu'une facture (revue du 25) : le second envoi retrouve celle du premier. #}
@@ -76,7 +90,7 @@
 
           {% if avec_finale %}
             <div class="finale" data-si-finale{% if champs.genre != 'finale' %} hidden{% endif %}>
-              <p class="muted petit">Toutes les lignes de l'offre{% if deja > 0 %}, moins les acomptes déjà facturés ({{ deja|chf }}){% endif %}.</p>
+              <p class="muted petit">{% if choix_client is not empty %}Les lignes de l'offre et ce que le client a retenu{% else %}Toutes les lignes de l'offre{% endif %}{% if deja > 0 %}, moins les acomptes déjà facturés ({{ deja|chf }}){% endif %}.</p>
               <button class="btn" type="submit" name="suite" value="corriger">Corriger des lignes d'abord</button>
               <p class="muted petit">Quantités réelles, {{ mots().travaux }} en plus&nbsp;: la facture prendra son numéro à la création.</p>
             </div>
