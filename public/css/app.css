@@ -324,6 +324,22 @@ a.nm:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .note.bad { color: var(--bad); }
 /* Prix dicté à côté du catalogue (Xavier, 2026-11-17) : une note discrète, les boutons à la façon de « C'est juste ». */
 .note.prix-dit { color: var(--muted); flex-wrap: wrap; row-gap: 0; }
+/* Options et variantes (chantier 2026-11-22_options-variantes) : la variante sous sa ligne, en retrait et en italique
+   (O2) ; la ligne qu'une variante retenue remplace reste visible, grisée, son montant barré (E5) ; l'écart sous le
+   montant ; la case du choix du client : 26 px, dans une cible de 48 px. */
+.row.var { box-shadow: inset 2px 0 0 var(--bord); padding-left: 12px; margin-left: 12px; }
+.row.var .nm { font-style: italic; }
+.row.var .nm small.sorte, .row.opt .nm small.sorte { font-style: normal; font-weight: 600; letter-spacing: .03em; margin: 0 0 1px; }
+.row.remplacee .nm, .row.remplacee .tt { color: var(--muted); }
+.row.remplacee .tt { text-decoration: line-through; }
+.tt .ecart { display: block; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.note.choix { color: var(--muted); }
+.note.choix .case { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; cursor: pointer; font-size: 13.5px; font-weight: 600; }
+.note.choix input[type="checkbox"] { width: 26px; height: 26px; margin: 0; accent-color: var(--ok); cursor: pointer; }
+.note.choix input[type="checkbox"]:checked + span { color: var(--ok); }
+.note.choix input[type="checkbox"]:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.options .cat h5 { color: var(--ink); }
+.totals .r.avec { color: var(--ink); font-weight: 600; border-top: 1px dashed var(--bord); }
 .okbtn { font: inherit; background: none; border: 0; padding: 0; min-height: 48px; cursor: pointer; }
 .okbtn span { display: inline-block; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 6px 12px; }
 .totals { margin-top: 14px; font-variant-numeric: tabular-nums; }

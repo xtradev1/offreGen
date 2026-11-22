@@ -139,6 +139,32 @@ final class LigneControleur
         return $this->versLaLigne($cible, $l['id']);
     }
 
+    /**
+     * Le client retient une option ou une variante, ou y renonce (O5) ; retenir une variante décoche les autres de sa
+     * ligne. « retour=facturer » : la feuille « Facturer » reprend ces cases (E1 A) et y revient. Offre seulement.
+     *
+     * @param array<string, string> $parametres
+     */
+    public function retenir(Request $requete, array $parametres): Response
+    {
+        if ($this->genre !== self::OFFRE) {
+            throw new PageIntrouvable();
+        }
+        [$cible, $l] = $this->ligne($requete, $parametres);
+        $valeur = $requete->request->getString('retenue');
+        if (!in_array($valeur, ['0', '1'], true)) {
+            throw new Conflit("Choix illisible\u{00A0}: rien n'a été modifié.");
+        }
+        if (!$this->c->offres($this->portee($requete))->retenir($cible['id'], $l['id'], $valeur === '1')) {
+            throw new Conflit('Cette ligne est dans le total : seule une option ou une variante se retient.');
+        }
+        $this->modifiee($requete, $cible['id']);
+        if ($requete->request->getString('retour') === 'facturer') {
+            return new RedirectResponse($cible['base'] . '/facturer', 303);
+        }
+        return $this->versLaLigne($cible, $l['id']);
+    }
+
     /** @param array<string, string> $parametres */
     public function supprimer(Request $requete, array $parametres): Response
     {

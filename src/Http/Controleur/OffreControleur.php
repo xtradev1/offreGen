@@ -16,6 +16,7 @@ use OffreGen\Http\Parametres;
 use OffreGen\Offre\Chantier;
 use OffreGen\Offre\Piece;
 use OffreGen\Offre\Offerte;
+use OffreGen\Offre\Options;
 use OffreGen\Offre\Rabais;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\Totaux;
@@ -235,6 +236,7 @@ final class OffreControleur
             'offre' => $offre,
             'chantier' => Chantier::depuisOffre($offre),
             'groupes' => self::grouper($lignes, $totaux['lignes']),
+            'options' => self::options($lignes),
             'totaux' => $totaux,
             'tva' => $r->tvaPourDixMille,
             'r' => $r,
@@ -251,16 +253,31 @@ final class OffreControleur
      *
      * « barre » : le montant qu'une ligne offerte montre barré (D1, 2026-11-21), null pour une ligne facturée.
      *
-     * @template T of array{categorie: string|null, piece?: string|null, quantite_milliemes: int, prix_centimes: int, offerte?: int}
+     * Options et variantes (chantier 2026-11-22_options-variantes) : une variante se range sous la ligne qu'elle remplace
+     * (« variantes ») ; « retenue » est celle que le client a choisie, qui prend la place de la ligne sur le document
+     * (point 2) ; « remplacee » le dit à l'écran (E5). Les options n'entrent dans aucun groupe : OffreControleur::options.
+     * « total » d'une option ou d'une variante : son montant, même hors du total ; le sous-total d'un groupe ne compte
+     * que ce qui est dans le total.
+     *
+     * @template T of array{categorie: string|null, piece?: string|null, quantite_milliemes: int, prix_centimes: int, offerte?: int, id?: int, nature?: string, remplace_id?: int|null, retenue?: int}
      * @param list<T> $lignes
-     * @param list<int> $totauxLignes total de chaque ligne, dans le même ordre
-     * @return list<array{nom: string, lignes: list<array{l: T, total: int, barre: int|null}>, total: int, piece: string|null, par_piece: bool}>
+     * @param list<int> $totauxLignes total de chaque ligne, dans le même ordre (0 hors du total, Totaux::calculer)
+     * @return list<array{nom: string, lignes: list<array{l: T, total: int, barre: int|null, variantes: list<array{l: T, total: int, barre: int|null}>, retenue: array{l: T, total: int, barre: int|null}|null, remplacee: bool}>, total: int, piece: string|null, par_piece: bool}>
      */
     public static function grouper(array $lignes, array $totauxLignes): array
     {
+        $variantes = [];
+        foreach ($lignes as $i => $l) {
+            if (Options::natureEffective($l, $lignes) === Options::VARIANTE) {
+                $variantes[$l['remplace_id'] ?? 0][] = $i;
+            }
+        }
         $parPiece = false;
         $general = false;
         foreach ($lignes as $l) {
+            if (Options::natureEffective($l, $lignes) !== Options::LIGNE) {
+                continue;
+            }
             $piece = $l['piece'] ?? null;
             $parPiece = $parPiece || $piece !== null;
             $general = $general || $piece === null;
@@ -270,6 +287,9 @@ final class OffreControleur
             $groupes[''] = ['nom' => Piece::GENERAL, 'lignes' => [], 'total' => 0, 'piece' => null, 'par_piece' => true];
         }
         foreach ($lignes as $i => $l) {
+            if (Options::natureEffective($l, $lignes) !== Options::LIGNE) {
+                continue;
+            }
             if ($parPiece) {
                 $piece = $l['piece'] ?? null;
                 $cle = $piece === null ? '' : 'p:' . Piece::cle($piece);
@@ -281,11 +301,55 @@ final class OffreControleur
                 $cle = 'c:' . $nom;
                 $piece = null;
             }
+            $sous = [];
+            $retenue = null;
+            $dansLeTotal = $totauxLignes[$i] ?? 0;
+            foreach ($variantes[$l['id'] ?? 0] ?? [] as $j) {
+                $v = self::rangee($lignes[$j], null);
+                $sous[] = $v;
+                $dansLeTotal += $totauxLignes[$j] ?? 0;
+                if ($retenue === null && ($lignes[$j]['retenue'] ?? 0) === 1) {
+                    $retenue = $v;
+                }
+            }
             $groupes[$cle] ??= ['nom' => $nom, 'lignes' => [], 'total' => 0, 'piece' => $piece, 'par_piece' => $parPiece];
-            $groupes[$cle]['lignes'][] = ['l' => $l, 'total' => $totauxLignes[$i] ?? 0, 'barre' => Offerte::est($l) ? Totaux::brut($l) : null];
-            $groupes[$cle]['total'] += $totauxLignes[$i] ?? 0;
+            $groupes[$cle]['lignes'][] = self::rangee($l, $retenue === null ? ($totauxLignes[$i] ?? 0) : null) + ['variantes' => $sous, 'retenue' => $retenue, 'remplacee' => $retenue !== null];
+            $groupes[$cle]['total'] += $dansLeTotal;
         }
         return array_values($groupes);
+    }
+
+    /**
+     * Les options de l'offre, dans l'ordre de la dictée, une variante sans ligne de base comprise (O3) : leur groupe
+     * « Options » sous le total (E2 A).
+     *
+     * @template T of array{categorie: string|null, piece?: string|null, quantite_milliemes: int, prix_centimes: int, offerte?: int, id?: int, nature?: string, remplace_id?: int|null, retenue?: int}
+     * @param list<T> $lignes
+     * @return list<array{l: T, total: int, barre: int|null}>
+     */
+    public static function options(array $lignes): array
+    {
+        $options = [];
+        foreach ($lignes as $l) {
+            if (Options::natureEffective($l, $lignes) === Options::OPTION) {
+                $options[] = self::rangee($l, null);
+            }
+        }
+        return $options;
+    }
+
+    /**
+     * Une rangée de l'écran ou du document. $total null : le montant de la ligne elle-même (option, variante), qu'elle
+     * soit dans le total ou non.
+     *
+     * @template T of array{quantite_milliemes: int, prix_centimes: int, offerte?: int}
+     * @param T $l
+     * @return array{l: T, total: int, barre: int|null}
+     */
+    private static function rangee(array $l, ?int $total): array
+    {
+        $offerte = Offerte::est($l);
+        return ['l' => $l, 'total' => $total ?? ($offerte ? 0 : Totaux::brut($l)), 'barre' => $offerte ? Totaux::brut($l) : null];
     }
 
     private function offres(Request $requete): DepotOffres

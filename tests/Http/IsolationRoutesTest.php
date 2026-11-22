@@ -162,6 +162,7 @@ final class IsolationRoutesTest extends TestCase
             'offre_relire_valider_ligne_de_b' => ['/offres/' . $this->jeu->offre['a'] . '/relire/' . $this->ligne['b'], ['quantite' => '99', 'prix' => '1']],
             'ligne_supprimer' => [$this->cheminLigne('b', '/supprimer'), []],
             'ligne_restaurer' => [$this->cheminLigne('b', '/restaurer'), []],
+            'ligne_retenue' => [$this->cheminLigne('b', '/retenue'), ['retenue' => '1']],
             'produit_modifier' => ['/catalogue/' . $this->jeu->produit['b'], $produit],
             'produit_supprimer' => ['/catalogue/' . $this->jeu->produit['b'] . '/supprimer', []],
             'vos_prix_agir' => ['/vos-prix/' . $this->jeu->produit['b'], ['action' => 'retirer', 'prix' => '1']],

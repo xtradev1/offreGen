@@ -12,10 +12,14 @@ function corrections() {
   const etat = () => document.querySelector('[data-sauvegarde]');
   const enAttente = new Set();
 
+  // Le choix du client (options et variantes, 2026-11-22) est une case : elle part quand son état change.
+  const caseACocher = (champ) => champ.type === 'checkbox';
+  const choixSansJs = () => document.querySelectorAll('form[data-choix] [data-sans-js]').forEach((b) => { b.hidden = true; });
+  choixSansJs();
   const envoyer = (champ) => {
     const form = champ.form;
-    if (!form || champ.value === champ.defaultValue) return;
-    champ.defaultValue = champ.value;
+    if (!form || (caseACocher(champ) ? champ.checked === champ.defaultChecked : champ.value === champ.defaultValue)) return;
+    if (caseACocher(champ)) champ.defaultChecked = champ.checked; else champ.defaultValue = champ.value;
     const corps = new URLSearchParams(new FormData(form));
     const ligne = form.closest('.row');
     const requete = fetch(form.action, { method: 'POST', body: corps, keepalive: true, credentials: 'same-origin' });
@@ -31,12 +35,13 @@ function corrections() {
         .filter((c) => c.value !== c.defaultValue)
         .map((c) => [c.closest('.row').id, c.name, c.value]);
       // Le total fixé en bas (D3) suit aussi : il restait à l'ancien montant jusqu'au lot 8 (constaté le 2026-11-15).
-      ['.rows', '.totals', '[data-sauvegarde]', '[data-total-fixe]', '[data-total-bouton]', '.lcard[aria-current="page"]'].forEach((s) => {
+      ['.rows', '.totals', '[data-options]', '[data-sauvegarde]', '[data-total-fixe]', '[data-total-bouton]', '.lcard[aria-current="page"]'].forEach((s) => {
         const neuf = page.querySelector(s);
         const vieux = document.querySelector(s);
         if (neuf && vieux) vieux.replaceWith(neuf);
       });
       montrerRenvoi(page);
+      choixSansJs();
       enCours.forEach(([ligneId, nom, valeur]) => {
         const c = document.querySelector('#' + ligneId + ' input[name=' + nom + ']');
         if (c) c.value = valeur;
@@ -53,7 +58,7 @@ function corrections() {
     })).catch(() => {
       if (etat()) etat().textContent = 'Non enregistré : pas de connexion';
       if (ligne) ligne.classList.add('miss');
-      champ.defaultValue = '';
+      if (caseACocher(champ)) champ.defaultChecked = !champ.checked; else champ.defaultValue = '';
     }).finally(() => enAttente.delete(requete));
   };
 

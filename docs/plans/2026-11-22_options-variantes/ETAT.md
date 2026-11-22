@@ -16,7 +16,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 3 de `PLAN.md` (lecture et écran) dans `~/offreGen-options`, base `offregen_options_test` ; créer d'abord une base de développement à soi (`offregen_options_dev`) pour les parcours Playwright locaux. Lots 1 et 2 commités et poussés (accord de Xavier : chaque lot poussé dès qu'il est vérifié).
+Lot 4 de `PLAN.md` (les gestes : nature dans la fenêtre d'une ligne et à l'ajout, « + Variante ») dans `~/offreGen-options`. Lots 1 à 3 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`).
 
 ## En attente de toi
 
@@ -38,6 +38,10 @@ Lot 3 de `PLAN.md` (lecture et écran) dans `~/offreGen-options`, base `offregen
 - 2026-11-22 : base `offregen_options_test` créée en root, droits recopiés de `offregen_test` (relus par `SHOW GRANTS`), `DB_NOM` posé dans le `.env.test.local` de ma copie. Suite de départ : `OK (1159 tests, 10086 assertions)`.
 - 2026-11-22 : lot 1 fait. Migration `Version20261122200001` (`nature`, `remplace_id`, `retenue` sur `ligne`), sans clé étrangère de `remplace_id` (raison dans la migration). Montée, descente, remontée sur `offregen_options_test` ; jouée nulle part ailleurs.
 - 2026-11-22 : lot 2 fait. `src/Offre/Options.php` ; `Totaux::calculer` et `parTaux` appliquent la règle, `calculer` rend `avec_options`. Tests à part dans `tests/Offre/TotauxOptionsTest.php` (au lieu de `TotauxTest`, prévu au plan : le fichier existant reste lisible) ; `TotauxTest::sansDetail` retire aussi `avec_options` (une ligne). Analyse statique : trois erreurs de typage trouvées et corrigées.
+- 2026-11-22 : Xavier : « tu peux enchainer et pousser a chaque fois que tu fini un lot et tu tarrete que quand tas fini ». Lots 1 et 2 poussés (`c57b170`).
+- 2026-11-22 : lot 3 fait (lecture et écran). `DepotOffres` lit les trois colonnes, `retenir` (une variante retenue décoche les autres) ; `OffreControleur::grouper` range les variantes sous leur ligne et sort les options (`options()`) ; nouvelle rangée commune `templates/_rangee.html.twig` (ligne, ligne remplacée, variante, option) ; groupe « Options » et « Total avec toutes les options » sous `.totals` ; route `ligne_retenue` et `LigneControleur::retenir` (avancée du lot 4 : sans elle, un lot poussé portait un formulaire mort) ; `corrections()` d'`app.js` envoie une case et remplace `[data-options]`. Écarts au plan : `RelectureControleur::aRelire` passait par `grouper` et aurait perdu les options et variantes à vérifier (corrigé, testé) ; le compteur « Relire N lignes » de l'écran se lit sur `manque + doute` de `vueDocument` (toutes les lignes) au lieu de parcourir les groupes.
+- 2026-11-22 : défauts trouvés en route et corrigés : un antislash mangé par le heredoc de l'outil Bash (erreur 500, cause lue dans le journal) ; l'insécable de « au catalogue ? » perdue à la recopie de la rangée (`PrixDicteTest` rouge) ; `IsolationRoutesTest` exigeait un cas pour `ligne_retenue` (ajouté) ; deux constructeurs de lignes d'essai sans les nouveaux champs (phpstan).
+- 2026-11-22 : base de développement à soi `offregen_options_dev` (droits recopiés de `offregen_dev`, `DB_NOM` dans le `.env` de ma copie), compte de démo `options-demo@exemple.ch` (fichier `~/.offregen-options-demo-compte`), offre 1 avec une variante et deux options posées en SQL ; serveur local sur le port 8041.
 
 ## Décisions
 
@@ -140,4 +144,30 @@ Options.php:88 masqueAvecOptions() should return list<bool> ; Options.php:125 li
 $ vendor/bin/phpstan analyse --error-format=raw   (après correction)
 (aucune erreur)
 BOM et tirets longs dans les fichiers touchés : aucun.
+```
+
+### Lot 3
+
+```
+$ phpunit --filter OptionsEcranTest   (code du lot mis de côté par git stash)
+Tests: 8, Assertions: 22, Failures: 6.
+$ phpunit --filter OptionsEcranTest   (code remis)
+OK (8 tests, 50 assertions)
+$ vendor/bin/phpstan analyse
+[OK] No errors
+$ APP_ENV=test vendor/bin/phpunit
+OK (1182 tests, 10180 assertions)
+BOM et tirets longs dans les fichiers touchés : aucun.
+$ node ecran3.js   (local, port 8041, offre 1 : échafaudage 2'400, façade 5'400, déplacement 60 ; variante façade minérale 52.00 ; options portes 3 x 140, radiateur 85)
+390 total CHF 8'496.65 | avec options CHF 9'042.55
+390 cible de la case 161x48 | bouton sans JS caché true
+390 après variante CHF 9'404.70 | remplacée 1 | libellé Retenue, à la place
+390 après option CHF 9'858.70 | avec options CHF 9'950.60 | bouton sans JS caché après remplacement true
+390 rechargements de page pendant les cases 0
+390 largeur page 390/390 | erreurs JS aucune ; remis CHF 8'496.65
+1280 : mêmes montants, mêmes contrôles, largeur 1280/1280, erreurs JS aucune
+Recalcul à la main : 7'860.00 + TVA 636.66 = 8'496.66 → 8'496.65 ; avec portes et radiateur 8'365.00 + 677.57 = 9'042.57 → 9'042.55 ;
+  variante 8'700.00 + 704.70 = 9'404.70 ; + portes 9'120.00 + 738.72 = 9'858.72 → 9'858.70.
+$ node ecran3b.js : « Total avec toutes les options » et « Conditions » visibles à 390 et 1280, rien posé dessus (elementFromPoint).
+Captures regardées : ecran3-apres-390, ecran3-apres-1280, ecran3-options-390.
 ```

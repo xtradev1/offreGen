@@ -7,6 +7,7 @@ namespace OffreGen\Donnees;
 use OffreGen\Compte\Conditions;
 use OffreGen\Offre\Chantier;
 use OffreGen\Offre\LigneExtraite;
+use OffreGen\Offre\Options;
 use OffreGen\Offre\Rabais;
 
 /**
@@ -22,7 +23,7 @@ use OffreGen\Offre\Rabais;
  * par défaut) ou « client » (chez lui) (D10 C).
  *
  * @phpstan-type Offre array{id: int, numero: int, enregistrement_id: int|null, titre: string, client_id: int|null, client_nom: string|null, client_adresse: string|null, client_dicte: string|null, lieu_dicte: string|null, cree_le: string, modifiee_le: string|null, envoyee_le: string|null, postes_coupes: int, chantier_adresse: string|null, chantier_contact: string|null, chantier_acces: string|null, debut_travaux: string|null, duree_travaux: string|null, non_compris: string|null, visite_le: string|null, rabais: string|null, conditions: string|null, texte_avant: string|null, texte_apres: string|null, representant_id: int|null, representant_nom: string|null, representant_adresse: string|null, offre_adressee: string, factures_adressees: string}
- * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null, prix_dicte_centimes: int|null, prix_catalogue: int|null, piece: string|null}
+ * @phpstan-type Ligne array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, a_verifier: int, entendu: string|null, produit_id: int|null, categorie: string|null, tva_pour_dix_mille: int|null, tva_ligne: int|null, prix_dicte_centimes: int|null, prix_catalogue: int|null, piece: string|null, nature: string, remplace_id: int|null, retenue: int}
  */
 final class DepotOffres implements SupportLignes
 {
@@ -37,7 +38,7 @@ final class DepotOffres implements SupportLignes
     /** Colonnes d'une ligne ; la catégorie vient du produit du catalogue, s'il existe encore. */
     private const COLONNES_LIGNE = 'l.id, l.offre_id, l.rang, l.designation, l.quantite_milliemes, l.unite, l.prix_centimes, l.offerte, l.a_verifier, l.entendu, l.produit_id, p.categorie,
             COALESCE(l.tva_pour_dix_mille, p.tva_pour_dix_mille) AS tva_pour_dix_mille, l.tva_pour_dix_mille AS tva_ligne,
-            l.prix_dicte_centimes, p.prix_centimes AS prix_catalogue, l.piece
+            l.prix_dicte_centimes, p.prix_centimes AS prix_catalogue, l.piece, l.nature, l.remplace_id, l.retenue
          FROM ligne l LEFT JOIN produit p ON p.id = l.produit_id AND p.artisan_id = l.artisan_id';
 
     public function __construct(private readonly Base $base, private readonly Portee $portee)
@@ -472,6 +473,31 @@ final class DepotOffres implements SupportLignes
                  'pr' => $this->produitDeLArtisan($produitId)],
             );
             return $ajoutees === 1 ? $this->base->dernierId() : 0;
+        });
+    }
+
+    /**
+     * Le choix du client sur une option ou une variante (O5) ; retenir une variante décoche les autres variantes de la
+     * même ligne (point 3, 2026-11-22). Faux si la ligne n'est pas à l'artisan, ou n'est ni option ni variante.
+     */
+    public function retenir(int $offreId, int $ligneId, bool $retenue): bool
+    {
+        return $this->base->transaction(function () use ($offreId, $ligneId, $retenue): bool {
+            $l = $this->ligne($offreId, $ligneId);
+            if ($l === null || !in_array($l['nature'], [Options::OPTION, Options::VARIANTE], true)) {
+                return false;
+            }
+            $this->base->ecrire(
+                'UPDATE ligne SET retenue = :r WHERE id = :l AND offre_id = :o AND artisan_id = :a',
+                ['r' => $retenue ? 1 : 0, 'l' => $ligneId, 'o' => $offreId, 'a' => $this->portee->artisanId],
+            );
+            if ($retenue && $l['nature'] === Options::VARIANTE && $l['remplace_id'] !== null) {
+                $this->base->ecrire(
+                    "UPDATE ligne SET retenue = 0 WHERE offre_id = :o AND artisan_id = :a AND nature = 'variante' AND remplace_id = :b AND id <> :l",
+                    ['o' => $offreId, 'a' => $this->portee->artisanId, 'b' => $l['remplace_id'], 'l' => $ligneId],
+                );
+            }
+            return true;
         });
     }
 

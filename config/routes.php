@@ -152,6 +152,8 @@ return static function (Conteneur $c): array {
         new Route('ligne_juste', '/offres/{id}/lignes/{ligne}/juste', ['POST'], static fn (Request $r, array $p): Response => $ligne()->confirmer($r, $p), Route::ARTISAN),
         new Route('ligne_supprimer', '/offres/{id}/lignes/{ligne}/supprimer', ['POST'], static fn (Request $r, array $p): Response => $ligne()->supprimer($r, $p), Route::ARTISAN),
         new Route('ligne_restaurer', '/offres/{id}/lignes/{ligne}/restaurer', ['POST'], static fn (Request $r, array $p): Response => $ligne()->restaurer($r, $p), Route::ARTISAN),
+        // Le choix du client sur une option ou une variante (chantier 2026-11-22_options-variantes, O5, E1 A).
+        new Route('ligne_retenue', '/offres/{id}/lignes/{ligne}/retenue', ['POST'], static fn (Request $r, array $p): Response => $ligne()->retenir($r, $p), Route::ARTISAN),
         new Route('catalogue', '/catalogue', ['GET'], static fn (Request $r): Response => $catalogue()->liste($r), Route::ARTISAN),
         new Route('produit_creer', '/catalogue', ['POST'], static fn (Request $r): Response => $catalogue()->creer($r), Route::ARTISAN),
         new Route('produit_nouveau', '/catalogue/nouveau', ['GET'], static fn (Request $r): Response => $catalogue()->nouveau($r), Route::ARTISAN),

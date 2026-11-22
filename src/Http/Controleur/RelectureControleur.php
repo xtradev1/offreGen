@@ -72,16 +72,27 @@ final class RelectureControleur
         return $this->c->offres(new Portee($requete->attributes->getInt('_artisan')));
     }
 
-    /** @return list<Ligne> les lignes à relire, dans l'ordre de l'écran de l'offre (par catégorie) */
+    /**
+     * Les lignes à relire, dans l'ordre de l'écran de l'offre (par catégorie) : chaque ligne, puis ses variantes ; les
+     * options à la fin, comme leur groupe sous le total (chantier 2026-11-22_options-variantes).
+     *
+     * @return list<Ligne>
+     */
     private function aRelire(Request $requete, int $offreId): array
     {
         $lignes = $this->offres($requete)->lignes($offreId);
-        $ordre = [];
+        $rangees = [];
         foreach (OffreControleur::grouper($lignes, []) as $g) {
             foreach ($g['lignes'] as $r) {
-                if ($r['l']['a_verifier'] === 1 || Offerte::prixManquant($r['l'])) {
-                    $ordre[] = $r['l'];
-                }
+                $rangees[] = $r;
+                array_push($rangees, ...$r['variantes']);
+            }
+        }
+        array_push($rangees, ...OffreControleur::options($lignes));
+        $ordre = [];
+        foreach ($rangees as $r) {
+            if ($r['l']['a_verifier'] === 1 || Offerte::prixManquant($r['l'])) {
+                $ordre[] = $r['l'];
             }
         }
         return $ordre;

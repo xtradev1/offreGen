@@ -57,7 +57,7 @@ final class OffreDEssai
             $groupe = self::GROUPES[intdiv($i, 7) % 6];
             $lignes[] = ['id' => $i + 1, 'offre_id' => 0, 'rang' => $i + 1, 'designation' => $designation, 'quantite_milliemes' => $quantite, 'unite' => $unite,
                 'prix_centimes' => $prix, 'offerte' => 0, 'a_verifier' => 0, 'entendu' => null, 'produit_id' => null, 'categorie' => $parPiece ? 'Peinture' : $groupe,
-                'tva_pour_dix_mille' => null, 'tva_ligne' => null, 'prix_dicte_centimes' => null, 'prix_catalogue' => null, 'piece' => $parPiece ? $groupe : null];
+                'tva_pour_dix_mille' => null, 'tva_ligne' => null, 'prix_dicte_centimes' => null, 'prix_catalogue' => null, 'piece' => $parPiece ? $groupe : null, 'nature' => 'ligne', 'remplace_id' => null, 'retenue' => 0];
         }
         return $lignes;
     }

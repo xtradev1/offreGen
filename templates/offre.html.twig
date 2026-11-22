@@ -26,8 +26,7 @@
     <a class="rep carte-lien" href="/offres/{{ offre.id }}/representant" data-en-feuille><span>{% if offre.representant_nom %}<small>Représenté par</small><b>{{ offre.representant_nom }}</b><small>{{ offre.offre_adressee == 'client' ? "L'offre va au client" : "L'offre lui est adressée" }}</small>{% else %}<small>Représenté par</small><span class="muted">Ajouter une régie, un architecte…</span>{% endif %}</span></a>
     <a class="t carte-lien" href="/offres/{{ offre.id }}/modifier" data-en-feuille-pc><span><b>{{ offre.titre }}</b><small>Objet de l'offre</small></span></a>
     {% if factures is not empty %}<span class="factures-offre">{% for f in factures %}<a class="etiquette facture{% if f.statut == 'annulee' %} annulee{% endif %}" href="/factures/{{ f.id }}{{ f.statut != 'brouillon' ? '/apercu' }}">{{ f.numero ? 'Facture ' ~ f.numero : 'Brouillon de facture' }}</a>{% endfor %}</span>{% endif %}
-    {% set a_relire = 0 %}
-    {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or (r.l.prix_centimes == 0 and not r.l.offerte) %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
+    {# Toutes les lignes, options et variantes comprises (vueDocument : manque et doute). #}{% set a_relire = manque + doute %}
     <span class="meta"><span class="status {{ a_relire > 0 ? 'a-verifier' : (offre.envoyee_le ? 'pret' : 'relue') }}">{% if a_relire > 0 %}À relire{% elseif offre.envoyee_le %}Envoyée le {{ offre.envoyee_le|date_locale|slice(0, 10) }}{% else %}Prête{% endif %}</span><span class="muted" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span>
       {# Sur PC, le document à côté des lignes, qui suit chaque correction (D13). Sans JavaScript, le bouton reste caché. #}
       <button class="btn pc-seul doc-cote" type="button" data-doc-cote="/offres/{{ offre.id }}/document" aria-pressed="false" hidden>Document à côté</button></span>
@@ -55,6 +54,15 @@
     {% if totaux.par_taux|length > 1 %}{% for g in totaux.par_taux %}<div class="r"><span>TVA {{ g.taux|taux }} sur {{ g.ht|chf }}</span><span>{{ g.tva|chf }}</span></div>{% endfor %}{% elseif avec_tva %}<div class="r"><span>TVA {{ totaux.par_taux[0].taux|taux }}</span><span>{{ totaux.tva|chf }}</span></div>{% endif %}
     {% if totaux.arrondi != 0 %}<div class="r"><span>Arrondi</span><span>{{ totaux.arrondi|chf }}</span></div>{% endif %}
   </div>
+  {# Options (O1, E2 A) : sous le total, hors de lui tant que le client ne les retient pas ; puis le total s'il les prend
+     toutes (point 4). Le conteneur reste vide sans option : app.js le remplace après chaque case cochée. #}
+  <div class="options" data-options>{% if options is not empty %}
+    <div class="rows une">
+      <div class="cat"><h5>Options <span class="st">hors du total</span></h5><span class="ch">Qté</span><span class="ch">Prix</span><span class="ch">Total</span><span></span></div>
+      {% for o in options %}{% include '_rangee.html.twig' with {r: o, sorte: 'option', base: '/offres/' ~ offre.id, modifiable: true, ranger: true} %}{% endfor %}
+    </div>
+    {% if totaux.avec_options %}<div class="totals"><div class="r avec"><span>Total avec toutes les options</span><span>{{ totaux.avec_options.ttc|chf }}</span></div></div>{% endif %}
+  {% endif %}</div>
   <a class="carte-lien conditions" href="/offres/{{ offre.id }}/conditions" data-en-feuille><span><small>Conditions</small><b>Valable {{ r.validiteJours }} jours, {{ r.conditions.resumePaiement }}</b><small>{{ r.phraseEscompte ?? "Pas d'escompte" }}</small></span></a>
   {{ o.texte(offre, 'apres', "Texte après les lignes", lettre ? 'Facultatif, avant la formule de politesse' : 'Facultatif') }}
   <p class="muted petit mobile-seul">Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.</p>
@@ -68,8 +76,7 @@
      principal (data-total-bouton) et la ligne du total se cache ; au PC, elle reste et le bouton garde son seul libellé. #}
   {# Décision D3 (2026-11-15) : le total reste visible en bas ; l'action principale suit l'état de l'offre.
      Une ligne à vérifier ou sans prix demande d'abord la relecture, une à la fois (D5). #}
-  {% set a_relire = 0 %}
-  {% for g in groupes %}{% for r in g.lignes %}{% if r.l.a_verifier or (r.l.prix_centimes == 0 and not r.l.offerte) %}{% set a_relire = a_relire + 1 %}{% endif %}{% endfor %}{% endfor %}
+  {# Toutes les lignes, options et variantes comprises (vueDocument : manque et doute). #}{% set a_relire = manque + doute %}
   {% set avec_tva = totaux.par_taux|filter(g => g.taux > 0)|length > 0 %}
   <div class="totalbar" data-total-fixe><span>Total{% if avec_tva %} TTC{% endif %}</span><b>{{ totaux.ttc|chf }}</b></div>
   {# Une offre reste modifiable après l'envoi (Xavier, 2026-11-21) ; changée depuis, elle le dit, au-dessus des boutons, et
