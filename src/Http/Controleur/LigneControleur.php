@@ -53,8 +53,7 @@ final class LigneControleur
                    'offerte' => Offerte::est($l) ? Offerte::CHOIX_OFFERTE : Offerte::CHOIX_FACTUREE,
                    // Une ligne de facture n'a pas de pièce ; celle d'une offre se lit dans le dépôt des offres.
                    'piece' => $this->genre === self::OFFRE ? ($this->c->offres($this->portee($requete))->ligne($cible['id'], $l['id'])['piece'] ?? '') : ''];
-        $nature = $this->genre === self::OFFRE ? $this->c->offres($this->portee($requete))->ligne($cible['id'], $l['id']) : null;
-        $champs += ['nature' => $nature['nature'] ?? Options::LIGNE, 'remplace' => (string) ($nature['remplace_id'] ?? '')];
+        $champs += $this->genre === self::OFFRE ? $this->natureActuelle($requete, $cible['id'], $l['id']) : ['nature' => Options::LIGNE, 'remplace' => ''];
         return $this->formulaire($requete, $cible, $l, $champs, [], 200);
     }
 
@@ -113,8 +112,13 @@ final class LigneControleur
         }
 
         // Options et variantes (O4, E3), depuis la fenêtre de la ligne d'une offre ; une facture n'en a pas.
-        if ($this->genre === self::OFFRE && $r->has('nature')) {
-            $remplace = ctype_digit($r->getString('remplace')) ? (int) $r->getString('remplace') : null;
+        $actuelle = $this->genre === self::OFFRE ? $this->natureActuelle($requete, $cible['id'], $l['id']) : null;
+        $remplace = ctype_digit($r->getString('remplace')) ? (int) $r->getString('remplace') : null;
+        // Seulement un vrai changement : une variante dont la ligne est supprimée se montre « option » ; la renvoyer telle
+        // quelle ne la détache pas de sa ligne, qu'« Annuler » remettra (revue, C1 ; R6 : pas d'écriture pour rien).
+        $change = $actuelle !== null && $r->has('nature') && ($r->getString('nature') !== $actuelle['nature']
+            || ($r->getString('nature') === Options::VARIANTE && (string) $remplace !== $actuelle['remplace']));
+        if ($change) {
             if (!$this->c->offres($this->portee($requete))->changerNature($cible['id'], $l['id'], $r->getString('nature'), $remplace)) {
                 $erreur = "Une variante remplace une ligne du total, une autre que celle-ci\u{00A0}; une ligne qui a des variantes reste dans le total.";
                 if ($depuisPage) {
@@ -238,7 +242,9 @@ final class LigneControleur
 
         if ($r->has('produit')) {
             $p = $produits->parId(Parametres::id(['p' => $r->getString('produit')], 'p')) ?? throw new PageIntrouvable();
-            $id = $support->ajouterLigne($cible['id'], $p['designation'], $base['quantite_milliemes'] ?? 1000, $p['unite'], $p['prix_centimes'], $p['id']);
+            // Une variante prend la quantité de sa ligne si l'unité est la même (42 m² ne font pas 42 rouleaux ; revue, C6).
+            $quantite = $base !== null && $base['unite'] === $p['unite'] ? $base['quantite_milliemes'] : 1000;
+            $id = $support->ajouterLigne($cible['id'], $p['designation'], $quantite, $p['unite'], $p['prix_centimes'], $p['id']);
             $this->rangerDansLaPiece($requete, $cible['id'], $id, $base !== null ? $base['piece'] : $piece);
             $this->poserNature($requete, $cible['id'], $id, $nature, $base);
             $this->modifiee($requete, $cible['id']);
@@ -299,11 +305,29 @@ final class LigneControleur
     }
 
     /**
+     * La nature de la ligne telle que l'artisan la voit (une variante sans ligne de base est une option, O3) et la ligne
+     * qu'elle remplace.
+     *
+     * @return array{nature: string, remplace: string}
+     */
+    private function natureActuelle(Request $requete, int $offreId, int $ligneId): array
+    {
+        $lignes = $this->c->offres($this->portee($requete))->lignes($offreId);
+        foreach ($lignes as $x) {
+            if ($x['id'] === $ligneId) {
+                $nature = Options::natureEffective($x, $lignes);
+                return ['nature' => $nature, 'remplace' => $nature === Options::VARIANTE ? (string) $x['remplace_id'] : ''];
+            }
+        }
+        return ['nature' => Options::LIGNE, 'remplace' => ''];
+    }
+
+    /**
      * La nature d'une ligne ajoutée à une offre (O4) et, pour une variante, la ligne remplacée : celle demandée si c'est une
      * ligne du total de l'offre, sinon la dernière ligne du total de la pièce choisie, sinon la dernière de l'offre.
      * Une facture n'a que des lignes.
      *
-     * @return array{string, array{id: int, designation: string, quantite_milliemes: int, piece: string|null}|null}
+     * @return array{string, array{id: int, designation: string, quantite_milliemes: int, unite: string, piece: string|null}|null}
      */
     private function natureDeLAjout(Request $requete, int $offreId, string $nature, string $remplace, ?string $piece = null): array
     {
@@ -320,6 +344,10 @@ final class LigneControleur
                 return [Options::VARIANTE, $b];
             }
         }
+        // Demandée puis disparue entre l'affichage et l'envoi : rien à remplacer, la ligne entre en option (O3 ; revue, C7).
+        if ($voulue > 0) {
+            return [Options::OPTION, null];
+        }
         $dansLaPiece = array_values(array_filter($bases, static fn (array $b): bool => $piece !== null && $b['piece'] !== null && Piece::cle($b['piece']) === Piece::cle($piece)));
         $base = $dansLaPiece[count($dansLaPiece) - 1] ?? $bases[count($bases) - 1] ?? null;
         // Aucune ligne à remplacer : la variante n'a pas de sens, la ligne entre comme option (O3).
@@ -329,20 +357,20 @@ final class LigneControleur
     /**
      * Les lignes du total d'une offre, que peut remplacer une variante.
      *
-     * @return list<array{id: int, designation: string, quantite_milliemes: int, piece: string|null}>
+     * @return list<array{id: int, designation: string, quantite_milliemes: int, unite: string, piece: string|null}>
      */
     private function bases(Request $requete, int $offreId): array
     {
         $bases = [];
         foreach ($this->c->offres($this->portee($requete))->lignes($offreId) as $l) {
             if ($l['nature'] === Options::LIGNE) {
-                $bases[] = ['id' => $l['id'], 'designation' => $l['designation'], 'quantite_milliemes' => $l['quantite_milliemes'], 'piece' => $l['piece']];
+                $bases[] = ['id' => $l['id'], 'designation' => $l['designation'], 'quantite_milliemes' => $l['quantite_milliemes'], 'unite' => $l['unite'], 'piece' => $l['piece']];
             }
         }
         return $bases;
     }
 
-    /** @param array{id: int, designation: string, quantite_milliemes: int, piece: string|null}|null $base */
+    /** @param array{id: int, designation: string, quantite_milliemes: int, unite: string, piece: string|null}|null $base */
     private function poserNature(Request $requete, int $offreId, int $ligneId, string $nature, ?array $base): void
     {
         if ($nature !== Options::LIGNE && $ligneId > 0) {
@@ -516,7 +544,7 @@ final class LigneControleur
      * @param Cible $cible
      * @param array<string, string> $champs
      * @param array<string, string> $erreurs
-     * @param array{id: int, designation: string, quantite_milliemes: int, piece: string|null}|null $base
+     * @param array{id: int, designation: string, quantite_milliemes: int, unite: string, piece: string|null}|null $base
      */
     private function pageAjoutAvec(Request $requete, array $cible, string $q, array $champs, array $erreurs, int $code, string $nature = Options::LIGNE, ?array $base = null): Response
     {

@@ -78,8 +78,9 @@ final class ExtracteurApi implements Extracteur
 
     /**
      * Troisième appel (options et variantes, chantier 2026-11-22) : dire quelles lignes trouvées sont des options ou des
-     * variantes, sans toucher à l'appel principal, mesuré au banc (leçon du sous-chantier 28). Lancé seulement quand la
-     * dictée contient un mot déclencheur (MOTS_OPTIONS) : une offre ordinaire ne change pas et ne coûte rien de plus.
+     * variantes, à part de l'appel principal (leçon du sous-chantier 28). L'appel principal a seulement reçu une règle :
+     * garder une option ou une variante sur sa propre ligne, mesurée au banc du 2026-11-22. Lancé seulement quand la
+     * dictée contient un mot déclencheur (MOTS_OPTIONS) : une offre ordinaire ne coûte rien de plus.
      */
     private const CONSIGNE_OPTIONS = <<<'TXT'
         Tu relis les lignes d'une offre d'artisan, tirées de la dictée de sa visite, et tu dis lesquelles sont des options ou des variantes.
@@ -206,11 +207,13 @@ final class ExtracteurApi implements Extracteur
             $corps['reasoning_effort'] = 'none';
         }
         try {
+            // Durée bornée : avec l'appel principal (600 s) et les pièces (180 s), 870 s, sous le verrou de 900 s du
+            // traitement (Audio\Traiteur ; revue du chantier des options, S1).
             $reponse = $this->http->request('POST', rtrim($this->url, '/') . '/chat/completions', [
                 'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
                 'json' => $corps,
-                'timeout' => 120,
-                'max_duration' => 180,
+                'timeout' => 60,
+                'max_duration' => 90,
             ]);
             $donnees = ReponseApi::lire($reponse, 'Options');
             $this->noterJetons($donnees, 'options', $this->modelePieces ?? $this->modele);
@@ -224,8 +227,10 @@ final class ExtracteurApi implements Extracteur
 
     /**
      * La sortie du troisième appel, traitée comme non fiable : un numéro hors de la liste ou une nature inconnue sont
-     * ignorés ; une variante sans ligne de base valable devient une option à vérifier (O3) ; une variante sans quantité
-     * dite (1, à vérifier) prend la quantité et l'unité de sa ligne (O2), et sa pièce.
+     * ignorés ; une variante sans ligne de base valable devient une option (O3). Toute ligne que l'appel sort du total
+     * passe à vérifier : une erreur du modèle ne fait pas disparaître d'argent en silence (revue, R1). Une variante
+     * comptée 1 dans l'unité de sa ligne (quantité non dite) prend la quantité de sa ligne (O2) ; une variante au
+     * forfait garde la sienne (« 800 francs le tout », revue, C2). Elle prend la pièce de sa ligne.
      *
      * @param array<string, mixed> $arguments
      * @param list<LigneExtraite> $lignes
@@ -246,7 +251,7 @@ final class ExtracteurApi implements Extracteur
         $sortie = [];
         foreach ($lignes as $i => $l) {
             [$nature, $base] = $choix[$i] ?? [Options::LIGNE, null];
-            $doute = $l->aVerifier;
+            $doute = $l->aVerifier || $nature !== Options::LIGNE;
             $quantite = $l->quantiteMilliemes;
             $unite = $l->unite;
             $piece = $l->piece;
@@ -256,12 +261,10 @@ final class ExtracteurApi implements Extracteur
                     $this->journal->info("offreGen, options : variante $i sans ligne de base valable, gardée en option à vérifier.");
                     $nature = Options::OPTION;
                     $base = null;
-                    $doute = true;
                 } else {
                     $b = $lignes[$base];
-                    if ($quantite === 1000 && $l->aVerifier && $b->quantiteMilliemes !== 1000 && ($unite === 'forfait' || $unite === $b->unite)) {
+                    if ($quantite === 1000 && $unite !== 'forfait' && $unite === $b->unite) {
                         $quantite = $b->quantiteMilliemes;
-                        $unite = $b->unite;
                     }
                     $piece = $b->piece;
                 }

@@ -141,7 +141,7 @@ if ($couts !== []) {
     printf("Coût moyen %.2f ct par offre, durée moyenne %.1f s (%d passes)\n", array_sum($couts) / count($couts), array_sum($durees) / count($durees), count($couts));
 }
 $rapport['cumul'] = $cumul;
-@mkdir("$dossier/rapports", 0777, true);
+@mkdir("$dossier/rapports", 0700, true);
 $fichier = "$dossier/rapports/" . date('Y-m-d-Hi') . '-' . $options['reglage'] . '-' . $options['moitie'] . '.json';
 file_put_contents($fichier, json_encode($rapport, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n");
 echo "Rapport : $fichier\n";

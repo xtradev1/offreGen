@@ -1,9 +1,9 @@
 ---
 chantier: Options et variantes dans l'offre
 slug: 2026-11-22_options-variantes
-phase: 5
-statut: en_cours
-gate_attendu: null
+phase: 8
+statut: gate_ouvert
+gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
 
@@ -16,12 +16,15 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Phase 6 et 7 : parcours complet sur le serveur local (dictée d'une option jusqu'à la facture), puis revue lourde (appels au modèle, couche d'accès aux données, droits par route). Lots 1 à 8 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`, offre 1 semée).
+Gate prod ouvert. Sur l'accord de Xavier : `git fetch`, tête de `origin/chantier-voix-offre` dans `~/offreGen-options` (sa base de test `offregen_options_test` est désignée par son `.env.test.local` ; remettre `DB_NOM` du `.env` à sa valeur d'origine si le script le lit), `pgrep` sans phpunit, `outils/deployer-test.sh`, `/sante`, contrôle de compatibilité, compte `options-recette@exemple.ch`. Puis la recette de Xavier et le banc sur ses vraies dictées. À la clôture : supprimer les bases `offregen_options_test` et `offregen_options_dev`, la copie `~/offreGen-options`, arrêter le serveur du port 8041, `/roadmap-sync`.
 
 ## En attente de toi
 
-- Enregistrer cinq à huit vraies dictées avec options et variantes (liste dans la réponse du 2026-11-22), dans `OffreGen/corpus/audio/`. Elles ne bloquent pas les lots 3 à 8, seulement la mise en service sur le test.
-
+- Dire si je déploie la tête de `chantier-voix-offre` sur le test (les données y sont-elles toujours inventées ?). La migration `Version20261122200001` part avec.
+- Dérouler `RECETTE.md` (scénarios 1 à 5 au téléphone et sur PC) et dire ce qui casse.
+- Enregistrer les fiches 21 à 28 (`OffreGen/corpus/FICHES.md`) et les déposer dans `corpus/audio/` : je les passe au banc avant la mise en service (scénario 6).
+- Trancher : un rabais en francs plafonné au sous-total compte moins sans les options qu'avec (REVUE, C5) ; garder ou changer ?
+- Trancher : Technique sans italique pour la variante (IBM Plex n'a pas de face italique) ; garder, ou ajouter la face italique ?
 
 ## Journal
 
@@ -50,6 +53,10 @@ Phase 6 et 7 : parcours complet sur le serveur local (dictée d'une option jusq
 - 2026-11-22 : lot 6 poussé (`5eacf1a`). Lot 7 fait (le banc). `outils/banc-corpus.php` (passes, moitié, réglage `service` ou `sans-options`, jetons et coût en centimes, rapport JSON dans `corpus/<dossier>/rapports/`) ; la notation dans `src/Offre/NoteExtraction.php` (écart au plan : `phpstan` n'analyse pas `outils/`, et le test doit charger la classe). Corpus écrit : `OffreGen/corpus/ecrit/`, quinze dictées inventées (six sans option, neuf avec, dont un piège « elle a l'option de… »), catalogues de démonstration peintre, menuisier, plâtrier exportés dans `corpus/catalogues/`. Fiches 21 à 28 ajoutées à `corpus/FICHES.md` pour les vraies dictées de Xavier.
 - 2026-11-22 : lot 8 fait (l'extraction). Troisième appel `classer_lignes`, lancé seulement si la dictée contient un mot déclencheur (`MOTS_OPTIONS`, en mode Unicode : sans lui « à la place » ne se reconnaissait pas) ; `validerOptions` traite la sortie comme non fiable ; une variante sans quantité dite prend celle de sa ligne ; `DepotOffres::creer` relie la variante à sa ligne, ou en fait une option à vérifier. Décision fragile n° 2 du plan contredite par le banc : l'appel principal perdait des variantes (la lessivable devenait un second « Peinture des murs », le prix du PVC passait sur la fenêtre bois). Règle ajoutée à sa consigne, puis précisée (une option garde son produit du catalogue) ; consigne du troisième appel durcie contre les fausses options. Empreinte de `ExtracteurActiviteTest` mise à jour avec la mesure qui la justifie.
 - 2026-11-22 : reste au banc : la 12 (« ou alors on vitrifie le parquet à la place », parquet absent de l'offre) reste dans le total au lieu d'une option ; la 13 garde une erreur de l'appel principal présente avant le chantier (« murs » rangés en plafond). Le corpus est écrit par Claude et connu pour être optimiste : les vraies dictées de Xavier (fiches 21 à 28) passent au banc avant la mise en service.
+- 2026-11-22 : lots 7 et 8 poussés (`5de3b67`). Phase 6 : bout en bout sans l'audio. La dictée 07 du corpus écrit passe par l'extraction réelle puis par `DepotOffres::creerExemple` (même `creer` que le traitement des dictées), compte `options-demo` de la base de développement à soi, offre 3 ; parcours Playwright à 390 px jusqu'à la facture finale, PDF de l'offre et de la facture lus. Constat hors périmètre, d'avant le chantier : sur une facture, une ligne libre est rangée sous « Hors catalogue », que le client lit ; plus visible avec les variantes, souvent libres.
+- 2026-11-22 : phase 7, revue lourde (trois relecteurs Opus indépendants : correction, sécurité avec `owasp-security`, régression), parce que le diff touche trois surfaces sensibles du profil : appels au modèle de langue, couche d'accès aux données, droits par route. Estimation annoncée : environ 10 $.
+- 2026-11-22 : revue lourde reçue (trois rapports). Trouvailles relues dans le code : 13 retenues (dont 4 majeures : durée des trois appels au-delà du verrou de 900 s, variante d'une ligne supprimée rattachée en silence à une autre, quantité d'une variante au forfait, ligne sortie du total sans « à vérifier »), 2 écartées, 2 hors périmètre ; détail et verdicts dans `REVUE.md`. Huit tests rouges écrits d'abord (`RevueOptionsTest`, `RevueGestesTest`), puis corrections ; deux tests du lot 8 mis à jour (ils figeaient l'ancien comportement). Corrections du script vérifiées au clic (focus, case refusée en 409). Banc complet relancé après coup.
+- 2026-11-22 : phase 8. `RECETTE.md` écrit (six scénarios, préalables, ce qui n'est pas couvert). Gate prod ouvert : le déploiement sur le test demande l'accord de Xavier (règle du projet), et la mise en service attend le banc sur ses vraies dictées.
 
 ## Décisions
 
@@ -280,4 +287,47 @@ $ vendor/bin/phpstan analyse
 $ APP_ENV=test vendor/bin/phpunit
 OK (1246 tests, 10562 assertions)
 BOM et tirets longs dans les fichiers touchés : aucun.
+```
+
+### Phase 6
+
+```
+$ php bout.php corpus/ecrit/07-options-rochat   (extraction réelle, Qwen3.8 27B, base offregen_options_dev)
+0. ligne | Peinture des murs, 2 couches | 42.000 m² | 28.00 | remplace NULL | à vérifier non
+1. variante | Peinture des murs lessivable, 2 couches | 42.000 m² | 34.00 | remplace 0 | à vérifier oui
+2. ligne | Peinture des plafonds, 2 couches | 24.000 m² | 32.00 | remplace NULL | à vérifier non
+3. option | Laquage de porte, 2 faces | 3.000 pce | 160.00 | remplace NULL | à vérifier non
+4. option | Laquage des plinthes | 26.000 m | 12.00 | remplace NULL | à vérifier oui
+5. ligne | Déplacement | 1.000 forfait | 60.00 | remplace NULL | à vérifier non
+OFFRE=3
+$ node bout.js 3   (390 px)
+écran : total CHF 2'166.30 | bouton Relire 2 lignes CHF 2'166.30 | variantes 1 | options 2 | Total avec toutes les options CHF 3'022.50
+variante : Variante Peinture des murs lessivable, 2 couches | 1'428.00 +252.00
+après le choix : total CHF 2'957.60 | remplacée 1
+feuille : cases cochées 2 sur 3
+facture 1 PDF 200 | erreurs JS aucune
+PDF de l'offre (PyMuPDF) : « Séjour Peinture des murs lessivable, 2 couches 42 m² 34.00 1'428.00 … Laquage de porte, 2 faces 3 pce 160.00 480.00 Sous-total HT 2'736.00 TVA 8,1 % 221.62 Arrondi -0.02 Total TTC CHF 2'957.60 OPTIONS … Laquage des plinthes 26 m 12.00 312.00 Total avec toutes les options TTC CHF 3'294.90 »
+PDF de la facture 2026-001 : lessivable, plafonds, portes, déplacement ; ni la peinture des murs standard ni les plinthes ; Total TTC CHF 2'957.60.
+Recalcul : 1'176 + 768 + 60 = 2'004.00 + TVA 162.32 = 2'166.32 → 2'166.30 ; + 480 + 312 = 2'796.00 + 226.48 → 3'022.50 ;
+  après le choix 1'428 + 768 + 480 + 60 = 2'736.00 + 221.62 → 2'957.60 ; + 312 = 3'048.00 + 246.89 → 3'294.90.
+```
+
+### Phase 7
+
+```
+$ phpunit --filter 'RevueOptionsTest|RevueGestesTest'   (avant les corrections)
+Tests: 8, Assertions: 19, Failures: 8.
+$ APP_ENV=test vendor/bin/phpunit   (après les corrections)
+OK (1254 tests, 10589 assertions)
+$ vendor/bin/phpstan analyse
+[OK] No errors
+$ node js9.js   (local, port 8041)
+C8 focus : INPUT[checkbox]#l11
+C9 réponse 409 | case cochée après false | en base 0 | état Non enregistré, réessayez
+erreurs JS aucune
+$ php outils/banc-corpus.php corpus/ecrit --passes=3   (après les corrections)
+Dictées sans option : taux 93.3 % (84 justes sur 90), 0.33 corrections par offre
+Dictées avec options : taux 96.3 % (130 justes sur 135), 0.19 corrections par offre, natures 39/42
+Coût moyen 0.24 ct par offre, durée moyenne 3.8 s (45 passes)
+Rapport : corpus/ecrit/rapports/2026-11-22-2058-service-toutes.json
 ```

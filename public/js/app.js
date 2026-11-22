@@ -43,16 +43,18 @@ function corrections() {
       montrerRenvoi(page);
       choixSansJs();
       enCours.forEach(([ligneId, nom, valeur]) => {
-        const c = document.querySelector('#' + ligneId + ' input[name=' + nom + ']');
+        const c = document.querySelector('#' + ligneId + ' input[name=' + nom + ']:not([type=hidden])');
         if (c) c.value = valeur;
       });
       page.querySelectorAll('.snack').forEach((s) => { document.querySelector('.app').append(s); setTimeout(() => s.remove(), 6000); });
       bandeauDansLeTotal();
       if (garde) {
-        const retrouve = document.querySelector('#' + garde[0] + ' input[name=' + garde[1] + ']');
+        const retrouve = document.querySelector('#' + garde[0] + ' input[name=' + garde[1] + ']:not([type=hidden])');
         if (retrouve) { retrouve.focus(); try { retrouve.setSelectionRange(garde[2], garde[3]); } catch (e) { /* champ sans sélection */ } }
       }
       if (!r.ok && etat()) etat().textContent = 'Non enregistré, réessayez';
+      // Une case refusée (409) reprend son état d'avant : rien n'est enregistré (revue, C9).
+      if (!r.ok && caseACocher(champ) && champ.isConnected) { champ.checked = !champ.checked; champ.defaultChecked = champ.checked; }
       // Le document à côté des lignes (PC, D13) se met à jour.
       if (r.ok) document.dispatchEvent(new Event('offre-modifiee'));
     })).catch(() => {

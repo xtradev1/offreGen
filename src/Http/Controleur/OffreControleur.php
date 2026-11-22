@@ -284,7 +284,8 @@ final class OffreControleur
         $parPiece = false;
         $general = false;
         foreach ($lignes as $l) {
-            if (!$entre($l)) {
+            // Par pièce ou par catégorie : les lignes seules en décident, à l'écran comme sur le document (revue, C4).
+            if (Options::natureEffective($l, $lignes) !== Options::LIGNE) {
                 continue;
             }
             $piece = $l['piece'] ?? null;

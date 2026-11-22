@@ -550,7 +550,9 @@ final class DepotOffres implements SupportLignes
                 'UPDATE ligne SET retenue = :r WHERE id = :l AND offre_id = :o AND artisan_id = :a',
                 ['r' => $retenue ? 1 : 0, 'l' => $ligneId, 'o' => $offreId, 'a' => $this->portee->artisanId],
             );
-            if ($retenue && $l['nature'] === Options::VARIANTE && $l['remplace_id'] !== null) {
+            // Une variante dont la ligne est supprimée se lit comme une option (O3) : elle ne décoche pas ses sœurs (revue, C3).
+            if ($retenue && $l['nature'] === Options::VARIANTE && $l['remplace_id'] !== null
+                && ($this->ligne($offreId, $l['remplace_id'])['nature'] ?? null) === Options::LIGNE) {
                 $this->base->ecrire(
                     "UPDATE ligne SET retenue = 0 WHERE offre_id = :o AND artisan_id = :a AND nature = 'variante' AND remplace_id = :b AND id <> :l",
                     ['o' => $offreId, 'a' => $this->portee->artisanId, 'b' => $l['remplace_id'], 'l' => $ligneId],

@@ -28,7 +28,7 @@ final class ExtracteurOptionsTest extends TestCase
 
     private const PRINCIPAL = '{"titre":"Séjour","lignes":[
         {"produit_id":null,"designation":"Peinture des murs","quantite":42,"unite":"m²","prix_unitaire":28,"certitude":"sure","extrait":"murs 42"},
-        {"produit_id":null,"designation":"Peinture lessivable","quantite":1,"unite":"forfait","prix_unitaire":34,"certitude":"a_verifier","extrait":"variante lessivable"},
+        {"produit_id":null,"designation":"Peinture lessivable","quantite":1,"unite":"m²","prix_unitaire":34,"certitude":"a_verifier","extrait":"variante lessivable à 34 le mètre"},
         {"produit_id":null,"designation":"Laquage des portes","quantite":3,"unite":"pce","prix_unitaire":140,"certitude":"sure","extrait":"en option les portes"}]}';
 
     private static function outil(string $nom, string $arguments): MockResponse
@@ -67,7 +67,7 @@ final class ExtracteurOptionsTest extends TestCase
         self::assertStringNotContainsString('Catalogue', $troisieme['messages'][1]['content'], 'le catalogue ne repart pas');
         self::assertSame(['ligne', 'variante', 'option'], array_map(static fn (LigneExtraite $l): string => $l->nature, $r->lignes));
         self::assertSame([null, 0, null], array_map(static fn (LigneExtraite $l): ?int => $l->remplace, $r->lignes));
-        // La variante sans quantité dite prend celle de sa ligne, son unité et sa pièce (O2).
+        // La variante comptée 1 dans l'unité de sa ligne prend sa quantité et sa pièce (O2) ; au forfait, elle garderait la sienne (revue, C2).
         self::assertSame([42000, 'm²', 'Séjour'], [$r->lignes[1]->quantiteMilliemes, $r->lignes[1]->unite, $r->lignes[1]->piece]);
         self::assertSame(3400, $r->lignes[1]->prixCentimes);
     }
@@ -85,7 +85,8 @@ final class ExtracteurOptionsTest extends TestCase
             ['ligne' => 3, 'nature' => 'variante', 'remplace' => 1], // deuxième avis sur la ligne 3 : ignoré
         ]], $lignes);
         self::assertSame(['ligne', 'option', 'option', 'option'], array_map(static fn (LigneExtraite $l): string => $l->nature, $sortie));
-        self::assertSame([false, true, false, true], array_map(static fn (LigneExtraite $l): bool => $l->aVerifier, $sortie));
+        // Toute ligne sortie du total passe à vérifier (revue, R1).
+        self::assertSame([false, true, true, true], array_map(static fn (LigneExtraite $l): bool => $l->aVerifier, $sortie));
         self::assertSame([null, null, null, null], array_map(static fn (LigneExtraite $l): ?int => $l->remplace, $sortie));
     }
 
