@@ -16,7 +16,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 4 de `PLAN.md` (les gestes : nature dans la fenêtre d'une ligne et à l'ajout, « + Variante ») dans `~/offreGen-options`. Lots 1 à 3 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`).
+Lot 5 de `PLAN.md` (le document, douze modèles : variantes sous leur ligne, bloc « Options », point 2 après le choix) dans `~/offreGen-options`. Lots 1 à 4 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`, offre 1 semée).
 
 ## En attente de toi
 
@@ -42,6 +42,8 @@ Lot 4 de `PLAN.md` (les gestes : nature dans la fenêtre d'une ligne et à l'aj
 - 2026-11-22 : lot 3 fait (lecture et écran). `DepotOffres` lit les trois colonnes, `retenir` (une variante retenue décoche les autres) ; `OffreControleur::grouper` range les variantes sous leur ligne et sort les options (`options()`) ; nouvelle rangée commune `templates/_rangee.html.twig` (ligne, ligne remplacée, variante, option) ; groupe « Options » et « Total avec toutes les options » sous `.totals` ; route `ligne_retenue` et `LigneControleur::retenir` (avancée du lot 4 : sans elle, un lot poussé portait un formulaire mort) ; `corrections()` d'`app.js` envoie une case et remplace `[data-options]`. Écarts au plan : `RelectureControleur::aRelire` passait par `grouper` et aurait perdu les options et variantes à vérifier (corrigé, testé) ; le compteur « Relire N lignes » de l'écran se lit sur `manque + doute` de `vueDocument` (toutes les lignes) au lieu de parcourir les groupes.
 - 2026-11-22 : défauts trouvés en route et corrigés : un antislash mangé par le heredoc de l'outil Bash (erreur 500, cause lue dans le journal) ; l'insécable de « au catalogue ? » perdue à la recopie de la rangée (`PrixDicteTest` rouge) ; `IsolationRoutesTest` exigeait un cas pour `ligne_retenue` (ajouté) ; deux constructeurs de lignes d'essai sans les nouveaux champs (phpstan).
 - 2026-11-22 : base de développement à soi `offregen_options_dev` (droits recopiés de `offregen_dev`, `DB_NOM` dans le `.env` de ma copie), compte de démo `options-demo@exemple.ch` (fichier `~/.offregen-options-demo-compte`), offre 1 avec une variante et deux options posées en SQL ; serveur local sur le port 8041.
+- 2026-11-22 : lot 3 poussé (`bc710c0`). Lot 4 fait (les gestes). `DepotOffres::changerNature` (refuse sans écrire : base hors de l'offre, base qui n'est pas une ligne du total, la ligne elle-même, ligne qui a des variantes ; remet le choix du client à zéro) et `aDesVariantes` ; fenêtre de la ligne : « Cette ligne est » (Dans le total, Option, Variante), « Elle remplace », « + Variante de cette ligne » ; feuille d'ajout : « Elle va » en liens (comme la pièce), « Elle remplace » en petit formulaire, nature et ligne remplacée en champs cachés de chaque produit ; une variante prend la quantité et la pièce de sa ligne ; une variante demandée sans ligne au total devient une option (O3). `app.js` : `optionsEtVariantes()`.
+- 2026-11-22 : écart au plan : le choix par défaut de la fenêtre d'une ligne est la dernière ligne du total de l'offre (celle de la pièce dans la feuille d'ajout). Défaut vu sur capture et corrigé : la rangée « Elle remplace » de la feuille d'ajout débordait de 6 px à 390 px. Fausse alerte écartée par mesure : deux puces grises sur une capture, prise pendant le fondu de 0,15 s.
 
 ## Décisions
 
@@ -170,4 +172,27 @@ Recalcul à la main : 7'860.00 + TVA 636.66 = 8'496.66 → 8'496.65 ; avec porte
   variante 8'700.00 + 704.70 = 9'404.70 ; + portes 9'120.00 + 738.72 = 9'858.72 → 9'858.70.
 $ node ecran3b.js : « Total avec toutes les options » et « Conditions » visibles à 390 et 1280, rien posé dessus (elementFromPoint).
 Captures regardées : ecran3-apres-390, ecran3-apres-1280, ecran3-options-390.
+```
+
+### Lot 4
+
+```
+$ phpunit --filter OptionsGestesTest   (code du lot mis de côté par git stash)
+Tests: 10, Assertions: 23, Failures: 9.
+$ phpunit --filter OptionsGestesTest   (code remis)
+OK (10 tests, 52 assertions)
+$ phpunit --filter 'OptionsGestesTest|OptionsEcranTest'
+OK (18 tests, 102 assertions)
+$ vendor/bin/phpstan analyse
+[OK] No errors
+$ APP_ENV=test vendor/bin/phpunit
+OK (1192 tests, 10232 assertions)
+$ node --check public/js/app.js  ->  sans erreur
+$ node ecran4.js   (local, port 8041)
+390 remplace caché au départ true ; visible après Variante true ; choix proposé Peinture de façade, 2 couches ; cible d'une puce 112x48
+390 fond de Variante rgb(35, 39, 45), de Dans le total rgb(255, 255, 255)   (après le fondu)
+390 feuille d'ajout : nature courante Variante ; liste changée -> /offres/1/ajouter?nature=variante&remplace=3
+390 largeur page 396/390 (avant correction) puis 390/390 ; erreurs JS aucune
+1280 : mêmes contrôles, largeur 1280/1280, erreurs JS aucune
+Captures regardées : ecran4-ligne-390, ecran4-ajout-390 (avant et après correction).
 ```

@@ -16,6 +16,7 @@ use OffreGen\Http\Formats;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
 use OffreGen\Offre\Offerte;
+use OffreGen\Offre\Options;
 use OffreGen\Offre\Piece;
 use OffreGen\Offre\Saisie;
 use OffreGen\Offre\SaisieRefusee;
@@ -52,6 +53,8 @@ final class LigneControleur
                    'offerte' => Offerte::est($l) ? Offerte::CHOIX_OFFERTE : Offerte::CHOIX_FACTUREE,
                    // Une ligne de facture n'a pas de pièce ; celle d'une offre se lit dans le dépôt des offres.
                    'piece' => $this->genre === self::OFFRE ? ($this->c->offres($this->portee($requete))->ligne($cible['id'], $l['id'])['piece'] ?? '') : ''];
+        $nature = $this->genre === self::OFFRE ? $this->c->offres($this->portee($requete))->ligne($cible['id'], $l['id']) : null;
+        $champs += ['nature' => $nature['nature'] ?? Options::LIGNE, 'remplace' => (string) ($nature['remplace_id'] ?? '')];
         return $this->formulaire($requete, $cible, $l, $champs, [], 200);
     }
 
@@ -109,6 +112,18 @@ final class LigneControleur
             return $this->versLaLigne($cible, $l['id']);
         }
 
+        // Options et variantes (O4, E3), depuis la fenêtre de la ligne d'une offre ; une facture n'en a pas.
+        if ($this->genre === self::OFFRE && $r->has('nature')) {
+            $remplace = ctype_digit($r->getString('remplace')) ? (int) $r->getString('remplace') : null;
+            if (!$this->c->offres($this->portee($requete))->changerNature($cible['id'], $l['id'], $r->getString('nature'), $remplace)) {
+                $erreur = "Une variante remplace une ligne du total, une autre que celle-ci\u{00A0}; une ligne qui a des variantes reste dans le total.";
+                if ($depuisPage) {
+                    return $this->formulaire($requete, $cible, $l, self::champs($requete), ['nature' => $erreur], 422);
+                }
+                Flash::dire($requete, 'erreur', $erreur . ' Rien n\'a été modifié.');
+                return $this->versLaLigne($cible, $l['id']);
+            }
+        }
         $support = $this->support($requete);
         $support->corrigerLigne($cible['id'], $l['id'], $designation, $quantite, $unite, $prix);
         $offerte = Offerte::apresSaisie(Offerte::est($l), $l['prix_centimes'], $r->has('prix') ? $r->getString('prix') : null, $prix, $choix);
@@ -156,7 +171,7 @@ final class LigneControleur
             throw new Conflit("Choix illisible\u{00A0}: rien n'a été modifié.");
         }
         if (!$this->c->offres($this->portee($requete))->retenir($cible['id'], $l['id'], $valeur === '1')) {
-            throw new Conflit('Cette ligne est dans le total : seule une option ou une variante se retient.');
+            throw new Conflit("Cette ligne est dans le total\u{00A0}: seule une option ou une variante se retient.");
         }
         $this->modifiee($requete, $cible['id']);
         if ($requete->request->getString('retour') === 'facturer') {
@@ -193,8 +208,10 @@ final class LigneControleur
     {
         $cible = $this->cible($requete, $parametres);
         $q = mb_substr($requete->query->getString('q'), 0, 100);
-        $champs = ['designation' => $q, 'quantite' => '1', 'unite' => 'forfait', 'prix' => '', 'categorie' => '', 'nouvelle_categorie' => '', 'tva' => ''];
-        return $this->pageAjoutAvec($requete, $cible, $q, $champs, [], 200);
+        $piece = $requete->query->has('piece') ? Piece::lire($requete->query->getString('piece')) : null;
+        [$nature, $base] = $this->natureDeLAjout($requete, $cible['id'], $requete->query->getString('nature'), $requete->query->getString('remplace'), $piece);
+        $champs = ['designation' => $q, 'quantite' => $base === null ? '1' : '', 'unite' => 'forfait', 'prix' => '', 'categorie' => '', 'nouvelle_categorie' => '', 'tva' => ''];
+        return $this->pageAjoutAvec($requete, $cible, $q, $champs, [], 200, $nature, $base);
     }
 
     /**
@@ -214,11 +231,16 @@ final class LigneControleur
         $piece = $this->genre !== self::OFFRE ? null
             : ($r->has('piece') ? Piece::lire($r->getString('piece')) : $this->piecesDeLOffre($requete, $cible['id'])['derniere']);
         $suite = $r->has('piece') ? '&piece=' . rawurlencode($r->getString('piece')) : '';
+        [$nature, $base] = $this->natureDeLAjout($requete, $cible['id'], $r->getString('nature'), $r->getString('remplace'));
+        if ($nature !== Options::LIGNE) {
+            $suite .= '&nature=' . $nature . ($base === null ? '' : '&remplace=' . $base['id']);
+        }
 
         if ($r->has('produit')) {
             $p = $produits->parId(Parametres::id(['p' => $r->getString('produit')], 'p')) ?? throw new PageIntrouvable();
-            $id = $support->ajouterLigne($cible['id'], $p['designation'], 1000, $p['unite'], $p['prix_centimes'], $p['id']);
-            $this->rangerDansLaPiece($requete, $cible['id'], $id, $piece);
+            $id = $support->ajouterLigne($cible['id'], $p['designation'], $base['quantite_milliemes'] ?? 1000, $p['unite'], $p['prix_centimes'], $p['id']);
+            $this->rangerDansLaPiece($requete, $cible['id'], $id, $base !== null ? $base['piece'] : $piece);
+            $this->poserNature($requete, $cible['id'], $id, $nature, $base);
             $this->modifiee($requete, $cible['id']);
             if ($r->getString('reste') === '1') {
                 return self::resterSurAjouter($cible, $id, $suite);
@@ -228,6 +250,9 @@ final class LigneControleur
         }
 
         $champs = self::champs($requete);
+        if ($base !== null && trim($champs['quantite']) === '') {
+            $champs['quantite'] = Formats::saisieQuantite($base['quantite_milliemes']);
+        }
         $erreurs = [];
         $designation = Saisie::texte($champs['designation'], 255);
         if ($designation === null) {
@@ -254,14 +279,15 @@ final class LigneControleur
             }
         }
         if ($designation === null || $quantite === null || $unite === null || $prix === null || $erreurs !== []) {
-            return $this->pageAjoutAvec($requete, $cible, '', $champs, $erreurs, 422);
+            return $this->pageAjoutAvec($requete, $cible, '', $champs, $erreurs, 422, $nature, $base);
         }
         $produitId = $produit === null ? null : $produits->creer($produit);
         $id = $support->ajouterLigne($cible['id'], $designation, $quantite, $unite, $prix, $produitId);
         if (Offerte::apresSaisie(false, 0, $champs['prix'], $prix, null)) {
             $support->changerOfferte($cible['id'], $id, true);
         }
-        $this->rangerDansLaPiece($requete, $cible['id'], $id, $piece);
+        $this->rangerDansLaPiece($requete, $cible['id'], $id, $base !== null ? $base['piece'] : $piece);
+        $this->poserNature($requete, $cible['id'], $id, $nature, $base);
         $this->modifiee($requete, $cible['id']);
         if ($produit !== null) {
             Flash::dire($requete, 'info', Flash::cite($produit['designation']) . ' ajouté à ' . $cible['document'] . ' et au catalogue');
@@ -270,6 +296,58 @@ final class LigneControleur
             return self::resterSurAjouter($cible, $id, $suite);
         }
         return $this->versLaLigne($cible, $id);
+    }
+
+    /**
+     * La nature d'une ligne ajoutée à une offre (O4) et, pour une variante, la ligne remplacée : celle demandée si c'est une
+     * ligne du total de l'offre, sinon la dernière ligne du total de la pièce choisie, sinon la dernière de l'offre.
+     * Une facture n'a que des lignes.
+     *
+     * @return array{string, array{id: int, designation: string, quantite_milliemes: int, piece: string|null}|null}
+     */
+    private function natureDeLAjout(Request $requete, int $offreId, string $nature, string $remplace, ?string $piece = null): array
+    {
+        if ($this->genre !== self::OFFRE || !in_array($nature, [Options::OPTION, Options::VARIANTE], true)) {
+            return [Options::LIGNE, null];
+        }
+        if ($nature === Options::OPTION) {
+            return [Options::OPTION, null];
+        }
+        $bases = $this->bases($requete, $offreId);
+        $voulue = ctype_digit($remplace) ? (int) $remplace : 0;
+        foreach ($bases as $b) {
+            if ($b['id'] === $voulue) {
+                return [Options::VARIANTE, $b];
+            }
+        }
+        $dansLaPiece = array_values(array_filter($bases, static fn (array $b): bool => $piece !== null && $b['piece'] !== null && Piece::cle($b['piece']) === Piece::cle($piece)));
+        $base = $dansLaPiece[count($dansLaPiece) - 1] ?? $bases[count($bases) - 1] ?? null;
+        // Aucune ligne à remplacer : la variante n'a pas de sens, la ligne entre comme option (O3).
+        return $base === null ? [Options::OPTION, null] : [Options::VARIANTE, $base];
+    }
+
+    /**
+     * Les lignes du total d'une offre, que peut remplacer une variante.
+     *
+     * @return list<array{id: int, designation: string, quantite_milliemes: int, piece: string|null}>
+     */
+    private function bases(Request $requete, int $offreId): array
+    {
+        $bases = [];
+        foreach ($this->c->offres($this->portee($requete))->lignes($offreId) as $l) {
+            if ($l['nature'] === Options::LIGNE) {
+                $bases[] = ['id' => $l['id'], 'designation' => $l['designation'], 'quantite_milliemes' => $l['quantite_milliemes'], 'piece' => $l['piece']];
+            }
+        }
+        return $bases;
+    }
+
+    /** @param array{id: int, designation: string, quantite_milliemes: int, piece: string|null}|null $base */
+    private function poserNature(Request $requete, int $offreId, int $ligneId, string $nature, ?array $base): void
+    {
+        if ($nature !== Options::LIGNE && $ligneId > 0) {
+            $this->c->offres($this->portee($requete))->changerNature($offreId, $ligneId, $nature, $base['id'] ?? null);
+        }
     }
 
     private function rangerDansLaPiece(Request $requete, int $offreId, int $ligneId, ?string $piece): void
@@ -373,14 +451,15 @@ final class LigneControleur
         return new RedirectResponse($cible['base'] . '#l' . $ligneId, 303);
     }
 
-    /** @return array{designation: string, quantite: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, tva: string, piece: string, offerte: string} */
+    /** @return array{designation: string, quantite: string, unite: string, prix: string, categorie: string, nouvelle_categorie: string, tva: string, piece: string, offerte: string, nature: string, remplace: string} */
     private static function champs(Request $requete): array
     {
         $r = $requete->request;
         return ['designation' => $r->getString('designation'), 'quantite' => $r->getString('quantite'), 'unite' => $r->getString('unite'),
                 'prix' => $r->getString('prix'), 'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie'),
                 'tva' => $r->getString('tva'), 'piece' => $r->getString('piece'),
-                'offerte' => $r->getString('offerte') === Offerte::CHOIX_OFFERTE ? Offerte::CHOIX_OFFERTE : Offerte::CHOIX_FACTUREE];
+                'offerte' => $r->getString('offerte') === Offerte::CHOIX_OFFERTE ? Offerte::CHOIX_OFFERTE : Offerte::CHOIX_FACTUREE,
+                'nature' => in_array($r->getString('nature'), Options::NATURES, true) ? $r->getString('nature') : Options::LIGNE, 'remplace' => $r->getString('remplace')];
     }
 
     /**
@@ -405,6 +484,8 @@ final class LigneControleur
             'taux_tva' => Tva::TAUX,
             'tva_habituelle' => $this->tvaHabituelle($requete, $l),
             'pieces' => $this->genre === self::OFFRE ? $this->piecesDeLOffre($requete, $cible['id'])['pieces'] : [],
+            'bases' => $this->genre === self::OFFRE ? array_values(array_filter($this->bases($requete, $cible['id']), static fn (array $b): bool => $b['id'] !== $l['id'])) : [],
+            'a_des_variantes' => $this->genre === self::OFFRE && $this->c->offres($this->portee($requete))->aDesVariantes($cible['id'], $l['id']),
         ]), $code);
     }
 
@@ -435,8 +516,9 @@ final class LigneControleur
      * @param Cible $cible
      * @param array<string, string> $champs
      * @param array<string, string> $erreurs
+     * @param array{id: int, designation: string, quantite_milliemes: int, piece: string|null}|null $base
      */
-    private function pageAjoutAvec(Request $requete, array $cible, string $q, array $champs, array $erreurs, int $code): Response
+    private function pageAjoutAvec(Request $requete, array $cible, string $q, array $champs, array $erreurs, int $code, string $nature = Options::LIGNE, ?array $base = null): Response
     {
         $depot = $this->c->produits($this->portee($requete));
         $tous = $depot->tous();
@@ -472,6 +554,9 @@ final class LigneControleur
             'categories' => $depot->categories(),
             'pieces' => $pieces,
             'piece_choisie' => $choisie,
+            'nature' => $nature,
+            'base' => $base,
+            'bases' => $this->genre === self::OFFRE ? $this->bases($requete, $cible['id']) : [],
         ]), $code);
     }
 }

@@ -33,6 +33,29 @@
       </form>
     </nav>
   {% endif %}
+  {# Options et variantes (O4, E3) : où va la ligne ajoutée, en un toucher ; une variante remplace la dernière ligne du
+     total de la pièce, ou celle choisie. Des liens et un petit formulaire : sans JavaScript. #}
+  {% if cible.base starts with '/offres' %}
+    {% set suite_piece = pieces is not empty ? '&piece=' ~ piece_choisie|url_encode : '' %}
+    <nav class="pieces-ajout nature-ajout" aria-label="Où va la ligne">
+      <span class="lbl">Elle va</span>
+      <div class="puces-liens">
+        {% for v, lib in {'ligne': 'Dans le total', 'option': 'Option', 'variante': 'Variante'} %}
+          <a class="puce-lien" href="{{ cible.base }}/ajouter?nature={{ v }}{{ suite_piece }}"{% if v == nature %} aria-current="true"{% endif %}>{{ lib }}</a>
+        {% endfor %}
+      </div>
+      {% if nature == 'variante' and base %}
+        <form class="piece-autre remplace-choix" method="get" action="{{ cible.base }}/ajouter">
+          <input type="hidden" name="nature" value="variante">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}
+          <label class="lbl" for="remplace-ajout">Elle remplace</label>
+          <select id="remplace-ajout" name="remplace" data-envoi-auto>
+            {% for b in bases %}<option value="{{ b.id }}"{% if b.id == base.id %} selected{% endif %}>{% if b.piece %}{{ b.piece }}, {% endif %}{{ b.designation }}</option>{% endfor %}
+          </select>
+          <button class="btn" type="submit" data-sans-js>Choisir</button>
+        </form>
+      {% endif %}
+    </nav>
+  {% endif %}
   {% if erreurs is empty %}
     <form class="search" method="get" action="{{ cible.base }}/ajouter" role="search">
       <div class="box">
@@ -44,7 +67,7 @@
       {% for p in produits %}
         <form method="post" action="{{ cible.base }}/lignes" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
           <input type="hidden" name="_csrf" value="{{ csrf() }}">
-          <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}
+          <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}{% if nature != 'ligne' %}<input type="hidden" name="nature" value="{{ nature }}">{% if base %}<input type="hidden" name="remplace" value="{{ base.id }}">{% endif %}{% endif %}
           <button class="pick" type="submit" name="produit" value="{{ p.id }}"><b class="pn">{{ p.designation }}</b>
             <span>{% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %} /&nbsp;{{ p.unite }}</span></button>
         </form>
@@ -52,9 +75,10 @@
       {# Rien ne correspond : le texte tapé devient une ligne libre (quantité 1, forfait, prix à compléter). #}
       <form class="pick-libre" method="post" action="{{ cible.base }}/lignes" data-aucun{% if trouves > 0 or q == '' %} hidden{% endif %}>
         <input type="hidden" name="_csrf" value="{{ csrf() }}">
-        <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}
+        <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}{% if nature != 'ligne' %}<input type="hidden" name="nature" value="{{ nature }}">{% if base %}<input type="hidden" name="remplace" value="{{ base.id }}">{% endif %}{% endif %}
         <input type="hidden" id="rapide-designation" name="designation" value="{{ q }}">
-        <input type="hidden" name="quantite" value="1">
+        {# Une variante prend la quantité de la ligne qu'elle remplace (O2) : vide, le serveur la reprend. #}
+        <input type="hidden" name="quantite" value="{{ base ? '' : '1' }}">
         <input type="hidden" name="unite" value="forfait">
         <input type="hidden" name="prix" value="">
         <button class="pick" type="submit"><b class="pn">Ajouter «&nbsp;<span id="rapide-texte">{{ q }}</span>&nbsp;»</b><span>ligne libre</span></button>
@@ -69,7 +93,7 @@
     <p class="muted petit">Pour une offre de fournisseur ou un travail ponctuel. Elle reste dans {{ cible.ce }}&nbsp;; le catalogue ne change que si vous cochez la case.</p>
     <form id="ajout-libre" method="post" action="{{ cible.base }}/lignes">
       <input type="hidden" name="_csrf" value="{{ csrf() }}">
-      <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}
+      <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}{% if nature != 'ligne' %}<input type="hidden" name="nature" value="{{ nature }}">{% if base %}<input type="hidden" name="remplace" value="{{ base.id }}">{% endif %}{% endif %}
       <div class="champ">
         <label for="libre-designation">Désignation</label>
         <input id="libre-designation" name="designation" value="{{ champs.designation }}" maxlength="255" required{{ f.invalide(erreurs, 'designation') }}>
@@ -78,7 +102,7 @@
       <div class="duo">
         <div class="champ">
           <label for="libre-quantite">Quantité</label>
-          <input id="libre-quantite" name="quantite" value="{{ champs.quantite }}" inputmode="decimal" autocomplete="off" required{{ f.invalide(erreurs, 'quantite') }}>
+          <input id="libre-quantite" name="quantite" value="{{ champs.quantite }}" inputmode="decimal" autocomplete="off"{% if base %} placeholder="{{ base.quantite_milliemes|saisie_quantite }}"{% else %} required{% endif %}{{ f.invalide(erreurs, 'quantite') }}>
           {{ f.erreur(erreurs, 'quantite') }}
         </div>
         <div class="champ">

@@ -45,6 +45,34 @@
       </div>
       <p class="muted petit">Offerte&nbsp;: le prix reste sur {{ cible.document }}, barré. Pour «&nbsp;Offert&nbsp;» sans prix, tapez 0.</p>
     </fieldset>
+    {# Options et variantes (O4, E3) : la nature de la ligne d'une offre ; une variante dit la ligne qu'elle remplace, la
+       dernière ligne du total proposée. Une ligne qui a des variantes reste dans le total. Sans JavaScript, la liste
+       « Elle remplace » reste cachée et la ligne proposée part. #}
+    {% if cible.base starts with '/offres' %}
+      {% set remplace = champs.remplace ?? '' %}
+      {% if remplace == '' and bases is not empty %}{% set remplace = (bases|last).id ~ '' %}{% endif %}
+      <fieldset class="groupe choix" data-nature>
+        <legend>Cette ligne est</legend>
+        <div class="puces">
+          <label class="puce"><input type="radio" name="nature" value="ligne"{% if champs.nature == 'ligne' %} checked{% endif %}>Dans le total</label>
+          <label class="puce"><input type="radio" name="nature" value="option"{% if champs.nature == 'option' %} checked{% endif %}{% if a_des_variantes %} disabled{% endif %}>Option</label>
+          <label class="puce"><input type="radio" name="nature" value="variante"{% if champs.nature == 'variante' %} checked{% endif %}{% if a_des_variantes or bases is empty %} disabled{% endif %}>Variante</label>
+        </div>
+        {% if a_des_variantes %}<p class="muted petit">Elle a des variantes : elle reste dans le total.</p>{% endif %}
+        {{ f.erreur(erreurs, 'nature') }}
+        {% if bases is not empty %}
+          <div class="champ" data-remplace{% if champs.nature != 'variante' %} hidden{% endif %}>
+            <label for="remplace">Elle remplace</label>
+            <select id="remplace" name="remplace">
+              {% for b in bases %}<option value="{{ b.id }}"{% if b.id ~ '' == remplace %} selected{% endif %}>{% if b.piece %}{{ b.piece }}, {% endif %}{{ b.designation }}</option>{% endfor %}
+            </select>
+          </div>
+        {% endif %}
+        {% if champs.nature == 'ligne' and not (l.offerte ?? false) %}
+          <a class="lien" href="{{ cible.base }}/ajouter?nature=variante&amp;remplace={{ l.id }}">+ Variante de cette ligne</a>
+        {% endif %}
+      </fieldset>
+    {% endif %}
     {# Offre rangée par pièce (sous-chantier 28, P5) : la ligne se déplace d'une pièce à l'autre ; vide, « Général ». #}
     {% if pieces is not empty %}
       <div class="champ">

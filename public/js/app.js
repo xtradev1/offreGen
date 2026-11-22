@@ -2021,7 +2021,22 @@ function premiereErreur() {
   champ.focus({ preventScroll: true });
 }
 
+// Options et variantes (O4, E3, 2026-11-22) : « Elle remplace » paraît quand « Variante » est choisie ; dans la feuille
+// d'ajout, la ligne remplacée se choisit d'un toucher. Écouteurs sur le document : les feuilles arrivent plus tard.
+function optionsEtVariantes() {
+  document.addEventListener('change', (e) => {
+    const nature = e.target.closest('[data-nature] input[name="nature"]');
+    if (nature && nature.form) {
+      const champ = nature.form.querySelector('[data-remplace]');
+      if (champ) champ.hidden = nature.value !== 'variante';
+    }
+    const liste = e.target.closest('select[data-envoi-auto]');
+    if (liste && liste.form) liste.form.requestSubmit();
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  optionsEtVariantes();
   oeilMotDePasse();
   premiereErreur();
   clavierPc();

@@ -477,6 +477,48 @@ final class DepotOffres implements SupportLignes
     }
 
     /**
+     * La nature d'une ligne (O4, E3) : dans le total, option, ou variante de la ligne $remplaceId. Faux, sans rien écrire,
+     * si la ligne n'est pas à l'artisan, si la ligne remplacée n'est pas une ligne du total de la même offre (ou est la
+     * ligne elle-même), ou si une ligne qui a des variantes cesserait d'être dans le total. Un changement remet le
+     * choix du client à zéro.
+     */
+    public function changerNature(int $offreId, int $ligneId, string $nature, ?int $remplaceId): bool
+    {
+        if (!in_array($nature, Options::NATURES, true)) {
+            return false;
+        }
+        return $this->base->transaction(function () use ($offreId, $ligneId, $nature, $remplaceId): bool {
+            $l = $this->ligne($offreId, $ligneId);
+            if ($l === null) {
+                return false;
+            }
+            if ($nature !== Options::VARIANTE) {
+                $remplaceId = null;
+            } elseif ($remplaceId === null || $remplaceId === $ligneId || ($this->ligne($offreId, $remplaceId)['nature'] ?? null) !== Options::LIGNE) {
+                return false;
+            }
+            if ($nature !== Options::LIGNE && $this->aDesVariantes($offreId, $ligneId)) {
+                return false;
+            }
+            $retenue = $nature === $l['nature'] && $remplaceId === $l['remplace_id'] ? $l['retenue'] : 0;
+            $this->base->ecrire(
+                'UPDATE ligne SET nature = :n, remplace_id = :r, retenue = :t WHERE id = :l AND offre_id = :o AND artisan_id = :a',
+                ['n' => $nature, 'r' => $remplaceId, 't' => $retenue, 'l' => $ligneId, 'o' => $offreId, 'a' => $this->portee->artisanId],
+            );
+            return true;
+        });
+    }
+
+    /** Une variante active désigne cette ligne. */
+    public function aDesVariantes(int $offreId, int $ligneId): bool
+    {
+        return (int) $this->base->valeur(
+            "SELECT COUNT(*) FROM ligne WHERE offre_id = :o AND artisan_id = :a AND remplace_id = :l AND nature = 'variante' AND supprimee_le IS NULL",
+            ['o' => $offreId, 'a' => $this->portee->artisanId, 'l' => $ligneId],
+        ) > 0;
+    }
+
+    /**
      * Le choix du client sur une option ou une variante (O5) ; retenir une variante décoche les autres variantes de la
      * même ligne (point 3, 2026-11-22). Faux si la ligne n'est pas à l'artisan, ou n'est ni option ni variante.
      */
