@@ -189,12 +189,12 @@ final class TotauxTest extends TestCase
     }
 
     /**
-     * @param array{lignes: list<int>, sous_total: int, rabais: list<array{libelle: string, pour_dix_mille: int|null, montant: int}>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>} $t
+     * @param array{lignes: list<int>, sous_total: int, rabais: list<array{libelle: string, pour_dix_mille: int|null, montant: int}>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>, avec_options: array{rabais: int, ht: int, tva: int, arrondi: int, ttc: int}|null} $t
      * @return array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int}
      */
     private static function sansDetail(array $t): array
     {
-        unset($t['par_taux'], $t['sous_total'], $t['rabais']);
+        unset($t['par_taux'], $t['sous_total'], $t['rabais'], $t['avec_options']);
         return $t;
     }
 }
