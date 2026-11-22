@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype : options et variantes</title>
+<style>
+/* Couleurs de l'application (public/css/app.css, branche chantier-voix-offre, 8385e78). */
+:root {
+  --ink: #23272D; --muted: #454B55; --line: #DDD8CC; --surface: #FFFFFF; --bg: #F4F1EA; --chip: #EBE7DE; --bord: #7C838C;
+  --accent: #23272D; --accent-soft: #E9E5DC; --on-accent: #FFFFFF;
+  --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4;
+  --marque: #C4552D; --on-marque: #FFFFFF; --focus: #C4552D; --bande: #23272D; --on-bande: #FFFFFF;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+    --accent: #ECEAE6; --accent-soft: #2D3138; --on-accent: #15171A;
+    --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+  --accent: #ECEAE6; --accent-soft: #2D3138; --on-accent: #15171A;
+  --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1240px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 8px; scroll-margin-top: 70px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 820px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin: 22px 0; }
+
+.proto { display: grid; grid-template-columns: 380px minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
+@media (max-width: 1180px) { .proto { grid-template-columns: 380px minmax(0, 1fr); } .guide { grid-column: 1 / -1; } }
+@media (max-width: 820px) { .proto { grid-template-columns: 1fr; } }
+.legende { font-size: 13px; font-weight: 650; color: var(--muted); margin: 0 0 6px; text-transform: uppercase; letter-spacing: .05em; }
+.colle { position: sticky; top: 64px; }
+@media (max-width: 820px) { .colle { position: static; } }
+
+.tel { position: relative; width: 100%; max-width: 380px; height: 760px; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,.08); display: flex; flex-direction: column; }
+@media (max-width: 820px) { .tel { height: 700px; margin: 0 auto; } }
+.tel .bar { display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 6px 12px; background: var(--bande); color: var(--on-bande); flex: none; }
+.tel .bar b { font-size: 16px; font-weight: 600; flex: 1; }
+.tel .ecran { flex: 1; overflow-y: auto; padding: 10px 16px 18px; }
+.statut { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 2px 0 2px; font-size: 13px; color: var(--muted); min-height: 32px; }
+.status { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); }
+.status.a-verifier { background: var(--warn-soft); color: var(--warn); }
+.status.pret { background: var(--ok-soft); color: var(--ok); }
+.status.envoyee { background: var(--accent-soft); color: var(--accent); }
+.cat { margin: 14px 0 0; padding-bottom: 4px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.cat.opt { color: var(--ink); border-bottom-color: var(--bord); }
+.row { border-bottom: 1px solid var(--line); padding: 4px 0 8px; }
+.row .haut { display: flex; align-items: center; gap: 6px; }
+.row .nm { flex: 1; font: inherit; font-size: 15.5px; text-align: left; background: none; border: 0; color: var(--ink); padding: 6px 0; min-height: 44px; cursor: pointer; }
+.row .vals { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 8px; }
+.row .q { display: flex; align-items: center; gap: 8px; }
+.saisie { font: inherit; font-size: 16px; width: 64px; min-height: 44px; padding: 0 8px; text-align: center; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface); color: var(--ink); font-variant-numeric: tabular-nums; }
+.saisie.manque { border-color: var(--bad); }
+.u { font-size: 13px; color: var(--muted); min-width: 40px; }
+.tt { text-align: right; font-weight: 600; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tt .ecart { display: block; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.del { width: 44px; min-height: 44px; display: grid; place-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; }
+.del svg { width: 18px; height: 18px; }
+.row.miss { box-shadow: inset 3px 0 0 var(--bad); padding-left: 10px; margin-left: -10px; }
+.row.var { margin-left: 14px; padding-left: 10px; border-left: 2px solid var(--bord); }
+.row.var .nm { font-style: italic; }
+.row.var .nm small, .row .nm small { display: block; font-style: normal; font-size: 12px; font-weight: 650; color: var(--muted); letter-spacing: .03em; }
+.row.remplacee .nm { color: var(--muted); }
+.row.remplacee .tt { color: var(--muted); text-decoration: line-through; }
+.note { font-size: 12.5px; padding: 2px 0 0; }
+.note.bad { color: var(--bad); }
+.note.info { color: var(--muted); }
+/* La case du choix du client : 48 px de toucher, la case elle-même 26 px. */
+.choix { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; min-width: 48px; padding: 0 4px; cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.choix input { width: 26px; height: 26px; margin: 0; accent-color: var(--ok); cursor: pointer; }
+.choix input:checked + span { color: var(--ok); }
+.choix input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.totals { margin-top: 12px; font-variant-numeric: tabular-nums; }
+.totals .r { display: flex; justify-content: space-between; align-items: center; min-height: 30px; color: var(--muted); font-size: 14px; width: 100%; gap: 8px; }
+.totals .r.fort { color: var(--ink); font-weight: 600; }
+.totals .r.g { color: var(--ink); font-weight: 700; font-size: 15px; border-top: 1px solid var(--bord); margin-top: 4px; }
+.totals .r.avec { color: var(--ink); font-weight: 600; border-top: 1px dashed var(--bord); margin-top: 6px; }
+.tag { font-size: 12px; font-weight: 600; border-radius: 4px; padding: 1px 6px; margin-left: 4px; }
+.tag.neutre { color: var(--accent); background: var(--accent-soft); }
+.tag.ok { color: var(--ok); background: var(--ok-soft); }
+.tag.warn { color: var(--warn); background: var(--warn-soft); }
+.bas { border-top: 1px solid var(--line); background: var(--surface); flex: none; }
+.bandeau { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 14px; background: var(--warn-soft); color: var(--warn); font-size: 13.5px; font-weight: 600; }
+.bandeau .lien { color: var(--warn); min-height: 40px; }
+.actionbar { display: flex; gap: 8px; padding: 10px 14px; }
+.btn { font: inherit; font-size: 15px; font-weight: 550; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 14px; min-height: 48px; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.actionbar .btn { flex: 1; }
+.actionbar .btn.grand { flex: 2; flex-direction: column; gap: 0; line-height: 1.2; }
+.actionbar .btn.grand small { font-size: 13px; font-weight: 600; }
+.tabs { display: flex; border-top: 1px solid var(--line); }
+.tabs button { flex: 1; font: inherit; font-size: 12px; color: var(--muted); background: none; border: 0; min-height: 52px; cursor: pointer; }
+.tabs button[aria-current="page"] { color: var(--accent); font-weight: 700; }
+.tabs .micro { flex: 1.1; position: relative; }
+.tabs .micro span { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); width: 60px; height: 60px; border-radius: 50%; background: var(--marque); color: var(--on-marque); display: grid; place-items: center; border: 4px solid var(--surface); font-size: 22px; }
+.lien { font: inherit; font-size: 14px; font-weight: 600; background: none; border: 0; color: var(--accent); text-decoration: underline; cursor: pointer; padding: 0; min-height: 44px; text-align: left; }
+.toast { position: absolute; left: 12px; right: 12px; top: 60px; background: var(--accent); color: var(--on-accent); border-radius: 12px; padding: 10px 14px; font-size: 14px; z-index: 9; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.vu { opacity: 1; }
+.row .nm:focus-visible, .del:focus-visible, .btn:focus-visible, .puce:focus-visible, .seg button:focus-visible, .tabs button:focus-visible, .saisie:focus-visible, .lien:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.voile { position: absolute; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: flex-end; z-index: 5; }
+.voile.ouvert { display: flex; }
+.feuille { width: 100%; max-height: 92%; overflow-y: auto; background: var(--surface); border-radius: 18px 18px 0 0; padding: 0 16px 14px; }
+.poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 8px auto 6px; }
+.feuille h4 { margin: 4px 0 10px; font-size: 17px; }
+.champ { display: grid; gap: 5px; margin: 0 0 12px; }
+.champ > label, .champ > .lab { font-size: 14px; font-weight: 600; }
+.champ input, .champ select { font: inherit; font-size: 16px; min-height: 46px; padding: 9px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); width: 100%; min-width: 0; }
+.champ input:focus-visible, .champ select:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.aide { font-size: 13px; color: var(--muted); }
+.duo { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; }
+.trio { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); gap: 8px; }
+.seg { display: flex; border: 1px solid var(--bord); border-radius: 12px; overflow: hidden; }
+.seg button { flex: 1; font: inherit; font-size: 14.5px; min-height: 48px; border: 0; background: var(--surface); color: var(--ink); cursor: pointer; padding: 6px 6px; }
+.seg button + button { border-left: 1px solid var(--bord); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.seg button:disabled { color: var(--muted); cursor: not-allowed; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.puce { font: inherit; font-size: 14px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.puce[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.err { color: var(--bad); font-size: 13px; }
+.liste-choix { display: grid; gap: 2px; margin: 0 0 12px; border: 1px solid var(--line); border-radius: 12px; padding: 4px 10px; }
+.liste-choix .choix { justify-content: space-between; width: 100%; color: var(--ink); font-weight: 500; font-size: 14.5px; }
+.liste-choix .choix > span:last-child { color: var(--muted); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.liste-choix .choix .gauche { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.champ .liste-choix .choix input { flex: none; width: 26px; min-width: 26px; height: 26px; min-height: 0; padding: 0; border: 0; }
+.liste-choix .choix { padding: 4px 0; }
+.liste-choix .choix + .choix { border-top: 1px solid var(--line); }
+.liste-choix small { display: block; font-weight: 500; }
+
+.vues { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; align-items: center; }
+.vues button { font: inherit; font-size: 14px; min-height: 40px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); cursor: pointer; }
+.vues button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.vues button:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+
+/* Le document du client : du papier, blanc dans les deux thèmes. */
+.doc { background: #fff; color: #222; border: 1px solid var(--line); border-radius: 6px; padding: 22px 22px 18px; font: 11.5px/1.45 Roboto, "Segoe UI", system-ui, sans-serif; box-shadow: 0 4px 18px rgba(0,0,0,.08); max-width: 660px; }
+.doc .d-tete { display: flex; justify-content: space-between; gap: 12px; }
+.doc .d-tete b { font-size: 15px; }
+.doc .d-exp { text-align: right; font-size: 10.5px; color: #444; }
+.doc .d-fen { margin: 16px 0 14px auto; width: 52%; min-height: 50px; }
+.doc .d-titre { color: #2E7D32; font-size: 18px; font-weight: 700; margin: 0; }
+.doc .d-objet { font-weight: 600; margin: 0 0 10px; }
+.doc table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.doc th { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #2E7D32; text-align: left; border-bottom: 1.5px solid #2E7D32; padding: 4px 3px; }
+.doc td { border-bottom: 1px solid #e6e6e6; padding: 5px 3px; vertical-align: top; }
+.doc .n { text-align: right; white-space: nowrap; }
+.doc .grp td { font-weight: 700; border-bottom: 0; padding-top: 9px; }
+.doc tr.var td { font-style: italic; color: #3d3d3d; border-bottom-style: dotted; }
+.doc tr.var td:first-child { padding-left: 14px; }
+.doc .case { display: inline-block; width: 9px; height: 9px; border: 1px solid #333; margin-right: 5px; vertical-align: -1px; }
+.doc .d-tot { margin: 8px 0 0 auto; width: 64%; font-variant-numeric: tabular-nums; }
+.doc .d-tot div { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; }
+.doc .d-tot .g { font-weight: 700; font-size: 13px; border-top: 1.5px solid #222; margin-top: 3px; padding-top: 4px; }
+.doc .d-opt { margin: 16px 0 0; }
+.doc .d-opt .lab { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: #2E7D32; font-weight: 700; margin: 0 0 2px; }
+.doc .d-opt .aide-doc { font-size: 10px; color: #555; margin: 0 0 4px; }
+.doc .d-avec { display: flex; justify-content: space-between; margin: 6px 0 0 auto; width: 64%; font-weight: 700; border-top: 1px solid #222; padding-top: 4px; }
+.doc .d-cond { margin: 12px 0 0; font-size: 10.5px; }
+.doc .sign { margin: 14px 0 0; display: flex; justify-content: space-between; gap: 20px; font-size: 10.5px; }
+.doc .sign span { flex: 1; border-top: 1px solid #999; padding-top: 4px; }
+
+.guide ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; counter-reset: etape; }
+.guide li { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.35; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; counter-increment: etape; }
+.guide li::before { content: counter(etape); flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--bord); font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.guide li.fait { background: var(--ok-soft); border-color: transparent; }
+.guide li.fait::before { background: var(--ok); border-color: var(--ok); color: var(--ok-soft); }
+.guide li .g { display: block; font-size: 12px; font-weight: 650; color: var(--muted); }
+.guide .compte { font-size: 14px; color: var(--muted); margin: 8px 0; }
+.btn-reset { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; background: var(--surface); color: var(--ink); border: 1px solid var(--bord); margin-top: 10px; width: 100%; cursor: pointer; }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.decision .ex { font-size: 14.5px; color: var(--muted); margin: -2px 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 650; }
+.opts button .reco { display: block; font-size: 12px; font-weight: 650; color: var(--ok); }
+.opts button[aria-pressed="true"] .reco { color: inherit; }
+.opts button:focus-visible, .decision textarea:focus-visible, .copier:focus-visible, .btn-reset:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+.decision textarea, .recap textarea { width: 100%; min-height: 60px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 120px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+table.tranche { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+table.tranche td { border-bottom: 1px solid var(--line); padding: 6px 8px; vertical-align: top; text-align: left; }
+table.tranche td:first-child { font-weight: 700; white-space: nowrap; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Prototype : options et variantes</h1>
+<p class="chapeau">L'écran de l'offre au téléphone, avec à côté le document que reçoit le client. Tout ce qui est réglé (O1 à O6, ta réponse du 22 novembre, les points 1 à 4 de la SPEC) y est appliqué. Restent cinq choix d'écran, sous le prototype. La marche à suivre, à droite, passe par chaque geste et dit combien il coûte.</p>
+
+<section class="point" id="s-proto">
+<h2 id="prototype" data-toc="Prototype">Le prototype</h2>
+<div class="proto">
+  <div>
+    <p class="legende">Téléphone</p>
+    <div class="tel" id="tel">
+      <div class="bar"><b data-titre-ecran>Offre 42</b></div>
+      <div class="ecran" data-ecran></div>
+      <div class="bas"><div class="bandeau" data-bandeau hidden><span>Modifiée depuis l'envoi</span><button class="lien" type="button" data-generer>Renvoyer</button></div><div class="actionbar" data-actions></div>
+        <div class="tabs"><button type="button" data-nav="offre" data-tab="offre">Offres</button><button type="button" disabled>Clients</button><button type="button" class="micro" disabled aria-label="Dicter (hors prototype)"><span>●</span></button><button type="button" data-nav="factures" data-tab="factures">Factures</button><button type="button" disabled>Plus</button></div></div>
+      <div class="toast" data-toast role="status"></div>
+
+      <div class="voile" id="f-ligne" role="dialog" aria-modal="true" aria-label="Ligne"><div class="feuille">
+        <div class="poignee"></div>
+        <h4 data-l-titre>Ligne</h4>
+        <div class="duo">
+          <div class="champ"><label for="l-q">Quantité</label><input id="l-q" inputmode="decimal" data-l-q></div>
+          <div class="champ"><label for="l-p">Prix unitaire (CHF)</label><input id="l-p" inputmode="decimal" placeholder="Prix" data-l-p></div>
+        </div>
+        <div class="champ"><span class="lab">Cette ligne est</span>
+          <div class="seg" data-l-nat><button type="button" data-v="ligne">Dans le total</button><button type="button" data-v="option">Option</button><button type="button" data-v="variante">Variante</button></div>
+          <span class="aide" data-l-aide></span></div>
+        <div class="champ" data-l-base-champ hidden><label for="l-base">Elle remplace</label><select id="l-base" data-l-base></select></div>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-l-variante>+ Variante</button><button class="btn primary" type="button" data-fermer>Fermer</button></div>
+      </div></div>
+
+      <div class="voile" id="f-nouvelle" role="dialog" aria-modal="true" aria-label="Nouvelle ligne"><div class="feuille">
+        <div class="poignee"></div>
+        <h4 data-n-titre>Nouvelle ligne</h4>
+        <p class="aide">Dans l'application, cette fenêtre propose aussi le catalogue.</p>
+        <div class="champ"><label for="n-des">Désignation</label><input id="n-des" maxlength="255" data-n-des></div>
+        <div class="trio">
+          <div class="champ"><label for="n-q">Quantité</label><input id="n-q" inputmode="decimal" data-n-q></div>
+          <div class="champ"><label for="n-u">Unité</label><input id="n-u" maxlength="20" data-n-u></div>
+          <div class="champ"><label for="n-p">Prix (CHF)</label><input id="n-p" inputmode="decimal" data-n-p></div>
+        </div>
+        <div class="champ"><span class="lab">Elle va</span>
+          <div class="seg" data-n-nat><button type="button" data-v="ligne">Dans le total</button><button type="button" data-v="option">Option</button><button type="button" data-v="variante">Variante</button></div></div>
+        <div class="champ" data-n-base-champ hidden><label for="n-base">Elle remplace</label><select id="n-base" data-n-base></select>
+          <span class="aide">Proposé : la dernière ligne du même groupe. Quantité vide : celle de la ligne remplacée.</span></div>
+        <p class="err" data-n-err hidden></p>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-fermer>Annuler</button><button class="btn primary" type="button" data-n-ok>Ajouter</button></div>
+      </div></div>
+
+      <div class="voile" id="f-envoi" role="dialog" aria-modal="true" aria-label="Envoyer l'offre"><div class="feuille">
+        <div class="poignee"></div>
+        <h4 data-envoi-titre>Envoyer l'offre 42</h4>
+        <p data-envoi-a>Par courriel à la Famille Rochat, avec le PDF.</p>
+        <p class="aide">L'offre reste modifiable après l'envoi.</p>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-fermer>Annuler</button><button class="btn primary" type="button" data-envoyer>Envoyer</button></div>
+      </div></div>
+
+      <div class="voile" id="f-facturer" role="dialog" aria-modal="true" aria-label="Facturer"><div class="feuille">
+        <div class="poignee"></div>
+        <h4>Facturer l'offre 42</h4>
+        <div class="champ" data-f-choix-champ><span class="lab">Choix du client</span>
+          <div class="liste-choix" data-f-choix></div>
+          <span class="aide">Les mêmes cases que sur l'offre. Ce qui est coché entre dans la facture.</span></div>
+        <div class="seg" data-f-genre style="margin-bottom:12px"><button type="button" data-v="acompte">Acompte</button><button type="button" data-v="finale">Facture finale</button></div>
+        <div data-si-acompte>
+          <div class="champ"><span class="lab">Part de l'offre</span>
+            <div class="puces" data-f-pct><button class="puce" type="button" data-v="20">20 %</button><button class="puce" type="button" data-v="30">30 %</button><button class="puce" type="button" data-v="50">50 %</button></div>
+            <span class="aide" data-f-reste></span></div>
+        </div>
+        <div data-si-finale hidden><p class="aide" data-f-finale></p></div>
+        <p class="err" data-f-err hidden></p>
+        <div class="actionbar" style="padding:6px 0 0"><button class="btn" type="button" data-fermer>Annuler</button><button class="btn primary" type="button" data-creer>Créer la facture</button></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="colle">
+    <p class="legende">Document du client</p>
+    <div class="vues" data-vues></div>
+    <div class="doc" data-doc></div>
+  </div>
+
+  <div class="guide colle">
+    <p class="legende">Marche à suivre</p>
+    <ol data-guide></ol>
+    <p class="compte" data-guide-compte></p>
+    <button class="btn-reset" type="button" data-reset>Recommencer l'exemple</button>
+  </div>
+</div>
+</section>
+
+<section class="point" id="s-ouvert">
+<h2 id="ouvert" data-toc="À trancher">Ce qui reste à trancher</h2>
+
+<div class="decision" data-id="E1"><p class="q">E1. Où l'artisan coche le choix du client ?</p>
+<p class="ex">O5 dit « cochées avant de facturer ». Le prototype les met aux deux endroits, avec le même état.</p><div class="opts">
+  <button type="button" data-v="A">A. Sur l'offre, et repris dans « Facturer »<span class="reco">Recommandé : c'est le prototype</span></button>
+  <button type="button" data-v="B">B. Sur l'offre seulement</button>
+  <button type="button" data-v="C">C. Dans « Facturer » seulement</button>
+</div><textarea aria-label="Commentaire E1" placeholder="Commentaire"></textarea></div>
+
+<div class="decision" data-id="E2"><p class="q">E2. Où paraissent les options sur l'écran de l'offre ?</p><div class="opts">
+  <button type="button" data-v="A">A. Dans un groupe « Options » sous le total, comme sur le document<span class="reco">Recommandé : c'est le prototype</span></button>
+  <button type="button" data-v="B">B. Dans leur pièce, avec une étiquette « Option »</button>
+</div><textarea aria-label="Commentaire E2" placeholder="Commentaire"></textarea></div>
+
+<div class="decision" data-id="E3"><p class="q">E3. À l'ajout d'une ligne et dans la fenêtre d'une ligne : un choix « Dans le total · Option · Variante », et pour une variante, la ligne remplacée (la dernière du groupe, proposée). « + Variante » dans la fenêtre d'une ligne ouvre l'ajout réglé sur elle.</p><div class="opts">
+  <button type="button" data-v="Valider">Valider</button>
+  <button type="button" data-v="Pas valider">Pas valider</button>
+</div><textarea aria-label="Commentaire E3" placeholder="Commentaire"></textarea></div>
+
+<div class="decision" data-id="E4"><p class="q">E4. Le montant d'une option, avec un rabais de 5 % sur l'offre.</p>
+<p class="ex">Laquage des portes, 3 pièces à 140 : 420.00. Ta règle : le rabais en pourcentage vaut sur tout, options comprises. Il entre de toute façon dans « Total avec toutes les options ». La question est le montant écrit sur la ligne de l'option.</p><div class="opts">
+  <button type="button" data-v="A">A. 420.00, le prix de la ligne ; le rabais se déduit dans le total<span class="reco">Recommandé : comme les lignes, c'est le prototype</span></button>
+  <button type="button" data-v="B">B. 399.00, déjà rabattu</button>
+</div><textarea aria-label="Commentaire E4" placeholder="Commentaire"></textarea></div>
+
+<div class="decision" data-id="E5"><p class="q">E5. Sur l'écran de l'offre, une variante retenue : la ligne de base reste visible, montant barré, pour pouvoir revenir en arrière d'un toucher. Le document, lui, ne montre plus que la variante (point 2).</p><div class="opts">
+  <button type="button" data-v="Valider">Valider</button>
+  <button type="button" data-v="Pas valider">Pas valider</button>
+</div><textarea aria-label="Commentaire E5" placeholder="Commentaire"></textarea></div>
+
+<div class="decision" data-id="R"><p class="q">Ce qui ne va pas dans le prototype (écran, mot, calcul, geste de trop) :</p><textarea aria-label="Remarques sur le prototype" placeholder="Par exemple : la case devrait…"></textarea></div>
+</section>
+
+<section class="point" id="s-tranche">
+<h2 id="tranche" data-toc="Réglé">Ce qui est réglé</h2>
+<table class="tranche"><tbody>
+<tr><td>O1</td><td>L'option reste hors du total. Bloc sous le total, case à cocher et montant, puis « Total avec toutes les options ».</td></tr>
+<tr><td>O2</td><td>La variante sort sous la ligne qu'elle remplace, en italique, case, prix unitaire et écart. Le total compte la ligne de base.</td></tr>
+<tr><td>O3</td><td>Dictée : « en option », « variante », « ou alors », « à la place de ». Une variante sans ligne de base devient une option « À vérifier ».</td></tr>
+<tr><td>O4</td><td>Un toucher « Option » ou « Variante » à l'ajout ; la variante remplace la dernière ligne du même groupe, modifiable.</td></tr>
+<tr><td>O5</td><td>L'artisan coche ce que le client retient, renvoie l'offre, facture ou demande un acompte en un toucher.</td></tr>
+<tr><td>O6</td><td>Les modèles d'abord (fait), les options ensuite.</td></tr>
+<tr><td>22.11</td><td>Rabais en pourcentage : sur tout, options comprises. Rabais en francs : le même montant. Options et variantes ensemble.</td></tr>
+<tr><td>Point 2</td><td>Après le choix, sur le document : option retenue dans les lignes, variante retenue à la place de sa ligne de base, le reste dans les blocs, case vide.</td></tr>
+<tr><td>Point 3</td><td>Plusieurs variantes d'une même ligne, une seule retenue.</td></tr>
+<tr><td>Point 4</td><td>« Total avec toutes les options » : les options seules, sans les variantes.</td></tr>
+</tbody></table>
+<p style="margin-top:12px">Les douze modèles suivent la même règle que le Sobre montré ici. Une facture ne porte jamais d'option ni de variante non retenue. Un prix manquant sur une option bloque l'envoi, comme sur une ligne.</p>
+</section>
+
+<section class="point recap" id="s-recap">
+<h2 id="recap" data-toc="Copier">Copier le texte</h2>
+<p class="chapeau">Rassemble E1 à E5 et tes remarques pour la conversation.</p>
+<textarea readonly aria-label="Réponses rassemblées" data-recap></textarea>
+<p><button class="copier" type="button" data-copier>Copier le texte</button><span class="copie-ok" data-copie-ok hidden>Copié</span></p>
+</section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var NB = ' ';
+  var S, ligneOuverte = null, nouv = { nat: 'ligne', base: null };
+
+  function exemple() {
+    return {
+      ecran: 'offre', envoyee: false, sigEnvoi: '', vue: 'offre', suivant: 9,
+      lignes: [
+        { id: 1, grp: 'Séjour', des: 'Peinture des murs, 2 couches', q: 42, u: 'm²', p: 2800, nat: 'ligne', base: null, ret: false },
+        { id: 2, grp: 'Séjour', des: 'Peinture lessivable, 2 couches', q: 42, u: 'm²', p: 3400, nat: 'variante', base: 1, ret: false },
+        { id: 3, grp: 'Séjour', des: 'Peinture des plafonds', q: 24, u: 'm²', p: 3200, nat: 'ligne', base: null, ret: false },
+        { id: 4, grp: 'Chambre', des: 'Peinture des murs, 2 couches', q: 30, u: 'm²', p: 2800, nat: 'ligne', base: null, ret: false },
+        { id: 5, grp: 'Chambre', des: 'Laquage des plinthes', q: 26, u: 'm', p: 1200, nat: 'ligne', base: null, ret: false },
+        { id: 6, grp: 'Chambre', des: 'Laquage du radiateur', q: 1, u: 'pce', p: 8500, nat: 'option', base: null, ret: false },
+        { id: 7, grp: 'Divers', des: 'Déplacement', q: 1, u: 'forfait', p: 6000, nat: 'ligne', base: null, ret: false },
+        { id: 8, grp: 'Divers', des: 'Protection des sols et des meubles', q: 1, u: 'forfait', p: 12000, nat: 'ligne', base: null, ret: false }
+      ],
+      rabais: { lib: 'Rabais fidélité', pct: 5 },
+      factures: [], fact: { genre: 'acompte', pct: '30' }, vu: {}
+    };
+  }
+
+  function chf(c) {
+    var neg = c < 0; c = Math.abs(Math.round(c));
+    return (neg ? '-' : '') + Math.floor(c / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '’') + '.' + String(c % 100).padStart(2, '0');
+  }
+  function signe(c) { return (c > 0 ? '+' : '') + chf(c); }
+  function nombre(t) { var v = String(t).trim().replace(',', '.'); return v === '' || isNaN(+v) ? null : +v; }
+  function prixSaisi(c) { return c === null ? '' : (c % 100 === 0 ? String(c / 100) : (c / 100).toFixed(2)); }
+  function qTxt(v) { return String(v).replace('.', ','); }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]; }); }
+  function r5(c) { return Math.round(c / 5) * 5; }
+  function montant(l) { return l.p === null ? 0 : Math.round(l.q * l.p); }
+  function ligne(id) { return S.lignes.find(function (x) { return x.id === id; }); }
+  function variantesDe(id) { return S.lignes.filter(function (x) { return x.nat === 'variante' && x.base === id; }); }
+  function retenueDe(id) { return variantesDe(id).find(function (v) { return v.ret; }) || null; }
+  function bases() { return S.lignes.filter(function (x) { return x.nat === 'ligne'; }); }
+  function options() { return S.lignes.filter(function (x) { return x.nat === 'option'; }); }
+  function groupes() { var g = []; S.lignes.forEach(function (l) { if (g.indexOf(l.grp) < 0) g.push(l.grp); }); return g; }
+  /* Ce qui est dans le total : les lignes non remplacées, les variantes et les options retenues. */
+  function compte(l) { return l.nat === 'ligne' ? !retenueDe(l.id) : l.ret; }
+  function calcul(pred) {
+    var sous = 0;
+    S.lignes.forEach(function (l) { if (pred(l)) sous += montant(l); });
+    var rab = Math.round(sous * S.rabais.pct / 100), ht = sous - rab, tva = Math.round(ht * 0.081), brut = ht + tva, ttc = r5(brut);
+    return { sous: sous, rab: rab, ht: ht, tva: tva, arr: ttc - brut, ttc: ttc };
+  }
+  function totaux() {
+    var t = calcul(compte);
+    var libres = options().filter(function (o) { return !o.ret; });
+    t.avec = libres.length ? calcul(function (l) { return compte(l) || (l.nat === 'option' && !l.ret); }) : null;
+    t.manque = S.lignes.filter(function (l) { return l.p === null; }).length;
+    return t;
+  }
+  function sig() { return JSON.stringify(S.lignes); }
+  function modifiee() { return S.envoyee && sig() !== S.sigEnvoi; }
+  function acomptes() { return S.factures.filter(function (f) { return f.genre === 'acompte'; }); }
+  function dejaAcomptes() { return acomptes().reduce(function (s, f) { return s + f.mt; }, 0); }
+  function aFinale() { return S.factures.some(function (f) { return f.genre === 'finale'; }); }
+  function numeroSuivant() { return '2026-' + String(31 + S.factures.length).padStart(3, '0'); }
+
+  /* ---------- Téléphone ---------- */
+  var POUBELLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
+  function caseChoix(l, libelle) {
+    return '<label class="choix"><input type="checkbox" data-ret="' + l.id + '"' + (l.ret ? ' checked' : '') + ' aria-label="Retenue par le client, ' + esc(l.des) + '"><span>' + libelle + '</span></label>';
+  }
+  function rangee(l, cls, tot, sous, apres) {
+    var manque = l.p === null;
+    return '<div class="row' + cls + (manque ? ' miss' : '') + '" id="l' + l.id + '"><div class="haut"><button class="nm" type="button" data-ligne="' + l.id + '">' + (sous ? '<small>' + sous + '</small>' : '') + esc(l.des) + '</button><button class="del" type="button" data-suppr="' + l.id + '" aria-label="Supprimer ' + esc(l.des) + '">' + POUBELLE + '</button></div>'
+      + '<div class="vals"><span class="q"><input class="saisie" inputmode="decimal" value="' + qTxt(l.q) + '" data-q="' + l.id + '" aria-label="Quantité, ' + esc(l.des) + '"><span class="u">' + esc(l.u) + '</span></span>'
+      + '<input class="saisie' + (manque ? ' manque' : '') + '" inputmode="decimal" placeholder="Prix" value="' + prixSaisi(l.p) + '" data-p="' + l.id + '" aria-label="Prix unitaire, ' + esc(l.des) + '">' + tot + '</div>'
+      + (apres || '') + (manque ? '<div class="note bad">Prix manquant' + NB + ': tapez un prix</div>' : '') + '</div>';
+  }
+  function ecranOffre(t) {
+    var h = '<div class="statut">' + (S.envoyee ? '<span class="status envoyee">Envoyée le 22.11.2026</span>' : (t.manque ? '<span class="status a-verifier">À relire</span>' : '<span class="status pret">Prête</span>')) + '<span>Famille Rochat · Rafraîchissement</span></div>';
+    groupes().forEach(function (g) {
+      var bs = bases().filter(function (b) { return b.grp === g; });
+      if (!bs.length) return;
+      h += '<div class="cat"><span>' + esc(g) + '</span><span>Qté · Prix · Total</span></div>';
+      bs.forEach(function (b) {
+        var vr = retenueDe(b.id);
+        h += rangee(b, vr ? ' remplacee' : '', '<span class="tt">' + (b.p === null ? '' : chf(montant(b))) + '</span>', '',
+          vr ? '<div class="note info">Remplacée par la variante retenue</div>' : '');
+        variantesDe(b.id).forEach(function (v) {
+          var ec = montant(v) - montant(b);
+          h += rangee(v, ' var', '<span class="tt">' + (v.p === null ? '' : chf(montant(v)) + '<span class="ecart">' + signe(ec) + '</span>') + '</span>', 'Variante',
+            '<div>' + caseChoix(v, v.ret ? 'Retenue, à la place' : 'Retenue par le client') + '</div>');
+        });
+      });
+    });
+    h += '<div class="totals"><div class="r"><span>Sous-total</span><span>' + chf(t.sous) + '</span></div>'
+      + '<div class="r"><span>' + esc(S.rabais.lib) + '<span class="tag neutre">' + S.rabais.pct + NB + '%</span></span><span>' + chf(-t.rab) + '</span></div>'
+      + '<div class="r fort"><span>Total HT</span><span>' + chf(t.ht) + '</span></div>'
+      + '<div class="r"><span>TVA 8,1' + NB + '%</span><span>' + chf(t.tva) + '</span></div>' + (t.arr ? '<div class="r"><span>Arrondi</span><span>' + chf(t.arr) + '</span></div>' : '')
+      + '<div class="r g"><span>Total TTC</span><span>CHF ' + chf(t.ttc) + '</span></div></div>';
+    var os = options();
+    if (os.length) {
+      h += '<div class="cat opt"><span>Options</span><span>Hors du total</span></div>';
+      os.forEach(function (o) {
+        h += rangee(o, '', '<span class="tt">' + (o.p === null ? '' : chf(montant(o))) + '</span>', o.grp,
+          '<div>' + caseChoix(o, o.ret ? 'Retenue, dans le total' : 'Retenue par le client') + '</div>');
+      });
+      if (t.avec) h += '<div class="totals"><div class="r avec"><span>Total avec toutes les options</span><span>CHF ' + chf(t.avec.ttc) + '</span></div></div>';
+    }
+    return h;
+  }
+  function ecranFactures() {
+    if (!S.factures.length) return '<p class="aide" style="margin-top:12px">Aucune facture. Envoyez l’offre, puis «' + NB + 'Facturer' + NB + '».</p>';
+    var h = '<div class="cat"><span>Offre 42</span><span></span></div>';
+    S.factures.forEach(function (f, i) {
+      h += '<div class="row"><button class="nm" type="button" data-voir="' + i + '"><small>Facture ' + f.num + '</small>' + (f.genre === 'finale' ? 'Facture finale' : 'Acompte de ' + f.pct + NB + '%') + ' · CHF ' + chf(f.aPayer) + '</button></div>';
+    });
+    return h;
+  }
+  function actions(t) {
+    if (S.ecran === 'factures') return '<button class="btn" type="button" data-nav="offre">Retour à l’offre</button>';
+    var a = '<button class="btn" type="button" data-nouvelle>+ Ligne</button>';
+    if (t.manque) return a + '<button class="btn primary grand" type="button" data-relire><span>Relire ' + t.manque + ' ligne' + (t.manque > 1 ? 's' : '') + '</span><small>CHF ' + chf(t.ttc) + '</small></button>';
+    if (!S.envoyee) return a + '<button class="btn primary grand" type="button" data-generer><span>Générer l’offre</span><small>CHF ' + chf(t.ttc) + '</small></button>';
+    if (aFinale()) return a + '<button class="btn primary grand" type="button" data-nav="factures"><span>Voir les factures</span><small>Offre facturée</small></button>';
+    return a + '<button class="btn primary grand" type="button" data-facturer><span>Facturer</span><small>CHF ' + chf(t.ttc) + '</small></button>';
+  }
+
+  /* ---------- Document ---------- */
+  function tete() { return '<div class="d-tete"><b>Peinture Morel Sàrl</b><div class="d-exp">Rue de l’Exemple 12<br>2800 Delémont<br>032' + NB + '000' + NB + '00' + NB + '01</div></div><div class="d-fen">Famille Rochat<br>Chemin des Vignes 4<br>1700 Fribourg</div>'; }
+  function tr(l, cls, debut, pu, mt) { return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + debut + esc(l.des) + '</td><td class="n">' + qTxt(l.q) + NB + esc(l.u) + '</td><td class="n">' + pu + '</td><td class="n">' + mt + '</td></tr>'; }
+  /* Point 2 : la variante retenue prend la place de sa ligne de base ; une option retenue entre dans son groupe. */
+  function tableOffre(facture) {
+    var h = '<table><thead><tr><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix unit.</th><th class="n">Montant</th></tr></thead><tbody>';
+    groupes().forEach(function (g) {
+      var dedans = [];
+      bases().filter(function (b) { return b.grp === g; }).forEach(function (b) { dedans.push({ l: retenueDe(b.id) || b, b: b }); });
+      options().filter(function (o) { return o.grp === g && o.ret; }).forEach(function (o) { dedans.push({ l: o, b: null }); });
+      if (!dedans.length) return;
+      h += '<tr class="grp"><td colspan="4">' + esc(g) + '</td></tr>';
+      dedans.forEach(function (x) {
+        h += tr(x.l, '', '', x.l.p === null ? '' : chf(x.l.p), x.l.p === null ? '' : chf(montant(x.l)));
+        if (facture || !x.b) return;
+        // Les variantes non retenues restent sous la ligne du total, l'écart compté sur elle ; la ligne de base remplacée disparaît.
+        variantesDe(x.b.id).filter(function (v) { return v !== x.l; }).forEach(function (v) {
+          h += tr(v, 'var', '<span class="case"></span>Variante' + NB + ': ', v.p === null ? '' : chf(v.p), v.p === null ? '' : signe(montant(v) - montant(x.l)));
+        });
+      });
+    });
+    return h + '</tbody></table>';
+  }
+  function totauxDoc(t, suite) {
+    var h = '<div class="d-tot"><div><span>Sous-total</span><span>' + chf(t.sous) + '</span></div><div><span>' + esc(S.rabais.lib) + ' ' + S.rabais.pct + NB + '%</span><span>' + chf(-t.rab) + '</span></div>'
+      + '<div><span>Total HT</span><span>' + chf(t.ht) + '</span></div><div><span>TVA 8,1' + NB + '%</span><span>' + chf(t.tva) + '</span></div>';
+    if (t.arr) h += '<div><span>Arrondi</span><span>' + chf(t.arr) + '</span></div>';
+    return h + '<div class="g"><span>Total TTC</span><span>CHF ' + chf(t.ttc) + '</span></div>' + (suite || '') + '</div>';
+  }
+  function docOffre() {
+    var t = totaux(), h = tete();
+    h += '<p class="d-titre">Offre n°' + NB + '42</p><p class="d-objet">Rafraîchissement de l’appartement</p>';
+    h += tableOffre(false) + totauxDoc(t);
+    var libres = options().filter(function (o) { return !o.ret; });
+    if (libres.length) {
+      h += '<div class="d-opt"><p class="lab">Options</p><p class="aide-doc">Hors du total ci-dessus. Cochez celles que vous retenez.</p><table><tbody>';
+      libres.forEach(function (o) { h += tr(o, '', '<span class="case"></span>', o.p === null ? '' : chf(o.p), o.p === null ? '' : chf(montant(o))); });
+      h += '</tbody></table><div class="d-avec"><span>Total avec toutes les options</span><span>CHF ' + chf(t.avec.ttc) + '</span></div></div>';
+    }
+    h += '<div class="d-cond">Paiement' + NB + ': net à 30 jours. Offre valable jusqu’au 22.12.2026. Prix en francs suisses, TVA comprise dans le total.</div>';
+    return h + '<div class="sign"><span>Pour l’entreprise</span><span>Bon pour accord, date et signature</span></div>';
+  }
+  function docFacture(f, brouillon) {
+    var h = tete();
+    h += '<p class="d-titre">Facture n°' + NB + f.num + (brouillon ? ' (aperçu)' : '') + '</p><p class="d-objet">Rafraîchissement de l’appartement</p>';
+    if (f.genre === 'acompte') {
+      var ht = Math.round(f.mt / 1.081);
+      h += '<table><thead><tr><th>Désignation</th><th class="n">Montant</th></tr></thead><tbody><tr><td>Acompte de ' + f.pct + NB + '%, selon offre n°' + NB + '42 (CHF ' + chf(f.base) + ')</td><td class="n">' + chf(f.mt) + '</td></tr></tbody></table>'
+        + '<div class="d-tot"><div><span>Total HT</span><span>' + chf(ht) + '</span></div><div><span>TVA 8,1' + NB + '%</span><span>' + chf(f.mt - ht) + '</span></div><div class="g"><span>À payer</span><span>CHF ' + chf(f.mt) + '</span></div></div>';
+    } else {
+      var suite = '';
+      f.acomptes.forEach(function (a) { suite += '<div><span>Acompte, facture ' + a.num + '</span><span>' + chf(-a.mt) + '</span></div>'; });
+      suite += '<div class="g"><span>À payer</span><span>CHF ' + chf(f.aPayer) + '</span></div>';
+      h += f.table + totauxDoc(f.t, suite);
+    }
+    return h + '<div class="d-cond">Payable à 30 jours avec la section de paiement (non montrée ici).</div>';
+  }
+  function factureBrouillon() {
+    var t = totaux(), f = { num: numeroSuivant(), genre: S.fact.genre };
+    if (f.genre === 'finale') {
+      f.table = tableOffre(true); f.t = t;
+      f.acomptes = acomptes().map(function (a) { return { num: a.num, mt: a.mt }; });
+      f.aPayer = t.ttc - dejaAcomptes();
+    } else {
+      f.pct = S.fact.pct; f.base = t.ttc; f.mt = r5(t.ttc * (+S.fact.pct) / 100); f.aPayer = f.mt;
+    }
+    return f;
+  }
+
+  /* ---------- Marche à suivre ---------- */
+  var ETAPES = [
+    ['Touchez « Laquage des plinthes », puis « Option », puis Fermer : elle sort du total et passe sous « Options ».', '3 gestes', function () { return S.vu.enOption; }],
+    ['« + Ligne » : « Laquage des portes », 3 pce à 140, « Option », Ajouter.', '3 gestes + saisie', function () { return S.vu.ajoutOption; }],
+    ['Touchez « Peinture des plafonds », « + Variante » : « Plafond acoustique », prix 45, Ajouter (la ligne remplacée et la quantité sont reprises).', '3 gestes + saisie', function () { return S.vu.ajoutVariante; }],
+    ['Regardez le document : variantes sous leur ligne avec l’écart, options sous le total, « Total avec toutes les options » rabais compris.', '0 geste', function () { return S.vu.ajoutVariante && S.vu.ajoutOption; }],
+    ['« Générer l’offre », puis « Envoyer ».', '2 gestes', function () { return S.vu.envoi; }],
+    ['Le client prend la peinture lessivable et les portes : cochez les deux cases. Le bandeau « Renvoyer » paraît.', '2 gestes', function () { var v = ligne(2), p = S.lignes.find(function (x) { return x.des === 'Laquage des portes'; }); if (S.vu.envoi && v && v.ret && p && p.ret) S.vu.choix = true; return !!S.vu.choix; }],
+    ['Regardez le document : la lessivable a pris la place de la peinture standard, les portes sont entrées dans « Divers ».', '0 geste', function () { return !!S.vu.choix; }],
+    ['« Renvoyer », « Envoyer ».', '2 gestes', function () { return S.vu.renvoi; }],
+    ['« Facturer » : acompte de 30 % (déjà choisi), Créer. Il se calcule sur le total avec le choix.', '2 gestes', function () { return acomptes().length > 0; }],
+    ['« Facturer » : le client renonce aux portes, décochez-les dans « Choix du client », « Facture finale », Créer.', '4 gestes', function () { return aFinale(); }]
+  ];
+
+  /* ---------- Rendu ---------- */
+  function rendreTel(t) {
+    var ecran = document.querySelector('[data-ecran]'), haut = ecran.scrollTop;
+    ecran.innerHTML = S.ecran === 'factures' ? ecranFactures() : ecranOffre(t);
+    ecran.scrollTop = haut;
+    document.querySelector('[data-titre-ecran]').textContent = S.ecran === 'factures' ? 'Factures' : 'Offre 42';
+    document.querySelector('[data-actions]').innerHTML = actions(t);
+    document.querySelector('[data-bandeau]').hidden = !(S.ecran === 'offre' && modifiee());
+    document.querySelectorAll('[data-tab]').forEach(function (b) { if (b.dataset.tab === S.ecran) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  }
+  function rendreDoc() {
+    var v = '<button type="button" data-vue="offre" aria-pressed="' + (S.vue === 'offre') + '">Offre 42</button>';
+    S.factures.forEach(function (f, i) { v += '<button type="button" data-vue="' + i + '" aria-pressed="' + (S.vue === String(i)) + '">Facture ' + f.num + '</button>'; });
+    if (document.getElementById('f-facturer').classList.contains('ouvert')) v += '<button type="button" data-vue="brouillon" aria-pressed="' + (S.vue === 'brouillon') + '">Aperçu de la facture</button>';
+    document.querySelector('[data-vues]').innerHTML = v;
+    var doc = document.querySelector('[data-doc]');
+    if (S.vue === 'brouillon') doc.innerHTML = docFacture(factureBrouillon(), true);
+    else if (S.vue !== 'offre' && S.factures[+S.vue]) doc.innerHTML = docFacture(S.factures[+S.vue], false);
+    else doc.innerHTML = docOffre();
+  }
+  function typo(s) { return s.replace(/ ([:;!?%»])/g, NB + '$1').replace(/« /g, '«' + NB); }
+  function rendreGuide() {
+    var faits = 0, g = '';
+    ETAPES.forEach(function (e) { var ok = e[2](); if (ok) faits++; g += '<li' + (ok ? ' class="fait"' : '') + '><span>' + typo(e[0]) + '<span class="g">' + e[1] + '</span></span></li>'; });
+    document.querySelector('[data-guide]').innerHTML = g;
+    document.querySelector('[data-guide-compte]').textContent = faits + ' sur ' + ETAPES.length + ' faites';
+  }
+  function presserIn(sel, v) { document.querySelectorAll(sel + ' button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === v)); }); }
+  function choixBases(sel, choisie, sauf) {
+    var o = '';
+    bases().forEach(function (b) { if (b.id === sauf) return; o += '<option value="' + b.id + '"' + (b.id === choisie ? ' selected' : '') + '>' + esc(b.grp + ', ' + b.des) + '</option>'; });
+    document.querySelector(sel).innerHTML = o;
+  }
+  function rendreFenetres(t) {
+    var f = document.getElementById('f-facturer'), deja = dejaAcomptes();
+    presserIn('[data-f-genre]', S.fact.genre); presserIn('[data-f-pct]', S.fact.pct);
+    f.querySelector('[data-si-acompte]').hidden = S.fact.genre !== 'acompte';
+    f.querySelector('[data-si-finale]').hidden = S.fact.genre !== 'finale';
+    f.querySelector('[data-f-reste]').textContent = 'Total avec le choix du client' + NB + ': CHF ' + chf(t.ttc) + (deja ? '. Déjà facturé' + NB + ': CHF ' + chf(deja) + '.' : '.');
+    f.querySelector('[data-f-finale]').textContent = 'Les lignes de l’offre et ce qui est coché' + (deja ? ', moins les acomptes (CHF ' + chf(deja) + ').' : '.');
+    var c = '';
+    S.lignes.filter(function (l) { return l.nat !== 'ligne'; }).forEach(function (l) {
+      var lib = l.nat === 'option' ? 'Option' : 'Variante de « ' + ligne(l.base).des + ' »';
+      c += '<label class="choix"><span class="gauche"><input type="checkbox" data-ret="' + l.id + '"' + (l.ret ? ' checked' : '') + '><span>' + esc(l.des) + '<br><small class="aide">' + typo(esc(lib)) + '</small></span></span><span>' + chf(montant(l)) + '</span></label>';
+    });
+    f.querySelector('[data-f-choix]').innerHTML = c;
+    f.querySelector('[data-f-choix-champ]').hidden = !c;
+  }
+  function rendre() { var t = totaux(); rendreTel(t); rendreDoc(); rendreFenetres(t); rendreGuide(); }
+
+  /* ---------- Fenêtres de ligne ---------- */
+  function derniereDuGroupe(g) { var d = null; bases().forEach(function (b) { if (b.grp === g) d = b; }); return d || bases()[bases().length - 1]; }
+  function remplirLigne() {
+    var l = ligne(ligneOuverte); if (!l) return;
+    var f = document.getElementById('f-ligne');
+    f.querySelector('[data-l-titre]').textContent = l.des;
+    if (document.activeElement !== f.querySelector('[data-l-q]')) f.querySelector('[data-l-q]').value = qTxt(l.q);
+    if (document.activeElement !== f.querySelector('[data-l-p]')) f.querySelector('[data-l-p]').value = prixSaisi(l.p);
+    presserIn('[data-l-nat]', l.nat);
+    var aDesVariantes = l.nat === 'ligne' && variantesDe(l.id).length > 0;
+    f.querySelectorAll('[data-l-nat] button').forEach(function (b) { b.disabled = aDesVariantes && b.dataset.v !== 'ligne'; });
+    f.querySelector('[data-l-aide]').textContent = aDesVariantes ? 'Elle a des variantes' + NB + ': elle reste dans le total.' : (l.nat === 'option' ? 'Hors du total tant que le client ne la retient pas.' : (l.nat === 'variante' ? 'Le total garde la ligne remplacée tant que le client ne retient pas la variante.' : ''));
+    f.querySelector('[data-l-base-champ]').hidden = l.nat !== 'variante';
+    if (l.nat === 'variante') choixBases('[data-l-base]', l.base, l.id);
+    f.querySelector('[data-l-variante]').hidden = l.nat !== 'ligne';
+  }
+  function ouvrirNouvelle(nat, base) {
+    nouv = { nat: nat, base: base };
+    ['des', 'q', 'u', 'p'].forEach(function (k) { document.querySelector('[data-n-' + k + ']').value = ''; });
+    document.querySelector('[data-n-err]').hidden = true;
+    majNouvelle(); ouvrir('f-nouvelle');
+  }
+  function majNouvelle() {
+    presserIn('[data-n-nat]', nouv.nat);
+    var b = nouv.base ? ligne(nouv.base) : null;
+    document.querySelector('[data-n-titre]').textContent = nouv.nat === 'variante' && b ? 'Variante de « ' + b.des + ' »' : 'Nouvelle ligne';
+    document.querySelector('[data-n-base-champ]').hidden = nouv.nat !== 'variante';
+    if (nouv.nat === 'variante') { if (!nouv.base) nouv.base = derniereDuGroupe('Divers').id; choixBases('[data-n-base]', nouv.base, null); }
+  }
+  function cocher(l, on) {
+    l.ret = on;
+    if (on && l.nat === 'variante') variantesDe(l.base).forEach(function (v) { if (v !== l) v.ret = false; });
+  }
+
+  /* ---------- Gestes ---------- */
+  var tel = document.getElementById('tel'), minuteur;
+  function toast(m) { var el = tel.querySelector('[data-toast]'); el.textContent = m; el.classList.add('vu'); clearTimeout(minuteur); minuteur = setTimeout(function () { el.classList.remove('vu'); }, 2600); }
+  function ouvrir(id) { var f = document.getElementById(id); f.classList.add('ouvert'); rendre(); var x = f.querySelector('input, select, button'); if (x) x.focus(); }
+  function fermer(f) { f.classList.remove('ouvert'); if (f.id === 'f-facturer' && S.vue === 'brouillon') S.vue = 'offre'; rendre(); }
+  function fermerTout() { document.querySelectorAll('.voile.ouvert').forEach(function (v) { v.classList.remove('ouvert'); }); }
+
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b || b.disabled) return;
+    var d = b.dataset;
+    if (d.ligne) { ligneOuverte = +d.ligne; remplirLigne(); ouvrir('f-ligne'); return; }
+    if (d.suppr) {
+      var id = +d.suppr;
+      S.lignes = S.lignes.filter(function (x) { return x.id !== id; });
+      S.lignes.forEach(function (x) { if (x.nat === 'variante' && x.base === id) { x.nat = 'option'; x.base = null; } });
+      rendre(); toast('Ligne supprimée.'); return;
+    }
+    if (b.hasAttribute('data-relire')) { var m = S.lignes.find(function (x) { return x.p === null; }); var inp = tel.querySelector('[data-p="' + m.id + '"]'); inp.scrollIntoView({ block: 'center' }); inp.focus(); return; }
+    if (b.hasAttribute('data-nouvelle')) { ouvrirNouvelle('ligne', null); return; }
+    if (b.closest('[data-n-nat]')) { nouv.nat = d.v; majNouvelle(); return; }
+    if (b.hasAttribute('data-l-variante')) { var base = ligneOuverte; document.getElementById('f-ligne').classList.remove('ouvert'); ouvrirNouvelle('variante', base); return; }
+    if (b.hasAttribute('data-n-ok')) {
+      var des = document.querySelector('[data-n-des]').value.trim(), qb = document.querySelector('[data-n-q]').value, q = nombre(qb), pb = document.querySelector('[data-n-p]').value, err = document.querySelector('[data-n-err]');
+      var pv = String(pb).trim() === '' ? null : nombre(pb), bl = nouv.nat === 'variante' ? ligne(+document.querySelector('[data-n-base]').value) : null;
+      if (bl && String(qb).trim() === '') q = bl.q;
+      if (!des) { err.textContent = 'Tapez une désignation.'; err.hidden = false; return; }
+      if (!(q > 0)) { err.textContent = 'Tapez une quantité.'; err.hidden = false; return; }
+      if ((String(pb).trim() !== '' && pv === null) || pv < 0) { err.textContent = 'Tapez un prix en chiffres.'; err.hidden = false; return; }
+      var grp = bl ? bl.grp : 'Divers';
+      var nl = { id: S.suivant++, grp: grp, des: des, q: q, u: document.querySelector('[data-n-u]').value.trim() || (bl ? bl.u : 'pce'), p: pv === null ? null : Math.round(pv * 100), nat: nouv.nat, base: bl ? bl.id : null, ret: false };
+      S.lignes.push(nl);
+      if (nl.nat === 'option') S.vu.ajoutOption = true;
+      if (nl.nat === 'variante') S.vu.ajoutVariante = true;
+      fermer(document.getElementById('f-nouvelle'));
+      toast(nl.nat === 'option' ? 'Option ajoutée, hors du total.' : (nl.nat === 'variante' ? 'Variante ajoutée sous « ' + bl.des + ' ».' : 'Ligne ajoutée dans ' + grp + '.')); return;
+    }
+    if (b.closest('[data-l-nat]')) {
+      var l = ligne(ligneOuverte);
+      if (d.v === 'variante' && l.nat !== 'variante') {
+        // La dernière ligne du même groupe, sinon la dernière de l'offre (O4).
+        var autres = bases().filter(function (x) { return x.id !== l.id; }), memes = autres.filter(function (x) { return x.grp === l.grp; });
+        var cible = (memes.length ? memes : autres)[(memes.length ? memes : autres).length - 1];
+        if (!cible) return;
+        l.base = cible.id; l.grp = cible.grp;
+      }
+      if (d.v !== 'variante') l.base = null;
+      if (d.v === 'option' && l.nat === 'ligne') S.vu.enOption = /plinthes/i.test(l.des) || S.vu.enOption;
+      l.nat = d.v; if (d.v === 'ligne') l.ret = false;
+      remplirLigne(); rendre(); return;
+    }
+    if (b.hasAttribute('data-fermer')) { fermer(b.closest('.voile')); return; }
+    if (b.hasAttribute('data-generer')) { document.querySelector('[data-envoi-titre]').textContent = S.envoyee ? 'Renvoyer l’offre 42' : 'Envoyer l’offre 42'; S.vue = 'offre'; ouvrir('f-envoi'); return; }
+    if (b.hasAttribute('data-envoyer')) {
+      var renvoi = S.envoyee; S.envoyee = true; S.sigEnvoi = sig(); S.vu.envoi = true; if (renvoi) S.vu.renvoi = true;
+      fermer(document.getElementById('f-envoi')); toast(renvoi ? 'Offre renvoyée, à jour.' : 'Offre envoyée. Elle reste modifiable.'); return;
+    }
+    if (b.hasAttribute('data-facturer')) { S.fact = { genre: acomptes().length ? 'finale' : 'acompte', pct: '30' }; document.querySelector('[data-f-err]').hidden = true; S.vue = 'brouillon'; ouvrir('f-facturer'); return; }
+    if (b.closest('[data-f-genre]')) { S.fact.genre = d.v; S.vue = 'brouillon'; rendre(); return; }
+    if (b.closest('[data-f-pct]')) { S.fact.pct = d.v; rendre(); return; }
+    if (b.hasAttribute('data-creer')) {
+      var f = factureBrouillon(), er = document.querySelector('[data-f-err]');
+      if (f.genre === 'finale' && f.aPayer < 0) { er.textContent = 'Les acomptes dépassent le total de CHF ' + chf(-f.aPayer) + '.'; er.hidden = false; return; }
+      S.factures.push(f); fermer(document.getElementById('f-facturer'));
+      S.vue = String(S.factures.length - 1); rendre(); toast('Facture ' + f.num + ' créée.'); return;
+    }
+    if (d.nav) { S.ecran = d.nav; fermerTout(); rendre(); return; }
+    if (d.voir !== undefined) { S.vue = d.voir; rendre(); return; }
+    if (d.vue !== undefined) { S.vue = d.vue; rendre(); return; }
+    if (b.hasAttribute('data-reset')) { S = exemple(); fermerTout(); tel.querySelector('[data-ecran]').scrollTop = 0; rendre(); return; }
+  });
+  document.querySelectorAll('.voile').forEach(function (v) { v.addEventListener('click', function (ev) { if (ev.target === v) fermer(v); }); });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') document.querySelectorAll('.voile.ouvert').forEach(fermer);
+    if (ev.key === 'Enter' && ev.target.matches('.saisie')) ev.target.blur();
+  });
+  /* Redessiner entre l'appui et le relâché perdrait le toucher : on attend le relâché (leçon de la version 2 des lignes). */
+  var appuye = false, enAttente = false;
+  document.addEventListener('pointerdown', function () { appuye = true; }, true);
+  document.addEventListener('pointerup', function () { appuye = false; if (enAttente) { enAttente = false; setTimeout(rendre, 0); } }, true);
+  function rendreApres() { if (appuye) enAttente = true; else rendre(); }
+  document.addEventListener('change', function (ev) {
+    var el = ev.target;
+    if (el.dataset.ret) { cocher(ligne(+el.dataset.ret), el.checked); if (S.vue === 'brouillon' || document.getElementById('f-facturer').classList.contains('ouvert')) S.vue = 'brouillon'; rendre(); return; }
+    if (el.dataset.p) { var v = String(el.value).trim(), n = nombre(v); var l = ligne(+el.dataset.p); if (v === '') l.p = null; else if (n !== null && n >= 0) l.p = Math.round(n * 100); rendreApres(); }
+    if (el.dataset.q) { var q = nombre(el.value); if (q > 0) ligne(+el.dataset.q).q = q; rendreApres(); }
+    if (el.matches('[data-l-base]')) { var lo = ligne(ligneOuverte); lo.base = +el.value; lo.grp = ligne(lo.base).grp; lo.ret = false; rendre(); }
+    if (el.matches('[data-n-base]')) { nouv.base = +el.value; majNouvelle(); }
+  });
+  document.addEventListener('input', function (ev) {
+    var el = ev.target;
+    if (el.matches('[data-l-p]')) { var v = String(el.value).trim(), n = nombre(v), l = ligne(ligneOuverte); if (v === '') l.p = null; else if (n !== null && n >= 0) l.p = Math.round(n * 100); rendre(); }
+    if (el.matches('[data-l-q]')) { var q = nombre(el.value); if (q > 0) { ligne(ligneOuverte).q = q; rendre(); } }
+  });
+
+  /* ---------- Réponses : sous chaque question, gardées dans le navigateur ---------- */
+  var CLE = 'maquette-options-variantes-2026-11-22', rep = {};
+  try { rep = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { rep = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(rep)); } catch (e) { /* stockage refusé : la page marche sans */ } }
+  function recap() {
+    var l = [];
+    document.querySelectorAll('.decision').forEach(function (dv) { var id = dv.dataset.id, r = rep[id] || {}; if (!r.v && !r.c) return; l.push((id === 'R' ? 'Remarques' : id) + NB + ': ' + (r.v || (id === 'R' ? '' : '(sans choix)')) + (r.c ? (r.v ? '. ' : '') + r.c : '')); });
+    document.querySelector('[data-recap]').value = l.length ? l.join('\n') : '(aucune réponse encore)';
+  }
+  document.querySelectorAll('.decision').forEach(function (dv) {
+    var id = dv.dataset.id, r = rep[id] || {};
+    dv.querySelectorAll('.opts button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.v === r.v));
+      b.addEventListener('click', function () {
+        rep[id] = rep[id] || {}; rep[id].v = rep[id].v === b.dataset.v ? '' : b.dataset.v;
+        dv.querySelectorAll('.opts button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.v === rep[id].v)); });
+        garder(); recap();
+      });
+    });
+    var ta = dv.querySelector('textarea'); ta.value = r.c || '';
+    ta.addEventListener('input', function () { rep[id] = rep[id] || {}; rep[id].c = ta.value.trim(); garder(); recap(); });
+  });
+  document.querySelector('[data-copier]').addEventListener('click', function () {
+    var ta = document.querySelector('[data-recap]'), ok = document.querySelector('[data-copie-ok]');
+    function fait() { ok.hidden = false; setTimeout(function () { ok.hidden = true; }, 2000); }
+    if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(fait, function () { ta.select(); document.execCommand('copy'); fait(); });
+    else { ta.select(); document.execCommand('copy'); fait(); }
+  });
+
+  S = exemple();
+  recap();
+  rendre();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>
