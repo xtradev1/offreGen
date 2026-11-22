@@ -16,7 +16,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 5 de `PLAN.md` (le document, douze modèles : variantes sous leur ligne, bloc « Options », point 2 après le choix) dans `~/offreGen-options`. Lots 1 à 4 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`, offre 1 semée).
+Lot 6 de `PLAN.md` (facturer : acompte et finale sur ce qui est coché, cases dans « Facturer », E1) dans `~/offreGen-options`. Lots 1 à 5 poussés. Bases : `offregen_options_test` (tests), `offregen_options_dev` (serveur local du port 8041, compte `options-demo@exemple.ch`, offre 1 semée).
 
 ## En attente de toi
 
@@ -44,6 +44,8 @@ Lot 5 de `PLAN.md` (le document, douze modèles : variantes sous leur ligne, bl
 - 2026-11-22 : base de développement à soi `offregen_options_dev` (droits recopiés de `offregen_dev`, `DB_NOM` dans le `.env` de ma copie), compte de démo `options-demo@exemple.ch` (fichier `~/.offregen-options-demo-compte`), offre 1 avec une variante et deux options posées en SQL ; serveur local sur le port 8041.
 - 2026-11-22 : lot 3 poussé (`bc710c0`). Lot 4 fait (les gestes). `DepotOffres::changerNature` (refuse sans écrire : base hors de l'offre, base qui n'est pas une ligne du total, la ligne elle-même, ligne qui a des variantes ; remet le choix du client à zéro) et `aDesVariantes` ; fenêtre de la ligne : « Cette ligne est » (Dans le total, Option, Variante), « Elle remplace », « + Variante de cette ligne » ; feuille d'ajout : « Elle va » en liens (comme la pièce), « Elle remplace » en petit formulaire, nature et ligne remplacée en champs cachés de chaque produit ; une variante prend la quantité et la pièce de sa ligne ; une variante demandée sans ligne au total devient une option (O3). `app.js` : `optionsEtVariantes()`.
 - 2026-11-22 : écart au plan : le choix par défaut de la fenêtre d'une ligne est la dernière ligne du total de l'offre (celle de la pièce dans la feuille d'ajout). Défaut vu sur capture et corrigé : la rangée « Elle remplace » de la feuille d'ajout débordait de 6 px à 390 px. Fausse alerte écartée par mesure : deux puces grises sur une capture, prise pendant le fondu de 0,15 s.
+- 2026-11-22 : lot 4 poussé (`395f621`). Lot 5 fait (le document). `OffreControleur::grouper` a un mode document : une option retenue entre dans les lignes de sa pièce (point 2) ; `vueDocument` rend `groupes_document`, lu par `_blocs.html.twig` et Récapitulatif ; une facture n'a que `groupes`. Macros `lignes` et `lignes_marge` : la variante retenue à la place de sa ligne, les autres dessous avec la case et l'écart ; macros `case`, `ecart`, `options`. Les douze modèles appellent `b.options` sous leur total (Récapitulatif : sous le détail des lignes, son total est dans une colonne étroite). Écart au plan : le bloc des options n'est pas dans la macro `totaux`, pour cette raison.
+- 2026-11-22 : défaut trouvé au premier rendu : la variante de Technique sortait illisible dans le PDF (IBM Plex n'a pas de face italique ; repli de dompdf). Corrigé : droite dans Technique ; le test refuse toute police de repli dans les douze PDF. Constat à montrer à Xavier : avec six lignes, une variante et deux options, la plupart des modèles laissent les conditions et les signatures seules en page 2 (le bloc de fin ne se coupe pas).
 
 ## Décisions
 
@@ -64,6 +66,8 @@ Lot 5 de `PLAN.md` (le document, douze modèles : variantes sous leur ligne, bl
 | 2026-11-22 | Lots 1 et 2 gardés dans la copie, ni commités ni poussés, jusqu'à l'accord de Xavier. | La tête de `chantier-voix-offre` part sur le test par d'autres sessions : la migration y serait jouée sans accord. |
 | 2026-11-22 | Chaque lot vérifié est commité et poussé sur `chantier-voix-offre` sans redemander ; le déploiement sur le test reste à demander. | Xavier : « pousse les lots au fur et a mesure ». Portée, lecture de Claude : ce chantier, ses fichiers, jamais `main`. |
 | 2026-11-22 | `remplace_id` sans clé étrangère. | Cascade de la suppression d'une offre sur une table qui se référence elle-même ; la cohérence se vérifie dans `DepotOffres::changerNature`. |
+| 2026-11-22 | Dans Technique, la variante reste droite (pas d'italique). | IBM Plex n'a pas de face italique dans le document : le PDF retombait sur une police de repli, texte illisible. Ajouter la face italique (fichier, empreinte, `SOURCES.md`) reste possible si Xavier y tient (O2 dit « en italique »). |
+| 2026-11-22 | À l'écran, une option retenue reste dans le groupe « Options » ; sur le document, elle entre dans les lignes de sa pièce. | E2 A (écran comme le prototype) et point 2 (document). |
 
 ## Artefacts
 
@@ -195,4 +199,24 @@ $ node ecran4.js   (local, port 8041)
 390 largeur page 396/390 (avant correction) puis 390/390 ; erreurs JS aucune
 1280 : mêmes contrôles, largeur 1280/1280, erreurs JS aucune
 Captures regardées : ecran4-ligne-390, ecran4-ajout-390 (avant et après correction).
+```
+
+### Lot 5
+
+```
+$ phpunit --filter GabaritsOptionsTest   (code du lot mis de côté par git stash)
+Tests: 37, Assertions: 74, Failures: 36.
+$ phpunit --filter GabaritsOptionsTest   (code remis)
+OK (37 tests, 242 assertions)
+$ phpunit --filter 'GabaritsOptionsTest|ReglesDuDocumentTest|GabaritsPdfTest|GabaritsFactureTest'
+OK (168 tests, 1250 assertions)
+$ vendor/bin/phpstan analyse
+[OK] No errors
+$ APP_ENV=test vendor/bin/phpunit   (avant la dernière correction de typage, d'un test seulement)
+OK (1229 tests, 10492 assertions)
+Texte extrait du PDF de Technique avant la correction : « 1’176.00噡物慮瑥ꀺ⁐敩湴畲攠... » (ligne de variante illisible).
+Planches regardées (pdf5.php, PyMuPDF à 70 dpi) : douze modèles avant le choix (22 pages), Sobre et Technique après le choix.
+  Avant : variantes sous « Peinture des murs » (+252.00, −84.00), bloc « Options », total avec toutes les options CHF 3'890.50.
+  Après : « Peinture lessivable » à la place de sa ligne, minérale −336.00, portail dans les lignes, total CHF 4'071.05
+  (3'766.00 + TVA 305.046 → 305.05), radiateur seul dans les options, CHF 4'162.95.
 ```

@@ -237,6 +237,7 @@ final class OffreControleur
             'chantier' => Chantier::depuisOffre($offre),
             'groupes' => self::grouper($lignes, $totaux['lignes']),
             'options' => self::options($lignes),
+            'groupes_document' => self::grouper($lignes, $totaux['lignes'], true),
             'totaux' => $totaux,
             'tva' => $r->tvaPourDixMille,
             'r' => $r,
@@ -259,13 +260,21 @@ final class OffreControleur
      * « total » d'une option ou d'une variante : son montant, même hors du total ; le sous-total d'un groupe ne compte
      * que ce qui est dans le total.
      *
+     * $document : pour le document du client (point 2, 2026-11-22), une option retenue entre dans les lignes de sa pièce,
+     * à son rang ; à l'écran, elle reste dans le groupe « Options » avec sa case (E2 A).
+     *
      * @template T of array{categorie: string|null, piece?: string|null, quantite_milliemes: int, prix_centimes: int, offerte?: int, id?: int, nature?: string, remplace_id?: int|null, retenue?: int}
      * @param list<T> $lignes
      * @param list<int> $totauxLignes total de chaque ligne, dans le même ordre (0 hors du total, Totaux::calculer)
      * @return list<array{nom: string, lignes: list<array{l: T, total: int, barre: int|null, variantes: list<array{l: T, total: int, barre: int|null}>, retenue: array{l: T, total: int, barre: int|null}|null, remplacee: bool}>, total: int, piece: string|null, par_piece: bool}>
      */
-    public static function grouper(array $lignes, array $totauxLignes): array
+    public static function grouper(array $lignes, array $totauxLignes, bool $document = false): array
     {
+        $entre = static fn (array $l): bool => match (Options::natureEffective($l, $lignes)) {
+            Options::LIGNE => true,
+            Options::OPTION => $document && ($l['retenue'] ?? 0) === 1,
+            Options::VARIANTE => false,
+        };
         $variantes = [];
         foreach ($lignes as $i => $l) {
             if (Options::natureEffective($l, $lignes) === Options::VARIANTE) {
@@ -275,7 +284,7 @@ final class OffreControleur
         $parPiece = false;
         $general = false;
         foreach ($lignes as $l) {
-            if (Options::natureEffective($l, $lignes) !== Options::LIGNE) {
+            if (!$entre($l)) {
                 continue;
             }
             $piece = $l['piece'] ?? null;
@@ -287,7 +296,7 @@ final class OffreControleur
             $groupes[''] = ['nom' => Piece::GENERAL, 'lignes' => [], 'total' => 0, 'piece' => null, 'par_piece' => true];
         }
         foreach ($lignes as $i => $l) {
-            if (Options::natureEffective($l, $lignes) !== Options::LIGNE) {
+            if (!$entre($l)) {
                 continue;
             }
             if ($parPiece) {

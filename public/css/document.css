@@ -47,6 +47,21 @@ body.pdf { margin: 0; font: 12px/1.45 Roboto, Arial, sans-serif; color: #1b1f24;
 .doc-lig .doc-st td { border-bottom: 0; color: #4b525b; text-align: right; padding-top: 4px; }
 .doc-lig .doc-pos { width: 38px; color: #4b525b; }
 .doc-lig .doc-u { width: 44px; color: #4b525b; }
+/* Options et variantes (O1, O2) : la variante en italique sous sa ligne, la case que le client coche à la main, le bloc
+   des options sous le total. Une case dessinée (bord) : un caractère « case » retomberait sur une police de repli. */
+.doc-lig tr.doc-var td { font-style: italic; color: #4b525b; }
+/* IBM Plex n'a pas de face italique dans le document : l'italique retomberait sur une police de repli (texte illisible
+   dans le PDF, constaté le 2026-11-22). La variante de Technique reste droite ; le mot « Variante », la case et le gris
+   la distinguent. */
+.m-technique .doc-lig tr.doc-var td { font-style: normal; }
+.doc-case { display: inline-block; width: 8px; height: 8px; border: 1px solid #1b1f24; margin: 0 6px 0 0; vertical-align: -1px; }
+.doc-options { margin: 16px 0 0; }
+.doc-options .doc-lab { margin: 0 0 2px; }
+.doc-opt-aide { font-size: 9.5px; color: #4b525b; margin: 0 0 4px; }
+.doc-lig.doc-opt td { border-bottom: 1px solid #e3e6ea; }
+.doc-lig.doc-opt td.n { width: 112px; }
+table.doc-avec { margin-top: 6px; }
+.pdf .doc-options { page-break-inside: avoid; }
 .doc-tva { color: #4b525b; }
 table.doc-totaux { width: 300px; margin: 12px 0 0 366px; }
 .doc-totaux td { padding: 3.5px 6px; }

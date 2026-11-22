@@ -61,11 +61,13 @@
       <th class="{{ th }}">Désignation</th><th class="n {{ th }}">Quantité</th>{% if unite %}<th class="doc-u {{ th }}">Un.</th>{% endif %}<th class="n {{ th }}">Prix unit.</th><th class="n {{ th }}">Montant</th>
     </tr></thead>
     <tbody>
-      {% for g in d.groupes %}
+      {% for g in d.groupes_document ?? d.groupes %}
         {% set gi = loop.index %}
         <tr class="doc-grp"><td class="{{ o.grp ?? '' }}" colspan="{{ grp_tot ? colonnes - 1 : colonnes }}">{% if pos %}{{ gi }}&nbsp;&nbsp;{% endif %}{% if o.lettres ?? false %}{{ _self.lettre(loop.index0) }}&nbsp;·&nbsp;{% endif %}{{ g.nom }}</td>{% if grp_tot %}<td class="n {{ o.grp_n ?? '' }}">{% if not ((g.par_piece ?? false) and g.piece is null) %}{{ g.total|montant }}{% endif %}</td>{% endif %}</tr>
-        {% for x in g.lignes %}
+        {% for r in g.lignes %}
           {% set z = (o.zebre ?? false) and loop.index0 is even ? ' c-teinte' : '' %}
+          {# Point 2 (2026-11-22) : la variante retenue prend la place de sa ligne ; l'écart des autres se compte sur elle. #}
+          {% set x = r.retenue ?? r %}
           <tr>
             {% if pos %}<td class="doc-pos{{ z }}">{{ gi }}.{{ loop.index }}</td>{% endif %}
             {# Plusieurs taux : la ligne à un autre taux que l'entreprise le dit (LTVA, art. 26 ; D11). #}
@@ -75,6 +77,16 @@
             <td class="n{{ z }}">{{ _self.prix_unitaire(x) }}</td>
             <td class="n{{ z }}">{{ _self.montant_ligne(x) }}</td>
           </tr>
+          {% for v in r.variantes ?? [] %}{% if v.l.id != x.l.id and not d.facture %}
+            <tr class="doc-var">
+              {% if pos %}<td class="doc-pos{{ z }}"></td>{% endif %}
+              <td class="{{ z|trim }}">{{ _self.case() }}Variante&nbsp;: {{ v.l.designation }}</td>
+              <td class="n{{ z }}">{{ v.l.quantite_milliemes|quantite }}{% if not unite %}&nbsp;{{ v.l.unite }}{% endif %}</td>
+              {% if unite %}<td class="doc-u{{ z }}">{{ v.l.unite }}</td>{% endif %}
+              <td class="n{{ z }}">{{ _self.prix_unitaire(v) }}</td>
+              <td class="n{{ z }}">{{ _self.ecart(v, x) }}</td>
+            </tr>
+          {% endif %}{% endfor %}
         {% endfor %}
         {# « Général » n'a pas de sous-total : « Total général » se confondrait avec le total de l'offre (sous-chantier 28). #}
         {% if (o.st ?? true) and not grp_tot and g.lignes|length > 1 and not ((g.par_piece ?? false) and g.piece is null) %}<tr class="doc-st"><td colspan="{{ colonnes - 1 }}">Total {{ g.nom|lower }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endif %}
@@ -88,6 +100,33 @@
 {% macro prix_unitaire(x) %}{% if x.l.offerte ?? false %}{% if x.l.prix_centimes > 0 %}<s>{{ x.l.prix_centimes|montant }}</s>{% endif %}{% elseif x.l.prix_centimes > 0 %}{{ x.l.prix_centimes|montant }}{% endif %}{% endmacro %}
 {% macro montant_ligne(x) %}{% if x.l.offerte ?? false %}{% if x.l.prix_centimes > 0 %}<s>{{ x.barre|montant }}</s> {% endif %}<b>Offert</b>{% elseif x.l.prix_centimes > 0 %}{{ x.total|montant }}{% endif %}{% endmacro %}
 
+{# Options et variantes (O1, O2, 2026-11-20) : la case que le client coche à la main ; l'écart d'une variante avec la
+   ligne du total qu'elle remplacerait, plus-value ou moins-value. Rien quand l'un des deux prix manque. #}
+{% macro case() %}<span class="doc-case"></span>{% endmacro %}
+{% macro ecart(v, ref) %}{% if v.l.prix_centimes > 0 and not (v.l.offerte ?? false) and ref.l.prix_centimes > 0 %}{% set e = v.total - ref.total %}{{ e > 0 ? '+' : (e < 0 ? '−' : '±') }}{{ (e < 0 ? -e : e)|montant }}{% endif %}{% endmacro %}
+
+{# Les options encore libres (O1, E4 A) : sous le total, hors de lui, case vide et montant de la ligne ; puis le total si
+   le client les prend toutes, rabais en pour cent compris (22.11). Une option retenue est dans les lignes (point 2).
+   Rien sur une facture. #}
+{% macro options(d) %}
+  {% set libres = (d.options ?? [])|filter(x => not x.l.retenue) %}
+  {% if not d.facture and libres is not empty %}
+    <div class="doc-options">
+      <div class="doc-lab">Options</div>
+      <div class="doc-opt-aide">Hors du total ci-dessus. Cochez celles que vous retenez.</div>
+      <table class="doc-lig doc-opt"><tbody>
+        {% for x in libres %}<tr>
+          <td>{{ _self.case() }}{{ x.l.designation }}</td>
+          <td class="n">{{ x.l.quantite_milliemes|quantite }}&nbsp;{{ x.l.unite }}</td>
+          <td class="n">{{ _self.prix_unitaire(x) }}</td>
+          <td class="n">{{ _self.montant_ligne(x) }}</td>
+        </tr>{% endfor %}
+      </tbody></table>
+      {% if d.t.avec_options ?? null %}<table class="doc-totaux doc-avec"><tr class="doc-tt"><td>Total avec toutes les options{{ d.avec_tva ? ' TTC' : '' }}</td><td class="n">{{ d.t.avec_options.ttc|chf }}</td></tr></table>{% endif %}
+    </div>
+  {% endif %}
+{% endmacro %}
+
 {# La lettre d'un poste, de A à Z ; au-delà, son rang. #}
 {% macro lettre(rang) %}{{ rang < 26 ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'|slice(rang, 1) : rang + 1 }}{% endmacro %}
 
@@ -98,9 +137,10 @@
   <table class="doc-lig">
     <thead><tr><th class="doc-po">Poste</th><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix unit.</th><th class="n">Montant</th></tr></thead>
     <tbody>
-      {% for g in d.groupes %}
+      {% for g in d.groupes_document ?? d.groupes %}
         {% set avec_total = not ((g.par_piece ?? false) and g.piece is null) %}
-        {% for x in g.lignes %}
+        {% for r in g.lignes %}
+          {% set x = r.retenue ?? r %}
           <tr class="{{ loop.first ? 'doc-prem' : '' }}{{ loop.last ? ' doc-der' : '' }}">
             <td class="doc-po">{% if loop.first %}<b class="c-texte">{{ g.nom }}</b>{% if loop.last and avec_total %}<br>{{ g.total|montant }}{% endif %}{% elseif loop.index == 2 and avec_total %}{{ g.total|montant }}{% endif %}</td>
             <td>{{ x.l.designation }}{% if d.t.par_taux|length > 1 and (x.l.tva_pour_dix_mille ?? d.t.taux) != d.t.taux %}<span class="doc-tva"> · TVA {{ x.l.tva_pour_dix_mille|taux }}</span>{% endif %}</td>
@@ -108,6 +148,15 @@
             <td class="n">{{ _self.prix_unitaire(x) }}</td>
             <td class="n">{{ _self.montant_ligne(x) }}</td>
           </tr>
+          {% for v in r.variantes ?? [] %}{% if v.l.id != x.l.id and not d.facture %}
+            <tr class="doc-var">
+              <td class="doc-po"></td>
+              <td>{{ _self.case() }}Variante&nbsp;: {{ v.l.designation }}</td>
+              <td class="n">{{ v.l.quantite_milliemes|quantite }}&nbsp;{{ v.l.unite }}</td>
+              <td class="n">{{ _self.prix_unitaire(v) }}</td>
+              <td class="n">{{ _self.ecart(v, x) }}</td>
+            </tr>
+          {% endif %}{% endfor %}
         {% endfor %}
       {% endfor %}
     </tbody>
