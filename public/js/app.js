@@ -36,12 +36,7 @@ function corrections() {
         const vieux = document.querySelector(s);
         if (neuf && vieux) vieux.replaceWith(neuf);
       });
-      // « Modifiée depuis l'envoi » paraît dès la première correction d'une offre envoyée.
-      const renvoi = page.querySelector('[data-renvoi]');
-      if (renvoi && !document.querySelector('[data-renvoi]')) {
-        const total = document.querySelector('[data-total-fixe]');
-        if (total) total.after(renvoi);
-      }
+      montrerRenvoi(page);
       enCours.forEach(([ligneId, nom, valeur]) => {
         const c = document.querySelector('#' + ligneId + ' input[name=' + nom + ']');
         if (c) c.value = valeur;
@@ -1594,15 +1589,28 @@ function textesOffre() {
       champ.defaultValue = champ.value;
       if (etat()) etat().textContent = 'Enregistrement…';
       fetch(form.action, { method: 'POST', body: new URLSearchParams(new FormData(form)), keepalive: true, credentials: 'same-origin' })
-        .then((r) => {
+        .then((r) => r.text().then((html) => {
           if (etat()) etat().textContent = r.ok ? 'Enregistrée' : 'Non enregistré, réessayez';
-          if (r.ok) document.dispatchEvent(new Event('offre-modifiee'));
-        })
+          if (!r.ok) return;
+          // La réponse est l'offre à jour (redirection suivie) : le bandeau de renvoi en vient.
+          montrerRenvoi(new DOMParser().parseFromString(html, 'text/html'));
+          document.dispatchEvent(new Event('offre-modifiee'));
+        }))
         .catch(() => { if (etat()) etat().textContent = 'Non enregistré : pas de connexion'; champ.defaultValue = ''; });
     };
     champ.addEventListener('change', envoyer);
     window.addEventListener('pagehide', envoyer);
   });
+}
+
+// « Modifiée depuis l'envoi » (lot 7) paraît dès la première correction d'une offre envoyée : ligne ou texte. `page`
+// est l'offre à jour renvoyée par le serveur.
+function montrerRenvoi(page) {
+  const renvoi = page.querySelector('[data-renvoi]');
+  if (renvoi && !document.querySelector('[data-renvoi]')) {
+    const total = document.querySelector('[data-total-fixe]');
+    if (total) total.after(renvoi);
+  }
 }
 
 // Les feuilles de style d'une page chargée à côté (document de facture, couleur de l'artisan) : ajoutées une fois.

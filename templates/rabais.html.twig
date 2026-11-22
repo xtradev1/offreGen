@@ -36,7 +36,8 @@
       {{ f.erreur(erreurs, 'valeur') }}
     </div>
     <p class="muted petit">Sous-total des lignes&nbsp;: {{ sous_total|chf }}. Le rabais se déduit avant la TVA.</p>
-    {% if deja > 0 %}<p class="alerte warn">Des acomptes sont déjà facturés ({{ deja|chf }})&nbsp;: les suivants et la facture finale suivront le nouveau total.</p>{% endif %}
+    {% if finale %}<p class="alerte warn">La facture finale est déjà émise&nbsp;: elle garde ses montants. Pour la corriger, annulez-la et refaites-la.</p>
+    {% elseif deja > 0 %}<p class="alerte warn">Des acomptes sont déjà facturés ({{ deja|chf }})&nbsp;: les suivants et la facture finale suivront le nouveau total.</p>{% endif %}
   </form>
   {% if rang %}
     <form class="pied" method="post" action="{{ action }}/retirer">

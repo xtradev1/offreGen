@@ -132,7 +132,8 @@ final class RabaisControleur
         $r = $this->c->reglages($portee)->lire();
         $sousTotal = Totaux::calculer($this->c->offres($portee)->lignes($offre['id']), $r->tvaPourDixMille, $r->arrondiCinqCentimes)['sous_total'];
         return new Response($this->c->twig()->render('rabais.html.twig', ['offre' => $offre, 'rang' => $rang, 'champs' => $champs,
-            'erreurs' => $erreurs, 'sous_total' => $sousTotal, 'deja' => $this->c->factures($portee)->dejaFacture($offre['id'])]), $code);
+            'erreurs' => $erreurs, 'sous_total' => $sousTotal, 'deja' => $this->c->factures($portee)->dejaFacture($offre['id']),
+            'finale' => $this->c->factures($portee)->finaleEmise($offre['id'])]), $code);
     }
 
     private function portee(Request $requete): Portee

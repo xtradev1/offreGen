@@ -145,6 +145,20 @@ final class RabaisEcranTest extends TestCase
         self::assertNotNull($this->rabaisEnBase());
     }
 
+    /** Recette sur le test du 2026-11-22 : la finale émise garde ses montants, la fenêtre ne promet pas qu'elle suivra. */
+    public function testFinaleEmiseLaFenetreDitQuElleGardeSesMontants(): void
+    {
+        $this->page($this->offre . '/facturer');
+        $this->a->post($this->offre . '/facturer', ['genre' => 'acompte', 'pourcent' => '30', 'numero' => '', 'date' => '2026-11-07', 'echeance' => '2026-12-07', 'suite' => 'creer']);
+        self::assertStringContainsString('Des acomptes sont déjà facturés', $this->page($this->offre . '/rabais'));
+        $this->page($this->offre . '/facturer');
+        $this->a->post($this->offre . '/facturer', ['genre' => 'finale', 'numero' => '', 'date' => '2026-11-07', 'echeance' => '2026-12-07', 'suite' => 'creer']);
+        self::assertSame(1, BaseDeTest::compter('facture', "offre_id = {$this->jeu->offre['a']} AND genre = 'finale' AND statut = 'emise'"));
+        $page = html_entity_decode($this->page($this->offre . '/rabais'), ENT_QUOTES);
+        self::assertStringContainsString('La facture finale est déjà émise', $page);
+        self::assertStringNotContainsString('suivront le nouveau total', $page);
+    }
+
     public function testLeDocumentMontreLeRabaisAvantLaTva(): void
     {
         $this->envoyer($this->offre . '/rabais', ['libelle' => 'Rabais fidélité', 'choix' => '10', 'valeur' => '']);
