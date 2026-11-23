@@ -51,7 +51,7 @@
     </div>
 
     <table class="table-admin pc-seul">
-      <thead><tr><th scope="col">Nom</th><th scope="col">Rôle</th><th scope="col" class="n">Artisans</th><th scope="col" class="n">Offres</th></tr></thead>
+      <thead><tr><th scope="col">Nom</th><th scope="col">Rôle</th><th scope="col" class="n">Clients</th><th scope="col" class="n">Offres</th></tr></thead>
       <tbody>
         {% for m in membres %}
           {% set modifiable = m.role != 'administrateur' and m.id != moi %}
@@ -64,18 +64,18 @@
         {% endfor %}
       </tbody>
     </table>
-    {% if autres > 0 %}<p class="muted pc-seul">Commercial&nbsp;: crée des démos et ne voit que ses artisans. Modérateur&nbsp;: voit tous les artisans et aide ceux qui bloquent.</p>{% endif %}
+    {% if autres > 0 %}<p class="muted pc-seul">Commercial&nbsp;: crée des démos et ne voit que ses clients. Modérateur&nbsp;: voit tous les clients et aide ceux qui bloquent.</p>{% endif %}
 
     {% if autres == 0 %}
       <h2 class="groupe">Vous pouvez ajouter</h2>
       <div class="roles-cartes">
         <div class="role-carte">
           <h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icone_commercial|raw }}</svg>Un commercial</h3>
-          <p>Il crée des démos chez les artisans et suit les siens. Il ne voit que ses artisans.</p>
+          <p>Il crée des démos chez les clients et suit les siens. Il ne voit que ses clients.</p>
         </div>
         <div class="role-carte">
           <h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icone_moderateur|raw }}</svg>Un modérateur</h3>
-          <p>Il voit tous les artisans et aide ceux qui bloquent. Il peut leur offrir quelques offres.</p>
+          <p>Il voit tous les clients et aide ceux qui bloquent. Il peut leur offrir quelques offres.</p>
         </div>
       </div>
     {% endif %}
@@ -94,10 +94,10 @@
         <label><input type="radio" name="role" value="commercial"{% if membre.role != 'moderateur' %} checked{% endif %}><span>Commercial</span></label>
         <label><input type="radio" name="role" value="moderateur"{% if membre.role == 'moderateur' %} checked{% endif %}><span>Modérateur</span></label>
       </fieldset>
-      <p class="muted role-note" data-role="commercial">Commercial&nbsp;: crée des démos et ne voit que ses artisans.</p>
-      <p class="muted role-note" data-role="moderateur">Modérateur&nbsp;: voit tous les artisans et aide ceux qui bloquent.</p>
+      <p class="muted role-note" data-role="commercial">Commercial&nbsp;: crée des démos et ne voit que ses clients.</p>
+      <p class="muted role-note" data-role="moderateur">Modérateur&nbsp;: voit tous les clients et aide ceux qui bloquent.</p>
       <div class="compteur">
-        <label for="offres"><b>Offres</b><small>Espace artisan</small></label>
+        <label for="offres"><b>Offres</b><small>Son espace</small></label>
         <span class="pas">
           <button class="btn" type="button" data-pas="-1" aria-label="Une offre de moins" hidden>−</button>
           <input id="offres" name="offres" type="number" inputmode="numeric" min="1" max="500" value="{{ membre.offres_max }}"{% if membre.offres_max is not null %} required{% endif %}>
@@ -106,10 +106,10 @@
       </div>
       <button class="btn primary pc-seul" type="submit">Enregistrer</button>
     </form>
-    <nav class="plus" aria-label="Ses artisans">
+    <nav class="plus" aria-label="Ses clients">
       <a class="plus-ligne" href="/admin/artisans?par={{ membre.id }}">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.6 5.2"/></svg>
-        <span><b>Ses artisans</b><small>{{ membre.artisans }} artisan{{ membre.artisans > 1 ? 's' : '' }} amené{{ membre.artisans > 1 ? 's' : '' }}</small></span>
+        <span><b>Ses clients</b><small>{{ membre.artisans }} client{{ membre.artisans > 1 ? 's' : '' }} amené{{ membre.artisans > 1 ? 's' : '' }}</small></span>
         <i class="va" aria-hidden="true">›</i>
       </a>
     </nav>
@@ -122,7 +122,7 @@
       <input type="hidden" name="role" value="">
       <button class="btn large danger" type="submit">Retirer de l'équipe</button>
     </form>
-    <p class="muted">{{ membre.entreprise }} garde son espace artisan. Ses artisans passent à vous&nbsp;; {{ membre.entreprise }} reste la personne qui les a amenés.</p>
+    <p class="muted">{{ membre.entreprise }} garde son espace. Ses clients passent à vous&nbsp;; {{ membre.entreprise }} reste la personne qui les a amenés.</p>
   </section>
   {% endif %}
 </div>

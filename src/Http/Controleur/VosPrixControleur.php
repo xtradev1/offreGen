@@ -34,6 +34,8 @@ final class VosPrixControleur
     private const CLE = 'vos_prix';
     /** « Plus tard » : le bandeau de l'accueil devient un rappel d'une ligne, jusqu'à la fin de la session. */
     public const PLUS_TARD = 'vos_prix_plus_tard';
+    /** Arrivé depuis la mise en route (E8 de Xavier, 2026-11-23) : l'écran en est la cinquième étape. */
+    private const MISE_EN_ROUTE = 'vos_prix_mise_en_route';
 
     public function __construct(private readonly Conteneur $c)
     {
@@ -42,6 +44,11 @@ final class VosPrixControleur
     public function afficher(Request $requete): Response
     {
         $session = $requete->getSession();
+        if ($requete->query->getBoolean('mise_en_route')) {
+            $session->set(self::MISE_EN_ROUTE, true);
+        } elseif (!$requete->query->getBoolean('suite')) {
+            $session->remove(self::MISE_EN_ROUTE);
+        }
         if (!$requete->query->getBoolean('suite')) {
             $session->remove(self::CLE);
         }
@@ -49,8 +56,10 @@ final class VosPrixControleur
         $sansPrix = $this->depot($requete)->sansPrix();
         $restants = self::restants($sansPrix, $etat);
         if ($restants === []) {
+            $session->remove(self::MISE_EN_ROUTE);
             return new Response($this->c->twig()->render('vos_prix.html.twig', [
                 'p' => null,
+                'mise_en_route' => false,
                 'bilan' => ['faits' => $etat['faits'], 'reste' => count($sansPrix), 'retires' => $etat['retires'],
                             'rien' => $etat['faits'] + count($etat['passes']) + $etat['retires'] === 0],
             ]));
@@ -62,7 +71,7 @@ final class VosPrixControleur
                 $p = $r;
             }
         }
-        return $this->carte($p, $etat, count($restants), '', false, 200);
+        return $this->carte($p, $etat, count($restants), '', false, 200, $session->get(self::MISE_EN_ROUTE) === true);
     }
 
     /** @param array<string, string> $parametres */
@@ -84,7 +93,7 @@ final class VosPrixControleur
             case 'suivant':
                 $prix = Saisie::centimes($saisie);
                 if ($prix === null || $prix === 0) {
-                    return $this->carte($p, $etat, count($restants), $saisie, true, 422);
+                    return $this->carte($p, $etat, count($restants), $saisie, true, 422, $session->get(self::MISE_EN_ROUTE) === true);
                 }
                 $depot->fixerPrix($p['id'], $prix);
                 $etat['faits']++;
@@ -93,7 +102,7 @@ final class VosPrixControleur
             case 'reprendre':
                 $exemple = $p['prix_exemple_centimes'] ?? 0;
                 if ($exemple <= 0) {
-                    return $this->carte($p, $etat, count($restants), $saisie, true, 422);
+                    return $this->carte($p, $etat, count($restants), $saisie, true, 422, $session->get(self::MISE_EN_ROUTE) === true);
                 }
                 $depot->fixerPrix($p['id'], $exemple);
                 $etat['faits']++;
@@ -114,7 +123,7 @@ final class VosPrixControleur
                 Flash::dire($requete, 'annuler', ['action' => '/vos-prix/annuler', 'texte' => $cite . ' retiré du catalogue']);
                 break;
             default:
-                return $this->carte($p, $etat, count($restants), $saisie, true, 422);
+                return $this->carte($p, $etat, count($restants), $saisie, true, 422, $session->get(self::MISE_EN_ROUTE) === true);
         }
         $session->set(self::CLE, $etat);
         return self::vers($suivant);
@@ -161,6 +170,7 @@ final class VosPrixControleur
     public function plusTard(Request $requete): Response
     {
         $requete->getSession()->set(self::PLUS_TARD, true);
+        $requete->getSession()->remove(self::MISE_EN_ROUTE);
         return new RedirectResponse('/', 303);
     }
 
@@ -173,7 +183,7 @@ final class VosPrixControleur
      * @param Produit $p
      * @param Etat $etat
      */
-    private function carte(array $p, array $etat, int $restants, string $saisie, bool $erreur, int $code): Response
+    private function carte(array $p, array $etat, int $restants, string $saisie, bool $erreur, int $code, bool $miseEnRoute = false): Response
     {
         $faits = $etat['faits'] + count($etat['passes']) + $etat['retires'];
         return new Response($this->c->twig()->render('vos_prix.html.twig', [
@@ -183,6 +193,7 @@ final class VosPrixControleur
             'saisie' => $saisie,
             'erreur' => $erreur,
             'bilan' => null,
+            'mise_en_route' => $miseEnRoute,
         ]), $code);
     }
 

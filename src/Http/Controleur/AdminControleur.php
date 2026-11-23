@@ -200,13 +200,15 @@ final class AdminControleur
         }
         return $this->page('admin/artisans.html.twig', [
             'actif' => 'artisans',
-            'titre' => $this->role() === Role::Commercial ? 'Mes artisans' : 'Artisans',
+            'titre' => $this->role() === Role::Commercial ? 'Mes clients' : 'Clients',
             'type' => $type,
             'q' => $q,
             'par' => $par,
             'apporteur' => $apporteur,
             'metiers' => CatalogueFictif::libelles(),
             'comptes' => $this->c->depotEquipe()->artisans($this->portee(), $type, $q, $par),
+            // Le guide du commercial passe par ici (E3 de Xavier, 2026-11-23).
+            'guide' => $this->entrainementACreer(),
         ]);
     }
 

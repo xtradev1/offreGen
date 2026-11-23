@@ -188,7 +188,7 @@ final class ReglagesRangesTest extends TestCase
         }
         $marque = $this->page('/bienvenue/marque');
         self::assertStringNotContainsString('1. Logo', $marque, 'le logo a son étape à lui');
-        self::assertContains($this->a->post('/bienvenue/marque', $champs['marque'])->headers->get('Location'), ['/', '/vos-prix']);
+        self::assertContains($this->a->post('/bienvenue/marque', $champs['marque'])->headers->get('Location'), ['/', '/vos-prix?mise_en_route=1']);
         $a = $this->artisan();
         self::assertSame(['2800', 0], [$a['adresse_npa'], $a['tva_pour_dix_mille']]);
         self::assertNotNull($a['reglages_faits_le']);

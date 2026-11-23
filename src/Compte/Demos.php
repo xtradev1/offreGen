@@ -26,8 +26,12 @@ final class Demos
     public const OFFRES_ESSAI = 10;
     /** Démos qu'un commercial peut créer en 24 heures : chacune peut coûter jusqu'à dix dictées d'IA. */
     public const PAR_JOUR = 10;
-    /** Démos d'entraînement qu'un membre peut ouvrir en 24 heures (chantier onboarding, lot 8). */
-    public const ENTRAINEMENTS_PAR_JOUR = 3;
+    /**
+     * Démos d'entraînement d'un membre (chantier onboarding, lot 8 ; E5 de Xavier, 2026-11-23 : « 3 au total pendant les
+     * premiers jours puis max 1 de plus par mois ») : trois quand il veut, ensuite une par mois civil.
+     */
+    public const ENTRAINEMENTS_D_ARRIVEE = 3;
+    public const ENTRAINEMENTS_PAR_MOIS = 1;
 
     public function __construct(
         private readonly Base $base,
@@ -37,6 +41,30 @@ final class Demos
         private readonly JournalAdmin $journal,
         private readonly ClockInterface $horloge,
     ) {
+    }
+
+    /**
+     * Trois démos d'entraînement, puis une par mois civil (heure de Zurich).
+     *
+     * @throws \OverflowException avec la date de la prochaine
+     */
+    private function verifierEntrainement(int $membre, \DateTimeImmutable $maintenant): void
+    {
+        $total = $this->depot->gestes($membre, 'demo_entrainement', new \DateTimeImmutable('@0'));
+        if ($total < self::ENTRAINEMENTS_D_ARRIVEE) {
+            return;
+        }
+        $debutDuMois = $maintenant->setTimezone(new \DateTimeZone('Europe/Zurich'))->modify('first day of this month')->setTime(0, 0);
+        if ($this->depot->gestes($membre, 'demo_entrainement', $debutDuMois) < self::ENTRAINEMENTS_PAR_MOIS) {
+            return;
+        }
+        // « 1er décembre 2026 » (relecture du 2026-11-23). Juste après les trois d'arrivée, le membre apprend la règle du
+        // mois ; ensuite, qu'il a fait celle du mois.
+        $mois = (string) (new \IntlDateFormatter('fr_CH', \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, 'Europe/Zurich', null, 'MMMM y'))->format($debutDuMois->modify('+1 month'));
+        $prochaine = "la prochaine sera possible le 1er $mois.";
+        throw new \OverflowException($total === self::ENTRAINEMENTS_D_ARRIVEE
+            ? "Vous avez fait vos trois démos d'entraînement. Ensuite, vous avez droit à une démo d'entraînement par mois\u{00A0}: $prochaine"
+            : "Vous avez fait votre démo d'entraînement du mois. " . ucfirst($prochaine));
     }
 
     /**
@@ -50,9 +78,9 @@ final class Demos
     {
         $maintenant = \DateTimeImmutable::createFromInterface($this->horloge->now());
         // La démo d'entraînement d'un membre (chantier onboarding, point 2 accepté par Xavier) : hors de la limite de
-        // dix, mais trois en 24 heures au plus, chacune pouvant coûter des dictées d'IA.
-        if ($entrainement && $this->depot->gestes($p->acteurId, 'demo_entrainement', $maintenant->modify('-24 hours')) >= self::ENTRAINEMENTS_PAR_JOUR) {
-            throw new \OverflowException('Vous avez fait ' . self::ENTRAINEMENTS_PAR_JOUR . ' démos d\'entraînement en 24 heures : c\'est la limite. Réessayez dans 24 heures.');
+        // dix, chacune pouvant coûter des dictées d'IA.
+        if ($entrainement) {
+            $this->verifierEntrainement($p->acteurId, $maintenant);
         }
         if (!$entrainement && $role === Role::Commercial && $this->depot->demosCreees($p->acteurId, $maintenant->modify('-24 hours')) >= self::PAR_JOUR) {
             throw new \OverflowException('Vous avez créé ' . self::PAR_JOUR . ' démos en 24 heures : c\'est la limite. Réessayez demain, ou demandez à un administrateur.');

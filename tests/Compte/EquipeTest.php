@@ -178,7 +178,7 @@ final class EquipeTest extends TestCase
         $admin = $this->navigateur();
         $nina = $this->ninaEtSonArtisan($admin);
         $fiche = (string) $admin->get("/admin/equipe/$nina")->getContent();
-        foreach (['Nina Rey', 'nina@exemple.ch', 'Enregistrer', 'Ses artisans', '1 artisan amené', 'Renvoyer un lien d\'accès', 'Retirer de l\'équipe', 'href="/admin/artisans?par=' . $nina . '"'] as $texte) {
+        foreach (['Nina Rey', 'nina@exemple.ch', 'Enregistrer', 'Ses clients', '1 client amené', 'Renvoyer un lien d\'accès', 'Retirer de l\'équipe', 'href="/admin/artisans?par=' . $nina . '"'] as $texte) {
             self::assertStringContainsString($texte, $fiche, $texte);
         }
 

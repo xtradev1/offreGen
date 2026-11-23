@@ -77,6 +77,9 @@ final class ArriveeCommercialTest extends TestCase
         self::assertSame('/admin/suivi', $nina->get('/admin')->headers->get('Location'));
         // Le guide est en cours : le suivi porte sa première étape, le formulaire marque la démo d'entraînement.
         self::assertStringContainsString('data-guide="equipe"', (string) $nina->get('/admin/suivi')->getContent());
+        // E3 (2026-11-23) : le guide passe par l'onglet « Clients », qui porte l'étape « Créer une démo ».
+        self::assertStringContainsString("data-cible=\".tabs a[href='/admin/artisans']\"", (string) $nina->get('/admin/suivi')->getContent());
+        self::assertStringContainsString('data-guide="equipe"', (string) $nina->get('/admin/artisans')->getContent());
         self::assertStringContainsString('name="entrainement" value="1"', (string) $nina->get('/admin/demos/nouvelle')->getContent());
 
         BaseDeTest::pdo()->exec("UPDATE artisan SET role = NULL, administrateur = 1, guide_equipe_le = NULL WHERE id = {$this->jeu->b}");
@@ -90,14 +93,39 @@ final class ArriveeCommercialTest extends TestCase
         $l = BaseDeTest::ligne("SELECT entrainement, apporte_par, cree_par, courriel_saisi FROM artisan WHERE id = $id");
         self::assertSame([1, null, $this->jeu->a, 'a@exemple.ch'], [(int) $l['entrainement'], $l['apporte_par'], (int) $l['cree_par'], $l['courriel_saisi']]);
         self::assertSame(0, (int) BaseDeTest::ligne("SELECT COUNT(*) AS n FROM journal_admin WHERE acteur_id = {$this->jeu->a} AND geste = 'demo_creee'")['n']);
-        // Trois en 24 heures, pas une de plus.
+        // Ni dans « Mes clients » : la liste ne la montre pas, sa page du code reste ouverte à Nina.
+        self::assertStringNotContainsString("/admin/artisans/$id\"", (string) $nina->get('/admin/artisans')->getContent());
+        self::assertSame(200, $nina->get("/admin/artisans/$id/qr")->getStatusCode());
+        // Les trois d'arrivée, pas une de plus ce mois-ci.
         $this->demo($nina, true);
         $this->demo($nina, true);
         $nina->get('/admin/bienvenue?ecran=3');
         $nina->post('/admin/bienvenue/vue', ['suite' => 'guide']);
         $nina->get('/admin/demos/nouvelle');
-        self::assertSame(429, $nina->post('/admin/demos', ['metier' => 'peintre', 'metier_saisi' => '', 'entreprise' => '', 'courriel' => '', 'entrainement' => '1'])->getStatusCode());
-        self::assertSame(Demos::ENTRAINEMENTS_PAR_JOUR, (int) BaseDeTest::ligne("SELECT COUNT(*) AS n FROM artisan WHERE entrainement = 1 AND cree_par = {$this->jeu->a}")['n']);
+        $refus = $nina->post('/admin/demos', ['metier' => 'peintre', 'metier_saisi' => '', 'entreprise' => '', 'courriel' => '', 'entrainement' => '1']);
+        self::assertSame(429, $refus->getStatusCode());
+        self::assertStringContainsString('Vous avez fait vos trois démos d&#039;entraînement. Ensuite, vous avez droit à une démo d&#039;entraînement par mois', (string) $refus->getContent());
+        self::assertSame(Demos::ENTRAINEMENTS_D_ARRIVEE, (int) BaseDeTest::ligne("SELECT COUNT(*) AS n FROM artisan WHERE entrainement = 1 AND cree_par = {$this->jeu->a}")['n']);
+    }
+
+    /** E5 de Xavier (2026-11-23) : trois démos d'entraînement, puis une par mois civil, heure de Zurich. */
+    public function testTroisDemosDEntrainementPuisUneParMois(): void
+    {
+        $horloge = new MockClock('2026-11-23 11:00:00', 'UTC');
+        BaseDeTest::pdo()->exec("INSERT INTO journal_admin (acteur_id, geste, quand) VALUES ({$this->jeu->a}, 'demo_entrainement', '2026-09-10 08:00:00'), ({$this->jeu->a}, 'demo_entrainement', '2026-09-10 09:00:00'), ({$this->jeu->a}, 'demo_entrainement', '2026-09-11 08:00:00')");
+        $nina = $this->navigateur('a@exemple.ch', '127.0.0.1', $horloge);
+        // Les trois d'arrivée datent de septembre : une en novembre.
+        $this->demo($nina, true);
+        $nina->get('/admin/bienvenue?ecran=3');
+        $nina->post('/admin/bienvenue/vue', ['suite' => 'guide']);
+        $nina->get('/admin/demos/nouvelle');
+        $refus = $nina->post('/admin/demos', ['metier' => 'peintre', 'metier_saisi' => '', 'entreprise' => '', 'courriel' => '', 'entrainement' => '1']);
+        self::assertSame(429, $refus->getStatusCode());
+        self::assertStringContainsString('démo d&#039;entraînement du mois. La prochaine sera possible le 1er décembre 2026.', (string) $refus->getContent());
+        // Le 1er décembre à 0 h 30 à Zurich (23 h 30 UTC la veille) : de nouveau une.
+        $horloge->modify('2026-11-30 23:30:00');
+        $this->demo($this->navigateur('a@exemple.ch', '127.0.0.2', $horloge), true);
+        self::assertSame(2, (int) BaseDeTest::ligne("SELECT COUNT(*) AS n FROM artisan WHERE entrainement = 1 AND cree_par = {$this->jeu->a}")['n']);
     }
 
     public function testLeMembreOuvreSaDemoDEntrainementEtRevientDansSonEspace(): void

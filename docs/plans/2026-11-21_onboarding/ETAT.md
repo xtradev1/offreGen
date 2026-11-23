@@ -1,9 +1,9 @@
 ---
 chantier: Onboarding du commercial et de l'artisan
 slug: 2026-11-21_onboarding
-phase: 8
-statut: gate_ouvert
-gate_attendu: prod
+phase: 6
+statut: en_cours
+gate_attendu: null
 profil: .claude/atoz-profile.md
 ---
 
@@ -13,14 +13,11 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Gate prod ouvert. À l'accord de Xavier : commit de la branche `chantier-onboarding` (rebase sur les deux commits arrivés sur `origin/chantier-voix-offre`), push, déploiement sur le test (`outils/deployer-test.sh` depuis une copie propre, mémoire « Production et test »), puis ligne de reprise des lots 6 et 7 dans l'`ETAT.md` de l'administration et exigence sur B3. Ensuite, recette de Xavier (`RECETTE.md`). Lots 9 et 10 : à reprendre quand B3 et la route « Aide et questions » du chantier support existeront.
+Retours du 2026-11-23 (E2, E3, E5, E7a, E8) commités et déployés sur le test. Ensuite : E1 dans ce chantier (texte K1 remis ; suppression des démos finies depuis 30 jours ; mois gratuit à la place des 10 offres de l'essai ; « Demander un appel »), d'abord relire ce que les maquettes de l'administration ont validé pour ces trois fonctions (`MAQUETTE-parcours-v4.html`, `MAQUETTE-mois-gratuit-v5.html`, lot 8), maquette pour ce qui n'y est pas ; E6 en maquette (« Les questions à poser », tirées de `docs/terrain/2026-11-18_questions-adequation.md`, en parlant de « client »). Puis ligne de reprise dans l'`ETAT.md` de l'administration et exigence sur B3. Lots 9 et 10 : à reprendre quand B3 et la route « Aide et questions » du chantier support existeront.
 
 ## En attente de toi
 
-- Dire si je commite, pousse et déploie sur le test (aucun accord permanent pour ce chantier).
-- Dérouler `RECETTE.md` sur le test, au téléphone puis sur PC, et dire ce qui casse.
-- Regarder trois textes validés que j'ai dû changer pour coller à l'écran : g.rond et g.fin.texte (le « rond + » n'existe pas dans l'administration), c.b1.p2 (les demandes d'appel passent au chantier support).
-- Trancher : « Les questions à poser » (contenu jamais maquetté), k.o3.r (99 %) et k.o4.r (factures), « Ce qu'on ne dit pas » (O31).
+- Dérouler `RECETTE.md` sur le test, au téléphone puis sur PC, et dire ce qui casse (le guide du commercial a maintenant onze gestes, par l'onglet « Clients »).
 - Dire à la conversation du support que la commission est de 10 %.
 
 ## Journal
@@ -156,6 +153,9 @@ Gate prod ouvert. À l'accord de Xavier : commit de la branche `chantier-onboar
 
 - 2026-11-23 : `ECARTS-code.html` (images dans `ECARTS-code-img/`) : le code des lots 0 à 8 face aux maquettes validées, neuf écarts E1 à E9 à trancher par Xavier, lots 9 et 10 montrés comme bloqués. Captures refaites sur la base locale (parcours du lot 8 rejoué : dix gestes, erreurs [], démo entrainement=1 apporte_par=NULL). Correction d'une affirmation du 22.11 (lot 6) : « Les questions à poser » a une source, les six questions de `docs/terrain/2026-11-18_questions-adequation.md` (entretiens de découverte de Xavier), en plus de la note interne à 49 francs.
 
+- 2026-11-23 : lots 0 à 8 commités, intégrés sur 15 commits arrivés sur `origin/chantier-voix-offre` (conflits résolus avec le chantier des activités : message de démo dans le mot de l'activité, groupes de métiers sous la démo d'entraînement), poussés (`c8afd28`) et déployés sur le test, sonde verte, migrations à jour. Accord de Xavier : « tu peux commit sur le test » ; pas de vrais clients sur le test (réponse du jour).
+- 2026-11-23 : réponses de Xavier aux écarts E1 à E9 (`ECARTS-code.html`). Codé : E2 (« client » à la place d'« artisan » dans l'administration et les textes du commercial ; onglet « Clients », « Mes clients »), E3 (guide en onze gestes : onglet « Clients », puis « Créer une démo »), E5 (trois démos d'entraînement, puis une par mois civil, message avec la date de la suivante), E7a (95 %), E8 (« Vos prix » en « Étape 5 sur 5 » avec « Passer le guide » depuis la mise en route). Défaut vu sur capture et corrigé : la liste des clients montrait les démos d'entraînement du membre (test rouge sans la correction, vert avec). Suite complète verte (1300 tests), phpstan vert, parcours 4 et 8 rejoués sans erreur. Restent : E1 (texte K1 remis et ses trois fonctions construites ici : suppression des démos finies depuis 30 jours, mois gratuit à la place des 10 offres de l'essai, « Demander un appel ») et E6 (« Les questions à poser » tirées des six questions, en maquette, en parlant de « client »).
+
 ## Décisions
 
 | Date | Décision | Raison |
@@ -192,6 +192,12 @@ Gate prod ouvert. À l'accord de Xavier : commit de la branche `chantier-onboar
 | 2026-11-22 | Retour direct : marque valable deux heures ; ouverture de la démo d'entraînement par un POST depuis la page du code | revue du 2026-11-22 (sécurité, OWASP) ; décision fragile 3 du plan précisée |
 | 2026-11-22 | Après la fin d'une démo : dictée, import, import du catalogue et relance d'une dictée refusés | revue du 2026-11-22 ; ce qui coûte de l'IA s'arrête avec la démo |
 | 2026-11-22 | Ruban, fenêtre et suivi comptent les jours au calendrier de Zurich | revue du 2026-11-22 : le ruban (heures) contredisait la fenêtre (jours) |
+| 2026-11-23 | E1 : le texte K1 de l'écran de fin revient tel que validé ; ses trois promesses (suppression à 30 jours, mois gratuit, « Demander un appel ») se construisent dans ce chantier | réponse de Xavier (« il faut pas retirer, on laisse et on note que c'est à faire et on fait » ; « Texte maintenant, ici ») ; remplace T11 pour « Demander un appel » sur l'écran de fin |
+| 2026-11-23 | E2 : dans l'administration, la personne à qui le commercial vend s'appelle « client » | réponse de Xavier (« démo du client », « Tout l'espace commercial ») |
+| 2026-11-23 | E3 : le guide du commercial passe par l'onglet « Clients », puis « Créer une démo » ; pas de rond + | réponse de Xavier |
+| 2026-11-23 | E5 : trois démos d'entraînement au total, puis une par mois civil (Zurich) | réponse de Xavier ; remplace « trois en 24 heures » |
+| 2026-11-23 | E7a : 95 % dans k.o3.r ; E7b, E9 : gardés tels quels ; E4 validé | réponses de Xavier ; 95 % est l'objectif du sous-chantier 29, pas une mesure (signalé une fois) |
+| 2026-11-23 | E8 : « Vos prix » est la cinquième étape de la mise en route quand on y arrive depuis l'assistant | réponse de Xavier |
 
 ## Artefacts
 

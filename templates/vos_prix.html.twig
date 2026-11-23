@@ -6,19 +6,28 @@
    Ordre dans le code, différent de l'ordre à l'écran (vos-prix.css) : « Suivant » est le premier bouton du
    formulaire, celui que la touche Entrée envoie ; le retrait vient en dernier.
    data-zone : ce que vos-prix.js remplace quand le produit suivant arrive sans recharger la page. #}
-{% block entete_html %}<link rel="stylesheet" href="/css/vos-prix.css"><script src="/js/vos-prix.js" defer></script>{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="/css/vos-prix.css">{% if mise_en_route ?? false %}<link rel="stylesheet" href="/css/mise-en-route.css">{% endif %}<script src="/js/vos-prix.js" defer></script>{% endblock %}
 {% block titre %}Vos prix · {{ nom_application }}{% endblock %}
 {% block retour %}
-  {% if p %}
+  {% if p and not (mise_en_route ?? false) %}
     <form class="vp-quitter" method="post" action="/vos-prix/plus-tard"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="back" type="submit">Plus tard</button></form>
-  {% else %}
+  {% elseif not p %}
     <a class="back" href="/catalogue">Catalogue</a>
   {% endif %}
 {% endblock %}
-{% block entete %}Vos prix{% endblock %}
+{% block entete %}{{ (mise_en_route ?? false) ? 'Bienvenue' : 'Vos prix' }}{% endblock %}
 {% block ecran_classe %} vos-prix{% endblock %}
 
 {% block contenu %}
+  {% if p and (mise_en_route ?? false) %}
+    {# Cinquième étape de la mise en route (E8 de Xavier, 2026-11-23), même tête que les quatre autres
+       (reglages_rubrique.html.twig) ; « Passer le guide » vaut « Plus tard ». #}
+    <form method="post" action="/vos-prix/plus-tard" class="passer-guide"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="lien" type="submit">{{ texte('e.passer') }}</button></form>
+    <div class="progression" aria-hidden="true">{% for i in 1..5 %}<i class="fait"></i>{% endfor %}</div>
+    <p class="muted petit">Étape 5 sur 5</p>
+    <h2 class="etape-titre">{{ texte('e.prix.titre') }}</h2>
+    <p class="etape-sous">{{ texte('e.prix.sous') }}</p>
+  {% endif %}
   {% if p %}
     <p class="vp-avance" data-zone="avance"><span><b>{{ n }}</b> sur {{ total }}</span><progress class="vp-barre" value="{{ n - 1 }}" max="{{ total }}" aria-hidden="true"></progress></p>
     {# data-dernier : après le dernier produit vient le bilan, le script laisse le formulaire partir normalement. #}

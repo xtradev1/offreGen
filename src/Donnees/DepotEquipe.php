@@ -43,7 +43,8 @@ final class DepotEquipe
      */
     public function artisans(PorteeEquipe $p, string $type, string $recherche, ?int $apporteur = null): array
     {
-        $sql = self::COMPTES;
+        // Les démos d'entraînement des membres ne sont pas des clients (c.b3.note ; vu à la recette du 2026-11-23).
+        $sql = self::COMPTES . ' AND a.entrainement = 0';
         $params = self::portee($p);
         if ($apporteur !== null) {
             $sql .= ' AND a.apporte_par = :par';

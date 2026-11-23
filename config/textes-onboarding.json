@@ -9,19 +9,19 @@
   "id": "c.b1.texte",
   "ecran": "Commercial · bienvenue 1",
   "lecteur": "commercial",
-  "texte": "Vous présentez Dicta aux artisans. Ils dictent leurs visites de chantier, Dicta rédige l'offre chiffrée."
+  "texte": "Vous présentez Dicta à vos clients. Ils dictent leurs visites de chantier, Dicta rédige l'offre chiffrée."
  },
  {
   "id": "c.b1.p1",
   "ecran": "Commercial · bienvenue 1",
   "lecteur": "commercial",
-  "texte": "Vous créez la démo de l'artisan pendant le rendez-vous."
+  "texte": "Vous créez la démo du client pendant le rendez-vous."
  },
  {
   "id": "c.b1.p2",
   "ecran": "Commercial · bienvenue 1",
   "lecteur": "commercial",
-  "texte": "Vous suivez les démos et les essais de vos artisans."
+  "texte": "Vous suivez les démos et les essais de vos clients."
  },
  {
   "id": "c.b1.p3",
@@ -33,7 +33,7 @@
   "id": "c.b2.titre",
   "ecran": "Commercial · bienvenue 2",
   "lecteur": "commercial",
-  "texte": "Ce que l'artisan reçoit"
+  "texte": "Ce que le client reçoit"
  },
  {
   "id": "c.b2.texte",
@@ -51,7 +51,7 @@
   "id": "c.b2.note",
   "ecran": "Commercial · bienvenue 2",
   "lecteur": "commercial",
-  "texte": "Chaque artisan dont vous créez la démo reste noté comme amené par vous."
+  "texte": "Chaque client dont vous créez la démo reste noté comme amené par vous."
  },
  {
   "id": "c.b3.titre",
@@ -63,19 +63,25 @@
   "id": "c.b3.texte",
   "ecran": "Commercial · bienvenue 3",
   "lecteur": "commercial",
-  "texte": "Un guide vous montre chaque geste : créer la démo, l'ouvrir, dicter, relire l'offre. Vous verrez ce que verra l'artisan."
+  "texte": "Un guide vous montre chaque geste : créer la démo, l'ouvrir, dicter, relire l'offre. Vous verrez ce que verra le client."
  },
  {
   "id": "c.b3.note",
   "ecran": "Commercial · bienvenue 3",
   "lecteur": "commercial",
-  "texte": "Cette démo d'entraînement ne compte ni dans vos démos ni dans vos artisans."
+  "texte": "Cette démo d'entraînement ne compte ni dans vos démos ni dans vos clients."
  },
  {
   "id": "c.b3.bouton",
   "ecran": "Commercial · bienvenue 3",
   "lecteur": "commercial",
   "texte": "Faire ma démo d'entraînement"
+ },
+ {
+  "id": "g.clients",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "Vos clients et leurs démos sont ici. Touchez « Clients »."
  },
  {
   "id": "g.rond",
@@ -87,7 +93,7 @@
   "id": "g.metier",
   "ecran": "Commercial · guide",
   "lecteur": "commercial",
-  "texte": "Choisissez le métier de l'artisan. Pour vous entraîner : <b>Peintre</b>."
+  "texte": "Choisissez le métier du client. Pour vous entraîner : <b>Peintre</b>."
  },
  {
   "id": "g.creer",
@@ -99,25 +105,25 @@
   "id": "g.qr.note",
   "ecran": "Commercial · guide",
   "lecteur": "commercial",
-  "texte": "L'artisan scanne ce code avec l'appareil photo de son téléphone, puis tape son courriel."
+  "texte": "Le client scanne ce code avec l'appareil photo de son téléphone, puis tape son courriel."
  },
  {
   "id": "g.qr",
   "ecran": "Commercial · guide",
   "lecteur": "commercial",
-  "texte": "Au rendez-vous, l'artisan scanne ce code. Pour vous entraîner, ouvrez la démo ici."
+  "texte": "Au rendez-vous, le client scanne ce code. Pour vous entraîner, ouvrez la démo ici."
  },
  {
   "id": "g.micro",
   "ecran": "Commercial · guide",
   "lecteur": "commercial",
-  "texte": "Vous voyez maintenant ce que voit l'artisan. Touchez le micro."
+  "texte": "Vous voyez maintenant ce que voit le client. Touchez le micro."
  },
  {
   "id": "g.conseils",
   "ecran": "Commercial · guide",
   "lecteur": "commercial",
-  "texte": "L'artisan lit ces trois conseils à sa première dictée. Touchez « Commencer la dictée »."
+  "texte": "Le client lit ces trois conseils à sa première dictée. Touchez « Commencer la dictée »."
  },
  {
   "id": "g.terminer",
@@ -141,7 +147,7 @@
   "id": "g.revenir",
   "ecran": "Commercial · guide",
   "lecteur": "commercial",
-  "texte": "Vous avez fait le parcours de l'artisan. Touchez « Revenir à mon espace »."
+  "texte": "Vous avez fait le parcours du client. Touchez « Revenir à mon espace »."
  },
  {
   "id": "g.fin.titre",
@@ -153,7 +159,7 @@
   "id": "g.fin.texte",
   "ecran": "Commercial · fin du guide",
   "lecteur": "commercial",
-  "texte": "Au rendez-vous, vous refaites les mêmes gestes : « Créer une démo », choisir le métier, « Créer la démo ». L'artisan scanne ensuite le code QR."
+  "texte": "Au rendez-vous, vous refaites les mêmes gestes : « Clients », « Créer une démo », choisir le métier, « Créer la démo ». Le client scanne ensuite le code QR."
  },
  {
   "id": "g.fin.note",
@@ -423,7 +429,7 @@
   "id": "k.r1.1",
   "ecran": "Commercial · aide à la vente",
   "lecteur": "commercial",
-  "texte": "Demandez à l'artisan sa dernière offre : quel chantier, combien de temps pour la rédiger."
+  "texte": "Demandez au client sa dernière offre : quel chantier, combien de temps pour la rédiger."
  },
  {
   "id": "k.r1.2",
@@ -507,7 +513,7 @@
   "id": "k.o3.r",
   "ecran": "Commercial · aide à la vente",
   "lecteur": "commercial",
-  "texte": "Dans tous les tests effectués, 99 % des lignes rédigées sont correctes par rapport à ce qui a été dit. Une information absente vous est transmise."
+  "texte": "Dans tous les tests effectués, 95 % des lignes rédigées sont correctes par rapport à ce qui a été dit. Une information absente vous est transmise."
  },
  {
   "id": "k.o4.q",

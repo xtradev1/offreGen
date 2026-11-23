@@ -64,6 +64,20 @@ final class VosPrixTest extends TestCase
         return BaseDeTest::ligne("SELECT prix_centimes, prix_exemple_centimes FROM produit WHERE id = $id");
     }
 
+    /** E8 de Xavier (2026-11-23) : après la mise en route, « Vos prix » en est la cinquième étape. */
+    public function testDepuisLaMiseEnRouteVosPrixEstLEtapeCinq(): void
+    {
+        $page = $this->page('/vos-prix?mise_en_route=1');
+        self::assertStringContainsString('Étape 5 sur 5', $page);
+        self::assertStringContainsString('Passer le guide', $page);
+        self::assertStringNotContainsString('class="vp-quitter"', $page);
+        // Le produit suivant garde la tête ; un nouvel accès depuis le catalogue, non.
+        self::assertStringContainsString('Étape 5 sur 5', $this->page('/vos-prix?suite=1'));
+        $seul = $this->page('/vos-prix');
+        self::assertStringNotContainsString('Étape 5 sur 5', $seul);
+        self::assertStringContainsString('class="vp-quitter"', $seul);
+    }
+
     public function testLaCarteMontreLePremierProduitSansPrix(): void
     {
         $page = $this->page('/vos-prix');

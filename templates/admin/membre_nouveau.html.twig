@@ -24,10 +24,10 @@
         <label><input type="radio" name="role" value="commercial"{% if saisie.role != 'moderateur' %} checked{% endif %}><span>Commercial</span></label>
         <label><input type="radio" name="role" value="moderateur"{% if saisie.role == 'moderateur' %} checked{% endif %}><span>Modérateur</span></label>
       </fieldset>
-      <p class="muted role-note" data-role="commercial">Commercial&nbsp;: crée des démos et ne voit que ses artisans.</p>
-      <p class="muted role-note" data-role="moderateur">Modérateur&nbsp;: voit tous les artisans, sans les coûts, et aide ceux qui bloquent.</p>
+      <p class="muted role-note" data-role="commercial">Commercial&nbsp;: crée des démos et ne voit que ses clients.</p>
+      <p class="muted role-note" data-role="moderateur">Modérateur&nbsp;: voit tous les clients, sans les coûts, et aide ceux qui bloquent.</p>
       <div class="compteur">
-        <label for="offres"><b>Offres</b><small>Espace artisan</small></label>
+        <label for="offres"><b>Offres</b><small>Son espace</small></label>
         <span class="pas">
           <button class="btn" type="button" data-pas="-1" aria-label="Une offre de moins" hidden>−</button>
           <input id="offres" name="offres" type="number" inputmode="numeric" min="1" max="500" value="{{ saisie.offres }}" required>

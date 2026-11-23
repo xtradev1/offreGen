@@ -77,7 +77,7 @@ final class ArtisansEquipeTest extends TestCase
     public function testLeCommercialNeVoitQueSesArtisans(): void
     {
         $page = (string) $this->navigateur('a@exemple.ch')->get('/admin/artisans')->getContent();
-        self::assertStringContainsString('Mes artisans', $page);
+        self::assertStringContainsString('Mes clients', $page);
         self::assertStringContainsString('Entreprise B', $page);
         self::assertStringNotContainsString('Sanitaire Durand', $page);
         // L'équipe n'est pas une liste d'artisans : ni l'autre commercial, ni la modératrice, ni l'administrateur.
@@ -174,14 +174,14 @@ final class ArtisansEquipeTest extends TestCase
         // Un caractère joker se cherche tel quel : il ne ramène pas toute la liste.
         $joker = (string) $chef->get('/admin/artisans?q=%25')->getContent();
         self::assertStringNotContainsString('Sanitaire Durand', $joker);
-        self::assertStringContainsString('Aucun artisan', $joker);
+        self::assertStringContainsString('Aucun client', $joker);
     }
 
     public function testLaListeSeFiltreParCeluiQuiAAmeneLesArtisans(): void
     {
         $leo = (int) BaseDeTest::ligne("SELECT id FROM artisan WHERE courriel = 'leo@exemple.ch'")['id'];
         $page = (string) $this->navigateur('chef@exemple.ch')->get("/admin/artisans?par=$leo")->getContent();
-        self::assertStringContainsString('1 artisan amené par Léo Favre', $page);
+        self::assertStringContainsString('1 client amené par Léo Favre', $page);
         self::assertStringContainsString('Sanitaire Durand', $page);
         self::assertStringNotContainsString('Entreprise B', $page);
         // Le commercial ne sort pas de ses artisans en changeant l'adresse.

@@ -216,7 +216,8 @@ final class ReglagesControleur
         // Les produits gardés de la démo, sans prix : « Vos prix », un par un, avec le prix de la démo proposé. Le message
         // « Votre compte est prêt » (il renvoie au micro) seulement sur « Offres » (relecture du 2026-11-22).
         if ($this->c->produits($portee)->sansPrix() !== []) {
-            return new RedirectResponse('/vos-prix', 303);
+            // Cinquième étape de la mise en route (E8 de Xavier, 2026-11-23) : « Étape 5 sur 5 » et « Passer le guide ».
+            return new RedirectResponse('/vos-prix?mise_en_route=1', 303);
         }
         $textes = $this->c->textes();
         Flash::dire($requete, 'info', html_entity_decode(strip_tags($textes->texte('e.fin.titre') . '. ' . $textes->texte('e.fin.texte')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
