@@ -74,7 +74,8 @@ final class DemoControleur
         $premiere = $ouverte['motif'] !== LiensAcces::DEMO_RETOUR && !$liens->retourDemoEnvoye($ouverte['artisan']);
         if ($fin !== null && ($premiere || $courriel !== $demo['courriel_saisi'])) {
             $id = $ouverte['artisan'];
-            $this->c->apresReponse()->ajouter(static fn () => $liens->envoyerRetourDemo($id, $courriel, Dates::depuisBase($fin)));
+            $presentePar = $demo['presente_par'];
+            $this->c->apresReponse()->ajouter(static fn () => $liens->envoyerRetourDemo($id, $courriel, Dates::depuisBase($fin), $presentePar));
         }
         return new RedirectResponse('/', 303);
     }
@@ -128,7 +129,7 @@ final class DemoControleur
     /**
      * La démo du compte connecté, si l'équipe l'a créée ; 404 pour tout autre compte.
      *
-     * @return array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null}
+     * @return array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null}
      */
     private function demoCourante(Request $requete): array
     {

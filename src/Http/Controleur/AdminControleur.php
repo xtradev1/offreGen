@@ -47,7 +47,21 @@ final class AdminControleur
 
     public function plus(): Response
     {
-        return $this->page('admin/plus.html.twig', ['actif' => 'plus', 'titre' => 'Plus']);
+        return $this->page('admin/plus.html.twig', [
+            'actif' => 'plus',
+            'titre' => 'Plus',
+            'nom_affiche' => $this->c->depotEquipe()->nomAffiche($this->acteur()) ?? '',
+            'nom_compte' => $this->c->depotEquipe()->nomDuCompte($this->acteur()) ?? '',
+        ]);
+    }
+
+    public function plusNom(Request $requete): Response
+    {
+        // Le nom qui signe le courriel d'une démo (M3 de Xavier, 2026-11-23). Vide : le nom du compte.
+        $nom = mb_substr(trim($requete->request->getString('nom')), 0, 120);
+        $this->c->depotEquipe()->changerNomAffiche($this->acteur(), $nom === '' ? null : $nom);
+        Flash::dire($requete, 'info', 'Enregistré.');
+        return new RedirectResponse('/admin/plus', 303);
     }
 
     public function artisans(Request $requete): Response

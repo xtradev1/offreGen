@@ -10,9 +10,9 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
 /**
- * Envoi réel, en texte brut, par le serveur d'envoi désigné par MAILER_DSN (smtp://utilisateur:motdepasse@hote:587).
+ * Envoi réel, en texte ou en deux versions (texte et HTML), par le serveur d'envoi désigné par MAILER_DSN (smtp://utilisateur:motdepasse@hote:587).
  */
-final class MessagerieSmtp implements Messagerie
+final class MessagerieSmtp implements MessagerieMiseEnForme
 {
     private readonly TransportInterface $transport;
     private readonly Address $expediteur;
@@ -25,9 +25,19 @@ final class MessagerieSmtp implements Messagerie
 
     public function envoyer(string $destinataire, string $sujet, string $texte): void
     {
+        $this->transport->send($this->courriel($destinataire, $sujet, $texte));
+    }
+
+    public function envoyerMisEnForme(string $destinataire, string $sujet, string $texte, string $html): void
+    {
+        $this->transport->send($this->courriel($destinataire, $sujet, $texte)->html($html));
+    }
+
+    private function courriel(string $destinataire, string $sujet, string $texte): Email
+    {
         if (filter_var($destinataire, FILTER_VALIDATE_EMAIL) === false) {
             throw new \InvalidArgumentException("Destinataire invalide : $destinataire");
         }
-        $this->transport->send((new Email())->from($this->expediteur)->to($destinataire)->subject($sujet)->text($texte));
+        return (new Email())->from($this->expediteur)->to($destinataire)->subject($sujet)->text($texte);
     }
 }

@@ -7,6 +7,15 @@
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 7H4l3-3M7 17h13l-3 3"/></svg>
       <span><b>Revenir à mon espace artisan</b><small>Offres, clients, factures</small></span></a>
   </nav>
+  <form class="carte-admin" method="post" action="/admin/plus/nom">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="nom_affiche">Votre nom dans les courriels</label>
+      <input id="nom_affiche" name="nom" type="text" maxlength="120" autocomplete="name" value="{{ nom_affiche }}">
+      <small class="muted">Il signe le courriel qu'un prospect reçoit après une démo, avec {{ nom_application }} dessous. Vide&nbsp;: «&nbsp;{{ nom_compte }}&nbsp;».</small>
+    </div>
+    <button class="btn" type="submit">Enregistrer</button>
+  </form>
   <form class="compte" method="post" action="/deconnexion">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     <button class="btn large" type="submit">Se déconnecter</button>

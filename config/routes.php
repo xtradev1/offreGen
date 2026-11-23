@@ -235,6 +235,7 @@ return static function (Conteneur $c): array {
     $routes[] = new Route('essai_passage', '/passer-a-l-essai', ['GET'], static fn (Request $r): Response => $demo()->passage($r), Route::ARTISAN);
     $routes[] = new Route('essai_passer', '/passer-a-l-essai', ['POST'], static fn (Request $r): Response => $demo()->passer($r), Route::ARTISAN);
     $routes[] = new Route('demo_ouvrir', '/d/{jeton}', ['POST'], static fn (Request $r, array $p): Response => $demo()->ouvrir($r, $p), Route::PUBLIC);
+    $routes[] = new Route('admin_plus_nom', '/admin/plus/nom', ['POST'], static fn (Request $r): Response => $admin()->plusNom($r), Route::EQUIPE);
     $routes[] = new Route('admin_plus', '/admin/plus', ['GET'], static fn (): Response => $admin()->plus(), Route::EQUIPE);
     // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.
     foreach (array_keys(ReglagesControleur::RUBRIQUES) as $nom) {

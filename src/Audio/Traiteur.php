@@ -17,6 +17,7 @@ use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\Statut;
 use OffreGen\Donnees\VerrouPerdu;
 use OffreGen\Offre\Extracteur;
+use OffreGen\Systeme\Courriel;
 use OffreGen\Systeme\Messagerie;
 use Symfony\Component\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
@@ -199,11 +200,13 @@ final class Traiteur
                 return;
             }
             $lien = rtrim($this->adresseApplication, '/') . '/offres/' . $offreId;
-            $this->messagerie->envoyer(
-                $artisan['courriel'],
+            (new Courriel(
                 'Votre offre est prête',
-                "Bonjour,\r\n\r\nL'offre préparée à partir de votre enregistrement est prête à relire :\r\n$lien\r\n\r\n{$this->nomApplication}",
-            );
+                'Votre offre est prête',
+                "L'offre préparée à partir de votre enregistrement est prête à relire.",
+                'Relire mon offre',
+                $lien,
+            ))->envoyer($this->messagerie, $artisan['courriel'], $this->nomApplication, $this->adresseApplication);
         } catch (\Throwable $e) {
             $this->journal->error("offreGen, courriel « offre prête » pour l'offre $offreId : " . $e->getMessage());
         }

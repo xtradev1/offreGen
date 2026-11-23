@@ -8,7 +8,7 @@ namespace OffreGen\Systeme;
  * Site de test (docs/SECURITE.md, « courriels bloqués ou redirigés ») : tout courriel part vers une seule adresse,
  * le destinataire d'origine écrit dans l'objet.
  */
-final class MessagerieRedirigee implements Messagerie
+final class MessagerieRedirigee implements MessagerieMiseEnForme
 {
     public function __construct(private readonly Messagerie $messagerie, private readonly string $adresse)
     {
@@ -20,5 +20,14 @@ final class MessagerieRedirigee implements Messagerie
     public function envoyer(string $destinataire, string $sujet, string $texte): void
     {
         $this->messagerie->envoyer($this->adresse, "[pour $destinataire] $sujet", $texte);
+    }
+
+    public function envoyerMisEnForme(string $destinataire, string $sujet, string $texte, string $html): void
+    {
+        if ($this->messagerie instanceof MessagerieMiseEnForme) {
+            $this->messagerie->envoyerMisEnForme($this->adresse, "[pour $destinataire] $sujet", $texte, $html);
+            return;
+        }
+        $this->envoyer($destinataire, $sujet, $texte);
     }
 }

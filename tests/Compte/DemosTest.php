@@ -192,6 +192,9 @@ final class DemosTest extends TestCase
         $this->creer($nina);
         $demo = $this->demo();
         self::assertCount(0, $this->dossiers->courriels());
+        // Nina choisit le nom qui signera le courriel de ses démos (M3 de Xavier, 2026-11-23).
+        $nina->get('/admin/plus');
+        self::assertSame(303, $nina->post('/admin/plus/nom', ['nom' => 'Nina Rey-Monnier'])->getStatusCode());
         [$lien] = $this->lien($nina->get("/admin/artisans/{$demo['id']}/qr"));
         $prospect = $this->navigateur(null, '198.51.100.20');
         $prospect->get($lien);
@@ -201,6 +204,11 @@ final class DemosTest extends TestCase
         // Un courriel, à l'adresse tapée, avec un lien bon jusqu'à la fin de la démo (Xavier, 2026-11-20).
         self::assertCount(1, $this->dossiers->courriels());
         $retour = $this->retour('info@peinture-morand.ch');
+        // Mis en forme : deux versions, le bouton, la fin de la démo avec l'heure, signé de la commerciale.
+        $ecrit = (string) file_get_contents($this->dossiers->courriels()[0]);
+        foreach (['text/html', 'text/plain', 'Revenir dans ma démo', "samedi 14 novembre à 11\u{00A0}h\u{00A0}00", "Nina Rey-Monnier\r\nDicta"] as $attendu) {
+            self::assertStringContainsString($attendu, $ecrit, $attendu);
+        }
         $jeton = BaseDeTest::ligne('SELECT motif, TIMESTAMPDIFF(MINUTE, cree_le, expire_le) AS minutes FROM jeton_acces ORDER BY id DESC LIMIT 1');
         self::assertSame(['demo_ret', 7 * 24 * 60], [$jeton['motif'], (int) $jeton['minutes']]);
 

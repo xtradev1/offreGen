@@ -7,6 +7,7 @@ namespace OffreGen\Compte;
 use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotLiensAcces;
+use OffreGen\Systeme\Courriel;
 use OffreGen\Systeme\Messagerie;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
@@ -60,14 +61,16 @@ final class LiensAcces
             return;
         }
         $lien = $this->lien($this->emettre($artisan['id'], self::OUBLI));
-        // Textes relus par l'agent XtraDev le 2026-11-18 (corrections 1 et 5 appliquées).
-        $this->messagerie->envoyer(
-            $artisan['courriel'],
+        // Textes relus par l'agent XtraDev les 2026-11-18 et 2026-11-23 ; mise en forme : maquette v8, validée le 23.11.
+        (new Courriel(
             "Choisir un nouveau mot de passe pour {$this->nomApplication}",
-            "Bonjour,\r\n\r\nPour choisir un nouveau mot de passe, ouvrez ce lien dans l'heure\u{00A0}:\r\n$lien\r\n\r\n"
-            . "Le lien sert une seule fois. Passé ce délai, refaites la demande depuis la page de connexion\u{00A0}: {$this->connexion()}\r\n\r\n"
-            . "Vous n'avez rien demandé\u{00A0}? Ignorez ce courriel, votre mot de passe ne change pas.\r\n\r\n{$this->nomApplication}",
-        );
+            'Nouveau mot de passe',
+            "Pour choisir un nouveau mot de passe, ouvrez ce lien dans l'heure\u{00A0}:",
+            'Choisir mon mot de passe',
+            $lien,
+            ['Le lien sert une seule fois.'],
+            "Vous n'avez rien demandé\u{00A0}? Ignorez ce courriel, votre mot de passe ne change pas.",
+        ))->envoyer($this->messagerie, $artisan['courriel'], $this->nomApplication, $this->adresseApplication);
     }
 
     /** Accès d'un compte que Xavier vient de créer : l'artisan choisit lui-même son mot de passe (A3 = A). */
@@ -78,13 +81,14 @@ final class LiensAcces
             throw new \InvalidArgumentException("$courriel est un compte de démonstration : aucun courriel ne part.");
         }
         $lien = $this->lien($this->emettre($artisan['id'], self::ACCES));
-        $this->messagerie->envoyer(
-            $artisan['courriel'],
+        (new Courriel(
             "Votre accès à {$this->nomApplication}",
-            "Bonjour,\r\n\r\nUn compte {$this->nomApplication} est ouvert pour {$artisan['entreprise']} avec votre adresse électronique. "
-            . "Pour choisir votre mot de passe et vous connecter, ouvrez ce lien dans les 7\u{00A0}jours\u{00A0}:\r\n$lien\r\n\r\n"
-            . "Le lien sert une seule fois. Passé ce délai, demandez un nouveau lien avec «\u{00A0}Mot de passe oublié\u{00A0}» sur {$this->connexion()}\r\n\r\n{$this->nomApplication}",
-        );
+            "Votre compte {$this->nomApplication} est ouvert",
+            "Un compte est ouvert pour {$artisan['entreprise']} avec votre adresse. Choisissez votre mot de passe dans les 7\u{00A0}jours\u{00A0}:",
+            'Choisir mon mot de passe',
+            $lien,
+            ["Le lien sert une seule fois. Passé ce délai, demandez-en un nouveau avec «\u{00A0}Mot de passe oublié\u{00A0}», sur la page de connexion."],
+        ))->envoyer($this->messagerie, $artisan['courriel'], $this->nomApplication, $this->adresseApplication);
     }
 
     /**
@@ -193,9 +197,9 @@ final class LiensAcces
      * reçoive automatiquement un mail à son adresse », avec « un lien d'accès à la démo »). C'est le seul courriel
      * qu'une démo fait partir : il remplace, pour lui seul, la règle du 18.11. L'adresse n'est pas confirmée : le
      * message ne donne accès qu'à la démo, sans mot de passe à choisir. Un lien de retour plus ancien cesse de
-     * valoir (courriel corrigé).
+     * valoir (courriel corrigé). $presentePar : la personne qui a présenté la démo, qui signe le courriel.
      */
-    public function envoyerRetourDemo(int $artisanId, string $courriel, \DateTimeImmutable $fin): void
+    public function envoyerRetourDemo(int $artisanId, string $courriel, \DateTimeImmutable $fin, ?string $presentePar = null): void
     {
         $maintenant = $this->horloge->now();
         if ($fin <= $maintenant) {
@@ -205,14 +209,16 @@ final class LiensAcces
         $this->liens->annulerMotif($artisanId, self::DEMO_RETOUR, $maintenant);
         $this->liens->creer($artisanId, self::empreinte($jeton), self::DEMO_RETOUR, $maintenant, $fin);
         $lien = rtrim($this->adresseApplication, '/') . '/d/' . $jeton;
-        $this->messagerie->envoyer(
-            $courriel,
+        (new Courriel(
             "Votre démo {$this->nomApplication}",
-            "Bonjour,\r\n\r\nVotre démo {$this->nomApplication} reste ouverte jusqu'au {$fin->format('d.m.Y')}. "
-            . "Pour y revenir, sur votre téléphone ou sur un ordinateur, ouvrez ce lien\u{00A0}:\r\n$lien\r\n\r\n"
-            . "Ce lien ouvre votre démo sans mot de passe\u{00A0}: gardez-le pour vous.\r\n\r\n"
-            . "Vous n'avez pas essayé {$this->nomApplication}\u{00A0}? Ignorez ce courriel.\r\n\r\n{$this->nomApplication}",
-        );
+            "Votre démo reste ouverte jusqu'au " . Courriel::moment($fin),
+            "Pour y revenir, sur votre téléphone ou sur un ordinateur\u{00A0}:",
+            'Revenir dans ma démo',
+            $lien,
+            ["Ce lien ouvre votre démo sans mot de passe\u{00A0}: gardez-le pour vous."],
+            "Vous n'avez pas essayé {$this->nomApplication}\u{00A0}? Ignorez ce courriel.",
+            $presentePar,
+        ))->envoyer($this->messagerie, $courriel, $this->nomApplication, $this->adresseApplication);
     }
 
     /** Vrai si un lien de retour a déjà été envoyé pour cette démo. */
@@ -234,10 +240,6 @@ final class LiensAcces
         return rtrim($this->adresseApplication, '/') . '/mot-de-passe/' . $jeton;
     }
 
-    private function connexion(): string
-    {
-        return rtrim($this->adresseApplication, '/') . '/connexion';
-    }
 
     private static function empreinte(string $jeton): string
     {

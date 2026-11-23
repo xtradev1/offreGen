@@ -189,12 +189,25 @@ final class DepotEquipe
     /**
      * Une démo, pour la page d'entrée du prospect : hors portée d'équipe, celui qui tient le lien y entre.
      *
-     * @return array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null}|null
+     * @return array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null}|null
      */
     public function demo(int $id): ?array
     {
-        /** @var array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null}|null */
-        return $this->base->un('SELECT id, entreprise, metier, metier_saisi, courriel_saisi, demo_fin FROM artisan WHERE id = :id AND demo = 1', ['id' => $id]);
+        /** @var array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null}|null */
+        return $this->base->un('SELECT a.id, a.entreprise, a.metier, a.metier_saisi, a.courriel_saisi, a.demo_fin, COALESCE(c.nom_affiche, c.entreprise) AS presente_par
+             FROM artisan a LEFT JOIN artisan c ON c.id = a.cree_par WHERE a.id = :id AND a.demo = 1', ['id' => $id]);
+    }
+
+    /** Le nom d'un membre de l'équipe dans les courriels, s'il en a choisi un. */
+    public function nomAffiche(int $id): ?string
+    {
+        $nom = $this->base->valeur('SELECT nom_affiche FROM artisan WHERE id = :id', ['id' => $id]);
+        return is_string($nom) ? $nom : null;
+    }
+
+    public function changerNomAffiche(int $id, ?string $nom): void
+    {
+        $this->base->ecrire('UPDATE artisan SET nom_affiche = :n WHERE id = :id', ['n' => $nom, 'id' => $id]);
     }
 
     /** Le nom d'un compte, pour dire qui a amené des artisans, même s'il a quitté l'équipe. */

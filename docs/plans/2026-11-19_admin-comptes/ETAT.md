@@ -449,3 +449,28 @@ Ce que cela donne, à construire (rien n'est codé) :
 - Partage d'une offre : aujourd'hui `public/js/apercu-pdf.js` ne passe que le PDF et un titre. À ajouter : un objet et un court message d'accompagnement, modifiable par l'artisan. Hors de ce chantier.
 
 Envoi réel sur le site de test : `COURRIELS_REDIRIGER_VERS` posé le 2026-11-23 (`xavier.frelechoz@xtradev.ch`), fichier de réglages relu sans erreur. `MESSAGERIE`, `MAILER_DSN` et `COURRIELS_EXPEDITEUR` restent vides : Xavier crée la boîte d'envoi et lance lui-même le script qui demande le mot de passe sans l'afficher, le pose sur le serveur par SSH, envoie un courriel d'essai, et remet l'ancien fichier si l'envoi échoue. Serveur d'envoi supposé : `mail.infomaniak.com`, port 587, non vérifié avant le premier envoi.
+
+Courriels mis en forme, direction C (2026-11-23, tâche Origin 562). Xavier, après avoir lancé le script de la boîte d'envoi : « tout bon on peut tester ». Réglages du site de test relus : `MESSAGERIE=smtp`, expéditeur `Dicta <notifications@dicta.ch>`, serveur `mail.infomaniak.com`, tout redirigé vers `xavier.frelechoz@xtradev.ch`.
+
+Construit :
+- `src/Systeme/Courriel.php` : un courriel en deux versions, texte et HTML. Bandeau anthracite en fond de cellule, nom du produit en texte blanc, symbole en image PNG (M1 : le bandeau tient sans image ; pas de SVG). Bouton, lien en clair dessous, pied, signature. Tout texte est échappé.
+- `MessagerieMiseEnForme`, interface à part : les trois messageries l'implémentent, et une messagerie qui ne connaît que le texte (les doublures de `TraiteurTest` et d'`AlertesTest`) continue de recevoir le texte.
+- Les quatre courriels vus par un artisan passent par `Courriel` : revenir dans sa démo, accès à son compte, mot de passe oublié (`LiensAcces`), offre prête (`Traiteur`, une ligne changée, et une assertion de `TraiteurTest` adaptée au fichier en deux versions).
+- M3 : le courriel de la démo est signé de la personne qui l'a créée, le nom du produit dessous. Colonne `nom_affiche` (migration `Version20261123100001`) et champ « Votre nom dans les courriels » dans « Plus » de l'administration ; sans lui, le nom du compte.
+- M4 : « jusqu'au vendredi 27 novembre à 14 h 19 », à l'heure de Zurich.
+- Le texte ne cite plus l'adresse de la page de connexion : `LiensAcces::connexion()` retirée, sans appelant.
+
+Non fait dans ce lot : le réglage « recevoir ou non le courriel de l'offre prête » et l'absence d'envoi quand l'artisan attend son offre à l'écran (M2, sous-tâche 566) ; le message du partage d'une offre (tâche 567). Les courriels à l'exploitant (demande d'essai, alertes) restent en texte.
+
+```
+$ DB_NOM=offregen_admin_test phpunit --filter 'CourrielTest|DemosTest'   (tests écrits, avant le code)
+ERRORS! Tests: 15, Assertions: 93, Errors: 4, Failures: 1.
+$ DB_NOM=offregen_admin_test phpunit   (après le code, copie du chantier)
+Tests: 1258, Assertions: 10667, Failures: 1. (le seul échec : ConteneurTest, à cause de DB_NOM)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ php rendu_courriel.php ; node rendu-courriels.js (HTML réel, téléphone 390 px et PC 900 px)
+largeur de page 390 / 390 et 900 / 900 ; images regardées : bandeau et nom présents quand l'image manque
+```
+
+Non vérifié : le rendu dans de vraies messageries (Gmail, Outlook, Mail d'iPhone, mode sombre) ; un courriel d'essai est envoyé à Xavier pour cela.
