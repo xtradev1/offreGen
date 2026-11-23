@@ -1,0 +1,72 @@
+[
+ {
+  "cas": "hors-ligne-juste",
+  "adresse": "chrome-error://chromewebdata/",
+  "titre": "localhost",
+  "texte": "Appuyez sur le dinosaure pour jouer\n\nVoici quelques conseils :\n\nVérifiez les câbles réseau, le modem et le routeur.\nReconnectez-vous au réseau Wi-Fi\nExécutez le"
+ },
+ {
+  "cas": "hors-ligne-juste-base",
+  "a_verifier_ligne_14": "1"
+ },
+ {
+  "cas": "hors-ligne-quantite",
+  "message": "Non enregistré : pas de connexion",
+  "avant": "24000",
+  "apres_retour_du_reseau_8s": "24000",
+  "apres_avoir_quitte_la_page": "27000"
+ },
+ {
+  "cas": "hors-ligne-ajout",
+  "adresse": "chrome-error://chromewebdata/",
+  "texte": "Appuyez sur le dinosaure pour jouer\n\nVoici quelques conseils :\n\nVérifiez les câbles réseau, le modem et le routeur.\nReconnectez-vous au réseau Wi-Fi\nExécutez le"
+ },
+ {
+  "cas": "hors-ligne-ouvrir",
+  "adresse": "chrome-error://chromewebdata/",
+  "texte": "Appuyez sur le dinosaure pour jouer\n\nVoici quelques conseils :\n\nVérifiez les câbles réseau, le modem et le routeur.\nReconnectez-vous au réseau Wi-Fi\nExécutez le"
+ },
+ {
+  "cas": "lent-juste",
+  "bouton_apres_1s": "remplacé",
+  "rendu_ms": 4873
+ },
+ {
+  "cas": "lent-une-corbeille",
+  "snack": [
+   "« Heure de régie » suppriméeAnnuler"
+  ],
+  "lignes_retirees": "37"
+ },
+ {
+  "cas": "lent-deux-corbeilles",
+  "reponses": [
+   "303 /offres/3/lignes/37/supprimer",
+   "303 /offres/3/lignes/36/supprimer"
+  ],
+  "lignes_retirees": "36,37",
+  "snack": [
+   "« Lasure, balcon » suppriméeAnnuler"
+  ]
+ },
+ {
+  "cas": "lent-deux-archiver",
+  "reponses": [
+   "303 /offres/2/archiver",
+   "second toucher impossible : page.click: Timeout 3000ms exceeded."
+  ],
+  "adresse": "/",
+  "titre": "Mes offres · Dicta",
+  "snack": [
+   "« Rafraîchissement du séjour » archivéeAnnuler"
+  ],
+  "archivee": "1"
+ },
+ {
+  "cas": "session-expiree-quantite",
+  "message": "Enregistrement…",
+  "avant": "24000",
+  "apres": "24000",
+  "adresse": "/offres/3"
+ }
+]

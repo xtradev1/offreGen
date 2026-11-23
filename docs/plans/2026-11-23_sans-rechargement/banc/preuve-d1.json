@@ -1,0 +1,21 @@
+{
+ "quand": "23.11.2026 21:24:38",
+ "avant": {
+  "adresse": "/css/app.css?v=be5114002580",
+  "regle": "",
+  "controle": true
+ },
+ "pendant": {
+  "adresse": "/css/app.css?v=996a0bb9277b",
+  "regle": "1",
+  "controle": true
+ },
+ "apres": {
+  "adresse": "/css/app.css?v=be5114002580",
+  "regle": "",
+  "controle": true
+ },
+ "fichierRemis": true,
+ "ok": true,
+ "texte": "Téléphone qui a déjà gardé le style (service worker aux commandes). Style de départ : <code>/css/app.css?v=be5114002580</code>. Une règle ajoutée à app.css, page suivante : <code>/css/app.css?v=996a0bb9277b</code>, règle appliquée, sans rien vider. Fichier remis : retour à <code>/css/app.css?v=be5114002580</code>."
+}

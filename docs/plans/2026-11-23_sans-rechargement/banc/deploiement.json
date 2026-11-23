@@ -1,0 +1,5 @@
+{
+ "ok": true,
+ "commit": "93a61d1",
+ "texte": "Commit <code>93a61d1</code> en service sur <code>easy-offres.xtradev.ch</code> depuis 21 h 29 : 1440 tests verts et analyse statique sans erreur avant l'envoi, migration de la table <code>envoi</code> jouée, sonde d'exposition verte, <code>/sante</code> au bon commit. En-têtes relus sur le site : fichiers versionnés gardés un an (<code>immutable</code>, sans ETag), <code>sw.js</code> et fichiers sans version en <code>no-cache</code>. Recette légère par l'interface, compte de démo du chantier : corbeille puis « Annuler » sans rechargement (ligne partie en 24 ms, confirmée en 111 ms ; revenue en 47 ms), service worker aux commandes, copies effacées à la déconnexion, aucune erreur JavaScript."
+}

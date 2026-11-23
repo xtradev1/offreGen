@@ -1,0 +1,4650 @@
+{
+ "quand": "2026-11-23T14:54:19.863Z",
+ "mesures": 328,
+ "echecs": 0,
+ "gestes": [
+  {
+   "id": "liste-ouvrir-offre",
+   "ecran": "Mes offres",
+   "geste": "Ouvrir une offre (33 lignes)",
+   "type": "N",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 288,
+      "duree": 185,
+      "requetes": 8,
+      "octets": 165727,
+      "fcp": 244,
+      "html": 25046,
+      "statique": 140681,
+      "serveur": 54,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 347,
+      "duree": 272,
+      "requetes": 8,
+      "octets": 165481,
+      "fcp": 292,
+      "html": 24800,
+      "statique": 140681,
+      "serveur": 55,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 280,
+      "duree": 192,
+      "requetes": 8,
+      "octets": 24860,
+      "fcp": 228,
+      "html": 24860,
+      "statique": 0,
+      "serveur": 76,
+      "n": 1
+     },
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 465,
+      "duree": 550,
+      "requetes": 8,
+      "octets": 165680,
+      "fcp": 432,
+      "html": 24999,
+      "statique": 140681,
+      "serveur": 124,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 323,
+      "duree": 235,
+      "requetes": 8,
+      "octets": 24931,
+      "fcp": 280,
+      "html": 24931,
+      "statique": 0,
+      "serveur": 128,
+      "n": 1
+     },
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2178,
+      "duree": 4283,
+      "requetes": 8,
+      "octets": 165640,
+      "fcp": 2128,
+      "html": 24959,
+      "statique": 140681,
+      "serveur": 527,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 664,
+      "duree": 1098,
+      "requetes": 8,
+      "octets": 24853,
+      "fcp": 612,
+      "html": 24853,
+      "statique": 0,
+      "serveur": 543,
+      "n": 1
+     },
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "liste-tri",
+   "ecran": "Mes offres",
+   "geste": "Trier les offres (puce de tri)",
+   "type": "N",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 149,
+      "duree": 136,
+      "requetes": 8,
+      "octets": 145559,
+      "fcp": 96,
+      "html": 4878,
+      "statique": 140681,
+      "serveur": 26,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 199,
+      "duree": 253,
+      "requetes": 8,
+      "octets": 145547,
+      "fcp": 144,
+      "html": 4866,
+      "statique": 140681,
+      "serveur": 51,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 398,
+      "duree": 585,
+      "requetes": 8,
+      "octets": 145540,
+      "fcp": 348,
+      "html": 4859,
+      "statique": 140681,
+      "serveur": 120,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2056,
+      "duree": 4270,
+      "requetes": 8,
+      "octets": 145532,
+      "fcp": 2012,
+      "html": 4851,
+      "statique": 140681,
+      "serveur": 517,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "liste-archiver",
+   "ecran": "Mes offres",
+   "geste": "Archiver une offre (glisser, Archiver)",
+   "type": "P",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 116,
+      "duree": 101,
+      "requetes": 9,
+      "octets": 146133,
+      "fcp": 84,
+      "html": 5452,
+      "statique": 140681,
+      "serveur": 33,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 15,
+      "duree": 15,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 12,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 220,
+      "duree": 273,
+      "requetes": 9,
+      "octets": 146130,
+      "fcp": 184,
+      "html": 5449,
+      "statique": 140681,
+      "serveur": 94,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 58,
+      "duree": 58,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 55,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 509,
+      "duree": 693,
+      "requetes": 9,
+      "octets": 146124,
+      "fcp": 468,
+      "html": 5443,
+      "statique": 140681,
+      "serveur": 256,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 136,
+      "duree": 136,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 132,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2674,
+      "duree": 4863,
+      "requetes": 9,
+      "octets": 146129,
+      "fcp": 2636,
+      "html": 5448,
+      "statique": 140681,
+      "serveur": 1095,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 594,
+      "duree": 594,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 592,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "liste-supprimer",
+   "ecran": "Mes offres",
+   "geste": "Supprimer une offre (glisser, Supprimer)",
+   "type": "P",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 123,
+      "duree": 115,
+      "requetes": 9,
+      "octets": 145969,
+      "fcp": 84,
+      "html": 5288,
+      "statique": 140681,
+      "serveur": 30,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 15,
+      "duree": 15,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 13,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 194,
+      "duree": 244,
+      "requetes": 9,
+      "octets": 146009,
+      "fcp": 168,
+      "html": 5328,
+      "statique": 140681,
+      "serveur": 89,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 66,
+      "duree": 66,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 63,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 506,
+      "duree": 672,
+      "requetes": 9,
+      "octets": 145974,
+      "fcp": 468,
+      "html": 5293,
+      "statique": 140681,
+      "serveur": 248,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 129,
+      "duree": 129,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 127,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2692,
+      "duree": 4888,
+      "requetes": 9,
+      "octets": 145974,
+      "fcp": 2652,
+      "html": 5293,
+      "statique": 140681,
+      "serveur": 1147,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 562,
+      "duree": 562,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 560,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "liste-restaurer",
+   "ecran": "Mes offres",
+   "geste": "Restaurer une offre archivée",
+   "type": "P",
+   "frequence": "rare",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 219,
+      "duree": 202,
+      "requetes": 9,
+      "octets": 146093,
+      "fcp": 100,
+      "html": 5412,
+      "statique": 140681,
+      "serveur": 34,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 14,
+      "duree": 14,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 11,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 327,
+      "duree": 374,
+      "requetes": 9,
+      "octets": 146120,
+      "fcp": 200,
+      "html": 5439,
+      "statique": 140681,
+      "serveur": 105,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 62,
+      "duree": 62,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 59,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 571,
+      "duree": 759,
+      "requetes": 9,
+      "octets": 146143,
+      "fcp": 452,
+      "html": 5462,
+      "statique": 140681,
+      "serveur": 239,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 130,
+      "duree": 130,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 127,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2740,
+      "duree": 4951,
+      "requetes": 9,
+      "octets": 146137,
+      "fcp": 2616,
+      "html": 5456,
+      "statique": 140681,
+      "serveur": 1119,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 565,
+      "duree": 565,
+      "requetes": 1,
+      "octets": 541,
+      "fcp": null,
+      "html": 541,
+      "statique": 0,
+      "serveur": 562,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "liste-retour",
+   "ecran": "Offre",
+   "geste": "Revenir à la liste (bouton retour du téléphone)",
+   "type": "N",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 49,
+      "duree": 35,
+      "requetes": 8,
+      "octets": 815,
+      "fcp": 40,
+      "html": 0,
+      "statique": 815,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 51,
+      "duree": 32,
+      "requetes": 8,
+      "octets": 815,
+      "fcp": 44,
+      "html": 0,
+      "statique": 815,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 52,
+      "duree": 34,
+      "requetes": 8,
+      "octets": 815,
+      "fcp": 44,
+      "html": 0,
+      "statique": 815,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 60,
+      "duree": 35,
+      "requetes": 8,
+      "octets": 815,
+      "fcp": 52,
+      "html": 0,
+      "statique": 815,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "onglet-clients",
+   "ecran": "Barre du bas",
+   "geste": "Onglet Clients",
+   "type": "N",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 160,
+      "duree": 152,
+      "requetes": 8,
+      "octets": 145549,
+      "fcp": 112,
+      "html": 4868,
+      "statique": 140681,
+      "serveur": 41,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 241,
+      "duree": 246,
+      "requetes": 8,
+      "octets": 145546,
+      "fcp": 196,
+      "html": 4865,
+      "statique": 140681,
+      "serveur": 46,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 179,
+      "duree": 148,
+      "requetes": 8,
+      "octets": 4875,
+      "fcp": 128,
+      "html": 4875,
+      "statique": 0,
+      "serveur": 46,
+      "n": 1
+     },
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 411,
+      "duree": 559,
+      "requetes": 8,
+      "octets": 145551,
+      "fcp": 364,
+      "html": 4870,
+      "statique": 140681,
+      "serveur": 128,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 227,
+      "duree": 210,
+      "requetes": 8,
+      "octets": 4876,
+      "fcp": 180,
+      "html": 4876,
+      "statique": 0,
+      "serveur": 131,
+      "n": 1
+     },
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2094,
+      "duree": 4283,
+      "requetes": 8,
+      "octets": 145545,
+      "fcp": 2048,
+      "html": 4864,
+      "statique": 140681,
+      "serveur": 530,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 632,
+      "duree": 670,
+      "requetes": 8,
+      "octets": 4881,
+      "fcp": 596,
+      "html": 4881,
+      "statique": 0,
+      "serveur": 531,
+      "n": 1
+     },
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "onglet-plus",
+   "ecran": "Barre du bas",
+   "geste": "Onglet Plus",
+   "type": "N",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 113,
+      "duree": 128,
+      "requetes": 8,
+      "octets": 144034,
+      "fcp": 64,
+      "html": 3353,
+      "statique": 140681,
+      "serveur": 20,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 229,
+      "duree": 270,
+      "requetes": 8,
+      "octets": 144028,
+      "fcp": 176,
+      "html": 3347,
+      "statique": 140681,
+      "serveur": 54,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 375,
+      "duree": 555,
+      "requetes": 8,
+      "octets": 144030,
+      "fcp": 328,
+      "html": 3349,
+      "statique": 140681,
+      "serveur": 119,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2111,
+      "duree": 4292,
+      "requetes": 8,
+      "octets": 144051,
+      "fcp": 2064,
+      "html": 3370,
+      "statique": 140681,
+      "serveur": 541,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "plus-catalogue",
+   "ecran": "Plus",
+   "geste": "Ouvrir le catalogue (274 produits)",
+   "type": "N",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 156,
+      "duree": 158,
+      "requetes": 11,
+      "octets": 160772,
+      "fcp": 112,
+      "html": 11044,
+      "statique": 149728,
+      "serveur": 30,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 250,
+      "duree": 243,
+      "requetes": 11,
+      "octets": 160780,
+      "fcp": 196,
+      "html": 11052,
+      "statique": 149728,
+      "serveur": 56,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 217,
+      "duree": 187,
+      "requetes": 11,
+      "octets": 20145,
+      "fcp": 180,
+      "html": 11050,
+      "statique": 9095,
+      "serveur": 46,
+      "n": 1
+     },
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 416,
+      "duree": 544,
+      "requetes": 11,
+      "octets": 160773,
+      "fcp": 364,
+      "html": 11045,
+      "statique": 149728,
+      "serveur": 119,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 368,
+      "duree": 344,
+      "requetes": 11,
+      "octets": 20146,
+      "fcp": 328,
+      "html": 11051,
+      "statique": 9095,
+      "serveur": 120,
+      "n": 1
+     },
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2299,
+      "duree": 4501,
+      "requetes": 11,
+      "octets": 160796,
+      "fcp": 2264,
+      "html": 11068,
+      "statique": 149728,
+      "serveur": 535,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 1324,
+      "duree": 1357,
+      "requetes": 11,
+      "octets": 20148,
+      "fcp": 1280,
+      "html": 11053,
+      "statique": 9095,
+      "serveur": 544,
+      "n": 1
+     },
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "plus-reglages",
+   "ecran": "Plus",
+   "geste": "Ouvrir les réglages",
+   "type": "N",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 124,
+      "duree": 105,
+      "requetes": 8,
+      "octets": 144316,
+      "fcp": 80,
+      "html": 3635,
+      "statique": 140681,
+      "serveur": 21,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 212,
+      "duree": 238,
+      "requetes": 8,
+      "octets": 144312,
+      "fcp": 160,
+      "html": 3631,
+      "statique": 140681,
+      "serveur": 42,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 378,
+      "duree": 562,
+      "requetes": 8,
+      "octets": 144306,
+      "fcp": 328,
+      "html": 3625,
+      "statique": 140681,
+      "serveur": 123,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2089,
+      "duree": 4280,
+      "requetes": 8,
+      "octets": 144314,
+      "fcp": 2044,
+      "html": 3633,
+      "statique": 140681,
+      "serveur": 519,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "offre-juste",
+   "ecran": "Offre",
+   "geste": "« C'est juste » sur une ligne à vérifier",
+   "type": "P",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 166,
+      "duree": 149,
+      "requetes": 9,
+      "octets": 166032,
+      "fcp": 116,
+      "html": 25351,
+      "statique": 140681,
+      "serveur": 55,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 18,
+      "duree": 18,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 15,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 306,
+      "duree": 310,
+      "requetes": 9,
+      "octets": 165938,
+      "fcp": 252,
+      "html": 25257,
+      "statique": 140681,
+      "serveur": 114,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 242,
+      "duree": 217,
+      "requetes": 9,
+      "octets": 25324,
+      "fcp": 184,
+      "html": 25324,
+      "statique": 0,
+      "serveur": 103,
+      "n": 1
+     },
+     "simule": {
+      "vu": 57,
+      "duree": 57,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 55,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 536,
+      "duree": 714,
+      "requetes": 9,
+      "octets": 165902,
+      "fcp": 484,
+      "html": 25221,
+      "statique": 140681,
+      "serveur": 260,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 390,
+      "duree": 366,
+      "requetes": 9,
+      "octets": 25187,
+      "fcp": 336,
+      "html": 25187,
+      "statique": 0,
+      "serveur": 261,
+      "n": 1
+     },
+     "simule": {
+      "vu": 138,
+      "duree": 138,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 135,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2680,
+      "duree": 4871,
+      "requetes": 9,
+      "octets": 166038,
+      "fcp": 2616,
+      "html": 25357,
+      "statique": 140681,
+      "serveur": 1108,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 1220,
+      "duree": 1664,
+      "requetes": 9,
+      "octets": 25344,
+      "fcp": 1164,
+      "html": 25344,
+      "statique": 0,
+      "serveur": 1090,
+      "n": 1
+     },
+     "simule": {
+      "vu": 572,
+      "duree": 572,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 569,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-corbeille",
+   "ecran": "Offre",
+   "geste": "Retirer une ligne (corbeille ou glisser)",
+   "type": "P",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 286,
+      "duree": 261,
+      "requetes": 9,
+      "octets": 166038,
+      "fcp": 132,
+      "html": 25357,
+      "statique": 140681,
+      "serveur": 51,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 17,
+      "duree": 17,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 14,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 401,
+      "duree": 405,
+      "requetes": 9,
+      "octets": 166021,
+      "fcp": 252,
+      "html": 25340,
+      "statique": 140681,
+      "serveur": 112,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 337,
+      "duree": 324,
+      "requetes": 9,
+      "octets": 25435,
+      "fcp": 184,
+      "html": 25435,
+      "statique": 0,
+      "serveur": 118,
+      "n": 1
+     },
+     "simule": {
+      "vu": 63,
+      "duree": 63,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 59,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 618,
+      "duree": 789,
+      "requetes": 9,
+      "octets": 166058,
+      "fcp": 468,
+      "html": 25377,
+      "statique": 140681,
+      "serveur": 252,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 474,
+      "duree": 459,
+      "requetes": 9,
+      "octets": 25314,
+      "fcp": 316,
+      "html": 25314,
+      "statique": 0,
+      "serveur": 248,
+      "n": 1
+     },
+     "simule": {
+      "vu": 140,
+      "duree": 140,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 137,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2766,
+      "duree": 4964,
+      "requetes": 9,
+      "octets": 165987,
+      "fcp": 2616,
+      "html": 25306,
+      "statique": 140681,
+      "serveur": 1106,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 1319,
+      "duree": 1774,
+      "requetes": 9,
+      "octets": 25324,
+      "fcp": 1168,
+      "html": 25324,
+      "statique": 0,
+      "serveur": 1110,
+      "n": 1
+     },
+     "simule": {
+      "vu": 590,
+      "duree": 590,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 587,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-annuler",
+   "ecran": "Offre",
+   "geste": "« Annuler » après avoir retiré une ligne",
+   "type": "P",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 190,
+      "duree": 165,
+      "requetes": 9,
+      "octets": 166152,
+      "fcp": 132,
+      "html": 25471,
+      "statique": 140681,
+      "serveur": 54,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 14,
+      "duree": 14,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 12,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 310,
+      "duree": 315,
+      "requetes": 9,
+      "octets": 166176,
+      "fcp": 252,
+      "html": 25495,
+      "statique": 140681,
+      "serveur": 115,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 44,
+      "duree": 44,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 42,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 530,
+      "duree": 721,
+      "requetes": 9,
+      "octets": 166233,
+      "fcp": 468,
+      "html": 25552,
+      "statique": 140681,
+      "serveur": 257,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 142,
+      "duree": 142,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 139,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2695,
+      "duree": 4898,
+      "requetes": 9,
+      "octets": 166069,
+      "fcp": 2636,
+      "html": 25388,
+      "statique": 140681,
+      "serveur": 1121,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 586,
+      "duree": 586,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 582,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-prix-dicte",
+   "ecran": "Offre",
+   "geste": "Prix dicté : « Prendre »",
+   "type": "P",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 199,
+      "duree": 169,
+      "requetes": 9,
+      "octets": 166133,
+      "fcp": 132,
+      "html": 25452,
+      "statique": 140681,
+      "serveur": 58,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 13,
+      "duree": 13,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 10,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 230,
+      "duree": 288,
+      "requetes": 9,
+      "octets": 166241,
+      "fcp": 168,
+      "html": 25560,
+      "statique": 140681,
+      "serveur": 76,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 61,
+      "duree": 61,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 59,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 557,
+      "duree": 747,
+      "requetes": 9,
+      "octets": 166242,
+      "fcp": 500,
+      "html": 25561,
+      "statique": 140681,
+      "serveur": 251,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 139,
+      "duree": 139,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 135,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2648,
+      "duree": 4849,
+      "requetes": 9,
+      "octets": 166151,
+      "fcp": 2600,
+      "html": 25470,
+      "statique": 140681,
+      "serveur": 1089,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 573,
+      "duree": 573,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 569,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-prix-catalogue",
+   "ecran": "Offre",
+   "geste": "Prix dicté : « Mettre aussi au catalogue ? Oui »",
+   "type": "P",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 198,
+      "duree": 168,
+      "requetes": 9,
+      "octets": 166084,
+      "fcp": 132,
+      "html": 25403,
+      "statique": 140681,
+      "serveur": 57,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 17,
+      "duree": 17,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 15,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 305,
+      "duree": 309,
+      "requetes": 9,
+      "octets": 166038,
+      "fcp": 252,
+      "html": 25357,
+      "statique": 140681,
+      "serveur": 117,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 65,
+      "duree": 65,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 63,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 526,
+      "duree": 700,
+      "requetes": 9,
+      "octets": 166020,
+      "fcp": 468,
+      "html": 25339,
+      "statique": 140681,
+      "serveur": 253,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 128,
+      "duree": 128,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 126,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2686,
+      "duree": 4880,
+      "requetes": 9,
+      "octets": 166083,
+      "fcp": 2636,
+      "html": 25402,
+      "statique": 140681,
+      "serveur": 1113,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 592,
+      "duree": 592,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 590,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-quantite",
+   "ecran": "Offre",
+   "geste": "Corriger une quantité (taper, Entrée)",
+   "type": "A",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 115,
+      "duree": 115,
+      "requetes": 2,
+      "octets": 25545,
+      "fcp": null,
+      "html": 25545,
+      "statique": 0,
+      "serveur": 17,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 18,
+      "duree": 18,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 16,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 174,
+      "duree": 174,
+      "requetes": 2,
+      "octets": 25491,
+      "fcp": null,
+      "html": 25491,
+      "statique": 0,
+      "serveur": 60,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 52,
+      "duree": 52,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 50,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 320,
+      "duree": 320,
+      "requetes": 2,
+      "octets": 25483,
+      "fcp": null,
+      "html": 25483,
+      "statique": 0,
+      "serveur": 135,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 128,
+      "duree": 128,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 125,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1647,
+      "duree": 1647,
+      "requetes": 2,
+      "octets": 25494,
+      "fcp": null,
+      "html": 25494,
+      "statique": 0,
+      "serveur": 588,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 576,
+      "duree": 576,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 574,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-prix",
+   "ecran": "Offre",
+   "geste": "Corriger un prix (taper, Entrée)",
+   "type": "A",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 113,
+      "duree": 113,
+      "requetes": 2,
+      "octets": 25566,
+      "fcp": null,
+      "html": 25566,
+      "statique": 0,
+      "serveur": 16,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 18,
+      "duree": 18,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 15,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 168,
+      "duree": 168,
+      "requetes": 2,
+      "octets": 25352,
+      "fcp": null,
+      "html": 25352,
+      "statique": 0,
+      "serveur": 54,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 61,
+      "duree": 61,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 57,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 321,
+      "duree": 321,
+      "requetes": 2,
+      "octets": 25374,
+      "fcp": null,
+      "html": 25374,
+      "statique": 0,
+      "serveur": 132,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 137,
+      "duree": 137,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 134,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1636,
+      "duree": 1636,
+      "requetes": 2,
+      "octets": 25395,
+      "fcp": null,
+      "html": 25395,
+      "statique": 0,
+      "serveur": 588,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 590,
+      "duree": 590,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 587,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-option",
+   "ecran": "Offre",
+   "geste": "Cocher « Retenue par le client » (option)",
+   "type": "A",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 116,
+      "duree": 116,
+      "requetes": 2,
+      "octets": 25530,
+      "fcp": null,
+      "html": 25530,
+      "statique": 0,
+      "serveur": 15,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 15,
+      "duree": 15,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 12,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 168,
+      "duree": 168,
+      "requetes": 2,
+      "octets": 25465,
+      "fcp": null,
+      "html": 25465,
+      "statique": 0,
+      "serveur": 53,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 58,
+      "duree": 58,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 55,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 331,
+      "duree": 331,
+      "requetes": 2,
+      "octets": 25462,
+      "fcp": null,
+      "html": 25462,
+      "statique": 0,
+      "serveur": 130,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 136,
+      "duree": 136,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 133,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1643,
+      "duree": 1643,
+      "requetes": 2,
+      "octets": 25293,
+      "fcp": null,
+      "html": 25293,
+      "statique": 0,
+      "serveur": 578,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 579,
+      "duree": 579,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 576,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-texte",
+   "ecran": "Offre",
+   "geste": "Écrire le texte avant les lignes",
+   "type": "A",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 96,
+      "duree": 96,
+      "requetes": 2,
+      "octets": 25433,
+      "fcp": null,
+      "html": 25433,
+      "statique": 0,
+      "serveur": 8,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 13,
+      "duree": 13,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 11,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 128,
+      "duree": 128,
+      "requetes": 2,
+      "octets": 25572,
+      "fcp": null,
+      "html": 25572,
+      "statique": 0,
+      "serveur": 33,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 64,
+      "duree": 64,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 61,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 308,
+      "duree": 308,
+      "requetes": 2,
+      "octets": 25536,
+      "fcp": null,
+      "html": 25536,
+      "statique": 0,
+      "serveur": 135,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 138,
+      "duree": 138,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 135,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1655,
+      "duree": 1655,
+      "requetes": 2,
+      "octets": 25491,
+      "fcp": null,
+      "html": 25491,
+      "statique": 0,
+      "serveur": 576,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 590,
+      "duree": 590,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 587,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-ouvrir-ligne",
+   "ecran": "Offre",
+   "geste": "Toucher une ligne pour l'ouvrir",
+   "type": "N",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 148,
+      "duree": 134,
+      "requetes": 8,
+      "octets": 145309,
+      "fcp": 96,
+      "html": 4628,
+      "statique": 140681,
+      "serveur": 30,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 218,
+      "duree": 236,
+      "requetes": 8,
+      "octets": 145324,
+      "fcp": 180,
+      "html": 4643,
+      "statique": 140681,
+      "serveur": 43,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 122,
+      "duree": 110,
+      "requetes": 8,
+      "octets": 4644,
+      "fcp": 80,
+      "html": 4644,
+      "statique": 0,
+      "serveur": 41,
+      "n": 1
+     },
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 407,
+      "duree": 571,
+      "requetes": 8,
+      "octets": 145340,
+      "fcp": 364,
+      "html": 4659,
+      "statique": 140681,
+      "serveur": 129,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 247,
+      "duree": 229,
+      "requetes": 8,
+      "octets": 4631,
+      "fcp": 196,
+      "html": 4631,
+      "statique": 0,
+      "serveur": 124,
+      "n": 1
+     },
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2103,
+      "duree": 4297,
+      "requetes": 8,
+      "octets": 145317,
+      "fcp": 2060,
+      "html": 4636,
+      "statique": 140681,
+      "serveur": 538,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 659,
+      "duree": 693,
+      "requetes": 8,
+      "octets": 4626,
+      "fcp": 612,
+      "html": 4626,
+      "statique": 0,
+      "serveur": 542,
+      "n": 1
+     },
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "ligne-enregistrer",
+   "ecran": "Ligne",
+   "geste": "Ligne : « Enregistrer »",
+   "type": "P",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 222,
+      "duree": 177,
+      "requetes": 9,
+      "octets": 166105,
+      "fcp": 184,
+      "html": 25424,
+      "statique": 140681,
+      "serveur": 61,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 15,
+      "duree": 15,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 12,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 306,
+      "duree": 278,
+      "requetes": 9,
+      "octets": 166184,
+      "fcp": 264,
+      "html": 25503,
+      "statique": 140681,
+      "serveur": 108,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 59,
+      "duree": 59,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 56,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 554,
+      "duree": 686,
+      "requetes": 9,
+      "octets": 166125,
+      "fcp": 516,
+      "html": 25444,
+      "statique": 140681,
+      "serveur": 260,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 132,
+      "duree": 132,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 128,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2715,
+      "duree": 4879,
+      "requetes": 9,
+      "octets": 166070,
+      "fcp": 2684,
+      "html": 25389,
+      "statique": 140681,
+      "serveur": 1136,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 600,
+      "duree": 600,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 598,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "ajout-ouvrir",
+   "ecran": "Offre",
+   "geste": "« + Ligne » : ouvrir l'ajout (274 produits)",
+   "type": "F",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 93,
+      "duree": 93,
+      "requetes": 1,
+      "octets": 37091,
+      "fcp": null,
+      "html": 37091,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 119,
+      "duree": 119,
+      "requetes": 1,
+      "octets": 37459,
+      "fcp": null,
+      "html": 37459,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 232,
+      "duree": 232,
+      "requetes": 1,
+      "octets": 37174,
+      "fcp": null,
+      "html": 37174,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1315,
+      "duree": 1315,
+      "requetes": 1,
+      "octets": 37226,
+      "fcp": null,
+      "html": 37226,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "ajout-produit",
+   "ecran": "Ajouter",
+   "geste": "Toucher un produit pour l'ajouter",
+   "type": "F",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 97,
+      "duree": 97,
+      "requetes": 2,
+      "octets": 37978,
+      "fcp": null,
+      "html": 37978,
+      "statique": 0,
+      "serveur": 16,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 14,
+      "duree": 14,
+      "requetes": 1,
+      "octets": 575,
+      "fcp": null,
+      "html": 575,
+      "statique": 0,
+      "serveur": 12,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 148,
+      "duree": 148,
+      "requetes": 2,
+      "octets": 37896,
+      "fcp": null,
+      "html": 37896,
+      "statique": 0,
+      "serveur": 52,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 66,
+      "duree": 66,
+      "requetes": 1,
+      "octets": 575,
+      "fcp": null,
+      "html": 575,
+      "statique": 0,
+      "serveur": 47,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 358,
+      "duree": 358,
+      "requetes": 2,
+      "octets": 37842,
+      "fcp": null,
+      "html": 37842,
+      "statique": 0,
+      "serveur": 124,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 142,
+      "duree": 142,
+      "requetes": 1,
+      "octets": 575,
+      "fcp": null,
+      "html": 575,
+      "statique": 0,
+      "serveur": 139,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1993,
+      "duree": 1993,
+      "requetes": 2,
+      "octets": 37967,
+      "fcp": null,
+      "html": 37967,
+      "statique": 0,
+      "serveur": 607,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 564,
+      "duree": 564,
+      "requetes": 1,
+      "octets": 575,
+      "fcp": null,
+      "html": 575,
+      "statique": 0,
+      "serveur": 562,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "ajout-termine",
+   "ecran": "Ajouter",
+   "geste": "« Terminé » après un ajout (l'offre se recharge)",
+   "type": "P",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 125,
+      "duree": 127,
+      "requetes": 8,
+      "octets": 165922,
+      "fcp": 96,
+      "html": 25241,
+      "statique": 140681,
+      "serveur": 44,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 193,
+      "duree": 224,
+      "requetes": 8,
+      "octets": 165906,
+      "fcp": 156,
+      "html": 25225,
+      "statique": 140681,
+      "serveur": 49,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 136,
+      "duree": 115,
+      "requetes": 8,
+      "octets": 25250,
+      "fcp": 112,
+      "html": 25250,
+      "statique": 0,
+      "serveur": 48,
+      "n": 1
+     },
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 363,
+      "duree": 543,
+      "requetes": 8,
+      "octets": 165963,
+      "fcp": 344,
+      "html": 25282,
+      "statique": 140681,
+      "serveur": 130,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 242,
+      "duree": 220,
+      "requetes": 8,
+      "octets": 25239,
+      "fcp": 212,
+      "html": 25239,
+      "statique": 0,
+      "serveur": 119,
+      "n": 1
+     },
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2074,
+      "duree": 4254,
+      "requetes": 8,
+      "octets": 166022,
+      "fcp": 2048,
+      "html": 25341,
+      "statique": 140681,
+      "serveur": 522,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 613,
+      "duree": 1067,
+      "requetes": 8,
+      "octets": 25327,
+      "fcp": 592,
+      "html": 25327,
+      "statique": 0,
+      "serveur": 530,
+      "n": 1
+     },
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "ajout-libre",
+   "ecran": "Ajouter",
+   "geste": "Ajouter une ligne libre (texte tapé)",
+   "type": "F",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 102,
+      "duree": 102,
+      "requetes": 2,
+      "octets": 38002,
+      "fcp": null,
+      "html": 38002,
+      "statique": 0,
+      "serveur": 15,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 18,
+      "duree": 18,
+      "requetes": 1,
+      "octets": 575,
+      "fcp": null,
+      "html": 575,
+      "statique": 0,
+      "serveur": 16,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 173,
+      "duree": 173,
+      "requetes": 2,
+      "octets": 37789,
+      "fcp": null,
+      "html": 37789,
+      "statique": 0,
+      "serveur": 61,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 48,
+      "duree": 48,
+      "requetes": 1,
+      "octets": 575,
+      "fcp": null,
+      "html": 575,
+      "statique": 0,
+      "serveur": 46,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 346,
+      "duree": 346,
+      "requetes": 2,
+      "octets": 37852,
+      "fcp": null,
+      "html": 37852,
+      "statique": 0,
+      "serveur": 132,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 131,
+      "duree": 131,
+      "requetes": 1,
+      "octets": 575,
+      "fcp": null,
+      "html": 575,
+      "statique": 0,
+      "serveur": 128,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1946,
+      "duree": 1946,
+      "requetes": 2,
+      "octets": 37859,
+      "fcp": null,
+      "html": 37859,
+      "statique": 0,
+      "serveur": 567,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 605,
+      "duree": 605,
+      "requetes": 1,
+      "octets": 575,
+      "fcp": null,
+      "html": 575,
+      "statique": 0,
+      "serveur": 603,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "client-offre",
+   "ecran": "Offre",
+   "geste": "Changer le client de l'offre (fenêtre, choix)",
+   "type": "F",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 240,
+      "duree": 219,
+      "requetes": 11,
+      "octets": 216109,
+      "fcp": 152,
+      "html": 75428,
+      "statique": 140681,
+      "serveur": 56,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 13,
+      "duree": 13,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 9,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 370,
+      "duree": 394,
+      "requetes": 11,
+      "octets": 216028,
+      "fcp": 228,
+      "html": 75347,
+      "statique": 140681,
+      "serveur": 123,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 339,
+      "duree": 311,
+      "requetes": 11,
+      "octets": 75314,
+      "fcp": 180,
+      "html": 75314,
+      "statique": 0,
+      "serveur": 122,
+      "n": 1
+     },
+     "simule": {
+      "vu": 63,
+      "duree": 63,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 60,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 795,
+      "duree": 968,
+      "requetes": 11,
+      "octets": 216021,
+      "fcp": 484,
+      "html": 75340,
+      "statique": 140681,
+      "serveur": 254,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 613,
+      "duree": 590,
+      "requetes": 11,
+      "octets": 75423,
+      "fcp": 312,
+      "html": 75423,
+      "statique": 0,
+      "serveur": 258,
+      "n": 1
+     },
+     "simule": {
+      "vu": 137,
+      "duree": 137,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 134,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 4200,
+      "duree": 6379,
+      "requetes": 11,
+      "octets": 216132,
+      "fcp": 2592,
+      "html": 75451,
+      "statique": 140681,
+      "serveur": 1109,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 2783,
+      "duree": 3224,
+      "requetes": 11,
+      "octets": 75441,
+      "fcp": 1128,
+      "html": 75441,
+      "statique": 0,
+      "serveur": 1146,
+      "n": 1
+     },
+     "simule": {
+      "vu": 569,
+      "duree": 569,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 567,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "representant",
+   "ecran": "Offre",
+   "geste": "« Représenté par » : choisir une régie",
+   "type": "F",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 270,
+      "duree": 245,
+      "requetes": 11,
+      "octets": 215996,
+      "fcp": 152,
+      "html": 75315,
+      "statique": 140681,
+      "serveur": 55,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 10,
+      "duree": 10,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 8,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 371,
+      "duree": 394,
+      "requetes": 11,
+      "octets": 216016,
+      "fcp": 228,
+      "html": 75335,
+      "statique": 140681,
+      "serveur": 125,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 51,
+      "duree": 51,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 49,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 766,
+      "duree": 959,
+      "requetes": 11,
+      "octets": 216188,
+      "fcp": 468,
+      "html": 75507,
+      "statique": 140681,
+      "serveur": 251,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 144,
+      "duree": 144,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 141,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 4189,
+      "duree": 6381,
+      "requetes": 11,
+      "octets": 215919,
+      "fcp": 2568,
+      "html": 75238,
+      "statique": 140681,
+      "serveur": 1097,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 591,
+      "duree": 591,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 589,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "rabais",
+   "ecran": "Offre",
+   "geste": "« + Rabais » : ajouter un rabais de 5 %",
+   "type": "F",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 246,
+      "duree": 224,
+      "requetes": 11,
+      "octets": 216124,
+      "fcp": 152,
+      "html": 75443,
+      "statique": 140681,
+      "serveur": 58,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 12,
+      "duree": 12,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 10,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 371,
+      "duree": 394,
+      "requetes": 11,
+      "octets": 215933,
+      "fcp": 228,
+      "html": 75252,
+      "statique": 140681,
+      "serveur": 94,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 66,
+      "duree": 66,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 63,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 771,
+      "duree": 926,
+      "requetes": 11,
+      "octets": 216144,
+      "fcp": 468,
+      "html": 75463,
+      "statique": 140681,
+      "serveur": 250,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 124,
+      "duree": 124,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 121,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 4219,
+      "duree": 6372,
+      "requetes": 11,
+      "octets": 216082,
+      "fcp": 2576,
+      "html": 75401,
+      "statique": 140681,
+      "serveur": 1125,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 608,
+      "duree": 608,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 606,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "conditions",
+   "ecran": "Offre",
+   "geste": "Conditions de l'offre : « Enregistrer »",
+   "type": "F",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 222,
+      "duree": 226,
+      "requetes": 11,
+      "octets": 216145,
+      "fcp": 136,
+      "html": 75464,
+      "statique": 140681,
+      "serveur": 51,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 8,
+      "duree": 8,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 6,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 372,
+      "duree": 378,
+      "requetes": 11,
+      "octets": 216042,
+      "fcp": 228,
+      "html": 75361,
+      "statique": 140681,
+      "serveur": 95,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 64,
+      "duree": 64,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 61,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 760,
+      "duree": 947,
+      "requetes": 11,
+      "octets": 215852,
+      "fcp": 444,
+      "html": 75171,
+      "statique": 140681,
+      "serveur": 248,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 140,
+      "duree": 140,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 137,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 4168,
+      "duree": 6370,
+      "requetes": 11,
+      "octets": 215743,
+      "fcp": 2564,
+      "html": 75062,
+      "statique": 140681,
+      "serveur": 1092,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 597,
+      "duree": 597,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 595,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "ligne-rattacher",
+   "ecran": "Offre",
+   "geste": "Ligne hors catalogue : la rattacher au produit proposé",
+   "type": "F",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 262,
+      "duree": 234,
+      "requetes": 11,
+      "octets": 216280,
+      "fcp": 160,
+      "html": 75599,
+      "statique": 140681,
+      "serveur": 67,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 28,
+      "duree": 28,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 25,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 351,
+      "duree": 403,
+      "requetes": 11,
+      "octets": 216274,
+      "fcp": 192,
+      "html": 75593,
+      "statique": 140681,
+      "serveur": 97,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 62,
+      "duree": 62,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 59,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 787,
+      "duree": 962,
+      "requetes": 11,
+      "octets": 216177,
+      "fcp": 472,
+      "html": 75496,
+      "statique": 140681,
+      "serveur": 263,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 129,
+      "duree": 129,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 126,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 4165,
+      "duree": 6373,
+      "requetes": 11,
+      "octets": 216130,
+      "fcp": 2576,
+      "html": 75449,
+      "statique": 140681,
+      "serveur": 1086,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 587,
+      "duree": 587,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 585,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "ligne-creer-produit",
+   "ecran": "Offre",
+   "geste": "Ligne hors catalogue : « Créer et ranger »",
+   "type": "F",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 260,
+      "duree": 241,
+      "requetes": 11,
+      "octets": 215560,
+      "fcp": 160,
+      "html": 74879,
+      "statique": 140681,
+      "serveur": 62,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 15,
+      "duree": 15,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 13,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 373,
+      "duree": 395,
+      "requetes": 11,
+      "octets": 215877,
+      "fcp": 216,
+      "html": 75196,
+      "statique": 140681,
+      "serveur": 107,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 53,
+      "duree": 53,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 50,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 746,
+      "duree": 932,
+      "requetes": 11,
+      "octets": 215468,
+      "fcp": 436,
+      "html": 74787,
+      "statique": 140681,
+      "serveur": 255,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 134,
+      "duree": 134,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 131,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 4154,
+      "duree": 6351,
+      "requetes": 11,
+      "octets": 215703,
+      "fcp": 2520,
+      "html": 75022,
+      "statique": 140681,
+      "serveur": 1106,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 533,
+      "duree": 533,
+      "requetes": 1,
+      "octets": 553,
+      "fcp": null,
+      "html": 553,
+      "statique": 0,
+      "serveur": 530,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "offre-objet",
+   "ecran": "Objet de l'offre",
+   "geste": "Objet : « Enregistrer »",
+   "type": "P",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 247,
+      "duree": 190,
+      "requetes": 9,
+      "octets": 166072,
+      "fcp": 184,
+      "html": 25391,
+      "statique": 140681,
+      "serveur": 53,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 15,
+      "duree": 15,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 13,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 351,
+      "duree": 328,
+      "requetes": 9,
+      "octets": 166068,
+      "fcp": 300,
+      "html": 25387,
+      "statique": 140681,
+      "serveur": 111,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 59,
+      "duree": 59,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 57,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 590,
+      "duree": 726,
+      "requetes": 9,
+      "octets": 166147,
+      "fcp": 532,
+      "html": 25466,
+      "statique": 140681,
+      "serveur": 251,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 132,
+      "duree": 132,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 128,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2746,
+      "duree": 4899,
+      "requetes": 9,
+      "octets": 166099,
+      "fcp": 2684,
+      "html": 25418,
+      "statique": 140681,
+      "serveur": 1127,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 572,
+      "duree": 572,
+      "requetes": 1,
+      "octets": 549,
+      "fcp": null,
+      "html": 549,
+      "statique": 0,
+      "serveur": 569,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "relire-ouvrir",
+   "ecran": "Offre",
+   "geste": "« Relire 6 lignes »",
+   "type": "N",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 105,
+      "duree": 97,
+      "requetes": 8,
+      "octets": 144289,
+      "fcp": 64,
+      "html": 3608,
+      "statique": 140681,
+      "serveur": 19,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 214,
+      "duree": 240,
+      "requetes": 8,
+      "octets": 144282,
+      "fcp": 164,
+      "html": 3601,
+      "statique": 140681,
+      "serveur": 43,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 399,
+      "duree": 586,
+      "requetes": 8,
+      "octets": 144297,
+      "fcp": 344,
+      "html": 3616,
+      "statique": 140681,
+      "serveur": 130,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2072,
+      "duree": 4256,
+      "requetes": 8,
+      "octets": 144306,
+      "fcp": 2028,
+      "html": 3625,
+      "statique": 140681,
+      "serveur": 537,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "relire-juste",
+   "ecran": "Relecture",
+   "geste": "Relecture : « C'est juste », ligne suivante",
+   "type": "P",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 126,
+      "duree": 124,
+      "requetes": 9,
+      "octets": 144832,
+      "fcp": 68,
+      "html": 4151,
+      "statique": 140681,
+      "serveur": 33,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 17,
+      "duree": 17,
+      "requetes": 1,
+      "octets": 556,
+      "fcp": null,
+      "html": 556,
+      "statique": 0,
+      "serveur": 15,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 265,
+      "duree": 291,
+      "requetes": 9,
+      "octets": 144849,
+      "fcp": 216,
+      "html": 4168,
+      "statique": 140681,
+      "serveur": 95,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 184,
+      "duree": 163,
+      "requetes": 9,
+      "octets": 4181,
+      "fcp": 136,
+      "html": 4181,
+      "statique": 0,
+      "serveur": 93,
+      "n": 1
+     },
+     "simule": {
+      "vu": 62,
+      "duree": 62,
+      "requetes": 1,
+      "octets": 556,
+      "fcp": null,
+      "html": 556,
+      "statique": 0,
+      "serveur": 58,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 526,
+      "duree": 679,
+      "requetes": 9,
+      "octets": 144842,
+      "fcp": 468,
+      "html": 4161,
+      "statique": 140681,
+      "serveur": 245,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 344,
+      "duree": 334,
+      "requetes": 9,
+      "octets": 4176,
+      "fcp": 284,
+      "html": 4176,
+      "statique": 0,
+      "serveur": 252,
+      "n": 1
+     },
+     "simule": {
+      "vu": 141,
+      "duree": 141,
+      "requetes": 1,
+      "octets": 556,
+      "fcp": null,
+      "html": 556,
+      "statique": 0,
+      "serveur": 139,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2697,
+      "duree": 4902,
+      "requetes": 9,
+      "octets": 144858,
+      "fcp": 2636,
+      "html": 4177,
+      "statique": 140681,
+      "serveur": 1130,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 1243,
+      "duree": 1249,
+      "requetes": 9,
+      "octets": 4151,
+      "fcp": 1184,
+      "html": 4151,
+      "statique": 0,
+      "serveur": 1119,
+      "n": 1
+     },
+     "simule": {
+      "vu": 566,
+      "duree": 566,
+      "requetes": 1,
+      "octets": 556,
+      "fcp": null,
+      "html": 556,
+      "statique": 0,
+      "serveur": 564,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "generer",
+   "ecran": "Offre",
+   "geste": "« Générer l'offre » : PDF affiché",
+   "type": "N",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 942,
+      "duree": 990,
+      "requetes": 12,
+      "octets": 283999,
+      "fcp": 60,
+      "html": 4085,
+      "statique": 279914,
+      "serveur": 23,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 672,
+      "duree": 711,
+      "requetes": 12,
+      "octets": 283997,
+      "fcp": 164,
+      "html": 4083,
+      "statique": 279914,
+      "serveur": 43,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 538,
+      "duree": 547,
+      "requetes": 12,
+      "octets": 4095,
+      "fcp": 80,
+      "html": 4095,
+      "statique": 0,
+      "serveur": 43,
+      "n": 1
+     },
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 1291,
+      "duree": 1584,
+      "requetes": 12,
+      "octets": 284007,
+      "fcp": 364,
+      "html": 4093,
+      "statique": 279914,
+      "serveur": 125,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 652,
+      "duree": 666,
+      "requetes": 12,
+      "octets": 4066,
+      "fcp": 164,
+      "html": 4066,
+      "statique": 0,
+      "serveur": 123,
+      "n": 1
+     },
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 11773,
+      "duree": 16353,
+      "requetes": 12,
+      "octets": 283999,
+      "fcp": 2228,
+      "html": 4085,
+      "statique": 279914,
+      "serveur": 537,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 2014,
+      "duree": 2038,
+      "requetes": 12,
+      "octets": 4084,
+      "fcp": 608,
+      "html": 4084,
+      "statique": 0,
+      "serveur": 546,
+      "n": 1
+     },
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "facturer-ouvrir",
+   "ecran": "Offre envoyée",
+   "geste": "« Facturer » : fenêtre et aperçu",
+   "type": "F",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 184,
+      "duree": 184,
+      "requetes": 7,
+      "octets": 76978,
+      "fcp": null,
+      "html": 5598,
+      "statique": 71380,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 153,
+      "duree": 153,
+      "requetes": 7,
+      "octets": 76996,
+      "fcp": null,
+      "html": 5616,
+      "statique": 71380,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 182,
+      "duree": 182,
+      "requetes": 7,
+      "octets": 76975,
+      "fcp": null,
+      "html": 5595,
+      "statique": 71380,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 687,
+      "duree": 687,
+      "requetes": 7,
+      "octets": 76990,
+      "fcp": null,
+      "html": 5610,
+      "statique": 71380,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "facturer-creer",
+   "ecran": "Facturer",
+   "geste": "« Créer la facture »",
+   "type": "P",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 334,
+      "duree": 342,
+      "requetes": 14,
+      "octets": 288451,
+      "fcp": 64,
+      "html": 8537,
+      "statique": 279914,
+      "serveur": 200,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 461,
+      "duree": 515,
+      "requetes": 14,
+      "octets": 288459,
+      "fcp": 164,
+      "html": 8545,
+      "statique": 279914,
+      "serveur": 241,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 401,
+      "duree": 385,
+      "requetes": 14,
+      "octets": 8531,
+      "fcp": 112,
+      "html": 8531,
+      "statique": 0,
+      "serveur": 255,
+      "n": 1
+     },
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 711,
+      "duree": 971,
+      "requetes": 14,
+      "octets": 288444,
+      "fcp": 340,
+      "html": 8530,
+      "statique": 279914,
+      "serveur": 308,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 549,
+      "duree": 541,
+      "requetes": 14,
+      "octets": 8508,
+      "fcp": 176,
+      "html": 8508,
+      "statique": 0,
+      "serveur": 328,
+      "n": 1
+     },
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 3764,
+      "duree": 8295,
+      "requetes": 14,
+      "octets": 302638,
+      "fcp": 2296,
+      "html": 7962,
+      "statique": 294676,
+      "serveur": 1161,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 2112,
+      "duree": 2131,
+      "requetes": 14,
+      "octets": 22728,
+      "fcp": 652,
+      "html": 7950,
+      "statique": 14778,
+      "serveur": 1179,
+      "n": 1
+     },
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "catalogue-filtrer",
+   "ecran": "Catalogue",
+   "geste": "Filtrer en tapant « porte »",
+   "type": "C",
+   "frequence": "très fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 85,
+      "duree": 85,
+      "requetes": 0,
+      "octets": 0,
+      "fcp": null,
+      "html": 0,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 84,
+      "duree": 84,
+      "requetes": 0,
+      "octets": 0,
+      "fcp": null,
+      "html": 0,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 81,
+      "duree": 81,
+      "requetes": 0,
+      "octets": 0,
+      "fcp": null,
+      "html": 0,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 88,
+      "duree": 88,
+      "requetes": 0,
+      "octets": 0,
+      "fcp": null,
+      "html": 0,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "catalogue-categorie",
+   "ecran": "Catalogue",
+   "geste": "Choisir une catégorie (puce)",
+   "type": "N",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 129,
+      "duree": 114,
+      "requetes": 11,
+      "octets": 160898,
+      "fcp": 80,
+      "html": 11170,
+      "statique": 149728,
+      "serveur": 26,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 207,
+      "duree": 265,
+      "requetes": 11,
+      "octets": 160896,
+      "fcp": 164,
+      "html": 11168,
+      "statique": 149728,
+      "serveur": 47,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 131,
+      "duree": 113,
+      "requetes": 11,
+      "octets": 11189,
+      "fcp": 80,
+      "html": 11189,
+      "statique": 0,
+      "serveur": 34,
+      "n": 1
+     },
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 384,
+      "duree": 539,
+      "requetes": 11,
+      "octets": 160922,
+      "fcp": 332,
+      "html": 11194,
+      "statique": 149728,
+      "serveur": 117,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 273,
+      "duree": 248,
+      "requetes": 11,
+      "octets": 11184,
+      "fcp": 228,
+      "html": 11184,
+      "statique": 0,
+      "serveur": 127,
+      "n": 1
+     },
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2256,
+      "duree": 4459,
+      "requetes": 11,
+      "octets": 160897,
+      "fcp": 2212,
+      "html": 11169,
+      "statique": 149728,
+      "serveur": 529,
+      "n": 1
+     },
+     "chaud": {
+      "vu": 633,
+      "duree": 797,
+      "requetes": 11,
+      "octets": 11188,
+      "fcp": 596,
+      "html": 11188,
+      "statique": 0,
+      "serveur": 537,
+      "n": 1
+     },
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "catalogue-fiche",
+   "ecran": "Catalogue",
+   "geste": "Ouvrir la fiche d'un produit",
+   "type": "F",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 73,
+      "duree": 73,
+      "requetes": 1,
+      "octets": 3916,
+      "fcp": null,
+      "html": 3916,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 109,
+      "duree": 109,
+      "requetes": 1,
+      "octets": 3897,
+      "fcp": null,
+      "html": 3897,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 176,
+      "duree": 176,
+      "requetes": 1,
+      "octets": 3903,
+      "fcp": null,
+      "html": 3903,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 637,
+      "duree": 637,
+      "requetes": 1,
+      "octets": 3923,
+      "fcp": null,
+      "html": 3923,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "catalogue-modifier",
+   "ecran": "Catalogue",
+   "geste": "Fiche produit : changer le prix, « Enregistrer »",
+   "type": "F",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 170,
+      "duree": 170,
+      "requetes": 3,
+      "octets": 22717,
+      "fcp": null,
+      "html": 22717,
+      "statique": 0,
+      "serveur": 8,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 15,
+      "duree": 15,
+      "requetes": 1,
+      "octets": 554,
+      "fcp": null,
+      "html": 554,
+      "statique": 0,
+      "serveur": 13,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 228,
+      "duree": 228,
+      "requetes": 3,
+      "octets": 22710,
+      "fcp": null,
+      "html": 22710,
+      "statique": 0,
+      "serveur": 47,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 54,
+      "duree": 54,
+      "requetes": 1,
+      "octets": 554,
+      "fcp": null,
+      "html": 554,
+      "statique": 0,
+      "serveur": 51,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 399,
+      "duree": 399,
+      "requetes": 3,
+      "octets": 22706,
+      "fcp": null,
+      "html": 22706,
+      "statique": 0,
+      "serveur": 137,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 141,
+      "duree": 141,
+      "requetes": 1,
+      "octets": 554,
+      "fcp": null,
+      "html": 554,
+      "statique": 0,
+      "serveur": 137,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1277,
+      "duree": 1277,
+      "requetes": 3,
+      "octets": 22728,
+      "fcp": null,
+      "html": 22728,
+      "statique": 0,
+      "serveur": 606,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 593,
+      "duree": 593,
+      "requetes": 1,
+      "octets": 554,
+      "fcp": null,
+      "html": 554,
+      "statique": 0,
+      "serveur": 591,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "catalogue-nouveau",
+   "ecran": "Catalogue",
+   "geste": "Nouveau produit : remplir, « Enregistrer »",
+   "type": "F",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 166,
+      "duree": 166,
+      "requetes": 3,
+      "octets": 22783,
+      "fcp": null,
+      "html": 22783,
+      "statique": 0,
+      "serveur": 11,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 13,
+      "duree": 13,
+      "requetes": 1,
+      "octets": 555,
+      "fcp": null,
+      "html": 555,
+      "statique": 0,
+      "serveur": 11,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 228,
+      "duree": 228,
+      "requetes": 3,
+      "octets": 22796,
+      "fcp": null,
+      "html": 22796,
+      "statique": 0,
+      "serveur": 52,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 56,
+      "duree": 56,
+      "requetes": 1,
+      "octets": 555,
+      "fcp": null,
+      "html": 555,
+      "statique": 0,
+      "serveur": 53,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 399,
+      "duree": 399,
+      "requetes": 3,
+      "octets": 22771,
+      "fcp": null,
+      "html": 22771,
+      "statique": 0,
+      "serveur": 135,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 134,
+      "duree": 134,
+      "requetes": 1,
+      "octets": 555,
+      "fcp": null,
+      "html": 555,
+      "statique": 0,
+      "serveur": 132,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1232,
+      "duree": 1232,
+      "requetes": 3,
+      "octets": 22792,
+      "fcp": null,
+      "html": 22792,
+      "statique": 0,
+      "serveur": 571,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 550,
+      "duree": 550,
+      "requetes": 1,
+      "octets": 555,
+      "fcp": null,
+      "html": 555,
+      "statique": 0,
+      "serveur": 548,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "client-fiche",
+   "ecran": "Clients",
+   "geste": "Ouvrir la fiche d'un client",
+   "type": "F",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 100,
+      "duree": 100,
+      "requetes": 1,
+      "octets": 4050,
+      "fcp": null,
+      "html": 4050,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 116,
+      "duree": 116,
+      "requetes": 1,
+      "octets": 4040,
+      "fcp": null,
+      "html": 4040,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 174,
+      "duree": 174,
+      "requetes": 1,
+      "octets": 4059,
+      "fcp": null,
+      "html": 4059,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 651,
+      "duree": 651,
+      "requetes": 1,
+      "octets": 4041,
+      "fcp": null,
+      "html": 4041,
+      "statique": 0,
+      "serveur": 0,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "client-champ",
+   "ecran": "Fiche client",
+   "geste": "Fiche client : taper un téléphone (enregistré seul)",
+   "type": "A",
+   "frequence": "fréquent",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 963,
+      "duree": 963,
+      "requetes": 1,
+      "octets": 544,
+      "fcp": null,
+      "html": 544,
+      "statique": 0,
+      "serveur": 27,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 993,
+      "duree": 993,
+      "requetes": 1,
+      "octets": 544,
+      "fcp": null,
+      "html": 544,
+      "statique": 0,
+      "serveur": 59,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 1047,
+      "duree": 1047,
+      "requetes": 1,
+      "octets": 544,
+      "fcp": null,
+      "html": 544,
+      "statique": 0,
+      "serveur": 122,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1502,
+      "duree": 1502,
+      "requetes": 1,
+      "octets": 544,
+      "fcp": null,
+      "html": 544,
+      "statique": 0,
+      "serveur": 587,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "client-nouveau",
+   "ecran": "Clients",
+   "geste": "Nouveau client : nom, « Ajouter »",
+   "type": "F",
+   "frequence": "occasionnel",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 168,
+      "duree": 168,
+      "requetes": 3,
+      "octets": 10390,
+      "fcp": null,
+      "html": 10390,
+      "statique": 0,
+      "serveur": 11,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 14,
+      "duree": 14,
+      "requetes": 1,
+      "octets": 552,
+      "fcp": null,
+      "html": 552,
+      "statique": 0,
+      "serveur": 12,
+      "n": 1
+     }
+    },
+    "fibre": {
+     "froid": {
+      "vu": 232,
+      "duree": 232,
+      "requetes": 3,
+      "octets": 10391,
+      "fcp": null,
+      "html": 10391,
+      "statique": 0,
+      "serveur": 51,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 53,
+      "duree": 53,
+      "requetes": 1,
+      "octets": 552,
+      "fcp": null,
+      "html": 552,
+      "statique": 0,
+      "serveur": 51,
+      "n": 1
+     }
+    },
+    "4g": {
+     "froid": {
+      "vu": 381,
+      "duree": 381,
+      "requetes": 3,
+      "octets": 10399,
+      "fcp": null,
+      "html": 10399,
+      "statique": 0,
+      "serveur": 129,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 140,
+      "duree": 140,
+      "requetes": 1,
+      "octets": 552,
+      "fcp": null,
+      "html": 552,
+      "statique": 0,
+      "serveur": 137,
+      "n": 1
+     }
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1258,
+      "duree": 1258,
+      "requetes": 3,
+      "octets": 10392,
+      "fcp": null,
+      "html": 10392,
+      "statique": 0,
+      "serveur": 599,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": {
+      "vu": 564,
+      "duree": 564,
+      "requetes": 1,
+      "octets": 552,
+      "fcp": null,
+      "html": 552,
+      "statique": 0,
+      "serveur": 562,
+      "n": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "reglages-rubrique",
+   "ecran": "Réglages",
+   "geste": "Ouvrir la rubrique Entreprise",
+   "type": "N",
+   "frequence": "rare",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 164,
+      "duree": 158,
+      "requetes": 8,
+      "octets": 145258,
+      "fcp": 112,
+      "html": 4577,
+      "statique": 140681,
+      "serveur": 31,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 230,
+      "duree": 234,
+      "requetes": 8,
+      "octets": 145256,
+      "fcp": 180,
+      "html": 4575,
+      "statique": 140681,
+      "serveur": 42,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 416,
+      "duree": 566,
+      "requetes": 8,
+      "octets": 145249,
+      "fcp": 380,
+      "html": 4568,
+      "statique": 140681,
+      "serveur": 124,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 2112,
+      "duree": 4296,
+      "requetes": 8,
+      "octets": 145245,
+      "fcp": 2060,
+      "html": 4564,
+      "statique": 140681,
+      "serveur": 539,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  },
+  {
+   "id": "reglages-champ",
+   "ecran": "Réglages",
+   "geste": "Réglage : taper un champ (enregistré seul)",
+   "type": "A",
+   "frequence": "rare",
+   "profils": {
+    "local": {
+     "froid": {
+      "vu": 957,
+      "duree": 957,
+      "requetes": 1,
+      "octets": 544,
+      "fcp": null,
+      "html": 544,
+      "statique": 0,
+      "serveur": 15,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "fibre": {
+     "froid": {
+      "vu": 1015,
+      "duree": 1015,
+      "requetes": 1,
+      "octets": 544,
+      "fcp": null,
+      "html": 544,
+      "statique": 0,
+      "serveur": 58,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "4g": {
+     "froid": {
+      "vu": 1083,
+      "duree": 1083,
+      "requetes": 1,
+      "octets": 544,
+      "fcp": null,
+      "html": 544,
+      "statique": 0,
+      "serveur": 135,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    },
+    "chantier": {
+     "froid": {
+      "vu": 1587,
+      "duree": 1587,
+      "requetes": 1,
+      "octets": 544,
+      "fcp": null,
+      "html": 544,
+      "statique": 0,
+      "serveur": 649,
+      "n": 1
+     },
+     "chaud": null,
+     "simule": null
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,75 @@
+[
+ {
+  "cle": "connexion",
+  "valeur": "acceptée, arrivée sur /bienvenue/entreprise"
+ },
+ {
+  "cle": "offres trouvées",
+  "valeur": [
+   "/offres/80"
+  ]
+ },
+ {
+  "cle": "service worker aux commandes",
+  "valeur": true
+ },
+ {
+  "cle": "caches",
+  "valeur": [
+   "offregen-etat",
+   "offregen-fichiers-2026-11-23-N",
+   "offregen-pages-N"
+  ]
+ },
+ {
+  "cle": "feuille de style versionnée",
+  "valeur": "/css/app.css?v=be5114002580"
+ },
+ {
+  "cle": "corbeille : ligne partie après (ms)",
+  "valeur": 24
+ },
+ {
+  "cle": "corbeille : confirmée après (ms)",
+  "valeur": 111
+ },
+ {
+  "cle": "bandeau",
+  "valeur": "« Protection des sols et des meubles » suppriméeAnnuler"
+ },
+ {
+  "cle": "Annuler : ligne revenue après (ms)",
+  "valeur": 47
+ },
+ {
+  "cle": "page rechargée pendant les deux gestes",
+  "valeur": false
+ },
+ {
+  "cle": "envois par morceaux (POST)",
+  "valeur": [
+   {
+    "url": "/offres/80/lignes/330/supprimer",
+    "statut": 200,
+    "page": null
+   },
+   {
+    "url": "/offres/80/lignes/330/restaurer",
+    "statut": 200,
+    "page": null
+   }
+  ]
+ },
+ {
+  "cle": "ligne",
+  "valeur": "Protection des sols et des meubles"
+ },
+ {
+  "cle": "après déconnexion : caches de pages",
+  "valeur": []
+ },
+ {
+  "cle": "erreurs JavaScript",
+  "valeur": []
+ }
+]

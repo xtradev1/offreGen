@@ -1,0 +1,12 @@
+liste-ouvrir-offre
+onglet-clients
+plus-catalogue
+offre-juste
+offre-corbeille
+offre-ouvrir-ligne
+ajout-termine
+client-offre
+relire-juste
+generer
+facturer-creer
+catalogue-categorie
