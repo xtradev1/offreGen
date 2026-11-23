@@ -66,13 +66,30 @@ final readonly class Conditions
         return $this->escomptePourDixMille > 0 && $this->escompteJours > 0;
     }
 
-    /** « Escompte 2 % à 10 jours. », ou null sans escompte. */
+    /** « Escompte 2 % à 10 jours », sans point (le sommaire de l'écran), ou null sans escompte. */
     public function phraseEscompte(): ?string
     {
         if (!$this->aEscompte()) {
             return null;
         }
-        return 'Escompte ' . self::pourcent($this->escomptePourDixMille) . "\u{00A0}% à {$this->escompteJours} jours.";
+        return 'Escompte ' . self::pourcent($this->escomptePourDixMille) . "\u{00A0}% à {$this->escompteJours} jours";
+    }
+
+    /**
+     * La phrase « Paiement : … » du document, escompte compris (Xavier, 2026-11-23) : « À 30 jours dès la fin des
+     * travaux, ou dans les 10 jours avec un escompte de 2 %. » Par acomptes, l'escompte suit en phrase à part : il vaut
+     * pour chaque facture.
+     */
+    public function paiementEtEscompte(): string
+    {
+        $phrase = $this->conditionsPaiement();
+        if (!$this->aEscompte()) {
+            return $phrase;
+        }
+        $taux = self::pourcent($this->escomptePourDixMille) . "\u{00A0}%";
+        return $this->paiementType === 'acomptes'
+            ? "$phrase Escompte de $taux sur chaque facture payée dans les {$this->escompteJours} jours."
+            : rtrim($phrase, '.') . ", ou dans les {$this->escompteJours} jours avec un escompte de $taux.";
     }
 
     /** 200 donne « 2 », 150 « 1,5 ». */

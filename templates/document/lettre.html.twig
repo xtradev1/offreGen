@@ -34,8 +34,8 @@
       {% else %}
         {% set debut = chantier ? chantier.debut|trim('.', 'right') : '' %}{% set duree = chantier ? chantier.duree|trim('.', 'right') : '' %}
         {# La phrase de paiement dans les mots de l'activité (Compte\Activite::dire). #}
-        {% set paiement = activite.dire(r.conditionsPaiement) %}
-        <div class="doc-txt doc-apres">{% if debut %}{{ mots.debut }}&nbsp;: {{ debut }}. {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}. {% endif %}Paiement&nbsp;: {{ paiement|first|lower }}{{ paiement|slice(1) }}{% if r.phraseEscompte %} {{ r.phraseEscompte }}{% endif %} Cette offre est valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.{% if chantier and chantier.nonCompris %} {{ chantier.nonCompris|length > 1 ? 'Ne sont pas compris' : "N'est pas compris" }}&nbsp;: {% for x in chantier.nonCompris %}{{ x|trim('.', 'right') }}{% if not loop.last %}&nbsp;; {% endif %}{% endfor %}.{% endif %}</div>
+        {% set paiement = activite.dire(r.paiementEtEscompte) %}
+        <div class="doc-txt doc-apres">{% if debut %}{{ mots.debut }}&nbsp;: {{ debut }}. {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}. {% endif %}Paiement&nbsp;: {{ paiement|first|lower }}{{ paiement|slice(1) }} Cette offre est valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.{% if chantier and chantier.nonCompris %} {{ chantier.nonCompris|length > 1 ? 'Ne sont pas compris' : "N'est pas compris" }}&nbsp;: {% for x in chantier.nonCompris %}{{ x|trim('.', 'right') }}{% if not loop.last %}&nbsp;; {% endif %}{% endfor %}.{% endif %}</div>
         {# Le texte après les lignes, avant la formule de politesse, qui reste (D16 A). #}
         {% if offre.texte_apres %}<div class="doc-txt">{{ offre.texte_apres|nl2br }}</div>{% endif %}
         <div class="doc-txt">{{ r.lettre.texte('offre_fin', client_nom, activite) }}</div>

@@ -24,8 +24,20 @@ final class ConditionsTest extends TestCase
     {
         [$c] = Conditions::depuisSaisie(self::BASE + ['escompte_pourcent' => '1,5', 'escompte_jours' => '10']);
         self::assertSame([150, 10], [$c?->escomptePourDixMille, $c?->escompteJours]);
-        self::assertSame("Escompte 1,5\u{00A0}% à 10 jours.", $c?->phraseEscompte());
-        self::assertSame("Escompte 2\u{00A0}% à 8 jours.", Conditions::depuisSaisie(self::BASE + ['escompte_pourcent' => '2', 'escompte_jours' => '8'])[0]?->phraseEscompte());
+        self::assertSame("Escompte 1,5\u{00A0}% à 10 jours", $c?->phraseEscompte());
+        self::assertSame("Escompte 2\u{00A0}% à 8 jours", Conditions::depuisSaisie(self::BASE + ['escompte_pourcent' => '2', 'escompte_jours' => '8'])[0]?->phraseEscompte());
+    }
+
+    /** L'escompte entre dans la phrase du paiement (Xavier, 2026-11-23) ; par acomptes, il suit à part. */
+    public function testLaPhraseDuPaiementPorteLEscompte(): void
+    {
+        self::assertSame('À 30 jours dès la fin des travaux.', (new Conditions())->paiementEtEscompte());
+        self::assertSame("À 30 jours dès la fin des travaux, ou dans les 10 jours avec un escompte de 2\u{00A0}%.",
+            (new Conditions(escomptePourDixMille: 200, escompteJours: 10))->paiementEtEscompte());
+        self::assertSame("Net à 20 jours dès réception de la facture, ou dans les 8 jours avec un escompte de 1,5\u{00A0}%.",
+            (new Conditions(paiementType: 'net', paiementJours: 20, escomptePourDixMille: 150, escompteJours: 8))->paiementEtEscompte());
+        self::assertSame("30\u{00A0}% à la commande, 70\u{00A0}% à la fin des travaux. Escompte de 2\u{00A0}% sur chaque facture payée dans les 10 jours.",
+            (new Conditions(paiementType: 'acomptes', paiementAcomptes: [30, 70], escomptePourDixMille: 200, escompteJours: 10))->paiementEtEscompte());
     }
 
     public function testUnEscompteFauxOuSansDelaiEstRefuse(): void

@@ -793,8 +793,8 @@ final class FactureControleur
     }
 
     /**
-     * « Escompte 2 % si payé jusqu'au 17.11.2026 : CHF 245.00. », ou null : sans escompte, rien à payer, facture annulée.
-     * La date court dès celle de la facture.
+     * « Payé jusqu'au 17.11.2026 : CHF 245.00 au lieu de CHF 250.00 (escompte de 2 %). » (Xavier, 2026-11-23), ou null :
+     * sans escompte, rien à payer, facture annulée. La date court dès celle de la facture.
      *
      * @param Facture $f
      */
@@ -805,8 +805,8 @@ final class FactureControleur
         }
         $arrondi = $f['statut'] === DepotFactures::BROUILLON ? $arrondiCinq : $f['arrondi_cinq'] === 1;
         $jusquau = (new \DateTimeImmutable($f['date_facture']))->modify('+' . $f['escompte_jours'] . ' days')->format('d.m.Y');
-        return 'Escompte ' . Conditions::pourcent($f['escompte_pour_dix_mille']) . "\u{00A0}% si payé jusqu'au $jusquau\u{00A0}: "
-            . Formats::chf(Totaux::escompte($aPayer, $f['escompte_pour_dix_mille'], $arrondi)) . '.';
+        return "Payé jusqu'au $jusquau\u{00A0}: " . Formats::chf(Totaux::escompte($aPayer, $f['escompte_pour_dix_mille'], $arrondi))
+            . ' au lieu de ' . Formats::chf($aPayer) . ' (escompte de ' . Conditions::pourcent($f['escompte_pour_dix_mille']) . "\u{00A0}%).";
     }
 
     /**

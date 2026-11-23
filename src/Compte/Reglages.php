@@ -77,10 +77,16 @@ final readonly class Reglages
         return $this->conditions()->conditionsPaiement();
     }
 
-    /** « Escompte 2 % à 10 jours. », ou null sans escompte. */
+    /** « Escompte 2 % à 10 jours », ou null sans escompte. */
     public function phraseEscompte(): ?string
     {
         return $this->conditions()->phraseEscompte();
+    }
+
+    /** La phrase « Paiement : … » du document, escompte compris. */
+    public function paiementEtEscompte(): string
+    {
+        return $this->conditions()->paiementEtEscompte();
     }
 
     /** Le paiement en quelques mots, pour le sommaire des réglages (une ligne de téléphone). */

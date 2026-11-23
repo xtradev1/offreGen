@@ -201,8 +201,8 @@
       {% if d.escompte ?? null %}<li>{{ d.escompte }}</li>{% endif %}{% endif %}
       <li>Montants en francs suisses{% if d.avec_tva %}, TVA comprise dans le total{% endif %}.</li>
     {% else %}
-      <li>Paiement&nbsp;: {{ d.activite.dire(d.r.conditionsPaiement) }}</li>
-      {% if d.r.phraseEscompte %}<li>{{ d.r.phraseEscompte }}</li>{% endif %}
+      {# Escompte compris dans la phrase du paiement (Xavier, 2026-11-23). #}
+      <li>Paiement&nbsp;: {{ d.activite.dire(d.r.paiementEtEscompte) }}</li>
       {# Texte libre de l'artisan : son point final, s'il en a mis un, ne double pas le nôtre. #}
       {% set debut = d.chantier ? d.chantier.debut|trim('.', 'right') : '' %}{% set duree = d.chantier ? d.chantier.duree|trim('.', 'right') : '' %}
       {% if (o.delais ?? true) and (debut or duree) %}<li>{% if debut %}{{ d.mots.debut }}&nbsp;: {{ debut }}.{% endif %}{% if debut and duree %} {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}.{% endif %}</li>{% endif %}
