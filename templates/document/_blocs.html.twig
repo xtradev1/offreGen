@@ -197,27 +197,68 @@
   </table>
 {% endmacro %}
 
-{# Les conditions de l'offre, ou les mentions de la facture. o : pile (l'une sous l'autre, pour une colonne étroite),
-   delais (faux : le modèle dit ailleurs le début et la durée des travaux). #}
-{% macro conditions(d, o = {}) %}
-  {% set liste %}
-    {% if d.facture %}
-      {% if d.annulee %}<li><b>Facture annulée le {{ d.f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b></li>{% else %}
-      <li>Payable jusqu'au {{ d.f.echeance|jour }}{% if d.qr %} avec la section de paiement {{ (d.qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}. Merci de votre confiance.</li>
-      {% endif %}
-      <li>Montants en francs suisses{% if d.avec_tva %}, TVA comprise dans le total{% endif %}.</li>
+{# Les phrases de la fin du document (Compte\PhrasesLettre::ecrire), celles de l'artisan ou de l'application, par
+   groupe : une puce par groupe dans les conditions d'un modèle (forme « li »), un paragraphe dans Lettre (forme
+   « texte »). Une phrase sans sa donnée ne paraît pas. o : forme ; delais (faux : le modèle dit ailleurs le début et la
+   durée) ; non_compris (vrai : la phrase « Non compris ») ; merci (faux : une phrase de fin remercie déjà).
+   Facture annulée : sa phrase reste fixe (M5 A, 2026-11-23), elle remplace l'échéance. #}
+{% macro phrases_fin(d, o = {}) %}
+  {%- set p = d.r.lettre %}{% set a = d.activite %}{% set texte = (o.forme ?? 'li') == 'texte' %}
+  {%- if d.facture %}
+    {%- set section = d.qr ? 'avec la section de paiement ' ~ ((d.qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous') : '' %}
+    {#- L'escompte n'est pas une phrase : une ligne sous le total (Xavier, 2026-11-23). #}
+    {%- set groupes = d.annulee ? [] : [
+      [p.ecrire('payable', {'échéance': d.f.echeance|jour, 'section de paiement': section}, a), (o.merci ?? true) ? p.ecrire('merci', {}, a) : null]] %}
+    {%- set groupes = groupes|merge([[p.ecrire(d.avec_tva ? 'montants_tva' : 'montants_sans', {}, a)]]) %}
+  {%- else %}
+    {#- Texte libre de l'artisan : son point final, s'il en a mis un, ne double pas le nôtre. Le paiement dit l'escompte
+       (Xavier, 2026-11-23), dans les mots de l'activité, en minuscule après « Paiement : ». #}
+    {%- set debut = d.chantier ? d.chantier.debut|trim('.', 'right') : '' %}{% set duree = d.chantier ? d.chantier.duree|trim('.', 'right') : '' %}
+    {%- set paiement = a.dire(d.r.paiementEtEscompte)|trim('.', 'right') %}
+    {#- Lettre dit les délais avant le paiement, les conditions d'un modèle les disent après (comme avant ce réglage). #}
+    {%- set delais = (o.delais ?? true) ? [p.ecrire('debut', {'début': debut}, a), p.ecrire('duree', {'durée': duree}, a)] : [] %}
+    {%- set paye = [p.ecrire('paiement', {'paiement': paiement|first|lower ~ paiement|slice(1)}, a)] %}
+    {%- set groupes = (texte ? [delais, paye] : [paye, delais])|merge([
+      [p.ecrire('validite', {'date': d.valable_jusqu_au}, a), p.ecrire(d.avec_tva ? 'prix_tva' : 'prix_sans', {}, a)],
+      [(o.non_compris ?? false) and d.chantier ? p.ecrire('non_compris', p.nonCompris(d.chantier.nonCompris), a) : null]]) %}
+  {%- endif %}
+  {%- if d.annulee %}{% if texte %}<b>Facture annulée le {{ d.f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b> {% else %}<li><b>Facture annulée le {{ d.f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b></li>{% endif %}{% endif %}
+  {%- for g in groupes|map(g => g|filter(x => x))|filter(g => g|length > 0) %}
+    {%- if texte %}{% if not loop.first %} {% endif %}{% else %}<li>{% endif %}
+    {%- for x in g %}{{ x|phrase }}{% if not loop.last %} {% endif %}{% endfor %}
+    {%- if not texte %}</li>{% endif %}
+  {%- endfor %}
+{%- endmacro %}
+
+{# Le début du document : le texte avant les lignes de l'offre. Avec la formule d'appel, le début et la fin dans les
+   douze modèles (M4 B, 2026-11-23) : la formule d'appel, puis le début (ou le texte avant les lignes, qui le remplace,
+   D6 A) et la date de visite, comme dans Lettre. Le chantier et l'offre d'origine restent dans les cases du modèle. #}
+{% macro debut(d) %}
+  {% set p = d.r.lettre %}
+  {% if p.partout %}
+    <div class="doc-txt">{{ p.appel(d.client_nom) }}</div>
+    {% if d.facture %}<div class="doc-txt">{{ p.texte('facture_debut', d.client_nom, d.activite) }}</div>
     {% else %}
-      {# Escompte compris dans la phrase du paiement (Xavier, 2026-11-23). #}
-      <li>Paiement&nbsp;: {{ d.activite.dire(d.r.paiementEtEscompte) }}</li>
-      {# Texte libre de l'artisan : son point final, s'il en a mis un, ne double pas le nôtre. #}
-      {% set debut = d.chantier ? d.chantier.debut|trim('.', 'right') : '' %}{% set duree = d.chantier ? d.chantier.duree|trim('.', 'right') : '' %}
-      {% if (o.delais ?? true) and (debut or duree) %}<li>{% if debut %}{{ d.mots.debut }}&nbsp;: {{ debut }}.{% endif %}{% if debut and duree %} {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}.{% endif %}</li>{% endif %}
-      <li>Offre valable jusqu'au {{ d.valable_jusqu_au }}. Prix en francs suisses{% if d.avec_tva %}, TVA comprise dans le total{% endif %}.</li>
+      {% set visite = d.chantier and d.chantier.visite ? p.ecrire('visite', {'date': d.chantier.visite|date_longue}, d.activite) : null %}
+      <div class="doc-txt">{% if d.offre.texte_avant %}{{ d.offre.texte_avant|nl2br }}{% else %}{{ p.texte('offre_debut', d.client_nom, d.activite) }}{% endif %}{% if visite %} {{ visite|phrase }}{% endif %}</div>
     {% endif %}
-  {% endset %}
+  {% else %}
+    {{ _self.texte(d, 'avant') }}
+  {% endif %}
+{% endmacro %}
+
+{# La phrase de fin, avant les signatures, quand l'artisan la veut dans les douze modèles (M4 B). #}
+{% macro fin(d) %}{% if d.r.lettre.partout %}<div class="doc-txt doc-fin-txt">{{ d.r.lettre.texte(d.facture ? 'facture_fin' : 'offre_fin', d.client_nom, d.activite) }}</div>{% endif %}{% endmacro %}
+
+{# Les conditions de l'offre, ou les mentions de la facture. o : pile (l'une sous l'autre, pour une colonne étroite),
+   delais (faux : le modèle dit ailleurs le début et la durée des travaux). « Non compris » garde sa liste titrée tant
+   que l'artisan n'a pas réécrit sa phrase ; réécrite, elle va dans les conditions (M4 B, 2026-11-23). #}
+{% macro conditions(d, o = {}) %}
+  {% set nc_phrase = d.r.lettre.estReecrite('non_compris') %}
+  {% set liste %}{{ _self.phrases_fin(d, {delais: o.delais ?? true, non_compris: nc_phrase, merci: not d.r.lettre.partout}) }}{% endset %}
   {# Une facture n'a pas de conditions à accepter : ses deux mentions vont sans titre. #}
   {% set titre %}{% if not d.facture %}<div class="doc-lab">Conditions</div>{% endif %}{% endset %}
-  {% set non %}{% if d.chantier and d.chantier.nonCompris %}<div class="doc-lab">Non compris</div><ul>{% for x in d.chantier.nonCompris %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}{% endset %}
+  {% set non %}{% if not nc_phrase and d.chantier and d.chantier.nonCompris %}<div class="doc-lab">Non compris</div><ul>{% for x in d.chantier.nonCompris %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}{% endset %}
   {% if o.pile ?? false %}
     <div class="doc-condp">{{ titre }}<ul>{{ liste }}</ul>{{ non }}</div>
   {% else %}

@@ -67,7 +67,7 @@ final class PhrasesLettreTest extends TestCase
         self::assertSame('Merci.', $p->texte('facture_fin', ''));
         self::assertSame(['lettre_appel' => 'client', 'lettre_offre_debut' => 'Comme convenu, voici notre offre : la voici !',
             'lettre_offre_fin' => PhrasesLettre::ACTUELLES['offre_fin'], 'lettre_facture_debut' => PhrasesLettre::ACTUELLES['facture_debut'],
-            'lettre_facture_fin' => 'Merci.'], $p->versChamps());
+            'lettre_facture_fin' => 'Merci.', 'lettre_partout' => '0'], array_slice($p->versChamps(), 0, 6));
     }
 
     public function testUneSaisieTropLongueOuIllisibleEstRefusee(): void

@@ -1392,6 +1392,45 @@ function tournuresLettre() {
   });
 }
 
+// Les phrases tirées de l'offre, dans « Ma marque » (M1 A, 2026-11-23) : une pastille se pose là où le curseur était
+// dans sa phrase, au bout si l'on n'y a jamais touché ; « Reprendre celle de l'application » remet la phrase d'origine.
+// L'enregistrement automatique suit (événement input), le serveur refuse une pastille inconnue ou retirée.
+function pastillesPhrases() {
+  const champs = [...document.querySelectorAll('textarea[data-origine]')];
+  if (!champs.length) return;
+  const touches = new WeakSet();
+  const etat = (champ) => {
+    const s = champ.closest('details')?.querySelector('[data-etat-phrase]');
+    if (s) s.textContent = champ.value.trim() === '' || champ.value.trim() === champ.dataset.origine ? 'Celle de l\'application' : 'Réécrite';
+  };
+  champs.forEach((champ) => {
+    champ.addEventListener('focus', () => touches.add(champ));
+    champ.addEventListener('input', () => etat(champ));
+  });
+  const changer = (champ, valeur, curseur) => {
+    champ.value = valeur;
+    champ.dispatchEvent(new Event('input', { bubbles: true }));
+    champ.focus();
+    champ.setSelectionRange(curseur, curseur);
+  };
+  document.querySelectorAll('[data-pastille]').forEach((b) => {
+    const champ = document.getElementById(b.dataset.pour);
+    if (!champ) return;
+    b.addEventListener('click', () => {
+      const debut = touches.has(champ) ? champ.selectionStart : champ.value.length;
+      const fin = touches.has(champ) ? champ.selectionEnd : champ.value.length;
+      const avant = champ.value.slice(0, debut);
+      // Collée à un mot, la pastille en reçoit une espace.
+      const texte = (/[\p{L}\p{N}]$/u.test(avant) ? ' ' : '') + b.dataset.pastille;
+      changer(champ, avant + texte + champ.value.slice(fin), debut + texte.length);
+    });
+  });
+  document.querySelectorAll('[data-remettre]').forEach((b) => {
+    const champ = document.getElementById(b.dataset.remettre);
+    if (champ) b.addEventListener('click', () => changer(champ, champ.dataset.origine, champ.dataset.origine.length));
+  });
+}
+
 // Feuille A4 des documents (modèles du bâtiment, 2026-11-20) : chaque modèle est dessiné sur 794 px, comme dans le PDF,
 // et se réduit à la largeur de son papier (--feuille, lue par document-ecran.css). La réduction ne change pas la place
 // que la feuille occupe : une marge basse négative la lui rend. Les papiers qui arrivent plus tard (document à côté,
@@ -2050,6 +2089,7 @@ document.addEventListener('DOMContentLoaded', () => {
   vignettesVivantes();
   avisCouleur();
   tournuresLettre();
+  pastillesPhrases();
   papiers();
   modelesEnGrand();
   glisserLignes();

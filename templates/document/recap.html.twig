@@ -14,7 +14,7 @@
     <div class="doc-titre"><span class="c-texte">{{ doc_nom }} n°&nbsp;{{ doc_numero }}</span> · {{ doc_objet }}</div>
     <div class="doc-meta">{{ b.meta(_context, {contact: true}) }}</div>
     {{ b.annulee(_context) }}
-    {{ b.texte(_context, 'avant') }}
+    {{ b.debut(_context) }}
     <table class="doc-duo2"><tr>
       <td class="doc-g">
         <div class="doc-h2">Récapitulatif</div>
@@ -28,6 +28,7 @@
     {{ b.texte(_context, 'apres') }}
     <div class="doc-fin">
       {{ b.conditions(_context) }}
+      {{ b.fin(_context) }}
       {{ b.signatures(_context) }}
     </div>
   </div>

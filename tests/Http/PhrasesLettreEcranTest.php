@@ -42,10 +42,11 @@ final class PhrasesLettreEcranTest extends TestCase
         return (string) $r->getContent();
     }
 
-    public function testLesPhrasesSeReglentSousLeModeleLettre(): void
+    public function testLesPhrasesSeReglentPourLesDouzeModeles(): void
     {
         $page = $this->page('/reglages/marque');
-        self::assertStringContainsString('<fieldset class="groupe si-lettre">', $page);
+        self::assertStringContainsString('<fieldset class="groupe phrases-doc">', $page, 'visibles quel que soit le modèle (M4 B)');
+        self::assertStringContainsString('name="lettre_partout" value="0" checked', $page, 'par défaut, Lettre seulement');
         foreach (['lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin'] as $champ) {
             self::assertMatchesRegularExpression('#<textarea id="' . $champ . '" name="' . $champ . '"[^>]*maxlength="500"#', $page, $champ);
         }
@@ -76,6 +77,41 @@ final class PhrasesLettreEcranTest extends TestCase
         $this->page('/reglages/entreprise');
         self::assertSame(303, $this->a->post('/reglages', ['contact_nom' => 'Luc Morel', 'retour' => '/reglages/entreprise'])->getStatusCode());
         self::assertSame('client', BaseDeTest::ligne("SELECT lettre_appel FROM artisan WHERE id = {$this->jeu->a}")['lettre_appel']);
+    }
+
+    /** M1 A, M3 A : chaque phrase tirée de l'offre, repliée, avec ses pastilles ; réécrite, elle va jusqu'au document. */
+    public function testLesPhrasesTireesDeLOffreSeReecrivent(): void
+    {
+        $page = $this->page('/reglages/marque');
+        foreach (array_keys(PhrasesLettre::DOCUMENT) as $cle) {
+            self::assertMatchesRegularExpression('#<textarea id="phrase_' . $cle . '" name="phrase_' . $cle . '" rows="3" maxlength="500" data-origine="#', $page, $cle);
+        }
+        self::assertStringContainsString('<details class="phrase-doc">', $page);
+        self::assertStringContainsString('data-pastille="[date]" data-pour="phrase_visite"', $page);
+        self::assertStringContainsString('>Visite du [date].</textarea>', $page, "le champ montre la phrase d'origine");
+
+        $r = $this->a->post('/reglages', ['phrase_validite' => 'Prix tenus jusqu\'au [date].', 'phrase_visite' => '', 'lettre_partout' => '1', 'retour' => '/reglages/marque']);
+        self::assertSame(303, $r->getStatusCode());
+        $l = BaseDeTest::ligne("SELECT phrases_document, lettre_partout FROM artisan WHERE id = {$this->jeu->a}");
+        self::assertSame(['phrases_document' => '{"validite":"Prix tenus jusqu\'au [date]."}', 'lettre_partout' => 1], $l);
+        $page = $this->page('/reglages/marque');
+        self::assertStringContainsString('name="lettre_partout" value="1" checked', $page);
+        self::assertMatchesRegularExpression('#<span class="phrase-nom">Validité</span> <span class="phrase-etat" data-etat-phrase>Réécrite</span>#', $page);
+
+        BaseDeTest::pdo()->exec("UPDATE artisan SET modele = 'sobre' WHERE id = {$this->jeu->a}");
+        $doc = $this->page('/offres/' . $this->jeu->offre['a'] . '/document');
+        self::assertMatchesRegularExpression("#Prix tenus jusqu'au \d\d\.\d\d\.\d{4}\.#", $doc);
+        self::assertStringContainsString('<div class="doc-txt">Madame, Monsieur,</div>', $doc, 'la formule d\'appel dans Sobre aussi');
+    }
+
+    public function testUnePastilleInconnueEstRefuseeEtSignalee(): void
+    {
+        $this->page('/reglages/marque');
+        $r = $this->a->post('/reglages', ['phrase_visite' => 'Venus le [date visite].', 'retour' => '/reglages/marque']);
+        self::assertSame(422, $r->getStatusCode());
+        self::assertStringContainsString('Pastille inconnue&nbsp;: [date visite]. Celle de cette phrase&nbsp;: [date].', str_replace("\u{00A0}", '&nbsp;', (string) $r->getContent()));
+        self::assertMatchesRegularExpression('#<details class="phrase-doc" open>\s*<summary><span class="phrase-nom">Date de la visite#', (string) $r->getContent(), 'la phrase refusée est ouverte');
+        self::assertNull(BaseDeTest::ligne("SELECT phrases_document FROM artisan WHERE id = {$this->jeu->a}")['phrases_document']);
     }
 
     public function testUnePhraseTropLongueEstRefuseeEtRienNEstEnregistre(): void

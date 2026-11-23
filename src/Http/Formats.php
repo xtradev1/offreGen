@@ -31,7 +31,17 @@ final class Formats extends AbstractExtension
             new TwigFilter('saisie_prix_ligne', [self::class, 'saisiePrixLigne']),
             new TwigFilter('iban', [Iban::class, 'lisible']),
             new TwigFilter('date_longue', [self::class, 'dateLongue']),
+            new TwigFilter('phrase', [self::class, 'phrase'], ['is_safe' => ['html']]),
         ];
+    }
+
+    /**
+     * Une phrase du document (Compte\PhrasesLettre::ecrire), échappée, ses espaces insécables écrits « &nbsp; » comme le
+     * reste des gabarits. Dans le texte d'un élément seulement, jamais dans un attribut : l'apostrophe reste telle quelle.
+     */
+    public static function phrase(?string $texte): string
+    {
+        return str_replace(self::NB, '&nbsp;', htmlspecialchars($texte ?? '', ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8'));
     }
 
     public static function chf(int $centimes): string

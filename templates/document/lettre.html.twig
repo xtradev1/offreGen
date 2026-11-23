@@ -14,28 +14,29 @@
     </tr></table>
     <div class="doc-concerne"><span class="c-texte">{{ doc_nom }} n°&nbsp;{{ doc_numero }}</span>&nbsp;: {{ doc_objet }}</div>
     {{ b.annulee(_context) }}
-    {# Phrases réglées par l'artisan (Compte\PhrasesLettre, réponses de Xavier du 2026-11-20) ; après elles, ce que
-       l'application tire de l'offre (L2) : la visite et le chantier, ou l'offre d'où vient la facture. #}
+    {# Phrases réglées par l'artisan (Compte\PhrasesLettre, réponses de Xavier du 2026-11-20) ; après elles, celles que
+       l'application tire de l'offre (L2), réécrites ou non (2026-11-23) : la visite et le chantier, ou l'offre d'où vient
+       la facture. #}
     <div class="doc-txt">{{ r.lettre.appel(client_nom) }}</div>
     {% if facture %}
-      <div class="doc-txt">{{ r.lettre.texte('facture_debut', client_nom, activite) }} Selon notre offre n°&nbsp;{{ f.offre_numero }} du {{ f.offre_cree_le|jour }}.</div>
+      {% set reference = r.lettre.ecrire('reference', {"n° de l'offre": f.offre_numero ~ '', "date de l'offre": f.offre_cree_le ? f.offre_cree_le|jour : ''}, activite) %}
+      <div class="doc-txt">{{ r.lettre.texte('facture_debut', client_nom, activite) }}{% if reference %} {{ reference|phrase }}{% endif %}</div>
     {% else %}
       {# Le texte avant les lignes de l'offre remplace la phrase de Ma marque (D6 A, 2026-11-21). #}
-      <div class="doc-txt">{% if offre.texte_avant %}{{ offre.texte_avant|nl2br }}{% else %}{{ r.lettre.texte('offre_debut', client_nom, activite) }}{% endif %}{% if chantier and chantier.visite %} {{ mots.lettre_date }} {{ chantier.visite|date_longue }}.{% endif %}{% if chantier and chantier.adresse %} {{ mots.doc_lieu }}&nbsp;: {{ chantier.adresse|trim('.', 'right') }}.{% endif %}</div>
+      {% set visite = chantier and chantier.visite ? r.lettre.ecrire('visite', {'date': chantier.visite|date_longue}, activite) : null %}
+      {% set lieu = chantier ? r.lettre.ecrire('chantier', {'adresse': chantier.adresse|trim('.', 'right')}, activite) : null %}
+      <div class="doc-txt">{% if offre.texte_avant %}{{ offre.texte_avant|nl2br }}{% else %}{{ r.lettre.texte('offre_debut', client_nom, activite) }}{% endif %}{% if visite %} {{ visite|phrase }}{% endif %}{% if lieu %} {{ lieu|phrase }}{% endif %}</div>
     {% endif %}
     {{ b.lignes(_context) }}
     {{ b.totaux(_context) }}
     {{ b.options(_context) }}
     <div class="doc-fin">
       {% if facture %}
-        <div class="doc-txt doc-apres">{% if annulee %}<b>Facture annulée le {{ f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b>{% else %}Payable jusqu'au {{ f.echeance|jour }}{% if qr %} avec la section de paiement {{ (qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}.{% endif %} Montants en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.</div>
+        <div class="doc-txt doc-apres">{{ b.phrases_fin(_context, {forme: 'texte', merci: false}) }}</div>
         <div class="doc-txt">{{ r.lettre.texte('facture_fin', client_nom, activite) }}</div>
         {% if qr and (not pdf or (qr_place ?? null) in ['essai', 'bas']) %}<div class="doc-mentions">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if avec_tva %} TVA{% endif %}{% endif %}</div>{% endif %}
       {% else %}
-        {% set debut = chantier ? chantier.debut|trim('.', 'right') : '' %}{% set duree = chantier ? chantier.duree|trim('.', 'right') : '' %}
-        {# La phrase de paiement dans les mots de l'activité (Compte\Activite::dire). #}
-        {% set paiement = activite.dire(r.paiementEtEscompte) %}
-        <div class="doc-txt doc-apres">{% if debut %}{{ mots.debut }}&nbsp;: {{ debut }}. {% endif %}{% if duree %}Durée&nbsp;: {{ duree }}. {% endif %}Paiement&nbsp;: {{ paiement|first|lower }}{{ paiement|slice(1) }} Cette offre est valable jusqu'au {{ valable_jusqu_au }}. Prix en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.{% if chantier and chantier.nonCompris %} {{ chantier.nonCompris|length > 1 ? 'Ne sont pas compris' : "N'est pas compris" }}&nbsp;: {% for x in chantier.nonCompris %}{{ x|trim('.', 'right') }}{% if not loop.last %}&nbsp;; {% endif %}{% endfor %}.{% endif %}</div>
+        <div class="doc-txt doc-apres">{{ b.phrases_fin(_context, {forme: 'texte', non_compris: true}) }}</div>
         {# Le texte après les lignes, avant la formule de politesse, qui reste (D16 A). #}
         {% if offre.texte_apres %}<div class="doc-txt">{{ offre.texte_apres|nl2br }}</div>{% endif %}
         <div class="doc-txt">{{ r.lettre.texte('offre_fin', client_nom, activite) }}</div>

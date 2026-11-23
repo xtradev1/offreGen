@@ -173,15 +173,38 @@ Si ça casse : `templates/document/<modèle>.html.twig`, le bloc du modèle dan
 | Compte | `demo-macon@exemple.ch` |
 
 Gestes :
-1. Cocher le modèle « Lettre » : le groupe « 4. Les phrases de la lettre » paraît.
+1. Cocher le modèle « Lettre ». Le groupe « 4. Les phrases du document » est sous les modèles, quel que soit le modèle (réponse M4 B du 2026-11-23).
 2. Choisir « Selon le client », toucher « Tournure 3 » sous le début de l'offre, taper une fin à soi qui contient « Madame, Monsieur ».
 3. Ouvrir le document d'une offre dont le client commence par « Madame » ou « Monsieur », puis d'une offre à une famille.
 4. Créer une facture de cette offre, ouvrir son PDF.
 5. Vider un champ, revenir : il montre la phrase d'avant.
 
-Attendu : au 1, le groupe paraît sous les modèles, et disparaît si un autre modèle est coché. Au 3, « Madame, » ou « Monsieur, » en tête, « Madame, Monsieur, » pour la famille ; ta fin reprend la même formule ; après le début, « Visite du … » et « Chantier : … » quand l'offre les a. Au 4, le début et la fin de la facture, puis « Selon notre offre n° … du … ».
+Attendu : au 3, « Madame, » ou « Monsieur, » en tête, « Madame, Monsieur, » pour la famille ; ta fin reprend la même formule ; après le début, « Visite du … » et « Chantier : … » quand l'offre les a. Au 4, le début et la fin de la facture, puis « Selon notre offre n° … du … ».
 
 Si ça casse : `Compte\PhrasesLettre`, `templates/document/lettre.html.twig`, colonnes `artisan.lettre_*`, `tournuresLettre` dans `public/js/app.js`.
+
+## Scénario 8 ter : réécrire les phrases tirées de l'offre, dans les douze modèles
+
+| | |
+|---|---|
+| URL | `/reglages/marque`, puis le document et le PDF d'une offre qui a un chantier, un début, une durée et des éléments non compris |
+| Compte | `demo-macon@exemple.ch` |
+
+Gestes :
+1. Dans « 4. Les phrases du document », sous « Phrases tirées de l'offre », toucher « Début des travaux ». Vider le champ, taper « Nous débuterons les travaux la », toucher la pastille « [début] », finir par « , sauf intempéries. ».
+2. Ouvrir « Validité », taper « Valable jusqu'au [date visite]. ».
+3. Toucher « Reprendre celle de l'application » sous la validité.
+4. Ouvrir « Non compris », écrire « Hors de cette offre : [liste]. ».
+5. Choisir le modèle Sobre, ouvrir le document de l'offre, puis son PDF. Refaire avec Lettre, puis avec Chantier.
+6. En haut du groupe, choisir « Dans les douze modèles », rouvrir le document Sobre.
+7. Créer une facture, réécrire « Échéance » (« À régler au plus tard le [échéance] [section de paiement]. »), ouvrir son PDF. Ouvrir le PDF d'une facture annulée.
+8. Tout remettre : « Reprendre celle de l'application » sur chaque phrase réécrite, et « Dans le modèle Lettre seulement ».
+
+Attendu : au 1, la ligne passe à « Réécrite » et « Enregistré » s'affiche. Au 2, « Pas enregistré » et, sous le champ, « Pastille inconnue : [date visite]. Celle de cette phrase : [date]. ». Au 3, la phrase d'origine revient et s'enregistre. Au 5, dans Sobre, « Nous débuterons les travaux la semaine …, sauf intempéries. » dans les conditions, et « Hors de cette offre : … » à la place de la liste « Non compris » ; mêmes phrases dans Lettre ; Chantier garde le début dans sa fiche, avec son titre. Au 6, « Madame, Monsieur, », le début et la date de visite au-dessus des lignes, la fin avant les signatures. Au 7, la phrase réécrite sur la facture ; la facture annulée garde « Facture annulée le … : elle ne doit pas être payée. ».
+
+À surveiller : avec la formule d'appel, le début et la fin dans les douze modèles, le document prend quelques lignes de plus. Une offre de sept lignes en Sobre est sortie sur deux pages dans mon essai local.
+
+Si ça casse : `Compte\PhrasesLettre` (DOCUMENT, ecrire), `templates/document/_blocs.html.twig` (phrases_fin, debut, fin, conditions), colonnes `artisan.phrases_document` et `artisan.lettre_partout`, `pastillesPhrases` dans `public/js/app.js`.
 
 ## Scénario 9 : les factures
 

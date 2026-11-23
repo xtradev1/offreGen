@@ -481,9 +481,22 @@ label.puce { position: relative; display: inline-flex; align-items: center; just
 .teinte:active { scale: .9; }
 .teinte-autre { min-height: 48px; }
 /* Phrases de Lettre (2026-11-20) : visibles quand Lettre est coché ; sans :has, toujours visibles. */
-.si-lettre { display: none; }
-#marque:has(input[name="modele"][value="lettre"]:checked) .si-lettre { display: block; }
-@supports not selector(:has(*)) { .si-lettre { display: block; } }
+/* Les phrases du document, pour les douze modèles (M4 B, 2026-11-23) ; celles tirées de l'offre repliées (M3 A) : le nom
+   à gauche, son état à droite, une flèche qui tourne à l'ouverture. Couleurs du thème (--muted, --line). */
+.phrases-titre { margin: 14px 0 4px; font-size: 14px; font-weight: 600; }
+.phrase-doc { border-top: 1px solid var(--line); }
+.phrase-doc:last-of-type { border-bottom: 1px solid var(--line); }
+.phrase-doc summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 4px 2px; }
+.phrase-doc summary::-webkit-details-marker { display: none; }
+/* Une boîte carrée : tournée, la flèche ne déborde pas de la ligne (sonde, 2026-11-23). */
+.phrase-doc summary::after { content: "›"; flex: 0 0 20px; width: 20px; height: 20px; font-size: 20px; line-height: 20px; text-align: center; transition: transform .2s; }
+.phrase-doc[open] summary::after { transform: rotate(90deg); }
+/* min-width 0 : à 390 px, un nom long et son état passent à la ligne au lieu de déborder (sonde, 2026-11-23). */
+.phrase-nom { min-width: 0; font-size: 15px; font-weight: 600; }
+.phrase-etat { min-width: 0; margin-left: auto; font-size: 13px; color: var(--muted); text-align: right; }
+.phrase-doc .champ { padding: 0 2px 14px; }
+.phrase-doc .champ label { font-weight: 400; color: var(--muted); }
+.jetons { margin-top: 8px; }
 .lettre-appel { margin: 0 0 12px; }
 .lettre-titre { display: block; font-size: 14px; font-weight: 600; margin: 0 0 2px; }
 .tournures .puce[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }

@@ -33,7 +33,7 @@ final class ReglagesControleur
                             'paiement_type', 'paiement_jours_choix', 'paiement_jours', 'paiement_acomptes_choix', 'paiement_acomptes',
                             'escompte_pourcent', 'escompte_jours',
                             'modele', 'couleur_choix', 'couleur',
-                            'lettre_appel', 'lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin',
+                            'lettre_appel', 'lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin', 'lettre_partout',
                             'activite'];
 
     /** Les rubriques du sommaire, dans l'ordre de la maquette validée le 2026-11-12. */
@@ -242,7 +242,9 @@ final class ReglagesControleur
         // comparer à celles d'une activité qui change ici les ferait enregistrer comme tapées (revue du 2026-11-22).
         $activiteAvant = Activite::lire($champs['activite']);
         $recus = $requete->request;
-        foreach (self::CHAMPS as $nom) {
+        // Les phrases du document : un champ phrase_<clé> par phrase de PhrasesLettre::DOCUMENT.
+        $phrases = array_map(static fn (string $cle): string => 'phrase_' . $cle, array_keys(PhrasesLettre::DOCUMENT));
+        foreach ([...self::CHAMPS, ...$phrases] as $nom) {
             if ($recus->has($nom)) {
                 $champs[$nom] = $recus->getString($nom);
             }
@@ -286,6 +288,22 @@ final class ReglagesControleur
             }
         }
         return [$erreurs, $champs, $arrondi];
+    }
+
+    /**
+     * Les phrases du document à l'écran de « Ma marque », par document : nom, moment, pastilles et phrase d'origine dans
+     * les mots de l'activité (MAQUETTE-lettre-phrases-auto.html, M3 A : repliées).
+     *
+     * @return array{offre: list<array{cle: string, nom: string, quand: string, pastilles: list<string>, origine: string}>, facture: list<array{cle: string, nom: string, quand: string, pastilles: list<string>, origine: string}>}
+     */
+    private static function phrasesDocument(Activite $activite): array
+    {
+        $phrases = ['offre' => [], 'facture' => []];
+        foreach (PhrasesLettre::DOCUMENT as $cle => $p) {
+            $phrases[$p['doc']][] = ['cle' => $cle, 'nom' => PhrasesLettre::nomPhrase($cle, $activite), 'quand' => $p['quand'],
+                'pastilles' => $p['pastilles'], 'origine' => PhrasesLettre::origine($cle, $activite)];
+        }
+        return $phrases;
     }
 
     /**
@@ -473,6 +491,7 @@ final class ReglagesControleur
             'vignettes' => in_array('marque', $sections, true) ? $this->vignettes($portee, $marque) : [],
             'proposees' => Marque::TEINTES,
             'tournures' => PhrasesLettre::tournures($this->c->activiteCourante()),
+            'phrases' => self::phrasesDocument($this->c->activiteCourante()),
             'activites' => Activite::cases(),
             'avis' => self::avisCouleur($champs),
         ]), $code);

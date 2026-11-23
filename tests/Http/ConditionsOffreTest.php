@@ -78,7 +78,7 @@ final class ConditionsOffreTest extends TestCase
         self::assertStringContainsString('"validite_jours":"60"', $json);
         self::assertSame(1, BaseDeTest::compter('artisan', "id = {$this->jeu->a} AND validite_jours = 30 AND paiement_type = 'jours' AND escompte_pour_dix_mille = 0"), 'D7 B : les réglages du compte ne changent pas');
         $texte = $this->texteDuDocument();
-        self::assertStringContainsString('Paiement : Net à 10 jours dès réception de la facture, ou dans les 10 jours avec un escompte de 2 %.', $texte);
+        self::assertStringContainsString('Paiement : net à 10 jours dès réception de la facture, ou dans les 10 jours avec un escompte de 2 %.', $texte);
         // Enregistrée le 7 novembre 2026 : valable 60 jours, jusqu'au 6 janvier 2027.
         self::assertStringContainsString("Offre valable jusqu'au 06.01.2027", $texte);
         $ecran = (string) preg_replace('/\s+/u', ' ', $this->page($this->offre));
@@ -91,7 +91,7 @@ final class ConditionsOffreTest extends TestCase
     public function testUneOffreSansConditionsSuitLesReglagesDuCompte(): void
     {
         BaseDeTest::pdo()->exec("UPDATE artisan SET escompte_pour_dix_mille = 300, escompte_jours = 8 WHERE id = {$this->jeu->a}");
-        self::assertStringContainsString('Paiement : À 30 jours dès la fin des travaux, ou dans les 8 jours avec un escompte de 3 %.', $this->texteDuDocument());
+        self::assertStringContainsString('Paiement : à 30 jours dès la fin des travaux, ou dans les 8 jours avec un escompte de 3 %.', $this->texteDuDocument());
     }
 
     public function testUneSaisieFausseEstRefuseeSansRienEcrire(): void

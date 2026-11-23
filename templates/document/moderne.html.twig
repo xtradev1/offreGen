@@ -14,13 +14,14 @@
     <div class="doc-objet c-texte">{{ doc_objet }}</div>
     {{ b.annulee(_context) }}
     {{ b.infos(_context, {numero: true, td: 'c-teinte'}) }}
-    {{ b.texte(_context, 'avant') }}
+    {{ b.debut(_context) }}
     {{ b.lignes(_context, {zebre: true, grp_tot: true, grp: 'c-texte'}) }}
     {{ b.totaux(_context, {tt: 'c-teinte-forte'}) }}
     {{ b.options(_context) }}
     {{ b.texte(_context, 'apres') }}
     <div class="doc-fin">
       {{ b.conditions(_context) }}
+      {{ b.fin(_context) }}
       {{ b.signatures(_context) }}
     </div>
   </div>

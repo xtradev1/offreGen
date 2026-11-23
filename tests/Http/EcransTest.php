@@ -572,7 +572,8 @@ final class EcransTest extends TestCase
         self::assertStringContainsString('value="20, 30, 50"', $page);
         $phrase = "20\u{00A0}% à la commande, 30\u{00A0}% en cours de travaux, 50\u{00A0}% à la fin des travaux.";
         self::assertStringContainsString($phrase, $page);
-        self::assertStringContainsString($phrase, $this->page($this->offre . '/document'));
+        // Le document écrit ses espaces insécables « &nbsp; » (filtre « phrase », 2026-11-23).
+        self::assertStringContainsString(str_replace("\u{00A0}", '&nbsp;', $phrase), $this->page($this->offre . '/document'));
 
         // Pas d'offre sans validité ; des acomptes qui ne font pas 100 sont refusés, rien n'est changé.
         $this->page('/reglages');

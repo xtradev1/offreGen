@@ -22,13 +22,14 @@
       <tr>{% for case in cases %}<td><div class="doc-lab">{{ case[0] }}</div>{{ case[1] }}</td>{% endfor %}</tr>
     </table>
     {{ b.annulee(_context) }}
-    {{ b.texte(_context, 'avant') }}
+    {{ b.debut(_context) }}
     {{ b.lignes(_context, {pos: true, unite: true, grp: 'c-teinte c-bord-gauche'}) }}
     {{ b.totaux(_context) }}
     {{ b.options(_context) }}
     {{ b.texte(_context, 'apres') }}
     <div class="doc-fin">
       {{ b.conditions(_context) }}
+      {{ b.fin(_context) }}
       {{ b.signatures(_context) }}
     </div>
   </div>

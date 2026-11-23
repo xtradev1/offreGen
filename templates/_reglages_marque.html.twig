@@ -61,19 +61,28 @@
     </div>
     {% endfor %}
   </fieldset>
-  {# Les phrases du modèle Lettre (maquette MAQUETTE-lettre-phrases.html, réponses de Xavier du 2026-11-20) : sous le
-     modèle, visibles quand Lettre est coché (app.css). Un toucher sur une tournure la met dans le champ (app.js,
-     tournuresLettre) ; l'enregistrement automatique suit. Un champ vidé reprend la phrase d'avant. #}
-  <fieldset class="groupe si-lettre">
-    <legend>4. Les phrases de la lettre</legend>
-    <p class="muted petit">Vos phrases. Après le début, la lettre ajoute d'elle-même la date de la visite et l'adresse du chantier (offre), ou le numéro de l'offre (facture).</p>
+  {# Les phrases du document, pour les douze modèles (maquette MAQUETTE-lettre-phrases.html, réponses de Xavier du
+     2026-11-20 ; MAQUETTE-lettre-phrases-auto.html, réponses du 2026-11-23, M4 B). La formule d'appel, le début et la
+     fin vont dans Lettre, et dans les autres modèles si l'artisan le choisit. Un toucher sur une tournure la met dans
+     le champ (app.js, tournuresLettre). Les phrases tirées de l'offre sont repliées (M3 A), une pastille se pose d'un
+     toucher (app.js, pastillesPhrases). L'enregistrement automatique suit ; un champ vidé reprend la phrase de
+     l'application (M2 A). #}
+  <fieldset class="groupe phrases-doc">
+    <legend>4. Les phrases du document</legend>
+    <h3 class="famille">Formule d'appel, début et fin</h3>
+    <div class="lettre-appel" role="radiogroup" aria-labelledby="lettre-partout-titre">
+      <span class="lettre-titre" id="lettre-partout-titre">Où les écrire</span>
+      <label class="radio"><input type="radio" name="lettre_partout" value="0"{% if champs.lettre_partout != '1' %} checked{% endif %}> Dans le modèle Lettre seulement</label>
+      <label class="radio"><input type="radio" name="lettre_partout" value="1"{% if champs.lettre_partout == '1' %} checked{% endif %}> Dans les douze modèles&nbsp;: au début du document, et avant les signatures</label>
+    </div>
+    <p class="muted petit">Après le début, le document ajoute la date de la visite (offre). Lettre ajoute aussi l'adresse du chantier, ou le numéro de l'offre (facture)&nbsp;; les autres modèles les écrivent dans leurs cases.</p>
     <div class="lettre-appel" role="radiogroup" aria-labelledby="lettre-appel-titre">
       <span class="lettre-titre" id="lettre-appel-titre">Formule d'appel</span>
       <label class="radio"><input type="radio" name="lettre_appel" value="fixe"{% if champs.lettre_appel != 'client' %} checked{% endif %}> La même pour tous&nbsp;: «&nbsp;Madame, Monsieur,&nbsp;»</label>
       <label class="radio"><input type="radio" name="lettre_appel" value="client"{% if champs.lettre_appel == 'client' %} checked{% endif %}> Selon le client&nbsp;: «&nbsp;Madame,&nbsp;», «&nbsp;Monsieur,&nbsp;», ou «&nbsp;Madame, Monsieur,&nbsp;» pour une famille ou une entreprise. La fin de la lettre suit.</label>
     </div>
     {% for doc, titre in {offre: "Dans une offre", facture: "Dans une facture"} %}
-      <h3 class="famille">{{ titre }}</h3>
+      <h4 class="phrases-titre">{{ titre }}</h4>
       {% for partie, nom in {debut: 'Début', fin: 'Fin'} %}
         {% set champ = 'lettre_' ~ doc ~ '_' ~ partie %}
         <div class="champ">
@@ -85,6 +94,27 @@
           {{ f.erreur(erreurs, champ) }}
         </div>
       {% endfor %}
+    {% endfor %}
+    <h3 class="famille">Phrases tirées de l'offre</h3>
+    <p class="muted petit">Écrivez-les à votre façon. Les pastilles entre crochets, comme [date], écrivent la donnée de l'offre&nbsp;; touchez une pastille pour la poser. Une phrase vidée reprend celle de l'application.</p>
+    {% for doc, titre in {offre: 'Dans une offre', facture: 'Dans une facture'} %}
+      <h4 class="phrases-titre">{{ titre }}</h4>
+      {% for p in phrases[doc] %}
+        {% set champ = 'phrase_' ~ p.cle %}
+        <details class="phrase-doc"{% if erreurs[champ] is defined %} open{% endif %}>
+          <summary><span class="phrase-nom">{{ p.nom }}</span> <span class="phrase-etat" data-etat-phrase>{{ champs[champ] != p.origine ? 'Réécrite' : "Celle de l'application" }}</span></summary>
+          <div class="champ">
+            <label for="{{ champ }}">{{ p.quand }}</label>
+            <textarea id="{{ champ }}" name="{{ champ }}" rows="3" maxlength="500" data-origine="{{ p.origine }}"{{ f.invalide(erreurs, champ) }}>{{ champs[champ] }}</textarea>
+            <div class="puces jetons" role="group" aria-label="Pastilles, {{ p.nom|lower }}">
+              {% for x in p.pastilles %}<button type="button" class="puce jeton" data-pastille="[{{ x }}]" data-pour="{{ champ }}">[{{ x }}]</button>{% endfor %}
+              <button type="button" class="puce" data-remettre="{{ champ }}">Reprendre celle de l'application</button>
+            </div>
+            {{ f.erreur(erreurs, champ) }}
+          </div>
+        </details>
+      {% endfor %}
+      {% if doc == 'facture' %}<p class="muted petit">La phrase d'une facture annulée reste fixe&nbsp;: elle dit au client de ne pas la payer.</p>{% endif %}
     {% endfor %}
   </fieldset>
 </div>

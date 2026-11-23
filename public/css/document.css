@@ -201,6 +201,9 @@ table.doc-cart { border: 1.5px solid #1b1f24; margin: 6px 0 16px; }
 .m-lettre .doc-concerne { font-weight: 700; font-size: 14px; margin: 22px 0 14px; }
 .m-lettre .doc-txt { margin-bottom: 10px; }
 .doc-texte { margin: 8px 0 12px; }
+/* Formule d'appel, début et fin dans les autres modèles que Lettre (M4 B, 2026-11-23). Lettre garde les siennes, plus haut. */
+.doc-txt { margin-bottom: 8px; }
+.doc-fin-txt { margin: 12px 0 0; }
 .doc-representant { margin-top: 4px; font-size: 0.85em; color: #555; }
 .m-lettre .doc-lig { font-size: 11.5px; margin-top: 4px; }
 .m-lettre .doc-lig th { border-top: 1px solid #1b1f24; border-bottom: 1px solid #1b1f24; }
