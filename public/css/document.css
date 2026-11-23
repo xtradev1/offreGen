@@ -62,6 +62,8 @@ table.doc-avec { margin-top: 6px; }
 table.doc-totaux { width: 300px; margin: 12px 0 0 366px; }
 .doc-totaux td { padding: 3.5px 6px; }
 .doc-tt td { font-weight: 700; font-size: 15px; padding-top: 8px; padding-bottom: 8px; }
+/* Le montant avec l'escompte (Xavier, 2026-11-23) : sous le total, entre les lignes et le total. */
+.doc-esc td { font-size: 13px; font-weight: 700; padding-top: 4px; border: 0; }
 .doc-cond { margin-top: 16px; font-size: 10.5px; color: #2c3138; }
 .doc-cond td { width: 58%; padding-right: 18px; }
 .doc-cond td + td { width: 42%; padding-right: 0; }

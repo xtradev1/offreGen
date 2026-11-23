@@ -190,6 +190,9 @@
   <table class="{{ o.classe ?? 'doc-totaux' }}">
     {% for rang in rangs %}<tr{% if loop.last %} class="doc-av"{% endif %}><td>{{ rang[0] }}</td><td class="n">{% if rang[2] ?? false %}−&nbsp;{% endif %}{{ rang[1] }}</td></tr>{% endfor %}
     <tr class="doc-tt"><td class="{{ o.tt ?? '' }}">{{ t.deja > 0 ? 'À payer' : 'Total' ~ ttc }}</td><td class="n {{ o.tt ?? '' }}">{{ (t.deja > 0 ? t.a_payer : t.ttc)|chf }}</td></tr>
+    {# Ce que le client paie avec l'escompte (Xavier, 2026-11-23) : sous le total, plus petit que lui, le code QR porte
+       le montant plein. #}
+    {% if d.escompte_total ?? null %}<tr class="doc-esc"><td>{{ d.escompte_total.libelle }}</td><td class="n">{{ d.escompte_total.montant|chf }}</td></tr>{% endif %}
   </table>
 {% endmacro %}
 
@@ -200,8 +203,7 @@
     {% if d.facture %}
       {% if d.annulee %}<li><b>Facture annulée le {{ d.f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b></li>{% else %}
       <li>Payable jusqu'au {{ d.f.echeance|jour }}{% if d.qr %} avec la section de paiement {{ (d.qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}. Merci de votre confiance.</li>
-      {# Escompte (D13 A, D14 A, 2026-11-21) : en mention ; la section de paiement garde le montant plein. #}
-      {% if d.escompte ?? null %}<li>{{ d.escompte }}</li>{% endif %}{% endif %}
+      {% endif %}
       <li>Montants en francs suisses{% if d.avec_tva %}, TVA comprise dans le total{% endif %}.</li>
     {% else %}
       {# Escompte compris dans la phrase du paiement (Xavier, 2026-11-23). #}

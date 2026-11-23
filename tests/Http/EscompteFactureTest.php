@@ -14,8 +14,8 @@ use OffreGen\Tests\Outils\Navigateur;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Escompte en mention sur chaque facture, acomptes compris ; le code QR garde le montant plein (D13 A, D14 A,
- * 2026-11-21). Offre de A : 250.00 ; escompte 2 % à 10 jours : 245.00 si payé jusqu'au 17.11.2026 (facture du 7).
+ * Escompte sur chaque facture, acomptes compris, en ligne sous le total (Xavier, 2026-11-23) ; le total et le code QR
+ * gardent le montant plein (D13 A, D14 A, 2026-11-21). Offre de A : 250.00 ; escompte 2 % à 10 jours : 245.00 si payé jusqu'au 17.11.2026 (facture du 7).
  */
 final class EscompteFactureTest extends TestCase
 {
@@ -74,7 +74,7 @@ final class EscompteFactureTest extends TestCase
         $id = $this->finaleEnBrouillon();
         self::assertSame(1, BaseDeTest::compter('facture', "id = $id AND escompte_pour_dix_mille = 200 AND escompte_jours = 10"));
         $doc = $this->texte($this->page("/factures/$id/document"));
-        self::assertStringContainsString("Payé jusqu'au 17.11.2026 : CHF 245.00 au lieu de CHF 250.00 (escompte de 2 %).", $doc);
+        self::assertStringContainsString("Total TTC CHF 250.00 Payé jusqu'au 17.11.2026, escompte de 2 % CHF 245.00", $doc);
         self::assertStringContainsString('Total TTC CHF 250.00', $doc, 'le montant à payer reste plein (D13 A)');
         // Changer l'escompte de l'offre ensuite ne change pas la facture.
         $this->conditions('3', '8');
@@ -86,7 +86,7 @@ final class EscompteFactureTest extends TestCase
         $this->page($this->offre . '/facturer');
         $apercu = $this->texte($this->page($this->offre . '/facturer/apercu?genre=acompte&pourcent=30&numero=2026-001&date=2026-11-07&echeance=2026-12-07'));
         // 75.00 moins 2 % : 73.50.
-        self::assertStringContainsString("Payé jusqu'au 17.11.2026 : CHF 73.50 au lieu de CHF 75.00 (escompte de 2 %).", $apercu);
+        self::assertStringContainsString("Payé jusqu'au 17.11.2026, escompte de 2 % CHF 73.50", $apercu);
         $this->page($this->offre . '/facturer');
         $this->a->post($this->offre . '/facturer', ['genre' => 'acompte', 'pourcent' => '30', 'numero' => '', 'date' => '2026-11-07', 'echeance' => '2026-12-07', 'suite' => 'creer']);
         self::assertSame(1, BaseDeTest::compter('facture', "offre_id = {$this->jeu->offre['a']} AND genre = 'acompte' AND escompte_pour_dix_mille = 200"));
@@ -97,7 +97,9 @@ final class EscompteFactureTest extends TestCase
         $this->conditions('', '');
         $id = $this->finaleEnBrouillon();
         self::assertSame(1, BaseDeTest::compter('facture', "id = $id AND escompte_pour_dix_mille = 0 AND escompte_jours = 0"));
-        self::assertStringNotContainsString('Escompte', $this->texte($this->page("/factures/$id/document")));
+        $doc = $this->texte($this->page("/factures/$id/document"));
+        self::assertStringNotContainsStringIgnoringCase('escompte', $doc);
+        self::assertStringNotContainsString("Payé jusqu'au", $doc);
     }
 
     public function testLaFactureRefaiteGardeLEscompte(): void

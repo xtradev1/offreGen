@@ -780,7 +780,7 @@ final class FactureControleur
             'groupes' => $groupes,
             'montants' => $montants,
             'acomptes' => $acomptes,
-            'escompte' => self::mentionEscompte($f, $montants['a_payer'], $r->arrondiCinqCentimes),
+            'escompte_total' => self::escompteTotal($f, $montants['a_payer'], $r->arrondiCinqCentimes),
             'r' => $r,
             'qr' => $qr instanceof SectionPaiement ? $qr : null,
             'qr_raison' => is_string($qr) ? $qr : null,
@@ -794,20 +794,22 @@ final class FactureControleur
     }
 
     /**
-     * « Payé jusqu'au 17.11.2026 : CHF 245.00 au lieu de CHF 250.00 (escompte de 2 %). » (Xavier, 2026-11-23), ou null :
-     * sans escompte, rien à payer, facture annulée. La date court dès celle de la facture.
+     * La ligne sous le total de la facture (Xavier, 2026-11-23) : « Payé jusqu'au 17.11.2026, escompte de 2 % » et
+     * CHF 245.00, ce que le client paie s'il prend l'escompte ; null sans escompte, sans rien à payer, facture annulée.
+     * La date court dès celle de la facture. Le total et le code QR gardent le montant plein (D13 A).
      *
      * @param Facture $f
+     * @return array{libelle: string, montant: int}|null
      */
-    private static function mentionEscompte(array $f, int $aPayer, bool $arrondiCinq): ?string
+    private static function escompteTotal(array $f, int $aPayer, bool $arrondiCinq): ?array
     {
         if ($f['escompte_pour_dix_mille'] <= 0 || $f['escompte_jours'] <= 0 || $aPayer <= 0 || $f['statut'] === DepotFactures::ANNULEE) {
             return null;
         }
         $arrondi = $f['statut'] === DepotFactures::BROUILLON ? $arrondiCinq : $f['arrondi_cinq'] === 1;
         $jusquau = (new \DateTimeImmutable($f['date_facture']))->modify('+' . $f['escompte_jours'] . ' days')->format('d.m.Y');
-        return "Payé jusqu'au $jusquau\u{00A0}: " . Formats::chf(Totaux::escompte($aPayer, $f['escompte_pour_dix_mille'], $arrondi))
-            . ' au lieu de ' . Formats::chf($aPayer) . ' (escompte de ' . Conditions::pourcent($f['escompte_pour_dix_mille']) . "\u{00A0}%).";
+        return ['libelle' => "Payé jusqu'au $jusquau, escompte de " . Conditions::pourcent($f['escompte_pour_dix_mille']) . "\u{00A0}%",
+            'montant' => Totaux::escompte($aPayer, $f['escompte_pour_dix_mille'], $arrondi)];
     }
 
     /**

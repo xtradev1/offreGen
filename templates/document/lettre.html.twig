@@ -28,7 +28,7 @@
     {{ b.options(_context) }}
     <div class="doc-fin">
       {% if facture %}
-        <div class="doc-txt doc-apres">{% if annulee %}<b>Facture annulée le {{ f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b>{% else %}Payable jusqu'au {{ f.echeance|jour }}{% if qr %} avec la section de paiement {{ (qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}.{% if escompte ?? null %} {{ escompte }}{% endif %}{% endif %} Montants en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.</div>
+        <div class="doc-txt doc-apres">{% if annulee %}<b>Facture annulée le {{ f.annulee_le|jour }}&nbsp;: elle ne doit pas être payée.</b>{% else %}Payable jusqu'au {{ f.echeance|jour }}{% if qr %} avec la section de paiement {{ (qr_place ?? null) == 'apart' ? 'de la page suivante' : 'ci-dessous' }}{% endif %}.{% endif %} Montants en francs suisses{% if avec_tva %}, TVA comprise dans le total{% endif %}.</div>
         <div class="doc-txt">{{ r.lettre.texte('facture_fin', client_nom, activite) }}</div>
         {% if qr and (not pdf or (qr_place ?? null) in ['essai', 'bas']) %}<div class="doc-mentions">{{ r.entreprise }}{% if r.ide %} · {{ r.ide }}{% if avec_tva %} TVA{% endif %}{% endif %}</div>{% endif %}
       {% else %}
