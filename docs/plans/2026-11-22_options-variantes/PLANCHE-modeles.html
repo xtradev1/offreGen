@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planche des modèles</title>
+<style>
+:root { --ink: #1b1f24; --muted: #5b6470; --bg: #f4f5f7; --surface: #fff; --line: #d9dde3; --accent: #1f4e8c; --on-accent: #fff; --ok: #1d7a43; --alerte: #a2470b;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #e7e9ec; --muted: #a5adb8; --bg: #15181c; --surface: #1f2329; --line: #353b44; --accent: #6f9fe0; --on-accent: #0d1117; --ok: #5fc48a; --alerte: #f0a060; } }
+:root[data-theme="dark"] { --ink: #e7e9ec; --muted: #a5adb8; --bg: #15181c; --surface: #1f2329; --line: #353b44; --accent: #6f9fe0; --on-accent: #0d1117; --ok: #5fc48a; --alerte: #f0a060; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 26px; margin: 8px 0 4px; }
+h2 { font-size: 21px; margin: 36px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+h3 { font-size: 18px; margin: 0 0 10px; } h3 small { color: var(--muted); font-weight: 500; font-size: 14px; margin-left: 6px; }
+p, li { max-width: 75ch; } .muted { color: var(--muted); }
+.carte { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+.alerte { border-left: 4px solid var(--alerte); }
+table.chiffres { border-collapse: collapse; font-size: 15px; width: 100%; max-width: 640px; }
+table.chiffres td { border-bottom: 1px solid var(--line); padding: 5px 8px; } table.chiffres td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.modele { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 16px 0; }
+.docs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .docs { grid-template-columns: minmax(0, 1fr); } }
+figure { margin: 0; } figure.doc .pages { display: grid; gap: 6px; }
+figure img { width: 100%; height: auto; display: block; border: 1px solid var(--line); background: #fff; cursor: zoom-in; }
+figcaption { font-size: 14px; color: var(--muted); margin-top: 4px; }
+figure.seule { max-width: 520px; }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; } .decision .ex { font-size: 14.5px; color: var(--muted); margin: -2px 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 650; }
+.opts button .reco { display: block; font-size: 12px; font-weight: 650; color: var(--ok); } .opts button[aria-pressed="true"] .reco { color: inherit; }
+.decision textarea, .recap textarea { width: 100%; min-height: 56px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 140px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+.mk-filters { padding: 8px 0; }
+</style><style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head><body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Planche des modèles</h1>
+<p class="muted">Options et variantes, 23 novembre 2026. Chaque image est un PDF rendu par l'application (branche au commit <code>7c6e14e</code>, plus la ligne d'escompte proposée ci-dessous, pas encore commitée).</p>
+
+<h2 id="offre">L'offre d'essai</h2>
+<div class="carte">
+<p>La même offre dans les douze modèles. Salon&nbsp;: murs 48 m² à 22.00, plafond 28 m² à 24.00, et une <b>variante</b> lessivable à 34.00 pour les murs. Chambre&nbsp;: murs 30 m² à 22.00, plinthes 18 m à 12.00. Deux <b>options</b>&nbsp;: laquage des deux portes (2 × 150.00), radiateur (85.00). <b>Rabais</b> de 5 %, <b>escompte</b> de 2 % à 10 jours, TVA 8,1 %, arrondi aux 5 centimes.</p>
+<p>Le client retient la variante lessivable et le laquage des portes. La facture finale suit ce choix.</p>
+<table class="chiffres">
+<tr><td>Offre&nbsp;: sous-total</td><td class="n">2'604.00</td></tr>
+<tr><td>Rabais 5 %</td><td class="n">− 130.20</td></tr>
+<tr><td>Total TTC</td><td class="n">CHF 2'674.20</td></tr>
+<tr><td>Total avec toutes les options</td><td class="n">CHF 3'069.55</td></tr>
+<tr><td>Après le choix&nbsp;: total TTC</td><td class="n">CHF 3'573.80</td></tr>
+<tr><td>Après le choix&nbsp;: avec le radiateur encore en option</td><td class="n">CHF 3'661.10</td></tr>
+<tr><td>Facture&nbsp;: payée jusqu'au 17.11.2026, escompte de 2 %</td><td class="n">CHF 3'502.30</td></tr>
+</table>
+<p>Ces montants sont calculés à la main. Contrôle automatique sur les 36 PDF&nbsp;: chaque montant attendu est présent, aucune police de repli. J'ai regardé moi-même les douze premières pages de chaque sorte (planche contact), plus en grand Sobre (facture), Technique (offre, deux pages), Lettre (facture), Récapitulatif (après le choix).</p>
+</div>
+
+<h2 id="escompte">Escompte sous le total</h2>
+<div class="carte">
+<p><b>Ta question</b>&nbsp;: un total avec l'escompte, en plus grand.</p>
+<p><b>Sur la facture, oui</b>, en une ligne juste sous le total&nbsp;: « Payé jusqu'au 17.11.2026, escompte de 2 % &nbsp;CHF 3'502.30 ». Plus grande que les lignes, plus petite que le total. Le total reste le plus grand parce que la section de paiement (code QR) porte le montant plein&nbsp;: un client qui paie avec l'escompte corrige le montant dans sa banque. Si le montant escompté était le plus visible, on recevrait des paiements de l'un ou l'autre montant sans savoir lequel il a lu. Avec cette ligne, la mention des conditions disparaît (elle disait la même chose).</p>
+<p><b>Sur l'offre, non</b>&nbsp;: elle a déjà deux totaux quand il y a des options&nbsp;; un troisième brouille. Par acomptes, l'escompte vaut facture par facture, un total escompté de l'offre ne correspondrait à aucun paiement. La phrase du paiement suffit.</p>
+<figure class="seule"><img src="PLANCHE-modeles-img/3-facture-sobre-p1.jpg" alt="Facture Sobre avec la ligne Payé jusqu'au 17.11.2026, escompte de 2 %, sous le total"><figcaption>Facture, modèle Sobre&nbsp;: la ligne proposée sous le total TTC.</figcaption></figure>
+<p class="alerte carte">Défaut vu&nbsp;: dans Récapitulatif, le bloc des totaux est étroit et la ligne passe sur trois lignes (voir sa facture plus bas). Version courte possible&nbsp;: « Payé jusqu'au 17.11.2026 (−2 %) ».</p>
+<div class="decision" data-id="Escompte facture"><p class="q">Facture : la ligne sous le total, à la place de la mention ?</p><div class="opts"><button type="button" data-r="Valider">Valider<span class=reco>Recommandé</span></button><button type="button" data-r="Valider, version courte">Valider, version courte</button><button type="button" data-r="Pas valider">Pas valider</button></div><textarea aria-label="Commentaire Escompte facture" placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="Escompte offre"><p class="q">Offre : un total avec l'escompte ?</p><div class="opts"><button type="button" data-r="Non, la phrase du paiement suffit">Non, la phrase du paiement suffit<span class=reco>Recommandé</span></button><button type="button" data-r="Oui">Oui</button></div><textarea aria-label="Commentaire Escompte offre" placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="remplacee">Ligne remplacée</h2>
+<div class="carte">
+<p><b>Ta question</b>&nbsp;: une fois la variante cochée, vaut-il la peine d'afficher encore l'ancienne ligne, ou on la supprime&nbsp;?</p>
+<p><b>Sur le document, elle a déjà disparu</b>&nbsp;: la variante prend sa place (voir « après le choix » dans les douze modèles plus bas). La question ne vaut que pour l'écran de l'artisan.</p>
+<p><b>À l'écran, je la garderais, barrée</b> (ta réponse E5). Décocher la variante la remet dans le total en un toucher, si le client change d'avis. Supprimée, il faudrait la redicter ou la retaper, prix compris. Et l'écart « +840.00 » de la variante se calcule sur elle.</p>
+<p>Si elle te gêne, le compromis est de la replier en une ligne grise, sans champs&nbsp;: « Remplacée&nbsp;: Peinture de façade, 2 couches, 5'400.00 ». Elle reste là pour décocher.</p>
+<div class="mk-compare">
+<figure><img src="PLANCHE-modeles-img/ecran-variante-avant.jpg" alt="Écran de l'offre au téléphone, variante pas encore cochée"><figcaption>Avant&nbsp;: variante proposée sous sa ligne.</figcaption></figure>
+<figure><img src="PLANCHE-modeles-img/ecran-variante-cochee.jpg" alt="Écran de l'offre au téléphone, variante cochée, ancienne ligne barrée"><figcaption>Cochée&nbsp;: l'ancienne ligne barrée, hors du total.</figcaption></figure>
+</div>
+<div class="decision" data-id="Ligne remplacée"><p class="q">À l'écran, quand la variante est cochée, l'ancienne ligne :</p><div class="opts"><button type="button" data-r="Reste barrée, comme maintenant">Reste barrée, comme maintenant<span class=reco>Recommandé : E5, on peut revenir en arrière</span></button><button type="button" data-r="Repliée en une ligne grise">Repliée en une ligne grise</button><button type="button" data-r="Supprimée">Supprimée</button></div><textarea aria-label="Commentaire Ligne remplacée" placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="modeles">Les douze modèles</h2>
+<div class="mk-filters" data-target="#liste">
+<button type="button" data-v="all" aria-pressed="true">Tout</button>
+<button type="button" data-v="offre">Offre</button>
+<button type="button" data-v="choix">Après le choix</button>
+<button type="button" data-v="facture">Facture</button>
+</div>
+<div id="liste">
+<section class="modele" id="m-sobre"><h3>Sobre <small>Classiques</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-sobre-p1.jpg" alt="Sobre : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-sobre-p2.jpg" alt="Sobre : Offre proposée, page 2"></div><figcaption>Sobre : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-sobre-p1.jpg" alt="Sobre : après le choix du client, page 1"><img src="PLANCHE-modeles-img/2-choix-sobre-p2.jpg" alt="Sobre : après le choix du client, page 2"></div><figcaption>Sobre : après le choix du client (2 pages)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-sobre-p1.jpg" alt="Sobre : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-sobre-p2.jpg" alt="Sobre : facture finale, page 2"></div><figcaption>Sobre : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Sobre"><p class="q">Sobre : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Sobre" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-lettre"><h3>Lettre <small>Classiques</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-lettre-p1.jpg" alt="Lettre : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-lettre-p2.jpg" alt="Lettre : Offre proposée, page 2"></div><figcaption>Lettre : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-lettre-p1.jpg" alt="Lettre : après le choix du client, page 1"><img src="PLANCHE-modeles-img/2-choix-lettre-p2.jpg" alt="Lettre : après le choix du client, page 2"></div><figcaption>Lettre : après le choix du client (2 pages)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-lettre-p1.jpg" alt="Lettre : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-lettre-p2.jpg" alt="Lettre : facture finale, page 2"></div><figcaption>Lettre : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Lettre"><p class="q">Lettre : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Lettre" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-atelier"><h3>Atelier <small>Classiques</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-atelier-p1.jpg" alt="Atelier : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-atelier-p2.jpg" alt="Atelier : Offre proposée, page 2"></div><figcaption>Atelier : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-atelier-p1.jpg" alt="Atelier : après le choix du client, page 1"><img src="PLANCHE-modeles-img/2-choix-atelier-p2.jpg" alt="Atelier : après le choix du client, page 2"></div><figcaption>Atelier : après le choix du client (2 pages)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-atelier-p1.jpg" alt="Atelier : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-atelier-p2.jpg" alt="Atelier : facture finale, page 2"></div><figcaption>Atelier : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Atelier"><p class="q">Atelier : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Atelier" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-bandeau"><h3>Bandeau <small>Couleur</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-bandeau-p1.jpg" alt="Bandeau : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-bandeau-p2.jpg" alt="Bandeau : Offre proposée, page 2"></div><figcaption>Bandeau : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-bandeau-p1.jpg" alt="Bandeau : après le choix du client, page 1"><img src="PLANCHE-modeles-img/2-choix-bandeau-p2.jpg" alt="Bandeau : après le choix du client, page 2"></div><figcaption>Bandeau : après le choix du client (2 pages)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-bandeau-p1.jpg" alt="Bandeau : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-bandeau-p2.jpg" alt="Bandeau : facture finale, page 2"></div><figcaption>Bandeau : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Bandeau"><p class="q">Bandeau : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Bandeau" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-moderne"><h3>Moderne <small>Couleur</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-moderne-p1.jpg" alt="Moderne : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-moderne-p2.jpg" alt="Moderne : Offre proposée, page 2"></div><figcaption>Moderne : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-moderne-p1.jpg" alt="Moderne : après le choix du client, page 1"><img src="PLANCHE-modeles-img/2-choix-moderne-p2.jpg" alt="Moderne : après le choix du client, page 2"></div><figcaption>Moderne : après le choix du client (2 pages)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-moderne-p1.jpg" alt="Moderne : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-moderne-p2.jpg" alt="Moderne : facture finale, page 2"></div><figcaption>Moderne : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Moderne"><p class="q">Moderne : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Moderne" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-lateral"><h3>Latéral <small>Couleur</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-lateral-p1.jpg" alt="Latéral : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-lateral-p2.jpg" alt="Latéral : Offre proposée, page 2"></div><figcaption>Latéral : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-lateral-p1.jpg" alt="Latéral : après le choix du client, page 1"></div><figcaption>Latéral : après le choix du client (1 page)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-lateral-p1.jpg" alt="Latéral : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-lateral-p2.jpg" alt="Latéral : facture finale, page 2"></div><figcaption>Latéral : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Latéral"><p class="q">Latéral : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Latéral" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-enseigne"><h3>Enseigne <small>Couleur</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-enseigne-p1.jpg" alt="Enseigne : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-enseigne-p2.jpg" alt="Enseigne : Offre proposée, page 2"></div><figcaption>Enseigne : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-enseigne-p1.jpg" alt="Enseigne : après le choix du client, page 1"><img src="PLANCHE-modeles-img/2-choix-enseigne-p2.jpg" alt="Enseigne : après le choix du client, page 2"></div><figcaption>Enseigne : après le choix du client (2 pages)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-enseigne-p1.jpg" alt="Enseigne : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-enseigne-p2.jpg" alt="Enseigne : facture finale, page 2"></div><figcaption>Enseigne : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Enseigne"><p class="q">Enseigne : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Enseigne" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-technique"><h3>Technique <small>Détaillés</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-technique-p1.jpg" alt="Technique : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-technique-p2.jpg" alt="Technique : Offre proposée, page 2"></div><figcaption>Technique : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-technique-p1.jpg" alt="Technique : après le choix du client, page 1"><img src="PLANCHE-modeles-img/2-choix-technique-p2.jpg" alt="Technique : après le choix du client, page 2"></div><figcaption>Technique : après le choix du client (2 pages)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-technique-p1.jpg" alt="Technique : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-technique-p2.jpg" alt="Technique : facture finale, page 2"></div><figcaption>Technique : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Technique"><p class="q">Technique : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Technique" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-recap"><h3>Récapitulatif <small>Détaillés</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-recap-p1.jpg" alt="Récapitulatif : Offre proposée, page 1"></div><figcaption>Récapitulatif : Offre proposée (1 page)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-recap-p1.jpg" alt="Récapitulatif : après le choix du client, page 1"></div><figcaption>Récapitulatif : après le choix du client (1 page)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-recap-p1.jpg" alt="Récapitulatif : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-recap-p2.jpg" alt="Récapitulatif : facture finale, page 2"></div><figcaption>Récapitulatif : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Récapitulatif"><p class="q">Récapitulatif : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Récapitulatif" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-chantier"><h3>Chantier <small>Détaillés</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-chantier-p1.jpg" alt="Chantier : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-chantier-p2.jpg" alt="Chantier : Offre proposée, page 2"></div><figcaption>Chantier : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-chantier-p1.jpg" alt="Chantier : après le choix du client, page 1"><img src="PLANCHE-modeles-img/2-choix-chantier-p2.jpg" alt="Chantier : après le choix du client, page 2"></div><figcaption>Chantier : après le choix du client (2 pages)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-chantier-p1.jpg" alt="Chantier : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-chantier-p2.jpg" alt="Chantier : facture finale, page 2"></div><figcaption>Chantier : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Chantier"><p class="q">Chantier : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Chantier" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-epure"><h3>Épuré <small>Simples</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-epure-p1.jpg" alt="Épuré : Offre proposée, page 1"><img src="PLANCHE-modeles-img/1-offre-epure-p2.jpg" alt="Épuré : Offre proposée, page 2"></div><figcaption>Épuré : Offre proposée (2 pages)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-epure-p1.jpg" alt="Épuré : après le choix du client, page 1"><img src="PLANCHE-modeles-img/2-choix-epure-p2.jpg" alt="Épuré : après le choix du client, page 2"></div><figcaption>Épuré : après le choix du client (2 pages)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-epure-p1.jpg" alt="Épuré : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-epure-p2.jpg" alt="Épuré : facture finale, page 2"></div><figcaption>Épuré : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Épuré"><p class="q">Épuré : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Épuré" placeholder="Commentaire"></textarea></div></section><section class="modele" id="m-marge"><h3>Marge <small>Simples</small></h3><div class="docs"><figure class="doc" data-v="offre"><div class="pages"><img src="PLANCHE-modeles-img/1-offre-marge-p1.jpg" alt="Marge : Offre proposée, page 1"></div><figcaption>Marge : Offre proposée (1 page)</figcaption></figure><figure class="doc" data-v="choix"><div class="pages"><img src="PLANCHE-modeles-img/2-choix-marge-p1.jpg" alt="Marge : après le choix du client, page 1"></div><figcaption>Marge : après le choix du client (1 page)</figcaption></figure><figure class="doc" data-v="facture"><div class="pages"><img src="PLANCHE-modeles-img/3-facture-marge-p1.jpg" alt="Marge : facture finale, page 1"><img src="PLANCHE-modeles-img/3-facture-marge-p2.jpg" alt="Marge : facture finale, page 2"></div><figcaption>Marge : facture finale (2 pages)</figcaption></figure></div><div class="decision" data-id="Marge"><p class="q">Marge : tout est bon ?</p><div class="opts"><button type="button" data-r="Bon">Bon</button><button type="button" data-r="À reprendre">À reprendre</button></div><textarea aria-label="Commentaire Marge" placeholder="Commentaire"></textarea></div></section>
+</div>
+
+<h2 id="constats">Déjà là avant</h2>
+<div class="carte alerte">
+<p><b>La facture perd les pièces.</b> Toutes les lignes passent sous « Hors catalogue », avec un « Total hors catalogue » qui répète le sous-total. Défaut d'avant ce chantier (la facture range par catalogue, les lignes dictées n'en ont pas)&nbsp;; je te l'avais signalé.</p>
+<p><b>Page 2 presque vide.</b> Dans dix modèles sur douze, l'offre déborde et la page 2 ne porte que les conditions et les signatures. Le bloc de fin ne se coupe pas, il part entier en page 2.</p>
+<div class="decision" data-id="Avant ce chantier"><p class="q">Ces deux défauts : quand s'en occuper ?</p><div class="opts"><button type="button" data-r="Dans ce chantier">Dans ce chantier</button><button type="button" data-r="Chantier à part, plus tard">Chantier à part, plus tard<span class=reco>Recommandé : hors du périmètre des options</span></button><button type="button" data-r="On laisse">On laisse</button></div><textarea aria-label="Commentaire Avant ce chantier" placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="copier">Copier</h2>
+<div class="carte recap">
+<div class="decision" data-id="Remarques"><p class="q">Autre chose ?</p><div class="opts"></div><textarea aria-label="Commentaire Remarques" placeholder="Commentaire"></textarea></div>
+<p><textarea data-recap readonly aria-label="Réponses à copier"></textarea></p>
+<p><button class="copier" type="button" data-copier>Copier le texte</button><span class="copie-ok" data-copie-ok hidden>Copié</span></p>
+</div>
+</main>
+<script>
+(function () {
+  var CLE = 'planche-modeles-2026-11-23', rep = {}, NB = '\u00a0';
+  try { rep = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { rep = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(rep)); } catch (e) { /* stockage refusé : la page marche sans */ } }
+  function recap() {
+    var l = [];
+    document.querySelectorAll('.decision').forEach(function (dv) { var id = dv.dataset.id, r = rep[id] || {}; if (!r.v && !r.c) return; l.push(id + NB + ': ' + (r.v || '') + (r.c ? (r.v ? '. ' : '') + r.c : '')); });
+    document.querySelector('[data-recap]').value = l.length ? l.join('\n') : '(aucune réponse encore)';
+  }
+  document.querySelectorAll('.decision').forEach(function (dv) {
+    var id = dv.dataset.id, r = rep[id] || {};
+    dv.querySelectorAll('.opts button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.r === r.v));
+      b.addEventListener('click', function () {
+        rep[id] = rep[id] || {}; rep[id].v = rep[id].v === b.dataset.r ? '' : b.dataset.r;
+        dv.querySelectorAll('.opts button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.r === rep[id].v)); });
+        garder(); recap();
+      });
+    });
+    var ta = dv.querySelector('textarea'); ta.value = r.c || '';
+    ta.addEventListener('input', function () { rep[id] = rep[id] || {}; rep[id].c = ta.value.trim(); garder(); recap(); });
+  });
+  document.querySelector('[data-copier]').addEventListener('click', function () {
+    var ta = document.querySelector('[data-recap]'), ok = document.querySelector('[data-copie-ok]');
+    function fait() { ok.hidden = false; setTimeout(function () { ok.hidden = true; }, 2000); }
+    if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(fait, function () { ta.select(); document.execCommand('copy'); fait(); });
+    else { ta.select(); document.execCommand('copy'); fait(); }
+  });
+  recap();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body></html>
