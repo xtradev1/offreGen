@@ -2,7 +2,7 @@
 
 {# « Voici ce qu'on intègre » (maquette validée le 2026-11-20 : D3 à D7). Un seul formulaire : les cases, les prix à
    choisir et le crayon. Rien n'entre au catalogue avant « Ajouter » ; une réponse manquante ramène la page, marquée. #}
-{% block entete_html %}<link rel="stylesheet" href="/css/import-catalogue.css"><script type="module" src="/js/import-catalogue.js"></script>{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/import-catalogue.css') }}"><script type="module" src="{{ fichier('/js/import-catalogue.js') }}"></script>{% endblock %}
 {% block titre %}Voici ce qu'on intègre · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/catalogue">Catalogue</a>{% endblock %}
 {% block entete %}Voici ce qu'on intègre{% endblock %}

@@ -152,13 +152,21 @@ final class OffreControleur
     public function pdf(Request $requete, array $parametres): Response
     {
         $d = $this->donnees($requete, $parametres);
-        $pdf = self::rendrePdf($this->c, $d);
-        $nom = 'Offre-' . $d['offre']['numero'] . '.pdf';
-        return new Response($pdf, 200, [
+        // Lot 5 du chantier sans rechargement : le PDF d'une offre qui n'a pas changé n'est ni refait ni retéléchargé
+        // (gardé au serveur, 304 pour le navigateur qui l'a déjà).
+        $garde = $this->c->pdfGarde();
+        $empreinte = $garde->empreinte(self::htmlPdf($this->c, $d));
+        $entetes = [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $nom . '"',
-            'Cache-Control' => 'private, no-store',
-        ]);
+            'Content-Disposition' => 'inline; filename="Offre-' . $d['offre']['numero'] . '.pdf"',
+            'Cache-Control' => 'private, no-cache',
+            'ETag' => '"' . $empreinte . '"',
+        ];
+        if (in_array('"' . $empreinte . '"', $requete->getETags(), true)) {
+            return new Response('', 304, $entetes);
+        }
+        $pdf = $garde->obtenir($requete->attributes->getInt('_artisan'), $d['offre']['id'], $empreinte, fn (): string => self::rendrePdf($this->c, $d));
+        return new Response($pdf, 200, $entetes);
     }
 
     /**
@@ -265,6 +273,16 @@ final class OffreControleur
     }
 
     /**
+     * L'id du titre d'un groupe de lignes (pièce ou catégorie), stable d'une page à l'autre : un geste sur une ligne
+     * d'une offre rangée par pièce redemande sa ligne et le sous-total de sa pièce, pas toute la liste (chantier sans
+     * rechargement, 2026-11-23).
+     */
+    private static function idGroupe(string $cle): string
+    {
+        return 'g-' . substr(hash('xxh3', $cle), 0, 10);
+    }
+
+    /**
      * Groupes dans l'ordre où leur première ligne paraît dans l'offre, donc dans l'ordre de la dictée.
      * Par pièce dès qu'une ligne en a une, « Général » en tête ; sinon par catégorie du catalogue (sous-chantier 28,
      * décisions P1 A et P2 A de Xavier, 2026-11-17). Sert aussi aux lignes d'une facture, qui n'ont pas de pièce.
@@ -311,7 +329,7 @@ final class OffreControleur
         }
         $groupes = [];
         if ($parPiece && $general) {
-            $groupes[''] = ['nom' => Piece::GENERAL, 'lignes' => [], 'total' => 0, 'piece' => null, 'par_piece' => true];
+            $groupes[''] = ['nom' => Piece::GENERAL, 'lignes' => [], 'total' => 0, 'piece' => null, 'par_piece' => true, 'id' => self::idGroupe('')];
         }
         foreach ($lignes as $i => $l) {
             if (!$entre($l)) {
@@ -341,7 +359,7 @@ final class OffreControleur
                     $retenue = $v;
                 }
             }
-            $groupes[$cle] ??= ['nom' => $nom, 'lignes' => [], 'total' => 0, 'piece' => $piece, 'par_piece' => $parPiece];
+            $groupes[$cle] ??= ['nom' => $nom, 'lignes' => [], 'total' => 0, 'piece' => $piece, 'par_piece' => $parPiece, 'id' => self::idGroupe($cle)];
             $groupes[$cle]['lignes'][] = self::rangee($l, $retenue === null ? ($totauxLignes[$i] ?? 0) : null) + ['variantes' => $sous, 'retenue' => $retenue, 'remplacee' => $retenue !== null];
             $groupes[$cle]['total'] += $dansLeTotal;
         }

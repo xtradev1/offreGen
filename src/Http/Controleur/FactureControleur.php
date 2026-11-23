@@ -533,11 +533,15 @@ final class FactureControleur
         if ($pdf === null) {
             throw new Conflit("Émettez la facture pour obtenir son PDF : un brouillon n'en a pas.");
         }
-        return new Response($pdf, 200, [
+        // Le PDF d'une facture émise ne change plus : le navigateur qui l'a déjà reçoit un 304 (chantier sans rechargement).
+        $etag = '"' . substr(hash('xxh3', $pdf), 0, 16) . '"';
+        $entetes = [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . self::fichier($f) . '"',
-            'Cache-Control' => 'private, no-store',
-        ]);
+            'Cache-Control' => 'private, no-cache',
+            'ETag' => $etag,
+        ];
+        return in_array($etag, $requete->getETags(), true) ? new Response('', 304, $entetes) : new Response($pdf, 200, $entetes);
     }
 
     /**

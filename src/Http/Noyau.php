@@ -37,9 +37,17 @@ final class Noyau
     /**
      * @param list<Route> $routes
      * @param (\Closure(string): void)|null $journal reçoit les erreurs ; par défaut, error_log
+     * @param (\Closure(int): \OffreGen\Donnees\DepotEnvois)|null $envois les clés des gestes d'un artisan (lot 4)
+     * @param (\Closure(): \DateTimeImmutable)|null $horloge
      */
-    public function __construct(array $routes, private readonly Environment $twig, private readonly Garde $garde, ?\Closure $journal = null)
-    {
+    public function __construct(
+        array $routes,
+        private readonly Environment $twig,
+        private readonly Garde $garde,
+        ?\Closure $journal = null,
+        private readonly ?\Closure $envois = null,
+        private readonly ?\Closure $horloge = null,
+    ) {
         $this->journal = $journal ?? static function (string $message): void {
             error_log($message);
         };
@@ -106,8 +114,15 @@ final class Noyau
 
         $this->garde->entrer($requete);
         try {
+            // Un envoi par morceaux (Http\Morceaux) attend une réponse qu'il peut lire : pas de renvoi à la connexion.
+            // En GET, il relit des morceaux de la page sans rien écrire (après un refus, au retour du réseau).
+            $morceaux = $requete->isMethod('POST') || $requete->isMethod('GET') ? Morceaux::demandes($requete) : null;
             if ($route->droit === Route::ARTISAN) {
                 $artisan = $this->garde->artisan($requete);
+                if ($artisan === null && $morceaux !== null) {
+                    // Constaté le 2026-11-23 : la quantité tapée après la session perdue restait sur « Enregistrement… ».
+                    return self::refusMorceaux(401, Morceaux::SESSION, 'perdue', 'Session expirée : reconnectez-vous.');
+                }
                 if ($artisan === null) {
                     return $route->visiteur !== null ? ($route->visiteur)($requete) : new RedirectResponse('/connexion', 303);
                 }
@@ -128,13 +143,25 @@ final class Noyau
                     return $this->erreur(413, 'Fichier trop gros');
                 }
                 if (!$this->garde->jetonValide($requete)) {
-                    return $this->erreur(403, 'Formulaire expiré, rechargez la page');
+                    return $morceaux !== null
+                        ? self::refusMorceaux(403, Morceaux::JETON, 'refuse', 'Formulaire expiré, rechargez la page.')
+                        : $this->erreur(403, 'Formulaire expiré, rechargez la page');
                 }
             }
 
             unset($parametres['_route']);
             /** @var array<string, string> $parametres */
-            return ($route->action)($requete, $parametres);
+            $reponse = $this->executer($route, $requete, $parametres);
+            if ($morceaux !== null && $reponse instanceof RedirectResponse) {
+                return Morceaux::ailleurs($requete, $reponse->getTargetUrl())
+                    ? Morceaux::aller($reponse->getTargetUrl())
+                    : $this->decouper($requete, $reponse->getTargetUrl(), $morceaux);
+            }
+            if ($morceaux !== null && $requete->isMethod('GET') && $reponse->getStatusCode() === 200
+                && str_contains((string) $reponse->headers->get('Content-Type', 'text/html'), 'html')) {
+                return Morceaux::reponse(Morceaux::extraire((string) $reponse->getContent(), $morceaux), $requete->getRequestUri());
+            }
+            return $reponse;
         } catch (PageIntrouvable) {
             return $this->erreur(404, 'Page introuvable');
         } catch (Conflit $e) {
@@ -145,6 +172,73 @@ final class Noyau
         } finally {
             $this->garde->sortir();
         }
+    }
+
+    /**
+     * L'action de la route. Un envoi d'un artisan avec sa clé (X-Cle-Envoi, chantier sans rechargement, lot 4) n'est fait
+     * qu'une fois : rejoué (réseau revenu, page quittée pendant l'envoi), il reçoit la redirection d'alors, sans rien
+     * refaire ; encore en cours, un 409 qu'il réessaiera. Une action qui ne mène nulle part (refus, erreur) libère la clé.
+     *
+     * @param array<string, string> $parametres
+     */
+    private function executer(Route $route, Request $requete, array $parametres): Response
+    {
+        $artisan = $requete->attributes->get('_artisan');
+        $cle = $requete->isMethod('POST') && is_int($artisan) && $this->envois !== null && $this->horloge !== null ? Morceaux::cle($requete) : null;
+        if ($cle === null) {
+            return ($route->action)($requete, $parametres);
+        }
+        $envois = ($this->envois)($artisan);
+        $deja = $envois->adresse($cle);
+        if ($deja !== null && $deja !== '') {
+            return new RedirectResponse($deja, 303);
+        }
+        if ($deja === '' || !$envois->reserver($cle, ($this->horloge)())) {
+            throw new Conflit(Morceaux::EN_COURS);
+        }
+        try {
+            $reponse = ($route->action)($requete, $parametres);
+        } catch (\Throwable $e) {
+            $envois->liberer($cle);
+            throw $e;
+        }
+        if ($reponse instanceof RedirectResponse) {
+            $envois->noter($cle, $reponse->getTargetUrl());
+        } else {
+            $envois->liberer($cle);
+        }
+        return $reponse;
+    }
+
+    /**
+     * La page où menait la redirection (ou celle de X-Morceaux-Page), rendue par une requête interne avec la même
+     * session, puis découpée. Une page qui renvoie encore ailleurs (assistant du premier lancement, fin de démo) ou ne
+     * se rend pas : le navigateur y va lui-même.
+     *
+     * @param list<string> $ids
+     */
+    private function decouper(Request $requete, string $cible, array $ids): Response
+    {
+        $chemin = Morceaux::page($requete, $cible);
+        if ($chemin === null) {
+            return Morceaux::aller('/');
+        }
+        $serveur = array_filter($requete->server->all(), static fn (string $cle): bool => !in_array($cle, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'REQUEST_URI', 'QUERY_STRING'], true)
+            && !str_starts_with($cle, 'HTTP_X_MORCEAUX') && !str_starts_with($cle, 'HTTP_X_CLE') && !str_starts_with($cle, 'HTTP_CONTENT_'), ARRAY_FILTER_USE_KEY);
+        $interne = Request::create($chemin, 'GET', [], $requete->cookies->all(), [], $serveur);
+        $interne->setSession($requete->getSession());
+        $page = $this->repondre($interne);
+        $type = (string) $page->headers->get('Content-Type', 'text/html');
+        if ($page->getStatusCode() !== 200 || !str_contains($type, 'html')) {
+            $ailleurs = $page->isRedirection() ? (string) $page->headers->get('Location', $cible) : $cible;
+            return Morceaux::aller(Morceaux::local($ailleurs) ? $ailleurs : $cible);
+        }
+        return Morceaux::reponse(Morceaux::extraire((string) $page->getContent(), $ids), $cible);
+    }
+
+    private static function refusMorceaux(int $code, string $entete, string $valeur, string $message): Response
+    {
+        return new Response($message, $code, ['Content-Type' => 'text/plain; charset=UTF-8', 'Cache-Control' => 'no-store', $entete => $valeur]);
     }
 
     /** Qui passe une page réservée : l'administrateur partout, le modérateur sauf l'argent et l'équipe, le commercial le reste. */

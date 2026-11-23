@@ -21,6 +21,9 @@ final class Garde
 {
     public const JETON = 'offregen';
 
+    /** @var \WeakMap<Request, string> la valeur masquée du jeton, une par requête */
+    private \WeakMap $jetons;
+
     /** @param \Closure(): SessionStorageInterface $stockage */
     public function __construct(
         private readonly Authentification $authentification,
@@ -28,6 +31,7 @@ final class Garde
         private readonly RequestStack $pile,
         private readonly \Closure $stockage,
     ) {
+        $this->jetons = new \WeakMap();
     }
 
     public function entrer(Request $requete): void
@@ -62,10 +66,19 @@ final class Garde
         return is_string($valeur) && $valeur !== '' && $this->csrf->isTokenValid(new CsrfToken(self::JETON, $valeur));
     }
 
-    /** Valeur du jeton à mettre dans chaque formulaire (fonction Twig csrf()). */
+    /**
+     * Valeur du jeton à mettre dans chaque formulaire (fonction Twig csrf()). Masquée une fois par requête : tous les
+     * formulaires d'une page portent la même valeur, la page suivante un autre masque (la parade contre BREACH tient à
+     * chaque réponse). Masquée à chaque appel, une page de 277 formulaires pesait 36,7 Ko compressés au lieu de 9,6
+     * (chantier sans rechargement, 2026-11-23).
+     */
     public function jeton(): string
     {
-        return $this->csrf->getToken(self::JETON)->getValue();
+        $requete = $this->pile->getCurrentRequest();
+        if ($requete === null) {
+            return $this->csrf->getToken(self::JETON)->getValue();
+        }
+        return $this->jetons[$requete] ??= $this->csrf->getToken(self::JETON)->getValue();
     }
 
     /**

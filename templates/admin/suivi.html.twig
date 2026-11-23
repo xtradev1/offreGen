@@ -3,7 +3,7 @@
 {# Le suivi (chantier onboarding, lot 7 ; maquettes v2 et v3, O10 et O19 de Xavier) : les démos encore ouvertes dans
    la portée du membre et leur activité, puis ses chiffres. Aucun contenu d'offre : un nom, un métier, des dates. La
    part du commercial (O32 à O36) viendra avec les paiements (lot B3 de l'administration, PLAN.md lot 9). #}
-{% block entete_html %}<link rel="stylesheet" href="/css/suivi.css">{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/suivi.css') }}">{% endblock %}
 {% block tete %}<div class="admin-tete avec-action"><div><h1>{{ titre }}</h1><p>{{ mois }}</p></div><a class="btn primary pc-seul" href="/admin/demos/nouvelle">Créer une démo</a></div>{% endblock %}
 
 {% block contenu %}

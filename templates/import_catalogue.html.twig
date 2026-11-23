@@ -3,7 +3,7 @@
 {# Import du catalogue depuis d'anciennes offres (chantier 2026-11-20_import-catalogue, maquette validée le 2026-11-20).
    import-catalogue.js sort le texte de chaque PDF dans le navigateur : le fichier ne quitte pas l'appareil. Il envoie
    ensuite chaque offre au serveur, qui la lit ; puis le regroupement, puis « Voir les produits trouvés ». #}
-{% block entete_html %}<link rel="stylesheet" href="/css/import-catalogue.css"><script type="module" src="/js/import-catalogue.js"></script>{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/import-catalogue.css') }}"><script type="module" src="{{ fichier('/js/import-catalogue.js') }}"></script>{% endblock %}
 {% block titre %}Importer d'anciennes offres · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/catalogue">Catalogue</a>{% endblock %}
 {% block entete %}Importer d'anciennes offres{% endblock %}

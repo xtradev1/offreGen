@@ -5,7 +5,7 @@
    page de confirmation, la phrase sous le bouton suffit. E4 : 20 / 30 / 40 / 50 % ou un montant en CHF, TVA comprise.
    E5 : « Corriger des lignes » (finale seulement) ouvre un brouillon qui prendra son numéro à la création. Sur PC (E8) :
    réglages à gauche, facture à droite (data-feuille-large). #}
-{% block entete_html %}<link rel="stylesheet" href="/css/document.css"><link rel="stylesheet" href="/css/document-ecran.css"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/document.css') }}"><link rel="stylesheet" href="{{ fichier('/css/document-ecran.css') }}"><link rel="stylesheet" href="/reglages/marque.css?v={{ m.version }}">{% endblock %}
 {% block titre %}Facturer l'offre {{ offre.numero }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
 {% block entete %}Facturer l'offre {{ offre.numero }}{% endblock %}

@@ -6,8 +6,8 @@
    6 à 11 de son guide (admin/_guide_equipe.html.twig), jusqu'à « Revenir à mon espace ». #}
 {% set equipe = retour_equipe() %}
 {% set d = equipe ? 5 : 0 %}
-<link rel="stylesheet" href="/css/guide.css">
-<script src="/js/guide.js" defer></script>
+<link rel="stylesheet" href="{{ fichier('/css/guide.css') }}">
+<script src="{{ fichier('/js/guide.js') }}" defer></script>
 <div class="guide" hidden data-guide="{{ equipe ? 'equipe' : 'artisan' }}" data-total="{{ equipe ? 11 : 5 }}" data-fin="/guide/fini" data-csrf="{{ csrf() }}">
   {% if page == 'offres' %}
     <template data-n="{{ 1 + d }}" data-cible="main [data-enregistrer] > span, .micro-central > span" data-cible-pc=".micro-central" data-forme="rond" data-ouvre="[data-guide-conseils]">{{ texte(equipe ? 'g.micro' : 'a.micro') }}</template>

@@ -7,6 +7,7 @@
 {% block titre %}Brouillon de facture · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/offres/{{ f.offre_id }}">Offre {{ f.offre_numero }}</a>{% endblock %}
 {% block entete %}Brouillon de facture{% endblock %}
+{% block ecran_donnees %} data-resume="totaux actions-facture manque-facture" data-fenetre="lignes"{% endblock %}
 
 {% block contenu %}
   <div class="ohead">
@@ -17,12 +18,13 @@
       <span class="muted">N°&nbsp;{{ f.numero ?? numero_prevu ~ ' à la création' }} · datée du {{ f.date_facture|jour }}, échéance le {{ f.echeance|jour }}</span>
       <button class="btn pc-seul doc-cote" type="button" data-doc-cote="/factures/{{ f.id }}/document" data-doc-cote-toujours aria-pressed="false" hidden>Document à côté</button></span>
   </div>
-  {% if manque > 0 %}<p class="alerte bad">{{ manque }} ligne{{ manque > 1 ? 's' : '' }} sans prix&nbsp;: à compléter avant de créer la facture.</p>{% endif %}
+  {# Toujours là, caché sans ligne sans prix : un morceau de page (chantier sans rechargement) peut le faire paraître. #}
+  <p class="alerte bad" id="manque-facture"{% if manque == 0 %} hidden{% endif %}>{% if manque > 0 %}{{ manque }} ligne{{ manque > 1 ? 's' : '' }} sans prix&nbsp;: à compléter avant de créer la facture.{% endif %}</p>
 
   {% include '_lignes.html.twig' with {base: '/factures/' ~ f.id, modifiable: true, libre: false, vide: "Aucune ligne. « + », en bas, en ajoute une."} %}
   {% include '_ajout_pc.html.twig' with {base: '/factures/' ~ f.id} %}
 
-  <div class="totals">
+  <div class="totals" id="totaux">
     {% set avec_tva = montants.par_taux|filter(g => g.taux > 0)|length > 0 %}
     <div class="r"><span>Sous-total{% if avec_tva and montants.rabais is empty %} HT{% endif %}</span><span>{{ montants.sous_total|chf }}</span></div>
     {% for r in montants.rabais %}<div class="r"><span>{{ r.libelle }}{% if r.pour_dix_mille %} {{ r.pour_dix_mille|taux }}{% endif %}</span><span>−&nbsp;{{ r.montant|chf }}</span></div>{% endfor %}
@@ -46,7 +48,7 @@
 
 {% block actions %}
   {% include '_feuille.html.twig' with {options: {recharger: '1'}} %}
-  <div class="actionbar avec-phrase">
+  <div class="actionbar avec-phrase" id="actions-facture">
     <a class="btn ajout" href="/factures/{{ f.id }}/ajouter" aria-label="Ajouter une ligne" data-en-feuille>
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ligne</a>
     <button class="btn primary grand" type="submit" form="creer-facture">Créer la facture</button>

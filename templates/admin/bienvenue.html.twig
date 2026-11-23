@@ -3,7 +3,7 @@
 {# La bienvenue d'un commercial (chantier onboarding, lot 8 ; maquette v2, O11 de Xavier : « 2 ou 3 petites bienvenue
    dans l'équipe, qui présentent un petit peu le truc »). Trois écrans, puis « Faire ma démo d'entraînement » lance le
    guide à anneau. Rouvrable depuis l'aide à la vente. #}
-{% block entete_html %}<link rel="stylesheet" href="/css/suivi.css">{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/suivi.css') }}">{% endblock %}
 {% block tete %}{% endblock %}
 
 {% block contenu %}

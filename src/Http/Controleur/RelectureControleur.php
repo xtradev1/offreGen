@@ -35,7 +35,9 @@ final class RelectureControleur
         $offre = $this->offres($requete)->parId(Parametres::id($parametres, 'id')) ?? throw new PageIntrouvable();
         $restantes = $this->aRelire($requete, $offre['id']);
         $l = $restantes[0] ?? null;
-        return $this->rendre($offre, $l, count($restantes), $l === null ? [] : self::champs($l), [], 200);
+        // Toutes les lignes à relire sont dans la page (chantier sans rechargement, 2026-11-23) : « C'est juste » montre
+        // la suivante tout de suite, l'envoi suit. Sans JavaScript, la première seule se voit, comme avant.
+        return $this->rendre($offre, $l, count($restantes), $l === null ? [] : self::champs($l), [], 200, array_slice($restantes, 1));
     }
 
     /** @param array<string, string> $parametres */
@@ -112,8 +114,9 @@ final class RelectureControleur
      * @param Ligne|null $l
      * @param array<string, string> $champs
      * @param array<string, string> $erreurs
+     * @param list<Ligne> $suivantes les lignes à relire après celle-ci, déjà dans la page
      */
-    private function rendre(array $offre, ?array $l, int $restantes, array $champs, array $erreurs, int $code): Response
+    private function rendre(array $offre, ?array $l, int $restantes, array $champs, array $erreurs, int $code, array $suivantes = []): Response
     {
         return new Response($this->c->twig()->render('relecture.html.twig', [
             'offre' => $offre,
@@ -121,6 +124,7 @@ final class RelectureControleur
             'restantes' => $restantes,
             'champs' => $champs,
             'erreurs' => $erreurs,
+            'suivantes' => array_map(static fn (array $s): array => ['l' => $s, 'champs' => self::champs($s)], $suivantes),
         ]), $code);
     }
 }

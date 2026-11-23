@@ -7,10 +7,10 @@
   <meta name="robots" content="noindex">
   <title>Dicta, vos offres dictées</title>
   <meta name="theme-color" content="#23272D">
-  <link rel="icon" type="image/svg+xml" href="/img/dicta-icone.svg">
-  <link rel="apple-touch-icon" href="/img/dicta-icone-180.png">
-  <link rel="stylesheet" href="/css/site.css">
-  <script src="/js/site.js"></script>
+  <link rel="icon" type="image/svg+xml" href="{{ fichier('/img/dicta-icone.svg') }}">
+  <link rel="apple-touch-icon" href="{{ fichier('/img/dicta-icone-180.png') }}">
+  <link rel="stylesheet" href="{{ fichier('/css/site.css') }}">
+  <script src="{{ fichier('/js/site.js') }}"></script>
 </head>
 {# Page statique : aucun attribut style, aucun script en ligne (CSP fermée). Les deux états sont dans la page, la classe « avant » de <html> choisit. #}
 <body>

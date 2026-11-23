@@ -2,10 +2,10 @@
    « modifiable » : faux pour une facture émise ou annulée, qui ne montre plus aucun champ.
    « libre » : faux sur une facture, où l'étiquette « Ligne libre » n'apprend rien au lecteur.
    Chaque ligne d'offre est suivie de ses variantes (O2) ; les options sont sous le total (offre.html.twig, E2 A). #}
-<div class="rows une{% if not modifiable %} figees{% endif %}">
+<div class="rows une{% if not modifiable %} figees{% endif %}" id="lignes">
   {% for g in groupes %}
     {# Par pièce (sous-chantier 28) : le sous-total au titre, « Renommer » pour une pièce (P5), pas pour « Général ». #}
-    <div class="cat"><h5>{{ g.nom }}{% if g.par_piece ?? false %} <span class="st">{{ g.total|montant }}</span>{% if modifiable and g.piece is not null %} <a class="renommer" href="{{ base }}/pieces?nom={{ g.piece|url_encode }}">Renommer</a>{% endif %}{% endif %}</h5><span class="ch">Qté</span><span class="ch">Prix</span><span class="ch">Total</span><span></span></div>
+    <div class="cat"{% if g.id is defined %} id="{{ g.id }}"{% endif %}><h5>{{ g.nom }}{% if g.par_piece ?? false %} <span class="st">{{ g.total|montant }}</span>{% if modifiable and g.piece is not null %} <a class="renommer" href="{{ base }}/pieces?nom={{ g.piece|url_encode }}" data-en-feuille>Renommer</a>{% endif %}{% endif %}</h5><span class="ch">Qté</span><span class="ch">Prix</span><span class="ch">Total</span><span></span></div>
     {% for r in g.lignes %}
       {% include '_rangee.html.twig' with {r: r, sorte: (r.remplacee ?? false) ? 'remplacee' : 'ligne'} %}
       {% for v in r.variantes ?? [] %}

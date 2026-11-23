@@ -6,19 +6,19 @@
   <meta name="robots" content="noindex">
   <title>{% block titre %}{{ titre }} · {{ role.espace }} · {{ nom_application }}{% endblock %}</title>
   <meta name="theme-color" content="#23272D">
-  <link rel="icon" type="image/svg+xml" href="/img/dicta-icone.svg">
-  <link rel="apple-touch-icon" href="/img/dicta-icone-180.png">
-  <link rel="stylesheet" href="/css/app.css">
-  <link rel="stylesheet" href="/css/admin.css">
-  <script src="/js/app.js" defer></script>
-  <script src="/js/admin.js" defer></script>
+  <link rel="icon" type="image/svg+xml" href="{{ fichier('/img/dicta-icone.svg') }}">
+  <link rel="apple-touch-icon" href="{{ fichier('/img/dicta-icone-180.png') }}">
+  <link rel="stylesheet" href="{{ fichier('/css/app.css') }}">
+  <link rel="stylesheet" href="{{ fichier('/css/admin.css') }}">
+  <script src="{{ fichier('/js/app.js') }}" defer></script>
+  <script src="{{ fichier('/js/admin.js') }}" defer></script>
   {% block entete_html %}{% endblock %}
 </head>
 {# La partie administration (G1, 2026-11-17) : sa mise en page et son menu. L'en-tête ne porte pas de titre
    (Xavier, 2026-11-19) : le logo, et le rôle cerclé de terracotta, qui dit qu'on n'est plus dans l'application. #}
 <body class="admin">
   <div class="app">
-    <header class="bar">{# Sur PC, le logo est dans le menu de gauche. #}{% block retour %}<img class="logo mobile-seul" src="/img/dicta-logo-sombre.svg" alt="{{ nom_application }}" width="177" height="64">{% endblock %}<span class="role-puce">{{ role.libelle }}</span></header>
+    <header class="bar">{# Sur PC, le logo est dans le menu de gauche. #}{% block retour %}<img class="logo mobile-seul" src="{{ fichier('/img/dicta-logo-sombre.svg') }}" alt="{{ nom_application }}" width="177" height="64">{% endblock %}<span class="role-puce">{{ role.libelle }}</span></header>
     <main class="screen gris">
       {% block tete %}<div class="admin-tete"><h1>{{ titre }}</h1>{% block sous %}{% endblock %}</div>{% endblock %}
       {% block contenu %}{% endblock %}

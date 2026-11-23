@@ -3,7 +3,8 @@
 {% block titre %}Mes offres · {{ nom_application }}{% endblock %}
 {% block entete %}Mes offres{% endblock %}
 {% block ecran_classe %} gris avec-rond{% endblock %}
-{% block entete_html %}{% if vos_prix.nombre > 0 %}<link rel="stylesheet" href="/css/vos-prix.css"><script src="/js/vos-prix.js" defer></script>{% endif %}{% endblock %}
+{% block ecran_donnees %} data-resume="compte-offres archives"{% endblock %}
+{% block entete_html %}{% if vos_prix.nombre > 0 %}<link rel="stylesheet" href="{{ fichier('/css/vos-prix.css') }}"><script src="{{ fichier('/js/vos-prix.js') }}" defer></script>{% endif %}{% endblock %}
 
 {% block contenu %}
   {% set m = mots() %}
@@ -13,7 +14,7 @@
   <p class="compteur">{{ du_mois }} offre{% if du_mois > 1 %}s{% endif %} ce mois</p>
 
   {# « Vos prix » : les produits d'exemple d'un essai attendent leur prix (chantier des métiers, 2026-11-19). #}
-  {% if vos_prix.nombre > 0 %}
+  <div id="vos-prix">{% if vos_prix.nombre > 0 %}
     {% if vos_prix.reduit %}
       <p class="vp-rappel"><span>{{ vos_prix.nombre }} produit{% if vos_prix.nombre > 1 %}s{% endif %} sans prix</span><a href="/vos-prix">Compléter</a></p>
     {% else %}
@@ -26,9 +27,9 @@
         </div>
       </div>
     {% endif %}
-  {% endif %}
+  {% endif %}</div>
 
-  {% if en_preparation is not empty or echecs is not empty %}
+  <div id="preparation">{% if en_preparation is not empty or echecs is not empty %}
     <div class="cat liste"><h5>En préparation</h5></div>
     {% for e in en_preparation %}
       <a class="ocard" href="/enregistrements/{{ e.uuid }}">
@@ -47,9 +48,9 @@
         </span>
       </div>
     {% endfor %}
-  {% endif %}
+  {% endif %}</div>
 
-  <div class="cat liste"><h5>Offres</h5><span>{{ offres|length }}</span></div>
+  <div class="cat liste"><h5>Offres</h5><span id="compte-offres">{{ offres|length }}</span></div>
   {% if offres|length > 1 %}
     <nav class="fchips tri" aria-label="Trier les offres">
       {% for cle, libelle in tris %}<a href="{{ cle == 'recent' ? '/' : '/?tri=' ~ cle }}"{% if cle == tri %} aria-current="true"{% endif %}><span>{{ libelle }}</span></a>{% endfor %}
@@ -57,8 +58,9 @@
   {% endif %}
   {# Balayer une offre vers la gauche montre Archiver et Supprimer (app.js) ; au clavier, la touche
      Tab les atteint et les fait apparaître. #}
+  <div id="liste-offres">
   {% for o in offres %}
-    <div class="glisse" data-glisse>
+    <div class="glisse" id="o{{ o.id }}" data-glisse data-rang="{{ rangs[o.id] }}" data-client="{{ o.client_nom }}" data-montant="{{ totaux[o.id] }}" data-relire="{{ a_relire[o.id] > 0 ? 1 : 0 }}" data-modifiee="{{ o.modifiee_le ?? o.cree_le }}">
       <div class="actions-glisse">
         <form method="post" action="/offres/{{ o.id }}/archiver"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="arch" type="submit" data-t="Archiver"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg><span>Archiver</span></button></form>
         <form method="post" action="/offres/{{ o.id }}/supprimer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="supp" type="submit" data-t="Supprimer"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Supprimer</span></button></form>
@@ -76,12 +78,13 @@
       <p class="vide">Aucune offre pour l'instant. Le micro, en bas, enregistre {{ m.dictee_objet }}&nbsp;; la flèche importe un fichier.</p>
     {% endif %}
   {% endfor %}
+  </div>
 
-  {% if archives is not empty %}
-    <details class="archives" data-archives>
+  {# Toujours là, caché sans archive : archiver la première offre le fait paraître (morceau « archives »). #}
+    <details class="archives" id="archives" data-archives{% if archives is empty %} hidden{% endif %}>
       <summary><span>Archives</span><span>{{ archives|length }}</span></summary>
       {% for o in archives %}
-        <div class="archive">
+        <div class="archive" id="a{{ o.id }}">
           <a class="ocard" href="/offres/{{ o.id }}">
             <span class="l1"><b>{{ o.titre }}</b></span>
             <span class="l2"><span>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}Offre {{ o.numero }}</span><b>{{ totaux[o.id]|chf }}</b></span>
@@ -90,7 +93,6 @@
         </div>
       {% endfor %}
     </details>
-  {% endif %}
   {% if guide_artisan() %}{% include '_guide_artisan.html.twig' with {page: 'offres'} %}{% endif %}
   {% set demo_fenetre = demo() %}
   {% if demo_fenetre and not demo_fenetre.terminee and demo_fenetre.avant_fin in [1, 2] and not guide_artisan() %}{% include '_fenetre_demo.html.twig' with {jours: demo_fenetre.avant_fin} %}{% endif %}

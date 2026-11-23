@@ -68,7 +68,8 @@
         <form method="post" action="{{ cible.base }}/lignes" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
           <input type="hidden" name="_csrf" value="{{ csrf() }}">
           <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}{% if nature != 'ligne' %}<input type="hidden" name="nature" value="{{ nature }}">{% if base %}<input type="hidden" name="remplace" value="{{ base.id }}">{% endif %}{% endif %}
-          <button class="pick" type="submit" name="produit" value="{{ p.id }}"><b class="pn">{{ p.designation }}</b>
+          {# data-prix, data-unite : la ligne provisoire d'un ajout sans réseau (chantier sans rechargement, lot 4). #}
+          <button class="pick" type="submit" name="produit" value="{{ p.id }}" data-prix="{{ p.prix_centimes }}" data-unite="{{ p.unite }}"><b class="pn">{{ p.designation }}</b>
             <span>{% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %} /&nbsp;{{ p.unite }}</span></button>
         </form>
       {% endfor %}

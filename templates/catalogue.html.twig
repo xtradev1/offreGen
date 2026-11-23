@@ -2,7 +2,9 @@
 
 {% block titre %}Mon catalogue · {{ nom_application }}{% endblock %}
 {% block entete %}Mon catalogue{% endblock %}
-{% block entete_html %}{% if sans_prix > 0 %}<link rel="stylesheet" href="/css/vos-prix.css"><script src="/js/vos-prix.js" defer></script>{% endif %}{% if import_propose %}<link rel="stylesheet" href="/css/import-catalogue.css">{% endif %}{% endblock %}
+{# data-fenetre : ce que redemande une fiche enregistrée qui change la liste (nouveau produit, autre catégorie). #}
+{% block ecran_donnees %} data-fenetre="clist categories"{% endblock %}
+{% block entete_html %}{% if sans_prix > 0 %}<link rel="stylesheet" href="{{ fichier('/css/vos-prix.css') }}"><script src="{{ fichier('/js/vos-prix.js') }}" defer></script>{% endif %}{% if import_propose %}<link rel="stylesheet" href="{{ fichier('/css/import-catalogue.css') }}">{% endif %}{% endblock %}
 
 {% block contenu %}
   {# Rappel vers l'écran « Vos prix » tant qu'un produit est sans prix (chantier des métiers, 2026-11-19). #}
@@ -20,7 +22,7 @@
       <input id="cq" name="q" type="search" value="{{ q }}" placeholder="Chercher parmi {{ nombre }} produits" autocomplete="off" aria-label="Chercher dans le catalogue" data-filtre="#clist">
     </div>
   </form>
-  <nav class="fchips" aria-label="Catégories">
+  <nav class="fchips" id="categories" aria-label="Catégories">
     <a href="/catalogue{% if q %}?q={{ q|url_encode }}{% endif %}"{% if cat == '' %} aria-current="true"{% endif %}><span>Tout</span></a>
     {% for c, produits in groupes %}
       <a href="/catalogue?cat={{ c|url_encode }}{% if q %}&amp;q={{ q|url_encode }}{% endif %}"{% if cat == c %} aria-current="true"{% endif %}><span>{{ c }}</span></a>
@@ -32,7 +34,7 @@
       {% set visibles = produits|filter(p => p.visible)|length %}
       <div class="ccat" data-groupe{% if visibles == 0 %} hidden{% endif %}><h5>{{ c }}</h5><span data-compte>{{ visibles }}</span></div>
       {% for p in produits %}
-        <a class="crow{% if p.prix_centimes == 0 %} sansprix{% endif %}" id="p{{ p.id }}" href="/catalogue/{{ p.id }}" data-en-feuille data-texte="{{ p.texte }}"{% if cat and cat != c %} data-hors-cat{% endif %}{% if not p.visible %} hidden{% endif %}>
+        <a class="crow{% if p.prix_centimes == 0 %} sansprix{% endif %}" id="p{{ p.id }}" href="/catalogue/{{ p.id }}" data-en-feuille data-texte="{{ p.texte }}" data-cat="{{ c }}"{% if cat and cat != c %} data-hors-cat{% endif %}{% if not p.visible %} hidden{% endif %}>
           <span class="nm">{{ p.designation }}{% if p.synonymes %}<small>{{ p.synonymes }}</small>{% endif %}</span>
           <span class="num{% if p.prix_centimes == 0 %} manque{% endif %}"><i>{% if p.prix_centimes == 0 %}Prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %}</i></span>
           <span class="u">/&nbsp;{{ p.unite }}</span>

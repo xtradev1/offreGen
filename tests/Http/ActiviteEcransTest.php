@@ -152,7 +152,8 @@ final class ActiviteEcransTest extends TestCase
         BaseDeTest::pdo()->exec("UPDATE ligne SET produit_id = NULL WHERE offre_id = {$this->jeu->offre['a']}");
         $page = $this->page('/offres/' . $this->jeu->offre['a']);
         self::assertStringNotContainsString('Hors catalogue', $page);
-        self::assertStringContainsString('<div class="cat"><h5></h5>', $page);
+        // Le titre du groupe porte son id de morceau (chantier sans rechargement, 2026-11-23) ; il reste vide.
+        self::assertMatchesRegularExpression('#<div class="cat" id="g-[0-9a-f]{10}"><h5></h5>#', $page);
         $doc = (string) $this->a->get('/offres/' . $this->jeu->offre['a'] . '/document')->getContent();
         self::assertStringNotContainsString('Hors catalogue', $doc);
         self::assertStringNotContainsString('doc-grp', $doc, 'aucune ligne de titre de groupe sur le document');

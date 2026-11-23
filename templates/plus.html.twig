@@ -3,7 +3,7 @@
 {# « Plus » (décision D2 de Xavier, 2026-11-15) : ce qui sert rarement sort de la barre du bas. #}
 {% block titre %}Plus · {{ nom_application }}{% endblock %}
 {% block entete %}Plus{% endblock %}
-{% block entete_html %}{% if guide_possible() %}<link rel="stylesheet" href="/css/guide.css">{% endif %}{% endblock %}
+{% block entete_html %}{% if guide_possible() %}<link rel="stylesheet" href="{{ fichier('/css/guide.css') }}">{% endif %}{% endblock %}
 
 {% block contenu %}
   <nav class="plus" aria-label="Plus">

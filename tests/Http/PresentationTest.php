@@ -107,7 +107,8 @@ final class PresentationTest extends TestCase
         preg_match_all('/\s(?:src|href)="(\/(?:css|js|img|fonts)\/[^"]+)"/', $page, $trouves);
         self::assertGreaterThanOrEqual(8, count($trouves[1]), 'La feuille, le script et les six modèles au moins.');
         foreach (array_unique($trouves[1]) as $chemin) {
-            self::assertFileExists(dirname(__DIR__, 2) . '/public' . $chemin);
+            // L'adresse porte la version de son contenu (fonction fichier(), chantier sans rechargement) : le fichier, sans elle.
+            self::assertFileExists(dirname(__DIR__, 2) . '/public' . explode('?', $chemin)[0]);
         }
     }
 

@@ -10,7 +10,7 @@
 {% set choix = sorte == 'variante' or sorte == 'option' %}
 <div class="row{% if manque %} miss{% elseif l.a_verifier %} flag{% endif %}{% if sorte == 'variante' %} var{% elseif sorte == 'remplacee' %} remplacee{% elseif sorte == 'option' %} opt{% endif %}" id="l{{ l.id }}"{% if modifiable %} data-glisse-ligne{% endif %}>
   {% if modifiable %}
-    <a class="nm" href="{{ lien }}" data-en-feuille-pc>{% if sorte == 'variante' %}<small class="sorte">Variante</small>{% elseif sorte == 'option' and l.piece is not null %}<small class="sorte">{{ l.piece }}</small>{% endif %}{{ l.designation }}{% if l.produit_id is null and (libre ?? true) %}<small><span class="tag">Ligne libre</span></small>{% endif %}</a>
+    <a class="nm" href="{{ lien }}" data-en-feuille>{% if sorte == 'variante' %}<small class="sorte">Variante</small>{% elseif sorte == 'option' and l.piece is not null %}<small class="sorte">{{ l.piece }}</small>{% endif %}{{ l.designation }}{% if l.produit_id is null and (libre ?? true) %}<small><span class="tag">Ligne libre</span></small>{% endif %}</a>
     <form class="q" method="post" action="{{ lien }}">
       <input type="hidden" name="_csrf" value="{{ csrf() }}">
       <input class="saisie" name="quantite" value="{{ l.quantite_milliemes|saisie_quantite }}" inputmode="decimal" autocomplete="off" required aria-label="Quantité, {{ l.designation }}" data-envoi-change>

@@ -3,8 +3,8 @@
    « Clients », créer la démo, le métier, « Créer la démo », l'ouvrir sur cet appareil ; E3 de Xavier, 2026-11-23 : « on va
    sous artisans (renommé client) et on a créer une démo »), six dans la démo d'entraînement (_guide_artisan.html.twig,
    en mode équipe), jusqu'à « Revenir à mon espace ». « page » : suivi, clients, nouvelle ou prete. #}
-<link rel="stylesheet" href="/css/guide.css">
-<script src="/js/guide.js" defer></script>
+<link rel="stylesheet" href="{{ fichier('/css/guide.css') }}">
+<script src="{{ fichier('/js/guide.js') }}" defer></script>
 <div class="guide" hidden data-guide="equipe" data-total="11" data-fin="/admin/guide/fini" data-csrf="{{ csrf() }}">
   {% if page == 'suivi' %}
     <template data-n="1" data-cible=".tabs a[href='/admin/artisans']">{{ texte('g.clients') }}</template>

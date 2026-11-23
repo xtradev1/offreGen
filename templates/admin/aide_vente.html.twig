@@ -4,7 +4,7 @@
    textes, config/textes-onboarding.json). Une rubrique ouverte à la fois au téléphone, toutes ouvertes à l'impression
    (public/js/aide-vente.js). Pas encore ici : « Les questions à poser » (contenu jamais montré à Xavier) et « Ce qu'on
    ne dit pas » (O31, en attente de Xavier). #}
-{% block entete_html %}<link rel="stylesheet" href="/css/aide-vente.css"><script src="/js/aide-vente.js" defer></script>{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/aide-vente.css') }}"><script src="{{ fichier('/js/aide-vente.js') }}" defer></script>{% endblock %}
 {% block retour %}<a class="back" href="/admin/plus">Plus</a>{% endblock %}
 {% block sous %}<p>{{ texte('k.sous') }}</p>{% endblock %}
 

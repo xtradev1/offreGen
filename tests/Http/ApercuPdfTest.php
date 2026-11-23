@@ -39,7 +39,7 @@ final class ApercuPdfTest extends TestCase
         self::assertSame(200, $r->getStatusCode());
         $page = (string) $r->getContent();
         self::assertMatchesRegularExpression("#<div class=\"pdf-pages\" data-pdf=\"{$this->offre}/pdf\" data-worker=\"/js/vendor/pdfjs-[0-9.]+/pdf\.worker\.min\.js\">#", $page);
-        self::assertMatchesRegularExpression('#<script type="module" src="/js/apercu-pdf\.js"></script>#', $page);
+        self::assertMatchesRegularExpression('#<script type="module" src="/js/apercu-pdf\.js\?v=[0-9a-f]{12}"></script>#', $page);
         // Les gestes suivants restent en bas : Modifier, Facturer, et le PDF à télécharger.
         self::assertStringContainsString("<a class=\"btn grand\" href=\"{$this->offre}\">Modifier</a>", $page);
         self::assertStringContainsString("<a class=\"btn grand\" href=\"{$this->offre}/facturer\" data-en-feuille>Facturer</a>", $page);

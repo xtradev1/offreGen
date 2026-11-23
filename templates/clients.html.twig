@@ -5,6 +5,7 @@
 {% block titre %}Clients · {{ nom_application }}{% endblock %}
 {% block entete %}Clients{% endblock %}
 {% block ecran_classe %} gris{% endblock %}
+{% block ecran_donnees %} data-fenetre="klist compte-clients"{% endblock %}
 
 {% block contenu %}
   <form class="search" method="get" action="/clients" role="search">
@@ -13,7 +14,7 @@
       <input id="kq" name="q" type="search" placeholder="Chercher un nom, une localité" autocomplete="off" aria-label="Chercher un client" data-filtre="#klist">
     </div>
   </form>
-  <p class="compteur">{{ clients|length }} client{{ clients|length > 1 ? 's' : '' }}</p>
+  <p class="compteur" id="compte-clients">{{ clients|length }} client{{ clients|length > 1 ? 's' : '' }}</p>
 
   <div id="klist">
     {% set lettre = '' %}

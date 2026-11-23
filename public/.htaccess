@@ -48,3 +48,25 @@ Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; 
 Header always set Strict-Transport-Security "max-age=31536000"
 Header always unset X-Powered-By
 Header unset X-Powered-By
+
+# Durée de garde des fichiers (chantier sans rechargement, D1, 2026-11-23). Les gabarits donnent à chaque feuille de
+# style, script et image une adresse suivie de l'empreinte de son contenu (?v=, fonction Twig fichier()) : un fichier
+# changé change d'adresse, l'ancienne se garde un an. PDF.js porte sa version dans le nom de son dossier. Sans version :
+# polices et images 7 jours (elles changent de nom quand elles changent) ; feuilles de style, scripts et service worker
+# revalidés à chaque usage. Les conditions portent sur le fichier servi : une page de PHP (index.php), même à une
+# adresse en .css, garde ses propres en-têtes.
+# L'ETag d'Apache, suffixé « -gzip » par la compression, n'était jamais reconnu (If-None-Match : 200 au lieu de 304,
+# constaté sur le test le 2026-11-23) : retiré, la revalidation passe par Last-Modified (304 constaté).
+FileETag None
+<If "%{REQUEST_FILENAME} =~ m#\.(css|js|mjs|png|jpe?g|gif|svg|webp|avif|ico|woff2?|webmanifest)$# && %{QUERY_STRING} =~ /(^|&)v=[0-9a-f]{12}(&|$)/">
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</If>
+<ElseIf "%{REQUEST_FILENAME} =~ m#/js/vendor/#">
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</ElseIf>
+<ElseIf "%{REQUEST_FILENAME} =~ m#\.(png|jpe?g|gif|svg|webp|avif|ico|woff2?)$#">
+  Header set Cache-Control "public, max-age=604800"
+</ElseIf>
+<ElseIf "%{REQUEST_FILENAME} =~ m#\.(css|js|mjs|webmanifest)$#">
+  Header set Cache-Control "no-cache"
+</ElseIf>

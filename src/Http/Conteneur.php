@@ -34,6 +34,7 @@ use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotFactures;
 use OffreGen\Donnees\DepotEnregistrements;
+use OffreGen\Donnees\DepotEnvois;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
 use OffreGen\Donnees\DepotReglages;
@@ -42,6 +43,7 @@ use OffreGen\Donnees\FileTraitement;
 use OffreGen\Donnees\JournalConnexions;
 use OffreGen\Donnees\Portee;
 use OffreGen\Offre\DocumentPdf;
+use OffreGen\Offre\PdfGarde;
 use OffreGen\Offre\Extracteur;
 use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\ExtracteurFactice;
@@ -342,6 +344,24 @@ final class Conteneur
         return new DepotReglages($this->base(), $p);
     }
 
+    /** Le PDF d'une offre gardé tant qu'il ne change pas ; la version du code qui le rend entre dans son empreinte. */
+    public function pdfGarde(): PdfGarde
+    {
+        return $this->une(PdfGarde::class, function (): PdfGarde {
+            $code = '';
+            foreach (['/composer.lock', '/src/Http/Controleur/OffreControleur.php', '/src/Offre/DocumentPdf.php'] as $f) {
+                $code .= is_file($this->racine . $f) ? (string) hash_file('xxh3', $this->racine . $f) : '';
+            }
+            // Pas var/cache/pdf : dompdf y range ses polices.
+            return new PdfGarde($this->racine . '/var/cache/offres-pdf', $code);
+        });
+    }
+
+    public function fichiers(): Fichiers
+    {
+        return $this->une(Fichiers::class, fn (): Fichiers => new Fichiers($this->racine . '/public'));
+    }
+
     public function garde(): Garde
     {
         return $this->une(Garde::class, function (): Garde {
@@ -399,6 +419,7 @@ final class Conteneur
                 'autoescape' => 'html',
             ]);
             $twig->addFunction(new TwigFunction('csrf', fn (): string => $this->garde()->jeton()));
+            $twig->addFunction(new TwigFunction('fichier', fn (string $chemin): string => $this->fichiers()->adresse($chemin)));
             $twig->addFunction(new TwigFunction('messages', fn (): array => $this->garde()->messages()));
             $twig->addFunction(new TwigFunction('compte', fn (): ?int => $this->garde()->artisanCourant()));
             // Le rôle d'équipe du compte connecté : l'entrée « Administration » de « Plus » et du menu n'existe que pour lui.
@@ -691,7 +712,9 @@ final class Conteneur
         return $this->une(Noyau::class, function (): Noyau {
             /** @var callable(self): list<Route> $declarer */
             $declarer = require $this->racine . '/config/routes.php';
-            return new Noyau($declarer($this), $this->twig(), $this->garde(), fn (string $m) => $this->journal()->error($m));
+            return new Noyau($declarer($this), $this->twig(), $this->garde(), fn (string $m) => $this->journal()->error($m),
+                fn (int $artisan): DepotEnvois => new DepotEnvois($this->base(), new Portee($artisan)),
+                fn (): \DateTimeImmutable => $this->horloge()->now());
         });
     }
 }

@@ -40,7 +40,7 @@ final class GuideTest extends TestCase
         $this->enDemo();
         $page = (string) $this->connecte()->get('/')->getContent();
         self::assertStringContainsString('data-guide="artisan"', $page);
-        self::assertStringContainsString('src="/js/guide.js"', $page);
+        self::assertMatchesRegularExpression('#src="/js/guide\.js\?v=[0-9a-f]{12}"#', $page);
     }
 
     public function testUnCompteOrdinaireNeLeVoitPas(): void

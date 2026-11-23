@@ -61,6 +61,9 @@ final class AccueilControleur
             'en_preparation' => array_values(array_filter($enCours, static fn (array $e): bool => $e['statut'] !== Statut::ECHEC)),
             'echecs' => array_values(array_filter($enCours, static fn (array $e): bool => $e['statut'] === Statut::ECHEC)),
             'offres' => self::trier($offres, $tri, $totaux, $aRelire),
+            // Le rang de chaque offre dans l'ordre par défaut : le tri se refait dans le navigateur, sans requête (chantier sans
+            // rechargement, lot 3), et revient à cet ordre pour « Récentes ».
+            'rangs' => array_flip(array_column($offres, 'id')),
             'archives' => $archives,
             'totaux' => $totaux,
             'a_relire' => $aRelire,

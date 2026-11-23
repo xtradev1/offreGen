@@ -89,13 +89,14 @@ final class EcransTest extends TestCase
     public function testCatalogueMontreLesProduitsEtLaRechercheMasqueLesAutres(): void
     {
         $page = $this->page('/catalogue');
-        self::assertMatchesRegularExpression('/<a class="crow" id="p\d+" href="\/catalogue\/\d+" data-en-feuille data-texte="peinture murale a peinture">/', $page);
+        // data-cat : la catégorie se choisit dans le navigateur (chantier sans rechargement, lot 3).
+        self::assertMatchesRegularExpression('/<a class="crow" id="p\d+" href="\/catalogue\/\d+" data-en-feuille data-texte="peinture murale a peinture" data-cat="Peinture">/', $page);
         self::assertStringContainsString('18.50', $page);
         self::assertStringContainsString('aria-current="page">', $page);
         $cherche = $this->page('/catalogue?q=MURALE');
-        self::assertMatchesRegularExpression('/data-texte="peinture murale a peinture">/', $cherche);
+        self::assertMatchesRegularExpression('/data-texte="peinture murale a peinture" data-cat="Peinture">/', $cherche);
         $rien = $this->page('/catalogue?q=fa%C3%A7ade');
-        self::assertMatchesRegularExpression('/data-texte="peinture murale a peinture" hidden>/', $rien);
+        self::assertMatchesRegularExpression('/data-texte="peinture murale a peinture" data-cat="Peinture" hidden>/', $rien);
         self::assertMatchesRegularExpression('/<p class="vide" data-aucun>/', $rien);
     }
 
@@ -340,7 +341,7 @@ final class EcransTest extends TestCase
         $o = $this->jeu->offre['a'];
         BaseDeTest::pdo()->exec("INSERT INTO ligne (artisan_id, offre_id, rang, designation, quantite_milliemes, unite, prix_centimes, a_verifier) VALUES ({$this->jeu->a}, $o, 9, 'Crépi', 18000, 'm²', 0, 0)");
         $page = $this->page($this->offre);
-        self::assertMatchesRegularExpression('#<div class="totalbar" data-total-fixe><span>Total TTC</span><b>CHF\x{00A0}[0-9\'’.]+</b></div>#u', $page);
+        self::assertMatchesRegularExpression('#<div class="totalbar" id="total-fixe" data-total-fixe><span>Total TTC</span><b>CHF\x{00A0}[0-9\'’.]+</b></div>#u', $page);
         // 3 A (2026-11-20) : le même total sous le libellé du bouton principal (montré hors PC).
         self::assertMatchesRegularExpression('#<span class="libelle-total"><span>[^<]+</span><small data-total-bouton>CHF\x{00A0}[0-9\'’.]+</small></span>#u', $page);
         self::assertMatchesRegularExpression("#<a class=\"btn ajout\" href=\"{$this->offre}/ajouter\" aria-label=\"Ajouter une ligne\" data-en-feuille>#", $page);
@@ -361,8 +362,9 @@ final class EcransTest extends TestCase
     public function testLEnTeteEnCartesEtLesLignesSeGlissent(): void
     {
         $page = $this->page($this->offre);
-        self::assertMatchesRegularExpression('#<a class="who carte-lien" href="/offres/\d+/client" data-en-feuille aria-label="Client de l\'offre : chercher ou changer">#', $page);
-        self::assertMatchesRegularExpression('#<a class="t carte-lien" href="/offres/\d+/modifier" data-en-feuille-pc>#', $page);
+        self::assertMatchesRegularExpression('#<a class="who carte-lien" id="carte-client" href="/offres/\d+/client" data-en-feuille aria-label="Client de l\'offre : chercher ou changer">#', $page);
+        // Chantier sans rechargement (2026-11-23) : l'objet s'ouvre en fenêtre au téléphone aussi, plus en page.
+        self::assertMatchesRegularExpression('#<a class="t carte-lien" id="carte-objet" href="/offres/\d+/modifier" data-en-feuille>#', $page);
         self::assertMatchesRegularExpression("#<div class=\"row\" id=\"l{$this->ligne}\" data-glisse-ligne>#", $page);
         self::assertStringContainsString('aria-label="Supprimer la ligne Peinture murale a"', $page);
     }
@@ -390,8 +392,8 @@ final class EcransTest extends TestCase
         self::assertStringContainsString('href="/catalogue/nouveau" data-en-feuille>', $liste);
         // Catégorie choisie : les autres produits restent cachés même quand on tape dans la recherche.
         $sols = $this->page('/catalogue?cat=Sols');
-        self::assertMatchesRegularExpression('#data-texte="[^"]*peinture[^"]*" data-hors-cat hidden>#', $sols);
-        self::assertDoesNotMatchRegularExpression('#data-texte="parquet[^"]*" data-hors-cat#', $sols);
+        self::assertMatchesRegularExpression('#data-texte="[^"]*peinture[^"]*" data-cat="[^"]*" data-hors-cat hidden>#', $sols);
+        self::assertDoesNotMatchRegularExpression('#data-texte="parquet[^"]*" data-cat="[^"]*" data-hors-cat#', $sols);
         // La fiche garde quatre champs visibles ; le reste est replié.
         $fiche = $this->page('/catalogue/nouveau');
         self::assertStringContainsString('<h1>Nouveau produit</h1>', $fiche);

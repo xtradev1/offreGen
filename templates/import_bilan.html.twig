@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {# Bilan d'un import intégré ou annulé (maquette validée le 2026-11-20 : D8, « Annuler cet import »). #}
-{% block entete_html %}<link rel="stylesheet" href="/css/import-catalogue.css">{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/import-catalogue.css') }}">{% endblock %}
 {% block titre %}Import du catalogue · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/catalogue">Catalogue</a>{% endblock %}
 {% block entete %}Import du catalogue{% endblock %}

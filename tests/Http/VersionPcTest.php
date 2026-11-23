@@ -71,8 +71,8 @@ final class VersionPcTest extends TestCase
         $page = $this->page('/offres/' . $this->jeu->offre['a']);
         self::assertSame(1, preg_match('#<aside class="colonne-liste".*?</aside>#s', $page, $m));
         $liste = $m[0] ?? '';
-        self::assertStringContainsString('<a class="lcard" href="/offres/' . $this->jeu->offre['a'] . '" aria-current="page"', $liste);
-        self::assertStringContainsString('<a class="lcard" href="/offres/' . $autre . '"', $liste);
+        self::assertStringContainsString('<a class="lcard" id="pc-' . $this->jeu->offre['a'] . '" href="/offres/' . $this->jeu->offre['a'] . '" aria-current="page"', $liste);
+        self::assertStringContainsString('<a class="lcard" id="pc-' . $autre . '" href="/offres/' . $autre . '"', $liste);
         self::assertStringContainsString('Façade de la maison', $liste);
         self::assertStringContainsString('1 à vérifier', $liste);
         self::assertStringContainsString('data-filtre="#liste-pc"', $liste);

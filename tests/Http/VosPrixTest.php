@@ -87,8 +87,8 @@ final class VosPrixTest extends TestCase
         self::assertStringContainsString('inputmode="decimal"', $page);
         self::assertStringContainsString('40.00', $page);
         self::assertStringContainsString('Reprendre', $page);
-        self::assertStringContainsString('href="/css/vos-prix.css"', $page);
-        self::assertStringContainsString('src="/js/vos-prix.js"', $page);
+        self::assertMatchesRegularExpression('#href="/css/vos-prix\.css\?v=[0-9a-f]{12}"#', $page);
+        self::assertMatchesRegularExpression('#src="/js/vos-prix\.js\?v=[0-9a-f]{12}"#', $page);
         // La touche Entrée envoie le premier bouton du formulaire : ce doit être « Suivant », jamais le retrait.
         self::assertSame(1, preg_match('/<form[^>]*data-vos-prix.*?<button[^>]*>/s', $page, $m));
         $premierBouton = $m[0] ?? '';
@@ -276,9 +276,9 @@ final class VosPrixTest extends TestCase
         $accueil = $this->page('/');
         self::assertStringContainsString('3 produits attendent votre prix', $accueil);
         self::assertStringContainsString('href="/vos-prix"', $accueil);
-        self::assertStringContainsString('href="/css/vos-prix.css"', $accueil);
+        self::assertMatchesRegularExpression('#href="/css/vos-prix\.css\?v=[0-9a-f]{12}"#', $accueil);
         // Le script ouvre l'écran sans changer de page : sur iPhone, le clavier ne s'ouvre que pendant un toucher.
-        self::assertStringContainsString('src="/js/vos-prix.js"', $accueil);
+        self::assertMatchesRegularExpression('#src="/js/vos-prix\.js\?v=[0-9a-f]{12}"#', $accueil);
 
         $reponse = $this->a->post('/vos-prix/plus-tard', []);
         self::assertSame(303, $reponse->getStatusCode());
@@ -287,7 +287,7 @@ final class VosPrixTest extends TestCase
         self::assertStringNotContainsString('attendent votre prix', $accueil);
         self::assertStringContainsString('3 produits sans prix', $accueil);
         self::assertStringContainsString('href="/vos-prix"', $accueil);
-        self::assertStringContainsString('src="/js/vos-prix.js"', $accueil);
+        self::assertMatchesRegularExpression('#src="/js/vos-prix\.js\?v=[0-9a-f]{12}"#', $accueil);
     }
 
     public function testLAccueilNeDitRienAUneDemoNiAUnCompteSansProduitDExemple(): void
@@ -309,7 +309,7 @@ final class VosPrixTest extends TestCase
         $catalogue = $this->page('/catalogue');
         self::assertStringContainsString('3 produits sans prix', $catalogue);
         self::assertStringContainsString('href="/vos-prix"', $catalogue);
-        self::assertStringContainsString('src="/js/vos-prix.js"', $catalogue);
+        self::assertMatchesRegularExpression('#src="/js/vos-prix\.js\?v=[0-9a-f]{12}"#', $catalogue);
         BaseDeTest::pdo()->exec("UPDATE produit SET prix_centimes = 100 WHERE artisan_id = {$this->jeu->a}");
         self::assertStringNotContainsString('/vos-prix', $this->page('/catalogue'));
     }

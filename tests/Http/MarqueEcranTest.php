@@ -218,7 +218,7 @@ final class MarqueEcranTest extends TestCase
         // La feuille a la largeur du papier A4 : l'écran la réduit à sa case (app.js, papiers ; document-ecran.css).
         self::assertStringContainsString('class="doc m-lateral" data-feuille', $apercu);
         self::assertStringContainsString('class="doc-colonne c-fond"', $apercu, 'la colonne de couleur');
-        self::assertStringContainsString('href="/css/document-ecran.css"', $apercu);
+        self::assertMatchesRegularExpression('#href="/css/document-ecran\.css\?v=[0-9a-f]{12}"#', $apercu);
         self::assertFileExists(dirname(__DIR__, 2) . '/public/css/document-ecran.css');
 
         self::assertSame(303, $this->a->post('/reglages', ['modele' => 'lateral', 'retour' => '/reglages/marque'])->getStatusCode());

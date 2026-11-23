@@ -3,7 +3,7 @@
    null. La feuille de style est à part : app.css est modifiée par d'autres chantiers. #}
 {% set demo_compte = demo() %}
 {% if demo_compte and not (sans_ruban ?? false) %}
-  <link rel="stylesheet" href="/css/demo.css">
+  <link rel="stylesheet" href="{{ fichier('/css/demo.css') }}">
   <div class="ruban-demo" role="note">
     <span><b>Démo</b> · {% if demo_compte.terminee %}terminée{% elseif demo_compte.avant_fin > 1 %}{{ demo_compte.avant_fin }} jours restants{% elseif demo_compte.avant_fin == 1 %}1 jour restant{% else %}dernier jour{% endif %}</span>
     {# La démo d'entraînement d'un membre, ouverte par lui (chantier onboarding, lot 8, O12 B) : le retour direct. #}

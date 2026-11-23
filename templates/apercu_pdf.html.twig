@@ -8,7 +8,7 @@
    Une facture a son panneau (maquette 25, E8) : montant, état, échéance, client, offre, « Annuler la facture » ; sous
    le PDF au téléphone, à côté sur PC. #}
 {% block titre %}{{ titre }} · PDF · {{ nom_application }}{% endblock %}
-{% block entete_html %}<script type="module" src="/js/apercu-pdf.js"></script>{% if nom_provisoire ?? null %}<link rel="stylesheet" href="/css/avertissement-envoi.css"><script src="/js/avertissement-envoi.js" defer></script>{% endif %}{% endblock %}
+{% block entete_html %}<script type="module" src="{{ fichier('/js/apercu-pdf.js') }}"></script>{% if nom_provisoire ?? null %}<link rel="stylesheet" href="{{ fichier('/css/avertissement-envoi.css') }}"><script src="{{ fichier('/js/avertissement-envoi.js') }}" defer></script>{% endif %}{% endblock %}
 {% block retour %}<a class="back" href="{{ retour.href }}">{{ retour.texte }}</a>{% endblock %}
 {% block entete %}{{ titre }} · PDF{% endblock %}
 {% block ecran_classe %} apercu-pdf{% endblock %}

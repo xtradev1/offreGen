@@ -9,7 +9,7 @@
   </form>
   <div id="liste-pc">
     {% for o in liste.offres %}
-      <a class="lcard" href="/offres/{{ o.id }}"{% if o.id == courante %} aria-current="page"{% endif %} data-texte="{{ liste.textes[o.id] }}">
+      <a class="lcard" id="pc-{{ o.id }}" href="/offres/{{ o.id }}"{% if o.id == courante %} aria-current="page"{% endif %} data-texte="{{ liste.textes[o.id] }}">
         <span class="l1"><b>{{ o.titre }}</b><span class="montant">{{ liste.totaux[o.id]|montant }}</span></span>
         <small>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}{% if liste.a_relire[o.id] > 0 %}{{ liste.a_relire[o.id] }} à vérifier{% elseif o.envoyee_le %}envoyée{% else %}prête{% endif %}</small>
       </a>

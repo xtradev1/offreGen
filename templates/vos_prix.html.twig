@@ -6,7 +6,7 @@
    Ordre dans le code, différent de l'ordre à l'écran (vos-prix.css) : « Suivant » est le premier bouton du
    formulaire, celui que la touche Entrée envoie ; le retrait vient en dernier.
    data-zone : ce que vos-prix.js remplace quand le produit suivant arrive sans recharger la page. #}
-{% block entete_html %}<link rel="stylesheet" href="/css/vos-prix.css">{% if mise_en_route ?? false %}<link rel="stylesheet" href="/css/mise-en-route.css">{% endif %}<script src="/js/vos-prix.js" defer></script>{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/vos-prix.css') }}">{% if mise_en_route ?? false %}<link rel="stylesheet" href="{{ fichier('/css/mise-en-route.css') }}">{% endif %}<script src="{{ fichier('/js/vos-prix.js') }}" defer></script>{% endblock %}
 {% block titre %}Vos prix · {{ nom_application }}{% endblock %}
 {% block retour %}
   {% if p and not (mise_en_route ?? false) %}

@@ -33,17 +33,23 @@ final class Navigateur
     /**
      * @param array<string, string|array<array-key, mixed>> $champs sans _csrf, il est repris de la dernière page ; un tableau comme p[0][choix]
      * @param array<string, UploadedFile> $fichiers
+     * @param array<string, string> $entetes
      */
-    public function post(string $chemin, array $champs, array $fichiers = [], bool $avecJeton = true, bool $json = false): Response
+    public function post(string $chemin, array $champs, array $fichiers = [], bool $avecJeton = true, bool $json = false, array $entetes = []): Response
     {
         if ($avecJeton && !isset($champs['_csrf'])) {
             $champs['_csrf'] = $this->jeton();
         }
         // $json : comme l'enregistrement automatique d'app.js, qui demande une réponse en JSON.
         $serveur = ['REMOTE_ADDR' => $this->ip] + ($json ? ['HTTP_ACCEPT' => 'application/json'] : []);
+        // $entetes : ceux d'un envoi par fetch (X-Morceaux, X-Cle-Envoi : chantier sans rechargement).
+        foreach ($entetes as $nom => $valeur) {
+            $serveur['HTTP_' . strtoupper(str_replace('-', '_', $nom))] = $valeur;
+        }
         $page = $this->dernierePage;
         $reponse = $this->envoyer(Request::create($chemin, 'POST', $champs, files: $fichiers, server: $serveur));
-        if ($json) {
+        // Des morceaux ne sont pas une page : le jeton de la page affichée reste celui du formulaire suivant.
+        if ($json || $entetes !== []) {
             // Le JSON n'a pas de formulaire : le jeton de la page affichée reste valable, comme dans le navigateur.
             $this->dernierePage = $page;
         }

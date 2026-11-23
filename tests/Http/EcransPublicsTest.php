@@ -19,7 +19,7 @@ final class EcransPublicsTest extends TestCase
     {
         $page = (string) (new Navigateur(Monde::conteneur()))->get('/connexion')->getContent();
         self::assertStringContainsString('<div class="app app-seule">', $page);
-        self::assertStringContainsString('<link rel="stylesheet" href="/css/connexion.css">', $page);
+        self::assertMatchesRegularExpression('#<link rel="stylesheet" href="/css/connexion\.css\?v=[0-9a-f]{12}">#', $page);
         self::assertFileExists(dirname(__DIR__, 2) . '/public/css/connexion.css');
         self::assertStringContainsString('<a class="vers-accueil" href="/"', $page, 'Le logo ramène à la page de présentation.');
     }
@@ -28,7 +28,7 @@ final class EcransPublicsTest extends TestCase
     {
         $page = (string) (new Navigateur(Monde::conteneur()))->get('/mot-de-passe/oubli')->getContent();
         self::assertStringContainsString('<div class="app app-seule">', $page);
-        self::assertStringContainsString('<link rel="stylesheet" href="/css/connexion.css">', $page);
+        self::assertMatchesRegularExpression('#<link rel="stylesheet" href="/css/connexion\.css\?v=[0-9a-f]{12}">#', $page);
     }
 
     public function testLesEcransDeLArtisanNeLaPortentPas(): void

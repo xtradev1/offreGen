@@ -16,7 +16,7 @@
   commercial: [['suivi', '/admin/suivi', 'Mon suivi'], ['artisans', '/admin/artisans', 'Clients'], ['espace', '/', 'Mon espace'], ['plus', '/admin/plus', 'Plus']]
 } %}
 <nav class="tabs" aria-label="Administration">
-  <a class="marque-pc pc-seul" href="/decouvrir" aria-label="{{ nom_application }}, le site"><picture><source srcset="/img/dicta-logo-sombre.svg" media="(prefers-color-scheme: dark)"><img src="/img/dicta-logo-clair.svg" alt="" width="177" height="64"></picture></a>
+  <a class="marque-pc pc-seul" href="/decouvrir" aria-label="{{ nom_application }}, le site"><picture><source srcset="/img/dicta-logo-sombre.svg" media="(prefers-color-scheme: dark)"><img src="{{ fichier('/img/dicta-logo-clair.svg') }}" alt="" width="177" height="64"></picture></a>
   {% for e in entrees[role.value] %}
   <a href="{{ e[1] }}"{% if actif == e[0] %} aria-current="page"{% endif %}>
     <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icones[e[0]]|raw }}</svg>{{ e[2] }}</a>

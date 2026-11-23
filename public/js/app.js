@@ -9,59 +9,20 @@ const normaliser = (s) => String(s || '').toLowerCase().normalize('NFD').replace
 // keepalive : l'envoi aboutit même si l'artisan quitte la page aussitôt (retour, onglet). Constaté le
 // 2026-11-12 : un envoi de formulaire classique était annulé par le lien touché juste après.
 function corrections() {
-  const etat = () => document.querySelector('[data-sauvegarde]');
-  const enAttente = new Set();
-
   // Le choix du client (options et variantes, 2026-11-22) est une case : elle part quand son état change.
   const caseACocher = (champ) => champ.type === 'checkbox';
   const choixSansJs = () => document.querySelectorAll('form[data-choix] [data-sans-js]').forEach((b) => { b.hidden = true; });
   choixSansJs();
+  // Les morceaux posés par fluide.js ramènent les boutons prévus pour qui n'a pas JavaScript.
+  document.addEventListener('morceaux-poses', choixSansJs);
+  // Chantier sans rechargement (2026-11-23) : la correction part dans la file de fluide.js, qui estime le montant au
+  // toucher, ne reçoit que la ligne et les totaux (avant : l'offre entière à chaque chiffre), garde le geste sans
+  // réseau et le renvoie au retour du réseau, une seule fois.
   const envoyer = (champ) => {
     const form = champ.form;
     if (!form || (caseACocher(champ) ? champ.checked === champ.defaultChecked : champ.value === champ.defaultValue)) return;
     if (caseACocher(champ)) champ.defaultChecked = champ.checked; else champ.defaultValue = champ.value;
-    const corps = new URLSearchParams(new FormData(form));
-    const ligne = form.closest('.row');
-    const requete = fetch(form.action, { method: 'POST', body: corps, keepalive: true, credentials: 'same-origin' });
-    enAttente.add(requete);
-    if (etat()) etat().textContent = 'Enregistrement…';
-    requete.then((r) => r.text().then((html) => {
-      // La réponse est l'offre à jour : on reprend ses lignes, ses totaux et ses messages.
-      const page = new DOMParser().parseFromString(html, 'text/html');
-      const actif = document.activeElement;
-      const garde = actif && actif.closest && actif.closest('.row') ? [actif.closest('.row').id, actif.name, actif.selectionStart, actif.selectionEnd] : null;
-      // Une autre saisie en cours (pas encore partie) survit au remplacement des lignes.
-      const enCours = [...document.querySelectorAll('input[data-envoi-change]')]
-        .filter((c) => c.value !== c.defaultValue)
-        .map((c) => [c.closest('.row').id, c.name, c.value]);
-      // Le total fixé en bas (D3) suit aussi : il restait à l'ancien montant jusqu'au lot 8 (constaté le 2026-11-15).
-      ['.rows', '.totals', '[data-options]', '[data-sauvegarde]', '[data-total-fixe]', '[data-total-bouton]', '.lcard[aria-current="page"]'].forEach((s) => {
-        const neuf = page.querySelector(s);
-        const vieux = document.querySelector(s);
-        if (neuf && vieux) vieux.replaceWith(neuf);
-      });
-      montrerRenvoi(page);
-      choixSansJs();
-      enCours.forEach(([ligneId, nom, valeur]) => {
-        const c = document.querySelector('#' + ligneId + ' input[name=' + nom + ']:not([type=hidden])');
-        if (c) c.value = valeur;
-      });
-      page.querySelectorAll('.snack').forEach((s) => { document.querySelector('.app').append(s); setTimeout(() => s.remove(), 6000); });
-      bandeauDansLeTotal();
-      if (garde) {
-        const retrouve = document.querySelector('#' + garde[0] + ' input[name=' + garde[1] + ']:not([type=hidden])');
-        if (retrouve) { retrouve.focus(); try { retrouve.setSelectionRange(garde[2], garde[3]); } catch (e) { /* champ sans sélection */ } }
-      }
-      if (!r.ok && etat()) etat().textContent = 'Non enregistré, réessayez';
-      // Une case refusée (409) reprend son état d'avant : rien n'est enregistré (revue, C9).
-      if (!r.ok && caseACocher(champ) && champ.isConnected) { champ.checked = !champ.checked; champ.defaultChecked = champ.checked; }
-      // Le document à côté des lignes (PC, D13) se met à jour.
-      if (r.ok) document.dispatchEvent(new Event('offre-modifiee'));
-    })).catch(() => {
-      if (etat()) etat().textContent = 'Non enregistré : pas de connexion';
-      if (ligne) ligne.classList.add('miss');
-      if (caseACocher(champ)) champ.defaultChecked = !champ.checked; else champ.defaultValue = '';
-    }).finally(() => enAttente.delete(requete));
+    fluide.ligne(champ);
   };
 
   document.addEventListener('change', (e) => { if (e.target.matches('input[data-envoi-change]')) envoyer(e.target); });
@@ -788,17 +749,39 @@ function fichesEnFenetre() {
   // Une fenêtre qui a changé l'offre (lignes ajoutées, ligne ou objet corrigés) la recharge en se fermant
   // (data-recharger) : les champs des lignes se rebranchent avec la page.
   let aChange = false;
+  // Écran à morceaux (fluide.js, chantier sans rechargement) : la fenêtre envoie par la file et l'écran derrière reçoit
+  // ses morceaux ; rien ne se recharge à la fermeture.
+  const surMorceaux = () => !!(window.fluide && document.querySelector('main.screen[data-resume]'));
+  // Lignes ajoutées depuis « + Ligne » : elles s'éclairent quand la fenêtre se ferme.
+  let ajoutees = [];
+  const eclairer = (ids) => {
+    const rangees = ids.map((id) => document.getElementById('l' + id)).filter(Boolean);
+    rangees.forEach((r) => { r.classList.remove('eclair'); void r.offsetWidth; r.classList.add('eclair'); });
+    if (rangees.length) rangees[rangees.length - 1].scrollIntoView({ block: 'center' });
+  };
   const calque = {
     montrer: () => apparaitre(fond),
     cacher: () => {
-      if (aChange && fond.dataset.recharger) {
+      if (aChange && fond.dataset.recharger && !surMorceaux()) {
         window.location.reload();
         return;
       }
       disparaitre(fond);
+      if (ajoutees.length) { eclairer(ajoutees); ajoutees = []; }
+      prechargerAjout();
       if (declencheur && declencheur.isConnected) declencheur.focus({ preventScroll: true });
       // Une fiche enregistrée au fil de la saisie : la liste derrière se met à jour.
-      if (enregistreSeul !== null) { const id = enregistreSeul; enregistreSeul = null; rafraichir('', new Set(), id); }
+      if (enregistreSeul !== null) {
+        const id = enregistreSeul;
+        enregistreSeul = null;
+        // Lot 3 : la ligne de la fiche seule (ou la liste si sa place change), au lieu de toute la page.
+        if (listeEnMorceaux()) {
+          const avant = new Set([...document.querySelectorAll(lignes)].map((r) => r.id));
+          fluide.rafraichir(idsListe(id || null)).then(() => apresListe(avant, id || null));
+        } else {
+          rafraichir('', new Set(), id);
+        }
+      }
     },
   };
   fond.addEventListener('enregistre', (e) => {
@@ -833,10 +816,148 @@ function fichesEnFenetre() {
     return true;
   };
 
-  const charger = (url) => fetch(url, { credentials: 'same-origin' })
-    .then((r) => (r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))))
-    .then((html) => { if (!afficher(html)) throw new Error('page sans contenu'); })
-    .catch(() => window.location.assign(url));
+  // Lot 3 du chantier sans rechargement (D4 : en arrière-plan, l'artisan d'abord) : la fenêtre « + Ligne » se prépare
+  // quand le navigateur est libre, jamais pendant un geste, et s'ouvre ensuite sans requête. Refaite après chaque usage.
+  const prechargees = new Map();
+  const cleDe = (url) => new URL(url, window.location.href).href;
+  function prechargerAjout() {
+    const lien = document.querySelector('a.btn.ajout[data-en-feuille]');
+    if (!lien || !surMorceaux() || (navigator.connection && navigator.connection.saveData)) return;
+    const essayer = () => {
+      if (fluide.file.length || document.visibilityState !== 'visible' || calques.ouvert() === calque) { setTimeout(essayer, 3000); return; }
+      fetch(lien.href, { credentials: 'same-origin', priority: 'low', headers: { Accept: 'text/html' } })
+        .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+        .then((html) => { prechargees.set(cleDe(lien.href), html); })
+        .catch(() => { /* pas de réseau : la fenêtre se chargera à l'ouverture */ });
+    };
+    (window.requestIdleCallback || ((f) => setTimeout(f, 1500)))(() => setTimeout(essayer, 600), { timeout: 6000 });
+  }
+  if (document.readyState === 'complete') prechargerAjout(); else window.addEventListener('load', prechargerAjout, { once: true });
+
+  const charger = (url) => {
+    const prete = prechargees.get(cleDe(url));
+    if (prete !== undefined) {
+      prechargees.delete(cleDe(url));
+      if (afficher(prete)) return Promise.resolve();
+    }
+    // Accept : le service worker garde la fenêtre comme une page (lot 4), elle s'ouvre ensuite sans réseau.
+    return fetch(url, { credentials: 'same-origin', headers: { Accept: 'text/html' } })
+      .then((r) => {
+        // 503 du service worker : pas de réseau, et la fenêtre n'a pas été gardée dans le téléphone.
+        if (r.status === 503 && navigator.serviceWorker && navigator.serviceWorker.controller) throw new TypeError('hors réseau');
+        return r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status));
+      })
+      .then((html) => { if (!afficher(html)) throw new Error('page sans contenu'); })
+      .catch((erreur) => {
+        // Sans réseau, l'artisan reste sur son écran (la page à part l'en sortirait) ; sinon, la page de la fenêtre.
+        if (erreur instanceof TypeError && window.fluide) {
+          fluide.messages.dire('Hors réseau' + fluide.NB + ': cette fenêtre n’est pas gardée dans le téléphone.', true);
+          return;
+        }
+        window.location.assign(url);
+      });
+  };
+
+  // Ce que dit la fenêtre « + Ligne » au toucher d'un produit : la ligne entre dans l'offre derrière, la fenêtre reste.
+  const annoncerAjout = (form, touche) => {
+    const nom = (form.querySelector('input[name=designation]') && form.querySelector('input[name=designation]').value.trim())
+      || (touche && touche.querySelector('.pn') ? touche.querySelector('.pn').textContent.trim() : '');
+    let note = corps.querySelector('p.ajoutee');
+    if (!note) {
+      note = document.createElement('p');
+      note.className = 'ajoutee';
+      note.setAttribute('role', 'status');
+      corps.prepend(note);
+    }
+    note.textContent = '«' + fluide.NB + nom + fluide.NB + '» ajoutée';
+    const champ = corps.querySelector('input[data-filtre]');
+    if (champ) { champ.value = ''; champ.dispatchEvent(new Event('input')); }
+  };
+
+  const avisDansLaFenetre = (texte) => {
+    const avis = document.createElement('p');
+    avis.className = 'alerte bad';
+    avis.setAttribute('role', 'alert');
+    avis.textContent = texte;
+    corps.prepend(avis);
+  };
+
+  // Catalogue, clients : une fiche enregistrée fait revenir sa seule ligne (lot 3) ; la liste entière si la ligne change
+  // de place (nouvelle, autre désignation ou catégorie ; un client, rangé par son nom) ou si elle part.
+  const listeEnMorceaux = () => !!(window.fluide && document.querySelector('main.screen[data-fenetre]') && !surMorceaux());
+  let placeChangee = false;
+  fond.addEventListener('change', (e) => { if (e.target.name && /^(designation|categorie|nouvelle_categorie)$/.test(e.target.name)) placeChangee = true; });
+  const idsListe = (modifie) => {
+    const ids = modifie && !placeChangee && prefixe === 'p' ? [prefixe + modifie] : (document.querySelector('main.screen').dataset.fenetre || '').split(' ').filter(Boolean);
+    placeChangee = false;
+    return ids;
+  };
+  const apresListe = (avant, modifie) => {
+    const champ = document.querySelector(recherche);
+    if (champ) champ.dispatchEvent(new Event('input'));
+    const ligne = modifie ? document.getElementById(prefixe + modifie) : [...document.querySelectorAll(lignes)].find((r) => !avant.has(r.id));
+    if (ligne && !ligne.hidden) {
+      declencheur = ligne;
+      ligne.classList.remove('eclair');
+      void ligne.offsetWidth;
+      ligne.classList.add('eclair');
+      ligne.scrollIntoView({ block: 'center' });
+    }
+  };
+
+  // Un formulaire de la fenêtre, par la file de fluide.js. Offre et facture : les morceaux de l'écran derrière (la
+  // fenêtre « + Ligne » reste ouverte et dit ce qui est entré). Catalogue et clients : la ligne de la fiche, ou la liste.
+  const envoyerEnMorceaux = (form, touche) => {
+    const ajout = !!form.querySelector('input[name="reste"][value="1"]');
+    const liste = !surMorceaux();
+    const avant = new Set([...document.querySelectorAll(lignes)].map((r) => r.id));
+    const modifie = (form.getAttribute('action').match(new RegExp('^' + ici + '/(\\d+)$')) || [])[1] || null;
+    const boutons = ajout ? [] : [...fond.querySelectorAll('button[type=submit]')];
+    const libelle = touche ? touche.textContent : '';
+    boutons.forEach((b) => { b.disabled = true; });
+    if (touche && !ajout) {
+      touche.setAttribute('aria-busy', 'true');
+      if (touche.dataset.attente) touche.textContent = touche.dataset.attente;
+    }
+    const rendre = () => {
+      boutons.forEach((b) => { b.disabled = false; });
+      if (touche && !ajout) {
+        touche.removeAttribute('aria-busy');
+        if (touche.dataset.attente) touche.textContent = libelle;
+      }
+    };
+    if (ajout) annoncerAjout(form, touche);
+    fluide.fenetre(form, touche, ajout ? ici : null, liste ? idsListe(modifie) : null).then((r) => {
+      rendre();
+      if (r.etat === 'pose') {
+        const adresse = r.reponse.adresse || '';
+        if (ajout) {
+          const id = (/[?&]ajoutee=(\d+)/.exec(adresse) || [])[1];
+          if (id) ajoutees.push(id);
+          return;
+        }
+        fermer();
+        if (liste) { apresListe(avant, modifie); return; }
+        const ligne = (/#l(\d+)$/.exec(adresse) || [])[1];
+        if (ligne) setTimeout(() => eclairer([ligne]), DUREE_ANIMATION);
+        return;
+      }
+      // Pas de réseau : le geste attend dans la file, le bandeau le dit ; la fenêtre d'un ajout reste ouverte, la ligne
+      // paraît en attente dans l'offre derrière, avec le total estimé (lot 4, D7).
+      if (r.etat === 'attente') {
+        if (!ajout) { fermer(); return; }
+        const champ = (nom) => (form.querySelector('[name="' + nom + '"]') ? form.querySelector('[name="' + nom + '"]').value.trim() : '');
+        const produit = touche && touche.name === 'produit';
+        const nom = produit && touche.querySelector('.pn') ? touche.querySelector('.pn').textContent.trim() : champ('designation');
+        const prix = produit ? Number(touche.dataset.prix || 0) : Math.round((parseFloat(champ('prix').replace(',', '.')) || 0) * 100);
+        fluide.ligneEnAttente(nom, produit ? touche.dataset.unite : champ('unite'), prix);
+        return;
+      }
+      // Champ refusé (422) : le formulaire revient dans la fenêtre, avec ses messages ; un autre refus s'y dit.
+      if (r.html && afficher(r.html)) return;
+      avisDansLaFenetre('Pas enregistré' + fluide.NB + ': ' + (r.message || 'refusé par le serveur') + '.');
+    });
+  };
 
   // La liste à jour, avec la recherche et la catégorie de l'adresse ; le message vient de l'envoi.
   const rafraichir = (reponse, avant, modifie) => {
@@ -896,6 +1017,14 @@ function fichesEnFenetre() {
     if (e.defaultPrevented) return;
     e.preventDefault();
     const form = e.target;
+    // Un choix en GET dans la fenêtre (autre pièce, ligne remplacée) s'y charge ; il partait en POST (405).
+    if ((form.getAttribute('method') || 'get').toLowerCase() !== 'post') {
+      const u = new URL(form.getAttribute('action') || window.location.href, window.location.href);
+      u.search = new URLSearchParams(new FormData(form)).toString();
+      charger(u.href);
+      return;
+    }
+    if (surMorceaux() || listeEnMorceaux()) { envoyerEnMorceaux(form, e.submitter || null); return; }
     const boutons = fond.querySelectorAll('button[type=submit]');
     const touche = e.submitter || boutons[0] || null;
     const libelle = touche ? touche.textContent : '';
@@ -946,65 +1075,69 @@ function fichesEnFenetre() {
 // 2026-11-12). Un glissé n'ouvre pas l'offre, un défilement vertical reste un défilement, une seule
 // offre ouverte à la fois. Au clavier, Tab atteint les deux boutons (CSS :focus-within).
 function balayage() {
-  const cartes = [...document.querySelectorAll('[data-glisse]')];
-  if (!cartes.length) return;
+  if (!document.querySelector('[data-glisse]')) return;
   const LARGEUR = 176;
-  const fermerTout = (sauf) => cartes.forEach((c) => { if (c !== sauf) c.classList.remove('ouverte'); });
-  cartes.forEach((c) => {
-    const face = c.querySelector('.ocard');
-    let x0 = null;
-    let y0 = 0;
-    let dx = 0;
-    let glisse = false;
-    face.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0) return;
-      x0 = e.clientX;
-      y0 = e.clientY;
-      dx = 0;
-      glisse = false;
-    });
-    face.addEventListener('pointermove', (e) => {
-      if (x0 === null) return;
-      const mx = e.clientX - x0;
-      if (!glisse) {
-        if (Math.abs(mx) < 8) return;
-        if (Math.abs(e.clientY - y0) > Math.abs(mx)) { x0 = null; return; }
-        glisse = true;
-        c.classList.add('tire');
-        face.setPointerCapture(e.pointerId);
-        face.style.transition = 'none';
-        fermerTout(c);
-      }
-      const depart = c.classList.contains('ouverte') ? -LARGEUR : 0;
-      dx = Math.min(0, Math.max(-LARGEUR - 24, depart + mx));
-      face.style.transform = 'translateX(' + dx + 'px)';
-    });
-    const fin = () => {
-      if (x0 === null) return;
-      x0 = null;
-      face.style.transition = '';
-      face.style.transform = '';
-      c.classList.remove('tire');
-      if (glisse) c.classList.toggle('ouverte', dx < -LARGEUR / 2);
-    };
-    face.addEventListener('pointerup', fin);
-    face.addEventListener('pointercancel', fin);
-    // La fin d'un glissé envoie un clic : il ne fait rien (constaté le 2026-11-12, il refermait l'offre
-    // qu'on venait d'ouvrir). Une offre déjà ouverte se referme au toucher au lieu de s'ouvrir.
-    face.addEventListener('click', (e) => {
-      if (glisse) {
-        e.preventDefault();
-        glisse = false;
-        return;
-      }
-      if (c.classList.contains('ouverte')) {
-        e.preventDefault();
-        c.classList.remove('ouverte');
-      }
-    });
-    face.addEventListener('dragstart', (e) => e.preventDefault());
+  // Écouté sur le document (chantier sans rechargement) : une liste remplacée par un morceau de page garde le geste.
+  const fermerTout = (sauf) => document.querySelectorAll('[data-glisse].ouverte').forEach((c) => { if (c !== sauf) c.classList.remove('ouverte'); });
+  let c = null;
+  let face = null;
+  let x0 = null;
+  let y0 = 0;
+  let dx = 0;
+  let glisse = false;
+  document.addEventListener('pointerdown', (e) => {
+    const f = e.target.closest && e.target.closest('[data-glisse] > .ocard');
+    if (!f) { if (!e.target.closest || !e.target.closest('[data-glisse]')) fermerTout(null); return; }
+    if (e.button !== 0) return;
+    face = f;
+    c = f.parentNode;
+    x0 = e.clientX;
+    y0 = e.clientY;
+    dx = 0;
+    glisse = false;
   });
-  document.addEventListener('pointerdown', (e) => { if (!e.target.closest('[data-glisse]')) fermerTout(null); });
+  document.addEventListener('pointermove', (e) => {
+    if (x0 === null || !face) return;
+    const mx = e.clientX - x0;
+    if (!glisse) {
+      if (Math.abs(mx) < 8) return;
+      if (Math.abs(e.clientY - y0) > Math.abs(mx)) { x0 = null; return; }
+      glisse = true;
+      c.classList.add('tire');
+      face.setPointerCapture(e.pointerId);
+      face.style.transition = 'none';
+      fermerTout(c);
+    }
+    const depart = c.classList.contains('ouverte') ? -LARGEUR : 0;
+    dx = Math.min(0, Math.max(-LARGEUR - 24, depart + mx));
+    face.style.transform = 'translateX(' + dx + 'px)';
+  });
+  const fin = () => {
+    if (x0 === null || !face) return;
+    x0 = null;
+    face.style.transition = '';
+    face.style.transform = '';
+    c.classList.remove('tire');
+    if (glisse) c.classList.toggle('ouverte', dx < -LARGEUR / 2);
+  };
+  document.addEventListener('pointerup', fin);
+  document.addEventListener('pointercancel', fin);
+  // La fin d'un glissé envoie un clic : il ne fait rien (constaté le 2026-11-12, il refermait l'offre
+  // qu'on venait d'ouvrir). Une offre déjà ouverte se referme au toucher au lieu de s'ouvrir.
+  document.addEventListener('click', (e) => {
+    const f = e.target.closest && e.target.closest('[data-glisse] > .ocard');
+    if (!f) return;
+    if (glisse) {
+      e.preventDefault();
+      glisse = false;
+      return;
+    }
+    if (f.parentNode.classList.contains('ouverte')) {
+      e.preventDefault();
+      f.parentNode.classList.remove('ouverte');
+    }
+  });
+  document.addEventListener('dragstart', (e) => { if (e.target.closest && e.target.closest('[data-glisse] > .ocard')) e.preventDefault(); });
 }
 
 // Réglages : la phrase « Paiement » de l'offre suit les choix avant l'enregistrement.
@@ -1539,50 +1672,55 @@ function modelesEnGrand() {
 // Lignes d'une offre ou d'un brouillon de facture : glisser vers la gauche retire la ligne (décision D4 B,
 // 2026-11-15), par le même envoi que la corbeille, donc avec le même « Annuler ». Un défilement vertical reste
 // un défilement ; un glissé qui part d'un champ ou d'un bouton ne fait rien.
+// Écouté sur le document (chantier sans rechargement, 2026-11-23) : une ligne remplacée par un morceau de page garde son
+// glissé ; écouté ligne par ligne, il se perdait dès la première correction. requestSubmit : la corbeille passe par
+// fluide.js comme un toucher (la ligne part sur place, « Annuler » à elle).
 function glisserLignes() {
   const SEUIL = 110;
-  document.querySelectorAll('[data-glisse-ligne]').forEach((row) => {
-    const suppr = row.querySelector('form[action$="/supprimer"]');
-    if (!suppr) return;
-    let x0 = null;
-    let y0 = 0;
-    let dx = 0;
-    let glisse = false;
-    row.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0 || e.target.closest('input, button, select, textarea')) return;
-      x0 = e.clientX;
-      y0 = e.clientY;
-      dx = 0;
-      glisse = false;
-    });
-    row.addEventListener('pointermove', (e) => {
-      if (x0 === null) return;
-      const mx = e.clientX - x0;
-      if (!glisse) {
-        if (Math.abs(mx) < 10) return;
-        if (Math.abs(e.clientY - y0) > Math.abs(mx) || mx > 0) { x0 = null; return; }
-        glisse = true;
-        row.classList.add('tire');
-        row.setPointerCapture(e.pointerId);
-      }
-      dx = Math.min(0, mx);
-      row.style.setProperty('--dx', dx + 'px');
-      row.classList.toggle('assez', dx <= -SEUIL);
-    });
-    const fin = () => {
-      if (x0 === null) return;
-      x0 = null;
-      if (glisse && dx <= -SEUIL) { suppr.submit(); return; }
-      row.classList.remove('tire', 'assez');
-      row.style.removeProperty('--dx');
-    };
-    row.addEventListener('pointerup', fin);
-    row.addEventListener('pointercancel', fin);
-    // Le nom de la ligne est un lien : sans cela, le navigateur le glisse lui-même et interrompt le geste.
-    row.addEventListener('dragstart', (e) => e.preventDefault());
-    // La fin d'un glissé envoie un clic : il n'ouvre pas la ligne.
-    row.addEventListener('click', (e) => { if (glisse) { e.preventDefault(); e.stopPropagation(); glisse = false; } }, true);
+  let row = null;
+  let x0 = null;
+  let y0 = 0;
+  let dx = 0;
+  let glisse = false;
+  const suppr = (r) => r.querySelector('form[action$="/supprimer"]');
+  document.addEventListener('pointerdown', (e) => {
+    const r = e.target.closest && e.target.closest('[data-glisse-ligne]');
+    if (!r || e.button !== 0 || e.target.closest('input, button, select, textarea') || !suppr(r)) { x0 = null; return; }
+    row = r;
+    x0 = e.clientX;
+    y0 = e.clientY;
+    dx = 0;
+    glisse = false;
   });
+  document.addEventListener('pointermove', (e) => {
+    if (x0 === null || !row) return;
+    const mx = e.clientX - x0;
+    if (!glisse) {
+      if (Math.abs(mx) < 10) return;
+      if (Math.abs(e.clientY - y0) > Math.abs(mx) || mx > 0) { x0 = null; return; }
+      glisse = true;
+      row.classList.add('tire');
+      row.setPointerCapture(e.pointerId);
+    }
+    dx = Math.min(0, mx);
+    row.style.setProperty('--dx', dx + 'px');
+    row.classList.toggle('assez', dx <= -SEUIL);
+  });
+  const fin = () => {
+    if (x0 === null || !row) return;
+    x0 = null;
+    if (glisse && dx <= -SEUIL) { suppr(row).requestSubmit(); return; }
+    row.classList.remove('tire', 'assez');
+    row.style.removeProperty('--dx');
+  };
+  document.addEventListener('pointerup', fin);
+  document.addEventListener('pointercancel', fin);
+  // Le nom de la ligne est un lien : sans cela, le navigateur le glisse lui-même et interrompt le geste.
+  document.addEventListener('dragstart', (e) => { if (e.target.closest && e.target.closest('[data-glisse-ligne]')) e.preventDefault(); });
+  // La fin d'un glissé envoie un clic : il n'ouvre pas la ligne.
+  document.addEventListener('click', (e) => {
+    if (glisse && e.target.closest && e.target.closest('[data-glisse-ligne]')) { e.preventDefault(); e.stopPropagation(); glisse = false; }
+  }, true);
 }
 
 // Toucher une ligne l'ouvre, où qu'on la touche (Xavier, 2026-11-22), sauf ses champs, ses boutons, ses liens et ses
@@ -1609,21 +1747,22 @@ function zeroOffreLaLigne() {
 }
 
 // Relecture (D5) : le montant suit la quantité et le prix pendant la frappe. Le serveur refait le calcul.
+// Chaque ligne de la relecture est dans la page (chantier sans rechargement) : écouté sur le document, par formulaire.
 function montantRelu() {
-  const q = document.querySelector('[data-relu-quantite]');
-  const p = document.querySelector('[data-relu-prix]');
-  const sortie = document.querySelector('[data-relu-montant]');
-  if (!q || !p || !sortie) return;
   const nombre = (v) => parseFloat(String(v).replace(/[\s'’]/g, '').replace(',', '.'));
-  const maj = () => {
+  document.addEventListener('input', (e) => {
+    const champ = e.target.closest && e.target.closest('[data-relu-quantite], [data-relu-prix]');
+    if (!champ || !champ.form) return;
+    const q = champ.form.querySelector('[data-relu-quantite]');
+    const p = champ.form.querySelector('[data-relu-prix]');
+    const sortie = champ.form.querySelector('[data-relu-montant]');
+    if (!q || !p || !sortie) return;
     const centimes = Math.round(nombre(q.value) * nombre(p.value) * 100);
     // Jamais de « ? » (Xavier, 2026-11-21) : un 0 tapé offre la ligne (D2), un prix vide laisse la case vide.
     sortie.textContent = Number.isFinite(centimes) && centimes > 0
       ? 'CHF ' + (centimes / 100).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/'/g, '’')
       : (nombre(p.value) === 0 ? 'Offert' : '');
-  };
-  q.addEventListener('input', maj);
-  p.addEventListener('input', maj);
+  });
 }
 
 // Textes avant et après les lignes (D5 A, 2026-11-21) : envoyés seuls quand le champ change, comme une quantité.
@@ -1635,33 +1774,17 @@ function textesOffre() {
   formulaires.forEach((form) => {
     form.querySelectorAll('[data-sans-js]').forEach((b) => { b.hidden = true; });
     const champ = form.querySelector('textarea');
+    // Par la file de fluide.js (chantier sans rechargement) : l'état d'enregistrement et le bandeau de renvoi reviennent
+    // en morceaux ; sans réseau, le texte attend et part au retour du réseau.
     const envoyer = () => {
       if (champ.value === champ.defaultValue) return;
       champ.defaultValue = champ.value;
       if (etat()) etat().textContent = 'Enregistrement…';
-      fetch(form.action, { method: 'POST', body: new URLSearchParams(new FormData(form)), keepalive: true, credentials: 'same-origin' })
-        .then((r) => r.text().then((html) => {
-          if (etat()) etat().textContent = r.ok ? 'Enregistrée' : 'Non enregistré, réessayez';
-          if (!r.ok) return;
-          // La réponse est l'offre à jour (redirection suivie) : le bandeau de renvoi en vient.
-          montrerRenvoi(new DOMParser().parseFromString(html, 'text/html'));
-          document.dispatchEvent(new Event('offre-modifiee'));
-        }))
-        .catch(() => { if (etat()) etat().textContent = 'Non enregistré : pas de connexion'; champ.defaultValue = ''; });
+      fluide.texte(form);
     };
     champ.addEventListener('change', envoyer);
     window.addEventListener('pagehide', envoyer);
   });
-}
-
-// « Modifiée depuis l'envoi » (lot 7) paraît dès la première correction d'une offre envoyée : ligne ou texte. `page`
-// est l'offre à jour renvoyée par le serveur.
-function montrerRenvoi(page) {
-  const renvoi = page.querySelector('[data-renvoi]');
-  if (renvoi && !document.querySelector('[data-renvoi]')) {
-    const total = document.querySelector('[data-total-fixe]');
-    if (total) total.after(renvoi);
-  }
 }
 
 // Les feuilles de style d'une page chargée à côté (document de facture, couleur de l'artisan) : ajoutées une fois.
@@ -1903,6 +2026,20 @@ function ajoutPc() {
         entree.value = valeur;
         poste.append(entree);
       });
+      // Chantier sans rechargement : la ligne entre sur place (morceau « lignes »), le curseur dans sa quantité.
+      if (window.fluide) {
+        champ.value = '';
+        filtrer();
+        fluide.envoyer(poste, {
+          morceaux: ['lignes'],
+          apres: (r) => {
+            const id = (/#l(\d+)$/.exec(r.adresse || '') || [])[1];
+            const quantite = id && document.querySelector('#l' + id + ' input[name=quantite]');
+            if (quantite) { quantite.scrollIntoView({ block: 'center' }); quantite.focus(); }
+          },
+        });
+        return;
+      }
       document.body.append(poste);
       poste.submit();
     };

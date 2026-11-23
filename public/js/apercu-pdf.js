@@ -1,14 +1,23 @@
 // Aperçu d'un PDF dans l'application (décision D7 A de Xavier, 2026-11-15) : PDF.js, livré avec l'application
 // (public/js/vendor, version verrouillée), dessine chaque page dans un canevas à la largeur de l'écran.
 // La CSP interdit eval : isEvalSupported est coupé. En cas d'échec, un lien ouvre le PDF.
+// Chantier sans rechargement (lot 5, 2026-11-23) : les octets du PDF sont lus une fois ; ils servent au dessin et au
+// partage, sans nouvelle requête ; l'envoi est noté sans recharger la page.
 import * as pdfjs from '/js/vendor/pdfjs-6.5.438/pdf.min.js';
 
 const zone = document.querySelector('[data-pdf]');
 if (zone) {
   const etat = zone.querySelector('[data-pdf-etat]');
   pdfjs.GlobalWorkerOptions.workerSrc = zone.dataset.worker;
+  // Le PDF lu une fois : le même fichier part au partage (le geste de l'artisan reste valable pour le téléphone, aucune
+  // attente du réseau entre le toucher et le partage).
+  let octets = null;
+  const lire = fetch(zone.dataset.pdf, { credentials: 'same-origin' })
+    .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('PDF ' + r.status))))
+    .then((b) => { octets = b; return b; });
   const dessiner = async () => {
-    const doc = await pdfjs.getDocument({ url: zone.dataset.pdf, isEvalSupported: false }).promise;
+    // PDF.js garde le tampon qu'on lui donne : il reçoit une copie, l'original reste pour le partage.
+    const doc = await pdfjs.getDocument({ data: new Uint8Array((await lire).slice(0)), isEvalSupported: false }).promise;
     const largeur = zone.clientWidth;
     const densite = Math.min(window.devicePixelRatio || 1, 3);
     for (let n = 1; n <= doc.numPages; n++) {
@@ -30,6 +39,18 @@ if (zone) {
     etat.textContent = doc.numPages > 1 ? doc.numPages + ' pages · ' + geste.charAt(0).toLowerCase() + geste.slice(1) : geste;
     zone.appendChild(etat);
   };
+
+  // L'envoi noté : par la file de fluide.js (sans rechargement ; sans réseau, il attend), sinon le formulaire.
+  const noterEnvoi = () => {
+    const marque = document.querySelector('form[data-apres-partage]');
+    if (!marque) return;
+    if (window.fluide) {
+      window.fluide.envoyer(marque, { sansResume: true, page: window.location.pathname });
+      return;
+    }
+    marque.submit();
+  };
+
   // « Envoyer » (décision D8) : le partage du téléphone, le PDF joint. Partage réussi : l'offre est notée envoyée
   // (formulaire data-apres-partage). Partage annulé : rien. Pas de partage de fichier (certains navigateurs de PC) : le
   // lien garde son effet, le PDF se télécharge, rien n'est noté.
@@ -37,11 +58,10 @@ if (zone) {
     lien.addEventListener('click', async (e) => {
       if (!navigator.canShare) return;
       e.preventDefault();
+      const nom = lien.getAttribute('download') || 'document.pdf';
       let fichier;
       try {
-        const reponse = await fetch(lien.href, { credentials: 'same-origin' });
-        if (!reponse.ok) throw new Error('PDF ' + reponse.status);
-        fichier = new File([await reponse.blob()], lien.getAttribute('download') || 'document.pdf', { type: 'application/pdf' });
+        fichier = new File([octets || await lire], nom, { type: 'application/pdf' });
       } catch (erreur) {
         window.location.assign(lien.href);
         return;
@@ -62,8 +82,7 @@ if (zone) {
       } catch (erreur) {
         return; // partage annulé : rien n'est envoyé
       }
-      const marque = document.querySelector('form[data-apres-partage]');
-      if (marque) marque.submit();
+      noterEnvoi();
     });
   });
 
@@ -71,7 +90,7 @@ if (zone) {
     etat.innerHTML = '';
     const lien = document.createElement('a');
     lien.href = zone.dataset.pdf;
-    lien.textContent = 'Le PDF ne s’affiche pas ici : l’ouvrir';
+    lien.textContent = 'Le PDF ne s’affiche pas ici' + String.fromCharCode(0xA0) + ': l’ouvrir';
     etat.appendChild(lien);
   });
 }

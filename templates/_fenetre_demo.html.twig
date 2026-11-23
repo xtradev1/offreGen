@@ -2,7 +2,7 @@
    peu pour pas qu'ils oublient, sans trop les forcer » ; chantier onboarding, lot 2). Une fois par jour au plus
    (public/js/demo-fin.js) ; « Continuer » la ferme pour la journée. Les deux boutons ont la même taille : refuser est
    aussi simple qu'accepter. Elle ne s'ouvre qu'au chargement des offres, jamais pendant une dictée. #}
-<script src="/js/demo-fin.js" defer></script>
+<script src="{{ fichier('/js/demo-fin.js') }}" defer></script>
 <div class="fenetre-demo" data-fenetre-demo="{{ compte() }}" hidden>
   <div class="fenetre-demo-carte" role="dialog" aria-modal="true" aria-labelledby="fenetre-demo-titre">
     <h2 id="fenetre-demo-titre">{% if jours == 1 %}Votre démo se termine demain{% else %}Votre démo se termine dans {{ jours }}&nbsp;jours{% endif %}</h2>

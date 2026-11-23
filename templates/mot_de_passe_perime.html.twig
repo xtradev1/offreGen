@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 {% set sans_menu = true %}
-{% block entete_html %}<link rel="stylesheet" href="/css/connexion.css">{% endblock %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/connexion.css') }}">{% endblock %}
 
 {% block titre %}Lien expiré · {{ nom_application }}{% endblock %}
 {% block entete %}Lien expiré{% endblock %}

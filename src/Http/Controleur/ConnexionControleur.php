@@ -42,7 +42,10 @@ final class ConnexionControleur
     public function deconnecter(Request $requete): Response
     {
         $this->authentification->deconnecter($requete);
-        return new RedirectResponse('/connexion', 303);
+        // Chantier sans rechargement (lot 4) : les PDF et les pages gardés par le navigateur partent avec la session. Pas
+        // « storage » : il effacerait aussi les dictées à l'abri pas encore envoyées (sous-chantier 27) ; les pages du
+        // service worker et la file des gestes, fluide.js les efface.
+        return new RedirectResponse('/connexion', 303, ['Clear-Site-Data' => '"cache"']);
     }
 
     private function page(string $courriel, ?string $erreur, int $code): Response
