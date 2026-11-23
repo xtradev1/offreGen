@@ -431,3 +431,21 @@ Libellés nouveaux (titres, boutons, ligne de secours) relus par `relecteur-xtra
 Contrôle du kit : bureau 1440/1440, téléphone 390/390, aucune image cassée ; captures regardées. Un défaut corrigé : le tableau du bas faisait défiler la page de côté au téléphone (420 px).
 
 Limite : le rendu réel dans les messageries (images bloquées, mode sombre) ne se vérifie qu'en envoyant de vrais courriels.
+
+Réponses de Xavier à `MAQUETTE-courriels-v8.html` (2026-11-23), collées telles quelles :
+
+- M1 : C, le bandeau · je préfère C et essayons de trouver comment mettre en place un système qui affiche quand meme bien meme sans images, ensvg ça passe ? et en css ?
+- M2 : Valider · il faut qu'on puisse dans les paramètre gérer de recevoir ou non les offres et je veux que ça n'envoie pas de mail si la personne a ouvert l'offre dans l'application, seulement si l'offre a été généré par le cron ou que l'application a été mis en pause pas de spam sinon les gens ne lise plus
+- M3 : C, le commercial sur la démo · commercial, moi tu peux mettre Xavier Freléchoz, mais toujours avec Dicta en fond
+- M4 : B, date et heure
+
+Puis : « du coup je fais une adresse mail avec un mot de passe et il faudrait que tu mette xavier.frelechoz@xtradev.ch et ensuite la commande pour me changer depuis powershell ». Et sur le partage d'une offre : « est-ce qu'on peu aussi améliorer quand on envoie avec la fonction partager », « par exemple remplir l'objet et mettre un petit message ».
+
+Ce que cela donne, à construire (rien n'est codé) :
+- Bandeau sans image (M1) : le bandeau anthracite est une cellule de tableau avec une couleur de fond, et « Dicta » y est écrit en texte blanc. Le symbole est une image PNG à côté : si la messagerie la bloque, le bandeau et le nom restent. Le SVG ne convient pas (Gmail et Outlook ne l'affichent pas dans un courriel) ; ces affirmations sur les messageries viennent de la connaissance générale, à vérifier par de vrais envois.
+- Signature (M3) : le courriel de la démo est signé du membre qui l'a créée, « Dicta » toujours écrit dessous ; pour le compte de Xavier, « Xavier Freléchoz ». Il faut un nom d'affichage par membre de l'équipe (son compte ne porte qu'un nom d'entreprise) et, au choix, un téléphone.
+- Fin de la démo (M4) : date et heure dans le courriel.
+- Courriel « offre prête » (M2) : un réglage pour le recevoir ou non ; pas de courriel quand l'artisan a l'application ouverte sur l'attente de son offre, seulement quand l'offre est sortie sans lui (traitement par le cron, application en pause). Touche `src/Audio/Traiteur.php` et les réglages, hors de ce chantier : à cadrer avec la session qui les modifie.
+- Partage d'une offre : aujourd'hui `public/js/apercu-pdf.js` ne passe que le PDF et un titre. À ajouter : un objet et un court message d'accompagnement, modifiable par l'artisan. Hors de ce chantier.
+
+Envoi réel sur le site de test : `COURRIELS_REDIRIGER_VERS` posé le 2026-11-23 (`xavier.frelechoz@xtradev.ch`), fichier de réglages relu sans erreur. `MESSAGERIE`, `MAILER_DSN` et `COURRIELS_EXPEDITEUR` restent vides : Xavier crée la boîte d'envoi et lance lui-même le script qui demande le mot de passe sans l'afficher, le pose sur le serveur par SSH, envoie un courriel d'essai, et remet l'ancien fichier si l'envoi échoue. Serveur d'envoi supposé : `mail.infomaniak.com`, port 587, non vérifié avant le premier envoi.
