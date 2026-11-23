@@ -244,7 +244,7 @@ final class FactureControleur
      * @param Offre $offre
      * @param list<Genre> $possibles
      * @param array<string, string> $champs genre, pourcent (nombre ou « chf »), montant (CHF TTC), numero, date, echeance
-     * @return array{array{choisi: Genre, entete: array{numero: string, date: \DateTimeImmutable, echeance: \DateTimeImmutable}, lignes: list<array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, categorie: string|null, produit_id: int|null}>, rabais: string|null, libelle: string|null, escompte: array{int, int}}|null, array<string, string>}
+     * @return array{array{choisi: Genre, entete: array{numero: string, date: \DateTimeImmutable, echeance: \DateTimeImmutable}, lignes: list<array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, categorie: string|null, produit_id: int|null, piece?: string|null}>, rabais: string|null, libelle: string|null, escompte: array{int, int}}|null, array<string, string>}
      */
     private function lireFacturer(Request $requete, array $offre, array $possibles, array $champs): array
     {
@@ -330,7 +330,7 @@ final class FactureControleur
             foreach (Options::lignesDuTotal($lignesOffre) as $l) {
                 $lignes[] = ['designation' => $l['designation'], 'quantite_milliemes' => $l['quantite_milliemes'], 'unite' => $l['unite'],
                     'prix_centimes' => $l['prix_centimes'], 'tva_pour_dix_mille' => $l['tva_pour_dix_mille'],
-                    'categorie' => $l['categorie'], 'produit_id' => $l['produit_id'], 'offerte' => $l['offerte']];
+                    'categorie' => $l['categorie'], 'piece' => $l['piece'] ?? null, 'produit_id' => $l['produit_id'], 'offerte' => $l['offerte']];
             }
         }
         if ($entete === null || $erreurs !== []) {
@@ -355,7 +355,7 @@ final class FactureControleur
      * Le document de la facture qui serait créée : une facture et des lignes en mémoire, jamais écrites.
      *
      * @param Offre $offre
-     * @param array{choisi: Genre, entete: array{numero: string, date: \DateTimeImmutable, echeance: \DateTimeImmutable}, lignes: list<array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, categorie: string|null, produit_id: int|null}>, rabais: string|null, libelle: string|null, escompte: array{int, int}} $pret
+     * @param array{choisi: Genre, entete: array{numero: string, date: \DateTimeImmutable, echeance: \DateTimeImmutable}, lignes: list<array{designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, tva_pour_dix_mille: int|null, categorie: string|null, produit_id: int|null, piece?: string|null}>, rabais: string|null, libelle: string|null, escompte: array{int, int}} $pret
      * @return array<string, mixed>
      */
     private function vueApercu(Request $requete, array $offre, array $pret): array
@@ -592,7 +592,7 @@ final class FactureControleur
         $lignes = array_map(static fn (array $l): array => [
             'designation' => $l['designation'], 'quantite_milliemes' => $l['quantite_milliemes'], 'unite' => $l['unite'],
             'prix_centimes' => $l['prix_centimes'], 'tva_pour_dix_mille' => $l['tva_pour_dix_mille'],
-            'categorie' => $l['categorie'], 'produit_id' => $l['produit_id'], 'offerte' => $l['offerte'],
+            'categorie' => $l['categorie'], 'piece' => $l['piece'], 'produit_id' => $l['produit_id'], 'offerte' => $l['offerte'],
         ], $depot->lignes($f['id']));
         $id = $depot->creer([
             'offre_id' => $f['offre_id'], 'numero' => null, 'genre' => $f['genre'],
