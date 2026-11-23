@@ -544,4 +544,21 @@ Lecture de la dernière ligne : au même moment, la base que l'ancien script au
 
 Erreur de ma part pendant cet essai : je croyais que le `.env.test.local` de `~/offreGen-admin` désignait ma base `offregen_admin_test`. Il désigne `offregen_test`, la base commune : la suite concurrente y a tourné. Aucune autre suite ne tournait au lancement (compté : 0), une suite lancée ensuite par une autre session a pu être percutée.
 
-Reste à prouver : l'arrêt « DÉJÀ EN SERVICE » (il faut une version en service plus récente que le commit déployé).
+Second passage, sans adversaire, puis l'arrêt « DÉJÀ EN SERVICE » :
+
+```
+$ bash outils/deployer-test.sh   (copie propre de 286f1fe, tête de la branche)
+base des tests : offregen_deploiement_test, reconstruite de zéro
+OK (1409 tests, 11852 assertions)
+SONDE VERTE
+DÉPLOYÉ : 286f1fe02a653f1f8b1ed900c75dee059c6a13cc sur https://easy-offres.xtradev.ch
+fin du script de déploiement : 14:03:52, 209 s, code de sortie 0
+$ bash outils/deployer-test.sh   (copie propre de f05cf95, le commit d'avant)
+verrou pris
+DÉJÀ EN SERVICE : la version du site de test (286f1fe02a653f1f8b1ed900c75dee059c6a13cc) contient f05cf9581d47d6fd40c93c8f410cb59a8bbe3bbd. Rien à déployer.
+fin du script de déploiement : 14:03:56, 1 s, code de sortie 0
+$ curl /sante
+{"commit":"286f1fe02a653f1f8b1ed900c75dee059c6a13cc","base":"ok","migrations":"ok"}
+```
+
+Non vérifié : `RETOUR_ARRIERE=1` (l'essayer ferait reculer le site de test), le refus après 30 minutes d'attente du verrou, deux vrais déploiements lancés par deux sessions au même moment (le verrou a été tenu par un `flock` de 40 secondes, pas par un second déploiement).
