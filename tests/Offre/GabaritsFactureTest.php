@@ -96,6 +96,29 @@ final class GabaritsFactureTest extends TestCase
         self::assertStringContainsString('avec la section de paiement de la page suivante', $html);
     }
 
+    /**
+     * Latéral : sa colonne de couleur se répète sur chaque page ; sur la page de la section, un cache blanc la couvre du
+     * haut du papier jusqu'au trait (Xavier, 2026-11-23 : « je préfère vide »). Les autres modèles n'en ont pas besoin.
+     */
+    public function testLaPageDeLaSectionDeLateralEstVide(): void
+    {
+        $pdf = $this->c->documentPdf();
+        $html = FactureDEssai::html($this->c, $this->jeu, new Marque('lateral', '#B8470F'), 30, 'apart');
+        $pages = $pdf->pages($html);
+        $blocs = $pdf->blocs($html, ['qr-cache', 'qr-section', 'doc-colonne']);
+        self::assertCount(1, $blocs['qr-cache']);
+        $cache = $blocs['qr-cache'][0];
+        $section = $blocs['qr-section'][0];
+        $colonne = $blocs['doc-colonne'][0];
+        self::assertSame($pages, $cache['page'], 'le cache est sur la page de la section');
+        self::assertLessThanOrEqual(0.5, $cache['haut'], 'depuis le haut du papier');
+        self::assertGreaterThanOrEqual($section['haut'], $cache['bas'], "jusqu'au trait");
+        self::assertLessThanOrEqual($colonne['gauche'], $cache['gauche']);
+        self::assertGreaterThanOrEqual($colonne['droite'], $cache['droite'], 'toute la largeur de la colonne');
+        $sobre = FactureDEssai::html($this->c, $this->jeu, new Marque('sobre', '#B8470F'), 30, 'apart');
+        self::assertSame([], $pdf->blocs($sobre, ['qr-cache'])['qr-cache'], 'rien chez les autres');
+    }
+
     #[DataProvider('modeles')]
     public function testUneFactureAnnuleeLeDitEtNePorteAucuneSection(string $modele): void
     {

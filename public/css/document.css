@@ -427,6 +427,12 @@ body.pdf, .pdf .doc[data-feuille], .pdf .doc-pied, .pdf .doc-bas, .pdf .doc-colo
    140 + 34,83). */
 .pdf .qr-espace { page-break-before: always; height: 140mm; }
 .pdf .qr-apart { position: relative; left: 0; top: 34.83mm; }
+/* Page à part, Latéral : sa colonne fixe se répète sur chaque page ; un cache blanc la couvre jusqu'au trait, la page
+   de paiement reste vide au-dessus de la section (Xavier, 2026-11-23 : « le bleu vraiment bof, je préfère vide »).
+   46 px de marge haute, puis 140 + 34,83 mm. */
+.pdf .qr-espace { position: relative; }
+.pdf .qr-cache { display: none; }
+.pdf.m-lateral .qr-cache { display: block; position: absolute; left: 0; top: -46px; width: 210mm; height: 714px; background: #fff; }
 
 /* Aperçu à l'écran : la section réduite à l'échelle de sa largeur (1 mm = 100/210 cqw), comme la maquette validée.
    La colonne de l'application fait au plus 448 px : une section de largeur fixe y défilait et cachait sa colonne de

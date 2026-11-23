@@ -5,7 +5,7 @@
 {% macro lignes(liste) %}{% for l in liste %}{{ l }}{% if not loop.last %}<br>{% endif %}{% endfor %}{% endmacro %}
 {% macro image(svg, donnees, pdf, classe) %}{% if pdf %}<img class="{{ classe }}" src="{{ donnees }}" alt="">{% else %}<span class="{{ classe }}">{{ svg|raw }}</span>{% endif %}{% endmacro %}
 {% set place = qr_place ?? null %}
-{% if place == 'apart' %}<div class="qr-espace"></div>{% endif %}
+{% if place == 'apart' %}<div class="qr-espace"><div class="qr-cache"></div></div>{% endif %}
 <div class="qr-section{% if place %} qr-{{ place }}{% endif %}">
   <p class="qr-detacher">À détacher avant le versement</p>
   <table class="qr-feuille"><tr>
