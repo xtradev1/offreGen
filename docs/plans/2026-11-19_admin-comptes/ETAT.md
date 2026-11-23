@@ -423,3 +423,11 @@ $ vendor/bin/phpstan analyse --no-progress
 ```
 
 Non vérifié : l'envoi par une vraie messagerie (le site de test n'en a pas) ; l'arrivée du courriel dans une boîte réelle.
+
+Maquette `MAQUETTE-courriels-v8.html` (2026-11-23), demande de Xavier : « fais une maquette pour le design des courriel ». Trois directions sur le courriel de la démo (lettre, carte, bandeau), la carte sans image et en sombre, les quatre courriels vus par un artisan dans la direction recommandée, la signature, la fin de démo, et ce qu'il faut pour brancher l'envoi. Questions M1 à M4, en attente de Xavier. Rien n'est codé : `MessagerieSmtp` n'envoie aujourd'hui que du texte.
+
+Libellés nouveaux (titres, boutons, ligne de secours) relus par `relecteur-xtradev` : une correction appliquée (« Le bouton ne fonctionne pas »). Au choix de Xavier : « votre dictée » à la place de « votre enregistrement » dans le courriel de l'offre prête ; les boutons à la première personne (« Revenir dans ma démo »), cohérents avec « Commencer mon mois gratuit » déjà validé.
+
+Contrôle du kit : bureau 1440/1440, téléphone 390/390, aucune image cassée ; captures regardées. Un défaut corrigé : le tableau du bas faisait défiler la page de côté au téléphone (420 px).
+
+Limite : le rendu réel dans les messageries (images bloquées, mode sombre) ne se vérifie qu'en envoyant de vrais courriels.
