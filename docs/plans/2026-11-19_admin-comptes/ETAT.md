@@ -499,3 +499,49 @@ $ vendor/bin/phpstan analyse --no-progress
 ```
 
 Non vérifié : l'écran du réglage n'a pas été regardé (une case et un bouton, sur le gabarit des autres rubriques) ; le silence du courriel sur un vrai téléphone, écran allumé puis en veille.
+
+Mise en service du réglage, envoi des quatre courriels, script de déploiement (2026-11-23).
+
+Mise en service de `6228555` : mes trois essais de déploiement ont été refusés (« tests rouges » deux fois, base occupée une fois). Cause : le script lançait ses tests sur la base de `.env.test.local`, vidée au même moment par les suites d'autres sessions. Le commit est entré en service par le déploiement d'une autre session (`d858516`, qui le contient : `git merge-base --is-ancestor 6228555 d8585163` rend vrai).
+
+Défaut de mon script de livraison (scratchpad) : `bash attendre_deployer.sh | tail -9` masque le code de sortie, la suite s'est jouée après un déploiement refusé. Sans conséquence cette fois, la version en service portait déjà le code. Règle pour la suite : `set -euo pipefail` et le code de sortie relu.
+
+Quatre courriels envoyés à Xavier depuis le site de test, à sa demande (« j'aimerais que tu m'envoies tous ceux qu'on a validés en test ») : Votre démo (démo n° 22, lien réel, signé « XtraDev » parce que son nom d'affichage est vide), Votre accès et Mot de passe oublié (liens fermés aussitôt : ils auraient permis de choisir le mot de passe de son compte administrateur), Votre offre est prête. Effet de bord : le lien de retour de la démo n° 22 a été remplacé, l'ancien ne vaut plus. Non vérifié : le rendu dans les messageries (Gmail, Outlook, iPhone, mode sombre), le classement en indésirables.
+
+Script de déploiement modifié, sur accord de Xavier (« oui modifie le script de déploiement »), commit `f05cf95` :
+- tests du déploiement sur `offregen_deploiement_test`, base du poste réservée au script, reconstruite de zéro par les migrations du commit ;
+- verrou `/tmp/offregen-deployer-test.verrou` : un déploiement à la fois, le suivant attend 30 minutes au plus ;
+- arrêt sans rien changer si la version en service contient déjà le commit (`RETOUR_ARRIERE=1` pour revenir exprès en arrière) ;
+- `ConteneurTest` ne dépend plus d'une variable `DB_NOM` posée par le système : l'échec « attendu » des suites lancées avec `DB_NOM=...` disparaît.
+Fichiers hors chantier touchés : `outils/deployer-test.sh`, `tests/Http/ConteneurTest.php`, `docs/DEPLOIEMENT.md`.
+
+```
+$ (base vide, deux passes) vider + doctrine-migrations migrate
+42 migrations executed, 78 sql queries ; passe 1 : 2.47 s ; passe 2 : 2.66 s
+$ DB_NOM=offregen_admin_test phpunit --filter ConteneurTest   (avant la correction)
+Tests: 7, Assertions: 14, Failures: 1.
+$ DB_NOM=offregen_admin_test phpunit --filter ConteneurTest   (après)
+OK (7 tests, 14 assertions)
+$ DB_NOM=offregen_admin_test phpunit   (suite complète, après)
+OK (1409 tests, 11852 assertions)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ bash outils/deployer-test.sh   (copie propre de f05cf95 ; le verrou tenu 40 s par un autre processus ; une suite complète lancée à 13:55:48 sur offregen_test, la base de .env.test.local)
+== Verrou
+Un autre déploiement est en cours : attente, 30 minutes au plus.
+verrou pris
+== Tests et analyse
+base des tests : offregen_deploiement_test, reconstruite de zéro
+OK (1409 tests, 11852 assertions)
+analyse statique : sans erreur
+SONDE VERTE
+DÉPLOYÉ : f05cf9581d47d6fd40c93c8f410cb59a8bbe3bbd sur https://easy-offres.xtradev.ch
+fin du script de déploiement : 13:59:18, 265 s, code de sortie 0
+la suite concurrente, sur offregen_test : Tests: 1409, Assertions: 6270, Errors: 420, Failures: 238.
+```
+
+Lecture de la dernière ligne : au même moment, la base que l'ancien script aurait utilisée rendait 658 tests en défaut. Cause non cherchée (migrations en retard sur cette base, ou une autre suite).
+
+Erreur de ma part pendant cet essai : je croyais que le `.env.test.local` de `~/offreGen-admin` désignait ma base `offregen_admin_test`. Il désigne `offregen_test`, la base commune : la suite concurrente y a tourné. Aucune autre suite ne tournait au lancement (compté : 0), une suite lancée ensuite par une autre session a pu être percutée.
+
+Reste à prouver : l'arrêt « DÉJÀ EN SERVICE » (il faut une version en service plus récente que le commit déployé).
