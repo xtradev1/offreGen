@@ -134,6 +134,11 @@ final class Comptes
             }
             // Le mot de passe de la démonstration ne sert plus, et le numéro de session avance.
             $this->artisans->remplacerMotDePasse($artisan['id'], $hache);
+            // Chantier onboarding : la mise en route s'ouvre (lot 4, IBAN gardé) ; le guide de la démo ne se rejoue
+            // pas, même quitté avant sa fin (O1).
+            $reglages = new DepotReglages($this->base, $portee);
+            $reglages->rouvrirAssistant();
+            $reglages->guideFini(\DateTimeImmutable::createFromInterface($this->horloge->now()));
             return $bilan;
         });
     }

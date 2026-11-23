@@ -67,17 +67,51 @@ final class DemoControleur
             return $this->perimee();
         }
         $this->c->depotEquipe()->saisirCourriel($ouverte['artisan'], $courriel);
+        // Un membre connecté qui ouvre SA démo d'entraînement garde de quoi revenir dans son espace (lot 8, O12 B). La
+        // session de la démo est neuve : ce qu'il faut en garder se lit avant, et se pose après.
+        $membre = null;
+        $connecte = $this->c->authentification()->artisanConnecte($requete);
+        if ($connecte !== null && $demo['entrainement'] === 1 && $demo['cree_par'] === $connecte) {
+            $compte = $this->c->artisans()->parId($connecte);
+            $membre = $compte === null ? null : ['id' => $compte['id'], 'version' => $compte['version_session'], 'guide' => $requete->getSession()->get(AdminControleur::GUIDE_EQUIPE) === true];
+        }
         $this->c->authentification()->ouvrirSession($requete, $ouverte['artisan'], $ouverte['version']);
-        // Le courriel « revenir dans votre démo » : à la première entrée, et quand le courriel est corrigé.
+        if ($membre !== null) {
+            $this->c->retourEquipe()->poser($requete, $membre['id'], $membre['version'], $ouverte['artisan']);
+            $this->c->journalAdmin()->noter($membre['id'], $ouverte['artisan'], 'entree_entrainement', null, $this->c->horloge()->now());
+            if ($membre['guide']) {
+                $requete->getSession()->set(AdminControleur::GUIDE_EQUIPE, true);
+            }
+        }
+        // Le courriel « revenir dans votre démo » : à la première entrée, et quand le courriel est corrigé. Jamais pour
+        // une démo d'entraînement : le membre revient par son espace.
         $liens = $this->c->liensAcces();
         $fin = $demo['demo_fin'];
         $premiere = $ouverte['motif'] !== LiensAcces::DEMO_RETOUR && !$liens->retourDemoEnvoye($ouverte['artisan']);
-        if ($fin !== null && ($premiere || $courriel !== $demo['courriel_saisi'])) {
+        if ($fin !== null && $demo['entrainement'] !== 1 && ($premiere || $courriel !== $demo['courriel_saisi'])) {
             $id = $ouverte['artisan'];
             $presentePar = $demo['presente_par'];
             $this->c->apresReponse()->ajouter(static fn () => $liens->envoyerRetourDemo($id, $courriel, Dates::depuisBase($fin), $presentePar));
         }
         return new RedirectResponse('/', 303);
+    }
+
+    /**
+     * « Revenir à mon espace » depuis une démo d'entraînement (lot 8) : le compte du membre se rouvre si la marque de la
+     * session concorde encore (RetourEquipe) ; 404 sinon, comme pour toute page qui n'existe pas pour ce compte.
+     */
+    public function retourEspace(Request $requete): RedirectResponse
+    {
+        $demoId = $requete->attributes->getInt('_artisan');
+        $membre = $this->c->retourEquipe()->membreARouvrir($requete, $demoId) ?? throw new PageIntrouvable();
+        $guide = $requete->getSession()->get(AdminControleur::GUIDE_EQUIPE) === true;
+        $this->c->authentification()->ouvrirSession($requete, $membre['id'], $membre['version']);
+        if ($guide) {
+            // La session est neuve : le guide en cours se repose, pour la carte de fin du suivi.
+            $requete->getSession()->set(AdminControleur::GUIDE_EQUIPE, true);
+        }
+        $this->c->journalAdmin()->noter($membre['id'], $demoId, 'retour_entrainement', null, $this->c->horloge()->now());
+        return new RedirectResponse($guide ? '/admin/suivi?guide=fin' : '/admin/suivi', 303);
     }
 
     /** L'écran « Passer à l'essai » (Xavier, 2026-11-20), ouvert depuis le ruban d'une démo de l'équipe. */
@@ -129,7 +163,7 @@ final class DemoControleur
     /**
      * La démo du compte connecté, si l'équipe l'a créée ; 404 pour tout autre compte.
      *
-     * @return array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null}
+     * @return array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null, cree_par: int|null, entrainement: int}
      */
     private function demoCourante(Request $requete): array
     {
@@ -138,6 +172,19 @@ final class DemoControleur
             throw new PageIntrouvable();
         }
         return $demo;
+    }
+
+    /**
+     * L'écran de fin d'une démo (K1 de l'administration, chantier onboarding, lot 2) : à la première ouverture
+     * après la date de fin, puis depuis le micro. Avant la fin, retour aux offres.
+     */
+    public function fin(Request $requete): Response
+    {
+        $demo = $this->demoCourante($requete);
+        if (!Demos::terminee($demo['demo_fin'], $this->c->horloge()->now())) {
+            return new RedirectResponse('/', 303);
+        }
+        return $this->page('demo_terminee.html.twig', ['entreprise' => $demo['entreprise']], 200);
     }
 
     private function perimee(): Response

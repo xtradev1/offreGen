@@ -175,15 +175,22 @@ final class ReglagesRangesTest extends TestCase
         $page = $this->page('/bienvenue/entreprise');
         self::assertStringContainsString('Étape 1 sur 4', $page);
         self::assertStringContainsString('name="adresse_npa"', $page);
+        // Mise en route (chantier onboarding, O15) : « Passer le guide » en haut, un seul bouton en bas.
+        self::assertStringContainsString('Passer le guide', $page);
+        self::assertStringNotContainsString('Plus tard', $page);
 
-        $suites = ['entreprise' => '/bienvenue/marque', 'marque' => '/bienvenue/tva', 'tva' => '/bienvenue/conditions', 'conditions' => '/'];
-        $champs = ['entreprise' => self::ADRESSE, 'marque' => ['modele' => 'bandeau'], 'tva' => ['tva' => '0'], 'conditions' => ['validite_choix' => '60']];
+        // Entreprise, TVA, logo, modèle et couleur ; les conditions restent dans les réglages (PLAN.md, décision 2).
+        $suites = ['entreprise' => '/bienvenue/tva', 'tva' => '/bienvenue/logo', 'logo' => '/bienvenue/marque'];
+        $champs = ['entreprise' => self::ADRESSE, 'tva' => ['tva' => '0'], 'logo' => [], 'marque' => ['modele' => 'bandeau']];
         foreach ($suites as $etape => $suite) {
             $this->page("/bienvenue/$etape");
             self::assertSame($suite, $this->a->post("/bienvenue/$etape", $champs[$etape])->headers->get('Location'), $etape);
         }
+        $marque = $this->page('/bienvenue/marque');
+        self::assertStringNotContainsString('1. Logo', $marque, 'le logo a son étape à lui');
+        self::assertContains($this->a->post('/bienvenue/marque', $champs['marque'])->headers->get('Location'), ['/', '/vos-prix']);
         $a = $this->artisan();
-        self::assertSame(['2800', 0, 60], [$a['adresse_npa'], $a['tva_pour_dix_mille'], $a['validite_jours']]);
+        self::assertSame(['2800', 0], [$a['adresse_npa'], $a['tva_pour_dix_mille']]);
         self::assertNotNull($a['reglages_faits_le']);
         self::assertSame(200, $this->a->get('/')->getStatusCode());
     }

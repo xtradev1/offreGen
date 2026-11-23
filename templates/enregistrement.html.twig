@@ -14,7 +14,10 @@
   <div class="suivi">
     {% include '_etapes.html.twig' with {uuid: fini ? '' : e.uuid} %}
   </div>
-  {% if not fini %}
+  {# Une démo n'a pas d'adresse : aucun courriel ne part (Traiteur::prevenir). Pas de promesse (chantier onboarding, lot 2). #}
+  {% if not fini and sans_courriel %}
+    <p class="muted petit centre">Restez sur cet écran, ou revenez plus tard dans «&nbsp;Offres&nbsp;»&nbsp;: l'offre y apparaît quand elle est prête.</p>
+  {% elseif not fini %}
     <p class="muted petit centre">Vous pouvez fermer l'application&nbsp;: un courriel vous préviendra quand l'offre sera prête.</p>
   {% endif %}
 {% endblock %}

@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onboarding, écarts du code</title>
+<style>
+@font-face { font-family: "Archivo"; font-weight: 500 700; font-display: swap; src: url("../../../public/fonts/archivo-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("../../../public/fonts/inter-latin.woff2") format("woff2"); }
+:root {
+  --mk-ink: #23272D; --mk-bg: #F4F1EA; --mk-surface: #FFFFFF; --mk-line: #DDD8CC; --mk-accent: #23272D;
+  --carte: #FFFFFF; --encre: #23272D; --doux: #454B55; --trait: #DDD8CC; --bord: #7C838C;
+  --acc: #23272D; --sur-acc: #FFFFFF; --mic: #C4552D; --ok: #13553A; --ok-fond: #E1EFE6; --att: #5A4300; --att-fond: #FFF0B3; --err: #8C1D18; --err-fond: #FBE7E4;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --bord: #868C94;
+  --acc: #ECEAE6; --sur-acc: #15171A; --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --err: #FF9A91; --err-fond: #3B1613; } }
+:root[data-theme="dark"] {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --bord: #868C94;
+  --acc: #ECEAE6; --sur-acc: #15171A; --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --err: #FF9A91; --err-fond: #3B1613; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.55 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.doc { max-width: 1100px; margin: 0 auto; padding: 16px; }
+h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.3px; }
+h1 { font-size: 28px; line-height: 1.2; margin: 18px 0 8px; }
+h2 { font-size: 22px; line-height: 1.25; margin: 40px 0 8px; }
+h3 { font-size: 18px; margin: 18px 0 6px; }
+.doc p, .doc li { max-width: 820px; }
+.table { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; max-width: 980px; background: var(--carte); border: 1px solid var(--trait); border-radius: 12px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--trait); font-size: 15px; }
+th { font-family: "Archivo", system-ui, sans-serif; }
+.etat { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.fait { background: var(--ok-fond); color: var(--ok); }
+.bloque { background: var(--err-fond); color: var(--err); }
+.toi { background: var(--att-fond); color: var(--att); }
+.ecrans { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; }
+.ecrans figure, .mk-compare figure { margin: 0; flex: 0 1 300px; }
+figure img { display: block; width: 100%; max-width: 300px; height: auto; border-radius: 14px; border: 1px solid var(--trait); }
+figcaption { font-size: 14px; color: var(--doux); margin-top: 6px; max-width: 300px; }
+.mk-compare img { max-width: 300px; }
+.ecart { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--mic); border-radius: 12px; padding: 10px 14px; margin: 10px 0; max-width: 820px; }
+.ecart ul { margin: 4px 0; padding-left: 20px; }
+.regle { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--ok); border-radius: 12px; padding: 10px 14px; margin: 10px 0; max-width: 820px; }
+blockquote { margin: 8px 0; padding: 8px 12px; border-left: 3px solid var(--bord); background: var(--carte); max-width: 780px; }
+.choix { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 12px 14px; margin: 12px 0 22px; max-width: 980px; }
+.choix .q { margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--bord); background: var(--carte); color: var(--encre); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--sur-acc); font-weight: 600; }
+.opts button:focus-visible, #copier:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.choix textarea, #texte { width: 100%; font: inherit; font-size: 15px; border: 1px solid var(--bord); border-radius: 10px; padding: 8px 10px; background: var(--carte); color: var(--encre); }
+#texte { min-height: 170px; }
+#copier { font: 600 16px "Archivo", system-ui, sans-serif; min-height: 52px; padding: 10px 20px; border-radius: 12px; border: 0; background: var(--acc); color: var(--sur-acc); cursor: pointer; }
+code { font-size: 14px; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main class="doc">
+<h1>L'onboarding codé, face aux maquettes validées</h1>
+<p>Code des lots 0 à 8, joué le 23.11.2026 au téléphone (390 px) sur la base locale du chantier. En face : les maquettes que tu as validées (v3 pour le guide du commercial, v5 pour l'aide à la vente, v6 pour la part du commercial, parcours v4 de l'administration pour l'écran de fin). Cette page montre seulement les écarts ; ce qui suit la maquette n'y est pas repris. Sous chaque écart qui demande ton avis : tes boutons et un commentaire. « Copier le texte », en bas, rassemble tes réponses pour la conversation.</p>
+
+<h2 id="lots" data-toc="Les lots">Les douze lots</h2>
+<div class="table"><table>
+<tr><th>Lot</th><th>Ce qu'il fait</th><th>État</th></tr>
+<tr><td>0</td><td>Traceur : l'anneau et la bulle du guide sur « Offres », le moteur du guide</td><td><span class="etat fait">fait</span></td></tr>
+<tr><td>1</td><td>Migration : trois colonnes sur le compte (guide de l'artisan vu, guide de l'équipe vu, démo d'entraînement)</td><td><span class="etat fait">fait</span>, pas encore jouée sur le test</td></tr>
+<tr><td>2</td><td>Fin de démo : dictée et imports refusés après la date de fin, écran de fin, fenêtre des deux derniers jours, attente sans promesse de courriel</td><td><span class="etat fait">fait</span>, écart 1</td></tr>
+<tr><td>3</td><td>Guide de l'artisan : micro, conseils, « Terminer », attente, trois repères, « Compris » ; « Revoir le guide » dans « Plus »</td><td><span class="etat fait">fait</span></td></tr>
+<tr><td>4</td><td>Mise en route en cinq étapes : entreprise et IBAN, TVA en quatre boutons, logo, modèle et couleur en blocs, « Vos prix »</td><td><span class="etat fait">fait</span>, écart 8</td></tr>
+<tr><td>5</td><td>Avertissement avant d'envoyer une offre qui porte encore « Démo Peintre », avec « Envoyer quand même »</td><td><span class="etat fait">fait</span></td></tr>
+<tr><td>6</td><td>Aide à la vente dans <code>/admin</code>, imprimable</td><td><span class="etat fait">fait</span>, écarts 6 et 7</td></tr>
+<tr><td>7</td><td>Suivi du commercial : ses démos en cours (courriel du prospect, ouverture, offres, jours restants), ses chiffres</td><td><span class="etat fait">fait</span></td></tr>
+<tr><td>8</td><td>Arrivée du commercial : trois écrans de bienvenue, guide de dix gestes, vraie démo d'entraînement, retour dans son espace sans mot de passe</td><td><span class="etat fait">fait</span>, écarts 2 à 5</td></tr>
+<tr><td>9</td><td>La part du commercial : 10 %, taux propre par commercial, l'annuel sur une ligne « En plus »</td><td><span class="etat bloque">bloqué</span> : il faut d'abord les paiements (lot B3 de l'administration)</td></tr>
+<tr><td>10</td><td>« Demander de l'aide » et l'écran de fin mènent à « Aide et questions »</td><td><span class="etat bloque">bloqué</span> : la page du chantier support n'existe pas encore</td></tr>
+<tr><td>11</td><td>Vérification, revue du code par quatre relecteurs, recette</td><td>revue faite ; <span class="etat toi">recette à toi</span> sur le test</td></tr>
+</table></div>
+
+<h2 id="conforme" data-toc="Conforme">Ce qui suit la maquette, pour mémoire</h2>
+<p>Quatre écrans du code, sans écart à signaler.</p>
+<div class="ecrans">
+  <figure><img src="ECARTS-code-img/lot3-micro.jpg" alt="Guide de l'artisan, première étape : l'anneau autour du micro"><figcaption>Lot 3 : le guide de l'artisan commence au micro.</figcaption></figure>
+  <figure><img src="ECARTS-code-img/lot3-reperes.jpg" alt="Les trois repères numérotés sur la première offre, bouton Compris"><figcaption>Lot 3 : les trois repères sur la première offre.</figcaption></figure>
+  <figure><img src="ECARTS-code-img/tva-code.jpg" alt="Mise en route, étape 2 sur 5 : la TVA en quatre boutons"><figcaption>Lot 4 : la TVA en quatre boutons, étape 2 sur 5.</figcaption></figure>
+  <figure><img src="ECARTS-code-img/lot5-avertissement.jpg" alt="Avertissement : votre offre porte encore Démo Peintre, deux boutons"><figcaption>Lot 5 : l'avertissement avant l'envoi.</figcaption></figure>
+</div>
+
+<h2 id="e1" data-toc="1. Fin de démo">1. L'écran de fin de démo</h2>
+<div class="mk-compare">
+  <figure><img src="ECARTS-code-img/k1-maquette.jpg" alt="Maquette : écran de fin avec date de suppression, mois gratuit, Demander un appel"><figcaption>Maquette validée (parcours v4, K1).</figcaption></figure>
+  <figure><img src="ECARTS-code-img/k1-code.jpg" alt="Code : Votre démo est terminée, Vos offres restent consultables, deux boutons"><figcaption>Code.</figcaption></figure>
+</div>
+<div class="ecart"><b>Retiré du texte validé, parce que le code ne le tient pas encore :</b>
+<ul>
+<li>« jusqu'au 19.12.2026, puis elles sont supprimées » : aucune suppression n'existe (lot 8 de l'administration non livré) ;</li>
+<li>« un mois gratuit, sans carte bancaire » : l'essai d'aujourd'hui compte 10 offres, le mois gratuit appartient au lot B ;</li>
+<li>« Demander un appel » : remplacé par « Aide et questions » du chantier support (T11), qui arrive avec le lot 10.</li>
+</ul>
+Le logo manque aussi : l'écran reprend le ruban de la démo. Je remettrai les phrases quand ce qu'elles promettent existera.</div>
+<div class="choix" data-cle="E1"><p class="q"><b>E1</b> · L'écran de fin sans date de suppression, sans mois gratuit, sans « Demander un appel » pour l'instant</p><div class="opts"><button type="button" data-q="E1" data-v="Valider">Valider</button><button type="button" data-q="E1" data-v="Pas valider">Pas valider</button></div><textarea data-c="E1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="e2" data-toc="2. Bienvenue">2. La bienvenue du commercial</h2>
+<div class="mk-compare">
+  <figure><img src="ECARTS-code-img/bienvenue-maquette.jpg" alt="Maquette : bienvenue, trois lignes cochées dont les demandes d'appel"><figcaption>Maquette validée (v3).</figcaption></figure>
+  <figure><img src="ECARTS-code-img/bienvenue-code.jpg" alt="Code : bienvenue, 1 sur 3, trois puces sans les demandes d'appel"><figcaption>Code.</figcaption></figure>
+</div>
+<div class="ecart"><b>Texte c.b1.p2 changé :</b> « Vous suivez les démos, les essais et les demandes d'appel de vos artisans » devient « Vous suivez les démos et les essais de vos artisans ». Les demandes d'appel passent au chantier support (T11). Deux détails visibles : des puces au lieu des coches, et un compteur « 1 sur 3 » ajouté sous les pastilles.</div>
+<div class="choix" data-cle="E2"><p class="q"><b>E2</b> · La bienvenue sans « les demandes d'appel », avec puces et « 1 sur 3 »</p><div class="opts"><button type="button" data-q="E2" data-v="Valider">Valider</button><button type="button" data-q="E2" data-v="Pas valider">Pas valider</button></div><textarea data-c="E2" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="e3" data-toc="3. Rond +">3. Le guide du commercial : plus de rond +</h2>
+<div class="mk-compare">
+  <figure><img src="ECARTS-code-img/barre-maquette.jpg" alt="Maquette : barre du bas du commercial avec un rond + terracotta au centre"><figcaption>Maquette : la barre du bas du commercial a un rond + au centre.</figcaption></figure>
+  <figure><img src="ECARTS-code-img/guide1-code.jpg" alt="Code : étape 1 sur 10, l'anneau autour du bouton Créer une démo"><figcaption>Code : pas de rond, l'anneau entoure « Créer une démo ».</figcaption></figure>
+</div>
+<div class="ecrans">
+  <figure><img src="ECARTS-code-img/guidefin-code.jpg" alt="Code : carte Le guide est terminé, au retour dans l'espace"><figcaption>Code : la carte de fin, texte g.fin.texte réécrit.</figcaption></figure>
+</div>
+<div class="ecart"><b>Pourquoi :</b> l'administration actuelle n'a pas de rond + dans sa barre du bas. Le bouton s'appelle « Créer une démo », en bas de « Mon suivi ». Deux textes suivent :
+<ul>
+<li>g.rond : « Touchez le rond + pour créer une démo » devient « Touchez « Créer une démo » pour commencer » ;</li>
+<li>g.fin.texte : « le rond +, le métier, « Créer la démo », puis l'artisan scanne le code » devient « « Créer une démo », choisir le métier, « Créer la démo ». L'artisan scanne ensuite le code QR ».</li>
+</ul></div>
+<div class="choix" data-cle="E3"><p class="q"><b>E3</b> · Le guide montre « Créer une démo » au lieu du rond +</p><div class="opts"><button type="button" data-q="E3" data-v="A, garder « Créer une démo »">A · Garder « Créer une démo »</button><button type="button" data-q="E3" data-v="B, ajouter le rond + à la barre du bas de l'administration">B · Ajouter le rond + à la barre de l'administration (change la navigation de tous les membres)</button></div><textarea data-c="E3" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="e4" data-toc="4. Code QR">4. La page du code QR de la démo d'entraînement</h2>
+<div class="ecrans">
+  <figure><img src="ECARTS-code-img/qr-code.jpg" alt="Code : étape 4 sur 10, bouton Ouvrir la démo sur cet appareil et phrase sur les deux heures"><figcaption>Code : un bouton, et une phrase sur la durée du retour.</figcaption></figure>
+</div>
+<div class="ecart"><b>Ajouté par la revue du code.</b> La maquette v3 disait « ouvrez la démo ici », sans dire comment. Deux corrections de sécurité ont changé l'écran :
+<ul>
+<li>la démo s'ouvre par un bouton (un formulaire), plus par un lien : un lien qui change de session et écrit en base est interdit par les règles du projet ;</li>
+<li>« Revenir à mon espace » vaut deux heures. Sans limite, un téléphone tendu à un prospect lui aurait ouvert l'espace du commercial. D'où la phrase « Sur cet appareil, la démo remplace votre espace. Le bouton « Revenir à mon espace » reste valable deux heures ; ensuite, reconnectez-vous. »</li>
+</ul></div>
+<div class="choix" data-cle="E4"><p class="q"><b>E4</b> · Le bouton « Ouvrir la démo sur cet appareil » et le retour valable deux heures</p><div class="opts"><button type="button" data-q="E4" data-v="Valider">Valider</button><button type="button" data-q="E4" data-v="Pas valider">Pas valider</button></div><textarea data-c="E4" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="e5" data-toc="5. Entraînement">5. Trois démos d'entraînement par 24 heures</h2>
+<div class="ecart">Aucune maquette ne fixait de limite. J'en ai mis une : trois démos d'entraînement en 24 heures au plus, en plus des dix démos de prospects. Chaque démo d'entraînement coûte une dictée (quelques centimes d'IA). Au-delà, le commercial lit : « Vous avez fait 3 démos d'entraînement en 24 heures : c'est la limite. Réessayez dans 24 heures. »</div>
+<div class="choix" data-cle="E5"><p class="q"><b>E5</b> · Trois démos d'entraînement en 24 heures au plus</p><div class="opts"><button type="button" data-q="E5" data-v="Garder 3">Garder 3</button><button type="button" data-q="E5" data-v="Autre nombre">Autre nombre (dans le commentaire)</button></div><textarea data-c="E5" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="e6" data-toc="6. Questions">6. L'aide à la vente : deux rubriques absentes</h2>
+<div class="mk-compare">
+  <figure><img src="ECARTS-code-img/aide-maquette.jpg" alt="Maquette : cinq rubriques, dont Les questions à poser et Ce qu'on ne dit pas"><figcaption>Maquette validée (v5) : cinq rubriques.</figcaption></figure>
+  <figure><img src="ECARTS-code-img/aide-code.jpg" alt="Code : trois rubriques, La démo au rendez-vous, Les objections, Le message de démo"><figcaption>Code : trois rubriques.</figcaption></figure>
+</div>
+<div class="regle"><b>Réglé :</b> « Ce qu'on ne dit pas » reste hors du code, ta réponse O31 du 22.11 (« je gère pas cela maintenant »).</div>
+<div class="ecart"><b>« Les questions à poser » :</b> la rubrique figurait fermée dans la maquette, son contenu n'a jamais été montré. Une source existe : les six questions de <code>docs/terrain/2026-11-18_questions-adequation.md</code>, plus « Voyez-vous un ou deux collègues à qui la montrer ? ». Elles sont écrites pour tes entretiens de découverte. La sixième demande au prospect à partir de quel prix l'application lui paraîtrait trop chère : pour un commercial qui vend, elle est à revoir.</div>
+<div class="choix" data-cle="E6"><p class="q"><b>E6</b> · Le contenu de « Les questions à poser »</p><div class="opts"><button type="button" data-q="E6" data-v="A, je propose une version tirée des six questions, en maquette">A · Tu proposes une version tirée des six questions, en maquette</button><button type="button" data-q="E6" data-v="B, je donne les questions">B · Je te donne les questions</button><button type="button" data-q="E6" data-v="C, retirer la rubrique">C · Retirer la rubrique</button></div><textarea data-c="E6" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="e7" data-toc="7. Tes phrases">7. Deux de tes phrases dans « Les objections »</h2>
+<p>Elles sont dans le code avec tes mots. Le relecteur les a jugées bloquantes : aucune mesure ne les appuie dans le dépôt. Je les signale une fois.</p>
+<blockquote>k.o3.r : « Dans tous les tests effectués, 99 % des lignes rédigées sont correctes par rapport à ce qui a été dit. Une information absente vous est transmise. »</blockquote>
+<div class="ecart">Le sous-chantier 29 vise 95 % de lignes justes, et son corpus de vraies dictées reste à faire (tâche ouverte dans Origin). Un prospect qui voit deux lignes fausses sur dix pendant la démo se souviendra du 99 %.</div>
+<div class="choix" data-cle="E7a"><p class="q"><b>E7a</b> · La phrase des 99 %</p><div class="opts"><button type="button" data-q="E7a" data-v="Garder">Garder</button><button type="button" data-q="E7a" data-v="Retirer le chiffre">Retirer le chiffre</button><button type="button" data-q="E7a" data-v="Réécrire">Réécrire (dans le commentaire)</button></div><textarea data-c="E7a" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+<blockquote>k.o4.r : « Vous pouvez facilement importer depuis vos dernières factures le catalogue de vos produits usuels. »</blockquote>
+<div class="ecart">L'import du catalogue existe. Un import depuis des factures n'a jamais été essayé sur une vraie facture d'artisan.</div>
+<div class="choix" data-cle="E7b"><p class="q"><b>E7b</b> · La phrase de l'import depuis les factures</p><div class="opts"><button type="button" data-q="E7b" data-v="Garder">Garder</button><button type="button" data-q="E7b" data-v="Retirer « depuis vos dernières factures »">Retirer « depuis vos dernières factures »</button><button type="button" data-q="E7b" data-v="Réécrire">Réécrire (dans le commentaire)</button></div><textarea data-c="E7b" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="e8" data-toc="8. Vos prix">8. « Vos prix », cinquième étape de la mise en route</h2>
+<div class="mk-compare">
+  <figure><img src="ECARTS-code-img/tva-code.jpg" alt="Code : étape 2 sur 5 avec Passer le guide et la barre de progression"><figcaption>Étapes 1 à 4 : « Étape 2 sur 5 », « Passer le guide ».</figcaption></figure>
+  <figure><img src="ECARTS-code-img/prix-code.jpg" alt="Code : Vos prix, 1 sur 12, Plus tard en haut à gauche"><figcaption>Étape 5 : « 1 sur 12 », « Plus tard ».</figcaption></figure>
+</div>
+<div class="ecart">« Vos prix » est l'écran d'un autre chantier, repris tel quel. L'artisan y arrive sans le titre « Étape 5 sur 5 » ni « Passer le guide » : le changement d'écran se voit. S'il n'a aucun produit sans prix, il saute cette étape et arrive sur ses offres.</div>
+<div class="choix" data-cle="E8"><p class="q"><b>E8</b> · « Vos prix » dans la mise en route</p><div class="opts"><button type="button" data-q="E8" data-v="A, laisser l'écran tel quel">A · Laisser l'écran tel quel</button><button type="button" data-q="E8" data-v="B, aligner : « Étape 5 sur 5 » et « Passer le guide »">B · L'aligner : « Étape 5 sur 5 » et « Passer le guide »</button></div><textarea data-c="E8" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="e9" data-toc="9. Boutons">9. Les mots « Suivant » et « Plus tard »</h2>
+<div class="ecart">Le relecteur demande des verbes à l'infinitif sur les boutons, comme « Passer à l'essai ». « Compris » est gardé (tes réponses O3 et O14). « Suivant » (bienvenue, guide, mise en route) et « Plus tard » (bienvenue du commercial, mise en route) sont à ton choix.</div>
+<div class="choix" data-cle="E9"><p class="q"><b>E9</b> · « Suivant » et « Plus tard »</p><div class="opts"><button type="button" data-q="E9" data-v="Garder">Garder</button><button type="button" data-q="E9" data-v="Changer">Changer (dans le commentaire)</button></div><textarea data-c="E9" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="bloques" data-toc="Bloqués">Les lots 9 et 10 : absents du code</h2>
+<p>Rien à décider ici : ces écrans attendent d'autres chantiers.</p>
+<h3>Lot 9 : la part du commercial</h3>
+<div class="mk-compare">
+  <figure><img src="ECARTS-code-img/barre-maquette.jpg" alt="Maquette : Votre part en novembre, abonnement mensuel et ligne En plus pour l'annuel"><figcaption>Maquette validée (v6, O35 et O36).</figcaption></figure>
+  <figure><img src="ECARTS-code-img/suivi-code.jpg" alt="Code : bas du suivi, trois chiffres Amenés par vous, À l'essai, Abonnés, sans montant"><figcaption>Code : les chiffres, sans montant.</figcaption></figure>
+</div>
+<div class="ecart">Une part se calcule sur un paiement arrivé. Les paiements arrivent avec le lot B3 de l'administration (QR-facture, « paiement reçu »), qui n'est pas livré. Le taux de 10 % sera enregistré avec chaque paiement, pour qu'un changement de taux ne touche jamais le passé.</div>
+<h3>Lot 10 : « Aide et questions »</h3>
+<div class="ecrans">
+  <figure><img src="ECARTS-code-img/fenetre-code.jpg" alt="Code : fenêtre Votre démo se termine demain, deux boutons, sans lien d'aide"><figcaption>Code : la fenêtre des deux derniers jours, sans lien d'aide.</figcaption></figure>
+</div>
+<div class="ecart">La fenêtre, l'écran de fin et « Demander de l'aide » dans « Plus » mèneront à « Aide et questions », la page du chantier support. Elle n'existe pas encore : aucun lien pour l'instant, plutôt qu'un lien vers une page vide.</div>
+
+<h2 id="copier-texte" data-toc="Copier">Copier le texte</h2>
+<p><button id="copier" type="button">Copier le texte</button></p>
+<textarea id="texte" readonly></textarea>
+</main>
+<script>
+(function () {
+  var CLE = 'ecarts-code-onboarding-2026-11-23', etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  function texte() {
+    var lignes = [];
+    document.querySelectorAll('.choix').forEach(function (c) {
+      var q = c.getAttribute('data-cle'), e = etat[q] || {};
+      if (e.v || e.c) { lignes.push('- ' + q + ' : ' + (e.v || '') + (e.c ? ' · ' + e.c : '')); }
+    });
+    document.getElementById('texte').value = lignes.length ? "Réponses, écarts du code de l'onboarding (23.11) :\n" + lignes.join('\n') : '';
+  }
+  document.querySelectorAll('.opts button').forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    b.setAttribute('aria-pressed', (etat[q] && etat[q].v === b.getAttribute('data-v')) ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      etat[q] = etat[q] || {};
+      etat[q].v = b.getAttribute('data-v');
+      document.querySelectorAll('.opts button[data-q="' + q + '"]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      garder(); texte();
+    });
+  });
+  document.querySelectorAll('textarea[data-c]').forEach(function (t) {
+    var q = t.getAttribute('data-c');
+    t.value = (etat[q] && etat[q].c) || '';
+    t.addEventListener('input', function () { etat[q] = etat[q] || {}; etat[q].c = t.value; garder(); texte(); });
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    texte();
+    var t = document.getElementById('texte');
+    t.select();
+    try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand('copy'); }
+  });
+  texte();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

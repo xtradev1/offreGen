@@ -2,6 +2,8 @@
 {# Ma marque, en trois touchers : le logo (envoyé à part, formulaire form-logo, sa couleur est proposée
    d'office), la couleur, le modèle. La CSP refuse les styles en ligne : pastilles dessinées en SVG. #}
 <div class="card" id="marque">
+  {# Mise en route : le logo a son étape à lui (_reglages_logo.html.twig) ; ici, la couleur puis le modèle. #}
+  {% if not assistant %}
   <fieldset class="groupe">
     <legend>1. Logo</legend>
     <div class="logo-ligne">
@@ -13,8 +15,9 @@
     <noscript><button class="btn" type="submit" form="form-logo">Envoyer le logo choisi</button></noscript>
     <p class="muted petit">PNG ou JPEG, 5&nbsp;Mo au plus. Sa couleur devient celle de vos documents.</p>
   </fieldset>
+  {% endif %}
   <fieldset class="groupe choix">
-    <legend>2. Couleur</legend>
+    <legend>{{ assistant ? texte('e.couleur') : '2. Couleur' }}</legend>
     <div class="teintes">
       {% for t in teintes %}
         <label class="teinte" title="{{ t == marque.couleurDuLogo ? 'Couleur du logo' : t }}"><input type="radio" name="couleur_choix" value="{{ t }}"{% if champs.couleur_choix == t %} checked{% endif %}>
@@ -41,7 +44,7 @@
     </div>
   </fieldset>
   <fieldset class="groupe">
-    <legend>3. Modèle</legend>
+    <legend>{{ assistant ? texte('e.modele') : '3. Modèle' }}</legend>
     {# Douze modèles en quatre familles (Xavier, 2026-11-19) ; celui du métier du compte est marqué. #}
     {% for famille in familles %}
     <h3 class="famille">{{ famille.nom }}</h3>

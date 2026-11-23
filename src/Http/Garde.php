@@ -43,6 +43,12 @@ final class Garde
         $this->pile->pop();
     }
 
+    /** La requête en cours : sa session, pour les pages qui n'en reçoivent pas (chantier onboarding, lot 8). */
+    public function requeteCourante(): ?Request
+    {
+        return $this->pile->getCurrentRequest();
+    }
+
     /** Artisan de la requête en cours, posé par le noyau sur les routes réservées ; null ailleurs. */
     public function artisanCourant(): ?int
     {

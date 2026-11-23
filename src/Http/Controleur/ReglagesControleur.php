@@ -39,8 +39,12 @@ final class ReglagesControleur
     /** Les rubriques du sommaire, dans l'ordre de la maquette validée le 2026-11-12. */
     public const RUBRIQUES = ['entreprise' => 'Mon entreprise', 'marque' => 'Ma marque', 'conditions' => "Conditions de l'offre", 'tva' => 'TVA et arrondi'];
 
-    /** Les étapes de l'assistant du premier lancement. */
-    public const ETAPES = ['entreprise' => 'Votre entreprise', 'marque' => 'Votre marque', 'tva' => 'La TVA', 'conditions' => 'Vos conditions'];
+    /**
+     * Les étapes de l'assistant du premier lancement et du passage d'une démo à l'essai (mise en route, chantier
+     * onboarding, O15, O28 et O34 de Xavier) : l'entreprise et son IBAN, la TVA, le logo, le modèle et la couleur ; puis
+     * « Vos prix » s'il reste des produits sans prix. Les conditions restent dans les réglages (PLAN.md, décision 2).
+     */
+    public const ETAPES = ['entreprise' => 'Votre entreprise', 'tva' => 'La TVA', 'logo' => 'Votre logo', 'marque' => 'Modèle et couleur'];
 
     public function __construct(private readonly Conteneur $c)
     {
@@ -209,7 +213,13 @@ final class ReglagesControleur
             return new RedirectResponse('/bienvenue/' . $suivante, 303);
         }
         $this->c->reglages($portee)->marquerAssistantFait($this->c->horloge()->now());
-        Flash::dire($requete, 'info', 'C\'est prêt : vos offres porteront votre en-tête, votre marque et vos conditions.');
+        // Les produits gardés de la démo, sans prix : « Vos prix », un par un, avec le prix de la démo proposé. Le message
+        // « Votre compte est prêt » (il renvoie au micro) seulement sur « Offres » (relecture du 2026-11-22).
+        if ($this->c->produits($portee)->sansPrix() !== []) {
+            return new RedirectResponse('/vos-prix', 303);
+        }
+        $textes = $this->c->textes();
+        Flash::dire($requete, 'info', html_entity_decode(strip_tags($textes->texte('e.fin.titre') . '. ' . $textes->texte('e.fin.texte')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         return new RedirectResponse('/', 303);
     }
 
@@ -377,10 +387,11 @@ final class ReglagesControleur
         return new RedirectResponse(self::retourDuLogo($requete), 303);
     }
 
-    /** Seules deux adresses : la rubrique Marque, ou l'étape Marque de l'assistant. */
+    /** Seules trois adresses : la rubrique Marque, ou les étapes Logo et Marque de l'assistant. */
     private static function retourDuLogo(Request $requete): string
     {
-        return $requete->request->getString('retour') === '/bienvenue/marque' ? '/bienvenue/marque' : '/reglages/marque';
+        $retour = $requete->request->getString('retour');
+        return in_array($retour, ['/bienvenue/logo', '/bienvenue/marque'], true) ? $retour : '/reglages/marque';
     }
 
     private function effacer(?string $logo): void
@@ -437,7 +448,9 @@ final class ReglagesControleur
         $assistant = null;
         if ($etape !== null) {
             $etapes = array_keys(self::ETAPES);
-            $assistant = ['etapes' => $etapes, 'numero' => (int) array_search($etape, $etapes, true) + 1];
+            // « Vos prix » compte pour une étape quand des produits attendent leur prix (maquette v6, cinq étapes).
+            $total = count($etapes) + ($this->c->produits($portee)->sansPrix() !== [] ? 1 : 0);
+            $assistant = ['etapes' => $etapes, 'numero' => (int) array_search($etape, $etapes, true) + 1, 'total' => $total];
         }
         return new Response($this->c->twig()->render('reglages_rubrique.html.twig', [
             'sections' => $sections,

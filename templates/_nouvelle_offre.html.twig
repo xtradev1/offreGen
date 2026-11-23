@@ -53,7 +53,10 @@
 {% endset %}
 
 {% set essai_compte = essai() %}
-<div class="nouvelle" data-nouvelle data-duree-max="{{ duree_max_secondes }}"{% if essai_compte and essai_compte.epuise %} data-epuise="{{ essai_compte.refus }}"{% endif %}>
+{# Une démo finie refuse la dictée comme un essai épuisé (chantier onboarding, lot 2). #}
+{% set demo_finie = demo() %}
+{% set refus = essai_compte and essai_compte.epuise ? essai_compte.refus : (demo_finie and demo_finie.terminee ? constant('OffreGen\\Http\\Controleur\\ImportControleur::DEMO_TERMINEE') : '') %}
+<div class="nouvelle" data-nouvelle data-duree-max="{{ duree_max_secondes }}"{% if refus %} data-epuise="{{ refus }}"{% endif %}>
   <form id="import" method="post" action="/import" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     <input class="cache" id="audio" name="audio" type="file" accept="audio/*,.m4a,.mp3,.ogg,.opus,.wav,.amr,.3gp,.webm" required data-envoi-fichier>

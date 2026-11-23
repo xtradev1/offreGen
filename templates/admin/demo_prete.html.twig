@@ -13,9 +13,20 @@
       <input type="hidden" name="_csrf" value="{{ csrf() }}">
       <button class="btn large" type="submit">Envoyer par message</button>
     </form>
-    <p class="muted"><a class="lien" href="{{ lien }}">Ouvrir la démo sur cet appareil</a>&nbsp;: vous y serez connecté à la place de l'administration.</p>
+    {% if entrainement ?? false %}
+      {# Sa démo d'entraînement (chantier onboarding, lot 8) : ouverte d'un toucher, par un POST avec jeton ; son courriel y
+         est déjà. La page d'entrée du prospect n'apprendrait rien. #}
+      <form method="post" action="{{ lien_chemin }}">
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <button class="btn large" type="submit" data-ouvrir-entrainement>Ouvrir la démo sur cet appareil</button>
+      </form>
+      <p class="muted">Sur cet appareil, la démo remplace votre espace. Le bouton «&nbsp;Revenir à mon espace&nbsp;» reste valable deux heures&nbsp;; ensuite, reconnectez-vous.</p>
+    {% else %}
+      <p class="muted"><a class="lien" href="{{ lien }}">Ouvrir la démo sur cet appareil</a>&nbsp;: vous y serez connecté à la place de l'administration.</p>
+    {% endif %}
     <a class="btn primary pc-seul" href="/admin/artisans/{{ compte.id }}">Terminé</a>
   </div>
+  {% if guide %}{% include 'admin/_guide_equipe.html.twig' with {page: 'prete'} %}{% endif %}
 {% endblock %}
 
 {% block actions %}

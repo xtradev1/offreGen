@@ -26,6 +26,7 @@ use OffreGen\Compte\Activite;
 use OffreGen\Compte\Authentification;
 use OffreGen\Compte\Comptes;
 use OffreGen\Compte\DemandesEssai;
+use OffreGen\Compte\Demos;
 use OffreGen\Compte\LiensAcces;
 use OffreGen\Donnees\DepotLiensAcces;
 use OffreGen\Donnees\Base;
@@ -161,6 +162,12 @@ final class Conteneur
         return $this->racine;
     }
 
+    /** Les textes de l'onboarding (chantier 2026-11-21_onboarding). */
+    public function textes(): Textes
+    {
+        return $this->une(Textes::class, fn (): Textes => new Textes($this->racine . '/config/textes-onboarding.json'));
+    }
+
     /**
      * @template T of object
      * @param class-string<T> $classe
@@ -254,6 +261,12 @@ final class Conteneur
     public function depotEquipe(): DepotEquipe
     {
         return $this->une(DepotEquipe::class, fn (): DepotEquipe => new DepotEquipe($this->base()));
+    }
+
+    /** Le retour direct d'un membre depuis sa démo d'entraînement (chantier onboarding, lot 8). */
+    public function retourEquipe(): \OffreGen\Compte\RetourEquipe
+    {
+        return new \OffreGen\Compte\RetourEquipe($this->artisans(), $this->depotEquipe(), $this->horloge());
     }
 
     public function equipe(): Equipe
@@ -401,8 +414,29 @@ final class Conteneur
                 if ($demo === null || $demo['demo_fin'] === null) {
                     return null;
                 }
-                $reste = \OffreGen\Donnees\Dates::depuisBase($demo['demo_fin'])->getTimestamp() - $this->horloge()->now()->getTimestamp();
-                return ['jours' => max(0, (int) ceil($reste / 86400))];
+                $maintenant = $this->horloge()->now();
+                $reste = \OffreGen\Donnees\Dates::depuisBase($demo['demo_fin'])->getTimestamp() - $maintenant->getTimestamp();
+                // terminee : dictée et import refusés ; avant_fin : jours de calendrier, pour la fenêtre des deux derniers jours.
+                return ['jours' => max(0, (int) ceil($reste / 86400)), 'terminee' => Demos::terminee($demo['demo_fin'], $maintenant),
+                    'avant_fin' => Demos::joursAvantLaFin($demo['demo_fin'], $maintenant)];
+            }));
+            // Un texte de l'onboarding, gras compris (src/Http/Textes.php) : il vient du dépôt, ses variables sont échappées.
+            $twig->addFunction(new TwigFunction('texte', fn (string $id, array $variables = []): string => $this->textes()->texte($id, $variables), ['is_safe' => ['html']]));
+            // La démo d'entraînement d'un membre, ouverte par lui : « Revenir à mon espace » et le guide du commercial (lot 8).
+            $twig->addFunction(new TwigFunction('retour_equipe', function (): bool {
+                $id = $this->garde()->artisanCourant();
+                $requete = $this->garde()->requeteCourante();
+                return $id !== null && $requete !== null && $this->retourEquipe()->present($requete, $id);
+            }));
+            // « Revoir le guide », dans « Plus » : les comptes qui ont un guide.
+            $twig->addFunction(new TwigFunction('guide_possible', function (): bool {
+                $id = $this->garde()->artisanCourant();
+                return $id !== null && $this->reglages(new Portee($id))->guidePossible();
+            }));
+            // Le guide à anneau de l'artisan (chantier 2026-11-21_onboarding) : démo de l'équipe ou essai, pas encore fini.
+            $twig->addFunction(new TwigFunction('guide_artisan', function (): bool {
+                $id = $this->garde()->artisanCourant();
+                return $id !== null && $this->reglages(new Portee($id))->guideAMontrer();
             }));
             $twig->addExtension(new Formats());
             $twig->addGlobal('pays_adresse', Adresse::PAYS);

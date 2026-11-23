@@ -6,6 +6,7 @@ namespace OffreGen\Compte;
 
 use OffreGen\Catalogue\CatalogueFictif;
 use OffreGen\Donnees\Base;
+use OffreGen\Donnees\Dates;
 use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotEquipe;
 use OffreGen\Donnees\JournalAdmin;
@@ -25,6 +26,8 @@ final class Demos
     public const OFFRES_ESSAI = 10;
     /** Démos qu'un commercial peut créer en 24 heures : chacune peut coûter jusqu'à dix dictées d'IA. */
     public const PAR_JOUR = 10;
+    /** Démos d'entraînement qu'un membre peut ouvrir en 24 heures (chantier onboarding, lot 8). */
+    public const ENTRAINEMENTS_PAR_JOUR = 3;
 
     public function __construct(
         private readonly Base $base,
@@ -43,11 +46,20 @@ final class Demos
      * @throws \OverflowException un commercial a atteint sa limite de la journée
      * @throws \InvalidArgumentException métier inconnu, courriel faux
      */
-    public function creer(PorteeEquipe $p, Role $role, string $metier, string $metierSaisi, string $entreprise, string $courriel): int
+    public function creer(PorteeEquipe $p, Role $role, string $metier, string $metierSaisi, string $entreprise, string $courriel, bool $entrainement = false): int
     {
         $maintenant = \DateTimeImmutable::createFromInterface($this->horloge->now());
-        if ($role === Role::Commercial && $this->depot->demosCreees($p->acteurId, $maintenant->modify('-24 hours')) >= self::PAR_JOUR) {
+        // La démo d'entraînement d'un membre (chantier onboarding, point 2 accepté par Xavier) : hors de la limite de
+        // dix, mais trois en 24 heures au plus, chacune pouvant coûter des dictées d'IA.
+        if ($entrainement && $this->depot->gestes($p->acteurId, 'demo_entrainement', $maintenant->modify('-24 hours')) >= self::ENTRAINEMENTS_PAR_JOUR) {
+            throw new \OverflowException('Vous avez fait ' . self::ENTRAINEMENTS_PAR_JOUR . ' démos d\'entraînement en 24 heures : c\'est la limite. Réessayez dans 24 heures.');
+        }
+        if (!$entrainement && $role === Role::Commercial && $this->depot->demosCreees($p->acteurId, $maintenant->modify('-24 hours')) >= self::PAR_JOUR) {
             throw new \OverflowException('Vous avez créé ' . self::PAR_JOUR . ' démos en 24 heures : c\'est la limite. Réessayez demain, ou demandez à un administrateur.');
+        }
+        if ($entrainement) {
+            // Le membre entre dans sa démo sans rien taper : son propre courriel.
+            $courriel = $this->artisans->parId($p->acteurId)['courriel'] ?? '';
         }
         if (!isset(CatalogueFictif::libelles()[$metier])) {
             throw new \InvalidArgumentException('Choisissez un métier.');
@@ -60,11 +72,15 @@ final class Demos
             $entreprise = 'Démo ' . ($metierSaisi !== '' ? $metierSaisi : CatalogueFictif::libelle($metier));
         }
         $adresse = 'demo-' . bin2hex(random_bytes(8)) . '@demo.invalid';
-        return $this->base->transaction(function () use ($p, $metier, $metierSaisi, $entreprise, $courriel, $adresse, $maintenant): int {
+        return $this->base->transaction(function () use ($p, $metier, $metierSaisi, $entreprise, $courriel, $adresse, $maintenant, $entrainement): int {
             $this->comptes->creer($adresse, $entreprise, true, null, self::OFFRES, $metier, $metierSaisi === '' ? null : $metierSaisi);
             $id = $this->artisans->parCourriel($adresse)['id'] ?? throw new \LogicException('Démo créée introuvable.');
             $this->depot->poserDemo($id, $p->acteurId, $maintenant, $maintenant->modify('+' . self::JOURS . ' days'), $courriel);
-            $this->journal->noter($p->acteurId, $id, 'demo_creee', $metier, $maintenant);
+            if ($entrainement) {
+                // Ni « amené par » ni commission ; supprimée avec les autres démos.
+                $this->depot->marquerEntrainement($id);
+            }
+            $this->journal->noter($p->acteurId, $id, $entrainement ? 'demo_entrainement' : 'demo_creee', $metier, $maintenant);
             return $id;
         });
     }
@@ -81,5 +97,37 @@ final class Demos
             throw new \InvalidArgumentException('Ce courriel ne semble pas valide.');
         }
         return $courriel;
+    }
+
+    /**
+     * La démo est finie : sa date de fin est passée (chantier onboarding, lot 2). Dictée et import sont refusés.
+     */
+    public static function terminee(?string $demoFin, \DateTimeInterface $maintenant): bool
+    {
+        return $demoFin !== null && Dates::depuisBase($demoFin)->getTimestamp() <= $maintenant->getTimestamp();
+    }
+
+    /**
+     * Jours de calendrier, à Zurich, jusqu'au jour de fin : 2 « se termine dans 2 jours », 1 « demain », 0 le jour
+     * même ou après. La fenêtre des deux derniers jours se montre à 2 et à 1 (règles R5 de l'administration).
+     */
+    public static function joursAvantLaFin(string $demoFin, \DateTimeInterface $maintenant): int
+    {
+        $zone = new \DateTimeZone('Europe/Zurich');
+        $fin = Dates::depuisBase($demoFin)->setTimezone($zone)->setTime(0, 0);
+        $jour = \DateTimeImmutable::createFromInterface($maintenant)->setTimezone($zone)->setTime(0, 0);
+        return max(0, (int) $jour->diff($fin)->format('%r%a'));
+    }
+
+    /**
+     * L'entreprise porte encore le nom provisoire d'une démo, « Démo » suivi du métier (même formule que creer()) :
+     * l'envoi d'une offre est précédé d'un avertissement (chantier onboarding, lot 5, O7 et O16 de Xavier).
+     */
+    public static function estNomProvisoire(string $entreprise, ?string $metier, ?string $metierSaisi): bool
+    {
+        if ($metier === null || !isset(CatalogueFictif::libelles()[$metier])) {
+            return false;
+        }
+        return $entreprise === 'Démo ' . ($metierSaisi !== null && $metierSaisi !== '' ? $metierSaisi : CatalogueFictif::libelle($metier));
     }
 }

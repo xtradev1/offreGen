@@ -7,6 +7,7 @@ namespace OffreGen\Http\Controleur;
 use OffreGen\Catalogue\ComparateurFactice;
 use OffreGen\Catalogue\Integration;
 use OffreGen\Catalogue\Regroupement;
+use OffreGen\Compte\Demos;
 use OffreGen\Donnees\DepotImports;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Conteneur;
@@ -55,6 +56,9 @@ final class ImportCatalogueControleur
 
     public function creer(Request $requete): JsonResponse
     {
+        if ($this->demoTerminee($requete)) {
+            return new JsonResponse(['erreur' => ImportControleur::DEMO_TERMINEE], 410);
+        }
         if ($this->restants($requete) <= 0) {
             return new JsonResponse(['erreur' => sprintf("Vous avez fait vos %d imports de ce mois. Le prochain est possible dès le %s.", self::PAR_MOIS, $this->prochainMois())], 429);
         }
@@ -64,6 +68,9 @@ final class ImportCatalogueControleur
     /** @param array<string, string> $parametres */
     public function offre(Request $requete, array $parametres): JsonResponse
     {
+        if ($this->demoTerminee($requete)) {
+            return new JsonResponse(['erreur' => ImportControleur::DEMO_TERMINEE], 410);
+        }
         $depot = $this->imports($requete);
         $import = $depot->parId(Parametres::id($parametres, 'id')) ?? throw new PageIntrouvable();
         if ($import['etat'] !== 'lecture' || $import['offres'] >= self::OFFRES_MAX) {
@@ -299,6 +306,13 @@ final class ImportCatalogueControleur
         $suivant = $this->c->horloge()->now()->setTimezone(new \DateTimeZone('Europe/Zurich'))->modify('first day of next month');
         $mois = (new \IntlDateFormatter('fr_CH', \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, 'Europe/Zurich', null, 'MMMM'))->format($suivant);
         return "1er\u{00A0}" . $mois;
+    }
+
+    /** Une démo finie ne lit plus d'offres par l'IA (revue du 2026-11-22, chantier onboarding). */
+    private function demoTerminee(Request $requete): bool
+    {
+        $a = $this->c->artisans()->parId($requete->attributes->getInt('_artisan'));
+        return $a !== null && $a['demo'] === 1 && Demos::terminee($a['demo_fin'], $this->c->horloge()->now());
     }
 
     private function portee(Request $requete): Portee

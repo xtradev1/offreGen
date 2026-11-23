@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Compte\Demos;
 use OffreGen\Audio\Uuid;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Conteneur;
@@ -57,6 +58,12 @@ final class RangementControleur
     public function reessayer(Request $requete, array $parametres): RedirectResponse
     {
         $uuid = $this->uuid($requete, $parametres);
+        // Une démo finie ne relance plus l'IA (revue du 2026-11-22, chantier onboarding).
+        $a = $this->c->artisans()->parId($requete->attributes->getInt('_artisan'));
+        if ($a !== null && $a['demo'] === 1 && Demos::terminee($a['demo_fin'], $this->c->horloge()->now())) {
+            Flash::dire($requete, 'erreur', ImportControleur::DEMO_TERMINEE);
+            return new RedirectResponse('/fin-de-demo', 303);
+        }
         if (!$this->c->enregistrements($this->portee($requete))->reessayer($uuid)) {
             Flash::dire($requete, 'erreur', "Plus de quoi relancer : l'audio a été effacé. Enregistrez à nouveau.");
             return new RedirectResponse('/', 303);

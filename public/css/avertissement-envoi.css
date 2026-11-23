@@ -1,0 +1,10 @@
+/* L'avertissement avant l'envoi d'une offre au nom provisoire (chantier onboarding, lot 5). À part : app.css est
+   modifiée par d'autres chantiers. Une confirmation s'ouvre en bas, au pouce (CODING_RULES, Ergonomie). */
+.avertissement-envoi { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, .4); }
+.avertissement-envoi[hidden] { display: none; }
+.avertissement-carte { width: 100%; max-width: 480px; display: grid; gap: 10px; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; background: var(--surface); color: var(--ink); box-shadow: 0 -6px 24px rgba(0, 0, 0, .18); }
+.avertissement-carte h2 { margin: 0; font: 700 21px var(--titre); }
+.avertissement-carte p { margin: 0 0 6px; font-size: 17px; }
+.avertissement-carte .btn { min-height: 56px; font-weight: 600; }
+.avertissement-carte .btn.primary { min-height: 64px; }
+@media (min-width: 1024px) { .avertissement-envoi { align-items: center; } .avertissement-carte { border-radius: 18px; } }

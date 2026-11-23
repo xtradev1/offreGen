@@ -78,6 +78,9 @@ final class DroitsEquipeTest extends TestCase
 
     public function testLAccueilRenvoieChaqueRoleASaPage(): void
     {
+        // Bienvenue déjà vue : la première arrivée d'un commercial passe par elle (ArriveeCommercialTest, lot 8 du
+        // chantier onboarding).
+        BaseDeTest::pdo()->exec("UPDATE artisan SET guide_equipe_le = '2026-11-01 08:00:00' WHERE id = {$this->jeu->a}");
         foreach (['administrateur' => '/admin/tableau', 'moderateur' => '/admin/a-aider', 'commercial' => '/admin/suivi'] as $role => $page) {
             $reponse = $this->navigateur($role)->get('/admin');
             self::assertSame(303, $reponse->getStatusCode());

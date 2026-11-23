@@ -8,6 +8,7 @@ use OffreGen\Audio\AudioRefuse;
 use OffreGen\Audio\DureeAudio;
 use OffreGen\Audio\Uuid;
 use OffreGen\Audio\ValidateurAudio;
+use OffreGen\Compte\Demos;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Conteneur;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -17,6 +18,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ImportControleur
 {
+    /** Le refus d'une démo finie, repris par la feuille de dictée (_nouvelle_offre.html.twig, data-epuise). */
+    public const DEMO_TERMINEE = "Votre démo est terminée. Pour dicter ou importer de nouveau, passez à l'essai.";
+
     /** Le navigateur s'arrête pile à la limite ; le fichier qu'il produit peut la dépasser d'une fraction de seconde. */
 
     public function __construct(private readonly Conteneur $c)
@@ -43,6 +47,10 @@ final class ImportControleur
         }
 
         $artisan = $this->c->artisans()->parId($portee->artisanId);
+        // Une démo finie ne dicte plus (chantier onboarding, lot 2) : 410, le message que la feuille de dictée affiche.
+        if ($artisan !== null && $artisan['demo'] === 1 && Demos::terminee($artisan['demo_fin'], $this->c->horloge()->now())) {
+            return $this->page(self::DEMO_TERMINEE, 410);
+        }
         if ($artisan !== null && $artisan['demo'] === 1 && $artisan['plafond_jour'] !== null
             && $enregistrements->recusDepuis($this->debutDuJour()) >= $artisan['plafond_jour']) {
             return $this->page("Ce compte de démonstration a atteint ses {$artisan['plafond_jour']} imports du jour. Réessayez demain.", 429);

@@ -5,7 +5,12 @@
 {% if demo_compte and not (sans_ruban ?? false) %}
   <link rel="stylesheet" href="/css/demo.css">
   <div class="ruban-demo" role="note">
-    <span><b>Démo</b> · {% if demo_compte.jours > 1 %}{{ demo_compte.jours }} jours restants{% elseif demo_compte.jours == 1 %}1 jour restant{% else %}dernier jour{% endif %}</span>
-    <a class="btn" href="/passer-a-l-essai">Passer à l'essai</a>
+    <span><b>Démo</b> · {% if demo_compte.terminee %}terminée{% elseif demo_compte.avant_fin > 1 %}{{ demo_compte.avant_fin }} jours restants{% elseif demo_compte.avant_fin == 1 %}1 jour restant{% else %}dernier jour{% endif %}</span>
+    {# La démo d'entraînement d'un membre, ouverte par lui (chantier onboarding, lot 8, O12 B) : le retour direct. #}
+    {% if retour_equipe() %}
+      <form method="post" action="/retour-espace"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="btn" type="submit" data-retour-espace>Revenir à mon espace</button></form>
+    {% else %}
+      <a class="btn" href="/passer-a-l-essai">Passer à l'essai</a>
+    {% endif %}
   </div>
 {% endif %}

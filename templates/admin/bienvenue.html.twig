@@ -1,0 +1,43 @@
+{% extends 'admin/base.html.twig' %}
+
+{# La bienvenue d'un commercial (chantier onboarding, lot 8 ; maquette v2, O11 de Xavier : « 2 ou 3 petites bienvenue
+   dans l'équipe, qui présentent un petit peu le truc »). Trois écrans, puis « Faire ma démo d'entraînement » lance le
+   guide à anneau. Rouvrable depuis l'aide à la vente. #}
+{% block entete_html %}<link rel="stylesheet" href="/css/suivi.css">{% endblock %}
+{% block tete %}{% endblock %}
+
+{% block contenu %}
+  <div class="bienvenue-equipe">
+    <div class="points-bienvenue" aria-hidden="true">{% for i in 1..total %}<i{% if i == ecran %} class="ici"{% endif %}></i>{% endfor %}</div>
+    <p class="muted petit">{{ ecran }} sur {{ total }}</p>
+    {% if ecran == 1 %}
+      <h1>{{ texte('c.b1.titre', {prenom: prenom}) }}</h1>
+      <p class="fort">{{ texte('c.b1.texte') }}</p>
+      <ul class="points-cles">
+        <li>{{ texte('c.b1.p1') }}</li>
+        <li>{{ texte('c.b1.p2') }}</li>
+        <li>{{ texte('c.b1.p3') }}</li>
+      </ul>
+    {% elseif ecran == 2 %}
+      <h1>{{ texte('c.b2.titre') }}</h1>
+      <p class="fort">{{ texte('c.b2.texte', {jours: jours, offres: offres}) }}</p>
+      <p>{{ texte('c.b2.texte2') }}</p>
+      <p class="note-bienvenue">{{ texte('c.b2.note') }}</p>
+    {% else %}
+      <h1>{{ texte('c.b3.titre') }}</h1>
+      <p class="fort">{{ texte('c.b3.texte') }}</p>
+      <p class="note-bienvenue">{{ texte('c.b3.note') }}</p>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    {% if ecran < total %}
+      <a class="btn primary" href="/admin/bienvenue?ecran={{ ecran + 1 }}">Suivant</a>
+    {% else %}
+      <form method="post" action="/admin/bienvenue/vue" class="passer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="btn" type="submit">Plus tard</button></form>
+      <form method="post" action="/admin/bienvenue/vue" class="principal-form"><input type="hidden" name="_csrf" value="{{ csrf() }}"><input type="hidden" name="suite" value="guide"><button class="btn primary" type="submit" data-guide-commencer-equipe>{{ texte('c.b3.bouton') }}</button></form>
+    {% endif %}
+  </div>
+{% endblock %}

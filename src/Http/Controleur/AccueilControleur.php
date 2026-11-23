@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Compte\Demos;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
 use OffreGen\Donnees\Statut;
@@ -23,6 +24,9 @@ use Symfony\Component\HttpFoundation\Response;
 final class AccueilControleur
 {
     /** Tris proposés : clé de l'adresse (?tri=) et libellé. « recent » est l'ordre par défaut. */
+    /** La session a déjà montré l'écran de fin de la démo. */
+    public const FIN_VUE = 'fin_demo_vue';
+
     public const TRIS = ['recent' => 'Récentes', 'client' => 'Client', 'montant' => 'Montant', 'relire' => 'À relire d\'abord'];
 
     public function __construct(private readonly Conteneur $c)
@@ -37,6 +41,12 @@ final class AccueilControleur
             return new RedirectResponse('/bienvenue/entreprise', 303);
         }
         $artisan = $this->c->artisans()->parId($portee->artisanId);
+        // Une démo finie : l'écran de fin à la première ouverture de la session (chantier onboarding, lot 2).
+        if ($artisan !== null && $artisan['demo'] === 1 && Demos::terminee($artisan['demo_fin'], $this->c->horloge()->now())
+            && $requete->getSession()->get(self::FIN_VUE) !== true) {
+            $requete->getSession()->set(self::FIN_VUE, true);
+            return new RedirectResponse('/fin-de-demo', 303);
+        }
         $depot = $this->c->offres($portee);
         $offres = $depot->liste();
         $archives = $depot->archives();

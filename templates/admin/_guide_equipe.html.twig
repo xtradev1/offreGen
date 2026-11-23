@@ -1,0 +1,16 @@
+{# Le guide à anneau du commercial, côté administration (chantier onboarding, lot 8 ; O11 de Xavier : « quand on dit faire
+   ma démo, tu cliques, et là je veux qu'il y ait un suivi […] cliquez ici »). Dix gestes en tout : quatre ici (créer la
+   démo, le métier, « Créer la démo », l'ouvrir sur cet appareil), six dans la démo d'entraînement
+   (_guide_artisan.html.twig, en mode équipe), jusqu'à « Revenir à mon espace ». « page » : suivi, nouvelle ou prete. #}
+<link rel="stylesheet" href="/css/guide.css">
+<script src="/js/guide.js" defer></script>
+<div class="guide" hidden data-guide="equipe" data-total="10" data-fin="/admin/guide/fini" data-csrf="{{ csrf() }}">
+  {% if page == 'suivi' %}
+    <template data-n="1" data-cible=".actionbar a[href='/admin/demos/nouvelle'], .admin-tete a[href='/admin/demos/nouvelle']">{{ texte('g.rond') }}</template>
+  {% elseif page == 'nouvelle' %}
+    <template data-n="2" data-cible="label:has(input[name='metier'][value='peintre'])">{{ texte('g.metier') }}</template>
+    <template data-n="3" data-cible=".actionbar button[form='demo'], #demo button[type='submit']">{{ texte('g.creer') }}</template>
+  {% else %}
+    <template data-n="4" data-cible="[data-ouvrir-entrainement]" data-bulle="haut">{{ texte('g.qr') }}</template>
+  {% endif %}
+</div>

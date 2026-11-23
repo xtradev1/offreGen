@@ -9,6 +9,8 @@
     {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
     <form id="demo" method="post" action="/admin/demos">
       <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      {# Le guide du commercial : cette démo est sa démo d'entraînement (chantier onboarding, lot 8). #}
+      {% if guide %}<input type="hidden" name="entrainement" value="1"><p class="note-bienvenue">{{ texte('c.b3.note') }}</p>{% endif %}
       {# Les métiers sous leur activité (Compte\Activite::grouper) : un intertitre et un groupe de boutons par activité,
          un seul choix pour tous (même nom de champ). #}
       {% for groupe in groupes %}
@@ -40,6 +42,7 @@
       <button class="btn primary pc-seul" type="submit">Créer la démo</button>
     </form>
   </div>
+  {% if guide %}{% include 'admin/_guide_equipe.html.twig' with {page: 'nouvelle'} %}{% endif %}
 {% endblock %}
 
 {% block actions %}

@@ -67,6 +67,8 @@
   {{ o.texte(offre, 'apres', "Texte après les lignes", lettre ? 'Facultatif, avant la formule de politesse' : 'Facultatif') }}
   <p class="muted petit mobile-seul">Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.</p>
   <p class="aide-clavier pc-seul"><kbd>Tab</kbd> champ suivant · <kbd>Entrée</kbd> ligne suivante · <kbd>J</kbd> c'est juste · <kbd>Suppr</kbd> retirer la ligne (avec Annuler) · <kbd>D</kbd> dicter une offre</p>
+  {# Les repères 1, 2, 3 du guide, sur une offre dictée, jamais sur une offre d'exemple (chantier onboarding, lot 3). #}
+  {% if guide_artisan() and offre.enregistrement_id %}{% include '_guide_artisan.html.twig' with {page: 'offre'} %}{% endif %}
 {% endblock %}
 
 {% block actions %}

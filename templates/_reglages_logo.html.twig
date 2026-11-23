@@ -1,0 +1,13 @@
+{# L'étape « Votre logo » de la mise en route (chantier onboarding, O28 et O34 de Xavier : le logo, puis le modèle et la
+   couleur). Le logo part par le formulaire form-logo, à part ; sa couleur est proposée d'office à l'étape suivante.
+   Dans les réglages, le logo reste le premier bloc de « Ma marque ». #}
+<div class="card" id="logo-etape">
+  <div class="logo-ligne">
+    {% if marque.logo %}<img class="logo-apercu" src="/reglages/logo?v={{ marque.logo }}" alt="Votre logo">{% endif %}
+    <label class="btn" for="logo">{{ marque.logo ? 'Changer le logo' : texte('e.logo.ajouter') }}</label>
+    <input class="cache" id="logo" name="logo" type="file" accept="image/png,image/jpeg" form="form-logo" data-envoi-auto>
+    {% if marque.logo %}<button class="lien" type="submit" form="form-logo-retirer">Retirer</button>{% endif %}
+  </div>
+  <noscript><button class="btn" type="submit" form="form-logo">Envoyer le logo choisi</button></noscript>
+  <p class="muted petit">{{ texte('e.logo.note') }}</p>
+</div>

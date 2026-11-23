@@ -91,6 +91,9 @@
       {% endfor %}
     </details>
   {% endif %}
+  {% if guide_artisan() %}{% include '_guide_artisan.html.twig' with {page: 'offres'} %}{% endif %}
+  {% set demo_fenetre = demo() %}
+  {% if demo_fenetre and not demo_fenetre.terminee and demo_fenetre.avant_fin in [1, 2] and not guide_artisan() %}{% include '_fenetre_demo.html.twig' with {jours: demo_fenetre.avant_fin} %}{% endif %}
 {% endblock %}
 
 {% block onglets %}{% include '_onglets.html.twig' with {actif: 'offres'} %}{% endblock %}

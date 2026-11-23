@@ -111,6 +111,47 @@ final class DepotEquipe
         );
     }
 
+    /**
+     * Le suivi (chantier onboarding, lot 7 ; O10 de Xavier) : les démos encore ouvertes dans la portée du membre, avec
+     * leur activité. « ouverte_le » : le premier lien de la démo utilisé par le prospect. Les démos d'entraînement n'y
+     * sont pas.
+     *
+     * @return list<array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, ouverte_le: string|null, demo_fin: string, offres_max: int|null, dictees: int, derniere_dictee: string|null}>
+     */
+    public function suivi(PorteeEquipe $p, \DateTimeImmutable $maintenant): array
+    {
+        /** @var list<array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, ouverte_le: string|null, demo_fin: string, offres_max: int|null, dictees: int, derniere_dictee: string|null}> */
+        return $this->base->lire(
+            "SELECT a.id, a.entreprise, a.metier, a.metier_saisi, a.courriel_saisi, a.demo_fin, a.offres_max,
+                    (SELECT MIN(j.utilise_le) FROM jeton_acces j WHERE j.artisan_id = a.id) AS ouverte_le,
+                    (SELECT COUNT(*) FROM enregistrement e WHERE e.artisan_id = a.id) AS dictees,
+                    (SELECT MAX(e.recu_le) FROM enregistrement e WHERE e.artisan_id = a.id) AS derniere_dictee
+             FROM artisan a
+             WHERE a.administrateur = 0 AND a.role IS NULL AND (:tout = 1 OR a.cree_par = :acteur)
+               AND a.demo = 1 AND a.entrainement = 0 AND a.demo_fin IS NOT NULL AND a.demo_fin > :maintenant
+             ORDER BY a.demo_fin, a.id",
+            self::portee($p) + ['maintenant' => Dates::versBase($maintenant)],
+        );
+    }
+
+    /**
+     * Les chiffres du suivi d'un membre (O10, O19) : les artisans qu'il a amenés (apporte_par, qui ne change jamais),
+     * dont ceux à l'essai et les abonnés. « Abonné » : un compte sans plafond d'offres, jusqu'à la formule du lot B1
+     * de l'administration.
+     *
+     * @return array{amenes: int, essai: int, abonnes: int}
+     */
+    public function chiffres(int $membreId): array
+    {
+        /** @var array{amenes: int|string|null, essai: int|string|null, abonnes: int|string|null} $l */
+        $l = $this->base->un(
+            "SELECT COUNT(*) AS amenes, SUM(demo = 0 AND offres_max IS NOT NULL) AS essai, SUM(demo = 0 AND offres_max IS NULL) AS abonnes
+             FROM artisan WHERE apporte_par = :m AND entrainement = 0 AND administrateur = 0 AND role IS NULL",
+            ['m' => $membreId],
+        );
+        return ['amenes' => (int) ($l['amenes'] ?? 0), 'essai' => (int) ($l['essai'] ?? 0), 'abonnes' => (int) ($l['abonnes'] ?? 0)];
+    }
+
     /** @return array{tout: int, acteur: int} */
     private static function portee(PorteeEquipe $p): array
     {
@@ -171,6 +212,32 @@ final class DepotEquipe
         );
     }
 
+    /** Une démo d'entraînement : hors du suivi et des chiffres, sans « amené par » (chantier onboarding, lot 8). */
+    public function marquerEntrainement(int $id): void
+    {
+        $this->base->ecrire('UPDATE artisan SET entrainement = 1, apporte_par = NULL WHERE id = :id AND demo = 1', ['id' => $id]);
+    }
+
+    /** Les gestes d'un membre depuis une date (journal_admin) : la limite des démos d'entraînement. */
+    public function gestes(int $acteur, string $geste, \DateTimeImmutable $depuis): int
+    {
+        return (int) $this->base->valeur(
+            'SELECT COUNT(*) FROM journal_admin WHERE acteur_id = :a AND geste = :g AND quand > :d',
+            ['a' => $acteur, 'g' => $geste, 'd' => Dates::versBase($depuis)],
+        );
+    }
+
+    /** La bienvenue d'un membre : à montrer tant qu'elle n'a pas été vue (chantier onboarding, lot 8). */
+    public function bienvenueAMontrer(int $membreId): bool
+    {
+        return $this->base->valeur('SELECT 1 FROM artisan WHERE id = :id AND guide_equipe_le IS NULL', ['id' => $membreId]) !== false;
+    }
+
+    public function bienvenueVue(int $membreId, \DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire('UPDATE artisan SET guide_equipe_le = COALESCE(guide_equipe_le, :q) WHERE id = :id', ['q' => Dates::versBase($quand), 'id' => $membreId]);
+    }
+
     /** Le courriel tapé par le prospect d'une démo. Non confirmé : il ne devient pas l'adresse du compte. */
     public function saisirCourriel(int $id, string $courriel): void
     {
@@ -189,12 +256,12 @@ final class DepotEquipe
     /**
      * Une démo, pour la page d'entrée du prospect : hors portée d'équipe, celui qui tient le lien y entre.
      *
-     * @return array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null}|null
+     * @return array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null, cree_par: int|null, entrainement: int}|null
      */
     public function demo(int $id): ?array
     {
-        /** @var array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null}|null */
-        return $this->base->un('SELECT a.id, a.entreprise, a.metier, a.metier_saisi, a.courriel_saisi, a.demo_fin, COALESCE(c.nom_affiche, c.entreprise) AS presente_par
+        /** @var array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null, cree_par: int|null, entrainement: int}|null */
+        return $this->base->un('SELECT a.id, a.entreprise, a.metier, a.metier_saisi, a.courriel_saisi, a.demo_fin, COALESCE(c.nom_affiche, c.entreprise) AS presente_par, a.cree_par, a.entrainement
              FROM artisan a LEFT JOIN artisan c ON c.id = a.cree_par WHERE a.id = :id AND a.demo = 1', ['id' => $id]);
     }
 

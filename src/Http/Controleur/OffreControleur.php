@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Compte\Demos;
 use OffreGen\Catalogue\Recherche;
 use OffreGen\Compte\Activite;
 use OffreGen\Compte\Marque;
@@ -117,7 +118,16 @@ final class OffreControleur
             'marquer' => $base . '/envoyee',
             'modifier' => $base,
             'facturer' => $base . '/facturer',
+            // Avertissement avant l'envoi d'une offre au nom provisoire « Démo <métier> » (chantier onboarding, lot 5).
+            'nom_provisoire' => $this->nomProvisoire($requete),
         ]));
+    }
+
+    /** Le nom de l'entreprise, s'il est encore le nom provisoire de sa démo ; null sinon. */
+    private function nomProvisoire(Request $requete): ?string
+    {
+        $a = $this->c->artisans()->parId($requete->attributes->getInt('_artisan'));
+        return $a !== null && Demos::estNomProvisoire($a['entreprise'], $a['metier'], $a['metier_saisi']) ? $a['entreprise'] : null;
     }
 
     /**

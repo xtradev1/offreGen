@@ -47,6 +47,8 @@ final class EnregistrementControleur
             'etapes' => self::etapes(self::FAITES[$e['statut']] ?? 1, $echec),
             'fini' => Statut::estFinal($e['statut']),
             'echec' => $echec,
+            // Même règle que Traiteur::prevenir : un compte de démonstration ne reçoit aucun courriel.
+            'sans_courriel' => ($this->c->artisans()->parId($requete->attributes->getInt('_artisan'))['demo'] ?? 0) === 1,
         ]));
     }
 

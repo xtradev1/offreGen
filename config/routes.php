@@ -20,6 +20,7 @@ use OffreGen\Http\Controleur\DemoControleur;
 use OffreGen\Http\Controleur\DemandeEssaiControleur;
 use OffreGen\Http\Controleur\EnregistrementControleur;
 use OffreGen\Http\Controleur\FactureControleur;
+use OffreGen\Http\Controleur\GuideControleur;
 use OffreGen\Http\Controleur\ImportCatalogueControleur;
 use OffreGen\Http\Controleur\ImportControleur;
 use OffreGen\Http\Controleur\MotDePasseControleur;
@@ -161,6 +162,9 @@ return static function (Conteneur $c): array {
         new Route('produit_modifier', '/catalogue/{id}', ['POST'], static fn (Request $r, array $p): Response => $catalogue()->modifier($r, $p), Route::ARTISAN),
         new Route('produit_suppression', '/catalogue/{id}/supprimer', ['GET'], static fn (Request $r, array $p): Response => $catalogue()->confirmerSuppression($r, $p), Route::ARTISAN),
         new Route('produit_supprimer', '/catalogue/{id}/supprimer', ['POST'], static fn (Request $r, array $p): Response => $catalogue()->supprimer($r, $p), Route::ARTISAN),
+        // Le guide à anneau de l'artisan (chantier 2026-11-21_onboarding) : fini ou quitté.
+        new Route('guide_fini', '/guide/fini', ['POST'], static fn (Request $r): Response => (new GuideControleur($c))->fini($r), Route::ARTISAN),
+        new Route('guide_revoir', '/guide/revoir', ['POST'], static fn (Request $r): Response => (new GuideControleur($c))->revoir($r), Route::ARTISAN),
         // « Vos prix » : les produits sans prix, un à la fois (chantier des métiers, 2026-11-19). Chemins fixes d'abord.
         new Route('vos_prix', '/vos-prix', ['GET'], static fn (Request $r): Response => (new VosPrixControleur($c))->afficher($r), Route::ARTISAN),
         new Route('vos_prix_annuler', '/vos-prix/annuler', ['POST'], static fn (Request $r): Response => (new VosPrixControleur($c))->annuler($r), Route::ARTISAN),
@@ -214,7 +218,7 @@ return static function (Conteneur $c): array {
     $routes[] = new Route('admin', '/admin', ['GET'], static fn (Request $r): Response => $admin()->accueil($r), Route::EQUIPE);
     $routes[] = new Route('admin_tableau', '/admin/tableau', ['GET'], static fn (): Response => $admin()->ossature('tableau', 'Tableau de bord'), Route::ADMIN);
     $routes[] = new Route('admin_aider', '/admin/a-aider', ['GET'], static fn (): Response => $admin()->ossature('aider', 'À aider'), Route::MODERATION);
-    $routes[] = new Route('admin_suivi', '/admin/suivi', ['GET'], static fn (): Response => $admin()->ossature('suivi', 'Suivi'), Route::EQUIPE);
+    $routes[] = new Route('admin_suivi', '/admin/suivi', ['GET'], static fn (): Response => $admin()->suivi(), Route::EQUIPE);
     $routes[] = new Route('admin_artisans', '/admin/artisans', ['GET'], static fn (Request $r): Response => $admin()->artisans($r), Route::EQUIPE);
     $routes[] = new Route('admin_artisan', '/admin/artisans/{id}', ['GET'], static fn (Request $r, array $p): Response => $admin()->artisan($p), Route::EQUIPE);
     $routes[] = new Route('admin_artisan_offres', '/admin/artisans/{id}/offres', ['POST'], static fn (Request $r, array $p): Response => $admin()->artisanOffres($r, $p), Route::EQUIPE);
@@ -234,9 +238,17 @@ return static function (Conteneur $c): array {
     $routes[] = new Route('demo_entrer', '/d/{jeton}', ['GET'], static fn (Request $r, array $p): Response => $demo()->entrer($r, $p), Route::PUBLIC);
     $routes[] = new Route('essai_passage', '/passer-a-l-essai', ['GET'], static fn (Request $r): Response => $demo()->passage($r), Route::ARTISAN);
     $routes[] = new Route('essai_passer', '/passer-a-l-essai', ['POST'], static fn (Request $r): Response => $demo()->passer($r), Route::ARTISAN);
+    $routes[] = new Route('admin_aide_vente', '/admin/aide-vente', ['GET'], static fn (): Response => $admin()->aideVente(), Route::EQUIPE);
+    $routes[] = new Route('demo_fin', '/fin-de-demo', ['GET'], static fn (Request $r): Response => $demo()->fin($r), Route::ARTISAN);
     $routes[] = new Route('demo_ouvrir', '/d/{jeton}', ['POST'], static fn (Request $r, array $p): Response => $demo()->ouvrir($r, $p), Route::PUBLIC);
     $routes[] = new Route('admin_plus_nom', '/admin/plus/nom', ['POST'], static fn (Request $r): Response => $admin()->plusNom($r), Route::EQUIPE);
     $routes[] = new Route('admin_plus', '/admin/plus', ['GET'], static fn (): Response => $admin()->plus(), Route::EQUIPE);
+    // L'arrivée d'un commercial (chantier onboarding, lot 8) : la bienvenue, le guide jusqu'à sa démo d'entraînement,
+    // et le retour direct dans son espace (RetourEquipe ; 404 sans marque valable).
+    $routes[] = new Route('admin_bienvenue', '/admin/bienvenue', ['GET'], static fn (Request $r): Response => $admin()->bienvenue($r), Route::EQUIPE);
+    $routes[] = new Route('admin_bienvenue_vue', '/admin/bienvenue/vue', ['POST'], static fn (Request $r): Response => $admin()->bienvenueVue($r), Route::EQUIPE);
+    $routes[] = new Route('admin_guide_fini', '/admin/guide/fini', ['POST'], static fn (Request $r): Response => $admin()->guideFini($r), Route::EQUIPE);
+    $routes[] = new Route('retour_espace', '/retour-espace', ['POST'], static fn (Request $r): Response => $demo()->retourEspace($r), Route::ARTISAN);
     // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.
     foreach (array_keys(ReglagesControleur::RUBRIQUES) as $nom) {
         $routes[] = new Route("reglages_$nom", "/reglages/$nom", ['GET'], static fn (Request $r): Response => $reglages()->rubrique($r, $nom), Route::ARTISAN);

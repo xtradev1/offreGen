@@ -1,0 +1,42 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Le suivi (chantier onboarding, lot 7 ; maquettes v2 et v3, O10 et O19 de Xavier) : les démos encore ouvertes dans
+   la portée du membre et leur activité, puis ses chiffres. Aucun contenu d'offre : un nom, un métier, des dates. La
+   part du commercial (O32 à O36) viendra avec les paiements (lot B3 de l'administration, PLAN.md lot 9). #}
+{% block entete_html %}<link rel="stylesheet" href="/css/suivi.css">{% endblock %}
+{% block tete %}<div class="admin-tete avec-action"><div><h1>{{ titre }}</h1><p>{{ mois }}</p></div><a class="btn primary pc-seul" href="/admin/demos/nouvelle">Créer une démo</a></div>{% endblock %}
+
+{% block contenu %}
+  {# La fin du guide du commercial, au retour de sa démo d'entraînement (lot 8). #}
+  {% if fin_guide %}
+    <div class="card fin-guide" role="status">
+      <h2>{{ texte('g.fin.titre') }}</h2>
+      <p>{{ texte('g.fin.texte') }}</p>
+      <p class="muted petit">{{ texte('g.fin.note') }}</p>
+    </div>
+  {% endif %}
+  <h2 class="groupe-titre">Démos en cours</h2>
+  {% if demos is empty %}
+    <p class="muted">{{ texte('g.fin.vide') }}</p>
+  {% else %}
+    <nav class="plus" aria-label="Démos en cours">
+      {% for d in demos %}
+        <a class="plus-ligne" href="/admin/artisans/{{ d.id }}">
+          <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5l8-2v18M12 8h8v13M4 21h16"/></svg>
+          <span><b>{{ d.entreprise }}{% if d.pas_encore_dicte %} <i class="badge attente">{{ texte('s.pasdicte') }}</i>{% endif %}</b>
+            <small>{% if d.courriel_saisi %}{{ d.courriel_saisi }} · {% endif %}{% if d.metier_nom %}{{ d.metier_nom }} · {% endif %}{% if d.ouverte_le %}ouverte le {{ d.ouverte_le|jour }}{% else %}pas encore ouverte{% endif %}{% if d.dictees > 0 %} · {{ d.dictees }} offre{{ d.dictees > 1 ? 's' : '' }}{% if d.offres_max %} sur {{ d.offres_max }}{% endif %}, la dernière le {{ d.derniere_dictee|jour }}{% endif %} · {% if d.jours == 0 %}dernier jour{% else %}{{ d.jours }}&nbsp;jour{{ d.jours > 1 ? 's' : '' }} restant{{ d.jours > 1 ? 's' : '' }}{% endif %}</small></span>
+        </a>
+      {% endfor %}
+    </nav>
+  {% endif %}
+  <div class="chiffres-suivi">
+    <div><span>{{ texte('s.amenes') }}</span><b>{{ chiffres.amenes }}</b></div>
+    <div><span>{{ texte('s.essai') }}</span><b>{{ chiffres.essai }}</b></div>
+    <div><span>{{ texte('s.payants') }}</span><b>{{ chiffres.abonnes }}</b></div>
+  </div>
+  {% if guide %}{% include 'admin/_guide_equipe.html.twig' with {page: 'suivi'} %}{% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar mobile-seul"><a class="btn primary" href="/admin/demos/nouvelle">Créer une démo</a></div>
+{% endblock %}

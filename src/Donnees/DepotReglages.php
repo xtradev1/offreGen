@@ -73,6 +73,46 @@ final class DepotReglages
         $this->base->ecrire('UPDATE artisan SET reglages_faits_le = NULL, iban = NULL WHERE id = :a', ['a' => $this->portee->artisanId]);
     }
 
+    /**
+     * L'assistant s'ouvrira de nouveau, IBAN gardé : le passage d'une démo à l'essai (chantier onboarding, lot 4).
+     * L'IBAN a été tapé par le prospect lui-même, dans sa propre démo.
+     */
+    public function rouvrirAssistant(): void
+    {
+        $this->base->ecrire('UPDATE artisan SET reglages_faits_le = NULL WHERE id = :a', ['a' => $this->portee->artisanId]);
+    }
+
+    /**
+     * Le guide à anneau se montre (chantier onboarding, lot 3) : pas encore fini ni quitté, et le compte est une démo
+     * de l'équipe ou un essai. Jamais à un membre de l'équipe : il a sa propre bienvenue.
+     */
+    public function guideAMontrer(): bool
+    {
+        return $this->guidePossible() && $this->base->valeur('SELECT 1 FROM artisan WHERE id = :a AND guide_artisan_le IS NULL', ['a' => $this->portee->artisanId]) !== false;
+    }
+
+    /** Le compte a un guide : une démo de l'équipe ou un essai, jamais un membre de l'équipe (« Revoir le guide »). */
+    public function guidePossible(): bool
+    {
+        return $this->base->valeur(
+            'SELECT 1 FROM artisan WHERE id = :a AND role IS NULL AND administrateur = 0
+                AND ((demo = 1 AND demo_fin IS NOT NULL) OR (demo = 0 AND offres_max IS NOT NULL))',
+            ['a' => $this->portee->artisanId],
+        ) !== false;
+    }
+
+    /** « Compris » ou « Quitter le guide » : le guide ne se montre plus. La première date reste. */
+    public function guideFini(\DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire('UPDATE artisan SET guide_artisan_le = COALESCE(guide_artisan_le, :q) WHERE id = :a', ['q' => Dates::versBase($quand), 'a' => $this->portee->artisanId]);
+    }
+
+    /** « Revoir le guide », dans « Plus ». */
+    public function revoirGuide(): void
+    {
+        $this->base->ecrire('UPDATE artisan SET guide_artisan_le = NULL WHERE id = :a', ['a' => $this->portee->artisanId]);
+    }
+
     public function lireMarque(): Marque
     {
         /** @var array{modele: string, couleur: string|null, logo_fichier: string|null, couleur_logo: string|null}|null $l */

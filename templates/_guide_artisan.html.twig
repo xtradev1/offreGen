@@ -1,0 +1,39 @@
+{# Le guide à anneau de l'artisan (chantier 2026-11-21_onboarding, maquettes v3 et v4 validées : O13, O14, O21 ;
+   public/js/guide.js). À l'ouverture d'une démo et d'un essai sans démo, jamais après un passage à l'essai (O1).
+   « page » : offres (le micro, les conseils, « Terminer », l'attente) ou offre (les repères 1, 2, 3 d'une offre dictée).
+   Le micro garde son travail (app.js) : le guide montre les conseils au premier toucher, puis le relance.
+   Mode équipe (lot 8) : dans sa démo d'entraînement, le commercial suit les mêmes gestes avec ses propres bulles, étapes
+   5 à 10 de son guide (admin/_guide_equipe.html.twig), jusqu'à « Revenir à mon espace ». #}
+{% set equipe = retour_equipe() %}
+{% set d = equipe ? 4 : 0 %}
+<link rel="stylesheet" href="/css/guide.css">
+<script src="/js/guide.js" defer></script>
+<div class="guide" hidden data-guide="{{ equipe ? 'equipe' : 'artisan' }}" data-total="{{ equipe ? 10 : 5 }}" data-fin="/guide/fini" data-csrf="{{ csrf() }}">
+  {% if page == 'offres' %}
+    <template data-n="{{ 1 + d }}" data-cible="main [data-enregistrer] > span, .micro-central > span" data-cible-pc=".micro-central" data-forme="rond" data-ouvre="[data-guide-conseils]">{{ texte(equipe ? 'g.micro' : 'a.micro') }}</template>
+    <template data-n="{{ 2 + d }}" data-cible="[data-guide-commencer]" data-bulle="tout-haut" data-sans-voile data-relance>{{ texte(equipe ? 'g.conseils' : 'a.conseils') }}</template>
+    <template data-n="{{ 3 + d }}" data-cible="[data-terminer]">{{ texte(equipe ? 'g.terminer' : 'a.terminer') }}</template>
+    <template data-n="{{ 4 + d }}" data-cible="[data-etat='envoi']" data-sans-voile data-suivant>{{ texte(equipe ? 'g.attente' : 'a.attente') }}</template>
+  {% elseif equipe %}
+    <template data-n="9" data-cible=".row.flag" data-facultative data-suivant>{{ texte('g.ligne') }}</template>
+  {% else %}
+    <template data-n="5" data-pastilles=".row.flag|.okbtn|.del" data-dernier><ol class="guide-reperes"><li><span>{{ texte('a.rep1') }}</span></li><li><span>{{ texte('a.rep2') }}</span></li><li><span>{{ texte('a.rep3') }}</span></li></ol></template>
+  {% endif %}
+  {% if equipe %}
+    <template data-n="10" data-cible="[data-retour-espace]" data-exacte>{{ texte('g.revenir') }}</template>
+  {% endif %}
+</div>
+{% if page == 'offres' %}
+  <div class="guide-conseils" data-guide-conseils hidden>
+    <div class="guide-conseils-feuille" role="dialog" aria-modal="true" aria-labelledby="guide-conseils-titre">
+      <h2 id="guide-conseils-titre">Avant de dicter</h2>
+      <ol class="guide-conseils-liste">
+        <li>{{ texte('a.conseil1') }}</li>
+        <li>{{ texte('a.conseil2') }}</li>
+        <li>{{ texte('a.conseil3') }}</li>
+      </ol>
+      <p class="guide-accord">{{ texte('a.accord') }}</p>
+      <button class="guide-commencer" type="button" data-guide-commencer>Commencer la dictée</button>
+    </div>
+  </div>
+{% endif %}

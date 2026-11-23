@@ -1,0 +1,560 @@
+[
+ {
+  "id": "c.b1.titre",
+  "ecran": "Commercial · bienvenue 1",
+  "lecteur": "commercial",
+  "texte": "Bienvenue dans l'équipe, {prenom}"
+ },
+ {
+  "id": "c.b1.texte",
+  "ecran": "Commercial · bienvenue 1",
+  "lecteur": "commercial",
+  "texte": "Vous présentez Dicta aux artisans. Ils dictent leurs visites de chantier, Dicta rédige l'offre chiffrée."
+ },
+ {
+  "id": "c.b1.p1",
+  "ecran": "Commercial · bienvenue 1",
+  "lecteur": "commercial",
+  "texte": "Vous créez la démo de l'artisan pendant le rendez-vous."
+ },
+ {
+  "id": "c.b1.p2",
+  "ecran": "Commercial · bienvenue 1",
+  "lecteur": "commercial",
+  "texte": "Vous suivez les démos et les essais de vos artisans."
+ },
+ {
+  "id": "c.b1.p3",
+  "ecran": "Commercial · bienvenue 1",
+  "lecteur": "commercial",
+  "texte": "Vous ne voyez jamais le contenu de leurs offres."
+ },
+ {
+  "id": "c.b2.titre",
+  "ecran": "Commercial · bienvenue 2",
+  "lecteur": "commercial",
+  "texte": "Ce que l'artisan reçoit"
+ },
+ {
+  "id": "c.b2.texte",
+  "ecran": "Commercial · bienvenue 2",
+  "lecteur": "commercial",
+  "texte": "Une démo de {jours} jours, avec {offres} offres et le catalogue de son métier. Il scanne un code QR avec l'appareil photo de son téléphone, tape son courriel, et il dicte."
+ },
+ {
+  "id": "c.b2.texte2",
+  "ecran": "Commercial · bienvenue 2",
+  "lecteur": "commercial",
+  "texte": "Quand il passe à l'essai, il garde les produits de son catalogue, sans les prix de la démo."
+ },
+ {
+  "id": "c.b2.note",
+  "ecran": "Commercial · bienvenue 2",
+  "lecteur": "commercial",
+  "texte": "Chaque artisan dont vous créez la démo reste noté comme amené par vous."
+ },
+ {
+  "id": "c.b3.titre",
+  "ecran": "Commercial · bienvenue 3",
+  "lecteur": "commercial",
+  "texte": "Faites-la d'abord vous-même"
+ },
+ {
+  "id": "c.b3.texte",
+  "ecran": "Commercial · bienvenue 3",
+  "lecteur": "commercial",
+  "texte": "Un guide vous montre chaque geste : créer la démo, l'ouvrir, dicter, relire l'offre. Vous verrez ce que verra l'artisan."
+ },
+ {
+  "id": "c.b3.note",
+  "ecran": "Commercial · bienvenue 3",
+  "lecteur": "commercial",
+  "texte": "Cette démo d'entraînement ne compte ni dans vos démos ni dans vos artisans."
+ },
+ {
+  "id": "c.b3.bouton",
+  "ecran": "Commercial · bienvenue 3",
+  "lecteur": "commercial",
+  "texte": "Faire ma démo d'entraînement"
+ },
+ {
+  "id": "g.rond",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "Touchez « Créer une démo » pour commencer."
+ },
+ {
+  "id": "g.metier",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "Choisissez le métier de l'artisan. Pour vous entraîner : <b>Peintre</b>."
+ },
+ {
+  "id": "g.creer",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "Touchez « Créer la démo »."
+ },
+ {
+  "id": "g.qr.note",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "L'artisan scanne ce code avec l'appareil photo de son téléphone, puis tape son courriel."
+ },
+ {
+  "id": "g.qr",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "Au rendez-vous, l'artisan scanne ce code. Pour vous entraîner, ouvrez la démo ici."
+ },
+ {
+  "id": "g.micro",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "Vous voyez maintenant ce que voit l'artisan. Touchez le micro."
+ },
+ {
+  "id": "g.conseils",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "L'artisan lit ces trois conseils à sa première dictée. Touchez « Commencer la dictée »."
+ },
+ {
+  "id": "g.terminer",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "Dictez une pièce, par exemple le salon, puis touchez « Terminer »."
+ },
+ {
+  "id": "g.attente",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "Dicta rédige l'offre en quelques minutes. Au rendez-vous, montrez pendant ce temps l'offre d'exemple."
+ },
+ {
+  "id": "g.ligne",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "La ligne en jaune est <b>à vérifier</b> : Dicta en doute. Touchez-la pour la confirmer ou la corriger."
+ },
+ {
+  "id": "g.revenir",
+  "ecran": "Commercial · guide",
+  "lecteur": "commercial",
+  "texte": "Vous avez fait le parcours de l'artisan. Touchez « Revenir à mon espace »."
+ },
+ {
+  "id": "g.fin.titre",
+  "ecran": "Commercial · fin du guide",
+  "lecteur": "commercial",
+  "texte": "Le guide est terminé"
+ },
+ {
+  "id": "g.fin.texte",
+  "ecran": "Commercial · fin du guide",
+  "lecteur": "commercial",
+  "texte": "Au rendez-vous, vous refaites les mêmes gestes : « Créer une démo », choisir le métier, « Créer la démo ». L'artisan scanne ensuite le code QR."
+ },
+ {
+  "id": "g.fin.note",
+  "ecran": "Commercial · fin du guide",
+  "lecteur": "commercial",
+  "texte": "Vous retrouvez le guide dans « Plus », puis « Aide à la vente »."
+ },
+ {
+  "id": "g.fin.vide",
+  "ecran": "Commercial · fin du guide",
+  "lecteur": "commercial",
+  "texte": "Aucune démo ouverte. Votre démo d'entraînement n'apparaît pas ici."
+ },
+ {
+  "id": "a.micro",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "Dictez votre première visite : touchez le micro et décrivez les travaux comme à un collègue."
+ },
+ {
+  "id": "a.conseil1",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "Gardez l'écran allumé jusqu'à « Terminer »."
+ },
+ {
+  "id": "a.conseil2",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "Avancez pièce par pièce, avec les quantités."
+ },
+ {
+  "id": "a.conseil3",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "Dites les prix si vous les dites d'habitude. Sinon, Dicta prend ceux du catalogue."
+ },
+ {
+  "id": "a.accord",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "Si votre client parle pendant la dictée, demandez-lui son accord avant."
+ },
+ {
+  "id": "a.conseils",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "Trois conseils avant de dicter. Touchez « Commencer la dictée »."
+ },
+ {
+  "id": "a.terminer",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "Décrivez les travaux, puis touchez « Terminer »."
+ },
+ {
+  "id": "a.attente",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "Dicta rédige votre offre en quelques minutes. Restez sur cet écran, ou revenez plus tard dans « Offres » : l'offre s'y range quand elle est prête."
+ },
+ {
+  "id": "a.rep1",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "<b>À vérifier</b> : Dicta doute de cette ligne. Touchez-la pour confirmer ou corriger."
+ },
+ {
+  "id": "a.rep2",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "<b>Prendre</b> applique le prix que vous avez dit."
+ },
+ {
+  "id": "a.rep3",
+  "ecran": "Artisan · guide de la démo",
+  "lecteur": "artisan",
+  "texte": "La corbeille retire une ligne ; « Annuler » la remet."
+ },
+ {
+  "id": "e.ent.titre",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Votre entreprise"
+ },
+ {
+  "id": "e.ent.sous",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Elle figure sur chaque offre et chaque facture."
+ },
+ {
+  "id": "e.iban",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Pour la QR-facture. Vous pouvez l'ajouter plus tard."
+ },
+ {
+  "id": "e.tva.titre",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "La TVA"
+ },
+ {
+  "id": "e.tva.sous",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Touchez votre taux. Il s'applique à chaque offre."
+ },
+ {
+  "id": "e.tva.non",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Non assujetti"
+ },
+ {
+  "id": "e.logo.titre",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Votre logo"
+ },
+ {
+  "id": "e.logo.sous",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Il figure en tête de vos offres et de vos factures. Vous pourrez aussi l'ajouter plus tard, dans « Ma marque »."
+ },
+ {
+  "id": "e.logo.ajouter",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Ajouter mon logo"
+ },
+ {
+  "id": "e.logo.note",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Une image (PNG ou JPEG), 5 Mo au plus. Sa couleur devient celle de vos documents."
+ },
+ {
+  "id": "e.mc.titre",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Modèle et couleur"
+ },
+ {
+  "id": "e.mc.sous",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Touchez une couleur, puis un modèle. Les modèles s'affichent aussitôt dans votre couleur."
+ },
+ {
+  "id": "e.propose",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Proposé pour votre métier"
+ },
+ {
+  "id": "e.couleur",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Votre couleur"
+ },
+ {
+  "id": "e.couleur.logo",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Celle de votre logo"
+ },
+ {
+  "id": "e.couleur.autre",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Autre"
+ },
+ {
+  "id": "e.modele",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Votre modèle"
+ },
+ {
+  "id": "e.voir",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Voir en grand"
+ },
+ {
+  "id": "e.zoom.fermer",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Fermer"
+ },
+ {
+  "id": "e.prix.titre",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Vos prix"
+ },
+ {
+  "id": "e.prix.sous",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Les produits de la démo sont gardés, sans prix. Pour chacun, Dicta propose le prix de la démo : gardez-le ou mettez le vôtre."
+ },
+ {
+  "id": "e.passer",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Passer le guide"
+ },
+ {
+  "id": "e.fin.titre",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Votre compte est prêt"
+ },
+ {
+  "id": "e.fin.texte",
+  "ecran": "Artisan · mise en route de l'essai",
+  "lecteur": "artisan",
+  "texte": "Votre nom et votre marque figurent sur vos prochaines offres. Touchez le micro pour en dicter une."
+ },
+ {
+  "id": "w.titre",
+  "ecran": "Artisan · avant l'envoi",
+  "lecteur": "artisan",
+  "texte": "Votre offre porte encore « {entreprise} »"
+ },
+ {
+  "id": "w.texte",
+  "ecran": "Artisan · avant l'envoi",
+  "lecteur": "artisan",
+  "texte": "Votre client verra ce nom. Complétez votre entreprise avant d'envoyer, ou envoyez tel quel."
+ },
+ {
+  "id": "w.b1",
+  "ecran": "Artisan · avant l'envoi",
+  "lecteur": "artisan",
+  "texte": "Compléter mon entreprise"
+ },
+ {
+  "id": "w.b2",
+  "ecran": "Artisan · avant l'envoi",
+  "lecteur": "artisan",
+  "texte": "Envoyer quand même"
+ },
+ {
+  "id": "k.titre",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Aide à la vente"
+ },
+ {
+  "id": "k.sous",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "À relire avant un rendez-vous"
+ },
+ {
+  "id": "k.r1",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "La démo au rendez-vous"
+ },
+ {
+  "id": "k.r1.1",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Demandez à l'artisan sa dernière offre : quel chantier, combien de temps pour la rédiger."
+ },
+ {
+  "id": "k.r1.2",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Créez la démo de son métier et montrez le code QR. Il le scanne avec l'appareil photo de son téléphone, tape son courriel, et sa démo s'ouvre."
+ },
+ {
+  "id": "k.r1.3",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Faites-lui dicter une pièce de ce chantier, sur son téléphone. Laissez-le faire seul."
+ },
+ {
+  "id": "k.r1.4",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Dicta rédige en quelques minutes. Pendant ce temps, montrez l'offre d'exemple et son PDF."
+ },
+ {
+  "id": "k.r1.5",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Ouvrez son offre avec lui : les lignes « À vérifier », le prix dicté comparé au catalogue."
+ },
+ {
+  "id": "k.r1.6",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Laissez-lui la démo, {jours} jours et {offres} offres. Notez le jour où vous le rappelez."
+ },
+ {
+  "id": "k.r2",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Les questions à poser"
+ },
+ {
+  "id": "k.r3",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Les objections"
+ },
+ {
+  "id": "k.r5",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Le message de démo"
+ },
+ {
+  "id": "k.o1.q",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "« C'est combien ? »"
+ },
+ {
+  "id": "k.o1.r",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Le premier mois est gratuit, sans carte bancaire. Ensuite, l'abonnement coûte CHF 44.90 par mois hors TVA, 50 offres comprises."
+ },
+ {
+  "id": "k.o2.q",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "« Où vont mes enregistrements ? »"
+ },
+ {
+  "id": "k.o2.r",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Votre voix est transcrite et l'offre rédigée par l'IA d'Infomaniak, dans ses centres de données en Suisse. Selon Infomaniak, vos dictées ne sont ni conservées ni utilisées pour entraîner ses modèles."
+ },
+ {
+  "id": "k.o3.q",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "« Et si elle se trompe ? »"
+ },
+ {
+  "id": "k.o3.r",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Dans tous les tests effectués, 99 % des lignes rédigées sont correctes par rapport à ce qui a été dit. Une information absente vous est transmise."
+ },
+ {
+  "id": "k.o4.q",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "« Je n'ai pas de catalogue. »"
+ },
+ {
+  "id": "k.o4.r",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "Vous pouvez facilement importer depuis vos dernières factures le catalogue de vos produits usuels."
+ },
+ {
+  "id": "k.o5.q",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "« Mon client sera là pendant la visite. »"
+ },
+ {
+  "id": "k.o5.r",
+  "ecran": "Commercial · aide à la vente",
+  "lecteur": "commercial",
+  "texte": "S'il parle pendant la dictée, il faut son accord. S'il refuse, dictez juste après, dans la voiture."
+ },
+ {
+  "id": "s.pasdicte",
+  "ecran": "Commercial · suivi",
+  "lecteur": "commercial",
+  "texte": "Pas encore dicté"
+ },
+ {
+  "id": "s.amenes",
+  "ecran": "Commercial · suivi",
+  "lecteur": "commercial",
+  "texte": "Amenés par vous"
+ },
+ {
+  "id": "s.essai",
+  "ecran": "Commercial · suivi",
+  "lecteur": "commercial",
+  "texte": "À l'essai"
+ },
+ {
+  "id": "s.payants",
+  "ecran": "Commercial · suivi",
+  "lecteur": "commercial",
+  "texte": "Abonnés"
+ }
+]

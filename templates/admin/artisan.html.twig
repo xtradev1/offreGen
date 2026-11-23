@@ -2,7 +2,7 @@
 
 {# La fiche d'un artisan (D7 refaite, validée par Xavier le 2026-11-19) : la jauge des dictées, « offrir des offres »
    d'un toucher dans la limite du rôle, le fil de ce qui s'est passé. Jamais le contenu d'une offre (R2). #}
-{% set gestes = {demo_creee: 'Démo créée', passage_essai: "Passé à l'essai", offres_ajoutees: 'Offres ajoutées', membre_cree: 'Compte créé', membre_promu: 'Rôle donné', role_change: 'Rôle changé', membre_retire: "Retiré de l'équipe"} %}
+{% set gestes = {demo_creee: 'Démo créée', passage_essai: "Passé à l'essai", offres_ajoutees: 'Offres ajoutées', membre_cree: 'Compte créé', membre_promu: 'Rôle donné', role_change: 'Rôle changé', membre_retire: "Retiré de l'équipe", demo_entrainement: "Démo d'entraînement créée", entree_entrainement: "Entrée dans la démo d'entraînement", retour_entrainement: "Retour depuis la démo d'entraînement"} %}
 {% set roles = {moderateur: 'modérateur', commercial: 'commercial'} %}
 {% block retour %}<a class="back" href="/admin/artisans">Artisans</a>{% endblock %}
 {% block sous %}<p>{{ compte.demo == 1 ? 'Démo' : (compte.offres_max is null ? 'Compte' : 'Essai') }}{% if compte.demo != 1 %} · {{ compte.courriel }}{% else %}{% if metier %} · {{ metier }}{% endif %}{% if compte.courriel_saisi is not null %} · {{ compte.courriel_saisi }}{% endif %}{% endif %}{% if compte.apporteur is not null %} · amené par {{ compte.apporteur }}{% endif %}{% if compte.createur is not null and compte.cree_par != compte.apporte_par %} · suivi par {{ compte.createur }}{% endif %}</p>{% endblock %}

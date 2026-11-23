@@ -12,6 +12,7 @@ use OffreGen\Compte\Equipe;
 use OffreGen\Compte\LiensAcces;
 use OffreGen\Compte\QrLien;
 use OffreGen\Compte\Role;
+use OffreGen\Donnees\Dates;
 use OffreGen\Donnees\DepotEquipe;
 use OffreGen\Donnees\PorteeEquipe;
 use OffreGen\Http\Conteneur;
@@ -30,13 +31,81 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class AdminControleur
 {
+    /** La session suit le guide du commercial, de la bienvenue au retour de sa démo d'entraînement (lot 8). */
+    public const GUIDE_EQUIPE = 'guide_equipe';
+    /** La démo d'entraînement du guide reste à créer : à usage unique (entrainementACreer). */
+    public const ENTRAINEMENT_A_CREER = 'entrainement_a_creer';
+    /** Les trois écrans de bienvenue d'un commercial (O11 de Xavier). */
+    public const ECRANS_BIENVENUE = 3;
+
     public function __construct(private readonly Conteneur $c)
     {
     }
 
     public function accueil(Request $requete): Response
     {
+        // Un commercial qui arrive : la bienvenue d'abord, une seule fois (chantier onboarding, lot 8).
+        if ($this->role() === Role::Commercial && $this->c->depotEquipe()->bienvenueAMontrer($this->acteur())) {
+            return new RedirectResponse('/admin/bienvenue', 303);
+        }
         return new RedirectResponse($this->role()->accueil(), 303);
+    }
+
+    /** Un des trois écrans de bienvenue (O11) ; ?ecran=1 à 3. Toujours rouvrable depuis l'aide à la vente. */
+    public function bienvenue(Request $requete): Response
+    {
+        $ecran = max(1, min(self::ECRANS_BIENVENUE, $requete->query->getInt('ecran', 1)));
+        $nom = (string) ($this->c->artisans()->parId($this->acteur())['entreprise'] ?? '');
+        return $this->page('admin/bienvenue.html.twig', [
+            'actif' => 'suivi',
+            'titre' => 'Bienvenue',
+            'ecran' => $ecran,
+            'total' => self::ECRANS_BIENVENUE,
+            'prenom' => explode(' ', trim($nom))[0],
+            'jours' => Demos::JOURS,
+            'offres' => Demos::OFFRES,
+        ]);
+    }
+
+    /**
+     * La bienvenue est vue. « Faire ma démo d'entraînement » lance le guide (suite=guide) ; « Plus tard » ramène à la
+     * page du rôle.
+     */
+    public function bienvenueVue(Request $requete): RedirectResponse
+    {
+        $this->c->depotEquipe()->bienvenueVue($this->acteur(), \DateTimeImmutable::createFromInterface($this->c->horloge()->now()));
+        if ($requete->request->getString('suite') === 'guide') {
+            $requete->getSession()->set(self::GUIDE_EQUIPE, true);
+            $requete->getSession()->set(self::ENTRAINEMENT_A_CREER, true);
+            return new RedirectResponse('/admin/suivi?guide=depart', 303);
+        }
+        $requete->getSession()->remove(self::GUIDE_EQUIPE);
+        $requete->getSession()->remove(self::ENTRAINEMENT_A_CREER);
+        return new RedirectResponse($this->role()->accueil(), 303);
+    }
+
+    /** « Quitter le guide » dans l'administration : le guide du commercial s'arrête. */
+    public function guideFini(Request $requete): Response
+    {
+        $requete->getSession()->remove(self::GUIDE_EQUIPE);
+        $requete->getSession()->remove(self::ENTRAINEMENT_A_CREER);
+        return new Response('', 204);
+    }
+
+    /** Le guide du commercial est-il en cours dans cette session ? */
+    private function guideEquipe(): bool
+    {
+        return $this->c->garde()->requeteCourante()?->getSession()->get(self::GUIDE_EQUIPE) === true;
+    }
+
+    /**
+     * La démo d'entraînement reste à créer (revue du 2026-11-22) : marque à usage unique, posée par « Faire ma démo
+     * d'entraînement » et consommée à sa création. Sans elle, une démo suivante, pour un vrai prospect, serait devenue
+     * une démo d'entraînement sans que rien ne le montre.
+     */
+    private function entrainementACreer(): bool
+    {
+        return $this->c->garde()->requeteCourante()?->getSession()->get(self::ENTRAINEMENT_A_CREER) === true;
     }
 
     /** Une page de l'ossature : son titre, son menu, et rien d'autre tant que son lot n'est pas livré. */
@@ -62,6 +131,59 @@ final class AdminControleur
         $this->c->depotEquipe()->changerNomAffiche($this->acteur(), $nom === '' ? null : $nom);
         Flash::dire($requete, 'info', 'Enregistré.');
         return new RedirectResponse('/admin/plus', 303);
+    }
+
+    /** Le message qui accompagne le lien d'une démo ; repris par l'aide à la vente, lien en clair. */
+    public static function messageDemo(string $application, string $lien, string $premiere = 'visite'): string
+    {
+        return "Bonjour, voici votre démo $application\u{00A0}: $lien\nLe lien est valable 24 heures et sert une seule fois. Ouvrez-le sur votre téléphone, indiquez votre courriel et dictez votre première $premiere.";
+    }
+
+    /**
+     * Le suivi (chantier onboarding, lot 7 ; O10 et O19 de Xavier) : les démos encore ouvertes et leur activité, puis
+     * les artisans amenés par le membre. « Pas encore dicté » : rien dicté 48 heures après l'ouverture de la démo.
+     */
+    public function suivi(): Response
+    {
+        $maintenant = \DateTimeImmutable::createFromInterface($this->c->horloge()->now());
+        $demos = [];
+        foreach ($this->c->depotEquipe()->suivi($this->portee(), $maintenant) as $d) {
+            $ouverte = $d['ouverte_le'] === null ? null : Dates::depuisBase($d['ouverte_le']);
+            $demos[] = $d + [
+                // Jours de calendrier, comme le ruban et la fenêtre de la démo (revue du 2026-11-22) ; 0 : le dernier jour.
+                'jours' => Demos::joursAvantLaFin($d['demo_fin'], $maintenant),
+                'pas_encore_dicte' => $d['dictees'] === 0 && $ouverte !== null && $maintenant->getTimestamp() - $ouverte->getTimestamp() >= 48 * 3600,
+                'metier_nom' => self::metier($d),
+            ];
+        }
+        // Le guide du commercial : son départ (?guide=depart) et sa fin, au retour de la démo d'entraînement (?guide=fin).
+        $requete = $this->c->garde()->requeteCourante();
+        $finGuide = $requete !== null && $requete->query->getString('guide') === 'fin' && $this->guideEquipe();
+        if ($finGuide) {
+            $requete->getSession()->remove(self::GUIDE_EQUIPE);
+        }
+        $mois = new \IntlDateFormatter('fr_CH', \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, 'Europe/Zurich', null, 'LLLL');
+        return $this->page('admin/suivi.html.twig', [
+            'actif' => 'suivi',
+            'titre' => $this->role() === Role::Commercial ? 'Mon suivi' : 'Suivi',
+            'mois' => mb_convert_case((string) $mois->format($maintenant), MB_CASE_TITLE),
+            'demos' => $demos,
+            'chiffres' => $this->c->depotEquipe()->chiffres($this->acteur()),
+            'guide' => $this->entrainementACreer(),
+            'fin_guide' => $finGuide,
+        ]);
+    }
+
+    /** L'aide à la vente (chantier onboarding, lot 6) : la même pour les trois rôles de l'équipe. */
+    public function aideVente(): Response
+    {
+        return $this->page('admin/aide_vente.html.twig', [
+            'actif' => 'plus',
+            'titre' => $this->c->textes()->texte('k.titre'),
+            'jours' => Demos::JOURS,
+            'offres' => Demos::OFFRES,
+            'message' => self::messageDemo($this->c->nomApplication(), '[le lien de la démo]'),
+        ]);
     }
 
     public function artisans(Request $requete): Response
@@ -131,6 +253,8 @@ final class AdminControleur
             'groupes' => Activite::grouper(CatalogueFictif::libelles()),
             'saisie' => $saisie ?? ['metier' => '', 'metier_saisi' => '', 'entreprise' => '', 'courriel' => ''],
             'erreur' => $erreur,
+            // Le guide du commercial en cours : la démo créée sera sa démo d'entraînement (lot 8).
+            'guide' => $this->entrainementACreer(),
         ], $code);
     }
 
@@ -142,8 +266,13 @@ final class AdminControleur
             'entreprise' => trim($requete->request->getString('entreprise')),
             'courriel' => trim($requete->request->getString('courriel')),
         ];
+        // Une démo d'entraînement seulement quand le guide l'attend : le champ posté seul ne suffit pas (revue du 2026-11-22).
+        $entrainement = $requete->request->getString('entrainement') === '1' && $this->entrainementACreer();
         try {
-            $id = $this->demos()->creer($this->portee(), $this->role(), $saisie['metier'], $saisie['metier_saisi'], $saisie['entreprise'], $saisie['courriel']);
+            $id = $this->demos()->creer($this->portee(), $this->role(), $saisie['metier'], $saisie['metier_saisi'], $saisie['entreprise'], $saisie['courriel'], $entrainement);
+            if ($entrainement) {
+                $requete->getSession()->remove(self::ENTRAINEMENT_A_CREER);
+            }
         } catch (\OverflowException $e) {
             return $this->demoNouvelle($saisie, $e->getMessage(), 429);
         } catch (\InvalidArgumentException $e) {
@@ -161,7 +290,11 @@ final class AdminControleur
     {
         $demo = $this->demo((int) $p['id']);
         $lien = $this->c->liensAcces()->emettreDemo($demo['id'], LiensAcces::DEMO_QR);
-        return $this->page('admin/demo_prete.html.twig', ['actif' => 'artisans', 'titre' => $demo['entreprise'], 'compte' => $demo, 'metier' => self::metier($demo), 'lien' => $lien, 'qr' => QrLien::svg($lien)]);
+        // Sa démo d'entraînement : « Ouvrir la démo sur cet appareil » devient un formulaire POST (le lien en GET
+        // n'écrit rien ; revue du 2026-11-22), et le guide y montre son étape 4.
+        $entrainement = ($this->c->depotEquipe()->demo($demo['id'])['entrainement'] ?? 0) === 1;
+        return $this->page('admin/demo_prete.html.twig', ['actif' => 'artisans', 'titre' => $demo['entreprise'], 'compte' => $demo, 'metier' => self::metier($demo), 'lien' => $lien, 'qr' => QrLien::svg($lien),
+            'entrainement' => $entrainement, 'lien_chemin' => (string) parse_url($lien, PHP_URL_PATH), 'guide' => $entrainement && $this->guideEquipe()]);
     }
 
     /**
@@ -174,8 +307,7 @@ final class AdminControleur
         $demo = $this->demo((int) $p['id']);
         $lien = $this->c->liensAcces()->emettreDemo($demo['id'], LiensAcces::DEMO_MSG);
         // « première visite » ou « première offre » : le prospect lit ce message, dans les mots de l'activité de son métier.
-        $premiere = Activite::duMetier($demo['metier'])->mots()['premiere'];
-        $message = "Bonjour, voici votre démo {$this->c->nomApplication()}\u{00A0}: $lien\nLe lien est valable 24 heures et sert une seule fois. Ouvrez-le sur votre téléphone, indiquez votre courriel et dictez votre première $premiere.";
+        $message = self::messageDemo($this->c->nomApplication(), $lien, Activite::duMetier($demo['metier'])->mots()['premiere']);
         return $this->page('admin/demo_message.html.twig', ['actif' => 'artisans', 'titre' => $demo['entreprise'], 'compte' => $demo, 'metier' => self::metier($demo), 'message' => $message]);
     }
 
@@ -347,7 +479,7 @@ final class AdminControleur
     /**
      * Le métier d'un compte, tel qu'on le lit : le texte tapé pour « Autre métier », sinon le libellé de la liste.
      *
-     * @param Compte $compte
+     * @param array{metier: string|null, metier_saisi: string|null} $compte
      */
     private static function metier(array $compte): ?string
     {
