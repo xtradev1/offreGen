@@ -16,11 +16,10 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Gate prod ouvert. Sur l'accord de Xavier : `git fetch`, tête de `origin/chantier-voix-offre` dans `~/offreGen-options` (sa base de test `offregen_options_test` est désignée par son `.env.test.local` ; remettre `DB_NOM` du `.env` à sa valeur d'origine si le script le lit), `pgrep` sans phpunit, `outils/deployer-test.sh`, `/sante`, contrôle de compatibilité, compte `options-recette@exemple.ch`. Puis la recette de Xavier et le banc sur ses vraies dictées. À la clôture : supprimer les bases `offregen_options_test` et `offregen_options_dev`, la copie `~/offreGen-options`, arrêter le serveur du port 8041, `/roadmap-sync`.
+Gate prod ouvert : attendre la recette de Xavier sur le test (`RECETTE.md`, compte `options-recette@exemple.ch`, les offres se trouvent par `/clients`), ses vraies dictées (fiches 21 à 28) pour le banc, et ses deux réponses (rabais en francs, italique de Technique). À la clôture : supprimer les bases `offregen_options_test` et `offregen_options_dev`, la copie `~/offreGen-options`, arrêter le serveur du port 8041, mettre à jour l'ETAT du sous-chantier 29 (le banc existe), `/roadmap-sync`.
 
 ## En attente de toi
 
-- Dire si je déploie la tête de `chantier-voix-offre` sur le test (les données y sont-elles toujours inventées ?). La migration `Version20261122200001` part avec.
 - Dérouler `RECETTE.md` (scénarios 1 à 5 au téléphone et sur PC) et dire ce qui casse.
 - Enregistrer les fiches 21 à 28 (`OffreGen/corpus/FICHES.md`) et les déposer dans `corpus/audio/` : je les passe au banc avant la mise en service (scénario 6).
 - Trancher : un rabais en francs plafonné au sous-total compte moins sans les options qu'avec (REVUE, C5) ; garder ou changer ?
@@ -57,6 +56,7 @@ Gate prod ouvert. Sur l'accord de Xavier : `git fetch`, tête de `origin/chanti
 - 2026-11-22 : phase 7, revue lourde (trois relecteurs Opus indépendants : correction, sécurité avec `owasp-security`, régression), parce que le diff touche trois surfaces sensibles du profil : appels au modèle de langue, couche d'accès aux données, droits par route. Estimation annoncée : environ 10 $.
 - 2026-11-22 : revue lourde reçue (trois rapports). Trouvailles relues dans le code : 13 retenues (dont 4 majeures : durée des trois appels au-delà du verrou de 900 s, variante d'une ligne supprimée rattachée en silence à une autre, quantité d'une variante au forfait, ligne sortie du total sans « à vérifier »), 2 écartées, 2 hors périmètre ; détail et verdicts dans `REVUE.md`. Huit tests rouges écrits d'abord (`RevueOptionsTest`, `RevueGestesTest`), puis corrections ; deux tests du lot 8 mis à jour (ils figeaient l'ancien comportement). Corrections du script vérifiées au clic (focus, case refusée en 409). Banc complet relancé après coup.
 - 2026-11-22 : phase 8. `RECETTE.md` écrit (six scénarios, préalables, ce qui n'est pas couvert). Gate prod ouvert : le déploiement sur le test demande l'accord de Xavier (règle du projet), et la mise en service attend le banc sur ses vraies dictées.
+- 2026-11-23 : Xavier : « oui » (déploiement sur le test, données inventées). Contrôle de compatibilité (`docs/DEPLOIEMENT.md`) : la version en service (`cedc573`) passe toute sa suite sur `offregen_options_test`, qui porte la migration. Premier essai faussé par un `vendor` en lien symbolique (les classes venaient de ma copie : 13 échecs sans valeur), refait avec un `composer install` propre. `127854a` déployé par `outils/deployer-test.sh`, sonde verte. Compte de recette `options-recette@exemple.ch` (démo peintre, mot de passe dans `~/.offregen-test-options-recette-compte`) ; contrôle en lecture seule sur le test, sans rien saisir. Copie de contrôle `~/offreGen-compat` retirée.
 
 ## Décisions
 
@@ -330,4 +330,27 @@ Dictées sans option : taux 93.3 % (84 justes sur 90), 0.33 corrections par offr
 Dictées avec options : taux 96.3 % (130 justes sur 135), 0.19 corrections par offre, natures 39/42
 Coût moyen 0.24 ct par offre, durée moyenne 3.8 s (45 passes)
 Rapport : corpus/ecrit/rapports/2026-11-22-2058-service-toutes.json
+```
+
+### Phase 8, déploiement sur le test
+
+```
+$ curl -s https://easy-offres.xtradev.ch/sante   (avant)
+{"commit":"cedc573cf0691285e1ab95831cce019f1886b10e","base":"ok","migrations":"ok"}
+$ (copie ~/offreGen-compat sur cedc573, composer install, DB_NOM=offregen_options_test, migration 20261122200001 présente : 1)
+APP_ENV=test vendor/bin/phpunit  ->  OK (1159 tests, 10086 assertions)
+$ bash outils/deployer-test.sh   (HEAD = origin/chantier-voix-offre = 127854a, aucune autre suite en cours)
+LU     /sante : {"commit":"127854a630259b82bae31f134e32c32849d0dc67","base":"ok","migrations":"ok"}
+OK     commit déployé : 127854a630259b82bae31f134e32c32849d0dc67
+OK     base joignable
+OK     migrations à jour
+SONDE VERTE
+DÉPLOYÉ : 127854a630259b82bae31f134e32c32849d0dc67 sur https://easy-offres.xtradev.ch
+$ node test_site.js   (https://easy-offres.xtradev.ch, options-recette, 390 px, une connexion, rien de saisi)
+après connexion : /bienvenue/entreprise
+offre 77 HTTP 200 | conteneur des options 1 | cases 0
+fenêtre de ligne : Cette ligne est | [ 'Dans le total', 'Option', 'Variante' ]
+feuille d'ajout : Elle va Dans le total Option Variante
+PDF de l'offre 200 application/pdf
+largeur 390/390 | erreurs JS aucune
 ```
