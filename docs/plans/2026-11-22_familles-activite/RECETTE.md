@@ -4,9 +4,9 @@ Tout ce qui suit se teste à la main sur le site de test, en une passe. Coche au
 
 ## Préalables
 
-- [ ] Accord de Xavier pour commiter, pousser sur `chantier-voix-offre` et déployer sur le site de test. Rien n'est commité : le code vit dans la copie `~/offreGen-familles`.
-- [ ] Migration à jouer : `migrations/Version20261122100001.php` (colonne `artisan.activite`). Le déploiement sur le test la joue (`outils/deployer-test.sh`). Elle est additive : l'ancienne version du code tourne avec la colonne.
-- [ ] Fichiers à déployer : la tête de `chantier-voix-offre` après le commit de ce chantier.
+- [x] Accord de Xavier du 2026-11-22. Commit `cedc573`, poussé sur `chantier-voix-offre`.
+- [x] Migration `migrations/Version20261122100001.php` (colonne `artisan.activite`) : jouée sur le test par le déploiement du 2026-11-22. Elle est additive : l'ancienne version du code tourne avec la colonne.
+- [x] Déployé : `cedc573` en service sur le test, sonde verte, `/sante` à jour.
 - [ ] Données de départ : aucune. Les démos des scénarios se créent à l'écran. Un compte d'équipe (commercial ou administrateur) est nécessaire pour `/admin`.
 - [ ] Les comptes existants du test restent en Bâtiment, sauf ceux dont le métier est paysagiste, qui passent en Extérieur.
 
@@ -39,7 +39,7 @@ Gestes :
 2. Dicter une vraie offre d'informatique ou de conseil, avec deux ou trois prix.
 3. Toucher « Terminer et créer l'offre », attendre l'offre.
 
-Attendu : l'écran d'enregistrement dit « Parlez, prestation par prestation. ». L'offre sort rangée par catégorie du catalogue, sans pièce. Si la dictée ne donne pas de titre, l'offre s'appelle « Offre du » suivi de la date.
+Attendu : l'écran d'enregistrement dit « Parlez, prestation par prestation. ». Sans partie annoncée, l'offre sort rangée par catégorie du catalogue. En annonçant des parties (« pour le site… », « pour l'hébergement… »), l'offre est rangée par ces parties, avec « Renommer la catégorie ». Une ligne libre n'a pas de titre « Hors catalogue ». Si la dictée ne donne pas de titre, l'offre s'appelle « Offre du » suivi de la date.
 
 À relever, pour cinq dictées (risque R2 de la SPEC) : le nombre de lignes justes et le nombre de lignes à corriger. Ces chiffres n'existent pas encore hors du bâtiment.
 
@@ -57,7 +57,7 @@ Gestes :
 2. Ouvrir l'aperçu du document.
 3. Dans Réglages, « Ma marque », choisir le modèle « Lettre », revenir à l'aperçu. Essayer deux autres modèles.
 
-Attendu : l'en-tête n'a ni titre de bloc ni champ « Accès ». Le document dit « Lieu », « Début », « Paiement : À 30 jours dès la fin de la prestation. ». Le modèle Lettre écrit « pour les prestations suivantes » et « Échange du » suivi de la date. Aucun modèle ne dit « chantier », « travaux » ni « visite ».
+Attendu : l'en-tête n'a pas de titre de bloc ; « Ajouter un accès » est replié et s'ouvre d'un toucher. Le document dit « Lieu », « Début », « Paiement : À 30 jours dès la fin de la prestation. ». Le modèle Lettre écrit « pour les prestations suivantes » et « Échange du » suivi de la date. Aucun modèle ne dit « chantier », « travaux » ni « visite ».
 
 Si ça casse : `templates/offre_entete.html.twig`, `templates/document/`, `templates/_document.html.twig`, `Activite::mots` et `Activite::dire`.
 
@@ -137,7 +137,6 @@ Si ça casse : `src/Offre/Saisie.php` (`UNITES`).
 - **L'écran d'une offre, à 390 px** : la sonde de disposition y relève quatre boutons de suppression qui dépassent de leur formulaire (`button.del`). Ni `templates/_lignes.html.twig` ni les feuilles de style ne sont touchés par ce chantier : le relevé existait avant. À trancher à part (geste « glisser pour retirer », ou défaut).
 - **Les prix des quatre catalogues de prestations** : inventés, sources faibles (sites de vendeurs). À corriger par Xavier.
 - **Un iPhone et un Android réels** : les écrans ont été regardés dans Chromium, à 390 px et à 1280 px, en local.
-- **Le site de test** : rien n'y est déployé tant que Xavier n'a pas donné son accord.
 
 ## État des vérifications automatiques
 
@@ -148,4 +147,4 @@ Si ça casse : `src/Offre/Saisie.php` (`UNITES`).
 | Migration, aller et retour | jouée, annulée, rejouée sur la base du chantier | `ETAT.md`, Preuves, phase 6 |
 | Recette visuelle locale | douze captures regardées, à 390 px et à 1280 px ; sondes de contraste et de disposition muettes sur les onze écrans du chantier | `ETAT.md`, Preuves, phase 6 |
 | Revue | trois lentilles ; un défaut haut corrigé, cinq corrections mineures | `REVUE.md` |
-| Site de test | rien de déployé | en attente de l'accord de Xavier |
+| Site de test | `cedc573` en service, sonde verte, migration jouée ; `demo-paysagiste` vue en Extérieur par l'interface | `ETAT.md`, Preuves, phase 8 |

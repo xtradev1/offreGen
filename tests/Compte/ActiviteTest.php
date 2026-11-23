@@ -38,16 +38,14 @@ final class ActiviteTest extends TestCase
         self::assertSame('Date de la visite', $m['date']);
     }
 
-    public function testLesPrestationsNOntNiTitreDeBlocNiAcces(): void
+    public function testLesPrestationsNOntNiTitreDeBlocNiAccesOuvert(): void
     {
         $m = Activite::Prestations->mots();
         self::assertSame('', $m['bloc_titre']);
-        self::assertSame('', $m['bloc_acces']);
+        self::assertSame('', $m['bloc_acces'], 'replié, ouvert à la demande (Xavier, 2026-11-23)');
+        self::assertSame('catégorie', $m['groupe']);
         foreach ($m as $cle => $mot) {
-            if ($cle === 'groupe') {
-                continue;
-            }
-            self::assertDoesNotMatchRegularExpression('/chantier|travaux|visite/iu', $mot, $cle);
+            self::assertDoesNotMatchRegularExpression('/chantier|travaux|visite|pièce/iu', $mot, $cle);
         }
     }
 
@@ -69,13 +67,6 @@ final class ActiviteTest extends TestCase
         foreach (['peintre', 'autre', 'inconnu', null] as $metier) {
             self::assertSame(Activite::Batiment, Activite::duMetier($metier), (string) $metier);
         }
-    }
-
-    public function testSeulesLesPrestationsNeRangentPasParGroupe(): void
-    {
-        self::assertTrue(Activite::Batiment->rangeParGroupe());
-        self::assertTrue(Activite::Exterieur->rangeParGroupe());
-        self::assertFalse(Activite::Prestations->rangeParGroupe());
     }
 
     public function testLesPhrasesFabriqueesSuiventLActivite(): void

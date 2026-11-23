@@ -104,3 +104,14 @@ Déjà en place, à garder : l'unité « jour » existe (`Saisie::UNITES`) ;
 - « Autre prestation » n'a pas de texte libre, à la différence d'« Autre métier ».
 - En Prestations, une offre faite avant le changement d'activité garde ses pièces, sous le mot « Pièce ».
 - En Prestations, le champ « Accès » reste affiché sur une offre qui en porte déjà un : l'enregistrement de l'en-tête ne l'efface pas.
+
+## Retours de Xavier après la maquette (2026-11-23)
+
+Réponses copiées de la maquette `MAQUETTE-activites.html` :
+
+- Dictée et accueil, en-tête, document, facturer, réglages, catalogue : « Valider ».
+- Accès : « y a-t-il une situation où on a un besoin d'accès ? dans les prestations ? si oui alors laisse mais facultatif, il apparaît seulement si besoin. » Oui : une installation chez le client, un atelier dans ses locaux (badge, réception, place de parc). Le champ « Accès » des Prestations est replié sous « Ajouter un accès », ouvert d'un toucher ou quand l'offre en porte un.
+- Offre et rangement : « Valider. je pense qu'on peut laisser renommer et ajouter mais on appelle cela catégorie si on veut séparer. » Le groupe dicté d'une prestation s'appelle « catégorie » : renommer, choisir à l'ajout d'une ligne.
+- Ce que lit l'IA : « Valider. ajouter le second appel qui range mais seulement si des catégories sont utiles. » Le second appel tourne aussi en Prestations et ne range que les parties que le prestataire annonce ; rien d'annoncé, l'offre sort par catégorie du catalogue. Remplace la décision du 2026-11-22 « Prestations : aucun second appel ».
+- Ce qui parle encore de bâtiment : « À laisser pour l'instant. il faut absolument sur les offres enlever la catégorie ou zone hors catalogue c'est moche et sert à rien. » Les lignes sans catégorie n'ont plus de titre « Hors catalogue », dans les trois modes, à l'écran et sur les douze modèles ; leur groupe passe en dernier. Le modèle Récapitulatif, qui cite chaque groupe par sa lettre, les nomme « Autres postes » (proposé par Claude, validé par Xavier le 2026-11-23 : « ok pour autres postes »).
+

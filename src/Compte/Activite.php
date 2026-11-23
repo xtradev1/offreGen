@@ -66,16 +66,10 @@ enum Activite: string
         };
     }
 
-    /** Faux : les lignes ne se rangent ni par pièce ni par zone, l'offre sort par catégorie du catalogue. */
-    public function rangeParGroupe(): bool
-    {
-        return $this !== self::Prestations;
-    }
-
     /**
      * Les mots des écrans et des documents, mêmes clés pour les trois activités. Une valeur vide : rien ne s'affiche
-     * (titre du bloc et champ « Accès » de l'en-tête, pour les Prestations). « groupe » : le rangement d'une ligne,
-     * au féminin dans les trois cas ; les Prestations gardent « pièce » pour les offres faites avant le changement.
+     * (titre du bloc de l'en-tête, pour les Prestations ; leur champ « Accès » est replié, ouvert à la demande).
+     * « groupe » : le rangement d'une ligne dicté (pièce, zone, catégorie), au féminin dans les trois cas.
      *
      * @return array<string, string>
      */
@@ -119,6 +113,8 @@ enum Activite: string
                 'dictee_objet' => 'votre dictée',
                 'titre_defaut' => 'Offre',
                 'premiere' => 'offre',
+                // Retours de Xavier du 2026-11-23 : les parties qu'il annonce en dictant se rangent, sous le mot « catégorie ».
+                'groupe' => 'catégorie',
                 'bloc_titre' => '',
                 'bloc_adresse' => 'Lieu',
                 'bloc_contact' => 'Contact',

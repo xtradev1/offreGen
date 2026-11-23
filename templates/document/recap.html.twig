@@ -18,12 +18,12 @@
     <table class="doc-duo2"><tr>
       <td class="doc-g">
         <div class="doc-h2">Récapitulatif</div>
-        <table class="doc-rec">{% for g in groupes_document ?? groupes %}<tr><td class="doc-let"><table class="doc-pas"><tr><td class="c-fond">{{ b.lettre(loop.index0) }}</td></tr></table></td><td>{{ g.nom }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endfor %}</table>
+        <table class="doc-rec">{% for g in groupes_document ?? groupes %}<tr><td class="doc-let"><table class="doc-pas"><tr><td class="c-fond">{{ b.lettre(loop.index0) }}</td></tr></table></td><td>{{ g.nom ?: 'Autres postes' }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endfor %}</table>
       </td>
       <td><div class="doc-h2">&nbsp;</div>{{ b.totaux(_context, {classe: 'doc-bloc-tot c-teinte'}) }}</td>
     </tr></table>
     <div class="doc-h2 doc-detail">{{ mots.doc_detail }}</div>
-    {{ b.lignes(_context, {st: false, lettres: true, grp: 'c-texte'}) }}
+    {{ b.lignes(_context, {st: false, lettres: true, grp: 'c-texte', sans_titre: 'Autres postes'}) }}
     {{ b.options(_context) }}
     {{ b.texte(_context, 'apres') }}
     <div class="doc-fin">

@@ -759,7 +759,8 @@ final class FactureControleur
         }
         if ($f['genre'] === 'acompte') {
             foreach ($groupes as $i => $g) {
-                $groupes[$i]['nom'] = $g['nom'] === OffreControleur::HORS_CATALOGUE ? 'Acompte' : $g['nom'];
+                // La ligne d'un acompte n'a pas de catégorie : son groupe, sans titre ailleurs, s'appelle « Acompte ».
+                $groupes[$i]['nom'] = $g['nom'] === '' ? 'Acompte' : $g['nom'];
             }
         }
         $numero = $f['numero'] ?? $this->numeroPropose($requete);

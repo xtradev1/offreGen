@@ -13,15 +13,12 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lire la réponse de Xavier au gate prod. S'il donne son accord : dans `~/offreGen-familles`, `git fetch`, rebase sur `origin/chantier-voix-offre` si elle a avancé, suite complète, commit par chemins, `git push origin HEAD:chantier-voix-offre`, puis déploiement sur le test selon la mémoire « Production et test » (dossier propre à la session, tête de la branche, `/sante` relu). Ensuite sa recette, puis la clôture (`roadmap-sync`, suppression des bases `offregen_familles_test` et `offregen_familles_vue`).
+Lire le retour de Xavier sur `RECETTE.md` (scénarios 2, 3 et 5 changés par le lot 7), sur le site de test. Défauts : phase 5. Recette validée : clôture (`statut: termine`, `roadmap-sync`, suppression des bases `offregen_familles_test` et `offregen_familles_vue`).
 
 ## En attente de toi
 
-- Dire si Claude commite, pousse sur `chantier-voix-offre` et déploie sur le site de test (le déploiement joue la migration `Version20261122100001`).
-- Dérouler `RECETTE.md` sur le site de test, sept scénarios, et dire ce qui casse.
-- Relever, sur cinq dictées de prestations et cinq dictées de jardinier, les lignes justes et les lignes à corriger (scénarios 2 et 5).
-- Corriger les prix des catalogues Informatique, Conseil, Marketing et « Autre prestation » s'ils sont faux (`docs/plans/2026-11-19_metiers-demo/CATALOGUES.md`).
-- Trancher le relevé de la sonde sur l'écran d'une offre à 390 px (boutons de suppression qui dépassent, d'avant ce chantier).
+- Dérouler `RECETTE.md` sur le site de test, dont cinq dictées de prestations (avec et sans parties annoncées) et cinq de jardinier.
+- Corriger les prix des catalogues de prestations s'ils sont faux.
 
 ## Journal
 
@@ -54,6 +51,13 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-22 : recette visuelle locale (skill `recette-visuelle`) : douze captures regardées, à 390 px et à 1280 px, sur quatre comptes inventés. Deux défauts vus et corrigés : l'aide « Par exemple : Peinture de finition » montrée à un prestataire, et l'explication du réglage plus aérée que les autres aides (passée en paragraphe). Captures et sondes dans le scratchpad de la session, non versionnées.
 - 2026-11-22 : phase 6 rejouée après la revue : 1159 tests verts, PHPStan sans erreur, migration annulée puis rejouée.
 - 2026-11-22 : phase 8, `RECETTE.md` écrite. Gate prod ouvert. Rien n'est commité ni déployé : l'accord permanent de commit et de déploiement vaut pour le chantier de l'administration seulement.
+- 2026-11-22 : accord de Xavier : « oui commite, pousse et déploie sur le test ». Commit par chemins (59 fichiers), rebasé sur deux commits de documentation d'une autre session (aucun fichier en commun, aucune migration nouvelle) : `cedc573`, poussé sur `chantier-voix-offre`.
+- 2026-11-22 : déploiement sur le test par `outils/deployer-test.sh` depuis la copie du chantier : 1159 tests verts, migration `Version20261122100001` jouée, sonde verte, `/sante` annonce `cedc573`. Version précédente gardée : `8385e78`. La tête distante n'a pas bougé pendant le déploiement.
+- 2026-11-22 : contrôle par l'interface sur le test, une connexion en lecture seule à `demo-paysagiste` : « Votre activité » coche « Extérieur », la consigne de dictée est « Parlez, zone par zone. », capture regardée. La migration a bien passé ce compte en Extérieur.
+- 2026-11-23 : maquette interactive `MAQUETTE-activites.html` (trois modes, surlignage des différences) ; réponses de Xavier reportées dans `SPEC.md`. Retour en phase 5 sans repasser les gates : lot 7 ajouté au plan.
+- 2026-11-23 : copie remise sur la tête de la branche (`80917d8`, dix commits d'autres sessions : options et variantes, administration). Aucun conflit ; deux migrations venues d'ailleurs jouées sur la base du chantier.
+- 2026-11-23 : lot 7 fait (accès replié, catégorie et second appel des Prestations, plus de « Hors catalogue »). Deux assertions d'`EcransTest` attendaient « Hors catalogue » : remplacées, la spec change ce comportement.
+- 2026-11-23 : recette visuelle locale du lot 7 (base `offregen_familles_vue`, compte inventé) : en-tête replié puis ouvert, offre avec une ligne libre, document. La sonde de disposition relève trois chevauchements sur l'en-tête replié : le champ « Accès » caché dans le `<details>` fermé garde une boîte (117 px de haut, au rang de « Début »), sans être peint ; replié ouvert, zéro chevauchement, et la capture ne montre rien. Les cinq débordements de l'écran de l'offre sont les boutons de suppression déjà relevés avant ce chantier.
 
 ## Décisions
 
@@ -80,6 +84,11 @@ Ce qui a été tranché sans demander, et pourquoi.
 | 2026-11-22 | Modèle proposé : Technique pour l'informatique, Lettre pour le conseil, Moderne pour le marketing, Sobre pour « Autre prestation » | choix de Claude, à corriger par Xavier à la recette |
 | 2026-11-22 | L'aide de « Ma marque », l'aperçu d'un compte sans offre et `visite.webm` gardent leurs mots du bâtiment | hors périmètre, à traiter ailleurs ; listés dans la recette |
 | 2026-11-22 | Pas de commit ni de déploiement sans accord | aucune demande explicite de Xavier pour ce chantier |
+| 2026-11-23 | `Activite::rangeParGroupe` retirée | le second appel tourne dans les trois modes : la méthode rendait toujours vrai |
+| 2026-11-23 | Le second appel des Prestations dit « partie » au modèle, l'écran dit « catégorie » | « catégorie » désigne déjà la catégorie du catalogue dans la consigne principale : le modèle ne doit pas confondre les deux |
+| 2026-11-23 | Le groupe sans titre vient en dernier | au milieu, ses lignes se liraient comme la suite du groupe précédent |
+| 2026-11-23 | Récapitulatif nomme ce groupe « Autres postes » | sa table des postes cite chaque groupe par sa lettre ; une lettre sans nom ne se lit pas. Validé par Xavier le 2026-11-23 |
+| 2026-11-23 | L'écran de l'offre garde la rangée des en-têtes (Qté, Prix, Total) au-dessus du groupe sans titre | elle le sépare du groupe précédent |
 
 ## Artefacts
 
@@ -87,7 +96,7 @@ Ce qui a été tranché sans demander, et pourquoi.
 |---|---|---|
 | `docs/plans/2026-11-22_familles-activite/SPEC.md` | 1 | validée au gate intention le 2026-11-22 |
 | `docs/plans/2026-11-22_familles-activite/PLAN.md` | 4 | six lots cochés le 2026-11-22 |
-| code et tests (46 fichiers modifiés, 8 neufs, voir Preuves) | 5 | livré en code, non commité, non déployé |
+| code et tests (46 fichiers modifiés, 8 neufs, voir Preuves) | 5 | commit `cedc573`, en service sur le test le 2026-11-22, recette de Xavier attendue |
 | `docs/plans/2026-11-19_metiers-demo/CATALOGUES.md` | 5 | section « Prestations » et sources S16 à S18 ajoutées |
 | `docs/plans/2026-11-22_familles-activite/REVUE.md` | 7 | écrite, trouvailles retenues corrigées |
 | `docs/plans/2026-11-22_familles-activite/RECETTE.md` | 8 | écrite, en attente de Xavier |
@@ -201,3 +210,67 @@ $ node captures.js
 ```
 
 La ligne 04 est résumée à la main : sa sortie brute donne le détail des quatre boutons. Non vérifié : le site de test, un iPhone et un Android réels, la justesse de l'extraction hors du bâtiment.
+
+### Phase 8
+
+Commit, push et déploiement sur le test, le 2026-11-22, après l'accord de Xavier :
+
+```
+$ git push origin HEAD:chantier-voix-offre
+   aa5ea49..cedc573  HEAD -> chantier-voix-offre
+$ bash outils/deployer-test.sh
+commit cedc573cf0691285e1ab95831cce019f1886b10e (Activités du compte : bâtiment, extérieur, prestations)
+OK (1159 tests, 10086 assertions)
+analyse statique : sans erreur
+[notice] Migrating up to OffreGen\Migrations\Version20261122100001
+[notice] finished in 24.8ms, used 8M memory, 1 migrations executed, 2 sql queries
+en service : releases/cedc573cf0691285e1ab95831cce019f1886b10e ; précédente : releases/8385e781710bd462e1b17b6b24223d8b715c1d7a
+/sante annonce cedc573cf0691285e1ab95831cce019f1886b10e après 0 s
+LU     /sante : {"commit":"cedc573cf0691285e1ab95831cce019f1886b10e","base":"ok","migrations":"ok"}
+OK     migrations à jour
+SONDE VERTE
+DÉPLOYÉ : cedc573cf0691285e1ab95831cce019f1886b10e sur https://easy-offres.xtradev.ch
+$ git rev-parse --short origin/chantier-voix-offre
+cedc573
+$ node test_site.js
+sante : 200 {"commit":"cedc573cf0691285e1ab95831cce019f1886b10e","base":"ok","migrations":"ok"}
+connecté : demo-paysagiste@exemple.ch -> /bienvenue/entreprise
+activité cochée : exterieur | consigne de dictée : Parlez, zone par zone.
+```
+
+### Lot 7 (2026-11-23)
+
+Sur la tête `80917d8` rebasée, base `offregen_familles_test` :
+
+```
+$ vendor/bin/phpunit
+....................................................          1272 / 1272 (100%)
+Time: 02:54.793, Memory: 116.50 MB
+OK (1272 tests, 10745 assertions)
+$ vendor/bin/phpstan analyse --memory-limit=512M --no-progress --error-format=raw
+tests/Offre/GabaritsActiviteTest.php:64:Parameter #4 $lignes of static method OffreGen\Tests\Outils\OffreDEssai::html() expects list<array{...}>, non-empty-list<array{categorie: null}|array{...}> given.
+tests/Offre/GabaritsActiviteTest.php:68:Offset 'designation' might not exist on array{categorie: null}|array{...}.
+```
+
+Les deux remarques portent sur le test neuf (tableau modifié par indice) : réécrit par `array_map`, puis :
+
+```
+$ vendor/bin/phpstan analyse --memory-limit=512M --no-progress --error-format=raw
+Note: Using configuration file /home/xavie/offreGen-familles/phpstan.neon.
+$ vendor/bin/phpunit tests/Offre/GabaritsActiviteTest.php
+OK (62 tests, 177 assertions)
+```
+
+Recette visuelle locale du lot 7 :
+
+```
+$ node lot7.js
+entete fermé | contraste : textes 24 sous 7:1 0 [] | disposition : débordements 0 chevauchements 3 coupés 0 scroll false []
+entete ouvert | contraste : textes 24 sous 7:1 0 [] | disposition : débordements 0 chevauchements 0 coupés 0 scroll false []
+offre | contraste : textes 78 sous 7:1 0 [] | disposition : débordements 5 (button.del, déjà relevés avant ce chantier)
+Hors catalogue sur le document : false
+$ node lot7c.js   # boîtes des champs, en-tête replié : [id, haut, hauteur, largeur, dans un details fermé]
+[["titre",76,74,358,false],["chantier_adresse",209,74,358,false],["chantier_contact",300,98,358,false],["chantier_acces",464,117,358,true],["debut_travaux",472,74,174,false],["duree_travaux",472,74,174,false],["non_compris",562,160,358,false],["visite_le",739,98,358,false]]
+```
+
+- 2026-11-23 : accord de Xavier : « oui commite, pousse et déploie, ok pour autres postes ».

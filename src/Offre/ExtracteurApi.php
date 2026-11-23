@@ -107,16 +107,34 @@ final class ExtracteurApi implements Extracteur
         - Jamais de tiret long : une virgule à la place.
         TXT;
 
+    /**
+     * Le second appel des Prestations (retours de Xavier du 2026-11-23 : « ajouter le second appel qui range, mais
+     * seulement si des catégories sont utiles ») : il ne range que les parties que le prestataire annonce lui-même.
+     * Tout « général » : l'offre sort par catégorie du catalogue, comme sans second appel. Jamais mesuré au banc.
+     */
+    private const CONSIGNE_CATEGORIES = <<<'TXT'
+        Tu ranges les lignes d'une offre de prestations dans les parties que le prestataire annonce lui-même dans sa dictée.
+        Règles :
+        - Range seulement si le prestataire annonce des parties (« pour le site », « phase 1 », « côté hébergement ») : une partie annoncée vaut pour les postes qui suivent, jusqu'à la suivante.
+        - Pour chaque ligne, donne son numéro et la partie telle qu'elle est dite.
+        - « général » pour une ligne qui vaut pour toute l'offre, et pour toutes les lignes quand aucune partie n'est annoncée. N'invente aucune partie.
+        - Jamais de tiret long : une virgule à la place.
+        TXT;
+
     /** La consigne de l'appel principal, pour l'activité du compte. */
     public static function consigne(Activite $activite): string
     {
         return strtr(self::CONSIGNE, self::PHRASES[$activite->value] ?? []);
     }
 
-    /** La consigne du second appel : par pièce, ou par zone en Extérieur. Les Prestations n'ont pas de second appel. */
+    /** La consigne du second appel : par pièce, par zone en Extérieur, par partie annoncée en Prestations. */
     public static function consigneGroupes(Activite $activite): string
     {
-        return $activite === Activite::Exterieur ? self::CONSIGNE_ZONES : self::CONSIGNE_PIECES;
+        return match ($activite) {
+            Activite::Batiment => self::CONSIGNE_PIECES,
+            Activite::Exterieur => self::CONSIGNE_ZONES,
+            Activite::Prestations => self::CONSIGNE_CATEGORIES,
+        };
     }
 
     public function __construct(
@@ -169,8 +187,7 @@ final class ExtracteurApi implements Extracteur
             return new ResultatExtraction(null, []);
         }
         $resultat = $this->valider($proposition, $catalogue);
-        // Une prestation ne se range ni par pièce ni par zone : l'offre sort par catégorie du catalogue, sans second appel.
-        if ($resultat->lignes !== [] && $activite->rangeParGroupe()) {
+        if ($resultat->lignes !== []) {
             $resultat = $this->rangerParPiece($transcription, $resultat, $activite);
         }
         return $resultat->lignes !== [] && $this->classerOptions && self::aDesMotsDOption($transcription) ? $this->classerOptions($transcription, $resultat) : $resultat;
@@ -465,10 +482,14 @@ final class ExtracteurApi implements Extracteur
      */
     private static function outilPieces(Activite $activite): array
     {
-        $zone = $activite === Activite::Exterieur;
+        $mot = match ($activite) {
+            Activite::Batiment => ['la pièce', 'Pièce'],
+            Activite::Exterieur => ['la zone', 'Zone'],
+            Activite::Prestations => ['la partie', 'Partie'],
+        };
         return ['type' => 'function', 'function' => [
             'name' => 'ranger_par_piece',
-            'description' => $zone ? 'Donne la zone de chaque ligne de l\'offre.' : 'Donne la pièce de chaque ligne de l\'offre.',
+            'description' => 'Donne ' . $mot[0] . ' de chaque ligne de l\'offre.',
             'parameters' => [
                 'type' => 'object',
                 'required' => ['pieces'],
@@ -478,7 +499,7 @@ final class ExtracteurApi implements Extracteur
                         'required' => ['ligne', 'piece'],
                         'properties' => [
                             'ligne' => ['type' => 'integer', 'description' => 'Numéro de la ligne'],
-                            'piece' => ['type' => 'string', 'description' => $zone ? 'Zone dite, ou « général »' : 'Pièce dite, ou « général »'],
+                            'piece' => ['type' => 'string', 'description' => $mot[1] . ' dite, ou « général »'],
                         ],
                     ]],
                 ],

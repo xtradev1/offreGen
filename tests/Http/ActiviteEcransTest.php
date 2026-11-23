@@ -67,12 +67,13 @@ final class ActiviteEcransTest extends TestCase
         }
     }
 
-    public function testLEnTeteDUnePrestationNANiTitreDeBlocNiAcces(): void
+    public function testLEnTeteDUnePrestationNaPasDeTitreEtGardeLAccesReplie(): void
     {
         $this->activite('prestations');
         $page = $this->page('/offres/' . $this->jeu->offre['a'] . '/modifier');
         self::assertStringNotContainsString('<legend>', $page);
-        self::assertStringNotContainsString('chantier_acces', $page);
+        // Xavier, 2026-11-23 : l'accès reste possible (un badge, une réception), replié tant qu'il n'est pas utile.
+        self::assertMatchesRegularExpression('~<details class="libre-detail">\s*<summary>Ajouter un accès</summary>\s*<div class="champ">\s*<label for="chantier_acces">Accès</label>~u', $page);
         foreach (['<label for="chantier_adresse">Lieu</label>', '<label for="chantier_contact">Contact</label>', '<label for="debut_travaux">Début</label>',
             '<label for="visite_le">Date de l&#039;échange</label>'] as $attendu) {
             self::assertStringContainsString($attendu, $page);
@@ -84,12 +85,12 @@ final class ActiviteEcransTest extends TestCase
         }
     }
 
-    public function testUnAccesDejaSaisiResteALEcranEnPrestations(): void
+    public function testUnAccesDejaSaisiResteOuvertEnPrestations(): void
     {
         BaseDeTest::pdo()->prepare('UPDATE offre SET chantier_acces = ? WHERE id = ?')->execute(['Clé chez la concierge', $this->jeu->offre['a']]);
         $this->activite('prestations');
         $chemin = '/offres/' . $this->jeu->offre['a'] . '/modifier';
-        self::assertStringContainsString('<label for="chantier_acces">Accès</label>', $this->page($chemin));
+        self::assertMatchesRegularExpression('~<details class="libre-detail" open>\s*<summary>Ajouter un accès</summary>~u', $this->page($chemin));
         self::assertSame(303, $this->a->post($chemin, ['titre' => 'Offre a', 'chantier_acces' => 'Clé chez la concierge', 'chantier_adresse' => 'Rue du Test 9'])->getStatusCode());
         self::assertSame(['chantier_acces' => 'Clé chez la concierge', 'chantier_adresse' => 'Rue du Test 9'],
             BaseDeTest::ligne('SELECT chantier_acces, chantier_adresse FROM offre WHERE id = ' . $this->jeu->offre['a']));
@@ -122,6 +123,39 @@ final class ActiviteEcransTest extends TestCase
         self::assertStringContainsString('Indiquez le nom de la zone', (string) $refus->getContent());
         self::assertSame(303, $this->a->post($offre . '/pieces', ['ancienne' => 'Devant la maison', 'nouvelle' => 'Talus'])->getStatusCode());
         self::assertStringContainsString('Zone renommée', $this->page($offre));
+    }
+
+    /** Xavier, 2026-11-23 : en Prestations, une partie annoncée se renomme et se choisit, sous le mot « catégorie ». */
+    public function testEnPrestationsLeGroupeDicteEstUneCategorie(): void
+    {
+        BaseDeTest::pdo()->prepare('UPDATE ligne SET piece = ? WHERE offre_id = ?')->execute(['Pour le site', $this->jeu->offre['a']]);
+        $ligne = (int) BaseDeTest::ligne('SELECT id FROM ligne WHERE offre_id = ' . $this->jeu->offre['a'])['id'];
+        $offre = '/offres/' . $this->jeu->offre['a'];
+        $this->activite('prestations');
+        $page = $this->page($offre . '/pieces?nom=Pour+le+site');
+        foreach (['Renommer la catégorie', '>Nom de la catégorie</label>', "Le nom d'une autre catégorie de l'offre"] as $attendu) {
+            self::assertStringContainsString($attendu, $page);
+        }
+        self::assertStringNotContainsString('pièce', $page);
+        self::assertStringContainsString('<label for="piece">Catégorie</label>', $this->page("$offre/lignes/$ligne"));
+        $ajout = $this->page($offre . '/ajouter');
+        self::assertStringContainsString('aria-label="Catégorie de la ligne"', $ajout);
+        self::assertStringContainsString('placeholder="Autre catégorie"', $ajout);
+        self::assertSame(303, $this->a->post($offre . '/pieces', ['ancienne' => 'Pour le site', 'nouvelle' => 'Site web'])->getStatusCode());
+        self::assertStringContainsString('Catégorie renommée', $this->page($offre));
+    }
+
+    /** Xavier, 2026-11-23 : « Hors catalogue » sur les offres « c'est moche et sert à rien ». */
+    public function testUneLigneSansCategorieNAPasDeTitre(): void
+    {
+        // La catégorie d'une ligne vient de son produit : sans produit, elle n'en a pas.
+        BaseDeTest::pdo()->exec("UPDATE ligne SET produit_id = NULL WHERE offre_id = {$this->jeu->offre['a']}");
+        $page = $this->page('/offres/' . $this->jeu->offre['a']);
+        self::assertStringNotContainsString('Hors catalogue', $page);
+        self::assertStringContainsString('<div class="cat"><h5></h5>', $page);
+        $doc = (string) $this->a->get('/offres/' . $this->jeu->offre['a'] . '/document')->getContent();
+        self::assertStringNotContainsString('Hors catalogue', $doc);
+        self::assertStringNotContainsString('doc-grp', $doc, 'aucune ligne de titre de groupe sur le document');
     }
 
     public function testLAccueilNommeLaDicteeSelonLActivite(): void

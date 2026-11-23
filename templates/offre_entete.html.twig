@@ -18,8 +18,9 @@
       {{ f.erreur(erreurs, 'titre') }}
     </div>
     {# Modèles du bâtiment (2026-11-20) : le chantier. Tout est facultatif ; un champ vide ne paraît pas sur l'offre.
-       Les libellés suivent l'activité du compte (Compte\Activite, 2026-11-22) : un mot vide retire le titre du bloc,
-       ou le champ « Accès » tant que l'offre n'en porte pas. #}
+       Les libellés suivent l'activité du compte (Compte\Activite, 2026-11-22) : un mot vide retire le titre du bloc ;
+       le champ « Accès » des Prestations est replié, ouvert d'un toucher ou quand l'offre en porte un (Xavier, 2026-11-23 :
+       « laisse, mais facultatif, il apparaît seulement si besoin »). #}
     {% set m = mots() %}
     <fieldset class="groupe"{% if not m.bloc_titre %} aria-label="Informations de l'offre"{% endif %}>
       {% if m.bloc_titre %}<legend>{{ m.bloc_titre }}</legend>{% endif %}
@@ -35,13 +36,19 @@
         <span class="muted petit">Paraît sur l'offre dans le modèle «&nbsp;Chantier&nbsp;».</span>
         {{ f.erreur(erreurs, 'chantier_contact') }}
       </div>
-      {% if m.bloc_acces or champs.chantier_acces %}
+      {% set acces %}
       <div class="champ">
-        <label for="chantier_acces">{{ m.bloc_acces ?: 'Accès' }}</label>
+        <label for="chantier_acces">Accès</label>
         <input id="chantier_acces" name="chantier_acces" value="{{ champs.chantier_acces }}" maxlength="255" placeholder="Clé, place de parc" autocomplete="off"{{ f.invalide(erreurs, 'chantier_acces') }}>
         <span class="muted petit">Paraît sur l'offre dans le modèle «&nbsp;Chantier&nbsp;»&nbsp;: n'y notez pas un code de porte.</span>
         {{ f.erreur(erreurs, 'chantier_acces') }}
       </div>
+      {% endset %}
+      {% if m.bloc_acces %}{{ acces }}{% else %}
+      <details class="libre-detail"{% if champs.chantier_acces or erreurs.chantier_acces is defined %} open{% endif %}>
+        <summary>Ajouter un accès</summary>
+        {{ acces }}
+      </details>
       {% endif %}
       <div class="duo">
         <div class="champ">

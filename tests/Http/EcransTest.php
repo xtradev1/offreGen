@@ -145,7 +145,11 @@ final class EcransTest extends TestCase
         $l = $this->ligneEnBase();
         self::assertSame(['designation' => 'Peinture murale a', 'prix_centimes' => 1850, 'produit_id' => null],
             ['designation' => $l['designation'], 'prix_centimes' => $l['prix_centimes'], 'produit_id' => $l['produit_id']]);
-        self::assertStringContainsString('Hors catalogue', $this->page($this->offre));
+        // Sans produit, la ligne n'a plus de catégorie : son groupe n'a pas de titre (Xavier, 2026-11-23, « Hors catalogue »
+        // sur les offres « c'est moche et sert à rien »).
+        $page = $this->page($this->offre);
+        self::assertStringContainsString('<h5></h5>', $page);
+        self::assertStringNotContainsString('Hors catalogue', $page);
     }
 
     // Offre
@@ -272,7 +276,10 @@ final class EcransTest extends TestCase
         self::assertSame([null, 0], [$l['produit_id'], $l['prix_centimes']]);
         self::assertSame(1, BaseDeTest::compter('produit', "artisan_id = {$this->jeu->a}"));
         $page = $this->page($this->offre);
-        self::assertStringContainsString('<h5>Hors catalogue</h5>', $page);
+        // Une ligne libre n'a pas de catégorie : son groupe, en dernier, n'a pas de titre (Xavier, 2026-11-23).
+        self::assertStringContainsString('<h5></h5>', $page);
+        self::assertStringNotContainsString('Hors catalogue', $page);
+        self::assertLessThan(strpos($page, '<h5></h5>'), strpos($page, '<h5>Peinture</h5>'), 'le groupe sans titre vient après les catégories');
         self::assertStringContainsString('Prix manquant', $page);
     }
 

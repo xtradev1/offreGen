@@ -34,9 +34,6 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class OffreControleur
 {
-    /** Titre du groupe des lignes qui ne viennent pas du catalogue. */
-    public const HORS_CATALOGUE = 'Hors catalogue';
-
     public function __construct(private readonly Conteneur $c)
     {
     }
@@ -315,9 +312,11 @@ final class OffreControleur
                 $cle = $piece === null ? '' : 'p:' . Piece::cle($piece);
                 $nom = $piece ?? Piece::GENERAL;
             } else {
-                // Lire la catégorie à part : un « ?? » sur $l resserrerait son type et perdrait T.
+                // Lire la catégorie à part : un « ?? » sur $l resserrerait son type et perdrait T. Une ligne sans
+                // catégorie va dans un groupe sans titre, en dernier (Xavier, 2026-11-23 : « Hors catalogue » sur les
+                // offres « c'est moche et sert à rien »).
                 $categorie = $l['categorie'];
-                $nom = $categorie ?? self::HORS_CATALOGUE;
+                $nom = $categorie ?? '';
                 $cle = 'c:' . $nom;
                 $piece = null;
             }
@@ -335,6 +334,11 @@ final class OffreControleur
             $groupes[$cle] ??= ['nom' => $nom, 'lignes' => [], 'total' => 0, 'piece' => $piece, 'par_piece' => $parPiece];
             $groupes[$cle]['lignes'][] = self::rangee($l, $retenue === null ? ($totauxLignes[$i] ?? 0) : null) + ['variantes' => $sous, 'retenue' => $retenue, 'remplacee' => $retenue !== null];
             $groupes[$cle]['total'] += $dansLeTotal;
+        }
+        if (isset($groupes['c:'])) {
+            $sansTitre = $groupes['c:'];
+            unset($groupes['c:']);
+            $groupes['c:'] = $sansTitre;
         }
         return array_values($groupes);
     }

@@ -158,6 +158,18 @@ Vérification commune : dans `~/offreGen-familles`, base `offregen_familles_tes
 | Vérification | `vendor/bin/phpunit tests/Http` : OK |
 | Dépend de | 1, 2 |
 
+### Lot 7 : retours de Xavier du 2026-11-23
+
+- [x] Fait le 2026-11-23
+
+| Champ | Contenu |
+|---|---|
+| Objectif | Accès replié en Prestations ; second appel des Prestations sur les parties annoncées, mot « catégorie » ; plus de titre « Hors catalogue » |
+| Fichiers touchés | `src/Compte/Activite.php` (`rangeParGroupe` retirée, `groupe` des Prestations), `src/Offre/ExtracteurApi.php` (`CONSIGNE_CATEGORIES`, `consigneGroupes`, `outilPieces`), `templates/offre_entete.html.twig`, `src/Http/Controleur/OffreControleur.php` (`grouper`, `HORS_CATALOGUE` retirée), `src/Http/Controleur/FactureControleur.php`, `templates/document/_blocs.html.twig`, `templates/document/recap.html.twig` |
+| Test | `ExtracteurActiviteTest` (deux tests de Prestations), `ActiviteTest`, `ActiviteEcransTest` (accès replié, accès ouvert, catégorie, sans titre), `GabaritsActiviteTest::testLesLignesSansCategorieNOntPasDeTitre` (douze modèles), `EcransTest` (deux assertions « Hors catalogue » remplacées) |
+| Vérification | `vendor/bin/phpunit` : suite complète verte ; `vendor/bin/phpstan analyse` : aucune erreur |
+| Dépend de | 1 à 6 |
+
 ## Migrations et données
 
 - `Version20261122100001` : additive, `activite` à « batiment », puis « exterieur » pour les comptes dont le métier est « paysagiste ». Annulation : suppression de la colonne. Elle alimente les préalables de la recette : à jouer sur le site de test par le déploiement.

@@ -63,7 +63,10 @@
     <tbody>
       {% for g in d.groupes_document ?? d.groupes %}
         {% set gi = loop.index %}
-        <tr class="doc-grp"><td class="{{ o.grp ?? '' }}" colspan="{{ grp_tot ? colonnes - 1 : colonnes }}">{% if pos %}{{ gi }}&nbsp;&nbsp;{% endif %}{% if o.lettres ?? false %}{{ _self.lettre(loop.index0) }}&nbsp;·&nbsp;{% endif %}{{ g.nom }}</td>{% if grp_tot %}<td class="n {{ o.grp_n ?? '' }}">{% if not ((g.par_piece ?? false) and g.piece is null) %}{{ g.total|montant }}{% endif %}</td>{% endif %}</tr>
+        {# Les lignes sans catégorie n'ont ni titre ni sous-total (Xavier, 2026-11-23) ; Récapitulatif leur donne un nom
+           (o.sans_titre), parce que sa table des postes les cite par leur lettre. #}
+        {% set titre = g.nom ?: (o.sans_titre ?? '') %}
+        {% if titre %}<tr class="doc-grp"><td class="{{ o.grp ?? '' }}" colspan="{{ grp_tot ? colonnes - 1 : colonnes }}">{% if pos %}{{ gi }}&nbsp;&nbsp;{% endif %}{% if o.lettres ?? false %}{{ _self.lettre(loop.index0) }}&nbsp;·&nbsp;{% endif %}{{ titre }}</td>{% if grp_tot %}<td class="n {{ o.grp_n ?? '' }}">{% if not ((g.par_piece ?? false) and g.piece is null) %}{{ g.total|montant }}{% endif %}</td>{% endif %}</tr>{% endif %}
         {% for r in g.lignes %}
           {% set z = (o.zebre ?? false) and loop.index0 is even ? ' c-teinte' : '' %}
           {# Point 2 (2026-11-22) : la variante retenue prend la place de sa ligne ; l'écart des autres se compte sur elle. #}
@@ -89,7 +92,7 @@
           {% endif %}{% endfor %}
         {% endfor %}
         {# « Général » n'a pas de sous-total : « Total général » se confondrait avec le total de l'offre (sous-chantier 28). #}
-        {% if (o.st ?? true) and not grp_tot and g.lignes|length > 1 and not ((g.par_piece ?? false) and g.piece is null) %}<tr class="doc-st"><td colspan="{{ colonnes - 1 }}">Total {{ g.nom|lower }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endif %}
+        {% if (o.st ?? true) and g.nom and not grp_tot and g.lignes|length > 1 and not ((g.par_piece ?? false) and g.piece is null) %}<tr class="doc-st"><td colspan="{{ colonnes - 1 }}">Total {{ g.nom|lower }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endif %}
       {% endfor %}
     </tbody>
   </table>
@@ -138,7 +141,7 @@
     <thead><tr><th class="doc-po">Poste</th><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix unit.</th><th class="n">Montant</th></tr></thead>
     <tbody>
       {% for g in d.groupes_document ?? d.groupes %}
-        {% set avec_total = not ((g.par_piece ?? false) and g.piece is null) %}
+        {% set avec_total = g.nom and not ((g.par_piece ?? false) and g.piece is null) %}
         {% for r in g.lignes %}
           {% set x = r.retenue ?? r %}
           <tr class="{{ loop.first ? 'doc-prem' : '' }}{{ loop.last ? ' doc-der' : '' }}">

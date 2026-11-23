@@ -81,10 +81,15 @@ final class ExtracteurActiviteTest extends TestCase
         }
     }
 
-    public function testUnePrestationNeSeRangeNiParPieceNiParZone(): void
+    /**
+     * Retours de Xavier du 2026-11-23 : le second appel range une prestation dans les parties annoncées, « seulement si
+     * des catégories sont utiles ». Rien d'annoncé : tout « général », l'offre sort par catégorie du catalogue.
+     */
+    public function testUnePrestationSansPartieAnnonceeResteParCategorieDuCatalogue(): void
     {
-        $r = $this->extracteur([self::outil('proposer_offre', self::LIGNES)])->extraire('Dictée.', self::CATALOGUE, Activite::Prestations);
-        self::assertCount(1, $this->corps, 'un seul appel : aucun rangement');
+        $r = $this->extracteur([self::outil('proposer_offre', self::LIGNES), self::outil('ranger_par_piece', '{"pieces":[{"ligne":1,"piece":"général"},{"ligne":2,"piece":"général"}]}')])
+            ->extraire('Dictée.', self::CATALOGUE, Activite::Prestations);
+        self::assertCount(2, $this->corps);
         self::assertCount(2, $r->lignes);
         self::assertSame([null, null], [$r->lignes[0]->piece, $r->lignes[1]->piece]);
         self::assertSame([12000, 15000], [$r->lignes[0]->quantiteMilliemes, $r->lignes[0]->prixCentimes], 'le prix reste celui du catalogue');
@@ -95,6 +100,20 @@ final class ExtracteurActiviteTest extends TestCase
         self::assertStringContainsString('- titre : court, la nature de la prestation, sans prix.', $consigne);
         self::assertStringNotContainsString('artisan', $consigne);
         self::assertStringNotContainsString('visite', $consigne);
+
+        $second = $this->corps[1]['messages'][0]['content'];
+        self::assertSame(ExtracteurApi::consigneGroupes(Activite::Prestations), $second);
+        self::assertStringContainsString('Range seulement si le prestataire annonce des parties', $second);
+        self::assertStringContainsString("N'invente aucune partie.", $second);
+        self::assertDoesNotMatchRegularExpression('/pièce|zone|chantier|artisan|visite/iu', $second);
+        self::assertSame('Partie dite, ou « général »', $this->corps[1]['tools'][0]['function']['parameters']['properties']['pieces']['items']['properties']['piece']['description']);
+    }
+
+    public function testUnePrestationSeRangeDansLesPartiesAnnoncees(): void
+    {
+        $r = $this->extracteur([self::outil('proposer_offre', self::LIGNES), self::outil('ranger_par_piece', '{"pieces":[{"ligne":1,"piece":"pour le site"},{"ligne":2,"piece":"formation"}]}')])
+            ->extraire('Dictée.', self::CATALOGUE, Activite::Prestations);
+        self::assertSame(['Pour le site', 'Formation'], [$r->lignes[0]->piece, $r->lignes[1]->piece]);
     }
 
     public function testEnExterieurLeSecondAppelRangeParZone(): void
@@ -123,5 +142,6 @@ final class ExtracteurActiviteTest extends TestCase
             self::assertDoesNotMatchRegularExpression('/[\x{2014}\x{2013}]/u', implode("\n", $lignes));
         }
         self::assertDoesNotMatchRegularExpression('/[\x{2014}\x{2013}]/u', ExtracteurApi::consigneGroupes(Activite::Exterieur));
+        self::assertDoesNotMatchRegularExpression('/[\x{2014}\x{2013}]/u', ExtracteurApi::consigneGroupes(Activite::Prestations));
     }
 }

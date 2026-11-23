@@ -50,6 +50,26 @@ final class GabaritsActiviteTest extends TestCase
         return html_entity_decode(strip_tags($sansStyle), ENT_QUOTES | ENT_HTML5);
     }
 
+    /**
+     * Xavier, 2026-11-23 : « Hors catalogue » sur les offres « c'est moche et sert à rien ». Des lignes sans catégorie
+     * se lisent sans titre ni sous-total, après les catégories ; Récapitulatif les nomme « Autres postes ».
+     */
+    #[DataProvider('modeles')]
+    public function testLesLignesSansCategorieNOntPasDeTitre(string $modele): void
+    {
+        $lignes = array_map(static fn (array $l): array => $l['rang'] > 7 ? ['categorie' => null] + $l : $l, OffreDEssai::lignes(10));
+        $html = OffreDEssai::html($this->c, $this->jeu->a, OffreDEssai::offre(), $lignes, new Marque($modele, '#1D4E89'));
+        $texte = html_entity_decode(strip_tags((string) preg_replace('~<style\b.*?</style>~su', '', $html)), ENT_QUOTES | ENT_HTML5);
+        self::assertStringNotContainsString('Hors catalogue', $texte, $modele);
+        self::assertStringNotContainsString('Total ' . "\n", $texte, "$modele : pas de « Total » sans nom");
+        self::assertStringContainsString($lignes[9]['designation'], $texte, "$modele : les lignes restent");
+        if ($modele === 'recap') {
+            self::assertSame(2, substr_count($texte, 'Autres postes'), 'dans la table des postes et au-dessus de ses lignes');
+        } else {
+            self::assertStringNotContainsString('Autres postes', $texte, $modele);
+        }
+    }
+
     #[DataProvider('modeles')]
     public function testUnePrestationSeLitSansChantierNiTravauxNiVisite(string $modele): void
     {
