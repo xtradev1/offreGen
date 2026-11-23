@@ -41,7 +41,7 @@ final class PolicesDocumentTest extends TestCase
                 );
             }
         }
-        self::assertCount(23, self::fichiers());
+        self::assertCount(25, self::fichiers());
     }
 
     public function testLesPolicesCouvrentLesNomsDIci(): void
@@ -77,7 +77,7 @@ final class PolicesDocumentTest extends TestCase
     {
         $releve = (string) file_get_contents(self::DOSSIER . '/SOURCES.md');
         preg_match_all('/^\| `([^`]+)` \| (\d+) \| `([0-9a-f]{64})` \| https:/m', $releve, $lignes, PREG_SET_ORDER);
-        self::assertCount(73, $lignes, "23 TTF, 4 licences (celle d'Archivo était déjà au dépôt), 46 WOFF2");
+        self::assertCount(79, $lignes, "25 TTF, 4 licences (celle d'Archivo était déjà au dépôt), 50 WOFF2");
         foreach ($lignes as [, $nom, $octets, $empreinte]) {
             self::assertSame($empreinte, hash_file('sha256', self::DOSSIER . "/$nom"), $nom);
             self::assertSame((int) $octets, filesize(self::DOSSIER . "/$nom"), $nom);

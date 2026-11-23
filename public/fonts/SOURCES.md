@@ -9,7 +9,8 @@ Polices des offres et des factures (modèles du bâtiment, 2026-11-20). Deux jeu
 
 `archivo-latin.woff2` et `inter-latin.woff2` sont les polices de l'application, hors de ce relevé.
 Licences : `LICENCE-Roboto.txt` (Apache 2.0), `OFL-*.txt` (SIL Open Font License 1.1).
-Relevé écrit par le script de téléchargement du 2026-11-20 ; `tests/Offre/PolicesDocumentTest.php` contrôle les empreintes.
+Relevé écrit par le script de téléchargement du 2026-11-20, complété le 2026-11-23 des italiques d'IBM Plex
+(variantes du modèle Technique) ; `tests/Offre/PolicesDocumentTest.php` contrôle les empreintes.
 
 | Fichier | Octets | SHA-256 | Source |
 |---|---|---|---|
@@ -33,6 +34,8 @@ Relevé écrit par le script de téléchargement du 2026-11-20 ; `tests/Offre/Po
 | `ibm-plex-mono-600.ttf` | 174608 | `f04d7c488ddf7d1fa99f2574efc3406ea4cbe17bb1af3a1ab960f84d0c96a172` | https://raw.githubusercontent.com/IBM/plex/2e90fe366fdc27c12682db13e5aa20ded3d90908/packages/plex-mono/fonts/complete/ttf/IBMPlexMono-SemiBold.ttf |
 | `ibm-plex-sans-700.ttf` | 207396 | `22f59d358e8b9b9fb38ac6ee26a7ea7263ffa1c89a9056c101acff5add91f5d6` | https://raw.githubusercontent.com/IBM/plex/2e90fe366fdc27c12682db13e5aa20ded3d90908/packages/plex-sans/fonts/complete/ttf/IBMPlexSans-Bold.ttf |
 | `ibm-plex-mono-700.ttf` | 175096 | `74e5eedcfa4596497d34e19023cabdabd3a8c852b903007a5654a59591a72ffb` | https://raw.githubusercontent.com/IBM/plex/2e90fe366fdc27c12682db13e5aa20ded3d90908/packages/plex-mono/fonts/complete/ttf/IBMPlexMono-Bold.ttf |
+| `ibm-plex-sans-400-italic.ttf` | 215392 | `fbcfd6c96fb6188d3d65498e6f8e9719c2a3c0c2932e09255b01bd6d7c78ca12` | https://raw.githubusercontent.com/IBM/plex/2e90fe366fdc27c12682db13e5aa20ded3d90908/packages/plex-sans/fonts/complete/ttf/IBMPlexSans-Italic.ttf |
+| `ibm-plex-mono-400-italic.ttf` | 179756 | `a55368deb953f594ac18336a1029009ed820e2d9abbb57ad601f61e22bec072b` | https://raw.githubusercontent.com/IBM/plex/2e90fe366fdc27c12682db13e5aa20ded3d90908/packages/plex-mono/fonts/complete/ttf/IBMPlexMono-Italic.ttf |
 | `OFL-IBMPlex.txt` | 4456 | `7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da` | https://raw.githubusercontent.com/IBM/plex/2e90fe366fdc27c12682db13e5aa20ded3d90908/LICENSE.txt |
 | `source-serif-4-400.ttf` | 261868 | `e5a4ee6a3d87bb9024796be390c6771e2a0eb1883dae25effaf57ca01668e24b` | https://raw.githubusercontent.com/adobe-fonts/source-serif/80d3f8894c09c937bebfa9011247d2e1c79fd6f4/TTF/SourceSerif4-Regular.ttf |
 | `source-serif-4-600.ttf` | 272088 | `36db62940cb5728b12b1802476dc7fcf4c6c519a7bdd476ba23a4e555fc4655f` | https://raw.githubusercontent.com/adobe-fonts/source-serif/80d3f8894c09c937bebfa9011247d2e1c79fd6f4/TTF/SourceSerif4-Semibold.ttf |
@@ -76,6 +79,10 @@ Relevé écrit par le script de téléchargement du 2026-11-20 ; `tests/Offre/Po
 | `ibm-plex-mono-600-latin-ext.woff2` | 14328 | `32057cf50dd14bdb21a2c93766c4a2c43e4abe688ea3922df3203cac7751a98b` | https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@latest/latin-ext-600-normal.woff2 |
 | `ibm-plex-mono-700-latin.woff2` | 14908 | `4f84d86cfd060f4ded334358ff8a4c81d4db2ed5addd568359d693f44a87765a` | https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@latest/latin-700-normal.woff2 |
 | `ibm-plex-mono-700-latin-ext.woff2` | 13380 | `5b9b81f54dd69635c7adcaacd4c4545a73fe4809c528e22734b238a83a74135f` | https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@latest/latin-ext-700-normal.woff2 |
+| `ibm-plex-sans-400-italic-latin.woff2` | 24356 | `6de912e531b6c98084f1b2d5e5a91bad77be4e68bc4e396e43c46fc435e5f3d9` | https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-sans@latest/latin-400-italic.woff2 |
+| `ibm-plex-sans-400-italic-latin-ext.woff2` | 17008 | `c5c00e8a32022dfedd2e7e864898ed007232e1450c6de1d6b847fe8825c2c5ce` | https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-sans@latest/latin-ext-400-italic.woff2 |
+| `ibm-plex-mono-400-italic-latin.woff2` | 16448 | `0840095faae86403735a8c04014b72cb29e7923646b222b360b7e8252932e4e3` | https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@latest/latin-400-italic.woff2 |
+| `ibm-plex-mono-400-italic-latin-ext.woff2` | 14524 | `1b07eee6df7d26b31864581c2365131d384077605e0b63ae67c4a0a64363a6de` | https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@latest/latin-ext-400-italic.woff2 |
 | `source-serif-4-400-latin.woff2` | 20088 | `02194deb92d3975dd30e11a3824a1f1db32b48c93654e60560cb81ce8e7b5f95` | https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4@latest/latin-400-normal.woff2 |
 | `source-serif-4-400-latin-ext.woff2` | 17844 | `78ff74ea29d0cc5594ff9efd5c0a30911691b89e9021e7bcf118b95e285e007f` | https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4@latest/latin-ext-400-normal.woff2 |
 | `source-serif-4-600-latin.woff2` | 21532 | `f2b7e1cf1d277b7608231868135648f8ad8e2b58d8e97ca088bee15dc357bee7` | https://cdn.jsdelivr.net/fontsource/fonts/source-serif-4@latest/latin-600-normal.woff2 |

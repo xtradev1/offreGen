@@ -78,6 +78,12 @@ final class GabaritsOptionsTest extends TestCase
         $pdf = OffreControleur::rendrePdf($this->c, $this->vue($modele, $choix));
         preg_match_all('#/BaseFont /(?:[A-Z]{6}\+)?([A-Za-z0-9-]+)#', $pdf, $polices);
         self::assertSame([], preg_grep('/DejaVu/', $polices[1]), "$modele : aucune police de repli (" . implode(', ', $polices[1]) . ')');
+        if ($modele === 'technique' && !$choix) {
+            // La variante en italique, ses faces comprises (réponse de Xavier du 23.11) : désignation en Sans, montants en
+            // Mono. Après le choix, la variante retenue prend la place de sa ligne : plus d'italique.
+            self::assertContains('IBMPlexSans-Italic', $polices[1], implode(', ', $polices[1]));
+            self::assertContains('IBMPlexMono-Italic', $polices[1], implode(', ', $polices[1]));
+        }
         return (string) preg_replace('/[\s\x{00A0}\x{202F}]+/u', '', implode('', TextePdf::pages($pdf)));
     }
 

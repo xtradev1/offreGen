@@ -16,14 +16,13 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Gate prod ouvert : attendre la recette de Xavier sur le test (`RECETTE.md`, compte `options-recette@exemple.ch`, les offres se trouvent par `/clients`), ses vraies dictées (fiches 21 à 28) pour le banc, et ses deux réponses (rabais en francs, italique de Technique). À la clôture : supprimer les bases `offregen_options_test` et `offregen_options_dev`, la copie `~/offreGen-options`, arrêter le serveur du port 8041, mettre à jour l'ETAT du sous-chantier 29 (le banc existe), `/roadmap-sync`.
+Gate prod ouvert : recette de Xavier faite sur le test (« ça fonctionne ça me convient ») ; italique de Technique ajouté, à déployer sur le test avec son accord. Attendre ses vraies dictées (fiches 21 à 28) pour le banc, sa réponse sur le rabais en francs et son avis sur l'escompte. À la clôture : supprimer les bases `offregen_options_test` et `offregen_options_dev`, la copie `~/offreGen-options`, arrêter le serveur du port 8041, mettre à jour l'ETAT du sous-chantier 29 (le banc existe), `/roadmap-sync`.
 
 ## En attente de toi
 
-- Dérouler `RECETTE.md` (scénarios 1 à 5 au téléphone et sur PC) et dire ce qui casse.
 - Enregistrer les fiches 21 à 28 (`OffreGen/corpus/FICHES.md`) et les déposer dans `corpus/audio/` : je les passe au banc avant la mise en service (scénario 6).
-- Trancher : un rabais en francs plafonné au sous-total compte moins sans les options qu'avec (REVUE, C5) ; garder ou changer ?
-- Trancher : Technique sans italique pour la variante (IBM Plex n'a pas de face italique) ; garder, ou ajouter la face italique ?
+- Trancher : un rabais en francs plafonné au sous-total compte moins sans les options qu'avec (REVUE, C5) ; garder ou changer ? (question reformulée le 23.11)
+- Escompte : choisir une formulation parmi celles proposées le 23.11 (offre, facture, carte des conditions). Hors du périmètre de ce chantier (D13, D14 du chantier lignes et conditions).
 
 ## Journal
 
@@ -57,6 +56,7 @@ Gate prod ouvert : attendre la recette de Xavier sur le test (`RECETTE.md`, com
 - 2026-11-22 : revue lourde reçue (trois rapports). Trouvailles relues dans le code : 13 retenues (dont 4 majeures : durée des trois appels au-delà du verrou de 900 s, variante d'une ligne supprimée rattachée en silence à une autre, quantité d'une variante au forfait, ligne sortie du total sans « à vérifier »), 2 écartées, 2 hors périmètre ; détail et verdicts dans `REVUE.md`. Huit tests rouges écrits d'abord (`RevueOptionsTest`, `RevueGestesTest`), puis corrections ; deux tests du lot 8 mis à jour (ils figeaient l'ancien comportement). Corrections du script vérifiées au clic (focus, case refusée en 409). Banc complet relancé après coup.
 - 2026-11-22 : phase 8. `RECETTE.md` écrit (six scénarios, préalables, ce qui n'est pas couvert). Gate prod ouvert : le déploiement sur le test demande l'accord de Xavier (règle du projet), et la mise en service attend le banc sur ses vraies dictées.
 - 2026-11-23 : Xavier : « oui » (déploiement sur le test, données inventées). Contrôle de compatibilité (`docs/DEPLOIEMENT.md`) : la version en service (`cedc573`) passe toute sa suite sur `offregen_options_test`, qui porte la migration. Premier essai faussé par un `vendor` en lien symbolique (les classes venaient de ma copie : 13 échecs sans valeur), refait avec un `composer install` propre. `127854a` déployé par `outils/deployer-test.sh`, sonde verte. Compte de recette `options-recette@exemple.ch` (démo peintre, mot de passe dans `~/.offregen-test-options-recette-compte`) ; contrôle en lecture seule sur le test, sans rien saisir. Copie de contrôle `~/offreGen-compat` retirée.
+- 2026-11-23 : Xavier, après sa recette sur le test : « sinon ça fonctionne ça me convient » ; « 4. ajoute l'italique » ; demande ce qu'est le point 2 (vraies dictées) et une meilleure explication du point 3 (rabais en francs) ; « pour l'escompte pourrait-il s'afficher mieux ? ». Italique : faces IBM Plex Sans et Mono italiques (400) ajoutées pour le PDF et l'écran, mêmes sources que les autres faces (relevé `public/fonts/SOURCES.md`), la règle qui redressait la variante de Technique retirée ; le test des gabarits exige les deux faces italiques dans le PDF de Technique avant le choix. Escompte constaté sur l'offre : « Escompte 2 % à 10 jours. » ne dit ni d'où courent les 10 jours, ni ce que le client paie. Un passage de la suite a pris `DB_NOM` de développement (mon `set -a` pour une requête SQL) : le garde-fou `*_test` l'a refusé (827 erreurs), base de développement vérifiée intacte, suite relancée proprement.
 
 ## Décisions
 
@@ -78,6 +78,7 @@ Gate prod ouvert : attendre la recette de Xavier sur le test (`RECETTE.md`, com
 | 2026-11-22 | Chaque lot vérifié est commité et poussé sur `chantier-voix-offre` sans redemander ; le déploiement sur le test reste à demander. | Xavier : « pousse les lots au fur et a mesure ». Portée, lecture de Claude : ce chantier, ses fichiers, jamais `main`. |
 | 2026-11-22 | `remplace_id` sans clé étrangère. | Cascade de la suppression d'une offre sur une table qui se référence elle-même ; la cohérence se vérifie dans `DepotOffres::changerNature`. |
 | 2026-11-22 | Dans Technique, la variante reste droite (pas d'italique). | IBM Plex n'a pas de face italique dans le document : le PDF retombait sur une police de repli, texte illisible. Ajouter la face italique (fichier, empreinte, `SOURCES.md`) reste possible si Xavier y tient (O2 dit « en italique »). |
+| 2026-11-23 | Remplace la décision précédente : la variante de Technique est en italique, faces IBM Plex Sans et Mono italiques ajoutées. | Xavier : « 4. ajoute l'italique ». |
 | 2026-11-22 | À l'écran, une option retenue reste dans le groupe « Options » ; sur le document, elle entre dans les lignes de sa pièce. | E2 A (écran comme le prototype) et point 2 (document). |
 | 2026-11-22 | La consigne principale reçoit une règle (option ou variante dite : ligne à part ; l'option garde son produit, la variante sa désignation et son prix). | Banc : sans elle, l'appel principal perdait trois variantes sur neuf dictées ; avec elle, moitié de contrôle 94,7 % au lieu de 57 %, dictées sans option inchangées (100 %). |
 | 2026-11-22 | Les options et variantes viennent d'un troisième appel, lancé seulement sur un mot déclencheur. | Une offre ordinaire ne coûte que la règle de plus (+0,007 ct) ; une offre à options +0,06 ct (+30 %). |
@@ -354,3 +355,18 @@ feuille d'ajout : Elle va Dans le total Option Variante
 PDF de l'offre 200 application/pdf
 largeur 390/390 | erreurs JS aucune
 ```
+
+### 23.11, italique de Technique
+
+```
+$ APP_ENV=test vendor/bin/phpunit tests/Offre/PolicesDocumentTest.php tests/Offre/GabaritsOptionsTest.php
+OK (44 tests, 720 assertions)
+$ APP_ENV=test vendor/bin/phpunit
+OK (1254 tests, 10629 assertions)
+$ vendor/bin/phpstan analyse
+[OK] No errors
+$ polices du PDF de l offre 1 (base de développement, modèle Technique), PyMuPDF
+IBMPlexSans, Roboto-Regular, Archivo-ExtraBold, IBMPlexSans-Bold, IBMPlexSans-SmBld, IBMPlexMono-SmBld, IBMPlexMono,
+IBMPlexSans-Italic, IBMPlexMono-Italic, IBMPlexMono-Bold
+```
+Capture regardée : la rangée « Variante : Peinture de façade minérale, 2 couches 120 m² 52.00 +840.00 » en italique, lisible.

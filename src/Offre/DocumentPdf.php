@@ -31,8 +31,10 @@ final class DocumentPdf
         'Roboto' => ['roboto-400' => [400, 'normal'], 'roboto-500' => [500, 'normal'], 'roboto-700' => [700, 'normal'], 'roboto-400-italic' => [400, 'italic']],
         'Archivo' => ['archivo-600' => [600, 'normal'], 'archivo-700' => [700, 'normal'], 'archivo-800' => [800, 'normal']],
         'Barlow Condensed' => ['barlow-condensed-500' => [500, 'normal'], 'barlow-condensed-600' => [600, 'normal'], 'barlow-condensed-700' => [700, 'normal']],
-        'IBM Plex Sans' => ['ibm-plex-sans-400' => [400, 'normal'], 'ibm-plex-sans-500' => [500, 'normal'], 'ibm-plex-sans-600' => [600, 'normal'], 'ibm-plex-sans-700' => [700, 'normal']],
-        'IBM Plex Mono' => ['ibm-plex-mono-400' => [400, 'normal'], 'ibm-plex-mono-500' => [500, 'normal'], 'ibm-plex-mono-600' => [600, 'normal'], 'ibm-plex-mono-700' => [700, 'normal']],
+        'IBM Plex Sans' => ['ibm-plex-sans-400' => [400, 'normal'], 'ibm-plex-sans-500' => [500, 'normal'], 'ibm-plex-sans-600' => [600, 'normal'], 'ibm-plex-sans-700' => [700, 'normal'],
+            'ibm-plex-sans-400-italic' => [400, 'italic']],
+        'IBM Plex Mono' => ['ibm-plex-mono-400' => [400, 'normal'], 'ibm-plex-mono-500' => [500, 'normal'], 'ibm-plex-mono-600' => [600, 'normal'], 'ibm-plex-mono-700' => [700, 'normal'],
+            'ibm-plex-mono-400-italic' => [400, 'italic']],
         'Source Serif 4' => ['source-serif-4-400' => [400, 'normal'], 'source-serif-4-600' => [600, 'normal'], 'source-serif-4-700' => [700, 'normal'],
             'source-serif-4-400-italic' => [400, 'italic'], 'source-serif-4-600-italic' => [600, 'italic']],
     ];
