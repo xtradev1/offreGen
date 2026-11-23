@@ -11,13 +11,25 @@
 #   sites/easy-offres.xtradev.ch/releases/<commit>/
 #   sites/easy-offres.xtradev.ch/partage/ (.env, voix, logos, journaux, sessions ; fermé)
 #
-# Étapes : arbre propre et commit poussé ; tests et analyse ; construction (git archive, composer sans dev) ;
-# envoi dans releases/<commit>/ ; liens vers partage/ ; lecture du .env ; migrations par l'utilisateur de
-# structure ; bascule de current ; tâche cron du traitement ; sonde d'exposition avec le commit attendu.
-# Sonde rouge : retour à la version précédente s'il y en a une.
+# Étapes : arbre propre et commit poussé ; verrou (un déploiement à la fois) ; tests sur une base réservée et
+# analyse ; construction (git archive, composer sans dev) ; envoi dans releases/<commit>/ ; liens vers partage/ ;
+# lecture du .env ; migrations par l'utilisateur de structure ; bascule de current ; tâche cron du traitement ;
+# sonde d'exposition avec le commit attendu. Sonde rouge : retour à la version précédente s'il y en a une.
 #
 # Usage : outils/deployer-test.sh
+#   DEPLOIEMENT_BASE_TESTS=<base>_test  autre base pour les tests du déploiement (elle est vidée, tables comprises)
+#   RETOUR_ARRIERE=1                    remettre en service un commit plus ancien que la version en service
 set -euo pipefail
+
+# Base des tests du déploiement (2026-11-23). La base que désigne .env.test.local sert aussi aux suites des
+# sessions qui travaillent en parallèle : elles la vidaient pendant la suite du déploiement, refusé à tort
+# (« tests rouges », trois refus de suite ce jour-là). Les tests du déploiement tournent sur une base réservée,
+# reconstruite de zéro par les migrations du commit : elle a la structure de ce commit, quoi qu'on y ait joué
+# avant. À créer une fois sur le poste : docs/DEPLOIEMENT.md, « Site de test ».
+BASE_TESTS="${DEPLOIEMENT_BASE_TESTS:-offregen_deploiement_test}"
+# Chemin fixe, sans TMPDIR : toutes les sessions du poste doivent tomber sur le même fichier.
+VERROU="/tmp/offregen-deployer-test.verrou"
+ATTENTE_VERROU=1800
 
 CIBLE="3p81e5_easytest@3p81e5.ftp.infomaniak.com"
 PORT=22
@@ -44,8 +56,50 @@ git fetch -q origin
 [ -n "$(git branch -r --contains "$commit")" ] || { echo "REFUS : $commit n'est pas poussé sur GitHub."; exit 1; }
 echo "commit $commit ($(git log -1 --format=%s))"
 
+etape "Verrou"
+# Deux déploiements en parallèle se disputeraient la base des tests et le lien current. Le verrou tient au
+# processus : il tombe avec lui, même tué.
+exec 9> "$VERROU"
+if ! flock -n 9; then
+  echo "Un autre déploiement est en cours : attente, $((ATTENTE_VERROU / 60)) minutes au plus."
+  flock -w "$ATTENTE_VERROU" 9 || { echo "REFUS : l'autre déploiement tient encore le verrou après $((ATTENTE_VERROU / 60)) minutes."; exit 1; }
+fi
+echo "verrou pris"
+# Pendant l'attente, une autre session a pu déployer plus loin sur la branche : remettre ce commit en service
+# retirerait son travail du site de test.
+en_service="$("${SSH[@]}" "cat $APP/current/REVISION 2>/dev/null" || true)"
+if [[ "$en_service" =~ ^[0-9a-f]{40}$ ]] && [ "$en_service" != "$commit" ] && [ "${RETOUR_ARRIERE:-0}" != "1" ] \
+   && git merge-base --is-ancestor "$commit" "$en_service" 2>/dev/null; then
+  echo; echo "DÉJÀ EN SERVICE : la version du site de test ($en_service) contient $commit. Rien à déployer."
+  echo "Pour revenir exprès à ce commit : RETOUR_ARRIERE=1 outils/deployer-test.sh"
+  exit 0
+fi
+
 etape "Tests et analyse"
-sortie="$(env APP_ENV=test vendor/bin/phpunit 2>&1)" || { printf '%s\n' "$sortie" | tail -15; echo "REFUS : tests rouges."; exit 1; }
+# DB_NOM posé ici l'emporte sur .env.test.local (Conteneur::lireEnvironnement lit le système en dernier).
+tests=(env APP_ENV=test DB_NOM="$BASE_TESTS")
+# Le nom est relu là où il sert, sur la connexion elle-même : rien n'est supprimé hors d'une base *_test.
+"${tests[@]}" php -r '
+  require "vendor/autoload.php";
+  $p = require "migrations-db.php";
+  if (!str_ends_with($p["dbname"], "_test")) {
+    fwrite(STDERR, "REFUS : la base des tests du déploiement doit finir par _test (" . $p["dbname"] . ").\n");
+    exit(1);
+  }
+  try {
+    $c = Doctrine\DBAL\DriverManager::getConnection($p);
+    $tables = $c->fetchFirstColumn("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = ?", ["BASE TABLE"]);
+    $c->executeStatement("SET FOREIGN_KEY_CHECKS = 0");
+    foreach ($tables as $t) { $c->executeStatement("DROP TABLE `" . str_replace("`", "``", $t) . "`"); }
+  } catch (Throwable $e) {
+    // Le code seul : le message complet de la connexion reste hors des journaux.
+    fwrite(STDERR, "REFUS : base " . $p["dbname"] . " inaccessible (erreur " . $e->getCode() . "). La créer une fois sur le poste : docs/DEPLOIEMENT.md, « Site de test ».\n");
+    exit(1);
+  }
+  echo "base des tests : " . $p["dbname"] . ", reconstruite de zéro\n";' || exit 1
+sortie="$("${tests[@]}" vendor/bin/doctrine-migrations migrate --no-interaction --allow-no-migration 2>&1)" \
+  || { printf '%s\n' "$sortie" | tail -15; echo "REFUS : les migrations ne passent pas sur une base vide."; exit 1; }
+sortie="$("${tests[@]}" vendor/bin/phpunit 2>&1)" || { printf '%s\n' "$sortie" | tail -15; echo "REFUS : tests rouges."; exit 1; }
 printf '%s\n' "$sortie" | tail -1
 vendor/bin/phpstan analyse --no-progress > /dev/null 2>&1 || { echo "REFUS : analyse statique en erreur."; exit 1; }
 echo "analyse statique : sans erreur"

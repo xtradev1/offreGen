@@ -90,12 +90,15 @@ final class ConteneurTest extends TestCase
     {
         $racine = sys_get_temp_dir() . '/offregen-env-' . bin2hex(random_bytes(4));
         mkdir($racine);
-        // Les tests voisins lisent le .env du dépôt, qui remplit $_ENV et $_SERVER pour tout le processus.
+        // Les tests voisins lisent le .env du dépôt, qui remplit $_ENV et $_SERVER pour tout le processus. Une variable
+        // posée par le système (DB_NOM=... devant phpunit, outils/deployer-test.sh) se lit aussi par getenv() et
+        // l'emporte sur le fichier : ce test tombait dès qu'une base à part était désignée ainsi (2026-11-23).
         $cles = ['DB_NOM', 'DB_STRUCTURE_UTILISATEUR', 'DB_STRUCTURE_MOT_DE_PASSE', 'SYMFONY_DOTENV_VARS'];
         $avant = [];
         foreach ($cles as $cle) {
-            $avant[$cle] = [$_ENV[$cle] ?? null, $_SERVER[$cle] ?? null];
+            $avant[$cle] = [$_ENV[$cle] ?? null, $_SERVER[$cle] ?? null, getenv($cle)];
             unset($_ENV[$cle], $_SERVER[$cle]);
+            putenv($cle);
         }
         try {
             file_put_contents("$racine/.env", "APP_ENV=prod\nDB_NOM=base_essai\nDB_STRUCTURE_UTILISATEUR=struct\n");
@@ -108,13 +111,16 @@ final class ConteneurTest extends TestCase
             @unlink("$racine/.env");
             @unlink("$racine/.env.structure");
             @rmdir($racine);
-            foreach ($avant as $cle => [$env, $serveur]) {
+            foreach ($avant as $cle => [$env, $serveur, $systeme]) {
                 unset($_ENV[$cle], $_SERVER[$cle]);
                 if ($env !== null) {
                     $_ENV[$cle] = $env;
                 }
                 if ($serveur !== null) {
                     $_SERVER[$cle] = $serveur;
+                }
+                if ($systeme !== false) {
+                    putenv("$cle=$systeme");
                 }
             }
         }
