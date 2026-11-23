@@ -32,6 +32,18 @@ final readonly class Courriel
     ) {
     }
 
+    /** Le courriel « offre prête », envoyé quand une offre sort sans que l'artisan soit devant son écran. */
+    public static function offrePrete(string $lien): self
+    {
+        return new self(
+            'Votre offre est prête',
+            'Votre offre est prête',
+            "L'offre préparée à partir de votre enregistrement est prête à relire.",
+            'Relire mon offre',
+            $lien,
+        );
+    }
+
     public function envoyer(Messagerie $messagerie, string $destinataire, string $nomApplication, string $adresseApplication): void
     {
         $texte = $this->enTexte($nomApplication);

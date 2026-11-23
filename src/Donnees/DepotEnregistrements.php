@@ -85,6 +85,15 @@ final class DepotEnregistrements
     }
 
     /** Tous les imports reçus du compte : ce que compte le plafond d'un compte d'essai. */
+    /** L'écran d'attente vient d'interroger le serveur : l'artisan suit son offre, le courriel « offre prête » est inutile. */
+    public function noterSuivi(string $uuid, \DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire(
+            'UPDATE enregistrement SET suivi_le = :q WHERE uuid = :u AND artisan_id = :a',
+            ['q' => Dates::versBase($quand), 'u' => $uuid, 'a' => $this->portee->artisanId],
+        );
+    }
+
     public function recus(): int
     {
         return (int) $this->base->valeur('SELECT COUNT(*) FROM enregistrement WHERE artisan_id = :a', ['a' => $this->portee->artisanId]);

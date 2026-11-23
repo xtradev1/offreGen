@@ -474,3 +474,28 @@ largeur de page 390 / 390 et 900 / 900 ; images regardées : bandeau et nom pré
 ```
 
 Non vérifié : le rendu dans de vraies messageries (Gmail, Outlook, Mail d'iPhone, mode sombre) ; un courriel d'essai est envoyé à Xavier pour cela.
+
+Courriel « offre prête » : réglage et silence quand l'artisan attend (2026-11-23, sous-tâche Origin 566). Xavier : le courriel d'essai mis en forme « c'est bien arrivé », puis « fais le réglage pour l'offre prête ». Sa règle (M2) : un réglage pour le recevoir ou non, et aucun courriel « si la personne a ouvert l'offre dans l'application, seulement si l'offre a été généré par le cron ou que l'application a été mis en pause ».
+
+Construit :
+- Rubrique « Courriels » dans les réglages de l'artisan (`/reglages/courriels`) : une case, cochée par défaut. Colonne `artisan.courriel_offre_prete`.
+- L'écran d'attente interroge déjà `/enregistrements/<uuid>/etat` : chaque passage est noté (`enregistrement.suivi_le`). Quand l'offre sort, `Traiteur::prevenir` n'envoie rien si le dernier passage a moins de 20 secondes : l'artisan est devant son écran et l'application lui ouvre l'offre. Sinon (application fermée, téléphone en veille, reprise par le cron sans personne à l'écran) le courriel part.
+- Migration `Version20261123110001`, additive.
+
+Décisions prises en codant :
+- La mesure est « l'écran d'attente est ouvert », pas « l'offre a été ouverte » : le courriel se décide au moment où l'offre sort, avant toute ouverture. Les deux se rejoignent, puisque l'écran d'attente ouvre l'offre dès qu'elle est prête.
+- Seuil de 20 secondes : une valeur choisie, non mesurée. L'écran interroge le serveur toutes les quelques secondes ; un navigateur en arrière-plan ralentit ses minuteries, ce qui compte alors comme une absence.
+- Fichiers d'autres chantiers touchés, au plus court : `src/Audio/Traiteur.php`, `EnregistrementControleur::etat`, `DepotEnregistrements`, `FileTraitement`, `DepotArtisans` (une colonne lue), `DepotReglages` (deux méthodes), `templates/reglages.html.twig` (une ligne de menu), trois tests ajoutés à `TraiteurTest`.
+
+Texte du réglage relu par `relecteur-xtradev` : une phrase reformulée (« Seulement si vous n'êtes pas sur l'écran d'attente »).
+
+```
+$ DB_NOM=offregen_admin_test phpunit --filter 'ReglagesCourrielsTest|TraiteurTest'   (tests écrits, avant le code)
+FAILURES! Tests: 30, Assertions: 105, Failures: 4.
+$ DB_NOM=offregen_admin_test phpunit   (après le code, copie du chantier)
+Tests: 1303, Assertions: 11286, Failures: 1. (le seul échec : ConteneurTest, à cause de DB_NOM)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+```
+
+Non vérifié : l'écran du réglage n'a pas été regardé (une case et un bouton, sur le gabarit des autres rubriques) ; le silence du courriel sur un vrai téléphone, écran allumé puis en veille.

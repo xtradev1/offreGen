@@ -15,6 +15,7 @@ use OffreGen\Http\Controleur\ConditionsControleur;
 use OffreGen\Http\Controleur\LigneCatalogueControleur;
 use OffreGen\Http\Controleur\LigneControleur;
 use OffreGen\Http\Controleur\ReglagesControleur;
+use OffreGen\Http\Controleur\ReglagesCourrielsControleur;
 use OffreGen\Http\Controleur\ConnexionControleur;
 use OffreGen\Http\Controleur\DemoControleur;
 use OffreGen\Http\Controleur\DemandeEssaiControleur;
@@ -241,6 +242,9 @@ return static function (Conteneur $c): array {
     $routes[] = new Route('admin_aide_vente', '/admin/aide-vente', ['GET'], static fn (): Response => $admin()->aideVente(), Route::EQUIPE);
     $routes[] = new Route('demo_fin', '/fin-de-demo', ['GET'], static fn (Request $r): Response => $demo()->fin($r), Route::ARTISAN);
     $routes[] = new Route('demo_ouvrir', '/d/{jeton}', ['POST'], static fn (Request $r, array $p): Response => $demo()->ouvrir($r, $p), Route::PUBLIC);
+    // Rubrique « Courriels » des réglages de l'artisan (2026-11-23).
+    $routes[] = new Route('reglages_courriels', '/reglages/courriels', ['GET'], static fn (Request $r): Response => (new ReglagesCourrielsControleur($c))->afficher($r), Route::ARTISAN);
+    $routes[] = new Route('reglages_courriels_enregistrer', '/reglages/courriels', ['POST'], static fn (Request $r): Response => (new ReglagesCourrielsControleur($c))->enregistrer($r), Route::ARTISAN);
     $routes[] = new Route('admin_plus_nom', '/admin/plus/nom', ['POST'], static fn (Request $r): Response => $admin()->plusNom($r), Route::EQUIPE);
     $routes[] = new Route('admin_plus', '/admin/plus', ['GET'], static fn (): Response => $admin()->plus(), Route::EQUIPE);
     // L'arrivée d'un commercial (chantier onboarding, lot 8) : la bienvenue, le guide jusqu'à sa démo d'entraînement,

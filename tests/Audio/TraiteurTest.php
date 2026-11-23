@@ -251,6 +251,31 @@ final class TraiteurTest extends TestCase
         self::assertSame('2026-11-07 10:00:00', $this->horloge->now()->format('Y-m-d H:i:s'));
     }
 
+    public function testAucunCourrielQuandLArtisanAttendSonOffreALEcran(): void
+    {
+        // L'écran d'attente a interrogé le serveur il y a cinq secondes : l'application ouvrira l'offre elle-même.
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET suivi_le = '2026-11-07 09:59:55' WHERE uuid = '" . self::UUID . "'");
+        self::assertSame(Statut::PRET, $this->traiteur()->avancer(self::UUID));
+        self::assertSame(1, $this->offresDeLEnregistrement());
+        self::assertCount(0, $this->dossiers->courriels());
+    }
+
+    public function testUnCourrielQuandLEcranDAttenteNEstPlusLa(): void
+    {
+        // Téléphone en veille ou application fermée depuis cinq minutes : l'offre sort sans l'artisan.
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET suivi_le = '2026-11-07 09:55:00' WHERE uuid = '" . self::UUID . "'");
+        self::assertSame(Statut::PRET, $this->traiteur()->avancer(self::UUID));
+        self::assertCount(1, $this->dossiers->courriels());
+    }
+
+    public function testAucunCourrielQuandLArtisanNEnVeutPas(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET courriel_offre_prete = 0 WHERE id = {$this->jeu->a}");
+        self::assertSame(Statut::PRET, $this->traiteur()->avancer(self::UUID));
+        self::assertSame(1, $this->offresDeLEnregistrement());
+        self::assertCount(0, $this->dossiers->courriels());
+    }
+
     private function etatDepuis(): ?string
     {
         $v = BaseDeTest::ligne("SELECT transcription_depuis FROM enregistrement WHERE uuid = '" . self::UUID . "'")['transcription_depuis'];

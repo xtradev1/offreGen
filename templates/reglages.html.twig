@@ -27,6 +27,11 @@
   {% endfor %}
   {# Un compte de démonstration est partagé : son mot de passe ne change pas. #}
   {% if not demo %}
+  <a class="rubrique" href="/reglages/courriels">
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+    <span class="corps"><b>Courriels</b><small>Être prévenu quand une offre est prête</small></span>
+    <span class="fl" aria-hidden="true">›</span>
+  </a>
   <a class="rubrique" href="/reglages/mot-de-passe">
     <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
     <span class="corps"><b>Mot de passe</b><small>Changer le mot de passe</small></span>

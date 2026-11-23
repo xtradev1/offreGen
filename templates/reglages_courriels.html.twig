@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{# Rubrique « Courriels » des réglages (M2 de Xavier, 2026-11-23) : le courriel « offre prête » se reçoit ou non. Il ne
+   part de toute façon que si l'artisan n'attend pas son offre à l'écran. #}
+{% block titre %}Courriels · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/reglages">Réglages</a>{% endblock %}
+{% block entete %}Courriels{% endblock %}
+{% set onglet = 'reglages' %}
+
+{% block contenu %}
+  <form id="courriels" method="post" action="/reglages/courriels">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <label class="check"><input type="checkbox" name="offre_prete" value="1"{% if offre_prete %} checked{% endif %}>
+      <span>Me prévenir par courriel quand une offre est prête</span></label>
+    <p class="muted">Seulement si vous n'êtes pas sur l'écran d'attente : application fermée ou téléphone en veille. Si vous attendez à l'écran, l'offre s'ouvre directement et aucun courriel ne part.</p>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><button class="btn primary" type="submit" form="courriels">Enregistrer</button></div>
+{% endblock %}

@@ -60,6 +60,11 @@ final class EnregistrementControleur
     public function etat(Request $requete, array $parametres): JsonResponse
     {
         $e = $this->enregistrement($requete, $parametres);
+        // L'artisan attend à l'écran : le traitement le saura et n'enverra pas de courriel « offre prête »
+        // (Xavier, 2026-11-23 : « pas de spam sinon les gens ne lisent plus »).
+        if ($e['statut'] !== Statut::PRET && $e['statut'] !== Statut::ECHEC) {
+            $this->c->enregistrements(new Portee($requete->attributes->getInt('_artisan')))->noterSuivi($parametres['uuid'], $this->c->horloge()->now());
+        }
         $reponse = new JsonResponse([
             'statut' => $e['statut'],
             'faites' => self::FAITES[$e['statut']] ?? 1,

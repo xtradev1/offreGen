@@ -38,6 +38,9 @@ final class Traiteur
     public const ATTENTE_IMMEDIATE_SECONDES = 90;
     public const INTERVALLE_ATTENTE_SECONDES = 3;
 
+    /** Un passage de l'écran d'attente plus récent que cela : l'artisan est devant son offre. */
+    private const SUIVI_RECENT_SECONDES = 20;
+
     public function __construct(
         private readonly Base $base,
         private readonly FileTraitement $file,
@@ -138,7 +141,7 @@ final class Traiteur
                     break;
                 case Statut::TRANSCRIT:
                     $offreId = $this->creerOffre($e, $jeton);
-                    $this->prevenir($e['artisan_id'], $offreId);
+                    $this->prevenir($e['artisan_id'], $offreId, $uuid);
                     return Statut::PRET;
                 default:
                     return $e['statut'];
@@ -191,7 +194,7 @@ final class Traiteur
     }
 
     /** Le courriel part après la validation : son échec ne défait pas une offre prête. */
-    private function prevenir(int $artisanId, int $offreId): void
+    private function prevenir(int $artisanId, int $offreId, string $uuid): void
     {
         try {
             $artisan = $this->artisans->parId($artisanId);
@@ -199,14 +202,18 @@ final class Traiteur
             if ($artisan === null || $artisan['demo'] === 1) {
                 return;
             }
+            // L'artisan peut ne pas vouloir ce courriel (réglage « Courriels », Xavier, 2026-11-23).
+            if ($artisan['courriel_offre_prete'] !== 1) {
+                return;
+            }
+            // S'il attend à l'écran, l'application lui ouvre l'offre : un courriel de plus serait du bruit. Le courriel
+            // part quand l'offre sort sans lui : application fermée, téléphone en veille, reprise par le cron.
+            $suivi = $this->file->suiviLe($uuid);
+            if ($suivi !== null && $suivi > $this->horloge->now()->modify('-' . self::SUIVI_RECENT_SECONDES . ' seconds')) {
+                return;
+            }
             $lien = rtrim($this->adresseApplication, '/') . '/offres/' . $offreId;
-            (new Courriel(
-                'Votre offre est prête',
-                'Votre offre est prête',
-                "L'offre préparée à partir de votre enregistrement est prête à relire.",
-                'Relire mon offre',
-                $lien,
-            ))->envoyer($this->messagerie, $artisan['courriel'], $this->nomApplication, $this->adresseApplication);
+            Courriel::offrePrete($lien)->envoyer($this->messagerie, $artisan['courriel'], $this->nomApplication, $this->adresseApplication);
         } catch (\Throwable $e) {
             $this->journal->error("offreGen, courriel « offre prête » pour l'offre $offreId : " . $e->getMessage());
         }

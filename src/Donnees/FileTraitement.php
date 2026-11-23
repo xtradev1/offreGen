@@ -138,6 +138,13 @@ final class FileTraitement
         return (string) $this->base->valeur('SELECT statut FROM enregistrement WHERE uuid = :u', ['u' => $uuid]);
     }
 
+    /** Le dernier passage de l'écran d'attente sur cet enregistrement ; null s'il n'y est jamais venu. */
+    public function suiviLe(string $uuid): ?\DateTimeImmutable
+    {
+        $v = $this->base->valeur('SELECT suivi_le FROM enregistrement WHERE uuid = :u', ['u' => $uuid]);
+        return is_string($v) ? Dates::depuisBase($v) : null;
+    }
+
     /** @return list<array{uuid: string, fichier: string}> audios dont la date de suppression est passée */
     public function aPurger(\DateTimeImmutable $maintenant): array
     {
