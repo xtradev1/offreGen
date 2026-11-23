@@ -187,7 +187,7 @@ const fluide = (() => {
     // Ce qui attend, dit par son premier geste nommé : l'artisan ne refait pas un ajout qui attend déjà (revue, B-I7).
     const lequel = () => { const nomme = file.find((f) => f.item.libelle); return nomme ? ' (' + nomme.item.libelle + ')' : ''; };
     return {
-      horsReseau: (n) => poser('Hors réseau' + NB + ': ' + attente(n) + lequel() + ', ils partiront au retour du réseau.', 'hors'),
+      horsReseau: (n) => poser('Hors réseau' + NB + ': ' + attente(n) + lequel() + (n > 1 ? ', ils partiront' : ', il partira') + ' au retour du réseau.', 'hors'),
       session: (n) => poser('Session expirée' + NB + ': ' + attente(n) + lequel() + '.', 'session', { href: '/connexion', texte: 'Se reconnecter' }),
       compte: (n) => poser('Ce téléphone a changé de compte' + NB + ': ' + attente(n) + ' l’autre compte.', 'session', { href: '/connexion', texte: 'Se reconnecter' }),
       envoi: (n) => {

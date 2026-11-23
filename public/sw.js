@@ -103,15 +103,16 @@ const horsReseau = async () => {
 };
 
 // Les fichiers qu'une page cite (feuilles de style, scripts, images) : gardés avec elle, sinon la page rouverte sans réseau
-// s'afficherait sans style ni script (ceux chargés avant le service worker manquent). Pas les polices que citent les
-// feuilles : document.css en cite pour douze modèles, 900 Ko lus en arrière-plan à l'ouverture de « Facturer » (banc du
-// 2026-11-23) ; celles dont une page a besoin passent ici quand le navigateur les demande.
+// s'afficherait sans style ni script (ceux chargés avant le service worker, ou ceux d'une page préchargée, manquent).
+// Toujours après coup, jamais avant de rendre la page, et seulement ceux qui manquent encore. Pas les polices que citent
+// les feuilles : document.css en cite pour douze modèles, 900 Ko lus en arrière-plan à l'ouverture de « Facturer » (banc
+// du 2026-11-23) ; celles dont une page a besoin passent ici quand le navigateur les demande.
 const garderFichiers = async (texte) => {
   const cache = await caches.open(FICHIERS);
   const deja = new Set((await cache.keys()).map((k) => cle(new URL(k.url))));
   const adresses = [...texte.matchAll(/\s(?:href|src|srcset)="(\/(?:css|js|img)\/[^"\s]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
   for (const adresse of [...new Set(adresses)]) {
-    if (deja.has(adresse)) continue;
+    if (deja.has(adresse) || await cache.match(adresse)) continue;
     try {
       await fichier(new Request(adresse));
       deja.add(adresse);
@@ -121,10 +122,11 @@ const garderFichiers = async (texte) => {
   }
 };
 
-// Garder une page reçue : seulement une vraie page de l'artisan (200, HTML, même adresse, pas l'écran de connexion).
+// Garder une page reçue : seulement une vraie page de l'artisan (200, HTML, même adresse, pas l'écran de connexion). Rend
+// le texte de la page gardée (ses fichiers sont gardés à part, garderFichiers), sinon null.
 const garder = async (requete, reponse) => {
   const type = reponse.headers.get('Content-Type') || '';
-  if (!reponse.ok || reponse.redirected || reponse.type !== 'basic') return;
+  if (!reponse.ok || reponse.redirected || reponse.type !== 'basic') return null;
   const url = new URL(requete.url);
   const entetes = new Headers(reponse.headers);
   entetes.set('X-Garde-Le', new Date().toISOString());
@@ -132,17 +134,17 @@ const garder = async (requete, reponse) => {
   if (url.pathname === '/reglages/marque.css' && type.includes('text/css')) {
     const c = await lireCompte();
     if (c) await (await caches.open(nomDesPages(c))).put(cle(url), new Response(await reponse.text(), { status: 200, headers: entetes }));
-    return;
+    return null;
   }
-  if (!type.includes('text/html')) return;
-  const texte = await reponse.clone().text();
+  if (!type.includes('text/html')) return null;
+  const texte = await reponse.text();
   const m = /<body[^>]*\sdata-compte="(\d+)"/.exec(texte);
-  if (!m) return;
+  if (!m) return null;
   if (m[1] !== (await lireCompte())) { await noterCompte(m[1]); await effacerLesPages(nomDesPages(m[1])); }
   const version = requete.headers.get('X-Version-Garde');
   if (version) entetes.set('X-Version-Garde', version);
   await (await caches.open(nomDesPages(m[1]))).put(cle(url), new Response(texte, { status: 200, headers: entetes }));
-  await garderFichiers(texte);
+  return texte;
 };
 
 // La copie d'une adresse, pour le seul compte noté, et pas plus vieille que la durée d'une session.
@@ -159,23 +161,29 @@ const chercherGardee = async (requete) => {
 };
 
 // Une page : le réseau d'abord ; sans réponse en 6 secondes ou sans réseau, la copie gardée (le réseau continue, met la
-// copie à jour et le dit à la page) ; ni réseau ni copie : l'écran « hors réseau ».
+// copie à jour et le dit à la page) ; ni réseau ni copie : l'écran « hors réseau ». La page part dès que ses en-têtes
+// arrivent ; la copie se fait à côté, et les fichiers qu'elle cite sont cherchés 5 secondes plus tard s'ils manquent
+// encore (le navigateur les demande entre-temps, ils passent par fichier()). Les attendre avant de rendre la page coûtait
+// un aller-retour par fichier neuf : 2,6 s pour ouvrir le catalogue sur un réseau de chantier (banc du 2026-11-23).
+const pause = (ms) => new Promise((ok) => setTimeout(() => ok(null), ms));
 const page = async (e) => {
   const requete = e.request;
   const html = new URL(requete.url).pathname !== '/reglages/marque.css';
   let servieGardee = false;
-  const reseau = fetch(requete).then(async (reponse) => {
-    if (new URL(reponse.url).pathname === '/connexion') { await effacerLesPages(null); await noterCompte(null); }
-    else await garder(requete, reponse.clone()).catch(() => {});
+  const reseau = fetch(requete);
+  const suite = reseau.then(async (reponse) => {
+    const copie = reponse.clone();
+    if (new URL(reponse.url).pathname === '/connexion') { await effacerLesPages(null); await noterCompte(null); return; }
+    const texte = await garder(requete, copie).catch(() => null);
     // Réseau lent : la page a reçu la copie ; la page à jour est là, on le lui dit.
     if (servieGardee && html && reponse.ok) {
       const client = await self.clients.get(e.resultingClientId || e.clientId);
       if (client) client.postMessage({ type: 'page-a-jour', adresse: cle(new URL(requete.url)) });
     }
-    return reponse;
+    if (texte) { await pause(5000); await garderFichiers(texte); }
   });
-  e.waitUntil(reseau.then(() => {}, () => {}));
-  const attendre = (ms) => new Promise((ok) => setTimeout(() => ok(null), ms));
+  e.waitUntil(suite.catch(() => {}));
+  const attendre = pause;
   let raison = 'lent';
   try {
     const premiere = await Promise.race([reseau, attendre(ATTENTE_MS)]);
@@ -223,8 +231,14 @@ const pdf = async (requete) => {
   return reponse;
 };
 
+// Le dernier signe de vie de l'artisan : toute requête d'une page (geste, page, fenêtre, fichier). Le préchargement passe
+// après lui (D4 : « les actions que le client fait sont prioritaires ») ; ses propres requêtes ne passent pas par ici.
+let activite = 0;
+const CALME_MS = 3000;
+
 self.addEventListener('fetch', (e) => {
   const requete = e.request;
+  activite = Date.now();
   if (requete.method !== 'GET') return;
   const url = new URL(requete.url);
   if (url.origin !== self.location.origin || requete.headers.has('X-Morceaux')) return;
@@ -250,7 +264,8 @@ self.addEventListener('message', (e) => {
   if (m.type === 'garder' && Array.isArray(m.pages)) e.waitUntil(precharger(m.pages));
 });
 
-// Une à une, sans presser le réseau ; une page déjà gardée à la même version n'est pas redemandée.
+// Une à une, sans presser le réseau ; une page déjà gardée à la même version n'est pas redemandée. Chaque page attend
+// 3 secondes sans requête de l'écran : un geste de l'artisan met le préchargement en pause (D4).
 const precharger = async (pages) => {
   const c = await lireCompte();
   if (!c) return;
@@ -261,12 +276,14 @@ const precharger = async (pages) => {
     if (url.origin !== self.location.origin || JAMAIS.test(url.pathname)) continue;
     const garde = await cache.match(cle(url));
     if (garde && p.version && garde.headers.get('X-Version-Garde') === String(p.version)) continue;
+    while (Date.now() - activite < CALME_MS) await pause(500);
     try {
       const requete = new Request(cle(url), { credentials: 'same-origin', headers: { Accept: 'text/html', 'X-Version-Garde': String(p.version || '') } });
-      await garder(requete, await fetch(requete));
+      const texte = await garder(requete, await fetch(requete));
+      if (texte) await garderFichiers(texte);
     } catch (err) {
       return; // plus de réseau : la suite attendra la prochaine ouverture
     }
-    await new Promise((ok) => setTimeout(ok, 400));
+    await pause(400);
   }
 };
