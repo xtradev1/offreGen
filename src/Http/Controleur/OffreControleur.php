@@ -168,12 +168,22 @@ final class OffreControleur
      * « Page n / N » : dompdf compte les pages au fil du rendu, mais ne connaît le total qu'à la fin. Un document d'une
      * page est juste au premier rendu ; un document plus long est rendu une seconde fois, avec son total.
      *
+     * Un document qui déborde est aussi essayé resserré (« doc-serre », document.css) : gardé s'il compte moins de pages,
+     * sinon la mise en page normale reste (Xavier, 2026-11-23 : la page 2 qui ne portait que conditions et signatures).
+     * $d['serre'] posé par l'appelant : pas d'essai.
+     *
      * @param array<string, mixed> $d les données du document, avec « m » (Marque)
      */
     public static function rendrePdf(Conteneur $c, array $d): string
     {
         $pdf = $c->documentPdf();
         [$sortie, $pages] = $pdf->rendreEtCompter(self::htmlPdf($c, $d));
+        if ($pages > 1 && !isset($d['serre'])) {
+            [$serre, $pagesSerre] = $pdf->rendreEtCompter(self::htmlPdf($c, ['serre' => true] + $d));
+            if ($pagesSerre < $pages) {
+                [$sortie, $pages, $d] = [$serre, $pagesSerre, ['serre' => true] + $d];
+            }
+        }
         return $pages === 1 ? $sortie : $pdf->rendre(self::htmlPdf($c, ['pages' => $pages] + $d));
     }
 

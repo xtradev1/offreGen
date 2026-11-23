@@ -50,7 +50,7 @@ body.pdf { margin: 0; font: 12px/1.45 Roboto, Arial, sans-serif; color: #1b1f24;
 /* Options et variantes (O1, O2) : la variante en italique sous sa ligne, la case que le client coche à la main, le bloc
    des options sous le total. Une case dessinée (bord) : un caractère « case » retomberait sur une police de repli. */
 .doc-lig tr.doc-var td { font-style: italic; color: #4b525b; }
-.doc-case { display: inline-block; width: 8px; height: 8px; border: 1px solid #1b1f24; margin: 0 6px 0 0; vertical-align: -1px; }
+.doc-case { display: inline-block; width: 8px; height: 8px; border: 1px solid #1b1f24; margin: 0 6px 0 0; vertical-align: 1px; }
 .doc-options { margin: 16px 0 0; }
 .doc-options .doc-lab { margin: 0 0 2px; }
 .doc-opt-aide { font-size: 9.5px; color: #4b525b; margin: 0 0 4px; }
@@ -79,6 +79,27 @@ table.doc-totaux { width: 300px; margin: 12px 0 0 366px; }
 .doc-annulee { display: inline-block; margin: 6px 0 10px; padding: 4px 12px; border: 2px solid #8C1D18; border-radius: 4px; color: #8C1D18; font-weight: bold; font-size: 16px; letter-spacing: .08em; text-transform: uppercase; }
 /* PDF : les totaux, puis les conditions et les signatures, restent entiers d'une page à l'autre. */
 .pdf .doc-totaux, .pdf .doc-fin { page-break-inside: avoid; }
+/* PDF resserré (Xavier, 2026-11-23 : « page 2 presque vide, corrige maintenant ») : un document qui déborde est rendu une
+   seconde fois avec ces espacements, gardés seulement s'il y gagne une page (OffreControleur::rendrePdf). L'en-tête et la
+   place de l'adresse ne bougent pas ; seuls les espaces verticaux des lignes, des totaux et des blocs se resserrent. */
+.pdf .doc-serre .doc-lig td { padding-top: 2.5px; padding-bottom: 2.5px; }
+.pdf .doc-serre .doc-lig th { padding-top: 5px; padding-bottom: 5px; }
+.pdf .doc-serre .doc-lig .doc-grp td { padding-top: 6px; }
+.pdf .doc-serre .doc-lig .doc-st td { padding-top: 2px; }
+.pdf .doc-serre .doc-totaux td { padding-top: 2px; padding-bottom: 2px; }
+.pdf .doc-serre .doc-tt td { padding-top: 5px; padding-bottom: 5px; }
+.pdf .doc-serre table.doc-totaux { margin-top: 8px; }
+.pdf .doc-serre .doc-options { margin-top: 8px; }
+.pdf .doc-serre .doc-cond, .pdf .doc-serre .doc-condp { margin-top: 8px; }
+.pdf .doc-serre .doc-sign { margin-top: 6px; }
+.pdf .doc-serre .doc-sig-esp { height: 24px; }
+/* Lettre : sa signature et ses paragraphes gardent plus d'air ; resserrés à part (l'adresse ne bouge pas). */
+.pdf .doc-serre.m-lettre .doc-concerne { margin: 14px 0 8px; }
+.pdf .doc-serre.m-lettre .doc-txt { margin-bottom: 6px; }
+.pdf .doc-serre.m-lettre .doc-apres { margin-top: 8px; }
+.pdf .doc-serre.m-lettre .doc-sign { margin-top: 6px; }
+.pdf .doc-serre.m-lettre .doc-sig-nom { padding-top: 18px; }
+.pdf .doc-serre.m-lettre .doc-sig-esp { height: 34px; }
 /* Pied de page : sous le contenu à l'écran, dans la marge basse de chaque page du PDF. */
 table.doc-pied { position: absolute; left: 64px; bottom: 26px; width: 666px; border-collapse: collapse; font: 9.5px/1.45 Roboto, Arial, sans-serif; color: #4b525b; border-top: 1px solid #d9dde2; }
 .doc-pied td { padding: 7px 0 0; vertical-align: top; }

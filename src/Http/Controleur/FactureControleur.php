@@ -618,8 +618,13 @@ final class FactureControleur
             return OffreControleur::rendrePdf($this->c, $vue);
         }
         $pdf = $this->c->documentPdf();
-        $place = $pdf->pages(OffreControleur::htmlPdf($this->c, ['qr_place' => 'essai'] + $vue)) === 1 ? 'bas' : 'apart';
-        return OffreControleur::rendrePdf($this->c, ['qr_place' => $place] + $vue);
+        // Resserrée (OffreControleur::rendrePdf), une facture qui tient sur une page garde sa section au bas de la page 1.
+        foreach ([false, true] as $serre) {
+            if ($pdf->pages(OffreControleur::htmlPdf($this->c, ['qr_place' => 'essai', 'serre' => $serre] + $vue)) === 1) {
+                return OffreControleur::rendrePdf($this->c, ['qr_place' => 'bas', 'serre' => $serre] + $vue);
+            }
+        }
+        return OffreControleur::rendrePdf($this->c, ['qr_place' => 'apart'] + $vue);
     }
 
     /**

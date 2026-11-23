@@ -39,7 +39,7 @@
 {% if pdf %}{{ fixes|raw }}{% endif %}
 {# À l'écran, la section de paiement d'une facture suit la feuille (_document.html.twig) : la feuille s'arrête alors à
    son contenu, sans pied, comme la facture d'une page du PDF (document-ecran.css). #}
-<div class="doc m-{{ m.modele }}" data-feuille{% if facture and qr and not pdf %} data-avec-section{% endif %}>
+<div class="doc m-{{ m.modele }}{% if serre ?? false %} doc-serre{% endif %}" data-feuille{% if facture and qr and not pdf %} data-avec-section{% endif %}>
   {% block corps %}{% endblock %}
   {% if not pdf %}{{ fixes|raw }}{% endif %}
 </div>
