@@ -8,7 +8,7 @@ namespace OffreGen\Offre;
  * Le PDF d'une offre, gardé tant que son contenu ne change pas (chantier sans rechargement, lot 5). dompdf le fabriquait
  * à chaque ouverture de l'aperçu, une à trois fois (pages comptées, mise en page resserrée). L'empreinte couvre le HTML
  * du document (lignes, totaux, marque, polices, feuille de style) et le code qui le rend : un changement de l'un ou de
- * l'autre fait un nouveau PDF, sans rien à vider à la main. Rangé par artisan dans var/cache/pdf, hors de public/ ; une
+ * l'autre fait un nouveau PDF, sans rien à vider à la main. Rangé par artisan dans var/cache/offres-pdf, hors de public/ ; une
  * offre n'y garde que son dernier PDF.
  */
 final class PdfGarde
@@ -41,9 +41,10 @@ final class PdfGarde
         foreach (glob($dossier . '/' . $offreId . '-*.pdf') ?: [] as $ancien) {
             @unlink($ancien);
         }
+        // Écrit à côté puis renommé : un rendu concurrent ne lit jamais un PDF à moitié écrit. Raté, le provisoire part.
         $provisoire = $fichier . '.' . bin2hex(random_bytes(4)) . '.tmp';
-        if (@file_put_contents($provisoire, $pdf) !== false) {
-            @rename($provisoire, $fichier);
+        if (@file_put_contents($provisoire, $pdf) === false || !@rename($provisoire, $fichier)) {
+            @unlink($provisoire);
         }
         return $pdf;
     }

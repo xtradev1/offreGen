@@ -10,6 +10,8 @@
   <link rel="apple-touch-icon" href="{{ fichier('/img/dicta-icone-180.png') }}">
   <link rel="stylesheet" href="{{ fichier('/css/app.css') }}">
   <link rel="stylesheet" href="{{ fichier('/css/admin.css') }}">
+  {# fluide.js : les boutons bloqués pendant l'envoi, socle des écrans de l'équipe (chantier sans rechargement, lot 1). #}
+  <script src="{{ fichier('/js/fluide.js') }}" defer></script>
   <script src="{{ fichier('/js/app.js') }}" defer></script>
   <script src="{{ fichier('/js/admin.js') }}" defer></script>
   {% block entete_html %}{% endblock %}

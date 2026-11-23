@@ -47,6 +47,8 @@
     </div>
   </div>
   {% endif %}
+  {# etat-envoi : le morceau que demande l'envoi noté (apercu-pdf.js), pour en recevoir le message « envoyée ». #}
+  <span id="etat-envoi" hidden></span>
   {% if marquer %}<form method="post" action="{{ marquer }}" data-apres-partage><input type="hidden" name="_csrf" value="{{ csrf() }}"></form>{% endif %}
 {% endblock %}
 

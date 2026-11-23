@@ -265,7 +265,7 @@ final class MarqueEcranTest extends TestCase
         $marque = $this->page('/reglages/marque');
         foreach (array_keys(\OffreGen\Compte\Marque::MODELES) as $cle) {
             self::assertFileExists(dirname(__DIR__, 2) . "/public/img/modeles/grand/$cle.jpg");
-            self::assertMatchesRegularExpression("#<a class=\"voir\" href=\"/reglages/modeles/$cle\"[^>]*data-grand=\"/img/modeles/grand/$cle\.jpg\"#", $marque);
+            self::assertMatchesRegularExpression("#<a class=\"voir\" href=\"/reglages/modeles/$cle\"[^>]*data-grand=\"/img/modeles/grand/$cle\.jpg(\?v=[0-9a-f]{12})?\"#", $marque);
         }
         $taille = getimagesize(dirname(__DIR__, 2) . '/public/img/modeles/grand/sobre.jpg');
         self::assertIsArray($taille);

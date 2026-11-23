@@ -6,7 +6,7 @@
    mobile-seul font le tri dans app.css. La feuille de dictée vient avec la barre : un seul exemplaire par écran. #}
 {% set dans_plus = actif in ['plus', 'catalogue', 'reglages'] %}
 <nav class="tabs{% if pc_seul ?? false %} pc-seul{% endif %}" aria-label="Sections">
-  <a class="marque-pc pc-seul" href="/decouvrir" aria-label="{{ nom_application }}, le site"><picture><source srcset="/img/dicta-logo-sombre.svg" media="(prefers-color-scheme: dark)"><img src="{{ fichier('/img/dicta-logo-clair.svg') }}" alt="" width="177" height="64"></picture></a>
+  <a class="marque-pc pc-seul" href="/decouvrir" aria-label="{{ nom_application }}, le site"><picture><source srcset="{{ fichier('/img/dicta-logo-sombre.svg') }}" media="(prefers-color-scheme: dark)"><img src="{{ fichier('/img/dicta-logo-clair.svg') }}" alt="" width="177" height="64"></picture></a>
   <a href="/"{% if actif == 'offres' %} aria-current="page"{% endif %}>
     <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>Offres</a>
   <a href="/clients"{% if actif == 'clients' %} aria-current="page"{% endif %}>

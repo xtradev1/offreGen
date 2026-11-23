@@ -43,13 +43,16 @@ final class PdfGardeTest extends TestCase
         self::assertSame(200, $premier->getStatusCode());
         $etag = (string) $premier->headers->get('ETag');
         self::assertMatchesRegularExpression('/^"[0-9a-f]{16}"$/', $etag);
-        self::assertStringContainsString('no-cache', (string) $premier->headers->get('Cache-Control'));
+        // Le navigateur ne garde pas le PDF sans session ; le service worker le garde pour le compte (revue, sécurité I3).
+        self::assertStringContainsString('no-store', (string) $premier->headers->get('Cache-Control'));
         self::assertStringStartsWith('%PDF', (string) $premier->getContent());
 
         $encore = $this->pdf($etag);
-        self::assertSame(304, $encore->getStatusCode(), 'le navigateur qui l\'a déjà ne le retélécharge pas');
+        self::assertSame(304, $encore->getStatusCode(), 'le téléphone qui l\'a déjà ne le retélécharge pas');
         self::assertSame('', (string) $encore->getContent());
         self::assertSame($etag, $encore->headers->get('ETag'));
+        // Apache suffixe l'empreinte d'une réponse compressée : elle compte encore.
+        self::assertSame(304, $this->pdf(substr($etag, 0, -1) . '-gzip"')->getStatusCode());
         self::assertSame((string) $premier->getContent(), (string) $this->pdf()->getContent(), 'gardé au serveur : le même PDF');
 
         // L'offre change (une quantité) : un autre PDF, l'ancien ETag ne vaut plus.

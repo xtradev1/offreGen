@@ -166,6 +166,86 @@ final class MorceauxTest extends TestCase
         self::assertStringNotContainsString('id="lignes"', $corps);
     }
 
+    /**
+     * Une fenêtre du bas pose son contenu dans la page de l'offre (app.js, fichesEnFenetre) : un id de la fenêtre déjà
+     * porté par la page fait viser le mauvais élément (constaté au banc le 2026-11-23 : la carte des conditions et le
+     * formulaire de sa fenêtre portaient « conditions », le bouton Enregistrer ne faisait rien).
+     */
+    public function testAucuneFenetreNeReprendUnIdDeLOffre(): void
+    {
+        $ids = static function (string $html, string $selecteur): array {
+            $page = \Dom\HTMLDocument::createFromString($html, LIBXML_NOERROR);
+            $trouves = [];
+            foreach ($page->querySelectorAll($selecteur) as $racine) {
+                foreach ([$racine, ...$racine->querySelectorAll('[id]')] as $el) {
+                    if ($el->getAttribute('id') !== null && $el->getAttribute('id') !== '') {
+                        $trouves[] = (string) $el->getAttribute('id');
+                    }
+                }
+            }
+            return $trouves;
+        };
+        $offre = $ids((string) $this->a->get($this->offre)->getContent(), 'body');
+        $verifiees = 0;
+        foreach (['/client', '/representant', '/modifier', '/rabais', '/conditions', '/ajouter', "/lignes/{$this->ligne}"] as $fenetre) {
+            $r = $this->a->get($this->offre . $fenetre);
+            if ($r->getStatusCode() !== 200) {
+                continue;
+            }
+            $verifiees++;
+            $communs = array_values(array_intersect($ids((string) $r->getContent(), 'main.screen, .bas .actionbar'), $offre));
+            self::assertSame([], $communs, "la fenêtre $fenetre reprend un id de l'offre");
+        }
+        self::assertGreaterThanOrEqual(6, $verifiees, 'les fenêtres de l\'offre se sont ouvertes');
+    }
+
+    /** Un formulaire refusé (422) revient tel quel, pour la fenêtre ; un conflit métier (409) aussi, avec son message. */
+    public function testUnRefusDeFormulaireEtUnConflitPassentTelsQuels(): void
+    {
+        $this->a->get("{$this->offre}/lignes/{$this->ligne}");
+        $refus = $this->morceaux("{$this->offre}/lignes/{$this->ligne}", ['designation' => '', 'quantite' => '2', 'unite' => 'm²', 'prix' => '10'], "l{$this->ligne} totaux");
+        self::assertSame(422, $refus->getStatusCode());
+        self::assertStringContainsString('<form id="ligne"', (string) $refus->getContent(), 'le formulaire refusé, à remontrer dans la fenêtre');
+        self::assertSame(12500, BaseDeTest::ligne("SELECT quantite_milliemes FROM ligne WHERE id = {$this->ligne}")['quantite_milliemes']);
+
+        // Une option qui n'en est pas une : 409 et son message, rien n'est fait.
+        $conflit = $this->morceaux("{$this->offre}/lignes/{$this->ligne}/retenue", ['retenue' => '1'], "l{$this->ligne}");
+        self::assertSame(409, $conflit->getStatusCode());
+        self::assertStringContainsString('seule une option ou une variante se retient', (string) $conflit->getContent());
+    }
+
+    /** Aucun morceau demandé : la page n'est pas rendue pour rien, son « Annuler » attend la page suivante. */
+    public function testSansMorceauDemandeLesMessagesRestentPourLaPageSuivante(): void
+    {
+        $r = $this->morceaux("{$this->offre}/lignes/{$this->ligne}/supprimer", [], '');
+        self::assertSame(200, $r->getStatusCode());
+        self::assertSame('', (string) $r->getContent());
+        self::assertStringContainsString("/lignes/{$this->ligne}/restaurer", (string) $this->a->get($this->offre)->getContent());
+    }
+
+    /** Revue du 2026-11-23, M1 : relire des morceaux d'une page qui renvoie ailleurs mène à cet écran, sans rien retirer. */
+    public function testUneRelectureDeMorceauxQuiRedirigeMeneAILAutreEcran(): void
+    {
+        $c = $this->a->c;
+        $noyau = new \OffreGen\Http\Noyau([
+            new \OffreGen\Http\Route('a', '/a', ['GET'], static fn (): \Symfony\Component\HttpFoundation\Response => new \Symfony\Component\HttpFoundation\RedirectResponse('/b', 303), \OffreGen\Http\Route::PUBLIC),
+            new \OffreGen\Http\Route('b', '/b', ['GET'], static fn (): \Symfony\Component\HttpFoundation\Response => new \Symfony\Component\HttpFoundation\Response('<!doctype html><body><div id="totaux">b</div></body>'), \OffreGen\Http\Route::PUBLIC),
+        ], $c->twig(), $c->garde());
+        $reponse = $noyau->traiter(Request::create('/a', 'GET', server: ['HTTP_X_MORCEAUX' => 'totaux']));
+        self::assertSame(200, $reponse->getStatusCode());
+        self::assertSame('1', $reponse->headers->get(Morceaux::ALLER));
+        self::assertSame('/b', $reponse->headers->get(Morceaux::ADRESSE));
+        self::assertStringNotContainsString('data-absent', (string) $reponse->getContent());
+    }
+
+    public function testUneAdresseAvecUnCaractereDeControleNEstPasLocale(): void
+    {
+        foreach (["/\t/exemple.org", "/\n/exemple.org", '/ /exemple.org', "/offres/1\r"] as $adresse) {
+            self::assertFalse(Morceaux::local($adresse), json_encode($adresse) ?: '');
+        }
+        self::assertTrue(Morceaux::local('/offres/1?tri=client#l2'));
+    }
+
     public function testLesIdsDemandesSontFiltres(): void
     {
         $r = Request::create('/x', 'POST', server: ['HTTP_X_MORCEAUX' => 'l12  totaux <script> l12 A Ok x' . str_repeat('y', 45)]);

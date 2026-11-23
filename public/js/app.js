@@ -820,15 +820,19 @@ function fichesEnFenetre() {
   // quand le navigateur est libre, jamais pendant un geste, et s'ouvre ensuite sans requête. Refaite après chaque usage.
   const prechargees = new Map();
   const cleDe = (url) => new URL(url, window.location.href).href;
+  // Un seul préchargement à la fois : sans réseau, chaque fermeture de fenêtre en ajoutait un (revue, B-M13).
+  let precharge = false;
   function prechargerAjout() {
     const lien = document.querySelector('a.btn.ajout[data-en-feuille]');
-    if (!lien || !surMorceaux() || (navigator.connection && navigator.connection.saveData)) return;
+    if (precharge || !lien || !surMorceaux() || (navigator.connection && navigator.connection.saveData)) return;
+    precharge = true;
     const essayer = () => {
       if (fluide.file.length || document.visibilityState !== 'visible' || calques.ouvert() === calque) { setTimeout(essayer, 3000); return; }
       fetch(lien.href, { credentials: 'same-origin', priority: 'low', headers: { Accept: 'text/html' } })
         .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
         .then((html) => { prechargees.set(cleDe(lien.href), html); })
-        .catch(() => { /* pas de réseau : la fenêtre se chargera à l'ouverture */ });
+        .catch(() => { /* pas de réseau : la fenêtre se chargera à l'ouverture */ })
+        .finally(() => { precharge = false; });
     };
     (window.requestIdleCallback || ((f) => setTimeout(f, 1500)))(() => setTimeout(essayer, 600), { timeout: 6000 });
   }
@@ -926,8 +930,15 @@ function fichesEnFenetre() {
         if (touche.dataset.attente) touche.textContent = libelle;
       }
     };
+    // Ce qu'un ajout montrerait sans réseau : sa ligne provisoire et son nom dans le bandeau (fluide.js, reprendre).
+    const champ = (nom) => (form.querySelector('[name="' + nom + '"]') ? form.querySelector('[name="' + nom + '"]').value.trim() : '');
+    const produit = !!(touche && touche.name === 'produit');
+    const nomAjout = produit && touche.querySelector('.pn') ? touche.querySelector('.pn').textContent.trim() : champ('designation');
+    const prixAjout = produit ? Number(touche.dataset.prix || 0) : Math.round((parseFloat(champ('prix').replace(',', '.')) || 0) * 100);
+    const uniteAjout = produit ? touche.dataset.unite : champ('unite');
+    const extra = ajout ? { libelle: '«' + fluide.NB + nomAjout + fluide.NB + '» ajoutée', provisoire: { designation: nomAjout, unite: uniteAjout, prix: prixAjout } } : {};
     if (ajout) annoncerAjout(form, touche);
-    fluide.fenetre(form, touche, ajout ? ici : null, liste ? idsListe(modifie) : null).then((r) => {
+    fluide.fenetre(form, touche, ajout ? ici : null, liste ? idsListe(modifie) : null, extra).then((r) => {
       rendre();
       if (r.etat === 'pose') {
         const adresse = r.reponse.adresse || '';
@@ -942,15 +953,18 @@ function fichesEnFenetre() {
         if (ligne) setTimeout(() => eclairer([ligne]), DUREE_ANIMATION);
         return;
       }
+      // L'action mène à une autre page de fenêtre (une case du choix du client dans « Facturer ») : elle s'y charge, comme
+      // avant le chantier ; l'écran derrière relit ses morceaux (l'option retenue change l'offre).
+      if (r.etat === 'aller') {
+        charger(r.adresse);
+        if (!liste) fluide.rafraichir((document.querySelector('main.screen').dataset.fenetre || '').split(' ').filter(Boolean));
+        return;
+      }
       // Pas de réseau : le geste attend dans la file, le bandeau le dit ; la fenêtre d'un ajout reste ouverte, la ligne
       // paraît en attente dans l'offre derrière, avec le total estimé (lot 4, D7).
       if (r.etat === 'attente') {
         if (!ajout) { fermer(); return; }
-        const champ = (nom) => (form.querySelector('[name="' + nom + '"]') ? form.querySelector('[name="' + nom + '"]').value.trim() : '');
-        const produit = touche && touche.name === 'produit';
-        const nom = produit && touche.querySelector('.pn') ? touche.querySelector('.pn').textContent.trim() : champ('designation');
-        const prix = produit ? Number(touche.dataset.prix || 0) : Math.round((parseFloat(champ('prix').replace(',', '.')) || 0) * 100);
-        fluide.ligneEnAttente(nom, produit ? touche.dataset.unite : champ('unite'), prix);
+        fluide.ligneEnAttente(nomAjout, uniteAjout, prixAjout);
         return;
       }
       // Champ refusé (422) : le formulaire revient dans la fenêtre, avec ses messages ; un autre refus s'y dit.
@@ -1024,7 +1038,10 @@ function fichesEnFenetre() {
       charger(u.href);
       return;
     }
-    if (surMorceaux() || listeEnMorceaux()) { envoyerEnMorceaux(form, e.submitter || null); return; }
+    // data-sortir : un acte qui mène ailleurs une fois fait (« Créer la facture », le client puis l'aperçu) n'entre pas
+    // dans la file : sans réseau, rien n'est fait et la fenêtre le dit ; la facture n'est jamais créée plus tard en
+    // silence, ni deux fois (revue du 2026-11-23, C-B2).
+    if ((surMorceaux() || listeEnMorceaux()) && !form.hasAttribute('data-sortir')) { envoyerEnMorceaux(form, e.submitter || null); return; }
     const boutons = fond.querySelectorAll('button[type=submit]');
     const touche = e.submitter || boutons[0] || null;
     const libelle = touche ? touche.textContent : '';
@@ -1684,6 +1701,8 @@ function glisserLignes() {
   let glisse = false;
   const suppr = (r) => r.querySelector('form[action$="/supprimer"]');
   document.addEventListener('pointerdown', (e) => {
+    // Un glissé fini sans clic ne doit pas avaler le clic suivant, même sur un bouton (revue, B-M12).
+    glisse = false;
     const r = e.target.closest && e.target.closest('[data-glisse-ligne]');
     if (!r || e.button !== 0 || e.target.closest('input, button, select, textarea') || !suppr(r)) { x0 = null; return; }
     row = r;
@@ -2035,7 +2054,8 @@ function ajoutPc() {
           apres: (r) => {
             const id = (/#l(\d+)$/.exec(r.adresse || '') || [])[1];
             const quantite = id && document.querySelector('#l' + id + ' input[name=quantite]');
-            if (quantite) { quantite.scrollIntoView({ block: 'center' }); quantite.focus(); }
+            // L'artisan tape déjà le produit suivant : le curseur reste dans la ligne d'ajout (revue, B-I10).
+            if (quantite && !(document.activeElement === champ && champ.value.trim() !== '')) { quantite.scrollIntoView({ block: 'center' }); quantite.focus(); }
           },
         });
         return;

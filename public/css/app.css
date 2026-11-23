@@ -1035,12 +1035,15 @@ h2, h3, .btn, .tabs .marque-pc, label { font-family: var(--titre); }
 
 /* Chantier sans rechargement (2026-11-23, fluide.js). Plusieurs bandeaux du bas à la fois : chacun garde son « Annuler »,
    empilés du plus récent (en bas) au plus ancien. Un montant estimé au toucher reste pâle jusqu'à la réponse du serveur
-   (D7). Le bandeau du réseau dit en haut ce qui attend : hors réseau, session expirée, envoi en cours. */
+   (D7). Le bandeau du réseau (hors réseau, session expirée, envoi qui dure) se pose au-dessus des boutons du bas, à la
+   place du premier bandeau : il ne pousse pas l'écran et ne couvre pas la barre du haut (revue du 2026-11-23, C-I3). */
 .app > .snack { translate: 0 calc(var(--rang, 0) * -58px); transition: translate .2s ease; }
 .provisoire { opacity: .6; }
-.reseau { position: fixed; top: 0; left: 0; right: 0; z-index: 40; min-height: 34px; padding: calc(6px + env(safe-area-inset-top, 0px)) 16px 6px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 600; text-align: center; background: var(--warn-soft); color: var(--ink); border-bottom: 1px solid var(--line); }
-.reseau.session { background: var(--bad-soft); }
-.reseau.envoi { background: var(--accent-soft); }
-.reseau a { color: inherit; font-weight: 700; text-decoration: underline; min-height: 34px; display: inline-flex; align-items: center; }
-body.avec-reseau { padding-top: calc(34px + env(safe-area-inset-top, 0px)); }
-@media (prefers-reduced-motion: reduce) { .app > .snack { transition: none; } }
+.row.eclair, .row.en-attente { animation: flash 1.8s ease-out; }
+.row.en-attente .note span { color: var(--muted); font-style: italic; }
+.app > .reseau { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(var(--bas, 120px) + 12px); width: min(456px, calc(100% - 24px)); min-height: 48px; padding: 6px 14px; margin: 0; border-radius: 12px; display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; font-size: 14px; font-weight: 600; background: var(--warn-soft); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 4px 14px rgb(0 0 0 / .14); }
+.app > .reseau.session { background: var(--bad-soft); }
+.app > .reseau.envoi { background: var(--accent-soft); }
+.app > .reseau a { color: inherit; font-weight: 700; text-decoration: underline; min-height: 40px; display: inline-flex; align-items: center; }
+.app:has(.bas > .tabs:not(.pc-seul)):not(:has(.bas .actionbar)) > .reseau { bottom: calc(var(--bas, 120px) + 36px); }
+@media (prefers-reduced-motion: reduce) { .app > .snack { transition: none; } .row.eclair, .row.en-attente { animation: none; } }

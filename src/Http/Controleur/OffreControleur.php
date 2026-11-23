@@ -11,6 +11,7 @@ use OffreGen\Compte\Marque;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Conteneur;
+use OffreGen\Http\Etag;
 use OffreGen\Http\Flash;
 use OffreGen\Http\PageIntrouvable;
 use OffreGen\Http\Parametres;
@@ -156,13 +157,14 @@ final class OffreControleur
         // (gardé au serveur, 304 pour le navigateur qui l'a déjà).
         $garde = $this->c->pdfGarde();
         $empreinte = $garde->empreinte(self::htmlPdf($this->c, $d));
+        // no-store : le navigateur ne le garde pas sans session ; le service worker le garde pour le compte et le revalide.
         $entetes = [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="Offre-' . $d['offre']['numero'] . '.pdf"',
-            'Cache-Control' => 'private, no-cache',
+            'Cache-Control' => 'private, no-store',
             'ETag' => '"' . $empreinte . '"',
         ];
-        if (in_array('"' . $empreinte . '"', $requete->getETags(), true)) {
+        if (Etag::connu($requete, '"' . $empreinte . '"')) {
             return new Response('', 304, $entetes);
         }
         $pdf = $garde->obtenir($requete->attributes->getInt('_artisan'), $d['offre']['id'], $empreinte, fn (): string => self::rendrePdf($this->c, $d));

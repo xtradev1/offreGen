@@ -39,17 +39,22 @@ const fluide = (() => {
     return titre && titre.textContent.trim() ? titre.textContent.trim() : (code ? 'Refusé par le serveur (' + code + ')' : 'Refusé par le serveur');
   };
 
-  // Bandeaux du bas (« Annuler », messages) : plusieurs à la fois, empilés, chacun avec sa durée.
+  // Les « Annuler » déjà touchés : celui du serveur, arrivé après, ne revient pas (revue, B-M7).
+  const annulees = new Set();
+  // Bandeaux du bas (« Annuler », messages) : plusieurs à la fois, empilés, chacun avec sa durée ; le bandeau du réseau,
+  // s'il est là, reste le plus bas.
   const messages = {
     empiler() {
       const tous = [...document.querySelectorAll('.app > .snack:not(.dans-total)')];
-      tous.forEach((el, i) => el.style.setProperty('--rang', String(tous.length - 1 - i)));
+      const base = document.querySelector('.app > .reseau:not([hidden])') ? 1 : 0;
+      tous.forEach((el, i) => el.style.setProperty('--rang', String(base + tous.length - 1 - i)));
     },
     poser(el, duree) {
       const app = document.querySelector('.app');
       if (!app || !el) return null;
       // Un « Annuler » pour la même adresse est déjà là (posé au toucher) : celui du serveur ne se pose pas en double.
       const action = el.getAttribute('action');
+      if (action && annulees.has(action)) return null;
       if (action && [...app.querySelectorAll(':scope > .snack, .bas > .snack')].some((s) => s.getAttribute('action') === action)) return null;
       app.append(el);
       messages.empiler();
@@ -107,6 +112,16 @@ const fluide = (() => {
 
   // Les morceaux reçus remplacent les éléments de même id ; un absent part ; un nouveau se pose après son voisin
   // (data-apres) ; les messages se posent en bas. `sauter(id)` : un geste plus récent attend ce morceau, il l'apportera.
+  // Les lignes retirées au toucher (corbeille), gardées cachées jusqu'à « Annuler » : la réponse d'un geste plus ancien,
+  // qui les montre encore, ne les fait pas revivre (revue du 2026-11-23, B-I1).
+  const cachees = new Set();
+  const recacher = (racine) => cachees.forEach((id) => {
+    const el = racine.id === id ? racine : racine.querySelector('#' + CSS.escape(id));
+    if (el && !el.hidden) { el.hidden = true; el.setAttribute('data-retiree', ''); }
+  });
+  // L'artisan tape ailleurs : un morceau qui arrive ne lui prend pas le curseur (revue, B-I10).
+  const libre = () => { const a = document.activeElement; return !a || a === document.body || !a.matches('input, textarea, select'); };
+
   const appliquer = (html, options = {}) => {
     const recu = new DOMParser().parseFromString('<!doctype html><body>' + html, 'text/html');
     const poses = [];
@@ -119,11 +134,12 @@ const fluide = (() => {
       if (neuf.matches('.snack')) { messages.poser(document.adoptNode(neuf)); return; }
       if (neuf.matches('[data-focus-ligne]')) {
         const champ = document.querySelector('#l' + neuf.dataset.focusLigne + ' input[name=quantite]');
-        if (champ) { champ.scrollIntoView({ block: 'center' }); champ.focus(); }
+        if (champ && libre()) { champ.scrollIntoView({ block: 'center' }); champ.focus(); }
         return;
       }
       if (!neuf.id || (options.sauter && options.sauter(neuf.id))) return;
       const vieux = document.getElementById(neuf.id);
+      if (vieux && vieux.hasAttribute('data-retiree')) return;
       const pose = document.adoptNode(neuf);
       if (!vieux) {
         const voisin = pose.dataset.apres && document.getElementById(pose.dataset.apres);
@@ -133,6 +149,7 @@ const fluide = (() => {
       const saisies = saisiesDe(vieux);
       if (vieux.tagName === 'DETAILS' && vieux.open) pose.open = true;
       vieux.replaceWith(pose);
+      recacher(pose);
       restaurerSaisies(saisies);
       poses.push(pose);
     });
@@ -140,15 +157,20 @@ const fluide = (() => {
     return poses;
   };
 
-  // État du réseau et des envois, dit par un bandeau en haut de l'écran (lot 4 : il lit aussi la file gardée).
+  // État du réseau et des envois, dit par un bandeau posé au-dessus des boutons du bas, à la place du premier bandeau
+  // « Annuler » : il ne pousse pas l'écran et ne couvre pas la barre du haut (revue du 2026-11-23, C-I3). « Envoi… »
+  // ne paraît que si l'envoi dure : une file qui se vide en moins d'une seconde ne fait rien clignoter.
   const bandeau = (() => {
     let el = null;
+    let minuterie = null;
     const poser = (texte, genre, lien) => {
+      clearTimeout(minuterie);
+      const app = document.querySelector('.app');
+      if (!app) return;
       if (!el) {
         el = document.createElement('div');
-        el.className = 'reseau';
         el.setAttribute('role', 'status');
-        document.body.prepend(el);
+        app.append(el);
       }
       el.className = 'reseau ' + genre;
       el.replaceChildren(document.createTextNode(texte));
@@ -159,15 +181,22 @@ const fluide = (() => {
         el.append(' ', a);
       }
       el.hidden = false;
-      document.body.classList.add('avec-reseau');
+      messages.empiler();
     };
     const attente = (n) => (n > 1 ? n + ' changements attendent' : n === 1 ? '1 changement attend' : 'rien n’attend');
+    // Ce qui attend, dit par son premier geste nommé : l'artisan ne refait pas un ajout qui attend déjà (revue, B-I7).
+    const lequel = () => { const nomme = file.find((f) => f.item.libelle); return nomme ? ' (' + nomme.item.libelle + ')' : ''; };
     return {
-      horsReseau: (n) => poser('Hors réseau' + NB + ': ' + attente(n) + ', ils partiront au retour du réseau.', 'hors'),
-      session: (n) => poser('Session expirée' + NB + ': ' + attente(n) + '.', 'session', { href: '/connexion', texte: 'Se reconnecter' }),
-      envoi: (n) => poser('Envoi de ' + (n > 1 ? n + ' changements' : '1 changement') + '…', 'envoi'),
+      horsReseau: (n) => poser('Hors réseau' + NB + ': ' + attente(n) + lequel() + ', ils partiront au retour du réseau.', 'hors'),
+      session: (n) => poser('Session expirée' + NB + ': ' + attente(n) + lequel() + '.', 'session', { href: '/connexion', texte: 'Se reconnecter' }),
+      compte: (n) => poser('Ce téléphone a changé de compte' + NB + ': ' + attente(n) + ' l’autre compte.', 'session', { href: '/connexion', texte: 'Se reconnecter' }),
+      envoi: (n) => {
+        clearTimeout(minuterie);
+        minuterie = setTimeout(() => poser('Envoi de ' + (n > 1 ? n + ' changements' : '1 changement') + '…', 'envoi'), 1200);
+      },
       page: (texte, lien) => poser(texte, 'hors', lien),
-      ok: () => { if (el) { el.hidden = true; document.body.classList.remove('avec-reseau'); } },
+      ok: () => { clearTimeout(minuterie); if (el) { el.hidden = true; messages.empiler(); } },
+      visible: () => !!(el && !el.hidden),
     };
   })();
 
@@ -235,10 +264,12 @@ const fluide = (() => {
 
   const poster = async (item, gardee = false) => {
     const ici = memeEcran(item);
+    // X-Compte : le serveur refuse un geste fait dans la page d'un autre compte que celui de la session (revue, D-I1).
     const entetes = {
       'X-Morceaux': ici ? item.morceaux.join(' ') : '',
       'X-Cle-Envoi': item.cle,
       'X-Morceaux-Ici': window.location.pathname + window.location.search,
+      'X-Compte': item.compte,
     };
     if (item.page && ici) entetes['X-Morceaux-Page'] = item.page;
     const corps = new URLSearchParams(item.corps);
@@ -258,17 +289,26 @@ const fluide = (() => {
       clearTimeout(minuterie);
     }
     if (r.status === 401 && r.headers.get('X-Morceaux-Session')) throw new Refus('session', 'Session expirée');
+    if (r.status === 409 && r.headers.get('X-Morceaux-Compte')) throw new Refus('compte', 'Autre compte');
     if (r.status === 403 && r.headers.get('X-Morceaux-Jeton')) throw new Refus('jeton', 'Formulaire expiré', 403);
     if (r.status === 409 && /déjà en cours/.test(html)) throw new Refus('reseau', 'Envoi déjà en cours');
     if (!r.ok) throw new Refus('refus', messageDe(html, r.status), r.status, html);
     return { html, ici, adresse: r.headers.get('X-Morceaux-Adresse') || '', aller: r.headers.get('X-Morceaux-Aller') === '1' };
   };
 
-  // Un jeton refusé (session renouvelée ailleurs) : la page du moment en porte un bon.
+  // Un jeton refusé (session renouvelée ailleurs) : la page du moment en porte un bon, si elle est du même compte.
   const jetonNeuf = async () => {
-    const r = await fetch(window.location.pathname + window.location.search, { credentials: 'same-origin', cache: 'no-store' });
-    const m = /name="_csrf" value="([^"]+)"/.exec(await r.text());
-    if (!m) throw new Error('sans jeton');
+    let html;
+    try {
+      html = await (await fetch(window.location.pathname + window.location.search, { credentials: 'same-origin', cache: 'no-store' })).text();
+    } catch (e) {
+      throw new Refus('reseau', 'Pas de connexion au serveur');
+    }
+    const page = /<body[^>]*\sdata-compte="(\d+)"/.exec(html);
+    if (!page) throw new Refus('session', 'Session expirée');
+    if (page[1] !== compte()) throw new Refus('compte', 'Autre compte');
+    const m = /name="_csrf" value="([^"]+)"/.exec(html);
+    if (!m) throw new Refus('session', 'Session expirée');
     document.querySelectorAll('input[name="_csrf"]').forEach((c) => { c.value = m[1]; });
   };
 
@@ -278,7 +318,7 @@ const fluide = (() => {
     try {
       while (file.length && !sessionPerdue) {
         const { item, options } = file[0];
-        if (navigator.onLine === false) { horsReseau = true; bandeau.horsReseau(file.length); break; }
+        if (navigator.onLine === false) { horsReseau = true; bandeau.horsReseau(file.length); direAttente(); break; }
         if (file.length > 1 || horsReseau) bandeau.envoi(file.length);
         let reponse;
         try {
@@ -287,7 +327,7 @@ const fluide = (() => {
           } catch (e) {
             if (e.genre !== 'jeton' || item.jetonRepris) throw e;
             item.jetonRepris = true;
-            await jetonNeuf().catch(() => {});
+            await jetonNeuf();
             reponse = await poster(item, options.gardee);
           }
         } catch (e) {
@@ -297,16 +337,19 @@ const fluide = (() => {
             direAttente();
             break;
           }
-          if (e.genre === 'session') {
+          // Session perdue, ou geste d'un autre compte que celui de la session : la file attend, rien n'est perdu.
+          if (e.genre === 'session' || e.genre === 'compte') {
             sessionPerdue = true;
-            bandeau.session(file.length);
+            if (e.genre === 'compte') bandeau.compte(file.length); else bandeau.session(file.length);
             direAttente();
             break;
           }
           file.shift();
           compter(item, -1);
           await garde.oublier(item.cle);
-          if (options.refus) options.refus(e); else messages.dire('Pas enregistré' + NB + ': ' + e.message, true);
+          // Un geste que l'écran disait « en attente » (fenêtre fermée, ligne provisoire) : son refus se dit toujours.
+          if (item.attenteDite || !options.refus) messages.dire((item.attenteDite ? 'Un changement fait sans réseau n’est pas accepté' : 'Pas enregistré') + NB + ': ' + e.message, true);
+          if (options.refus) options.refus(e);
           // Ce que montre l'écran redevient ce que dit le serveur.
           if (memeEcran(item)) rafraichir([...item.morceaux, ...(options.aRelire || [])]);
           continue;
@@ -316,24 +359,34 @@ const fluide = (() => {
         compter(item, -1);
         await garde.oublier(item.cle);
         if (reponse.aller && reponse.ici && !options.gardee) {
-          window.location.assign(reponse.adresse);
-          return;
+          // Une fenêtre suit l'action dans la fenêtre (« Facturer » après le choix du client) ; ailleurs, la page entière.
+          if (!options.aller) { window.location.assign(reponse.adresse); return; }
+          options.aller(reponse.adresse);
+          continue;
         }
         if (reponse.ici) appliquer(reponse.html, { sauter: (id) => demandes.has(id) });
         else if (reponse.html) appliquer(reponse.html, { sauter: () => true });
         if (options.apres) options.apres(reponse);
         if (reponse.ici && /^\/(offres|factures)\/\d+/.test(window.location.pathname)) document.dispatchEvent(new Event('offre-modifiee'));
       }
-      if (!file.length && !sessionPerdue) bandeau.ok();
+      if (!file.length && !sessionPerdue) {
+        bandeau.ok();
+        // L'aperçu du PDF attend la fin de la file pour se refaire avec les changements (revue, B-I6).
+        document.dispatchEvent(new Event('file-vide'));
+      }
     } finally {
       pompe = false;
     }
   };
 
-  // Le réseau revient, l'onglet revient au premier plan, ou toutes les 20 secondes tant qu'un geste attend.
-  const relancer = () => { if (file.length && !pompe) { horsReseau = false; pomper(); } };
-  window.addEventListener('online', relancer);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') relancer(); });
+  // Le réseau revient, l'onglet revient au premier plan (reconnecté peut-être dans un autre onglet), ou toutes les 20
+  // secondes tant qu'un geste attend.
+  const relancer = (session = false) => {
+    if (session) sessionPerdue = false;
+    if (file.length && !pompe) { horsReseau = false; pomper(); }
+  };
+  window.addEventListener('online', () => relancer(true));
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') relancer(true); });
   setInterval(() => { if (file.length && navigator.onLine !== false) relancer(); }, 20000);
   window.addEventListener('offline', () => { if (file.length) bandeau.horsReseau(file.length); });
 
@@ -359,6 +412,8 @@ const fluide = (() => {
     const corps = new URLSearchParams(new FormData(form));
     if (options.bouton && options.bouton.name) corps.set(options.bouton.name, options.bouton.value);
     corps.delete('_csrf');
+    // libelle : ce que dit le bandeau quand le geste attend ; provisoire : la ligne d'un ajout, remontrée si la page
+    // gardée est rouverte sans réseau ; champ : la valeur tapée, remontrée de même (revue, B-I7).
     const item = {
       cle: cleNeuve(),
       action: form.getAttribute('action'),
@@ -368,6 +423,9 @@ const fluide = (() => {
       ici: window.location.pathname + window.location.search,
       compte: compte(),
       cree: Date.now(),
+      libelle: options.libelle || '',
+      provisoire: options.provisoire || null,
+      champ: options.champ || null,
     };
     if (options.anticiper) options.anticiper();
     mettreEnFile(item, options);
@@ -390,14 +448,21 @@ const fluide = (() => {
     const dernier = noeuds[noeuds.length - 1];
     retirees.set(cle, { noeuds, parent: dernier.parentNode, suivant: dernier.nextElementSibling });
     // Une ligne glissée garde son décalage (glisserLignes) : remise, elle doit revenir droite.
-    noeuds.forEach((n) => { n.hidden = true; n.classList.remove('ouverte', 'tire', 'assez'); n.style.removeProperty('--dx'); });
-    setTimeout(() => retirees.delete(cle), 120000);
+    noeuds.forEach((n) => {
+      n.hidden = true;
+      n.setAttribute('data-retiree', '');
+      if (n.id) cachees.add(n.id);
+      n.classList.remove('ouverte', 'tire', 'assez');
+      n.style.removeProperty('--dx');
+    });
+    setTimeout(() => { const r = retirees.get(cle); if (r) r.noeuds.forEach((n) => cachees.delete(n.id)); retirees.delete(cle); }, 120000);
   };
   // Remet ce qui a été retiré à sa place ; faux si la place a disparu (la liste a été remplacée entre-temps) : le serveur
   // renverra alors la liste entière.
   const remettre = (cle) => {
     const r = retirees.get(cle);
     retirees.delete(cle);
+    if (r) r.noeuds.forEach((n) => { cachees.delete(n.id); n.removeAttribute('data-retiree'); });
     if (!r || !r.parent || !r.parent.isConnected || (r.suivant && !r.suivant.isConnected)) return false;
     r.noeuds.forEach((n) => {
       n.hidden = false;
@@ -406,8 +471,8 @@ const fluide = (() => {
     return true;
   };
 
-  // Les morceaux que touche un geste sur une ligne : elle et ses variantes (rangées .var qui la suivent) ; dans une offre
-  // rangée par pièce, le titre de sa pièce, qui porte le sous-total.
+  // Les morceaux que touche un geste sur une ligne : elle, ses variantes (rangées .var qui la suivent) et le titre de son
+  // groupe (sous-total d'une pièce ; un groupe vidé disparaît).
   const parPiece = () => !!document.querySelector('#lignes .cat .st');
   const idsDeLaLigne = (row) => {
     if (!row || !row.id) return ['lignes'];
@@ -415,10 +480,8 @@ const fluide = (() => {
     for (let s = row.nextElementSibling; s && s.classList.contains('var'); s = s.nextElementSibling) if (s.id) ids.push(s.id);
     let titre = row.previousElementSibling;
     while (titre && !titre.classList.contains('cat')) titre = titre.previousElementSibling;
-    if (titre && titre.querySelector('.st')) {
-      if (!titre.id) return ['lignes'];
-      ids.push(titre.id);
-    }
+    if (titre && titre.id) ids.push(titre.id);
+    else if (titre && titre.querySelector('.st')) return ['lignes'];
     return ids;
   };
   const variantesDe = (row) => {
@@ -506,10 +569,11 @@ const fluide = (() => {
     envoyer(form, {
       // Retenir une variante décoche les autres de sa ligne et remplace la ligne : toute la liste revient.
       morceaux: caseACocher ? ['lignes'] : idsDeLaLigne(row),
+      champ: !caseACocher && row ? { porteur: row.id, nom: champ.name, valeur: champ.value } : null,
       anticiper: () => { if (!caseACocher && row) estimer(row, avant); },
       refus: (e) => {
         messages.dire('Non enregistré' + NB + ': ' + e.message, true);
-        if (caseACocher && champ.isConnected) champ.checked = !champ.checked;
+        if (caseACocher && champ.isConnected) { champ.checked = !champ.checked; champ.defaultChecked = champ.checked; }
       },
     });
   };
@@ -522,12 +586,14 @@ const fluide = (() => {
    * l'écran derrière se posent. Résout « pose » (fermer la fenêtre), « attente » (pas de réseau : le geste attend) ou
    * {html, code} (refus à montrer dans la fenêtre). `page` : l'écran derrière, quand l'action mène ailleurs (« + Ligne »).
    */
-  const fenetre = (form, bouton, page = null, ids = null) => new Promise((ok) => {
+  const fenetre = (form, bouton, page = null, ids = null, extra = {}) => new Promise((ok) => {
     envoyer(form, {
+      ...extra,
       bouton,
       page,
       morceaux: ids || liste(ecran() && ecran().dataset.fenetre),
       apres: (r) => ok({ etat: 'pose', reponse: r }),
+      aller: (adresse) => ok({ etat: 'aller', adresse }),
       attente: () => ok({ etat: 'attente' }),
       refus: (e) => ok({ etat: 'refus', html: e.html, code: e.code, message: e.message }),
     });
@@ -552,8 +618,9 @@ const fluide = (() => {
         const remise = action.replace(/\/supprimer$/, '/restaurer');
         const variantes = variantesDe(row);
         envoyer(form, {
-          // Ses variantes passent en options ; le sous-total de sa pièce change ; elle-même reste là, cachée, pour « Annuler ».
-          morceaux: idsDeLaLigne(row).filter((id) => id !== row.id),
+          // Elle reste là, cachée, pour « Annuler » ; le titre de son groupe suit (sous-total, groupe vidé). Ses variantes
+          // passent en options, avec le même id : la liste revient entière, sinon elles paraissaient deux fois (revue, B-B1).
+          morceaux: variantes.length ? ['lignes'] : idsDeLaLigne(row).filter((id) => id !== row.id),
           aRelire: ['lignes'],
           anticiper: () => {
             const m = montantDe(row);
@@ -589,12 +656,13 @@ const fluide = (() => {
         const m = montantDe(r.noeuds[0]);
         if (m !== null && compteDansLeTotal(r.noeuds[0])) ajusterTotal(m);
       }
+      annulees.add(action);
+      setTimeout(() => annulees.delete(action), 60000);
       form.remove();
       messages.empiler();
-      let morceaux;
-      // Une offre rangée par pièce : le titre de la pièce a pu partir avec sa dernière ligne, la liste revient entière.
-      if (ligneId) morceaux = remis && r && !parPiece() ? r.noeuds.map((n) => n.id) : ['lignes'];
-      else morceaux = remis ? [] : ['liste-offres'];
+      // Une ligne remise : la liste entière revient (ses variantes reviennent des options, le titre de son groupe a pu partir
+      // avec elle) ; l'écran l'a déjà remise à sa place au toucher.
+      const morceaux = ligneId ? ['lignes'] : (remis ? [] : ['liste-offres']);
       envoyer(form, { morceaux, refus: (err) => messages.dire('Non remise' + NB + ': ' + err.message, true) });
       return;
     }
@@ -609,7 +677,10 @@ const fluide = (() => {
       const remise = action.replace(/\/(archiver|supprimer)$/, '/restaurer');
       const titre = carte.querySelector('.titre');
       const fait = /archiver$/.test(action) ? 'archivée' : 'supprimée';
+      // La dernière carte partie : la liste revient avec son message « aucune offre » (revue, C).
+      const derniere = ![...document.querySelectorAll('#liste-offres > .glisse')].some((c) => c !== carte && !c.hidden);
       envoyer(form, {
+        morceaux: derniere ? ['liste-offres'] : [],
         anticiper: () => {
           retirer(remise, [carte]);
           messages.annuler(remise, '«' + NB + (titre ? titre.textContent.trim() : 'L’offre') + NB + '» ' + fait);
@@ -622,7 +693,12 @@ const fluide = (() => {
     const archive = form.closest('#archives .archive');
     if (archive && /\/restaurer$/.test(action)) {
       e.preventDefault();
-      envoyer(form, { morceaux: ['liste-offres'], anticiper: () => { archive.hidden = true; } });
+      envoyer(form, {
+        morceaux: ['liste-offres'],
+        anticiper: () => { archive.hidden = true; },
+        // La liste revient dans l'ordre du serveur : le tri choisi se refait (revue, B-M8).
+        apres: () => { const tri = document.querySelector('nav.fchips.tri a[aria-current]'); if (tri) trier(tri); },
+      });
       return;
     }
     const echec = form.closest('#preparation .ocard.echec');
@@ -656,16 +732,25 @@ const fluide = (() => {
       }
       window.scrollTo({ top: 0 });
     };
+    // Un temps de lecture après chaque ligne : un double toucher ne valide pas la suivante sans qu'on l'ait vue (revue,
+    // B-I5). Avant, le rechargement de la page jouait ce rôle.
+    let lisible = 0;
     document.addEventListener('submit', (e) => {
       const form = e.target;
       const section = form.closest && form.closest('section[data-relu]');
       if (!section || e.defaultPrevented) return;
       e.preventDefault();
+      if (Date.now() < lisible) return;
       let suivante = section.nextElementSibling;
       while (suivante && !suivante.matches('section[data-relu]')) suivante = suivante.nextElementSibling;
       envoyer(form, {
         sansResume: true,
-        anticiper: () => montrer(suivante || null),
+        anticiper: () => {
+          montrer(suivante || null);
+          lisible = Date.now() + 700;
+          bouton.disabled = true;
+          setTimeout(() => { bouton.disabled = false; }, 700);
+        },
         refus: (err) => { montrer(section); messages.dire('Pas enregistré' + NB + ': ' + err.message, true); },
       });
     });
@@ -732,29 +817,32 @@ const fluide = (() => {
     });
   });
 
-  // La page s'en va avec des gestes pas encore partis : ils partent quand même (keepalive), chacun avec sa clé ; la file
-  // gardée (lot 4) les renvoie à la page suivante, le serveur ne les fait qu'une fois.
-  window.addEventListener('pagehide', () => {
-    file.slice(pompe ? 1 : 0).forEach(({ item }) => {
-      const corps = new URLSearchParams(item.corps);
-      corps.set('_csrf', jeton());
-      try {
-        fetch(item.action, { method: 'POST', body: corps, keepalive: true, credentials: 'same-origin', headers: { 'X-Morceaux': '', 'X-Cle-Envoi': item.cle } });
-      } catch (e) { /* trop gros pour keepalive : la file gardée le renverra */ }
-    });
-  });
+  // La page s'en va : le geste en cours d'envoi finit seul (keepalive) ; ceux qui attendent derrière restent rangés dans le
+  // téléphone et repartent de la page suivante, dans l'ordre. Les envoyer tous ici les faisait partir en même temps, dans
+  // un ordre que le serveur ne garantit pas (revue du 2026-11-23, A-I2 et B-I2).
 
-  // Lot 4 : les gestes rangés par une page précédente repartent, dans l'ordre, avec leur clé.
+  // Lot 4 : les gestes rangés par une page précédente repartent, dans l'ordre, avec leur clé. Plus vieux qu'une semaine :
+  // ils ne partent plus (le serveur oublie les clés après 30 jours, et l'offre a pu changer ailleurs), l'écran le dit.
+  // Sur l'écran où ils ont été faits, la ligne ajoutée et la valeur tapée se remontrent (revue, B-I7).
+  const SEMAINE = 7 * 86400000;
   const reprendre = async () => {
     const c = compte();
     if (!c) return;
     const gardes = await garde.relire(c);
     const connus = new Set(file.map((f) => f.item.cle));
+    let perimes = 0;
     gardes.filter((item) => !connus.has(item.cle)).forEach((item) => {
+      if (Date.now() - item.cree > SEMAINE) { perimes++; garde.oublier(item.cle); return; }
       file.push({ item, options: { gardee: true } });
       compter(item, 1);
+      if (!memeEcran(item)) return;
+      if (item.provisoire) ligneEnAttente(item.provisoire.designation, item.provisoire.unite, item.provisoire.prix);
+      const porteur = item.champ && document.getElementById(item.champ.porteur);
+      const champ = porteur && porteur.querySelector('[name="' + item.champ.nom + '"]:not([type=hidden])');
+      if (champ) { champ.value = item.champ.valeur; champ.defaultValue = item.champ.valeur; }
     });
-    if (file.length) { if (navigator.onLine === false) bandeau.horsReseau(file.length); else pomper(); }
+    if (perimes) messages.dire((perimes > 1 ? perimes + ' changements faits' : 'Un changement fait') + ' sans réseau il y a plus d’une semaine ne partent plus.', true);
+    if (file.length) { if (navigator.onLine === false) { horsReseau = true; bandeau.horsReseau(file.length); } else pomper(); }
   };
 
   // Lot 4 : le service worker garde les fichiers et les pages (public/sw.js). Ce que le téléphone garde d'avance (D6) :
@@ -798,7 +886,8 @@ const fluide = (() => {
     if (c) garde.vider(c);
     if (window.caches) caches.keys().then((noms) => noms.filter((n) => n.startsWith('offregen-pages-')).forEach((n) => caches.delete(n))).catch(() => {});
     if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ type: 'oublier' });
-    try { sessionStorage.setItem('offregen-deconnexion', '1'); } catch (e) { /* le service worker efface aussi à l'écran de connexion */ }
+    // Le compte qui sort : à l'écran de connexion, sa file seule part si l'effacement a été coupé (revue, B-M14).
+    try { if (c) sessionStorage.setItem('offregen-deconnexion', c); } catch (e) { /* le service worker efface aussi à l'écran de connexion */ }
   };
   document.addEventListener('submit', (e) => {
     const form = e.target;
@@ -815,18 +904,25 @@ const fluide = (() => {
     // Les bandeaux posés par le serveur avec la page s'empilent aussi.
     messages.empiler();
     // L'écran de connexion après une déconnexion : ce qui restait du compte part (la navigation a pu couper l'effacement).
-    let deconnecte = false;
-    try { deconnecte = sessionStorage.getItem('offregen-deconnexion') === '1'; } catch (e) { /* sans stockage */ }
-    if (deconnecte && !compte()) {
+    let sorti = null;
+    try { sorti = sessionStorage.getItem('offregen-deconnexion'); } catch (e) { /* sans stockage */ }
+    if (sorti && !compte()) {
       try { sessionStorage.removeItem('offregen-deconnexion'); } catch (e) { /* idem */ }
-      if (window.indexedDB) indexedDB.deleteDatabase('offregen-fluide');
+      garde.vider(sorti);
     }
-    // Une page servie par le service worker, sans réseau : elle le dit, et propose la page à jour au retour du réseau.
+    // Une page servie par le service worker : elle le dit ; ses anciens bandeaux du bas (« Annuler » d'alors) partent.
+    // Réseau lent, la page à jour est arrivée entre-temps : elle est proposée (revue, B-I8 et B-M9).
     if (document.body.dataset.gardeLe) {
+      document.querySelectorAll('.app > .snack').forEach((s) => s.remove());
       const le = new Date(document.body.dataset.gardeLe);
       const quand = Number.isNaN(le.getTime()) ? '' : ' du ' + le.toLocaleDateString('fr-CH') + ' à ' + le.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
-      bandeau.page('Hors réseau' + NB + ': page gardée dans le téléphone' + quand + '.');
-      window.addEventListener('online', () => bandeau.page('Le réseau est revenu.', { href: window.location.pathname + window.location.search, texte: 'Mettre la page à jour' }));
+      const lent = document.body.dataset.gardeRaison === 'lent';
+      bandeau.page((lent ? 'Réseau lent' : 'Hors réseau') + NB + ': page gardée dans le téléphone' + quand + '.');
+      const aJour = () => bandeau.page('La page à jour est arrivée.', { href: window.location.pathname + window.location.search, texte: 'La voir' });
+      window.addEventListener('online', aJour);
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.addEventListener('message', (m) => { if (m.data && m.data.type === 'page-a-jour' && m.data.adresse === window.location.pathname + window.location.search) aJour(); });
+      }
     }
     reprendre();
     serviceWorker();

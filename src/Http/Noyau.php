@@ -9,6 +9,8 @@ use Symfony\Component\HttpFoundation\Exception\SuspiciousOperationException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
@@ -149,13 +151,27 @@ final class Noyau
                 }
             }
 
+            // Un geste fait dans la page d'un autre compte (même téléphone, autre session depuis) ne part pas dans celui-ci
+            // (revue du 2026-11-23, sécurité I1) : le téléphone le garde pour son compte.
+            $compte = $requete->headers->get(Morceaux::COMPTE);
+            if ($compte !== null && $requete->isMethod('POST') && $requete->attributes->has('_artisan') && $compte !== (string) $requete->attributes->get('_artisan')) {
+                return self::refusMorceaux(409, Morceaux::COMPTE_AUTRE, 'autre', 'Ce geste a été fait par un autre compte.');
+            }
+
             unset($parametres['_route']);
             /** @var array<string, string> $parametres */
             $reponse = $this->executer($route, $requete, $parametres);
             if ($morceaux !== null && $reponse instanceof RedirectResponse) {
-                return Morceaux::ailleurs($requete, $reponse->getTargetUrl())
-                    ? Morceaux::aller($reponse->getTargetUrl())
-                    : $this->decouper($requete, $reponse->getTargetUrl(), $morceaux);
+                // Une relecture de morceaux (GET) qui redirige mène à un autre écran (brouillon émis entre-temps).
+                if ($requete->isMethod('GET') || Morceaux::ailleurs($requete, $reponse->getTargetUrl())) {
+                    return Morceaux::aller($reponse->getTargetUrl());
+                }
+                // Aucun morceau demandé (relecture, geste rejoué d'un autre écran) : la page n'est pas rendue pour rien, ses
+                // messages restent pour la page suivante (revue du 2026-11-23 : coût de la relecture, messages perdus).
+                if ($morceaux === []) {
+                    return Morceaux::reponse('', $reponse->getTargetUrl());
+                }
+                return $this->decouper($requete, $reponse->getTargetUrl(), $morceaux);
             }
             if ($morceaux !== null && $requete->isMethod('GET') && $reponse->getStatusCode() === 200
                 && str_contains((string) $reponse->headers->get('Content-Type', 'text/html'), 'html')) {
@@ -176,8 +192,9 @@ final class Noyau
 
     /**
      * L'action de la route. Un envoi d'un artisan avec sa clé (X-Cle-Envoi, chantier sans rechargement, lot 4) n'est fait
-     * qu'une fois : rejoué (réseau revenu, page quittée pendant l'envoi), il reçoit la redirection d'alors, sans rien
-     * refaire ; encore en cours, un 409 qu'il réessaiera. Une action qui ne mène nulle part (refus, erreur) libère la clé.
+     * qu'une fois : rejoué (réponse perdue), il reçoit la redirection d'alors et les messages d'alors (« Annuler », un
+     * refus), sans rien refaire ; encore en cours, un 409 qu'il réessaiera ; réservé puis abandonné (processus tué), il
+     * repart. Une action qui ne mène nulle part (refus, erreur) libère la clé.
      *
      * @param array<string, string> $parametres
      */
@@ -189,11 +206,18 @@ final class Noyau
             return ($route->action)($requete, $parametres);
         }
         $envois = ($this->envois)($artisan);
-        $deja = $envois->adresse($cle);
-        if ($deja !== null && $deja !== '') {
-            return new RedirectResponse($deja, 303);
+        $maintenant = ($this->horloge)();
+        $deja = $envois->deja($cle, $maintenant);
+        if ($deja !== null && $deja['adresse'] !== '') {
+            $sac = self::messagesDe($requete);
+            foreach ($deja['messages'] as $genre => $liste) {
+                foreach ($liste as $message) {
+                    $sac?->add($genre, $message);
+                }
+            }
+            return new RedirectResponse($deja['adresse'], 303);
         }
-        if ($deja === '' || !$envois->reserver($cle, ($this->horloge)())) {
+        if ($deja !== null || !$envois->reserver($cle, $maintenant)) {
             throw new Conflit(Morceaux::EN_COURS);
         }
         try {
@@ -202,12 +226,23 @@ final class Noyau
             $envois->liberer($cle);
             throw $e;
         }
-        if ($reponse instanceof RedirectResponse) {
-            $envois->noter($cle, $reponse->getTargetUrl());
-        } else {
-            $envois->liberer($cle);
+        try {
+            if ($reponse instanceof RedirectResponse) {
+                $envois->noter($cle, $reponse->getTargetUrl(), self::messagesDe($requete)?->peekAll() ?? []);
+            } else {
+                $envois->liberer($cle);
+            }
+        } catch (\Throwable $e) {
+            // L'action est faite : la réponse part. La clé restée vide sera libérée comme abandonnée (DepotEnvois).
+            ($this->journal)('offreGen, clé d\'envoi non notée : ' . $e->getMessage());
         }
         return $reponse;
+    }
+
+    private static function messagesDe(Request $requete): ?FlashBagInterface
+    {
+        $session = $requete->hasSession() ? $requete->getSession() : null;
+        return $session instanceof FlashBagAwareSessionInterface ? $session->getFlashBag() : null;
     }
 
     /**
@@ -224,7 +259,7 @@ final class Noyau
             return Morceaux::aller('/');
         }
         $serveur = array_filter($requete->server->all(), static fn (string $cle): bool => !in_array($cle, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'REQUEST_URI', 'QUERY_STRING'], true)
-            && !str_starts_with($cle, 'HTTP_X_MORCEAUX') && !str_starts_with($cle, 'HTTP_X_CLE') && !str_starts_with($cle, 'HTTP_CONTENT_'), ARRAY_FILTER_USE_KEY);
+            && !str_starts_with($cle, 'HTTP_X_MORCEAUX') && !str_starts_with($cle, 'HTTP_X_CLE') && $cle !== 'HTTP_X_COMPTE' && !str_starts_with($cle, 'HTTP_CONTENT_'), ARRAY_FILTER_USE_KEY);
         $interne = Request::create($chemin, 'GET', [], $requete->cookies->all(), [], $serveur);
         $interne->setSession($requete->getSession());
         $page = $this->repondre($interne);

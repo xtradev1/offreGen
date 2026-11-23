@@ -94,6 +94,48 @@ final class EnvoiCleTest extends TestCase
         self::assertSame($avant, $this->lignes());
     }
 
+    /** Revue du 2026-11-23, B1 : un processus tué laisse sa réservation vide ; passé trois minutes, le geste repart. */
+    public function testUneReservationAbandonneeLaissePartirLeGeste(): void
+    {
+        BaseDeTest::pdo()->exec("INSERT INTO envoi (artisan_id, cle, adresse, recu_le) VALUES ({$this->jeu->a}, 'cle-abandon-01', '', '2026-11-07 09:50:00')");
+        $avant = $this->lignes();
+        $r = $this->envoyer($this->a, "{$this->offre}/lignes", ['produit' => (string) $this->jeu->produit['a']], 'cle-abandon-01');
+        self::assertSame(200, $r->getStatusCode());
+        self::assertSame($avant + 1, $this->lignes());
+        self::assertNotSame('', BaseDeTest::ligne("SELECT adresse FROM envoi WHERE cle = 'cle-abandon-01'")['adresse'], 'la clé est notée');
+    }
+
+    /** Revue du 2026-11-23, I1 : la réponse s'est perdue ; rejoué, le geste retrouve ses messages (« Annuler », un refus). */
+    public function testUnGesteRejoueRetrouveSesMessages(): void
+    {
+        $ligne = (int) BaseDeTest::ligne("SELECT id FROM ligne WHERE offre_id = {$this->jeu->offre['a']}")['id'];
+        $suppression = fn (): string => (string) $this->a->post("{$this->offre}/lignes/$ligne/supprimer", [],
+            entetes: [Morceaux::DEMANDE => 'totaux', Morceaux::CLE => 'cle-annuler-01'])->getContent();
+        self::assertStringContainsString("/lignes/$ligne/restaurer", $suppression());
+        self::assertStringContainsString("/lignes/$ligne/restaurer", $suppression(), 'rejoué : « Annuler » revient');
+
+        $refus = fn (): string => (string) $this->a->post("{$this->offre}/lignes/$ligne/restaurer", [],
+            entetes: [Morceaux::DEMANDE => 'totaux', Morceaux::CLE => 'cle-remise-01'])->getContent();
+        self::assertStringContainsString('Ligne remise', $refus());
+        self::assertStringContainsString('Ligne remise', $refus(), 'rejoué : le message revient');
+    }
+
+    /** Revue du 2026-11-23, sécurité I1 : un geste fait dans la page d'un compte ne part jamais dans un autre. */
+    public function testUnGesteDUnAutreCompteEstRefuseSansRienFaire(): void
+    {
+        $avant = $this->lignes();
+        $r = $this->a->post("{$this->offre}/lignes", ['produit' => (string) $this->jeu->produit['a']],
+            entetes: [Morceaux::DEMANDE => 'lignes', Morceaux::CLE => 'cle-compte-001', Morceaux::COMPTE => (string) $this->jeu->b]);
+        self::assertSame(409, $r->getStatusCode());
+        self::assertSame('autre', $r->headers->get(Morceaux::COMPTE_AUTRE));
+        self::assertSame($avant, $this->lignes());
+        self::assertSame(0, BaseDeTest::compter('envoi', "cle = 'cle-compte-001'"));
+        $ok = $this->a->post("{$this->offre}/lignes", ['produit' => (string) $this->jeu->produit['a']],
+            entetes: [Morceaux::DEMANDE => 'lignes', Morceaux::CLE => 'cle-compte-002', Morceaux::COMPTE => (string) $this->jeu->a]);
+        self::assertSame(200, $ok->getStatusCode());
+        self::assertSame($avant + 1, $this->lignes());
+    }
+
     public function testUneCleMalFormeeEstIgnoree(): void
     {
         $avant = $this->lignes();

@@ -32,6 +32,9 @@ final class Morceaux
 
     /** La clé unique d'un geste (lot 4) : rejoué, il n'est fait qu'une fois (Noyau, DepotEnvois). */
     public const CLE = 'X-Cle-Envoi';
+    /** Le compte qui a fait le geste ; un autre compte en session : 409 avec X-Morceaux-Compte, rien n'est fait. */
+    public const COMPTE = 'X-Compte';
+    public const COMPTE_AUTRE = 'X-Morceaux-Compte';
     /** Le refus d'un geste dont l'envoi précédent tourne encore : fluide.js le réessaiera (il cherche « déjà en cours »). */
     public const EN_COURS = "Envoi déjà en cours\u{00A0}: il repartira.";
 
@@ -92,7 +95,10 @@ final class Morceaux
     /** Une adresse du site : un chemin qui commence par une seule barre, sans hôte ni barre oblique inverse. */
     public static function local(string $adresse): bool
     {
-        return preg_match('#^/(?![/\\\\])#', $adresse) === 1 && !str_contains($adresse, '\\') && parse_url($adresse, PHP_URL_HOST) === null;
+        // Ni espace ni caractère de contrôle : un navigateur retire tabulations et sauts de ligne, « /\t/hote » devient
+        // « //hote » (revue du 2026-11-23, sécurité M1).
+        return preg_match('#^/(?![/\\\\])#', $adresse) === 1 && preg_match('/[\x00-\x20\x7f]/', $adresse) === 0
+            && !str_contains($adresse, '\\') && parse_url($adresse, PHP_URL_HOST) === null;
     }
 
     /**

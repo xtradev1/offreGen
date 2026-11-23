@@ -3,7 +3,7 @@
 {% block titre %}{{ offre.titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
 {% block entete %}Offre {{ offre.numero }}{% endblock %}
-{% block ecran_donnees %} data-resume="etat-offre sauvegarde totaux options total-fixe renvoi actions-offre pc-{{ offre.id }}" data-fenetre="carte-client carte-representant carte-objet factures-offre conditions lignes"{% endblock %}
+{% block ecran_donnees %} data-resume="etat-offre sauvegarde totaux options total-fixe renvoi actions-offre pc-{{ offre.id }}" data-fenetre="carte-client carte-representant carte-objet factures-offre carte-conditions lignes"{% endblock %}
 
 {% block colonne %}{% include '_liste_offres_pc.html.twig' with {liste: liste_pc, courante: offre.id} %}{% endblock %}
 
@@ -64,7 +64,7 @@
     </div>
     {% if totaux.avec_options %}<div class="totals"><div class="r avec"><span>Total avec toutes les options</span><span>{{ totaux.avec_options.ttc|chf }}</span></div></div>{% endif %}
   {% endif %}</div>
-  <a class="carte-lien conditions" id="conditions" href="/offres/{{ offre.id }}/conditions" data-en-feuille><span><small>Conditions</small><b>Valable {{ r.validiteJours }} jours, paiement {{ r.conditions.paiementType == 'acomptes' ? 'par ' }}{{ r.conditions.resumePaiement }}</b><small>{{ r.phraseEscompte ?? "Pas d'escompte" }}</small></span></a>
+  <a class="carte-lien conditions" id="carte-conditions" href="/offres/{{ offre.id }}/conditions" data-en-feuille><span><small>Conditions</small><b>Valable {{ r.validiteJours }} jours, paiement {{ r.conditions.paiementType == 'acomptes' ? 'par ' }}{{ r.conditions.resumePaiement }}</b><small>{{ r.phraseEscompte ?? "Pas d'escompte" }}</small></span></a>
   {{ o.texte(offre, 'apres', "Texte après les lignes", lettre ? 'Facultatif, avant la formule de politesse' : 'Facultatif') }}
   <p class="muted petit mobile-seul">Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.</p>
   <p class="aide-clavier pc-seul"><kbd>Tab</kbd> champ suivant · <kbd>Entrée</kbd> ligne suivante · <kbd>J</kbd> c'est juste · <kbd>Suppr</kbd> retirer la ligne (avec Annuler) · <kbd>D</kbd> dicter une offre</p>

@@ -77,11 +77,29 @@ final class RelectureTest extends TestCase
         self::assertSame($this->offre . '/relire', $r->headers->get('Location'));
         $l = $this->ligneEnBase($this->ligne);
         self::assertSame([14000, 1850, 0], [(int) $l['quantite_milliemes'], (int) $l['prix_centimes'], (int) $l['a_verifier']]);
-        self::assertStringContainsString('<h2 class="relu-nom">Plafond</h2>', $this->page($this->offre . '/relire'));
+        // Toutes les lignes à relire sont dans la page (chantier sans rechargement) : la visible est la première, les
+        // autres et la fin sont cachées. Revue du 2026-11-23 : sans regarder hidden, ces assertions passaient à vide.
+        $suite = $this->page($this->offre . '/relire');
+        self::assertMatchesRegularExpression("#<section data-relu=\"$deuxieme\" data-corriger=\"[^\"]+\">.*?<h2 class=\"relu-nom\">Plafond</h2>#s", $suite, 'Plafond est la ligne visible');
+        self::assertMatchesRegularExpression('#<div class="relu-fin" hidden data-relu-fin>#', $suite, 'la fin est cachée tant qu\'une ligne reste');
         $this->a->post("{$this->offre}/relire/$deuxieme", ['quantite' => '24', 'prix' => '32']);
         $fin = $this->page($this->offre . '/relire');
-        self::assertStringContainsString('Toutes les lignes sont relues', $fin);
-        self::assertStringContainsString("href=\"{$this->offre}/apercu\"", $fin, 'le geste suivant : générer l\'offre');
+        self::assertMatchesRegularExpression('#<div class="relu-fin" data-relu-fin>.*?Toutes les lignes sont relues#s', $fin, 'la fin est visible');
+        self::assertStringNotContainsString('<section data-relu=', $fin, 'plus aucune ligne à relire');
+        self::assertMatchesRegularExpression("#<div class=\"actionbar\" data-relu-fin>.*?href=\"{$this->offre}/apercu\"#s", $fin, 'le geste suivant : générer l\'offre');
+    }
+
+    /** Toutes les lignes à relire sont dans la page, la première visible : la suivante paraît sans requête (fluide.js). */
+    public function testLaRelecturePorteToutesSesLignesLaPremiereVisible(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 1 WHERE id = {$this->ligne}");
+        $deuxieme = $this->nouvelleLigne('Plafond', 24000, 3200, 1);
+        $page = $this->page($this->offre . '/relire');
+        self::assertMatchesRegularExpression("#<section data-relu=\"{$this->ligne}\" data-corriger=\"[^\"]+\">#", $page);
+        self::assertMatchesRegularExpression("#<section data-relu=\"$deuxieme\" data-corriger=\"[^\"]+\" hidden>#", $page);
+        self::assertMatchesRegularExpression("#<form id=\"relecture-$deuxieme\" method=\"post\" action=\"{$this->offre}/relire/$deuxieme\">#", $page);
+        self::assertStringContainsString('Encore 2 à relire', $page);
+        self::assertStringContainsString('Encore 1 à relire', $page);
     }
 
     public function testUneLigneSansPrixDemandeUnPrix(): void

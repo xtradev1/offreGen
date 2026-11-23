@@ -40,22 +40,33 @@ if (zone) {
     zone.appendChild(etat);
   };
 
-  // L'envoi noté : par la file de fluide.js (sans rechargement ; sans réseau, il attend), sinon le formulaire.
+  // L'envoi noté : par la file de fluide.js (sans rechargement ; sans réseau, il attend), sinon le formulaire. Le morceau
+  // etat-envoi fait revenir le message « envoyée ».
   const noterEnvoi = () => {
     const marque = document.querySelector('form[data-apres-partage]');
     if (!marque) return;
     if (window.fluide) {
-      window.fluide.envoyer(marque, { sansResume: true, page: window.location.pathname });
+      window.fluide.envoyer(marque, { sansResume: true, page: window.location.pathname, morceaux: ['etat-envoi'] });
       return;
     }
     marque.submit();
   };
+  // Des changements de l'offre attendent le réseau : ce PDF ne les contient pas. « Envoyer » le dit et attend ; la file
+  // partie, l'aperçu se refait avec le PDF à jour (revue du 2026-11-23, B-I6).
+  const enAttente = () => !!(window.fluide && window.fluide.file.length);
+  document.addEventListener('file-vide', () => { if (zone.dataset.attendait) window.location.reload(); });
 
   // « Envoyer » (décision D8) : le partage du téléphone, le PDF joint. Partage réussi : l'offre est notée envoyée
   // (formulaire data-apres-partage). Partage annulé : rien. Pas de partage de fichier (certains navigateurs de PC) : le
   // lien garde son effet, le PDF se télécharge, rien n'est noté.
   document.querySelectorAll('[data-partager]').forEach((lien) => {
     lien.addEventListener('click', async (e) => {
+      if (enAttente()) {
+        e.preventDefault();
+        zone.dataset.attendait = '1';
+        window.fluide.messages.dire('Des changements de l’offre attendent le réseau' + String.fromCharCode(0xA0) + ': ce PDF ne les contient pas encore. Il se refera dès qu’ils seront partis.', true);
+        return;
+      }
       if (!navigator.canShare) return;
       e.preventDefault();
       const nom = lien.getAttribute('download') || 'document.pdf';

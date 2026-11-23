@@ -20,6 +20,7 @@ use OffreGen\Facture\QrFacture;
 use OffreGen\Facture\SectionPaiement;
 use OffreGen\Http\Conflit;
 use OffreGen\Http\Conteneur;
+use OffreGen\Http\Etag;
 use OffreGen\Http\Flash;
 use OffreGen\Http\Formats;
 use OffreGen\Http\PageIntrouvable;
@@ -538,10 +539,10 @@ final class FactureControleur
         $entetes = [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . self::fichier($f) . '"',
-            'Cache-Control' => 'private, no-cache',
+            'Cache-Control' => 'private, no-store',
             'ETag' => $etag,
         ];
-        return in_array($etag, $requete->getETags(), true) ? new Response('', 304, $entetes) : new Response($pdf, 200, $entetes);
+        return Etag::connu($requete, $etag) ? new Response('', 304, $entetes) : new Response($pdf, 200, $entetes);
     }
 
     /**
