@@ -69,7 +69,8 @@
         {% if titre %}<tr class="doc-grp"><td class="{{ o.grp ?? '' }}" colspan="{{ grp_tot ? colonnes - 1 : colonnes }}">{% if pos %}{{ gi }}&nbsp;&nbsp;{% endif %}{% if o.lettres ?? false %}{{ _self.lettre(loop.index0) }}&nbsp;·&nbsp;{% endif %}{{ titre }}</td>{% if grp_tot %}<td class="n {{ o.grp_n ?? '' }}">{% if not ((g.par_piece ?? false) and g.piece is null) %}{{ g.total|montant }}{% endif %}</td>{% endif %}</tr>{% endif %}
         {% for r in g.lignes %}
           {% set z = (o.zebre ?? false) and loop.index0 is even ? ' c-teinte' : '' %}
-          {# Point 2 (2026-11-22) : la variante retenue prend la place de sa ligne ; l'écart des autres se compte sur elle. #}
+          {# Point 2 (2026-11-22) : la variante retenue prend la place de sa ligne. Les autres variantes de la même ligne
+             disparaissent : le choix est fait (Xavier, 2026-11-23). #}
           {% set x = r.retenue ?? r %}
           <tr>
             {% if pos %}<td class="doc-pos{{ z }}">{{ gi }}.{{ loop.index }}</td>{% endif %}
@@ -80,7 +81,7 @@
             <td class="n{{ z }}">{{ _self.prix_unitaire(x) }}</td>
             <td class="n{{ z }}">{{ _self.montant_ligne(x) }}</td>
           </tr>
-          {% for v in r.variantes ?? [] %}{% if v.l.id != x.l.id and not d.facture %}
+          {% for v in r.retenue ? [] : (r.variantes ?? []) %}{% if not d.facture %}
             <tr class="doc-var">
               {% if pos %}<td class="doc-pos{{ z }}"></td>{% endif %}
               <td class="{{ z|trim }}">{{ _self.case() }}Variante&nbsp;: {{ v.l.designation }}</td>
@@ -151,7 +152,7 @@
             <td class="n">{{ _self.prix_unitaire(x) }}</td>
             <td class="n">{{ _self.montant_ligne(x) }}</td>
           </tr>
-          {% for v in r.variantes ?? [] %}{% if v.l.id != x.l.id and not d.facture %}
+          {% for v in r.retenue ? [] : (r.variantes ?? []) %}{% if not d.facture %}
             <tr class="doc-var">
               <td class="doc-po"></td>
               <td>{{ _self.case() }}Variante&nbsp;: {{ v.l.designation }}</td>

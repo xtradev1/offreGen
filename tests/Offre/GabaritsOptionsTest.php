@@ -117,6 +117,30 @@ final class GabaritsOptionsTest extends TestCase
         self::assertGreaterThan($bloc, mb_strpos($t, 'Peintureduradiateurdelacave'), "$modele : l'option libre reste dans le bloc");
     }
 
+    /**
+     * Deux variantes de la même ligne : avant le choix, les deux sous la ligne ; une fois l'une retenue, l'autre quitte le
+     * document, le choix est fait (Xavier, 2026-11-23 : « la base disparaît et il reste une variante, ça me semble pas top »).
+     */
+    #[DataProvider('modeles')]
+    public function testUneFoisLeChoixFaitLesAutresVariantesDisparaissent(string $modele): void
+    {
+        $texte = function (bool $choix) use ($modele): string {
+            $lignes = [...OffreDEssai::lignes(6),
+                self::ligne(7, 'Peinture lessivable, 2 couches', 42000, 'm²', 3400, 'variante', 3, $choix ? 1 : 0),
+                self::ligne(8, 'Peinture minérale, 2 couches', 42000, 'm²', 2600, 'variante', 3, 0)];
+            $vue = (new OffreControleur($this->c))->vueDocument(new Portee($this->jeu->a), OffreDEssai::offre(), $lignes, new Marque($modele, '#B8470F'));
+            return (string) preg_replace('/[\s\x{00A0}\x{202F}]+/u', '', implode('', TextePdf::pages(OffreControleur::rendrePdf($this->c, $vue))));
+        };
+        $avant = $texte(false);
+        self::assertStringContainsString('Variante:Peinturelessivable,2couches', $avant, $modele);
+        self::assertStringContainsString('Variante:Peintureminérale,2couches', $avant, $modele);
+        $apres = $texte(true);
+        self::assertStringContainsString('Peinturelessivable,2couches', $apres, $modele);
+        self::assertStringNotContainsString('Peinturedesmurs,2couches', $apres, "$modele : la ligne remplacée");
+        self::assertStringNotContainsString('minérale', $apres, "$modele : l'autre variante");
+        self::assertStringNotContainsString('Variante', $apres, $modele);
+    }
+
     #[DataProvider('modeles')]
     public function testLeBlocDesOptionsNeTouchePasLePied(string $modele): void
     {
