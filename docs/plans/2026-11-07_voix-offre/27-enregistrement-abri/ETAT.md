@@ -9,11 +9,10 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Recette AB-1 bis sur l'iPhone de Xavier, une fois le test déployé (son accord d'abord). Puis rhabiller la fenêtre avec la marque.
+Recette AB-1 bis sur l'iPhone de Xavier : le test porte le correctif depuis le 2026-11-24. Puis rhabiller la fenêtre avec la marque.
 
 ## En attente de toi
 
-- Ton accord pour déployer `chantier-voix-offre` (tête, avec ce correctif) sur le site de test.
 - Sur ton iPhone, après le déploiement : dicter 10 s, fermer Safari de force, le rouvrir aussitôt. La fenêtre « Une dictée n'est pas partie » doit être là dès l'ouverture.
 - Toucher « Continuer la dictée », parler 10 s, « Terminer » : une seule offre, avec ce qui a été dit avant et après la coupure.
 - Refaire une coupure pendant la suite, rouvrir : la dictée revient avec sa durée totale.
@@ -45,6 +44,7 @@ Recette AB-1 bis sur l'iPhone de Xavier, une fois le test déployé (son accord 
 - 2026-11-24 : recette AB-1 de Xavier (voir Décisions). Livré en code, commits sur `chantier-voix-offre` : verrou du navigateur par dictée (Web Locks), tenu pendant l'enregistrement et l'envoi seulement ; repli des 20 s qui refait le tour à l'échéance ; « Continuer la dictée » (dictée coupée avant « Terminer » seulement) ; envoi en parties `suite[]`, rangement `<uuid>-<n>`, colonne `fichiers_suite`, une transcription par partie, textes joints ; migration `Version20261124200001` (additive, `transcription_ref` élargie à 512). Revue en trois lentilles : `REVUE.md`, onze points retenus et corrigés, deux laissés en limite connue.
 - Limites connues, à porter à la recette : un lot de transcription perdu chez le prestataire renvoie toutes les parties (rare, refacturé, rien de perdu) ; après un retour à l'ancienne version du code, une dictée en parties déjà en transcription donnerait une offre de la seule première partie.
 - Base de test du chantier : `offregen_abri_test` (phpunit), `offregen_abri_vue` (recette locale, compte `abri-recette@exemple.ch`, mot de passe dans `~/.offregen-abri-vue-compte`), copie `~/offreGen-abri`. À supprimer à la clôture.
+- 2026-11-24, Xavier : « oui déploie, pas de vraies données ». Déployé : `0b20d96` (tête de `chantier-voix-offre`, qui contient `fb63939`) sur easy-offres.xtradev.ch, sonde verte, `/sante` {"commit":"0b20d96…","base":"ok","migrations":"ok"} ; `js/app.js` servi contient `data-reprise-continuer`.
 
 ## Preuves
 
