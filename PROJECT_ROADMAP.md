@@ -40,6 +40,7 @@
 - [2026-11-20] Responsive (téléphone, tablette, PC) : décisions de Xavier en cinq tours de maquette (R1 à R10, B2 à B4, points 1 à 9, 2b, 3 A, 4a B, 4b, 5, 7a), consignées telles quelles dans `docs/plans/2026-11-19_responsive/ETAT.md`. Notables : champs de l'offre à 16 px (zoom de l'iPhone), cibles de 48 px, facture annulée avec PDF « Annulée » et date d'envoi, pastilles de marque à 7:1.
 - [2026-11-23] Options et variantes (décisions de Xavier, planche des douze modèles) : une variante retenue efface ses sœurs sur le document, l'écran garde la ligne remplacée barrée ; facture : ligne « Payé jusqu'au …, escompte de 2 % » sous le total, offre : phrase du paiement seule ; la facture garde la pièce (`facture_ligne.piece`) ; PDF resserré gardé s'il gagne une page, page 2 de signature gardée sinon. Dépendance : faces italiques IBM Plex (OFL) dans `public/fonts/`. Détail : `docs/plans/2026-11-22_options-variantes/ETAT.md`.
 - [2026-11-24] **Sans rechargement** (choix D1 à D10 du 23.11) : morceaux de page découpés dans le noyau, script maison `fluide.js`, file d'envoi à clé unique (table `envoi`), service worker (copies par compte, 14 jours au plus), fichiers versionnés par l'empreinte de leur contenu (`fichier()`). Les fenêtres de l'offre et « Prendre » attendent le serveur (choix A de Xavier, 24.11). Détail : `docs/plans/2026-11-23_sans-rechargement/ETAT.md`.
+- [2026-11-23] Commerciaux (Xavier) : deux codes par commercial. Le code de parrainage donne un mois gratuit à l'artisan et la commission au commercial (pourcentage réservé aux commerciaux). Le code personnel ouvre un seul compte, payant : prix plein sous 5 artisans payants, moitié dès 5, offert dès 10, aucune commission pour personne. Échange de codes entre commerciaux : fraude des deux, repérée au passage au paiement (IBAN, IDE, adresse, téléphone). Espace de démonstration marqué « Démonstration », envoi bloqué ; 200 dictées de démonstration par mois et par commercial, alerte à Xavier à 80 %, ajouter ou bloquer d'un clic. Règles C1, C9, C13 à C17 de `docs/commerciaux/PROJET-regles-commission.md`, tâche Origin 555.
 
 ## Current state
 ### Done
@@ -61,6 +62,7 @@
 - [ ] Corpus de vraies dictées (sous-chantier 29) ; journal des appels IA (sous-chantier 26).
 - [ ] Convention de sous-traitance (art. 9 LPD) prête avant le premier artisan pilote.
 - [ ] Page d'accueil avant la production : pages légales (mentions, protection des données, conditions), vraies vignettes des douze modèles, réglage d'envoi de courriels du test (sinon les demandes d'essai ne partent pas).
+- [ ] Commerciaux (Origin 555) : règles C13 à C17 de `docs/commerciaux/PROJET-regles-commission.md` à coder (espace de démonstration, plafond de 200 dictées, compte personnel, remise). Avant le code : réponses de Xavier sur les questions 12 et 14 du juriste, l'effet du blocage sur les démos ouvertes, R3 et R4 (remise à zéro par le commercial, 30 démos par jour).
 
 ### Blocked
 - [ ] Mesure de la qualité réelle (sous-chantier 29).
@@ -152,3 +154,7 @@
   - Lots 1 à 5, revue (4 bloquantes, 19 importantes corrigées), comparatif avant / après : sur réseau de chantier, médiane à l'écran 2,1 s → 632 ms, 31 → 10 rechargements, gestes gardés hors réseau.
   - Banc et service worker corrigés en route ; `93a61d1` déployé, sonde verte. Recette de Xavier attendue.
   - Détail : `docs/plans/2026-11-23_sans-rechargement/ETAT.md`.
+- [2026-11-23] **Commerciaux : codes, compte personnel, plafond des démos**
+  - Deux codes par commercial (parrainage avec commission, personnel sans commission) ; compte personnel payant, moitié dès 5 artisans payants, offert dès 10 ; échange de codes repéré au paiement.
+  - Espace de démonstration marqué, envoi bloqué, 200 dictées par mois, alerte à 80 %. Projet de règles v0.3, commit `9cf9b49` (document seul, rien à déployer).
+  - Tâche Origin 555. Détail : `docs/commerciaux/PROJET-regles-commission.md`.
