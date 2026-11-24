@@ -164,7 +164,10 @@ ligne="* * * * * cd \$HOME/$app/current && $php bin/traiter-file --silencieux >>
 purge="17 3 * * * grep -qx 'PURGE_AUDIO=1' \$HOME/$app/partage/.env && cd \$HOME/$app/current && $php bin/purger-audio >> \$HOME/$app/partage/var/log/cron.log 2>&1"
 # Rappels de fin de démo, 2 jours puis 12 heures avant la fin (Xavier, 2026-11-24) : toutes les dix minutes.
 rappels="*/10 * * * * cd \$HOME/$app/current && $php bin/rappeler-demos >> \$HOME/$app/partage/var/log/cron.log 2>&1"
-( crontab -l 2>/dev/null | grep -v -e 'bin/traiter-file' -e 'bin/purger-audio' -e 'bin/rappeler-demos' || true; echo "$ligne"; echo "$purge"; echo "$rappels" ) | crontab -
+# Suppression des démos finies depuis 30 jours, chaque nuit à 3 h 27 (écran de fin K1, chantier onboarding, E1). La
+# garde « test -f » couvre le retour arrière vers une version qui n'a pas encore la commande.
+demos="27 3 * * * cd \$HOME/$app/current && test -f bin/supprimer-demos && $php bin/supprimer-demos >> \$HOME/$app/partage/var/log/cron.log 2>&1"
+( crontab -l 2>/dev/null | grep -v -e 'bin/traiter-file' -e 'bin/purger-audio' -e 'bin/rappeler-demos' -e 'bin/supprimer-demos' || true; echo "$ligne"; echo "$purge"; echo "$rappels"; echo "$demos" ) | crontab -
 echo "$precedent"
 DISTANT
 )"

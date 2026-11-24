@@ -1,0 +1,21 @@
+{# « À rappeler » (S1 de la maquette v4 de l'administration, validé le 2026-11-19) : en tête du suivi du commercial et
+   du tableau de l'administrateur. Le numéro se touche pour appeler ; « C'est fait » sort la demande de la liste. #}
+{% if appels is not empty %}
+  <h2 class="groupe-titre">À rappeler</h2>
+  <div class="a-rappeler">
+    {% for a in appels %}
+      <div class="card appel">
+        <p class="appel-tete"><a href="/admin/artisans/{{ a.artisan_id }}"><b>{{ a.entreprise }}</b></a> <small class="muted">{{ a.etat }}</small></p>
+        <p class="muted petit">{{ a.demande }}</p>
+        {% if a.question %}<p>«&nbsp;{{ a.question }}&nbsp;»</p>{% endif %}
+        <div class="appel-gestes">
+          <a class="btn" href="tel:{{ a.tel }}">{{ a.telephone }}</a>
+          <form method="post" action="/admin/appels/{{ a.id }}/fait">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <button class="btn primary" type="submit">C'est fait</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

@@ -28,8 +28,14 @@
         <span><b>Revoir le guide</b><small>Le micro, les conseils, la première offre</small></span></button>
     </form>
     {% endif %}
-    {# L'administration n'existe que pour l'équipe (G1, 2026-11-17 ; E1, 2026-11-19). #}
     {% set role = role_equipe() %}
+    {# « Demander un appel », pendant toute la démo et tout l'essai (K1 de l'administration ; chantier onboarding, E1). #}
+    {% if not role and (demo() or essai()) %}
+    <a class="plus-ligne" href="/demander-un-appel">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+      <span><b>Demander un appel</b><small>Votre numéro, le moment qui vous convient</small></span></a>
+    {% endif %}
+    {# L'administration n'existe que pour l'équipe (G1, 2026-11-17 ; E1, 2026-11-19). #}
     {% if role %}
     <a class="plus-ligne" href="/admin">
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h13l-3-3M17 17H4l3 3"/></svg>

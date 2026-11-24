@@ -1,9 +1,8 @@
 {% extends 'base.html.twig' %}
 
-{# La fin d'une démo (K1 de la maquette v4 de l'administration, validée par Xavier ; chantier onboarding, lot 2).
-   Deux phrases de K1 attendent leur lot : « un mois gratuit » (lot B de l'administration, aujourd'hui l'essai compte
-   des offres) et la date de suppression des offres (lot 8 de l'administration, rien n'est encore supprimé).
-   « Demander un appel » devient le lien vers l'aide du chantier support (décision T11, lot 10). #}
+{# La fin d'une démo : K1 de la maquette v4 de l'administration, validé par Xavier le 2026-11-19, remis tel quel le
+   2026-11-24 (E1 de Xavier, chantier onboarding : « on laisse et on fait »). La date est celle de la suppression
+   (Compte\SuppressionDemos, 30 jours après la fin) ; « Demander un appel » va au commercial qui suit la démo. #}
 {% block titre %}Démo terminée · {{ nom_application }}{% endblock %}
 {% block entete %}{{ entreprise }}{% endblock %}
 {% block ecran_classe %} gris{% endblock %}
@@ -11,13 +10,14 @@
 {% block contenu %}
   <div class="card">
     <h2>Votre démo est terminée</h2>
-    <p>Vos offres restent consultables. Pour dicter de nouveau, passez à l'essai.</p>
+    <p>Vos offres restent consultables jusqu'au {{ supprimee_le|jour }}, puis elles sont supprimées. Pour dicter de nouveau, passez à l'essai&nbsp;: un mois gratuit, sans carte bancaire.</p>
   </div>
 {% endblock %}
 
 {% block actions %}
-  <div class="actionbar">
+  <div class="actionbar empile">
     <a class="btn primary" href="/passer-a-l-essai">Passer à l'essai</a>
+    <a class="btn" href="/demander-un-appel">Demander un appel</a>
     <a class="btn" href="/">Voir mes offres</a>
   </div>
 {% endblock %}

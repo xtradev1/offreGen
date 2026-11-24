@@ -311,6 +311,44 @@ final class DepotEquipe
         return explode(' ', trim($nom))[0];
     }
 
+    /**
+     * Qui reçoit une demande d'appel (S1 ; M3 à confirmer par Xavier) : le membre qui suit le compte (cree_par), s'il
+     * est encore dans l'équipe ; les administrateurs sinon. « nom » : la personne nommée sur le formulaire, null
+     * quand la demande va aux administrateurs.
+     *
+     * @return array{nom: string|null, courriels: list<string>}
+     */
+    public function destinatairesAppel(int $artisanId): array
+    {
+        /** @var array{nom: string, courriel: string}|null $suivi */
+        $suivi = $this->base->un(
+            'SELECT ' . self::PRESENTE_PAR . " AS nom, c.courriel FROM artisan a JOIN artisan c ON c.id = a.cree_par
+             WHERE a.id = :id AND (c.administrateur = 1 OR c.role IN ('commercial', 'moderateur'))",
+            ['id' => $artisanId],
+        );
+        if ($suivi !== null) {
+            return ['nom' => $suivi['nom'], 'courriels' => [$suivi['courriel']]];
+        }
+        /** @var list<string> $admins */
+        $admins = array_column($this->base->lire('SELECT courriel FROM artisan WHERE administrateur = 1 ORDER BY id'), 'courriel');
+        return ['nom' => null, 'courriels' => $admins];
+    }
+
+    /**
+     * Le compte d'une demande d'appel, pour le courriel : hors portée, la demande vient du compte lui-même.
+     *
+     * @return array{entreprise: string, demo: int, demo_fin: string|null, offres_max: int|null, dictees: int}|null
+     */
+    public function compteAppel(int $artisanId): ?array
+    {
+        /** @var array{entreprise: string, demo: int, demo_fin: string|null, offres_max: int|null, dictees: int}|null */
+        return $this->base->un(
+            'SELECT a.entreprise, a.demo, a.demo_fin, a.offres_max, (SELECT COUNT(*) FROM enregistrement e WHERE e.artisan_id = a.id) AS dictees
+             FROM artisan a WHERE a.id = :id AND a.administrateur = 0 AND a.role IS NULL',
+            ['id' => $artisanId],
+        );
+    }
+
     /** Le nom d'un membre de l'équipe dans les courriels, s'il en a choisi un. */
     public function nomAffiche(int $id): ?string
     {

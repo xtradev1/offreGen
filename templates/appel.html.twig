@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{# « Demander un appel » (K1 de la maquette v4 de l'administration, écran 2 : le numéro, le moment, la question s'il
+   veut). Une démo n'a ni courriel ni téléphone : on demande le numéro à ce moment-là, rien d'autre d'obligatoire. #}
+{% block titre %}Demander un appel · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="{{ retour }}">Retour</a>{% endblock %}
+{% block entete %}Demander un appel{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  <p><b>{% if nom %}{{ nom }}, de {{ nom_application }}, vous rappelle.{% else %}{{ nom_application }} vous rappelle.{% endif %}</b></p>
+  {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+  <form id="appel" method="post" action="/demander-un-appel">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="telephone">Votre numéro de téléphone</label>
+      <input id="telephone" name="telephone" type="tel" inputmode="tel" autocomplete="tel" maxlength="32" value="{{ telephone }}" placeholder="079 123 45 67" required>
+    </div>
+    <fieldset class="groupe choix">
+      <legend>Quand vous joindre</legend>
+      <div class="puces">
+        {% for cle, libelle in moments %}<label class="puce"><input type="radio" name="moment" value="{{ cle }}"{% if moment == cle %} checked{% endif %} required>{{ libelle }}</label>{% endfor %}
+      </div>
+    </fieldset>
+    <div class="champ">
+      <label for="question">Votre question (facultatif)</label>
+      <textarea id="question" name="question" rows="3" maxlength="500">{{ question }}</textarea>
+    </div>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><button class="btn primary" type="submit" form="appel">Envoyer ma demande</button></div>
+{% endblock %}

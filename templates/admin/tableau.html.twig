@@ -1,0 +1,10 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Le tableau de bord de l'administrateur : « À rappeler » pour toute l'équipe (S1). Le reste arrive avec la suite du
+   chantier de l'administration. #}
+{% block entete_html %}<link rel="stylesheet" href="/css/suivi.css">{% endblock %}
+{% block contenu %}
+  {% include 'admin/_a_rappeler.html.twig' %}
+  {% if appels is empty %}<p class="muted">Aucune demande d'appel en attente.</p>{% endif %}
+  <p class="muted">Le reste du tableau de bord arrive avec la suite du chantier.</p>
+{% endblock %}

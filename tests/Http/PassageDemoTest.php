@@ -134,6 +134,8 @@ final class PassageDemoTest extends TestCase
         $ecran = $prospect->get('/passer-a-l-essai');
         self::assertSame(200, $ecran->getStatusCode());
         self::assertStringContainsString('value="info@platrerie-roux.ch"', (string) $ecran->getContent());
+        self::assertStringContainsString('Votre mois gratuit&nbsp;: 50 offres, sans carte bancaire.', (string) $ecran->getContent());
+        self::assertStringContainsString('Commencer mon mois gratuit', (string) $ecran->getContent());
         // L'écran du passage ne se propose pas lui-même.
         self::assertStringNotContainsString('href="/passer-a-l-essai"', (string) $ecran->getContent());
 
@@ -158,7 +160,9 @@ final class PassageDemoTest extends TestCase
         self::assertSame(410, $this->navigateur(null, '198.51.100.45')->get($m[1] ?? '')->getStatusCode());
 
         // Le compte est un essai, à l'adresse du prospect ; les offres d'exemple sont parties, le catalogue reste.
-        self::assertSame(['info@platrerie-roux.ch', 0, 10], array_values($this->compte($id)));
+        // Le mois gratuit (E1 de Xavier, 2026-11-23) : les 50 offres de la formule, un mois de calendrier à Zurich.
+        self::assertSame(['info@platrerie-roux.ch', 0, 50], array_values($this->compte($id)));
+        self::assertSame('2026-12-07 22:59:59', BaseDeTest::ligne("SELECT essai_fin FROM artisan WHERE id = $id")['essai_fin']);
         self::assertSame(0, (int) BaseDeTest::ligne("SELECT COUNT(*) AS n FROM offre WHERE artisan_id = $id")['n']);
         self::assertSame(12, (int) BaseDeTest::ligne("SELECT COUNT(*) AS n FROM produit WHERE artisan_id = $id")['n']);
         $journal = BaseDeTest::ligne('SELECT acteur_id, artisan_id, geste FROM journal_admin ORDER BY id DESC LIMIT 1');
@@ -168,6 +172,7 @@ final class PassageDemoTest extends TestCase
         $catalogue = $prospect->get('/catalogue');
         self::assertSame(200, $catalogue->getStatusCode());
         self::assertStringNotContainsString('href="/passer-a-l-essai"', (string) $catalogue->getContent());
+        self::assertStringContainsString('<b>Mois gratuit</b> · 30 jours restants', (string) $catalogue->getContent());
         self::assertSame(404, $prospect->get('/passer-a-l-essai')->getStatusCode());
 
         // Il choisit son mot de passe, et revient plus tard avec son courriel.

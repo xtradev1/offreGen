@@ -8,6 +8,7 @@ use OffreGen\Catalogue\CatalogueFictif;
 use OffreGen\Compte\Activite;
 use OffreGen\Compte\Demos;
 use OffreGen\Compte\LiensAcces;
+use OffreGen\Compte\MoisGratuit;
 use OffreGen\Donnees\Dates;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Flash;
@@ -121,7 +122,7 @@ final class DemoControleur
         $demo = $this->demoCourante($requete);
         return $this->page('essai_passer.html.twig', [
             'courriel' => $saisi ?? $demo['courriel_saisi'] ?? '',
-            'offres' => Demos::OFFRES_ESSAI,
+            'offres' => MoisGratuit::OFFRES,
             'par_courriel' => $this->c->messagerieReelle(),
             'erreur' => $erreur,
         ], $code);
@@ -142,7 +143,8 @@ final class DemoControleur
             if ($this->c->artisans()->parCourriel($courriel) !== null) {
                 throw new \InvalidArgumentException('Un compte existe déjà avec ce courriel. Indiquez-en un autre ou connectez-vous à ce compte.');
             }
-            $this->c->comptes()->passerEnEssai($compte['courriel'], $courriel, Demos::OFFRES_ESSAI);
+            // Le mois gratuit commence au toucher (lot B de l'administration, T1) ; E1 de Xavier, 2026-11-23.
+            $this->c->comptes()->passerEnEssai($compte['courriel'], $courriel, MoisGratuit::OFFRES, MoisGratuit::fin($this->c->horloge()->now()));
         } catch (\InvalidArgumentException $e) {
             return $this->passage($requete, $e->getMessage(), 422, $saisi);
         }
@@ -153,12 +155,12 @@ final class DemoControleur
         $this->c->apresReponse()->ajouter(fn () => $this->prevenirPresentateur($demo, $courriel));
         if ($this->c->messagerieReelle()) {
             $this->c->apresReponse()->ajouter(fn () => $this->c->liensAcces()->envoyerAcces($courriel));
-            Flash::dire($requete, 'info', "Vous êtes à l'essai. Un courriel vous attend pour choisir votre mot de passe.");
+            Flash::dire($requete, 'info', 'Votre mois gratuit commence. Vous allez recevoir un courriel pour choisir votre mot de passe.');
             return new RedirectResponse('/', 303);
         }
         // Ce site n'envoie pas de courriels : sans mot de passe choisi tout de suite, le compte serait perdu à la
         // fin de la session.
-        Flash::dire($requete, 'info', "Vous êtes à l'essai. Choisissez votre mot de passe pour retrouver votre compte.");
+        Flash::dire($requete, 'info', 'Votre mois gratuit commence. Choisissez votre mot de passe pour retrouver votre compte.');
         return new RedirectResponse((string) parse_url($this->c->liensAcces()->lienDAcces($essai['id']), PHP_URL_PATH), 303);
     }
 
@@ -175,7 +177,7 @@ final class DemoControleur
             return;
         }
         $adresse = rtrim($this->c->parametre('APP_URL', 'http://localhost:8000'), '/');
-        Courriel::passageEssai($demo['entreprise'], $courriel, $this->c->horloge()->now(), Demos::OFFRES_ESSAI, "$adresse/admin/artisans/{$demo['id']}")
+        Courriel::passageEssai($demo['entreprise'], $courriel, $this->c->horloge()->now(), MoisGratuit::OFFRES, "$adresse/admin/artisans/{$demo['id']}")
             ->envoyer($this->c->messagerie(), $membre['courriel'], $this->c->nomApplication(), $adresse);
     }
 
@@ -203,7 +205,10 @@ final class DemoControleur
         if (!Demos::terminee($demo['demo_fin'], $this->c->horloge()->now())) {
             return new RedirectResponse('/', 303);
         }
-        return $this->page('demo_terminee.html.twig', ['entreprise' => $demo['entreprise']], 200);
+        return $this->page('demo_terminee.html.twig', [
+            'entreprise' => $demo['entreprise'],
+            'supprimee_le' => Dates::versBase(Demos::supprimeeLe((string) $demo['demo_fin'])),
+        ], 200);
     }
 
     private function perimee(): Response

@@ -96,7 +96,7 @@ final class Comptes
      * @return array{offres: int, clients: int, produits: int, dictees: int, mot_de_passe: string} offres et fiches
      *         d'exemple effacées, produits remis à 0, visites dictées gardées, mot de passe à transmettre une fois
      */
-    public function passerEnEssai(string $courriel, string $courrielArtisan, int $offresMax = 10): array
+    public function passerEnEssai(string $courriel, string $courrielArtisan, int $offresMax = 10, ?\DateTimeImmutable $essaiFin = null): array
     {
         self::verifierOffresMax($offresMax);
         $artisan = $this->artisans->parCourriel($courriel) ?? throw new \InvalidArgumentException("Aucun compte pour $courriel.");
@@ -116,7 +116,7 @@ final class Comptes
         $motDePasse = self::genererMotDePasse();
         $hache = $this->hacheur->hash($motDePasse);
         $portee = new Portee($artisan['id']);
-        return $this->base->transaction(function () use ($artisan, $portee, $offresMax, $courrielArtisan, $hache, $motDePasse): array {
+        return $this->base->transaction(function () use ($artisan, $portee, $offresMax, $courrielArtisan, $hache, $motDePasse, $essaiFin): array {
             // Les factures d'abord : elles désignent les offres. Les fiches après : les offres les désignent.
             (new DepotFactures($this->base, $portee))->effacerDesOffresExemple();
             $dictees = (new DepotEnregistrements($this->base, $portee))->recus();
@@ -129,7 +129,7 @@ final class Comptes
             ];
             // Le plafond d'un essai compte tous les imports du compte : ceux de la démonstration ne sont pas décomptés.
             // Faux : le compte n'est plus une démonstration (remise à zéro ou passage lancés en même temps).
-            if (!$this->artisans->sortirDeDemo($artisan['id'], $offresMax + $dictees, $courrielArtisan)) {
+            if (!$this->artisans->sortirDeDemo($artisan['id'], $offresMax + $dictees, $courrielArtisan, $essaiFin)) {
                 throw new \RuntimeException("{$artisan['courriel']} n'est plus une démonstration : rien n'est changé.");
             }
             // Le mot de passe de la démonstration ne sert plus, et le numéro de session avance.

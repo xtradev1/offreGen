@@ -32,6 +32,8 @@ final class Demos
      */
     public const ENTRAINEMENTS_D_ARRIVEE = 3;
     public const ENTRAINEMENTS_PAR_MOIS = 1;
+    /** Jours entre la fin d'une démo et sa suppression (K1, SuppressionDemos). */
+    public const JOURS_GARDEE = 30;
 
     public function __construct(
         private readonly Base $base,
@@ -133,6 +135,12 @@ final class Demos
     public static function terminee(?string $demoFin, \DateTimeInterface $maintenant): bool
     {
         return $demoFin !== null && Dates::depuisBase($demoFin)->getTimestamp() <= $maintenant->getTimestamp();
+    }
+
+    /** Le moment où la démo finie est supprimée (SuppressionDemos, la nuit qui suit). */
+    public static function supprimeeLe(string $demoFin): \DateTimeImmutable
+    {
+        return Dates::depuisBase($demoFin)->modify('+' . self::JOURS_GARDEE . ' days');
     }
 
     /**

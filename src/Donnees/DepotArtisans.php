@@ -10,11 +10,11 @@ use OffreGen\Compte\Activite;
  * Les comptes. Hors portée par nature : on cherche un compte avant de savoir qui est connecté.
  * Sert la connexion et les commandes de bin/, jamais une page qui liste des comptes.
  *
- * @phpstan-type Artisan array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null, administrateur: int, version_session: int, role: string|null, cree_par: int|null, demo_fin: string|null, offres_offertes: int, metier: string|null, metier_saisi: string|null, activite: string, courriel_offre_prete: int, courriel_dictee_echec: int}
+ * @phpstan-type Artisan array{id: int, courriel: string, mot_de_passe: string, entreprise: string, demo: int, plafond_jour: int|null, offres_max: int|null, administrateur: int, version_session: int, role: string|null, cree_par: int|null, demo_fin: string|null, essai_fin: string|null, offres_offertes: int, metier: string|null, metier_saisi: string|null, activite: string, courriel_offre_prete: int, courriel_dictee_echec: int}
  */
 final class DepotArtisans
 {
-    private const COLONNES = 'id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max, administrateur, version_session, role, cree_par, demo_fin, offres_offertes, metier, metier_saisi, activite, courriel_offre_prete, courriel_dictee_echec';
+    private const COLONNES = 'id, courriel, mot_de_passe, entreprise, demo, plafond_jour, offres_max, administrateur, version_session, role, cree_par, demo_fin, essai_fin, offres_offertes, metier, metier_saisi, activite, courriel_offre_prete, courriel_dictee_echec';
 
     public function __construct(private readonly Base $base)
     {
@@ -95,16 +95,17 @@ final class DepotArtisans
     }
 
     /**
-     * Une démonstration devient un essai : plus de plafond par jour ni de date de fin, un nombre total d'offres,
-     * et l'adresse de l'artisan à la place de l'adresse inventée de la démonstration.
+     * Une démonstration devient un essai : plus de plafond par jour ni de date de fin de démo, un nombre total
+     * d'offres, et l'adresse de l'artisan à la place de l'adresse inventée de la démonstration. $essaiFin : la fin du
+     * mois gratuit (MoisGratuit) ; null pour un essai sans date (bin/passer-en-essai).
      *
      * @return bool faux si le compte n'est plus une démonstration (passé ou remis à zéro entre-temps)
      */
-    public function sortirDeDemo(int $id, int $offresMax, string $courriel): bool
+    public function sortirDeDemo(int $id, int $offresMax, string $courriel, ?\DateTimeImmutable $essaiFin = null): bool
     {
         return $this->base->ecrire(
-            'UPDATE artisan SET demo = 0, plafond_jour = NULL, demo_fin = NULL, offres_max = :m, courriel = :c WHERE id = :id AND demo = 1',
-            ['m' => $offresMax, 'c' => self::normaliser($courriel), 'id' => $id],
+            'UPDATE artisan SET demo = 0, plafond_jour = NULL, demo_fin = NULL, essai_fin = :f, offres_max = :m, courriel = :c WHERE id = :id AND demo = 1',
+            ['f' => $essaiFin === null ? null : Dates::versBase($essaiFin), 'm' => $offresMax, 'c' => self::normaliser($courriel), 'id' => $id],
         ) === 1;
     }
 

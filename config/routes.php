@@ -8,6 +8,7 @@ use OffreGen\Donnees\EtatBase;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Controleur\AccueilControleur;
 use OffreGen\Http\Controleur\AdminControleur;
+use OffreGen\Http\Controleur\AppelControleur;
 use OffreGen\Http\Controleur\AdresseControleur;
 use OffreGen\Http\Controleur\CatalogueControleur;
 use OffreGen\Http\Controleur\ClientControleur;
@@ -217,7 +218,7 @@ return static function (Conteneur $c): array {
     ];
     // Administration (docs/plans/2026-11-19_admin-comptes/PLAN-lot-A.md) : 404 pour qui n'a pas le rôle.
     $routes[] = new Route('admin', '/admin', ['GET'], static fn (Request $r): Response => $admin()->accueil($r), Route::EQUIPE);
-    $routes[] = new Route('admin_tableau', '/admin/tableau', ['GET'], static fn (): Response => $admin()->ossature('tableau', 'Tableau de bord'), Route::ADMIN);
+    $routes[] = new Route('admin_tableau', '/admin/tableau', ['GET'], static fn (): Response => $admin()->tableau(), Route::ADMIN);
     $routes[] = new Route('admin_aider', '/admin/a-aider', ['GET'], static fn (): Response => $admin()->ossature('aider', 'À aider'), Route::MODERATION);
     $routes[] = new Route('admin_suivi', '/admin/suivi', ['GET'], static fn (): Response => $admin()->suivi(), Route::EQUIPE);
     $routes[] = new Route('admin_artisans', '/admin/artisans', ['GET'], static fn (Request $r): Response => $admin()->artisans($r), Route::EQUIPE);
@@ -253,6 +254,12 @@ return static function (Conteneur $c): array {
     $routes[] = new Route('admin_bienvenue_vue', '/admin/bienvenue/vue', ['POST'], static fn (Request $r): Response => $admin()->bienvenueVue($r), Route::EQUIPE);
     $routes[] = new Route('admin_guide_fini', '/admin/guide/fini', ['POST'], static fn (Request $r): Response => $admin()->guideFini($r), Route::EQUIPE);
     $routes[] = new Route('retour_espace', '/retour-espace', ['POST'], static fn (Request $r): Response => $demo()->retourEspace($r), Route::ARTISAN);
+    // « Demander un appel » (K1 et S1 de l'administration ; chantier onboarding, E1 du 2026-11-23) : le client laisse
+    // son numéro ; le membre qui le suit le voit dans « À rappeler » et le marque « C'est fait ».
+    $routes[] = new Route('appel', '/demander-un-appel', ['GET'], static fn (Request $r): Response => (new AppelControleur($c))->formulaire($r), Route::ARTISAN);
+    $routes[] = new Route('appel_envoyer', '/demander-un-appel', ['POST'], static fn (Request $r): Response => (new AppelControleur($c))->envoyer($r), Route::ARTISAN);
+    $routes[] = new Route('appel_note', '/demander-un-appel/note', ['GET'], static fn (Request $r): Response => (new AppelControleur($c))->note($r), Route::ARTISAN);
+    $routes[] = new Route('admin_appel_fait', '/admin/appels/{id}/fait', ['POST'], static fn (Request $r, array $p): Response => $admin()->appelFait($r, $p), Route::EQUIPE);
     // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.
     foreach (array_keys(ReglagesControleur::RUBRIQUES) as $nom) {
         $routes[] = new Route("reglages_$nom", "/reglages/$nom", ['GET'], static fn (Request $r): Response => $reglages()->rubrique($r, $nom), Route::ARTISAN);

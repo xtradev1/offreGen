@@ -25,8 +25,12 @@ use OffreGen\Audio\ValidateurAudio;
 use OffreGen\Compte\Activite;
 use OffreGen\Compte\Authentification;
 use OffreGen\Compte\Comptes;
+use OffreGen\Compte\DemandesAppel;
 use OffreGen\Compte\DemandesEssai;
 use OffreGen\Compte\Demos;
+use OffreGen\Compte\MoisGratuit;
+use OffreGen\Compte\SuppressionDemos;
+use OffreGen\Donnees\DepotAppels;
 use OffreGen\Compte\LiensAcces;
 use OffreGen\Donnees\DepotLiensAcces;
 use OffreGen\Donnees\Base;
@@ -317,8 +321,9 @@ final class Conteneur
     /** Plafond total d'un compte d'essai, avec ce qu'il reste ; null pour un compte sans plafond. */
     public function plafondEssai(int $artisanId): ?PlafondEssai
     {
-        $offresMax = $this->artisans()->parId($artisanId)['offres_max'] ?? null;
-        return $offresMax === null ? null : PlafondEssai::de($offresMax, $this->enregistrements(new Portee($artisanId))->recus());
+        $compte = $this->artisans()->parId($artisanId);
+        $offresMax = $compte['offres_max'] ?? null;
+        return $offresMax === null ? null : PlafondEssai::de($offresMax, $this->enregistrements(new Portee($artisanId))->recus(), ($compte['essai_fin'] ?? null) !== null);
     }
 
     public function offres(Portee $p): DepotOffres
@@ -447,6 +452,17 @@ final class Conteneur
                 // terminee : dictée et import refusés ; avant_fin : jours de calendrier, pour la fenêtre des deux derniers jours.
                 return ['jours' => max(0, (int) ceil($reste / 86400)), 'terminee' => Demos::terminee($demo['demo_fin'], $maintenant),
                     'avant_fin' => Demos::joursAvantLaFin($demo['demo_fin'], $maintenant)];
+            }));
+            // Le ruban du mois gratuit (maquette v5 de l'administration : « Mois gratuit · 7 jours restants »). Null pour
+            // tout compte sans date de fin d'essai.
+            $twig->addFunction(new TwigFunction('mois_gratuit', function (): ?array {
+                $id = $this->garde()->artisanCourant();
+                $fin = $id === null ? null : ($this->artisans()->parId($id)['essai_fin'] ?? null);
+                if ($fin === null) {
+                    return null;
+                }
+                $maintenant = $this->horloge()->now();
+                return ['termine' => MoisGratuit::termine($fin, $maintenant), 'avant_fin' => Demos::joursAvantLaFin($fin, $maintenant)];
             }));
             // Un texte de l'onboarding, gras compris (src/Http/Textes.php) : il vient du dépôt, ses variables sont échappées.
             $twig->addFunction(new TwigFunction('texte', fn (string $id, array $variables = []): string => $this->textes()->texte($id, $variables), ['is_safe' => ['html']]));
@@ -664,6 +680,36 @@ final class Conteneur
             $this->parametre('DEMANDES_ESSAI_DESTINATAIRE', 'info@xtradev.ch'),
             $this->parametre('DEMANDES_ESSAI_DOSSIER', $this->racine . '/var/demandes-essai'),
             $this->horloge(),
+        ));
+    }
+
+    public function depotAppels(): DepotAppels
+    {
+        return $this->une(DepotAppels::class, fn (): DepotAppels => new DepotAppels($this->base()));
+    }
+
+    public function demandesAppel(): DemandesAppel
+    {
+        return $this->une(DemandesAppel::class, fn (): DemandesAppel => new DemandesAppel(
+            $this->depotAppels(),
+            $this->depotEquipe(),
+            $this->journalAdmin(),
+            $this->messagerie(),
+            $this->horloge(),
+            $this->nomApplication(),
+            $this->parametre('APP_URL', 'http://localhost:8000'),
+        ));
+    }
+
+    /** Les démos finies depuis 30 jours, supprimées chaque nuit (bin/supprimer-demos). */
+    public function suppressionDemos(): SuppressionDemos
+    {
+        return $this->une(SuppressionDemos::class, fn (): SuppressionDemos => new SuppressionDemos(
+            $this->base(),
+            $this->stockageAudio(),
+            $this->dossierLogos(),
+            $this->horloge(),
+            $this->journal(),
         ));
     }
 

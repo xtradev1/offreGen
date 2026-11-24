@@ -7,12 +7,14 @@ namespace OffreGen\Http\Controleur;
 use OffreGen\Catalogue\CatalogueFictif;
 use OffreGen\Compte\Activite;
 use OffreGen\Compte\ArtisansEquipe;
+use OffreGen\Compte\DemandesAppel;
 use OffreGen\Compte\Demos;
 use OffreGen\Compte\Equipe;
 use OffreGen\Compte\LiensAcces;
 use OffreGen\Compte\QrLien;
 use OffreGen\Compte\Role;
 use OffreGen\Donnees\Dates;
+use OffreGen\Donnees\DepotAppels;
 use OffreGen\Donnees\DepotEquipe;
 use OffreGen\Donnees\PorteeEquipe;
 use OffreGen\Http\Conteneur;
@@ -167,11 +169,66 @@ final class AdminControleur
             'actif' => 'suivi',
             'titre' => $this->role() === Role::Commercial ? 'Mon suivi' : 'Suivi',
             'mois' => mb_convert_case((string) $mois->format($maintenant), MB_CASE_TITLE),
+            'appels' => $this->aRappeler($maintenant),
             'demos' => $demos,
             'chiffres' => $this->c->depotEquipe()->chiffres($this->acteur()),
             'guide' => $this->entrainementACreer(),
             'fin_guide' => $finGuide,
         ]);
+    }
+
+    /**
+     * Le tableau de bord de l'administrateur : pour l'instant « À rappeler », pour ses clients et ceux de toute l'équipe
+     * (S1 de la maquette v4). Le reste du tableau arrive avec la suite du chantier de l'administration.
+     */
+    public function tableau(): Response
+    {
+        return $this->page('admin/tableau.html.twig', [
+            'actif' => 'tableau',
+            'titre' => 'Tableau de bord',
+            'appels' => $this->aRappeler(\DateTimeImmutable::createFromInterface($this->c->horloge()->now())),
+        ]);
+    }
+
+    /**
+     * « C'est fait » sur une demande d'appel : elle sort de « À rappeler ». Hors de la portée du membre, 404.
+     *
+     * @param array<string, string> $p
+     */
+    public function appelFait(Request $requete, array $p): RedirectResponse
+    {
+        $id = preg_match('/^[1-9]\d{0,9}$/', $p['id'] ?? '') === 1 ? (int) $p['id'] : throw new PageIntrouvable();
+        $maintenant = \DateTimeImmutable::createFromInterface($this->c->horloge()->now());
+        $artisan = $this->c->depotAppels()->marquerFait($this->portee(), $id, $maintenant) ?? throw new PageIntrouvable();
+        $this->c->journalAdmin()->noter($this->acteur(), $artisan, 'appel_fait', null, $maintenant);
+        return new RedirectResponse($this->role() === Role::Administrateur ? '/admin/tableau' : '/admin/suivi', 303);
+    }
+
+    /**
+     * « À rappeler » : les demandes d'appel en attente dans la portée du membre, avec le moment de la demande.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function aRappeler(\DateTimeImmutable $maintenant): array
+    {
+        $zone = new \DateTimeZone('Europe/Zurich');
+        $aujourdhui = $maintenant->setTimezone($zone)->format('Y-m-d');
+        $hier = $maintenant->setTimezone($zone)->modify('-1 day')->format('Y-m-d');
+        $appels = [];
+        foreach ($this->c->depotAppels()->aRappeler($this->portee()) as $a) {
+            $quand = Dates::depuisBase($a['cree_le'])->setTimezone($zone);
+            $jour = match ($quand->format('Y-m-d')) {
+                $aujourdhui => "Demande d'aujourd'hui",
+                $hier => "Demande d'hier",
+                default => 'Demande du ' . $quand->format('d.m'),
+            };
+            $appels[] = $a + [
+                'demande' => $jour . ', ' . $quand->format('H:i') . ' · rappeler ' . (DepotAppels::MOMENTS[$a['moment']] ?? ''),
+                'etat' => DemandesAppel::etat($a, $maintenant),
+                'tel' => (string) preg_replace('/[^0-9+]/', '', $a['telephone']),
+            ];
+        }
+        return $appels;
     }
 
     /** L'aide à la vente (chantier onboarding, lot 6) : la même pour les trois rôles de l'équipe. */
@@ -457,7 +514,9 @@ final class AdminControleur
     /** @param array<string, mixed> $vars */
     private function page(string $gabarit, array $vars, int $code = 200): Response
     {
-        $reponse = new Response($this->c->twig()->render($gabarit, $vars + ['role' => $this->role()]), $code);
+        // Le nombre de demandes d'appel en attente, sur l'onglet du suivi ou du tableau (S1).
+        $vars += ['role' => $this->role(), 'appels_en_attente' => $this->c->depotAppels()->nombreARappeler($this->portee())];
+        $reponse = new Response($this->c->twig()->render($gabarit, $vars), $code);
         // Des comptes, des liens d'accès, des numéros de téléphone : rien ne reste dans le cache du navigateur.
         $reponse->headers->set('Cache-Control', 'no-store');
         return $reponse;

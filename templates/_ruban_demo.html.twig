@@ -14,3 +14,12 @@
     {% endif %}
   </div>
 {% endif %}
+{# Le ruban du mois gratuit (maquette v5 de l'administration ; chantier onboarding, E1). « Ma formule » viendra avec
+   la page des formules (lot B de l'administration). #}
+{% set mois_compte = demo_compte ? null : mois_gratuit() %}
+{% if mois_compte and not (sans_ruban ?? false) %}
+  <link rel="stylesheet" href="/css/demo.css">
+  <div class="ruban-demo" role="note">
+    <span><b>Mois gratuit</b> · {% if mois_compte.termine %}terminé{% elseif mois_compte.avant_fin > 1 %}{{ mois_compte.avant_fin }} jours restants{% elseif mois_compte.avant_fin == 1 %}se termine demain{% else %}dernier jour{% endif %}</span>
+  </div>
+{% endif %}

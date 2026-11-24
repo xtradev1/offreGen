@@ -123,3 +123,8 @@
   .metiers { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .carte-admin .btn.large { min-height: 48px; margin: 0 0 10px; }
 }
+
+/* Le nombre de demandes d'appel en attente sur l'onglet du suivi ou du tableau (S1, chantier onboarding, E1). */
+.tabs a { position: relative; }
+.compte-appels { position: absolute; top: 4px; left: calc(50% + 6px); min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--marque); color: var(--on-marque); font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .compte-appels { position: static; margin-left: auto; } }

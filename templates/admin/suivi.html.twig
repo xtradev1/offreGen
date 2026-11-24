@@ -15,6 +15,7 @@
       <p class="muted petit">{{ texte('g.fin.note') }}</p>
     </div>
   {% endif %}
+  {% include 'admin/_a_rappeler.html.twig' %}
   <h2 class="groupe-titre">Démos en cours</h2>
   {% if demos is empty %}
     <p class="muted">{{ texte('g.fin.vide') }}</p>

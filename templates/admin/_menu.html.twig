@@ -19,6 +19,6 @@
   <a class="marque-pc pc-seul" href="/decouvrir" aria-label="{{ nom_application }}, le site"><picture><source srcset="{{ fichier('/img/dicta-logo-sombre.svg') }}" media="(prefers-color-scheme: dark)"><img src="{{ fichier('/img/dicta-logo-clair.svg') }}" alt="" width="177" height="64"></picture></a>
   {% for e in entrees[role.value] %}
   <a href="{{ e[1] }}"{% if actif == e[0] %} aria-current="page"{% endif %}>
-    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icones[e[0]]|raw }}</svg>{{ e[2] }}</a>
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icones[e[0]]|raw }}</svg>{{ e[2] }}{% if e[0] in ['suivi', 'tableau'] and (appels_en_attente ?? 0) > 0 %} <span class="compte-appels" aria-label="{{ appels_en_attente }} demande{{ appels_en_attente > 1 ? 's' : '' }} d'appel en attente">{{ appels_en_attente }}</span>{% endif %}</a>
   {% endfor %}
 </nav>

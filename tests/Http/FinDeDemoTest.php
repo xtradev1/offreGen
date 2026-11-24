@@ -99,6 +99,10 @@ final class FinDeDemoTest extends TestCase
         $fin = (string) $n->get('/fin-de-demo')->getContent();
         self::assertStringContainsString('Votre démo est terminée', $fin);
         self::assertStringContainsString('href="/passer-a-l-essai"', $fin);
+        // K1 tel que validé : la date de suppression, 30 jours après la fin, et « Demander un appel » (E1, 2026-11-23).
+        self::assertStringContainsString("Vos offres restent consultables jusqu'au 06.12.2026, puis elles sont supprimées.", $fin);
+        self::assertStringContainsString('un mois gratuit, sans carte bancaire', $fin);
+        self::assertStringContainsString('href="/demander-un-appel"', $fin);
         self::assertStringContainsString('<b>Démo</b> · terminée', $fin);
         self::assertSame(200, $n->get('/')->getStatusCode());
     }

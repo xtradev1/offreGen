@@ -21,3 +21,13 @@
 .fin-guide { box-shadow: inset 4px 0 0 var(--marque); margin-bottom: 12px; }
 .fin-guide h2 { margin: 0 0 6px; font: 700 20px var(--titre); }
 .revoir-bienvenue { min-height: 48px; display: inline-flex; align-items: center; }
+
+/* « À rappeler » (S1, chantier onboarding, E1) : en tête du suivi et du tableau de bord. */
+.a-rappeler { display: grid; gap: 10px; margin-bottom: 18px; }
+.appel { box-shadow: inset 4px 0 0 var(--marque); }
+.appel p { margin: 0 0 6px; }
+.appel-tete a { color: var(--ink); }
+.appel-gestes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.appel-gestes .btn, .appel-gestes form { flex: 1 1 140px; min-height: 48px; }
+.appel-gestes form { display: flex; margin: 0; }
+.appel-gestes form .btn { flex: 1; }
