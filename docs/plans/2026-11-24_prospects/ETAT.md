@@ -1,9 +1,9 @@
 ---
 chantier: Prospects, le catalogue des commerciaux
 slug: 2026-11-24_prospects
-phase: 7
-statut: en_cours
-gate_attendu: null
+phase: 8
+statut: gate_ouvert
+gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
 
@@ -14,11 +14,16 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lire les trois rapports de revue, vérifier chaque trouvaille dans le code, écrire `REVUE.md`, corriger les retenues (test rouge d'abord), relancer la suite et PHPStan, puis commit, push sur `chantier-voix-offre`, déploiement sur le test et `RECETTE.md`.
+Attendre la recette de Xavier sur le site de test (`RECETTE.md`). S'il remonte des défauts : phase 5, test rouge d'abord, puis commit, push et déploiement sur le test. À la clôture : supprimer les bases locales `offregen_prospects_test` et `offregen_prospects_vue`, la copie `~/offreGen-prospects` et le fichier `~/.offregen-prospects-vue-comptes`, puis `/roadmap-sync`.
 
 ## En attente de toi
 
-Rien.
+- Dérouler `RECETTE.md` sur `https://easy-offres.xtradev.ch` (sept scénarios, comptes `prospects-nina@exemple.ch` et `prospects-leo@exemple.ch`, mots de passe dans `~/.offregen-test-prospects-nina-compte` et `-leo-compte` de WSL) et dire ce qui casse.
+- Confirmer ou refuser l'exception à la règle du 19.11 : en cherchant un nom, un commercial apprend qu'un compte d'un collègue existe (nom, sorte, qui l'a amené), et la fiche d'un collègue dit si l'artisan a une démo, un essai ou un abonnement.
+- Dire si le plafond de 30 fiches tenues par personne te convient (chiffre de Claude).
+- Dire si je crée la tâche Origin du chantier dans le projet offreGen (demandé trois fois, sans réponse).
+- Dire quel rôle a la responsable commerciale dans l'application : aujourd'hui administrateur et modérateur lisent toutes les fiches.
+- Créer le site de production chez Infomaniak : sans lui, aucun vrai prospect ne peut être saisi.
 
 ## Journal
 
@@ -35,6 +40,11 @@ Rien.
 - 2026-11-24 : phase 5, lots 3 à 6 : `ProspectControleur`, 16 routes, entrée « Prospects » au menu des trois rôles, neuf gabarits, `prospects.css`, `tests/Http/ProspectsEcransTest.php`. Tests des prospects : 21 tests, 276 assertions verts ; règles, droits de l'équipe, schéma, suppression des démos : 66 tests verts ; PHPStan niveau 8 sans erreur.
 - 2026-11-24 : phase 6, recette cliquée locale (Playwright, base `offregen_prospects_vue`, serveur `php -S localhost:8097`, quatre comptes inventés) : création par la recherche, formulaire, note, états, démo depuis la fiche, doublon par le téléphone, « Je prends », fiche réduite sans fuite, tableau et fiche à côté sur PC, thème sombre. Captures regardées par Claude : 12 au téléphone, 5 sur PC. Aucun débordement à 390 px, aucune erreur de console. Trois retouches après lecture des captures : feuille `suivi.css` manquante sur la recherche, lien souligné des cartes, prochain pas visible pour qui lit tout.
 - 2026-11-24 : phase 7 : revue lourde (le diff touche les droits par route et le filtre par rôle), trois relecteurs `route-heavy` indépendants (correction, sécurité, régression), estimation 4,5 $.
+- 2026-11-24 : phase 7 : trois rapports reçus, chaque trouvaille relue dans le code. Onze retenues (neuf reproduites par des tests rouges dans `tests/Compte/ProspectsRevueTest.php`, puis corrigées), sept écartées avec leur raison : `REVUE.md`. Suite complète après corrections : 1541 tests, 12 754 assertions ; PHPStan sans erreur.
+- 2026-11-24 : commit `aa4d39f` (rebasé sur neuf commits d'autres sessions, un conflit résolu dans `tests/Outils/BaseDeTest.php`), poussé sur `chantier-voix-offre`, déployé sur le test : sonde verte, migrations à jour.
+- 2026-11-24 : phase 8, recette cliquée par Claude sur le site de test (Playwright, Chromium, 390 px et 1440 px) : deux comptes inventés créés par `outils/compte-essai-test.sh` puis entrés dans l'équipe par l'écran « Ajouter un membre » (aucun courriel : comptes existants). Parcours complet sans erreur de console, douze captures regardées. Un échec de connexion de mon fait sur `recette-e1@exemple.ch` (mauvaise ligne lue dans le fichier du compte), sans blocage.
+- 2026-11-24 : défaut trouvé par cette recette : « mercredi 26.11 » pour un jeudi. Le serveur de test est à l'heure de Zurich, le poste en UTC. Test rouge dans trois fuseaux, correction, commit `5d60a46` poussé et déployé (sonde verte, 1608 tests verts dans la suite du déploiement). Relu sur le test : « jeudi 26.11 ».
+- 2026-11-24 : `RECETTE.md` écrite, gate prod ouvert. La démo de la recette part d'une fiche sans courriel : aucun rappel de démo ne part vers la boîte de Xavier.
 
 ## Décisions
 
@@ -59,6 +69,11 @@ Ce qui a été tranché sans demander, et pourquoi.
 | 2026-11-24 | La fiche d'un collègue ne montre pas son état saisi, seulement l'état de son compte (démo, essai, client) | P2 = A de Xavier : « nom, localité, métier, qui le suit et depuis quand » |
 | 2026-11-24 | L'avertissement de doublon est une page, ses boutons dans la barre du bas, au lieu de la feuille par-dessus le formulaire de la maquette | même contenu, même place, sans script |
 | 2026-11-24 | Sur PC, la fiche s'ouvre à côté de la liste « Tous » pour qui lit tout, « Les miens » pour un commercial | P8 de Xavier |
+| 2026-11-24 | Deux fiches suivies par deux personnes ne se fusionnent pas ; une fiche libre qui absorbe une fiche tenue passe à celui qui tenait l'autre | revue C1 et S5 ; la maquette dit que l'administrateur ne retire un prospect à personne |
+| 2026-11-24 | Les fiches d'un membre retiré de l'équipe sont libres aussitôt | revue R1 ; sinon elles restaient gelées |
+| 2026-11-24 | Les comptes ne se rapprochent d'une saisie que par le nom, plus par le courriel | revue S3 ; un courriel deviné désignait le compte d'un collègue |
+| 2026-11-24 | La recherche exige un mot de trois lettres au moins | revue S2 ; des lettres isolées listaient les comptes des collègues |
+| 2026-11-24 | Perdre la course à « Je prends » rouvre la fiche avec un message au lieu d'une page introuvable | revue C3 |
 
 Lectures de Claude à confirmer par Xavier : « au bout d'une semaine » lu comme 7 jours sans action notée (P3 = A), avec une variante B recommandée ; « une liste globale où les prospects qui existent, on peut directement les prendre » lu comme l'onglet « Libres » et « Je prends ».
 
@@ -71,6 +86,9 @@ Lectures de Claude à confirmer par Xavier : « au bout d'une semaine » lu c
 | `PLAN.md` | 4 | écrit |
 | `migrations/Version20261124210001.php`, `src/Donnees/DepotProspects.php`, `src/Compte/Prospects.php`, `src/Compte/DoublonProspect.php`, `tests/Compte/ProspectsTest.php` | 5 | lots 1 et 2 verts |
 | `src/Http/Controleur/ProspectControleur.php`, `config/routes.php`, `templates/admin/prospect*.html.twig`, `_prospect*.html.twig`, `_prospects_liste.html.twig`, `_menu.html.twig`, `public/css/prospects.css`, `tests/Http/ProspectsEcransTest.php` | 5 | lots 3 à 6 verts |
+| `REVUE.md` | 7 | écrite, onze retenues corrigées |
+| `RECETTE.md` | 8 | écrite, à dérouler par Xavier |
+| `tests/Compte/ProspectsRevueTest.php` | 7 | neuf tests, rouges avant correction |
 
 Rien n'est commité.
 
@@ -102,3 +120,66 @@ $ node pc.js <captures>   (après correction du tableau qui débordait sous la f
 Le sixième logo, de largeur 0, est l'image vide de la visionneuse du kit. « images 0 » de `check.js` : les logos portent `data-no-zoom`.
 
 Captures regardées par Claude : les dix écrans en clair, trois en sombre, la vue ordinateur, l'écran après « Je prends ». Non vérifié : un vrai téléphone, Safari, Firefox.
+
+### Phases 5 et 6
+
+```
+$ php vendor/bin/phpunit tests/Compte/ProspectsTest.php   (avant le service)
+Tests: 13, Assertions: 0, Errors: 13.   (Call to undefined method OffreGen\Http\Conteneur::prospects())
+$ php vendor/bin/phpunit tests/Compte/ProspectsTest.php   (après)
+OK (13 tests, 78 assertions)
+$ php vendor/bin/phpunit   (suite complète, avant la revue)
+OK (1532 tests, 12721 assertions)
+$ php vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ node parcours.js   (recette cliquée locale, base offregen_prospects_vue)
+- doublon : Ce prospect est peut-être déjà noté | Peinture Roux Sàrl Même téléphone · Delémont · Peintre · suivi par Nina Rey depuis le 24.11.2026
+- après « Je prends » : Ce prospect est à vous. | 7 suivis par vous
+- menu du bas, premier onglet : 78 × 56 px
+erreurs : aucune
+```
+
+### Phase 7
+
+```
+$ php vendor/bin/phpunit tests/Compte/ProspectsRevueTest.php   (avant les corrections)
+neuf tests, neuf rouges : 2 erreurs, 7 échecs
+$ php vendor/bin/phpunit tests/Compte/ProspectsRevueTest.php tests/Compte/ProspectsTest.php tests/Http/ProspectsEcransTest.php   (après)
+OK (30 tests, 309 assertions)
+$ php vendor/bin/phpunit   (suite complète, après les corrections)
+OK (1541 tests, 12754 assertions)
+$ php vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+```
+
+### Phase 8
+
+```
+$ sh deployer.sh   (push puis outils/deployer-test.sh, premier déploiement)
+   3b2e510..aa4d39f  HEAD -> chantier-voix-offre
+LU     /sante : {"commit":"aa4d39f70bd04d14cae8e2d61cafe2e4c0b79544","base":"ok","migrations":"ok"}
+SONDE VERTE
+DÉPLOYÉ : aa4d39f70bd04d14cae8e2d61cafe2e4c0b79544 sur https://easy-offres.xtradev.ch
+$ node parcours-test.js   (recette cliquée sur le site de test)
+- équipe, prospects-nina@exemple.ch : Nina Rey Commercial · prospects-nina@exemple.ch Ce compte existait déjà : il a maintenant le rôle Commercial.
+- fiche créée : /admin/prospects/1
+- doublon : Ce prospect est peut-être déjà noté | Peinture Roux Sàrl Même téléphone · Delémont · Peintre · suivi par Nina Rey depuis le 24.11.2026
+- fiche de Nina vue par Léo : Peinture Roux Sàrl Delémont · Peintre Suivi par Nina Rey Depuis le 24.11.2026. Dernière action notée le 24.11.2026. Sans nouvelle action de Nina Rey, ce prospect redevient libre le 02.12.2026.
+- gestes offerts à Léo sur la fiche de Nina : 0 formulaire(s)
+- après « Je prends » : Ce prospect est à vous. | 2 suivis par vous
+- fiche de Léo lue par l'administrateur : téléphone et note visibles, gestes : absents
+erreurs : aucune
+$ php vendor/bin/phpunit tests/Http/ProspectsEcransTest.php --filter FuseauDuServeur   (avant la correction)
+Failed asserting that '<!doctype html>…' contains "Rappeler · mardi 10.11".
+$ php vendor/bin/phpunit tests/Http/ProspectsEcransTest.php tests/Compte/ProspectsTest.php tests/Compte/ProspectsRevueTest.php   (après)
+OK (31 tests, 327 assertions)
+$ sh commit2.sh   (commit, push, second déploiement ; la suite complète est celle du script de déploiement)
+   aa4d39f..5d60a46  HEAD -> chantier-voix-offre
+OK (1608 tests, 13135 assertions)
+OK     commit déployé : 5d60a465334ccfb77670e90b165bc56e4a9afa81
+SONDE VERTE
+$ node verif-jour.js   (lecture de l'écran sur le site de test)
+lignes : Demander son avis sur la démo · jeudi 26.11
+```
+
+Captures regardées par Claude : douze du site de test (téléphone et ordinateur). Non vérifié : un vrai téléphone, Safari, Firefox ; la libération après sept jours et le plafond de 30, prouvés par test seulement ; deux gestes au même instant.
