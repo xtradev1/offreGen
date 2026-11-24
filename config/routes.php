@@ -10,6 +10,7 @@ use OffreGen\Http\Controleur\DicteesControleur;
 use OffreGen\Http\Controleur\AccueilControleur;
 use OffreGen\Http\Controleur\AdminControleur;
 use OffreGen\Http\Controleur\AppelControleur;
+use OffreGen\Http\Controleur\ProspectControleur;
 use OffreGen\Http\Controleur\AdresseControleur;
 use OffreGen\Http\Controleur\CatalogueControleur;
 use OffreGen\Http\Controleur\ClientControleur;
@@ -273,6 +274,25 @@ return static function (Conteneur $c): array {
     $routes[] = new Route('appel_envoyer', '/demander-un-appel', ['POST'], static fn (Request $r): Response => (new AppelControleur($c))->envoyer($r), Route::ARTISAN);
     $routes[] = new Route('appel_note', '/demander-un-appel/note', ['GET'], static fn (Request $r): Response => (new AppelControleur($c))->note($r), Route::ARTISAN);
     $routes[] = new Route('admin_appel_fait', '/admin/appels/{id}/fait', ['POST'], static fn (Request $r, array $p): Response => $admin()->appelFait($r, $p), Route::EQUIPE);
+    // Prospects (docs/plans/2026-11-24_prospects) : le catalogue que l'équipe se partage. Qui lit quoi et qui écrit
+    // se décide dans Compte\Prospects ; seule la fusion est réservée à l'administrateur par sa route.
+    $prospect = static fn (): ProspectControleur => new ProspectControleur($c);
+    $routes[] = new Route('admin_prospects', '/admin/prospects', ['GET'], static fn (Request $r): Response => $prospect()->liste($r), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_creer', '/admin/prospects', ['POST'], static fn (Request $r): Response => $prospect()->creer($r), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_chercher', '/admin/prospects/chercher', ['GET'], static fn (Request $r): Response => $prospect()->chercher($r), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_nouveau', '/admin/prospects/nouveau', ['GET'], static fn (Request $r): Response => $prospect()->nouveau($r), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect', '/admin/prospects/{id}', ['GET'], static fn (Request $r, array $p): Response => $prospect()->fiche($p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_modifier', '/admin/prospects/{id}', ['POST'], static fn (Request $r, array $p): Response => $prospect()->modifier($r, $p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_formulaire', '/admin/prospects/{id}/modifier', ['GET'], static fn (Request $r, array $p): Response => $prospect()->modifierFormulaire($p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_prendre', '/admin/prospects/{id}/prendre', ['POST'], static fn (Request $r, array $p): Response => $prospect()->prendre($r, $p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_lacher', '/admin/prospects/{id}/lacher', ['POST'], static fn (Request $r, array $p): Response => $prospect()->lacher($r, $p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_etat', '/admin/prospects/{id}/etat', ['POST'], static fn (Request $r, array $p): Response => $prospect()->etat($r, $p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_pas', '/admin/prospects/{id}/pas', ['POST'], static fn (Request $r, array $p): Response => $prospect()->pas($r, $p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_pas_fait', '/admin/prospects/{id}/pas-fait', ['POST'], static fn (Request $r, array $p): Response => $prospect()->pasFait($r, $p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_note', '/admin/prospects/{id}/note', ['POST'], static fn (Request $r, array $p): Response => $prospect()->note($r, $p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_demo', '/admin/prospects/{id}/demo', ['POST'], static fn (Request $r, array $p): Response => $prospect()->demo($r, $p), Route::EQUIPE);
+    $routes[] = new Route('admin_prospect_fusion', '/admin/prospects/{id}/fusion', ['GET'], static fn (Request $r, array $p): Response => $prospect()->fusionFormulaire($r, $p), Route::ADMIN);
+    $routes[] = new Route('admin_prospect_fusionner', '/admin/prospects/{id}/fusion', ['POST'], static fn (Request $r, array $p): Response => $prospect()->fusion($r, $p), Route::ADMIN);
     // Une adresse fixe par rubrique et par étape de l'assistant : aucun paramètre à vérifier.
     foreach (array_keys(ReglagesControleur::RUBRIQUES) as $nom) {
         $routes[] = new Route("reglages_$nom", "/reglages/$nom", ['GET'], static fn (Request $r): Response => $reglages()->rubrique($r, $nom), Route::ARTISAN);

@@ -89,6 +89,8 @@ use OffreGen\Compte\ArtisansEquipe;
 use OffreGen\Compte\Equipe;
 use OffreGen\Compte\Role;
 use OffreGen\Donnees\DepotEquipe;
+use OffreGen\Compte\Prospects;
+use OffreGen\Donnees\DepotProspects;
 use OffreGen\Donnees\JournalAdmin;
 
 /**
@@ -281,6 +283,23 @@ final class Conteneur
     public function equipe(): Equipe
     {
         return $this->une(Equipe::class, fn (): Equipe => new Equipe($this->base(), $this->artisans(), $this->depotEquipe(), $this->journalAdmin(), $this->comptes(), $this->horloge()));
+    }
+
+    public function depotProspects(): DepotProspects
+    {
+        return $this->une(DepotProspects::class, fn (): DepotProspects => new DepotProspects($this->base()));
+    }
+
+    /** Le catalogue des prospects (docs/plans/2026-11-24_prospects). */
+    public function prospects(): Prospects
+    {
+        return $this->une(Prospects::class, fn (): Prospects => new Prospects(
+            $this->base(),
+            $this->depotProspects(),
+            new Demos($this->base(), $this->comptes(), $this->artisans(), $this->depotEquipe(), $this->journalAdmin(), $this->horloge()),
+            $this->journalAdmin(),
+            $this->horloge(),
+        ));
     }
 
     public function artisansEquipe(): ArtisansEquipe

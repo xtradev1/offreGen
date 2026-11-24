@@ -1,0 +1,44 @@
+{% extends 'admin/base.html.twig' %}
+
+{# La saisie ressemble à une fiche ou à un compte déjà connu (P4 validé le 2026-11-24). La personne tranche : ouvrir la
+   fiche existante, ou confirmer que c'est une autre entreprise. Même numéro IDE : la fiche existe, on l'ouvre. #}
+{% set vue = 'tous' %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/prospects.css') }}">{% endblock %}
+{% block retour %}<a class="back" href="/admin/prospects">Prospects</a>{% endblock %}
+{% block sous %}<p>Vous avez saisi «&nbsp;{{ saisie.entreprise }}&nbsp;», {{ saisie.localite }}.</p>{% endblock %}
+
+{% block contenu %}
+  <div class="carte-admin">
+    <div class="lignes-prospects">
+      {% for l in lignes %}
+        <div class="ligne-prospect">
+          <a href="/admin/prospects/{{ l.id }}">
+            <b>{{ l.entreprise }}{% include 'admin/_prospect_badges.html.twig' %}</b>
+            <small>{{ l.motif|capitalize }} · {% include 'admin/_prospect_sous.html.twig' %}</small>
+          </a>
+          <i class="va" aria-hidden="true">›</i>
+        </div>
+      {% endfor %}
+      {% for c in comptes %}
+        <div class="ligne-prospect">
+          <span><b>{{ c.entreprise }} <i class="badge {{ c.sorte == 'Client' ? 'ok' : 'role' }}">{{ c.sorte }}</i></b>
+            <small>Déjà chez {{ nom_application }}{% if c.apporteur %} · amené par {{ c.apporteur }}{% endif %}</small></span>
+        </div>
+      {% endfor %}
+    </div>
+    {% if ferme %}
+      <p class="alerte info">Ce numéro IDE est celui d'une fiche existante&nbsp;: ouvrez-la.</p>
+    {% else %}
+      <form id="confirmer" method="post" action="{{ action }}">
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <input type="hidden" name="confirme" value="1">
+        {% for champ, valeur in saisie %}<input type="hidden" name="{{ champ }}" value="{{ valeur }}">{% endfor %}
+        <button class="btn large pc-seul" type="submit">C'est une autre entreprise</button>
+      </form>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block actions %}
+  {% if not ferme %}<div class="actionbar mobile-seul"><button class="btn" type="submit" form="confirmer">C'est une autre entreprise</button></div>{% endif %}
+{% endblock %}

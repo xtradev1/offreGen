@@ -1,0 +1,50 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Nouveau prospect, ou fiche à modifier (maquette du 2026-11-24, écran 7). Le nom et la localité suffisent. Le
+   prochain pas ne se pose qu'à la création ; ensuite il se change sur la fiche. #}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/prospects.css') }}">{% endblock %}
+{% block retour %}<a class="back" href="{{ id ? '/admin/prospects/' ~ id : '/admin/prospects/chercher' }}">{{ id ? 'Fiche' : 'Chercher' }}</a>{% endblock %}
+{% block sous %}<p>Le nom et la localité suffisent.</p>{% endblock %}
+
+{% block contenu %}
+  <div class="carte-admin">
+    {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+    <form id="fiche" method="post" action="{{ id ? '/admin/prospects/' ~ id : '/admin/prospects' }}">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <div class="champ"><label for="entreprise">Entreprise</label><input id="entreprise" name="entreprise" type="text" maxlength="120" autocomplete="off" required value="{{ saisie.entreprise }}"></div>
+      <div class="champ"><label for="localite">Localité</label><input id="localite" name="localite" type="text" maxlength="85" autocomplete="off" required placeholder="2800 Delémont" value="{{ saisie.localite }}"></div>
+      <fieldset class="choix-puces">
+        <legend>Métier <span class="facultatif">facultatif</span></legend>
+        {% for cle, nom in metiers %}<label class="puce"><input type="radio" name="metier" value="{{ cle }}"{% if saisie.metier == cle %} checked{% endif %}>{{ nom }}</label>{% endfor %}
+      </fieldset>
+      <div class="champ metier-autre">
+        <label for="metier_saisi">Quel métier&nbsp;?</label>
+        <input id="metier_saisi" name="metier_saisi" type="text" maxlength="60" autocomplete="off" value="{{ saisie.metier_saisi }}">
+        <small class="muted">Pour «&nbsp;Autre métier&nbsp;» seulement.</small>
+      </div>
+      <div class="deux-champs">
+        <div class="champ"><label for="telephone">Téléphone <span class="facultatif">facultatif</span></label><input id="telephone" name="telephone" type="tel" inputmode="tel" maxlength="32" autocomplete="off" value="{{ saisie.telephone }}"></div>
+        <div class="champ"><label for="contact">Contact <span class="facultatif">facultatif</span></label><input id="contact" name="contact" type="text" maxlength="120" autocomplete="off" value="{{ saisie.contact }}"></div>
+      </div>
+      <div class="champ"><label for="courriel">Courriel <span class="facultatif">facultatif</span></label><input id="courriel" name="courriel" type="email" inputmode="email" maxlength="190" autocomplete="off" value="{{ saisie.courriel }}"></div>
+      <fieldset class="choix-puces">
+        <legend>Rencontré <span class="facultatif">facultatif</span></legend>
+        {% for cle, nom in origines %}<label class="puce"><input type="radio" name="origine" value="{{ cle }}"{% if saisie.origine == cle %} checked{% endif %}>{{ nom }}</label>{% endfor %}
+      </fieldset>
+      {% if not id %}
+        <div class="deux-champs">
+          <div class="champ"><label for="pas_texte">Prochain pas <span class="facultatif">facultatif</span></label><input id="pas_texte" name="pas_texte" type="text" maxlength="120" autocomplete="off" placeholder="Rappeler" value="{{ saisie.pas_texte }}"></div>
+          <div class="champ"><label for="pas_date">Quand</label><input id="pas_date" name="pas_date" type="date" min="{{ aujourdhui }}" max="{{ date_max }}" value="{{ saisie.pas_date }}"></div>
+        </div>
+        <label class="case"><input type="checkbox" name="prend" value="1"{% if saisie.prend == '1' %} checked{% endif %}> Je m'en occupe</label>
+        <p class="muted">Décochez pour laisser ce prospect libre&nbsp;: un collègue pourra le prendre.</p>
+      {% endif %}
+      <div class="champ"><label for="ide">Numéro IDE <span class="facultatif">facultatif</span></label><input id="ide" name="ide" type="text" maxlength="24" autocomplete="off" placeholder="CHE-123.456.789" value="{{ saisie.ide }}"></div>
+      <button class="btn primary pc-seul" type="submit">Enregistrer</button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar mobile-seul"><button class="btn primary" type="submit" form="fiche">Enregistrer</button></div>
+{% endblock %}

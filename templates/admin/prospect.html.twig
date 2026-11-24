@@ -1,0 +1,134 @@
+{% extends 'admin/base.html.twig' %}
+
+{# La fiche d'un prospect (maquette du 2026-11-24, P5 validé). Trois lectures :
+   - celui qui la tient : état, prochain pas, notes, « Créer une démo », « Je lâche ce prospect » ;
+   - une fiche libre, ou lue par qui lit tout : la même, sans les gestes ; « Je prends » si elle est libre ;
+   - la fiche d'un collègue (P2 = A) : son nom, sa localité, son métier, qui la suit et depuis quand.
+   Sur PC, la liste reste à côté (P8). #}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/suivi.css') }}"><link rel="stylesheet" href="{{ fichier('/css/prospects.css') }}">{% endblock %}
+{% block retour %}<a class="back mobile-seul" href="/admin/prospects">Prospects</a>{% endblock %}
+{% block tete %}{% endblock %}
+
+{% block contenu %}
+<div class="prospects avec-fiche">
+  {% include 'admin/_prospects_liste.html.twig' %}
+  <section class="prospect-fiche" aria-label="Fiche de {{ p.entreprise }}">
+    <div class="admin-tete">
+      <h1>{{ p.entreprise }}</h1>
+      <p>{{ p.npa ? p.npa ~ ' ' : '' }}{{ p.localite }}{% if p.metier_nom %} · {{ p.metier_nom }}{% endif %}{% if p.contact %} · {{ p.contact }}{% endif %}</p>
+    </div>
+    {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+
+    {% if not p.entiere %}
+      <div class="card"><h2 class="carte-titre">Suivi par {{ p.suiveur }}</h2><p class="muted">Depuis le {{ p.suivi_quand }}. Dernière action notée le {{ p.action_quand }}.</p></div>
+      {% if p.compte_nom %}
+        <p class="alerte info">{{ p.compte_nom }} chez {{ nom_application }}.</p>
+      {% elseif p.echeance_quand %}
+        <p class="alerte info">Sans nouvelle action de {{ p.suiveur }}, ce prospect redevient libre le {{ p.echeance_quand }}.</p>
+      {% endif %}
+      <p class="muted">Le téléphone et les notes restent chez {{ p.suiveur }}.</p>
+      <p class="muted">Cette liste informe, elle ne réserve aucun artisan. La commission revient à celui dont le code est tapé à l'inscription.</p>
+    {% else %}
+      {% if p.compte_nom %}
+        <div class="card"><h2 class="carte-titre">{{ p.compte == 'demo' ? 'Démo en cours' : (p.compte == 'essai' ? 'Mois gratuit' : 'Client') }}</h2>
+          <p class="muted">{{ p.c_dictees }} offre{{ p.c_dictees > 1 ? 's' : '' }} dictée{{ p.c_dictees > 1 ? 's' : '' }}{% if p.c_derniere %}, la dernière le {{ p.c_derniere|jour }}{% endif %}{% if p.compte == 'demo' and p.c_demo_fin %} · jusqu'au {{ p.c_demo_fin|jour }}{% endif %}</p>
+          {% if p.a_moi or tout_voir %}<a class="lien-texte" href="/admin/artisans/{{ p.compte_id }}">Voir le compte</a>{% endif %}
+          <p class="muted">L'état se lit sur le compte de l'artisan&nbsp;: il change seul.</p></div>
+      {% elseif p.ecrit %}
+        <form class="etats" method="post" action="/admin/prospects/{{ p.id }}/etat" aria-label="État du prospect">
+          <input type="hidden" name="_csrf" value="{{ csrf() }}">
+          {% for cle, nom in etats %}<button class="puce" type="submit" name="etat" value="{{ cle }}"{% if p.etat == cle %} aria-pressed="true"{% endif %}>{{ nom }}</button>{% endfor %}
+        </form>
+      {% elseif p.tenue == 1 %}
+        <p class="muted">{{ p.etat_nom }} · suivi par {{ p.suiveur }} depuis le {{ p.suivi_quand }}</p>
+        {% if p.pas_texte %}<p class="muted">Prochain pas&nbsp;: {{ p.pas_texte }}, {{ p.pas_quand }}{% if p.retard %} <i class="badge retard">En retard</i>{% endif %}</p>{% endif %}
+      {% else %}
+        <div class="card"><h2 class="carte-titre">{{ p.etat == 'pas_interesse' ? 'Pas intéressé' : 'Libre' }}</h2>
+          <p class="muted">{% if p.libre_quand %}Depuis le {{ p.libre_quand }}{% if p.avant %}, suivi avant par {{ p.avant }}{% endif %}.{% elseif p.createur %}Noté par {{ p.createur }} le {{ p.cree_quand }}, personne ne le suit.{% else %}Personne ne le suit.{% endif %}</p></div>
+      {% endif %}
+      {% if p.tenue == 0 %}
+        <form id="prendre" method="post" action="/admin/prospects/{{ p.id }}/prendre">
+          <input type="hidden" name="_csrf" value="{{ csrf() }}">
+          <button class="btn primary large pc-seul" type="submit">Je prends</button>
+        </form>
+      {% endif %}
+
+      {% if p.ecrit %}
+        {% if p.pas_texte %}
+          <div class="card pas-carte">
+            <p class="pas-tete"><b>{{ p.pas_texte }}</b>{% if p.retard %} <i class="badge retard">En retard</i>{% endif %}</p>
+            <p class="muted">Prévu {{ p.pas_quand }}</p>
+            <div class="appel-gestes">
+              {% if p.telephone %}<a class="btn" href="tel:{{ p.tel }}">{{ p.telephone }}</a>{% endif %}
+              <form method="post" action="/admin/prospects/{{ p.id }}/pas-fait">
+                <input type="hidden" name="_csrf" value="{{ csrf() }}">
+                <button class="btn primary" type="submit">C'est fait</button>
+              </form>
+            </div>
+          </div>
+        {% else %}
+          {% if p.libre_dans is not null %}<p class="alerte {{ p.libre_dans <= 2 ? 'warn' : 'info' }}">Aucun pas prévu. Sans suite, ce prospect redevient libre le {{ p.echeance_quand }}.</p>{% endif %}
+          {% if p.telephone %}<a class="btn large" href="tel:{{ p.tel }}">{{ p.telephone }}</a>{% endif %}
+        {% endif %}
+        <details class="plus pas-nouveau"{% if not p.pas_texte %} open{% endif %}>
+          <summary>{{ p.pas_texte ? 'Changer le prochain pas' : 'Prochain pas' }}</summary>
+          <form method="post" action="/admin/prospects/{{ p.id }}/pas">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <div class="deux-champs">
+              <div class="champ"><label for="pas-texte">Quoi</label><input id="pas-texte" name="texte" type="text" maxlength="120" autocomplete="off" required placeholder="Rappeler"></div>
+              <div class="champ"><label for="pas-date">Quand</label><input id="pas-date" name="date" type="date" min="{{ aujourdhui }}" max="{{ date_max }}" required></div>
+            </div>
+            <button class="btn" type="submit">Enregistrer le pas</button>
+          </form>
+        </details>
+        {% if not p.compte_nom %}
+          <form id="demo" method="post" action="/admin/prospects/{{ p.id }}/demo">
+            <input type="hidden" name="_csrf" value="{{ csrf() }}">
+            <button class="btn primary large pc-seul" type="submit">Créer une démo</button>
+          </form>
+        {% endif %}
+      {% elseif p.telephone or p.courriel %}
+        <p class="muted">{% if p.telephone %}{{ p.telephone }}{% endif %}{% if p.telephone and p.courriel %} · {% endif %}{% if p.courriel %}{{ p.courriel }}{% endif %}</p>
+      {% endif %}
+
+      <h2 class="groupe-titre">Notes</h2>
+      {% if p.ecrit %}
+        <form class="note-nouvelle" method="post" action="/admin/prospects/{{ p.id }}/note">
+          <input type="hidden" name="_csrf" value="{{ csrf() }}">
+          <div class="champ"><label class="cache" for="note">Ajouter une note</label><textarea id="note" name="texte" rows="2" maxlength="1000" required placeholder="Ajouter une note"></textarea></div>
+          <button class="btn" type="submit">Ajouter la note</button>
+        </form>
+      {% endif %}
+      {% if notes is not empty %}
+        <ul class="fil notes">
+          {% for n in notes %}<li><time datetime="{{ n.cree_le }}">{{ n.jour }}</time><span>{{ n.texte }}{% if n.auteur and not p.a_moi %} <small class="muted">{{ n.auteur }}</small>{% endif %}</span></li>{% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">Aucune note pour l'instant.</p>
+      {% endif %}
+
+      <p class="muted fiche-pied">{% if p.courriel and p.ecrit %}{{ p.courriel }} · {% endif %}{% if p.origine %}Rencontré&nbsp;: {{ origines[p.origine]|lower }} · {% endif %}{% if p.ide %}{{ p.ide }} · {% endif %}Fiche créée{% if p.createur %} par {{ p.createur }}{% endif %} le {{ p.cree_quand }}</p>
+      {% if p.ecrit %}
+        <div class="fiche-liens">
+          <a class="lien" href="/admin/prospects/{{ p.id }}/modifier">Modifier la fiche</a>
+          {% if not p.compte_nom %}
+            <form method="post" action="/admin/prospects/{{ p.id }}/lacher">
+              <input type="hidden" name="_csrf" value="{{ csrf() }}">
+              <button class="lien" type="submit">Je lâche ce prospect</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endif %}
+      {% if peut_fusionner %}<a class="btn large" href="/admin/prospects/{{ p.id }}/fusion">Fusionner avec une autre fiche</a>{% endif %}
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+
+{% block actions %}
+  {% if p.entiere and p.ecrit and not p.compte_nom %}
+    <div class="actionbar mobile-seul"><button class="btn primary" type="submit" form="demo">Créer une démo</button></div>
+  {% elseif p.entiere and p.tenue == 0 %}
+    <div class="actionbar mobile-seul"><button class="btn primary" type="submit" form="prendre">Je prends</button></div>
+  {% endif %}
+{% endblock %}

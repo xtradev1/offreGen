@@ -1,0 +1,7 @@
+{# Les étiquettes d'une ligne de prospect : à qui elle est, où en est son compte, ce qui presse. #}
+{%- if l.tenue == 0 and l.etat == 'pas_interesse' %} <i class="badge role">Pas intéressé</i>
+{%- elseif l.tenue == 0 %} <i class="badge ok">Libre</i>
+{%- elseif l.a_moi and vue != 'miens' %} <i class="badge contour">Vous</i>{% endif %}
+{%- if l.compte_nom %} <i class="badge {{ l.compte == 'client' ? 'ok' : 'role' }}">{{ l.compte_nom }}</i>
+{%- elseif l.entiere and l.tenue == 1 and l.etat == 'plus_tard' %} <i class="badge role">Plus tard</i>{% endif %}
+{%- if l.a_moi and l.libre_dans is not null and l.libre_dans <= 2 %} <i class="badge manque">{{ l.libre_dans == 0 ? 'Libre demain' : 'Libre dans ' ~ (l.libre_dans + 1) ~ ' jours' }}</i>{% endif %}
