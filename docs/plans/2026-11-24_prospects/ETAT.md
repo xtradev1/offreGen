@@ -47,6 +47,7 @@ Attendre la recette de Xavier sur le site de test (`RECETTE.md`, revue pour la n
 - 2026-11-24 : réponse de Xavier : « oui crée la tâche Origin, pas de plafond, une fiche pour l'instant est gardé tant quon la libère pas puis commit et push et /roadmap-sync ». Tâche Origin 616 créée (sous-tâches 617 à 621), conversation rattachée à 619.
 - 2026-11-24 : phase 5 : copie rebasée sur `origin/chantier-voix-offre` (`81a6856`, avance rapide). Trois tests rouges d'abord, chacun pour sa raison : pas au 15.03.2027 refusé (borne de 30 jours), `OverflowException` du plafond, « redevient libre » sur la fiche. Puis retrait de l'échéance (`DepotProspects::ECHEANCE`, `JOURS_LIBRE`), du plafond (`Prospects::PLAFOND`, `refuserAuPlafond`), de l'encart « redevient libre » et du badge « Libre dans N jours ». Un prochain pas se date dans l'année.
 - 2026-11-24 : vérification : tests des prospects 30 tests, 324 assertions ; suite complète 1608 tests, 13 144 assertions ; PHPStan sans erreur.
+- 2026-11-24 : commit `ec8bab0` (rebasé sur `4eb9e76`), poussé sur `chantier-voix-offre`, déployé sur le test : sonde verte, 1614 tests verts dans la suite du déploiement. Relu en cliquant, compte de Léo, une connexion : ni sa fiche ni celle de Nina n'annoncent de date de libération, aucun bouton sur celle de Nina, aucune erreur de console ; deux captures regardées.
 
 ## Décisions
 
@@ -188,3 +189,31 @@ lignes : Demander son avis sur la démo · jeudi 26.11
 ```
 
 Captures regardées par Claude : douze du site de test (téléphone et ordinateur). Non vérifié : un vrai téléphone, Safari, Firefox ; la libération après sept jours et le plafond de 30, prouvés par test seulement ; deux gestes au même instant.
+
+### Fiche gardée jusqu'à ce qu'on la lâche, sans plafond (2026-11-24)
+
+```
+$ php vendor/bin/phpunit tests/Compte/ProspectsTest.php tests/Compte/ProspectsRevueTest.php tests/Http/ProspectsEcransTest.php   (avant)
+1) ProspectsTest::testUneFicheResteSuivieTantQuOnNeLaLachePas
+InvalidArgumentException: Choisissez une date entre aujourd'hui et le 24.12.2026.
+2) ProspectsTest::testAucunPlafondDeFichesSuivies
+OverflowException: Vous suivez déjà 30 prospects : c'est la limite. Lâchez-en un, ou créez la démo de l'un d'eux.
+1) ProspectsEcransTest::testUnCollegueVoitLeNomEtQuiSuitRienDAutre   (« redevient libre » sur la fiche)
+$ (après)
+OK (30 tests, 324 assertions)
+$ php vendor/bin/phpunit   (suite complète)
+OK (1608 tests, 13144 assertions)
+$ php vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ sh commit4.sh   (commit, push, déploiement)
+   4eb9e76..ec8bab0  HEAD -> chantier-voix-offre
+OK (1614 tests, 13204 assertions)
+LU     /sante : {"commit":"ec8bab0398abfa6e984732dfcc2637df23d0bf1f","base":"ok","migrations":"ok"}
+SONDE VERTE
+$ node verif-garde.js   (site de test, compte de Léo)
+en-tête de la liste : 2 suivis par vous
+ma fiche, « redevient libre » : false ; « Libre dans » : false
+fiche de Nina, « redevient libre » : false ; formulaires : 0
+erreurs de console : aucune
+```
+

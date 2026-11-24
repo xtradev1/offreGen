@@ -33,3 +33,7 @@ Déplacées telles quelles de `PROJECT_ROADMAP.md` le 2026-11-18 (les ~20 plus r
 - [2026-11-07] Dépendances ajoutées au sous-chantier 01 : `doctrine/migrations` 3.9 (DBAL 4), `monolog/monolog` 3, `symfony/clock` 7.4 (horloge que les tests figent). `symfony/string` et `symfony/console`, tirés par les migrations, figés en 7.4. Audit sans alerte.
 - [2026-11-07] **Entorse au socle :** de vraies visites au banc de mesure, avec l'accord des clients, en plus de visites rejouées (Xavier : « on peut bosser avec de vraies données, c'est le mieux »). Compensations : stockage dans WSL hors dépôt et hors SynologyDrive, envoi seulement à Infomaniak, Claude ne lit ni l'audio ni la transcription d'une vraie visite, suppression en fin de banc. Conditions dans la SPEC du chantier.
 - [2026-11-07] Les en-têtes de sécurité sont posés deux fois : par `public/.htaccess` chez l'hébergeur, par `Noyau` en secours et en local. Un test exige que les deux copies restent identiques.
+
+## Archivées le 2026-11-24
+- [2026-11-12] IA réelle en local d'abord (Xavier : « ensuite on ajoutera juste les clés API ») : Whisper turbo dans WSL sur le processeur, Qwen 27B dans l'Ollama de Windows (variante `offregen-qwen3.8`, contexte 16 384 jetons). Le PHP parle le protocole d'Infomaniak ; passer au serveur ne change que le `.env`. Détail : `docs/plans/2026-11-07_voix-offre/10-ia-locale/`.
+- [2026-11-12] Dépendances : `symfony/http-client` et `symfony/mime` 7.4. Hors dépôt : `python3.12-venv` dans Ubuntu, faster-whisper 1.2.1 dans `~/offregen-ia`.
