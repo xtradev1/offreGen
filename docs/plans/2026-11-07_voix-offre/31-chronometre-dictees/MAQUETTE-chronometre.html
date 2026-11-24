@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chronomètre des dictées</title>
+<style>
+:root {
+  --ink: #23272D; --muted: #454B55; --line: #DDD8CC; --surface: #FFFFFF; --bg: #F4F1EA; --chip: #EBE7DE; --bord: #7C838C;
+  --accent: #23272D; --on-accent: #FFFFFF; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3;
+  --bad: #8C1D18; --bad-soft: #FBE7E4; --marque: #C4552D; --on-marque: #FFFFFF; --bande: #23272D; --on-bande: #FFFFFF; --cadre: #16181B;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --attente: #B9B3A6; --critique: #d03b3b; --grille: #ECE8DF;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+    --accent: #ECEAE6; --on-accent: #15171A; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10;
+    --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113; --cadre: #000;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --attente: #5A5F66; --grille: #2A2D32;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+  --accent: #ECEAE6; --on-accent: #15171A; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10;
+  --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113; --cadre: #000;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --attente: #5A5F66; --grille: #2A2D32;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1320px; margin: 0 auto; padding: 16px 16px 80px; }
+header.page h1 { font-size: 26px; margin: 8px 0 4px; }
+header.page p { margin: 0 0 12px; color: var(--muted); max-width: 780px; }
+h2 { font-size: 21px; margin: 40px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p.note { color: var(--muted); font-size: 14px; max-width: 780px; }
+.encart { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin: 12px 0; max-width: 900px; }
+.encart.regle { border-left: 5px solid var(--ok); }
+.rangee { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin: 14px 0; }
+.fig { margin: 0; }
+.fig figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; max-width: 340px; }
+.fig figcaption b { color: var(--ink); }
+.btn { font: inherit; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 14px; min-height: 48px; cursor: pointer; text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.petit { min-height: 40px; font-size: 14px; padding: 6px 12px; }
+.alerte { border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 0 0 12px; }
+.alerte.warn { background: var(--warn-soft); color: var(--warn); }
+.alerte b { display: block; margin-bottom: 2px; }
+.etiq { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 6px; padding: 1px 7px; background: var(--chip); color: var(--ink); }
+.etiq.releve { background: var(--ok-soft); color: var(--ok); }
+.etiq.exemple { background: var(--warn-soft); color: var(--warn); }
+
+/* Cadres */
+.pc { border: 9px solid var(--cadre); border-radius: 14px; overflow: hidden; background: var(--surface); max-width: 1300px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.pc .barre { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 6px 16px; background: var(--bande); color: var(--on-bande); font-weight: 600; }
+.pc .barre small { font-weight: 400; opacity: .8; margin-left: auto; font-size: 13px; }
+.pc .corps { display: grid; grid-template-columns: 180px 1fr; min-height: 380px; }
+.pc .menu { border-right: 1px solid var(--line); padding: 14px 10px; font-size: 14px; }
+.pc .menu a { display: block; padding: 9px 10px; border-radius: 8px; color: var(--ink); text-decoration: none; }
+.pc .menu a.cur { background: var(--chip); font-weight: 600; }
+.pc .menu a.sous { padding-left: 24px; font-size: 13px; }
+.pc .contenu { padding: 16px; min-width: 0; }
+@media (max-width: 900px) { .pc .corps { grid-template-columns: 1fr; } .pc .menu { display: none; } }
+.tel { width: 340px; max-width: 100%; border: 9px solid var(--cadre); border-radius: 34px; overflow: hidden; background: var(--surface); box-shadow: 0 6px 20px rgba(0,0,0,.18); flex: none; }
+.tel .barre { display: flex; align-items: center; gap: 8px; min-height: 50px; padding: 6px 14px; background: var(--bande); color: var(--on-bande); font-weight: 600; font-size: 15px; }
+.tel .ecran { padding: 14px; min-height: 480px; display: flex; flex-direction: column; }
+
+/* Outils de la liste */
+.outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.outils label { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+.outils input, .outils select { font: inherit; font-size: 14px; border: 1px solid var(--bord); border-radius: 8px; padding: 6px 8px; min-height: 40px; background: var(--surface); color: var(--ink); }
+.outils .droite { margin-left: auto; display: flex; gap: 8px; }
+
+/* Tableau des dictées */
+.defile { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table.dictees { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+table.dictees th, table.dictees td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+table.dictees th { font-weight: 600; color: var(--muted); background: var(--bg); position: sticky; top: 0; }
+table.dictees th.g, table.dictees td.g { text-align: left; }
+table.dictees tr:hover td { background: var(--chip); cursor: pointer; }
+table.dictees td.lent { font-weight: 700; color: var(--bad); }
+table.dictees td.lent::after { content: " ▲"; font-size: 10px; }
+table.dictees td.manque { color: var(--muted); }
+.sous-info { display: block; font-size: 11px; color: var(--muted); }
+table.dictees th, table.dictees td { padding: 6px 5px; font-size: 12.5px; }
+table.dictees tr.sel td { background: var(--warn-soft); }
+.legende-liste { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+
+/* Cartes téléphone */
+.carte { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; font-size: 14px; }
+.carte .haut { display: flex; justify-content: space-between; font-weight: 600; }
+.carte .bas { color: var(--muted); font-size: 13px; }
+.carte .barre-mini { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin: 8px 0 4px; gap: 2px; }
+.carte .barre-mini span { display: block; height: 100%; }
+.carte .lent { color: var(--bad); font-weight: 700; }
+
+/* Frise d'une dictée */
+.frise { width: 100%; }
+.frise .ligne { display: grid; grid-template-columns: 190px 1fr 92px; align-items: center; gap: 8px; min-height: 28px; font-size: 13px; }
+.frise .ligne:hover { background: var(--chip); }
+.frise .nom { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.frise .nom small { color: var(--muted); }
+.frise .piste { position: relative; height: 16px; background: repeating-linear-gradient(90deg, var(--grille) 0 1px, transparent 1px 10%); }
+.frise .marque { position: absolute; top: 2px; bottom: 2px; border-radius: 4px; min-width: 3px; }
+.frise .duree { text-align: right; font-variant-numeric: tabular-nums; }
+.frise .t1 { background: var(--s1); } .frise .t2 { background: var(--s2); } .frise .t3 { background: var(--s3); } .frise .t4 { background: var(--s4); }
+.frise .ta { background: repeating-linear-gradient(45deg, var(--attente) 0 3px, transparent 3px 6px); border: 1px solid var(--attente); }
+.frise .tx { background: var(--critique); }
+.frise .entete-t { font-size: 13px; font-weight: 600; margin: 14px 0 4px; display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+.frise .entete-t small { font-weight: 400; color: var(--muted); }
+.frise .coupure { display: grid; grid-template-columns: 190px 1fr 92px; gap: 8px; align-items: center; font-size: 13px; margin: 6px 0; min-height: 36px; }
+.frise .coupure .zz { height: 18px; border-top: 2px dashed var(--attente); border-bottom: 2px dashed var(--attente); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); }
+.frise .axe { display: grid; grid-template-columns: 190px 1fr 92px; gap: 8px; font-size: 11px; color: var(--muted); }
+.frise .axe div { display: flex; justify-content: space-between; }
+.icone-x { color: var(--critique); font-weight: 700; }
+.legende-frise { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); margin: 10px 0; }
+.legende-frise i { display: inline-block; width: 14px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; padding: 6px 8px; border-radius: 6px; max-width: 280px; z-index: 50; display: none; }
+.fiche { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px; font-size: 13px; margin: 0 0 12px; }
+.fiche div b { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+details.table-vue summary { cursor: pointer; font-size: 14px; font-weight: 600; min-height: 40px; display: flex; align-items: center; }
+table.etapes { border-collapse: collapse; font-size: 13px; width: 100%; font-variant-numeric: tabular-nums; }
+table.etapes th, table.etapes td { border-bottom: 1px solid var(--line); padding: 5px 6px; text-align: left; white-space: nowrap; }
+#mesure + .encart table.etapes td { white-space: normal; }
+.pc .contenu > * { max-width: 100%; }
+
+/* Verrou */
+.verrou { font-size: 14px; }
+.verrou .rang { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: center; margin: 8px 0; }
+.verrou .bande { position: relative; height: 26px; background: var(--chip); border-radius: 6px; }
+.verrou .bande span { position: absolute; top: 0; bottom: 0; border-radius: 6px; font-size: 12px; display: flex; align-items: center; padding: 0 6px; white-space: nowrap; overflow: hidden; }
+.verrou .travail { background: var(--s1); color: #fff; }
+.verrou .mort { background: repeating-linear-gradient(45deg, var(--attente) 0 3px, transparent 3px 6px); border: 1px solid var(--attente); color: var(--ink); }
+.verrou .fin { background: var(--s3); color: #fff; }
+pre.csv { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 12px; overflow-x: auto; max-width: 1120px; }
+
+/* Suivi (écran d'attente) */
+.etapes-suivi { list-style: none; padding: 0; margin: 8px 0 14px; }
+.etapes-suivi li { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 15px; }
+.etapes-suivi .pt { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--bord); flex: none; display: grid; place-items: center; font-size: 12px; }
+.etapes-suivi .done .pt { background: var(--ok); border-color: var(--ok); color: #fff; }
+.etapes-suivi .cur .pt { border-color: var(--marque); }
+.etapes-suivi .cur { font-weight: 600; }
+.etapes-suivi .todo { color: var(--muted); }
+
+/* Choix de Xavier */
+.choix { background: var(--surface); border: 1px dashed var(--bord); border-radius: 12px; padding: 12px 14px; margin: 14px 0 4px; max-width: 900px; }
+.choix .q { font-weight: 600; margin: 0 0 8px; }
+.choix .opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.choix .opts button { font: inherit; font-size: 14px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 12px; min-height: 44px; cursor: pointer; text-align: left; }
+.choix .opts button[aria-pressed="true"] { background: var(--marque); border-color: var(--marque); color: var(--on-marque); }
+.choix textarea { width: 100%; min-height: 54px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--bg); color: var(--ink); }
+.recap { position: sticky; bottom: 12px; display: flex; justify-content: flex-end; gap: 8px; margin-top: 30px; }
+.recap .btn { box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+@media (max-width: 600px) { .recap { position: static; } .frise .ligne, .frise .coupure, .frise .axe { grid-template-columns: 1fr auto; row-gap: 2px; padding: 3px 0; } .frise .piste, .frise .coupure .zz, .frise .axe div { grid-column: 1 / -1; grid-row: 2; } .frise .axe > span { display: none; } .frise .coupure .zz { height: auto; min-height: 22px; text-align: center; } .verrou .rang { grid-template-columns: 1fr; } }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav id="mk-toc"></nav>
+<header class="page">
+  <h1>Chronomètre des dictées</h1>
+  <p>Chaque dictée garde en base la durée de chaque étape, de l'envoi depuis le téléphone à l'offre écrite. Une page de l'administration les liste, un rapport montre une dictée sur une frise, un export CSV les sort pour un tableur. En dessous de chaque écran, ta réponse.</p>
+  <p class="note">Les chiffres marqués <span class="etiq releve">relevé</span> viennent de la base et du journal du test (24.11). Ceux marqués <span class="etiq exemple">exemple</span> sont inventés pour montrer l'écran : aujourd'hui, personne ne les mesure.</p>
+</header>
+
+<h2 id="rapport">Le rapport d'une dictée : l'offre 87</h2>
+<p class="note">Ce que la page aurait montré pour l'offre 87 si le chronomètre avait tourné. Les fins des trois appels à l'IA, la panne et la reprise sont <span class="etiq releve">relevé</span> ; l'envoi, la transcription et le début de l'extraction sont des <span class="etiq exemple">exemple</span>. Survole une barre pour le détail.</p>
+
+<div class="pc" id="ecran-rapport">
+  <div class="barre">Dicta, administration <small>Xavier, administrateur</small></div>
+  <div class="corps">
+    <div class="menu">
+      <a href="#">Tableau</a><a href="#">Clients</a><a href="#">Équipe</a><a href="#">Plus</a><a class="sous cur" href="#">Dictées</a>
+    </div>
+    <div class="contenu">
+      <p style="margin:0 0 4px"><a href="#liste">← Dictées</a></p>
+      <h3 style="margin:0 0 10px">Dictée du 24.11.2026 à 12:05, offre 87</h3>
+      <div class="fiche">
+        <div><b>Compte</b>n° 19</div>
+        <div><b>Audio</b>2 min 48 s <span class="etiq exemple">exemple</span></div>
+        <div><b>Taille, format</b>656 Ko, video/webm <span class="etiq releve">relevé</span></div>
+        <div><b>Navigateur</b>Chrome, Android</div>
+        <div><b>Origine</b>micro</div>
+        <div><b>Total</b>15 min 30 s, 2 tentatives</div>
+      </div>
+      <div class="legende-frise">
+        <span><i style="background:var(--s1)"></i>Téléphone et réception</span>
+        <span><i style="background:var(--s2)"></i>Transcription</span>
+        <span><i style="background:var(--s3)"></i>IA</span>
+        <span><i style="background:var(--s4)"></i>Écriture de l'offre</span>
+        <span><i style="background:repeating-linear-gradient(45deg,var(--attente) 0 3px,transparent 3px 6px);border:1px solid var(--attente)"></i>Attente</span>
+        <span><i style="background:var(--critique)"></i><span class="icone-x">✕</span> Erreur ou interruption</span>
+      </div>
+      <div class="frise" id="frise"></div>
+      <details class="table-vue"><summary>Voir en tableau</summary>
+        <div class="defile"><table class="etapes" id="table-etapes"><thead><tr><th>Tentative</th><th>Étape</th><th>Processus</th><th>Début</th><th>Fin</th><th>Durée</th><th>Issue</th><th>Modèle</th><th>Jetons envoyés</th><th>reçus</th><th>1er octet</th></tr></thead><tbody></tbody></table></div>
+      </details>
+    </div>
+  </div>
+</div>
+<p class="note">Lecture : la première tentative a fini ses trois appels à l'IA, puis l'écriture a échoué ; 13 minutes de reprise, dues au verrou ; la seconde extraction a pris 6 s pour 776 jetons reçus. Le début de la première extraction n'est noté nulle part aujourd'hui : ses 59 s sont une estimation (58 s ou plus selon toi), le chronomètre la mesurera.</p>
+
+<div class="choix" data-q="D1">
+  <p class="q">D1. Le rapport : frise par tentative, tableau en dessous, étapes de la section « Ce qui est mesuré »</p>
+  <div class="opts">
+    <button type="button" data-c="Valider">Valider</button>
+    <button type="button" data-c="Pas valider">Pas valider</button>
+  </div>
+  <textarea placeholder="Commentaire (une étape en trop, une qui manque ?)"></textarea>
+</div>
+
+<h2 id="liste">La liste des dictées</h2>
+<p class="note">Les 100 dernières dictées, plus récentes d'abord. Une durée plus de deux fois la médiane de sa colonne passe en gras rouge avec ▲. Un clic sur une ligne ouvre son rapport. Toutes les lignes sont des <span class="etiq exemple">exemple</span>, sauf les offres 87 et 70 (durée totale <span class="etiq releve">relevé</span>).</p>
+
+<div class="pc">
+  <div class="barre">Dicta, administration <small>Xavier, administrateur</small></div>
+  <div class="corps">
+    <div class="menu">
+      <a href="#">Tableau</a><a href="#">Clients</a><a href="#">Équipe</a><a href="#">Plus</a><a class="sous cur" href="#">Dictées</a>
+    </div>
+    <div class="contenu">
+      <h3 style="margin:0 0 10px">Dictées</h3>
+      <div class="outils">
+        <label>Du<input type="date" value="2026-11-17"></label>
+        <label>Au<input type="date" value="2026-11-24"></label>
+        <label>Afficher<select><option>Toutes</option><option>Avec une étape marquée</option><option>Avec une reprise ou une erreur</option></select></label>
+        <div class="droite"><a class="btn petit" href="#csv">Exporter en CSV</a></div>
+      </div>
+      <div class="defile">
+        <table class="dictees" id="table-dictees">
+          <thead><tr>
+            <th class="g">Reçue</th><th>Offre</th><th>Compte</th><th class="g">Audio</th><th class="g">Navigateur</th>
+            <th>Envoi</th><th>Attente</th><th>Transcription</th><th>Extraction</th><th>Pièces</th><th>Options</th><th>Écriture</th><th>Hors étapes</th><th>Total</th><th>Tent.</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="legende-liste">Transcription : conversion, envoi à Infomaniak et attente du texte additionnés ; le rapport les sépare. « Attente » compte aussi la reprise après une panne. « - » : étape absente (pas d'options dictées, message du téléphone perdu).</p>
+    </div>
+  </div>
+</div>
+
+<div class="rangee">
+  <figure class="fig">
+    <div class="tel">
+      <div class="barre">Dictées</div>
+      <div class="ecran" id="cartes"></div>
+    </div>
+    <figcaption><b>Au téléphone</b>, une carte par dictée : la barre montre la part de chaque étape dans le total, l'étape la plus lente est nommée.</figcaption>
+  </figure>
+</div>
+
+<div class="choix" data-q="D2">
+  <p class="q">D2. La liste : 100 dernières, période réglable, marque à deux fois la médiane, filtre « étape marquée » et « reprise ou erreur »</p>
+  <div class="opts">
+    <button type="button" data-c="A">A. Comme montré (proposé)</button>
+    <button type="button" data-c="B">B. Marque par un seuil fixe par étape (par exemple extraction au-delà de 20 s)</button>
+    <button type="button" data-c="C">C. Sans marque, je lis les chiffres</button>
+  </div>
+  <textarea placeholder="Commentaire (colonnes à retirer ou à ajouter ?)"></textarea>
+</div>
+
+<h2 id="csv">L'export CSV</h2>
+<p class="note">Il sort la liste affichée (même période, même filtre). Point-virgule, durées en millisecondes, pour Excel ou LibreOffice. Proposé : une ligne par dictée, comme la liste, avec en plus les jetons de chaque appel. Chiffres d'<span class="etiq exemple">exemple</span>.</p>
+<pre class="csv">recue;offre;compte;audio_ms;taille_octets;format;navigateur;origine;tentatives;envoi_ms;attente_ms;reprise_ms;mesure_ms;conversion_ms;transcription_envoi_ms;transcription_ms;extraction_ms;extraction_jetons_envoyes;extraction_jetons_recus;pieces_ms;options_ms;ecriture_ms;hors_etapes_ms;total_ms;modele_ia;modele_transcription
+2026-11-24 12:05:43;87;19;168000;672022;video/webm;Chrome, Android;micro;2;3800;50;787800;50;1400;1100;65200;65400;3526;1569;2800;1100;200;3330;930500;Qwen/Qwen3.8-27B-FP8;whisper
+2026-11-24 12:39:01;91;19;94000;381310;video/webm;Safari, iPhone;micro;1;2100;40;;60;900;800;21400;6100;1547;351;600;500;180;420;33100;Qwen/Qwen3.8-27B-FP8;whisper</pre>
+<p class="note">Autre forme possible : une ligne par étape (dictée, tentative, étape, processus, début, fin, durée, modèle, jetons). Plus longue, mais tout y est, tentative par tentative, pour un tableau croisé.</p>
+
+<div class="choix" data-q="D3">
+  <p class="q">D3. Le format du CSV</p>
+  <div class="opts">
+    <button type="button" data-c="A">A. Une ligne par dictée (proposé)</button>
+    <button type="button" data-c="B">B. Une ligne par étape</button>
+    <button type="button" data-c="C">C. Les deux, deux boutons</button>
+  </div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<h2 id="verrou">Le verrou qui reste pris 15 minutes</h2>
+<p class="note">Un traitement prend un verrou sur la dictée pour que deux processus ne la traitent pas en même temps. Il le prend aujourd'hui pour 15 minutes. S'il meurt sans le rendre, personne ne reprend la dictée avant la fin des 15 minutes, et l'artisan attend sans message. L'offre 87, <span class="etiq releve">relevé</span> : verrou pris à 12:05:43, panne à 12:07:52, verrou expiré à 12:20:43, reprise par le cron à 12:21.</p>
+
+<div class="encart verrou">
+  <div class="rang"><b>Aujourd'hui</b>
+    <div class="bande">
+      <span class="travail" style="left:0;width:13.9%">travail</span>
+      <span class="mort" style="left:13.9%;width:84.8%">verrou d'un processus mort, 12 min 51 s</span>
+      <span class="fin" style="left:98.7%;width:1.3%"></span>
+    </div>
+  </div>
+  <div class="rang"><b>Avec A</b>
+    <div class="bande">
+      <span class="travail" style="left:0;width:13.9%">travail</span>
+      <span class="mort" style="left:13.9%;width:13.0%">2 min</span>
+      <span class="fin" style="left:26.9%;width:1.8%"></span>
+    </div>
+  </div>
+  <p class="note" style="margin:8px 0 0">Échelle : de 12:05:43 à 12:21:08. Avec A, l'offre 87 aurait été prête vers 12:10:10 au lieu de 12:21:08.</p>
+</div>
+
+<div class="encart regle">
+  <h3 style="margin-top:0">A. Un bail court et un pouls (proposé)</h3>
+  <p style="margin:0 0 6px">Le verrou se prend pour 2 minutes. Le traitement le prolonge à chaque étape et, pendant un appel à l'IA ou à la transcription, toutes les 20 secondes : le client HTTP rappelle le code au moins une fois par seconde pendant qu'il attend la réponse (contrat de Symfony, lu dans son code). Un processus mort ne prolonge plus rien : 2 minutes plus tard le verrou est libre, le cron (chaque minute) reprend. Attente après une panne : 3 minutes au plus.</p>
+  <p style="margin:0" class="note">En prime : le pouls garde la connexion à la base en vie, la panne du 24.11 ne peut plus revenir par ce chemin. Si le pouls trouve que le verrou a été repris par un autre processus, il coupe l'appel en cours : l'extraction n'est pas payée deux fois. À vérifier pendant le code : ffmpeg, qui ne bat pas le pouls, doit rester sous 2 minutes sur une dictée de 30 minutes (le chronomètre le mesure).</p>
+</div>
+<div class="encart">
+  <h3 style="margin-top:0">B. Garder 15 minutes, rendre le verrou à toute erreur</h3>
+  <p style="margin:0" class="note">À une erreur, le traitement rouvre une connexion à la base pour rendre le verrou, et le rend aussi quand PHP s'arrête sur une erreur fatale. Couvre l'offre 87. Un processus tué (limite de durée de PHP-FPM, redémarrage du serveur) laisse encore 15 minutes.</p>
+</div>
+<div class="encart">
+  <h3 style="margin-top:0">C. Rien de plus que le correctif de la connexion</h3>
+  <p style="margin:0" class="note"><code>wait_timeout</code> à 1800 s (commit afd225b, poussé, pas encore sur le test) supprime la cause du 24.11. Toute autre mort de processus garde ses 15 minutes.</p>
+</div>
+
+<div class="choix" data-q="D4">
+  <p class="q">D4. Le remède au verrou</p>
+  <div class="opts">
+    <button type="button" data-c="A">A. Bail de 2 minutes et pouls (proposé)</button>
+    <button type="button" data-c="B">B. 15 minutes, verrou rendu à toute erreur</button>
+    <button type="button" data-c="C">C. Rien de plus</button>
+  </div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<h2 id="artisan">Ce que voit l'artisan pendant la panne</h2>
+<div class="rangee">
+  <figure class="fig">
+    <div class="tel">
+      <div class="barre">Préparation de l'offre</div>
+      <div class="ecran">
+        <p style="margin:0 0 6px;color:var(--muted);font-size:14px">Fichier : dictee-24-11-12h05.webm</p>
+        <ul class="etapes-suivi">
+          <li class="done"><span class="pt">✓</span>Envoi de l'enregistrement</li>
+          <li class="done"><span class="pt">✓</span>Transcription de la dictée</li>
+          <li class="cur"><span class="pt"></span>Création de l'offre</li>
+          <li class="todo"><span class="pt"></span>Offre prête</li>
+        </ul>
+        <p class="alerte warn" role="status"><b>Le traitement s'est arrêté en route.</b>Il reprend tout seul d'ici une minute. Vous pouvez rester sur cet écran ou revenir plus tard.</p>
+        <div style="margin-top:auto"><a class="btn" style="width:100%" href="#">Revenir aux offres</a></div>
+      </div>
+    </div>
+    <figcaption><b>Après</b> : le message apparaît dès que le verrou du traitement a expiré sans offre prête (avec A, 2 minutes après la panne), et disparaît à la reprise. Aujourd'hui, rien ne s'affiche pendant les 15 minutes.</figcaption>
+  </figure>
+</div>
+<div class="choix" data-q="D5">
+  <p class="q">D5. Le message pendant la panne (écran d'attente et fenêtre du bas)</p>
+  <div class="opts">
+    <button type="button" data-c="Valider">Valider</button>
+    <button type="button" data-c="Pas valider">Pas valider</button>
+  </div>
+  <textarea placeholder="Commentaire (texte ?)"></textarea>
+</div>
+
+<h2 id="mesure">Ce qui est mesuré, et comment</h2>
+<div class="encart">
+  <table class="etapes">
+    <thead><tr><th>Étape</th><th>Mesurée par</th><th>Remarque</th></tr></thead>
+    <tbody>
+      <tr><td>Envoi depuis le téléphone</td><td>le téléphone</td><td>il mesure l'envoi du fichier, puis envoie la durée par un petit message ; l'horloge du téléphone n'est jamais crue</td></tr>
+      <tr><td>Réception</td><td>le serveur</td><td>de l'arrivée de la requête à la réponse (contrôles, rangement du fichier)</td></tr>
+      <tr><td>Attente avant traitement</td><td>le serveur</td><td>de la réception (ou d'une erreur) à la prise du verrou ; « reprise » après une panne</td></tr>
+      <tr><td>Mesure et conversion</td><td>le serveur</td><td>ffprobe et ffmpeg, avant la transcription</td></tr>
+      <tr><td>Transcription</td><td>le serveur</td><td>envoi à Infomaniak, puis attente du texte (lot asynchrone)</td></tr>
+      <tr><td>Chaque appel à l'IA</td><td>le serveur</td><td>extraction, pièces, options : modèle, jetons envoyés et reçus, temps jusqu'au premier octet</td></tr>
+      <tr><td>Écriture de l'offre</td><td>le serveur</td><td>rapprochement du client et transaction</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Pour chaque étape : début, fin, durée en ms, tentative, processus (après réponse ou cron, téléphone, web), issue. Sur la dictée : durée de l'audio, taille, format, navigateur (en-tête du navigateur, gardé tel quel), micro ou fichier. Pas mesuré : la lecture du catalogue et le courriel « offre prête » ; la colonne « Hors étapes » montre ce qui manque au total. Jamais de texte de dictée dans ces lignes.</p>
+</div>
+<div class="choix" data-q="D6">
+  <p class="q">D6. Le téléphone envoie la durée de son envoi par un second petit message, après l'envoi du fichier</p>
+  <div class="opts">
+    <button type="button" data-c="Valider">Valider</button>
+    <button type="button" data-c="Pas valider">Pas valider, seulement ce que le serveur mesure</button>
+  </div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<h2 id="place">Place dans l'administration</h2>
+<p class="note">Réservé au rôle administrateur. Proposé : une entrée « Dictées » dans « Plus » et un lien depuis le Tableau, sans onglet de plus dans la barre du bas (elle a déjà quatre entrées).</p>
+<div class="choix" data-q="D7">
+  <p class="q">D7. Où mettre la page</p>
+  <div class="opts">
+    <button type="button" data-c="A">A. Dans « Plus » et un lien depuis le Tableau (proposé)</button>
+    <button type="button" data-c="B">B. Un onglet « Dictées » dans la barre</button>
+  </div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<h2 id="origin">Suivi dans Origin</h2>
+<p class="note">Aucune tâche du projet offreGen ne couvre ce chantier. Proposé : tâche « Chronomètre des dictées (sous-chantier 31) », 13 h, sous-tâches : SPEC et maquette (1,5 h), table et chronomètre dans le traitement (3 h), envoi mesuré par le téléphone (1 h), page, rapport et CSV (3 h), remède du verrou et message (2,5 h), revue et recette sur le test (2 h).</p>
+<div class="choix" data-q="D8">
+  <p class="q">D8. Créer la tâche Origin</p>
+  <div class="opts">
+    <button type="button" data-c="Créer">Créer</button>
+    <button type="button" data-c="Pas maintenant">Pas maintenant</button>
+  </div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<div class="recap"><button class="btn primary" type="button" data-copier>Copier le texte</button></div>
+</main>
+<div class="tip" id="tip"></div>
+
+<script>
+(function () {
+  // Offre 87. t en secondes depuis 12:05:39.2 (début de l'envoi). Fins des appels IA, panne, reprise : journal du test.
+  var ORIGINE = { h: 12, m: 5, s: 39.2 };
+  var T1 = [
+    { n: 'Envoi', p: 'téléphone', d: 0, f: 3.8, c: 't1', ex: true },
+    { n: 'Réception', p: 'web', d: 3.8, f: 4.4, c: 't1', ex: true },
+    { n: 'Attente', p: 'après réponse', d: 4.4, f: 4.45, c: 'ta', ex: true },
+    { n: 'Mesure', p: 'après réponse', d: 4.45, f: 4.5, c: 't2', ex: true, issue: 'illisible (ffprobe absent du site)' },
+    { n: 'Conversion', p: 'après réponse', d: 4.5, f: 5.9, c: 't2', ex: true },
+    { n: 'Transcription, envoi', p: 'après réponse', d: 5.9, f: 7.0, c: 't2', ex: true, mod: 'whisper' },
+    { n: 'Transcription', p: 'après réponse', d: 7.0, f: 72.2, c: 't2', ex: true, mod: 'whisper' },
+    { n: 'IA, extraction', p: 'après réponse', d: 72.3, f: 131.74, c: 't3', mod: 'Qwen3.8-27B', je: 1759, jr: 793, po: 58900, fr: true },
+    { n: 'IA, pièces', p: 'après réponse', d: 131.74, f: 132.59, c: 't3', mod: 'Qwen3.8-27B', je: 1188, jr: 141, po: 600, fr: true },
+    { n: 'IA, options', p: 'après réponse', d: 132.59, f: 133.18, c: 't3', mod: 'Qwen3.8-27B', je: 1378, jr: 49, po: 420, fr: true },
+    { n: 'Écriture', p: 'après réponse', d: 133.18, f: 133.19, c: 'tx', issue: 'erreur : MySQL server has gone away', fr: true }
+  ];
+  var T2 = [
+    { n: 'IA, extraction', p: 'cron', d: 921.1, f: 927.12, c: 't3', mod: 'Qwen3.8-27B', je: 1767, jr: 776, po: 5700, fr: true },
+    { n: 'IA, pièces', p: 'cron', d: 927.12, f: 928.99, c: 't3', mod: 'Qwen3.8-27B', je: 1169, jr: 141, po: 1500, fr: true },
+    { n: 'IA, options', p: 'cron', d: 928.99, f: 929.5, c: 't3', mod: 'Qwen3.8-27B', je: 1359, jr: 49, po: 380, fr: true },
+    { n: 'Écriture', p: 'cron', d: 929.5, f: 929.7, c: 't4', ex: true }
+  ];
+  function duree(s) {
+    if (s < 1) return Math.round(s * 1000) + ' ms';
+    if (s < 60) return (Math.round(s * 10) / 10).toString().replace('.', ',') + ' s';
+    var m = Math.floor(s / 60), r = Math.round(s - m * 60);
+    return m + ' min ' + (r < 10 ? '0' : '') + r + ' s';
+  }
+  function heure(t) {
+    var tot = ORIGINE.h * 3600 + ORIGINE.m * 60 + ORIGINE.s + t;
+    var h = Math.floor(tot / 3600), m = Math.floor(tot % 3600 / 60), s = tot % 60;
+    var p = function (x) { return (x < 10 ? '0' : '') + x; };
+    return p(h) + ':' + p(m) + ':' + (s < 10 ? '0' : '') + s.toFixed(1).replace('.', ',');
+  }
+  var tip = document.getElementById('tip');
+  function montrer(e, texte) { tip.textContent = texte; tip.style.display = 'block'; tip.style.left = Math.min(e.clientX + 12, innerWidth - 290) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; }
+  function cacher() { tip.style.display = 'none'; }
+  function texteEtape(x, t) {
+    return 'Tentative ' + t + ', ' + x.n + ' (' + x.p + ') : ' + heure(x.d) + ' à ' + heure(x.f) + ', ' + duree(x.f - x.d)
+      + (x.mod ? ', ' + x.mod : '') + (x.je ? ', ' + x.je + ' jetons envoyés, ' + x.jr + ' reçus' : '') + (x.issue ? ', ' + x.issue : '')
+      + (x.ex ? ' (exemple)' : x.fr ? ' (fin relevée au journal)' : '');
+  }
+  var frise = document.getElementById('frise');
+  function bloc(liste, t, debut, fin, titre) {
+    var e = document.createElement('div'); e.className = 'entete-t';
+    e.innerHTML = '<span>' + titre + '</span><small>' + heure(debut) + ' à ' + heure(fin) + ', ' + duree(fin - debut) + '</small>';
+    frise.appendChild(e);
+    liste.forEach(function (x) {
+      var l = document.createElement('div'); l.className = 'ligne';
+      var g = (x.d - debut) / (fin - debut) * 100, w = (x.f - x.d) / (fin - debut) * 100;
+      l.innerHTML = '<div class="nom">' + (x.c === 'tx' ? '<span class="icone-x">✕</span> ' : '') + x.n + ' <small>' + x.p + '</small></div>'
+        + '<div class="piste"><div class="marque ' + x.c + '" style="left:' + g + '%;width:' + Math.max(w, 0.4) + '%"></div></div>'
+        + '<div class="duree">' + (x.c === 'tx' ? 'erreur' : duree(x.f - x.d)) + '</div>';
+      l.addEventListener('mousemove', function (ev) { montrer(ev, texteEtape(x, t)); });
+      l.addEventListener('mouseleave', cacher);
+      frise.appendChild(l);
+    });
+    var a = document.createElement('div'); a.className = 'axe';
+    a.innerHTML = '<span></span><div><span>' + heure(debut).slice(0, 8) + '</span><span>' + heure(fin).slice(0, 8) + '</span></div><span></span>';
+    frise.appendChild(a);
+  }
+  bloc(T1, 1, 0, 133.2, 'Tentative 1, après réponse');
+  var c = document.createElement('div'); c.className = 'coupure';
+  c.innerHTML = '<div class="nom">Reprise <small>cron</small></div><div class="zz">verrou d\'un processus mort, frise coupée</div><div class="duree">13 min 08 s</div>';
+  c.addEventListener('mousemove', function (ev) { montrer(ev, 'Reprise : de la panne (' + heure(133.19) + ') à la prise du verrou par le cron (' + heure(921.1) + '). Verrou de 900 s pris à 12:05:43, expiré à 12:20:43.'); });
+  c.addEventListener('mouseleave', cacher);
+  frise.appendChild(c);
+  bloc(T2, 2, 921.1, 929.7, 'Tentative 2, cron');
+
+  var tb = document.querySelector('#table-etapes tbody');
+  [[T1, 1], [T2, 2]].forEach(function (z) {
+    z[0].forEach(function (x) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + z[1] + '</td><td>' + x.n + '</td><td>' + x.p + '</td><td>' + heure(x.d) + '</td><td>' + heure(x.f) + '</td><td>' + duree(x.f - x.d)
+        + '</td><td>' + (x.issue || 'ok') + '</td><td>' + (x.mod || '') + '</td><td>' + (x.je || '') + '</td><td>' + (x.jr || '') + '</td><td>' + (x.po ? duree(x.po / 1000) : '') + '</td>';
+      tb.appendChild(tr);
+    });
+  });
+
+  // Liste : secondes ; null = étape absente.
+  var D = [
+    { r: '24.11 12:39', o: 91, c: 19, a: 94, t: '372 Ko', f: 'webm', nav: 'Safari, iPhone', or: 'micro', e: [2.1, 0.04, 23.1, 6.1, 0.6, 0.5, 0.18], h: 0.4, n: 1 },
+    { r: '24.11 12:38', o: 90, c: 19, a: 71, t: '284 Ko', f: 'webm', nav: 'Safari, iPhone', or: 'micro', e: [1.8, 0.05, 19.4, 5.2, 0.6, null, 0.15], h: 0.3, n: 1 },
+    { r: '24.11 12:05', o: 87, c: 19, a: 168, t: '656 Ko', f: 'webm', nav: 'Chrome, Android', or: 'micro', e: [3.8, 787.85, 67.7, 65.4, 2.8, 1.1, 0.2], h: 1.6, n: 2, sel: true },
+    { r: '24.11 11:52', o: 86, c: 22, a: 212, t: '3,1 Mo', f: 'm4a', nav: 'Safari, iPhone', or: 'fichier', e: [14.6, 0.05, 41.0, 7.9, 0.9, null, 0.21], h: 0.5, n: 1 },
+    { r: '24.11 10:14', o: 85, c: 27, a: 46, t: '181 Ko', f: 'webm', nav: 'Chrome, Windows', or: 'micro', e: [0.4, 0.03, 14.2, 4.8, 0.5, null, 0.14], h: 0.3, n: 1 },
+    { r: '23.11 17:31', o: 84, c: 19, a: 133, t: '528 Ko', f: 'webm', nav: 'Chrome, Android', or: 'micro', e: [null, 41.2, 33.0, 6.6, 0.7, 0.6, 0.19], h: 0.4, n: 1 },
+    { r: '23.11 16:02', o: 83, c: 22, a: 88, t: '350 Ko', f: 'webm', nav: 'Safari, iPhone', or: 'micro', e: [2.4, 0.04, 21.7, 5.5, 0.6, null, 0.16], h: 0.3, n: 1 },
+    { r: '21.11 16:47', o: 70, c: 14, a: 61, t: '242 Ko', f: 'webm', nav: 'Safari, iPhone', or: 'micro', e: [1.9, 862.0, 17.8, 30.1, 0.7, null, 0.2], h: 4.3, n: 2 }
+  ];
+  function med(i) { var v = D.map(function (x) { return x.e[i]; }).filter(function (x) { return x !== null; }).sort(function (a, b) { return a - b; }); var k = Math.floor(v.length / 2); return v.length % 2 ? v[k] : (v[k - 1] + v[k]) / 2; }
+  var M = [0, 1, 2, 3, 4, 5, 6].map(med);
+  var NOMS = ['Envoi', 'Attente', 'Transcription', 'Extraction', 'Pièces', 'Options', 'Écriture'];
+  var body = document.querySelector('#table-dictees tbody');
+  D.forEach(function (x) {
+    var tot = x.e.reduce(function (a, b) { return a + (b || 0); }, 0) + x.h;
+    var tr = document.createElement('tr'); if (x.sel) tr.className = 'sel';
+    var cells = '<td class="g">' + x.r + '</td><td>' + x.o + '</td><td>' + x.c + '</td><td class="g">' + duree(x.a) + '<small class="sous-info">' + x.t + ', ' + x.f + ', ' + x.or + '</small></td><td class="g">' + x.nav + '</td>';
+    x.e.forEach(function (v, i) { cells += v === null ? '<td class="manque">-</td>' : '<td' + (v > 2 * M[i] && v > 1 ? ' class="lent" title="plus de deux fois la médiane (' + duree(M[i]) + ')"' : '') + '>' + duree(v) + '</td>'; });
+    cells += '<td>' + duree(x.h) + '</td><td><b>' + duree(tot) + '</b></td><td>' + x.n + '</td>';
+    tr.innerHTML = cells;
+    tr.addEventListener('click', function () { location.hash = 'rapport'; });
+    body.appendChild(tr);
+  });
+  var COUL = ['var(--s1)', 'var(--attente)', 'var(--s2)', 'var(--s3)', 'var(--s3)', 'var(--s3)', 'var(--s4)'];
+  var cartes = document.getElementById('cartes');
+  D.slice(0, 5).forEach(function (x) {
+    var tot = x.e.reduce(function (a, b) { return a + (b || 0); }, 0) + x.h, pire = -1, rap = 0;
+    x.e.forEach(function (v, i) { if (v !== null && v > 2 * M[i] && v > 1 && v / M[i] > rap) { rap = v / M[i]; pire = i; } });
+    var d = document.createElement('div'); d.className = 'carte';
+    var seg = x.e.map(function (v, i) { return v ? '<span style="width:' + (v / tot * 100) + '%;background:' + COUL[i] + '"></span>' : ''; }).join('');
+    d.innerHTML = '<div class="haut"><span>Offre ' + x.o + ', ' + x.r + '</span><span>' + duree(tot) + '</span></div>'
+      + '<div class="barre-mini">' + seg + '</div>'
+      + '<div class="bas">' + x.nav + ', ' + duree(x.a) + ' d\'audio' + (x.n > 1 ? ', ' + x.n + ' tentatives' : '') + '</div>'
+      + (pire >= 0 ? '<div class="lent">▲ ' + NOMS[pire] + ' : ' + duree(x.e[pire]) + '</div>' : '');
+    cartes.appendChild(d);
+  });
+
+  // Choix de Xavier, gardés dans le navigateur.
+  var CLE = 'mk-offregen-31-chronometre';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  document.querySelectorAll('.choix').forEach(function (c) {
+    var q = c.getAttribute('data-q'), ta = c.querySelector('textarea');
+    etat[q] = etat[q] || { c: '', t: '' };
+    c.querySelectorAll('.opts button').forEach(function (b) {
+      b.setAttribute('aria-pressed', etat[q].c === b.getAttribute('data-c') ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        etat[q].c = b.getAttribute('data-c');
+        c.querySelectorAll('.opts button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        garder();
+      });
+    });
+    ta.value = etat[q].t;
+    ta.addEventListener('input', function () { etat[q].t = ta.value; garder(); });
+  });
+  document.querySelector('[data-copier]').addEventListener('click', function () {
+    var lignes = [];
+    document.querySelectorAll('.choix').forEach(function (c) {
+      var q = c.getAttribute('data-q'), e = etat[q] || {};
+      lignes.push(c.querySelector('.q').textContent + ' : ' + (e.c || '(pas de choix)') + (e.t ? ' | ' + e.t : ''));
+    });
+    var texte = lignes.join('\n'), b = this;
+    function fait() { b.textContent = 'Copié'; setTimeout(function () { b.textContent = 'Copier le texte'; }, 1500); }
+    if (navigator.clipboard) navigator.clipboard.writeText(texte).then(fait, function () { window.prompt('Copier :', texte); });
+    else window.prompt('Copier :', texte);
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>
