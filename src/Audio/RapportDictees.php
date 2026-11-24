@@ -77,9 +77,12 @@ final class RapportDictees
         $modeleIa = null;
         $modeleTranscription = null;
         foreach ($etapes as $e) {
-            $detail[$e['etape']] = ($detail[$e['etape']] ?? 0) + ($e['duree_ms'] ?? 0);
+            // Une étape sans durée (en cours, interrompue) n'entre ni dans les colonnes ni dans les statistiques (revue M1).
+            if ($e['duree_ms'] !== null) {
+                $detail[$e['etape']] = ($detail[$e['etape']] ?? 0) + $e['duree_ms'];
+            }
             $essais = max($essais, $e['tentative']);
-            $accroc = $accroc || $e['etape'] === 'reprise' || in_array($e['issue'], ['erreur', 'interrompue'], true);
+            $accroc = $accroc || in_array($e['etape'], ['reprise', 'erreur'], true) || in_array($e['issue'], ['erreur', 'interrompue'], true);
             $debut = $debut === null || $e['debut'] < $debut ? $e['debut'] : $debut;
             $f = $e['fin'] ?? $e['debut'];
             $fin = $fin === null || $f > $fin ? $f : $fin;
@@ -187,6 +190,7 @@ final class RapportDictees
         'envoi' => 'Envoi', 'reception' => 'Réception', 'attente' => 'Attente', 'reprise' => 'Reprise', 'mesure' => 'Mesure',
         'conversion' => 'Conversion', 'transcription_envoi' => 'Transcription, envoi', 'transcription' => 'Transcription',
         'ia_extraction' => 'IA, extraction', 'ia_pieces' => 'IA, pièces', 'ia_options' => 'IA, options', 'ecriture' => 'Écriture',
+        'erreur' => 'Erreur',
     ];
 
     public const NOMS_PROCESSUS = ['telephone' => 'téléphone', 'web' => 'web', 'apres_reponse' => 'après réponse', 'cron' => 'cron', 'rejeu' => 'rejeu'];
@@ -223,6 +227,11 @@ final class RapportDictees
                 }
             }
             if ($lignes === []) {
+                // Une reprise seule (le passage repris est mort aussitôt) reste visible (revue M9).
+                if ($reprise !== null) {
+                    $blocs[] = ['tentative' => $tentative, 'processus' => self::NOMS_PROCESSUS[$reprise['processus']] ?? $reprise['processus'],
+                        'debut' => $reprise['debut'], 'fin' => $reprise['fin'] ?? $reprise['debut'], 'duree' => 1, 'reprise' => $reprise, 'lignes' => []];
+                }
                 continue;
             }
             $debut = min(array_column($lignes, 'debut'));

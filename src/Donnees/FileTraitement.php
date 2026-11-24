@@ -153,11 +153,12 @@ final class FileTraitement
      * pas de l'ordre d'évaluation, qui varie selon le mode SQL.
      *
      * @param \DateTimeImmutable $supprimerApres date de suppression de l'audio si l'enregistrement passe en échec
-     * @return string le statut après l'échec : inchangé, ou echec quand les tentatives sont épuisées
+     * @return string|null le statut après l'échec : inchangé, ou echec quand les tentatives sont épuisées ; null quand
+     *                     le verrou n'est plus à ce traitement (rien n'est noté : revue T2 du sous-chantier 31)
      */
-    public function noterEchec(string $uuid, string $jeton, string $message, int $tentativesMax, \DateTimeImmutable $supprimerApres): string
+    public function noterEchec(string $uuid, string $jeton, string $message, int $tentativesMax, \DateTimeImmutable $supprimerApres): ?string
     {
-        $this->base->ecrire(
+        $touche = $this->base->ecrire(
             'UPDATE enregistrement
              SET statut = IF(tentatives + 1 >= :max, :echec, statut),
                  supprimer_apres = IF(tentatives + 1 >= :max2, :sa, supprimer_apres),
@@ -166,6 +167,9 @@ final class FileTraitement
             ['e' => mb_substr($message, 0, 1000), 'max' => $tentativesMax, 'max2' => $tentativesMax, 'echec' => Statut::ECHEC,
              'sa' => Dates::versBase($supprimerApres), 'u' => $uuid, 'j' => $jeton],
         );
+        if ($touche !== 1) {
+            return null;
+        }
         return (string) $this->base->valeur('SELECT statut FROM enregistrement WHERE uuid = :u', ['u' => $uuid]);
     }
 

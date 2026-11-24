@@ -41,9 +41,11 @@ final class TranscripteurApi implements Transcripteur
     {
         $chrono = $this->chrono ?? Chronometre::inactif();
         // ffmpeg ne bat pas le pouls : 11 s pour 30 minutes de WAV en local, loin du bail de 150 s (ETAT du sous-chantier 31).
-        $fichier = $chrono->mesurer('conversion', fn (): FichierPrepare => $this->preparation->preparer($cheminAudio));
-        $envoi = $chrono->commencer('transcription_envoi', $this->modele);
+        $fichier = $chrono->mesurer('conversion', fn (): FichierPrepare => $this->preparation->preparer($cheminAudio, $chrono->pouls(...)));
+        $envoi = null;
         try {
+            // Dans le try : un pouls qui coupe ici laisse quand même le fichier converti nettoyé (revue T3).
+            $envoi = $chrono->commencer('transcription_envoi', $this->modele);
             $champs = [
                 'model' => $this->modele,
                 'language' => 'fr',
@@ -73,7 +75,7 @@ final class TranscripteurApi implements Transcripteur
             ]);
             $donnees = ReponseApi::lire($reponse, 'Envoi à la transcription');
         } catch (\Throwable $e) {
-            $envoi->echouer($e);
+            $envoi?->echouer($e);
             throw $e;
         } finally {
             $fichier->nettoyer();

@@ -25,8 +25,13 @@ final class Rejeu
 {
     public const ATTENTE_TRANSCRIPTION_SECONDES = 600;
     public const INTERVALLE_SECONDES = 3;
-    /** Un rejeu plus ancien encore « en cours » est tenu pour mort : on peut en relancer un. */
-    public const BLOCAGE_MINUTES = 15;
+    /**
+     * Un rejeu plus ancien encore « en cours » est tenu pour mort : on peut en relancer un. Plus long que le rejeu vivant
+     * le plus long (envoi 600 s, attente du texte 600 s, appels 870 s : environ 35 minutes ; revue M6).
+     */
+    public const BLOCAGE_MINUTES = 40;
+    /** Rejeux en cours au plus, tous comptes confondus : chacun occupe un processus PHP (revue S2, 40 au plus). */
+    public const EN_COURS_MAX = 2;
 
     public function __construct(
         private readonly Base $base,
@@ -72,7 +77,7 @@ final class Rejeu
             $resultat = $this->extracteur->extraire($texte, $produits->tous(), $activite);
             $this->etapes->finirRejeu($rejeuId, 'fini', $horloge->now(), $texte, $resultat->titre, count($resultat->lignes), null);
         } catch (\Throwable $e) {
-            $this->chrono->echouerOuvertes($e);
+            $this->chrono->echouerOuvertes($e, true);
             $this->etapes->finirRejeu($rejeuId, 'echec', $horloge->now(), null, null, null, Chronometre::resume($e));
             $this->journal->warning("offreGen, rejeu $rejeuId : " . Chronometre::resume($e));
         } finally {

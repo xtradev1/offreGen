@@ -269,6 +269,58 @@ final class TraiteurTest extends TestCase
         self::assertSame(151000, BaseDeTest::ligne("SELECT duree_ms FROM dictee_etape WHERE etape = 'reprise'")['duree_ms']);
     }
 
+    /** Revue E1 : une erreur levée après une étape « ok » (réponse coupée) laisse une ligne « erreur » ; l'attente suit. */
+    public function testUneErreurHorsEtapeLaisseSaTraceEtLAttenteSuit(): void
+    {
+        $chrono = $this->chrono();
+        $coupee = new class implements Extracteur {
+            public function extraire(string $transcription, array $catalogue, Activite $activite = Activite::Batiment): ResultatExtraction
+            {
+                throw new \RuntimeException('Extraction : réponse coupée par la limite de jetons de sortie.');
+            }
+        };
+        $t = new Traiteur($this->jeu->base, new FileTraitement($this->jeu->base), new TranscripteurSansFichier(), $coupee,
+            new MessagerieFichier($this->dossiers->env()['COURRIELS_DOSSIER'], $this->horloge), new DepotArtisans($this->jeu->base),
+            new StockageAudio($this->dossiers->env()['AUDIO_DOSSIER']), $this->horloge, new NullLogger(), 'https://exemple.test', chrono: $chrono);
+        self::assertSame(Statut::TRANSCRIT, $t->avancer(self::UUID, 0, Chronometre::APRES_REPONSE));
+        $this->horloge->sleep(60);
+        self::assertSame(Statut::PRET, $this->traiteurChronometre($chrono)->avancer(self::UUID));
+        self::assertSame([
+            'attente ok 1 apres_reponse', 'mesure ok 1 apres_reponse', 'transcription ok 1 apres_reponse', 'erreur erreur 1 apres_reponse',
+            'attente ok 2 cron', 'ecriture ok 2 cron',
+        ], $this->etapesChrono());
+        self::assertSame(60000, BaseDeTest::ligne("SELECT duree_ms FROM dictee_etape WHERE etape = 'attente' AND tentative = 2")['duree_ms']);
+    }
+
+    /**
+     * Revue T2 : un traitement qui a perdu son verrou n'écrit pas l'échec et n'envoie pas le courriel « dictée en échec »
+     * à la place de celui qui tient la dictée.
+     */
+    public function testUnEchecApresVerrouPerduNEnvoiePasDeCourriel(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET demo = 0, courriel_dictee_echec = 1 WHERE id = {$this->jeu->a}");
+        $voleurQuiEchoue = new class (self::UUID) implements Transcripteur {
+            public function __construct(private readonly string $uuid)
+            {
+            }
+
+            public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
+            {
+                // Un autre traitement a repris la dictée et l'a passée en échec ; celui-ci tombe ensuite en panne.
+                BaseDeTest::pdo()->exec("UPDATE enregistrement SET verrou_jeton = '" . str_repeat('z', 32) . "', statut = 'echec' WHERE uuid = '{$this->uuid}'");
+                throw new \RuntimeException('502 Bad Gateway');
+            }
+
+            public function resultat(string $reference): ?string
+            {
+                return null;
+            }
+        };
+        self::assertSame(Statut::ECHEC, $this->traiteur($voleurQuiEchoue)->avancer(self::UUID));
+        self::assertSame(0, $this->etat()['tentatives'], 'aucune tentative notée par celui qui a perdu le verrou');
+        self::assertSame([], $this->dossiers->courriels());
+    }
+
     public function testVerrouVoleEnCoursDeRouteNEcritRienEtNeCompteRien(): void
     {
         $voleur = new TranscripteurVoleur(self::UUID);

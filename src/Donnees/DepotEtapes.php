@@ -6,8 +6,9 @@ namespace OffreGen\Donnees;
 
 /**
  * Les étapes chronométrées des dictées (sous-chantier 31), écrites par le traitement de fond et par la réception.
- * Hors portée, comme FileTraitement : le traitement agit pour tous les artisans et ne lit ici que des durées, jamais
- * le texte d'une dictée. Un rejeu a ses propres étapes (`rejeu_id`) ; la dictée elle-même a `rejeu_id` NULL.
+ * Hors portée, comme FileTraitement : le traitement agit pour tous les artisans. Les étapes ne portent que des durées ;
+ * seul finirRejeu écrit un texte, la transcription refaite par un rejeu. Un rejeu a ses propres étapes (`rejeu_id`) ;
+ * la dictée elle-même a `rejeu_id` NULL.
  *
  * @phpstan-type Ouverte array{id: int, etape: string, debut: string}
  */
@@ -36,8 +37,13 @@ final class DepotEtapes
     /** Une étape déjà finie quand on l'écrit : attente, reprise, réception, envoi. */
     public function ajouter(int $enregistrementId, ?int $rejeuId, int $tentative, string $etape, string $processus, \DateTimeImmutable $debut, \DateTimeImmutable $fin): void
     {
-        $id = $this->ouvrir($enregistrementId, $rejeuId, $tentative, $etape, $processus, $debut, null);
-        $this->terminer($id, $debut, $fin, self::OK, null, null, null, null, null);
+        // Une seule requête : un passage qui lirait entre deux écritures prendrait l'étape pour abandonnée (revue M7).
+        $this->base->ecrire(
+            'INSERT INTO dictee_etape (enregistrement_id, rejeu_id, tentative, etape, processus, debut, fin, duree_ms, issue)
+             VALUES (:e, :r, :t, :et, :p, :d, :f, :ms, :i)',
+            ['e' => $enregistrementId, 'r' => $rejeuId, 't' => min(255, $tentative), 'et' => $etape, 'p' => $processus,
+             'd' => self::versBase($debut), 'f' => self::versBase($fin), 'ms' => self::ms($debut, $fin), 'i' => self::OK],
+        );
     }
 
     public function terminer(int $id, \DateTimeImmutable $debut, \DateTimeImmutable $fin, string $issue, ?string $erreur, ?string $modele,

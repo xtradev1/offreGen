@@ -26,24 +26,24 @@ final class DureeAudio
      * Durée lue dans les paquets, sans se fier à l'en-tête (revue du 2026-11-18, H1 : un MP3 de 10 h s'annonçait à
      * 920 s). Plus lente que secondes() : pour le traitement de fond. Null si ffprobe ne tourne pas ici.
      */
-    public function mesurer(string $chemin): ?float
+    public function mesurer(string $chemin, ?\Closure $pendant = null): ?float
     {
-        return $this->finDesPaquets($chemin) ?? $this->secondes($chemin);
+        return $this->finDesPaquets($chemin, $pendant) ?? $this->secondes($chemin, $pendant);
     }
 
-    public function secondes(string $chemin): ?float
+    public function secondes(string $chemin, ?\Closure $pendant = null): ?float
     {
-        $entete = $this->sonder(['-show_entries', 'format=duration', $chemin]);
+        $entete = $this->sonder(['-show_entries', 'format=duration', $chemin], $pendant);
         if ($entete !== null && is_numeric($entete)) {
             return (float) $entete;
         }
         // Le WebM du navigateur (MediaRecorder) n'annonce pas sa durée : l'instant du dernier paquet la donne.
-        return $this->finDesPaquets($chemin);
+        return $this->finDesPaquets($chemin, $pendant);
     }
 
-    private function finDesPaquets(string $chemin): ?float
+    private function finDesPaquets(string $chemin, ?\Closure $pendant = null): ?float
     {
-        $paquets = $this->sonder(['-select_streams', 'a:0', '-show_entries', 'packet=pts_time', $chemin]);
+        $paquets = $this->sonder(['-select_streams', 'a:0', '-show_entries', 'packet=pts_time', $chemin], $pendant);
         if ($paquets === null) {
             return null;
         }
@@ -58,10 +58,10 @@ final class DureeAudio
     }
 
     /** @param list<string> $arguments */
-    private function sonder(array $arguments): ?string
+    private function sonder(array $arguments, ?\Closure $pendant = null): ?string
     {
         // ffprobe absent, ou proc_open désactivée (site web chez Infomaniak) : durée inconnue, l'import continue.
-        $r = $this->commande->lancer([$this->ffprobe, '-v', 'error', '-of', 'csv=p=0', ...$arguments]);
+        $r = $this->commande->lancer([$this->ffprobe, '-v', 'error', '-of', 'csv=p=0', ...$arguments], Commande::DELAI, $pendant);
         return $r->code === 0 ? trim($r->sortie) : null;
     }
 }

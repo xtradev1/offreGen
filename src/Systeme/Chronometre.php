@@ -143,13 +143,31 @@ final class Chronometre
      * Le passage s'arrête sur une exception : ses étapes encore ouvertes passent en erreur, avec le message. Sans cela,
      * le passage suivant les prendrait pour celles d'un traitement mort. L'attente de la transcription reste ouverte.
      */
-    public function echouerOuvertes(\Throwable $e): void
+    public function echouerOuvertes(\Throwable $e, bool $transcriptionComprise = false): int
     {
+        $n = 0;
         foreach ($this->ouvertes as $id => $o) {
-            if ($o['etape'] !== 'transcription') {
+            if ($o['etape'] !== 'transcription' || $transcriptionComprise) {
                 $this->terminer($id, $o['debut'], DepotEtapes::ERREUR, self::resume($e), null, null, null, null);
+                $n++;
             }
         }
+        return $n;
+    }
+
+    /** Une erreur levée hors de toute étape ouverte : une ligne « erreur » sans durée, pour la frise et l'attente qui suit. */
+    public function noterErreur(\Throwable $e): void
+    {
+        $p = $this->passage;
+        if ($this->etapes === null || $p === null) {
+            return;
+        }
+        // Sans pouls : appelé depuis un catch, il ne doit jamais lever.
+        $quand = $this->horloge->now();
+        $this->noter(function () use ($p, $quand, $e): void {
+            $id = $this->etapes()->ouvrir($p['enregistrement'], $p['rejeu'], $p['tentative'], 'erreur', $p['processus'], $quand, null);
+            $this->etapes()->terminer($id, $quand, $quand, DepotEtapes::ERREUR, self::resume($e), null, null, null, null);
+        });
     }
 
     public function commencer(string $etape, ?string $modele = null): EtapeChrono

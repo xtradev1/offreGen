@@ -1,15 +1,15 @@
 ---
 chantier: Chronomètre des dictées (sous-chantier 31 de voix-offre)
 slug: 2026-11-07_voix-offre/31-chronometre-dictees
-phase: 5
-statut: en_cours
-gate_attendu: aucun
+phase: 8
+statut: gate_ouvert
+gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
 
 ## Prochaine action
 
-Lot 1 du PLAN (migration), puis lots 2 à 7 dans l'ordre. Sous-tâche Origin en cours : 609.
+Lot 8 : revue faite et corrigée (`REVUE.md`). Reste : déploiement sur le test **avec l'accord de Xavier**, `migrations:status` avant et après, recette par l'interface sur le test, `RECETTE.md`. Sous-tâche Origin : 614.
 
 À savoir à la reprise :
 - Copie à soi : `~/offreGen-chrono` (worktree détaché sur `origin/chantier-voix-offre`), base de test `offregen_chrono_test` (droits recopiés de `offregen_test`, `DB_NOM` posé dans son `.env.test.local`).
@@ -19,7 +19,8 @@ Lot 1 du PLAN (migration), puis lots 2 à 7 dans l'ordre. Sous-tâche Origin en 
 
 ## En attente de toi
 
-- Rien pour l'instant. Le déploiement du chronomètre sur le test sera redemandé au lot 8.
+- Dire si je déploie le chronomètre sur le test (tête de `chantier-voix-offre`, migration `Version20261124230001`), et confirmer qu'il n'y a toujours que des données inventées.
+- Trancher S1 de `REVUE.md` : le texte des dictées dans le rapport de l'administration (garder, journaliser chaque ouverture, ou cacher derrière un clic journalisé).
 
 ## Suivi Origin
 
@@ -71,7 +72,61 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 - 2026-11-24 : correctif de connexion déployé sur le test (`fb63939`, sonde verte), valeur de session relue sur le serveur.
 - 2026-11-24 : phase 4, PLAN.md écrit (contrat technique, huit lots). Décisions fragiles 1 à 3 prouvées avant le code (preuves ci-dessous).
 
+- 2026-11-24 : lot 1 (migration `Version20261124230001`, le numéro `20261124200001` ayant été pris par l'abri) : `SchemaTest::testLeChronometreASesTables` rouge puis vert, retour arrière et remigration propres.
+- 2026-11-24 : lots 2 à 5 : chronomètre, pouls du verrou (bail de 150 s), message de panne, réception et envoi mesuré. Deux mutations attrapées par les tests (verrou de 900 s ; `on_progress` retiré). Défaut trouvé par la suite complète et corrigé : construire l'extracteur ouvrait la connexion à la base (`ConteneurTest`), chronomètre rendu paresseux. Commit `6c33a7e`, poussé.
+- 2026-11-24 : lots 6 et 7 : page des dictées, statistiques, CSV, rapport, rejeu. Recette visuelle locale (base de test semée, `php -S` sur le port 8099, parcours cliqué par Playwright depuis « Plus ») : quatre défauts vus sur les captures et corrigés (tableaux coupés au PC, cartes du téléphone sans titre à cause de la classe `.bas` de l'application, statistiques sans maximum au téléphone, en-tête « 90E »). Commit `2ddda06`, rebasé.
+- 2026-11-24 : phase 7, revue lourde lancée (exactitude, sécurité, concurrence du verrou), environ 8 $ estimés, sans phpunit pour les relecteurs.
+- 2026-11-24 : revue rendue : aucune faille haute ; T1 (ffmpeg et ffprobe sans pouls) élevée, E1, E2 importantes, T2, S2 moyennes, le reste mineur. Toutes relues dans le code, corrigées sauf S1 (décision de Xavier) et cinq acceptées avec leur raison (`REVUE.md`). Trois mutations vérifiées (T2, E1, E2 rouges sans leur correction). Suite complète verte. Gate prod ouvert.
 ## Preuves
+
+### Revue (2026-11-24)
+
+```
+--- T2 sans correction : Failed asserting that two arrays are identical.  Tests: 1, Failures: 1
+--- E1 sans correction : Failed asserting that two arrays are identical.  Tests: 1, Failures: 1
+--- E2 sans correction : Failed asserting that two arrays are identical.  Tests: 1, Failures: 1
+$ php vendor/bin/phpunit tests/Systeme/CommandePoulsTest.php
+OK (2 tests, 4 assertions)
+$ php vendor/bin/phpstan analyse
+ [OK] No errors
+$ php vendor/bin/phpunit
+OK (1574 tests, 12719 assertions)
+```
+
+### Lots 1 à 7 (2026-11-24, base `offregen_chrono_test`)
+
+```
+$ php vendor/bin/phpunit --filter testLeChronometreASesTables   # avant la migration
+Failed asserting that two arrays are identical.  Tests: 1, Failures: 1
+$ migrations:migrate ; phpunit tests/Donnees
+OK (40 tests, 154 assertions)
+--- mutation 1 : verrou de 900 s
+Failed asserting that two strings are identical.   (testUnTraitementMortEstReprisApresLeBailDe150Secondes)
+--- mutation 2 : sans on_progress
+1) ChronometreTest::testLePoulsProlongeLeVerrouPendantUneReponseLente   Failed
+2) ChronometreTest::testLePoulsQuiTrouveLeVerrouReprisCoupeLAppel   Failed
+3) RevueOptionsTest::testLesTroisAppelsBattentLePoulsDuVerrou   Failed
+$ php vendor/bin/phpunit   # après les lots 1 à 5, rebasé sur 8bb25b1
+OK (1530 tests, 12489 assertions)
+$ git push origin HEAD:chantier-voix-offre
+   8bb25b1..6c33a7e  HEAD -> chantier-voix-offre
+$ php vendor/bin/phpstan analyse
+ [OK] No errors
+$ php vendor/bin/phpunit   # après les lots 6 et 7
+OK (1545 tests, 12578 assertions)
+```
+
+### Recette visuelle locale des lots 6 et 7 (captures dans le scratchpad, `vue/cap/`)
+
+```
+connecté : http://localhost:8099/
+rapport : http://localhost:8099/admin/dictees/9864
+largeur liste tel : 390
+largeur rapport tel : 390
+csv : dictees-2026-11-24.csv
+erreurs : aucune
+```
+Captures ouvertes : liste PC, liste téléphone, rapport PC, rapport téléphone, rapport sombre, liste sombre.
 
 ### Déploiement du correctif de connexion (2026-11-24)
 

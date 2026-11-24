@@ -88,6 +88,16 @@ final class DicteesPageTest extends TestCase
             [$b[$colonnes['recue']], $b[$colonnes['tentatives']], $b[$colonnes['ia_extraction_ms']], $b[$colonnes['reprise_ms']], $b[$colonnes['lentes']]]);
     }
 
+    /** Revue sécurité : une valeur qu'Excel prendrait pour une formule sort précédée d'une apostrophe. */
+    public function testLeCsvNeutraliseLesFormules(): void
+    {
+        $b = $this->jeu->enregistrement['b'];
+        BaseDeTest::pdo()->exec("UPDATE dictee_etape SET modele = '=HYPERLINK(1)' WHERE enregistrement_id = $b AND etape = 'ia_extraction'");
+        $texte = (string) $this->admin()->get('/admin/dictees.csv')->getContent();
+        self::assertStringContainsString("'=HYPERLINK(1)", $texte);
+        self::assertStringNotContainsString(';=HYPERLINK', $texte);
+    }
+
     public function testLeRapportMontreUneFriseParTentativeEtLaReprise(): void
     {
         $page = (string) $this->admin()->get('/admin/dictees/' . $this->jeu->enregistrement['b'])->getContent();

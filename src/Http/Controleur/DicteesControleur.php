@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Audio\RapportDictees;
+use OffreGen\Audio\DureeAudio;
 use OffreGen\Audio\Rejeu;
 use OffreGen\Compte\Role;
 use OffreGen\Donnees\DepotDictees;
@@ -80,7 +81,7 @@ final class DicteesControleur
                 }
             }
             array_push($ligne, $l['hors'], $l['total'], implode(' ', $l['lentes']), $l['modele_ia'], $l['modele_transcription']);
-            fputcsv($sortie, $ligne, ';', '"', '');
+            fputcsv($sortie, array_map(self::cellule(...), $ligne), ';', '"', '');
         }
         rewind($sortie);
         // BOM : Excel lit alors l'UTF-8 (« Pièces », « Écriture »).
@@ -134,20 +135,25 @@ final class DicteesControleur
     {
         $id = ctype_digit($p['id'] ?? '') ? (int) $p['id'] : 0;
         $depot = $this->depot();
-        if ($depot->dictee($id) === null) {
-            throw new PageIntrouvable();
-        }
+        $dictee = $depot->dictee($id) ?? throw new PageIntrouvable();
         $maintenant = $this->c->horloge()->now();
+        $depuis = $maintenant->modify('-' . Rejeu::BLOCAGE_MINUTES . ' minutes');
+        $maxMs = ($this->c->dureeMaxSecondes() + DureeAudio::TOLERANCE_SECONDES) * 1000;
         $refus = match (true) {
             !$depot->audioPresent($id) => 'L\'audio de cette dictée est supprimé : rejeu impossible.',
-            $depot->rejeuEnCours($id, $maintenant->modify('-' . Rejeu::BLOCAGE_MINUTES . ' minutes')) => 'Un rejeu de cette dictée est déjà en cours.',
+            // Un audio refusé par le traitement pour sa durée ne part pas en transcription payante (revue S3).
+            $dictee['duree_ms'] !== null && $dictee['duree_ms'] > $maxMs => 'Cette dictée dépasse la durée permise : rejeu impossible.',
+            $depot->rejeuEnCours($id, $depuis) => 'Un rejeu de cette dictée est déjà en cours.',
+            $depot->rejeuxEnCours($depuis) >= Rejeu::EN_COURS_MAX => 'Déjà ' . Rejeu::EN_COURS_MAX . ' rejeux en cours sur le site : réessayez dans quelques minutes.',
             default => null,
         };
-        if ($refus !== null) {
-            Flash::dire($requete, 'erreur', $refus);
+        $rejeuId = $refus === null ? $depot->creerRejeu($id, $this->acteur(), $maintenant, $depuis, Rejeu::EN_COURS_MAX) : null;
+        if ($rejeuId === null) {
+            Flash::dire($requete, 'erreur', $refus ?? 'Un rejeu est déjà en cours.');
             return new RedirectResponse('/admin/dictees/' . $id, 303);
         }
-        $rejeuId = $depot->creerRejeu($id, $this->acteur(), $maintenant);
+        // Un geste de l'administration qui coûte : noté au journal de l'équipe.
+        $this->c->journalAdmin()->noter($this->acteur(), $dictee['artisan_id'], 'rejeu_dictee', 'dictée ' . $id, $maintenant);
         $this->c->apresReponse()->ajouter(function () use ($rejeuId): void {
             $this->c->rejeu()->executer($rejeuId);
         });
@@ -214,6 +220,12 @@ final class DicteesControleur
         $filtre = array_key_exists($requete->query->getString('filtre'), self::FILTRES) ? $requete->query->getString('filtre') : 'toutes';
         $utc = new \DateTimeZone('UTC');
         return [$du?->setTimezone($utc), $au?->setTimezone($utc), $filtre];
+    }
+
+    /** Une cellule qu'Excel prendrait pour une formule est précédée d'une apostrophe (revue S, injection CSV). */
+    private static function cellule(mixed $v): mixed
+    {
+        return is_string($v) && $v !== '' && str_contains("=+-@\t\r", $v[0]) ? "'" . $v : $v;
     }
 
     private static function heureLocale(string $utc): string

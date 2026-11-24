@@ -29,7 +29,8 @@ final class PreparationAudio
         $this->commande = $commande ?? new Commande();
     }
 
-    public function preparer(string $chemin): FichierPrepare
+    /** @param \Closure|null $pendant appelé pendant la conversion (pouls du verrou) */
+    public function preparer(string $chemin, ?\Closure $pendant = null): FichierPrepare
     {
         if (!is_file($chemin)) {
             throw new \RuntimeException('Audio introuvable : ' . basename($chemin));
@@ -49,7 +50,7 @@ final class PreparationAudio
         // Revue du 2026-11-18 (M10, B6) : jamais plus long que la durée permise, jamais d'autre source qu'un fichier local.
         $borne = $this->dureeMaxSecondes === null ? [] : ['-t', (string) $this->dureeMaxSecondes];
         $commande = [$this->ffmpeg, '-nostdin', '-v', 'error', '-y', '-protocol_whitelist', 'file', '-i', $chemin, ...$borne, '-vn', '-ac', '1', '-c:a', 'libopus', '-b:a', '32k', $sortie];
-        $r = $this->commande->lancer($commande, 900);
+        $r = $this->commande->lancer($commande, 900, $pendant);
         if ($r->code !== 0 || !is_file($sortie)) {
             @unlink($sortie);
             throw new \RuntimeException(match ($r->code) {

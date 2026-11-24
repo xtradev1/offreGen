@@ -81,6 +81,29 @@ final class RapportDicteesTest extends TestCase
         self::assertSame(['n' => 2, 'max' => 7491, 'max_id' => 2], array_intersect_key($stats['par_jetons']['extraction'], ['n' => 0, 'max' => 0, 'max_id' => 0]));
     }
 
+    /** Revue M1 : une étape sans durée (interrompue) n'entre pas dans sa colonne ni dans les statistiques. */
+    public function testUneEtapeSansDureeLaisseLaColonneVide(): void
+    {
+        [$l] = RapportDictees::lignes([self::dictee(1)], [
+            self::etape(1, 'reception', '2026-11-24 10:00:00.000', '2026-11-24 10:00:00.400'),
+            self::etape(1, 'ecriture', '2026-11-24 10:00:01.000', null, 1, 'interrompue'),
+        ]);
+        self::assertNull($l['colonnes']['ecriture']);
+        self::assertTrue($l['accroc']);
+        self::assertSame(0, RapportDictees::statistiques([$l])['colonnes']['ecriture']['n']);
+    }
+
+    /** Revue M9 : une reprise seule dans sa tentative (le passage repris est mort aussitôt) reste sur la frise. */
+    public function testUneRepriseSeuleResteSurLaFrise(): void
+    {
+        $blocs = RapportDictees::frise([
+            self::etape(1, 'attente', '2026-11-24 10:00:00.000', '2026-11-24 10:00:00.100'),
+            self::etape(1, 'reprise', '2026-11-24 10:00:00.100', '2026-11-24 10:02:40.000', 2),
+        ]);
+        self::assertCount(2, $blocs);
+        self::assertSame([[], 'reprise'], [$blocs[1]['lignes'], $blocs[1]['reprise']['etape'] ?? null]);
+    }
+
     public function testLaFriseMetUnBlocParTentativeEtLaRepriseAPart(): void
     {
         $blocs = RapportDictees::frise([

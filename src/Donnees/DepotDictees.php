@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace OffreGen\Donnees;
 
 /**
- * Les dictées chronométrées, pour la page de l'administrateur (sous-chantier 31). Tous les comptes, jamais le texte
- * d'une dictée : des durées, des jetons, le navigateur. Exige une portée de l'équipe qui voit tout ; la route est en
- * plus réservée à l'administrateur.
+ * Les dictées chronométrées, pour la page de l'administrateur (sous-chantier 31). Tous les comptes : des durées, des
+ * jetons, le navigateur. Le texte transcrit n'est lu que par original() et rejeux(), pour le rapport d'une seule dictée
+ * (comparer un rejeu à l'original, D2 de Xavier). Exige une portée de l'équipe qui voit tout ; la route est en plus
+ * réservée à l'administrateur.
  *
  * @phpstan-import-type Dictee from \OffreGen\Audio\RapportDictees
  * @phpstan-import-type Etape from \OffreGen\Audio\RapportDictees
@@ -120,13 +121,41 @@ final class DepotDictees
         ) > 0;
     }
 
-    public function creerRejeu(int $id, int $demandePar, \DateTimeImmutable $quand): int
+    /**
+     * Crée le rejeu si aucun n'est en cours pour cette dictée et si moins de $enCoursMax le sont sur tout le site. Le
+     * contrôle et l'écriture se font sous un verrou nommé de MariaDB : deux clics simultanés ne lancent pas deux rejeux
+     * payants (revue S2, T6).
+     *
+     * @return int|null l'identifiant du rejeu, null si refusé
+     */
+    public function creerRejeu(int $id, int $demandePar, \DateTimeImmutable $quand, \DateTimeImmutable $depuis, int $enCoursMax): ?int
     {
-        $this->base->ecrire(
-            "INSERT INTO dictee_rejeu (enregistrement_id, demande_par, demande_le, statut) VALUES (:id, :p, :q, 'en_cours')",
-            ['id' => $id, 'p' => $demandePar, 'q' => Dates::versBase($quand)],
-        );
-        return $this->base->dernierId();
+        if ((int) $this->base->valeur("SELECT GET_LOCK('offregen_rejeu', 5)") !== 1) {
+            return null;
+        }
+        try {
+            $enCours = $this->base->lire(
+                "SELECT enregistrement_id FROM dictee_rejeu WHERE statut = 'en_cours' AND demande_le >= :d",
+                ['d' => Dates::versBase($depuis)],
+            );
+            if (in_array($id, array_column($enCours, 'enregistrement_id'), true) || count($enCours) >= $enCoursMax) {
+                return null;
+            }
+            $this->base->ecrire(
+                "INSERT INTO dictee_rejeu (enregistrement_id, demande_par, demande_le, statut) VALUES (:id, :p, :q, 'en_cours')",
+                ['id' => $id, 'p' => $demandePar, 'q' => Dates::versBase($quand)],
+            );
+            return $this->base->dernierId();
+        } finally {
+            $this->base->valeur("SELECT RELEASE_LOCK('offregen_rejeu')");
+        }
+    }
+
+    /** Rejeux en cours depuis cette date, tous comptes confondus. */
+    public function rejeuxEnCours(\DateTimeImmutable $depuis): int
+    {
+        return (int) $this->base->valeur("SELECT COUNT(*) FROM dictee_rejeu WHERE statut = 'en_cours' AND demande_le >= :d",
+            ['d' => Dates::versBase($depuis)]);
     }
 
     public function audioPresent(int $id): bool

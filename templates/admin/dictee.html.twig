@@ -53,6 +53,7 @@
       {% if b.reprise %}
         <div class="frise-coupure"><span class="nom">Reprise <small>{{ b.processus }}</small></span><span class="zz">verrou d'un traitement mort, frise coupée</span><span class="duree">{{ b.reprise.duree_ms|duree_ms }}</span></div>
       {% endif %}
+      {% if b.lignes is not empty %}
       <h3 class="frise-tete">Tentative {{ b.tentative }}, {{ b.processus }} <small>{{ b.debut|heure_ms }} à {{ b.fin|heure_ms }}, {{ b.duree|duree_ms }}</small></h3>
       <ol class="frise">
         {% for e in b.lignes %}
@@ -66,6 +67,7 @@
           </li>
         {% endfor %}
       </ol>
+      {% endif %}
     {% endfor %}
 
     <h2 class="dictees-titre">Les étapes en tableau</h2>

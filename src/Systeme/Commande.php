@@ -34,7 +34,7 @@ final class Commande
      *
      * @param list<string> $commande
      */
-    public function lancer(array $commande, int $delaiSecondes = self::DELAI): ResultatCommande
+    public function lancer(array $commande, int $delaiSecondes = self::DELAI, ?\Closure $pendant = null): ResultatCommande
     {
         if (!$this->possible) {
             return new ResultatCommande(self::IMPOSSIBLE, '', '');
@@ -58,6 +58,21 @@ final class Commande
                 }
                 proc_close($processus);
                 return new ResultatCommande(self::DEPASSE, $lu[1], $lu[2]);
+            }
+            // $pendant : appelé au moins toutes les 5 s pendant que la commande tourne (pouls du verrou, sous-chantier 31,
+            // revue T1). S'il lève une exception, la commande est arrêtée et l'exception remonte.
+            if ($pendant !== null) {
+                try {
+                    $pendant();
+                } catch (\Throwable $e) {
+                    proc_terminate($processus, 9);
+                    foreach ($ouverts as $tube) {
+                        fclose($tube);
+                    }
+                    proc_close($processus);
+                    throw $e;
+                }
+                $reste = min($reste, 5.0);
             }
             $lecture = array_values($ouverts);
             $rien = null;

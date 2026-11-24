@@ -98,14 +98,17 @@ final class Traiteur
         if (!$this->file->prendreVerrou($uuid, $jeton, $maintenant->modify('+' . self::DUREE_VERROU_SECONDES . ' seconds'), $maintenant)) {
             return $this->file->lire($uuid)['statut'] ?? 'inconnu';
         }
-        $tenu = $this->file->lire($uuid);
-        if ($tenu !== null) {
-            $this->chrono->ouvrirPassage($tenu['id'], $uuid, $jeton, $tenu['tentatives'] + 1, $processus);
-        }
         try {
+            $tenu = $this->file->lire($uuid);
+            if ($tenu !== null) {
+                $this->chrono->ouvrirPassage($tenu['id'], $uuid, $jeton, $tenu['tentatives'] + 1, $processus);
+            }
             return $this->enchainer($uuid, $jeton);
         } catch (\Throwable $e) {
-            $this->chrono->echouerOuvertes($e);
+            // Une erreur hors de toute étape (réponse coupée, lot sans numéro) laisse quand même sa trace (revue E1).
+            if ($this->chrono->echouerOuvertes($e) === 0 && !Chronometre::verrouPerdu($e)) {
+                $this->chrono->noterErreur($e);
+            }
             if (Chronometre::verrouPerdu($e)) {
                 // Un autre traitement a repris la main : ce n'est pas un échec de cet enregistrement. Le pouls coupe l'appel
                 // en cours, que le client HTTP enveloppe dans sa propre exception.
@@ -116,10 +119,12 @@ final class Traiteur
                 $this->file->transcriptionAReprendre($uuid, $jeton);
             }
             // Trop long : réessayer ne le raccourcira pas, l'échec est immédiat.
-            $statut = $this->file->noterEchec($uuid, $jeton, $e->getMessage(), $e instanceof AudioTropLong ? 1 : self::TENTATIVES_MAX,
+            $note = $this->file->noterEchec($uuid, $jeton, $e->getMessage(), $e instanceof AudioTropLong ? 1 : self::TENTATIVES_MAX,
                 $this->horloge->now()->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
+            // Verrou repris entre-temps : l'échec n'est pas noté, et le courriel ne part pas d'ici (revue T2).
+            $statut = $note ?? ($this->file->lire($uuid)['statut'] ?? 'inconnu');
             $this->journal->error("offreGen, traitement de $uuid ($statut) : " . $e->getMessage());
-            if ($statut === Statut::ECHEC) {
+            if ($note === Statut::ECHEC) {
                 $this->prevenirEchec($uuid, $e instanceof AudioTropLong);
             }
             return $statut;
@@ -166,6 +171,9 @@ final class Traiteur
                         $this->chrono->finirOuverte('transcription', $perdu);
                         throw $perdu;
                     } catch (\Throwable $passagere) {
+                        if (Chronometre::verrouPerdu($passagere)) {
+                            throw $passagere;
+                        }
                         // Revue du 2026-11-18 (M8) : une erreur passagère pendant l'attente ne compte pas de tentative ;
                         // le délai de ATTENTE_TRANSCRIPTION_MAX_HEURES borne l'attente.
                         $this->journal->warning("offreGen, $uuid : résultat de la transcription pas encore lisible (" . $passagere::class . ').');
@@ -224,11 +232,13 @@ final class Traiteur
             return null;
         }
         $lue = false;
+        $complete = true;
         // Une partie illisible n'efface pas les autres : les parties lisibles se comptent quand même (revue du 2026-11-24).
         $secondes = 0.0;
         foreach ($chemins as $chemin) {
-            $partie = $this->duree->mesurer($chemin);
+            $partie = $this->duree->mesurer($chemin, $this->chrono->pouls(...));
             if ($partie === null) {
+                $complete = false;
                 $this->journal->warning('offreGen, traitement : durée illisible, transcription sans contrôle de durée de cette partie.');
                 continue;
             }
@@ -238,7 +248,8 @@ final class Traiteur
         if ($secondes > $this->dureeMaxSecondes + DureeAudio::TOLERANCE_SECONDES) {
             throw new AudioTropLong(sprintf('Enregistrement trop long : %d min, %d min au maximum.', (int) ceil($secondes / 60), intdiv($this->dureeMaxSecondes, 60)));
         }
-        return $lue ? $secondes : null;
+        // Une partie illisible : la durée lue est partielle, celle du téléphone reste (revue M8).
+        return $lue && $complete ? $secondes : null;
     }
 
     /** @param array{id: int, artisan_id: int, uuid: string, transcription: string|null} $e */
