@@ -162,7 +162,9 @@ ligne="* * * * * cd \$HOME/$app/current && $php bin/traiter-file --silencieux >>
 # (décision Q1 de Xavier, 2026-11-18). La garde est dans la ligne cron, pas seulement dans le code : après un
 # retour arrière, une version d'avant le 18.11 purgerait sans condition (revue du 2026-11-18).
 purge="17 3 * * * grep -qx 'PURGE_AUDIO=1' \$HOME/$app/partage/.env && cd \$HOME/$app/current && $php bin/purger-audio >> \$HOME/$app/partage/var/log/cron.log 2>&1"
-( crontab -l 2>/dev/null | grep -v -e 'bin/traiter-file' -e 'bin/purger-audio' || true; echo "$ligne"; echo "$purge" ) | crontab -
+# Rappels de fin de démo, 2 jours puis 12 heures avant la fin (Xavier, 2026-11-24) : toutes les dix minutes.
+rappels="*/10 * * * * cd \$HOME/$app/current && $php bin/rappeler-demos >> \$HOME/$app/partage/var/log/cron.log 2>&1"
+( crontab -l 2>/dev/null | grep -v -e 'bin/traiter-file' -e 'bin/purger-audio' -e 'bin/rappeler-demos' || true; echo "$ligne"; echo "$purge"; echo "$rappels" ) | crontab -
 echo "$precedent"
 DISTANT
 )"

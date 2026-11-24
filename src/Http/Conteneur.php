@@ -296,6 +296,13 @@ final class Conteneur
         ));
     }
 
+    /** Rappels de fin de démo, envoyés par bin/rappeler-demos (Xavier, 2026-11-24). */
+    public function rappelsDemo(): \OffreGen\Compte\RappelsDemo
+    {
+        return new \OffreGen\Compte\RappelsDemo($this->depotEquipe(), $this->liensAcces(), $this->messagerie(), $this->horloge(),
+            $this->journal(), $this->nomApplication(), $this->parametre('APP_URL', 'http://localhost:8000'));
+    }
+
     /** Le nom affiché dans les pages et les courriels. Dicta : choix de Xavier du 2026-11-18 (docs/identite/). */
     public function nomApplication(): string
     {

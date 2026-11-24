@@ -12,6 +12,7 @@ use OffreGen\Donnees\Dates;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\Flash;
 use OffreGen\Http\PageIntrouvable;
+use OffreGen\Systeme\Courriel;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -149,6 +150,7 @@ final class DemoControleur
         $essai = $this->c->artisans()->parId($demo['id']);
         $this->c->authentification()->ouvrirSession($requete, $essai['id'], $essai['version_session']);
         $this->c->journalAdmin()->noter($essai['id'], $essai['id'], 'passage_essai', null, $this->c->horloge()->now());
+        $this->c->apresReponse()->ajouter(fn () => $this->prevenirPresentateur($demo, $courriel));
         if ($this->c->messagerieReelle()) {
             $this->c->apresReponse()->ajouter(fn () => $this->c->liensAcces()->envoyerAcces($courriel));
             Flash::dire($requete, 'info', "Vous êtes à l'essai. Un courriel vous attend pour choisir votre mot de passe.");
@@ -158,6 +160,23 @@ final class DemoControleur
         // fin de la session.
         Flash::dire($requete, 'info', "Vous êtes à l'essai. Choisissez votre mot de passe pour retrouver votre compte.");
         return new RedirectResponse((string) parse_url($this->c->liensAcces()->lienDAcces($essai['id']), PHP_URL_PATH), 303);
+    }
+
+    /**
+     * Le membre de l'équipe qui a présenté la démo apprend qu'elle devient un essai (Xavier, 2026-11-24). Rien pour une
+     * démo d'entraînement : il l'a ouverte lui-même.
+     *
+     * @param array{id: int, entreprise: string, cree_par: int|null, entrainement: int} $demo
+     */
+    private function prevenirPresentateur(array $demo, string $courriel): void
+    {
+        $membre = $demo['cree_par'] === null || $demo['entrainement'] === 1 ? null : $this->c->artisans()->parId($demo['cree_par']);
+        if ($membre === null || $membre['demo'] === 1) {
+            return;
+        }
+        $adresse = rtrim($this->c->parametre('APP_URL', 'http://localhost:8000'), '/');
+        Courriel::passageEssai($demo['entreprise'], $courriel, $this->c->horloge()->now(), Demos::OFFRES_ESSAI, "$adresse/admin/artisans/{$demo['id']}")
+            ->envoyer($this->c->messagerie(), $membre['courriel'], $this->c->nomApplication(), $adresse);
     }
 
     /**

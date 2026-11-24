@@ -240,6 +240,61 @@ final class LiensAccesTest extends TestCase
         self::assertSame(410, $this->navigateur()->get($lien)->getStatusCode());
     }
 
+    /** @return list<string> le contenu des courriels écrits, dans l'ordre */
+    private function contenus(): array
+    {
+        $fichiers = $this->dossiers->courriels();
+        sort($fichiers);
+        return array_map(static fn (string $f): string => (string) file_get_contents($f), $fichiers);
+    }
+
+    /** Xavier, 2026-11-24 : celui dont le compte est volé l'apprend, et reprend la main par « Mot de passe oublié ». */
+    public function testChangerSonMotDePasseEnPrevientParCourriel(): void
+    {
+        $n = $this->navigateur();
+        $n->connecter('a@exemple.ch');
+        $n->get('/reglages/mot-de-passe');
+        self::assertSame(303, $n->post('/reglages/mot-de-passe', ['ancien' => Jeu::MOT_DE_PASSE, 'mot_de_passe' => self::NOUVEAU, 'confirmation' => self::NOUVEAU])->getStatusCode());
+        // Le courriel part après la réponse.
+        self::assertCount(0, $this->dossiers->courriels());
+        $n->c->apresReponse()->executer();
+        $courriels = $this->contenus();
+        self::assertCount(1, $courriels);
+        $courriel = $courriels[0];
+        self::assertStringContainsString("To: a@exemple.ch\r\n", $courriel);
+        self::assertStringContainsString('Votre mot de passe a été changé', $courriel);
+        self::assertStringContainsString("mercredi 18 novembre à 11\u{00A0}h\u{00A0}00", $courriel);
+        self::assertStringContainsString('https://exemple.test/mot-de-passe/oubli', $courriel);
+        // Le mot de passe n'apparaît nulle part.
+        self::assertStringNotContainsString(self::NOUVEAU, $courriel);
+    }
+
+    public function testUnMotDePasseOublieEtRemplaceEnPrevientAussi(): void
+    {
+        $n = $this->navigateur();
+        $this->demander($n, 'a@exemple.ch');
+        [$lien] = $this->liensRecus();
+        self::assertSame(303, $this->choisir($n, $lien)->getStatusCode());
+        $n->c->apresReponse()->executer();
+        $courriels = $this->contenus();
+        self::assertCount(2, $courriels);
+        // Les deux courriels ont la même heure : on les distingue par leur contenu, pas par l'ordre des fichiers.
+        self::assertCount(1, array_filter($courriels, static fn (string $c): bool => str_contains($c, 'Votre mot de passe a été changé')));
+    }
+
+    /** Le premier mot de passe d'un compte neuf ne change rien pour la personne : aucun courriel de plus. */
+    public function testLePremierMotDePasseNeDeclenchePasLAvertissement(): void
+    {
+        $c = Monde::conteneur($this->horloge, $this->dossiers->env() + ['APP_URL' => 'https://exemple.test']);
+        $c->comptes()->creer('luigi@exemple.ch', 'Peinture Luigi', false, null, 20);
+        $c->liensAcces()->envoyerAcces('luigi@exemple.ch');
+        [$lien] = $this->liensRecus();
+        $n = $this->navigateur();
+        self::assertSame(303, $this->choisir($n, $lien)->getStatusCode());
+        $n->c->apresReponse()->executer();
+        self::assertCount(1, $this->contenus());
+    }
+
     public function testUnMauvaisAncienMotDePasseNeChangeRien(): void
     {
         $n = $this->navigateur();

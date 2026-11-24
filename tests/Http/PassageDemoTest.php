@@ -99,6 +99,34 @@ final class PassageDemoTest extends TestCase
         self::assertSame(1, (int) BaseDeTest::ligne("SELECT demo FROM artisan WHERE courriel = 'partagee@exemple.ch'")['demo']);
     }
 
+    /** Xavier, 2026-11-24 : « un mail au commercial, votre machin est arrivé à l'essai ». */
+    public function testLaPersonneQuiAPresenteLaDemoApprendLePassage(): void
+    {
+        [$prospect, $id] = $this->prospectDansSaDemo();
+        $avant = $this->dossiers->courriels();
+        $prospect->get('/passer-a-l-essai');
+        self::assertSame(303, $prospect->post('/passer-a-l-essai', ['courriel' => 'info@platrerie-roux.ch'])->getStatusCode());
+        $prospect->c->apresReponse()->executer();
+        $nouveaux = array_values(array_diff($this->dossiers->courriels(), $avant));
+        self::assertCount(1, $nouveaux);
+        $courriel = (string) file_get_contents($nouveaux[0]);
+        self::assertStringContainsString("To: a@exemple.ch\r\n", $courriel);
+        self::assertStringContainsString("passe à l'essai", $courriel);
+        self::assertStringContainsString('info@platrerie-roux.ch', $courriel);
+        self::assertStringContainsString("https://exemple.test/admin/artisans/$id", $courriel);
+    }
+
+    public function testUneDemoDEntrainementNePrevientPersonne(): void
+    {
+        [$prospect, $id] = $this->prospectDansSaDemo();
+        BaseDeTest::pdo()->exec("UPDATE artisan SET entrainement = 1 WHERE id = $id");
+        $avant = $this->dossiers->courriels();
+        $prospect->get('/passer-a-l-essai');
+        $prospect->post('/passer-a-l-essai', ['courriel' => 'info@platrerie-roux.ch']);
+        $prospect->c->apresReponse()->executer();
+        self::assertSame([], array_values(array_diff($this->dossiers->courriels(), $avant)));
+    }
+
     public function testLePassageGardeLaSessionEtFaitChoisirUnMotDePasse(): void
     {
         [$prospect, $id] = $this->prospectDansSaDemo();

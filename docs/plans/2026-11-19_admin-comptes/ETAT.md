@@ -562,3 +562,42 @@ $ curl /sante
 ```
 
 Non vérifié : `RETOUR_ARRIERE=1` (l'essayer ferait reculer le site de test), le refus après 30 minutes d'attente du verrou, deux vrais déploiements lancés par deux sessions au même moment (le verrou a été tenu par un `flock` de 40 secondes, pas par un second déploiement).
+
+Courriels, deuxième lot (2026-11-24, tâche Origin 600). Demande de Xavier : « mettre en place le système de mot de passe volé », « reçoit un mail quand la dictée n'a pas pu être traitée », « un rappel 2 jours avant » et « 12 heures avant » pour la démo, « un mail au commercial, votre machin est arrivé à l'essai », et les courriels de l'abonnement « préparés ».
+
+Construit (commit à venir) :
+- `Courriel::motDePasseChange` : après un changement dans les réglages ou par « Mot de passe oublié » (`LiensAcces::utiliser` rend le motif du lien). Rien au premier choix d'un mot de passe (lien d'accès), rien pour une démo.
+- `Courriel::dicteeEchouee`, deux variantes (échec après plusieurs essais, dictée trop longue) : `Traiteur::prevenirEchec`, appelé au passage en échec (`noterEchec`, et `FileTraitement::noterAbandon` qui dit maintenant s'il a mis en échec). Même règle que « offre prête » : rien pour une démo, rien devant l'écran d'attente. Nouvelle case dans Réglages, Courriels (`artisan.courriel_dictee_echec`, cochée par défaut).
+- Rappels de fin de démo : `RappelsDemo`, `bin/rappeler-demos`, cron toutes les dix minutes posé par `outils/deployer-test.sh`. Colonnes `demo_rappel_2j_le`, `demo_rappel_12h_le`, notées avant l'envoi par une seule requête (deux passages simultanés n'envoient qu'un rappel). Chaque rappel porte un lien de retour neuf (`LiensAcces::lienRetourDemo`), sans fermer les précédents. Une démo entrée en retard dans la fenêtre ne reçoit que le dernier.
+- `Courriel::passageEssai` : à la personne qui a présenté la démo (`cree_par`), rien pour une démo d'entraînement. Un constat sans consigne (le commercial est indépendant, docs/commerciaux section 3). Ni paiement ni commission tant que l'essai est gratuit.
+- Migration `Version20261124100001`, additive.
+- Textes relus par `relecteur-xtradev` : n° 1, 4, 5 prêts ; corrigés : « Elle ne vous est pas décomptée », « Votre démo se termine dans 2 jours » (au lieu d'un compte à rebours), « restent sur votre compte ».
+- Maquette `MAQUETTE-courriels-v9.html` : les dix courriels (cinq codés, cinq de l'abonnement préparés), choix V1 à V10 et D1 à D3.
+
+Décisions prises en codant :
+- Le lien du courriel d'échec mène à la liste des offres, où l'échec a son bouton « Réessayer ». La page de l'enregistrement en échec dit « Importez le fichier une nouvelle fois », faux pour une dictée : non corrigé ici (fichier de l'écran d'attente), signalé.
+- La phrase sous les cases du réglage change : « il vous montre le résultat » au lieu de « l'offre s'ouvre directement », pour couvrir les deux courriels.
+- Les montants de l'abonnement s'annoncent TVA comprise (relecteur) : ce que l'artisan voit débité.
+- Mes tests sont écrits après le code : leur valeur est prouvée par mutation (cinq défauts injectés, cinq attrapés, après un test ajouté pour la garde SQL des rappels).
+
+```
+$ DB_NOM=offregen_admin_test phpunit   (suite complète, copie du chantier)
+OK (1452 tests, 12096 assertions)   (avant le test de la garde SQL, ajouté ensuite ; la suite du déploiement fait foi)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+$ mutations (défaut injecté, test lancé, code remis)
+src/Audio/Traiteur.php : Tests: 31, Assertions: 112, Failures: 3.
+src/Http/Controleur/MotDePasseControleur.php : Tests: 23, Assertions: 77, Failures: 1.
+src/Compte/RappelsDemo.php : Tests: 5, Assertions: 24, Failures: 3.
+src/Http/Controleur/DemoControleur.php : Tests: 4, Assertions: 71, Failures: 1.
+src/Donnees/DepotEquipe.php : Tests: 5, Assertions: 30, Failures: 1.
+$ recette-v9.js (serveur local, Réglages puis Courriels, téléphone clair et PC sombre)
+tel-courriels        aucun défaut
+tel case échec avant true après false | case offre prête true | bandeau Enregistré.
+pc-courriels         aucun défaut
+pc case échec avant true après false | case offre prête true | bandeau Enregistré.
+```
+
+Piège noté : MariaDB ne compte pas une ligne réécrite à l'identique (`rowCount` = lignes changées). Un test de garde qui réécrit la même valeur passe avec ou sans la garde.
+
+Non vérifié : le rappel réel envoyé par le cron du serveur de test (il faut une démo dont la fin tombe dans les 48 heures) ; le courriel d'échec sur une vraie dictée ; le rendu dans Gmail, Outlook et iPhone. La migration a aussi été jouée sur `offregen_dev` (avec celle d'une autre session, `Version20261123230001`), pour la recette locale.

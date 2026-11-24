@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Compte\Authentification;
+use OffreGen\Compte\LiensAcces;
 use OffreGen\Compte\MotDePasse;
 use OffreGen\Compte\ResultatConnexion;
 use OffreGen\Http\Conteneur;
@@ -67,6 +68,9 @@ final class MotDePasseControleur
             return $this->page('mot_de_passe_perime.html.twig', [], 410);
         }
         $this->c->authentification()->ouvrirSession($requete, $resultat['artisan'], $resultat['version']);
+        if ($resultat['motif'] === LiensAcces::OUBLI) {
+            $this->c->apresReponse()->ajouter(fn () => $this->c->liensAcces()->prevenirMotDePasseChange($resultat['artisan']));
+        }
         Flash::dire($requete, 'info', 'Mot de passe enregistré.');
         return new RedirectResponse('/', 303);
     }
@@ -99,6 +103,7 @@ final class MotDePasseControleur
             return new RedirectResponse('/connexion', 303);
         }
         $this->c->liensAcces()->annulerTout($artisan);
+        $this->c->apresReponse()->ajouter(fn () => $this->c->liensAcces()->prevenirMotDePasseChange($artisan));
         Flash::dire($requete, 'info', 'Mot de passe changé. Les autres appareils sont déconnectés.');
         return new RedirectResponse('/reglages', 303);
     }

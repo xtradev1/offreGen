@@ -181,6 +181,17 @@ final class DepotReglages
         $this->base->ecrire('UPDATE artisan SET courriel_offre_prete = :v WHERE id = :a', ['v' => $oui ? 1 : 0, 'a' => $this->portee->artisanId]);
     }
 
+    /** Vrai si l'artisan veut le courriel « dictée en échec » (réglage du 2026-11-24, vrai par défaut). */
+    public function courrielDicteeEchec(): bool
+    {
+        return (int) $this->base->valeur('SELECT courriel_dictee_echec FROM artisan WHERE id = :a', ['a' => $this->portee->artisanId]) === 1;
+    }
+
+    public function changerCourrielDicteeEchec(bool $oui): void
+    {
+        $this->base->ecrire('UPDATE artisan SET courriel_dictee_echec = :v WHERE id = :a', ['v' => $oui ? 1 : 0, 'a' => $this->portee->artisanId]);
+    }
+
     /** @return array<string, string|null> arue, anumero, anpa, alocalite, apays */
     private static function colonnesAdresse(Adresse $a): array
     {

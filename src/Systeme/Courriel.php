@@ -44,6 +44,103 @@ final readonly class Courriel
         );
     }
 
+    /**
+     * Après un changement de mot de passe (réglages ou « Mot de passe oublié », Xavier, 2026-11-24) : la personne dont
+     * le compte est volé l'apprend, et reprend la main par « Mot de passe oublié ».
+     */
+    public static function motDePasseChange(\DateTimeInterface $quand, string $lienOubli): self
+    {
+        return new self(
+            'Votre mot de passe Dicta a été changé',
+            'Votre mot de passe a été changé',
+            'Le mot de passe de votre compte a été changé le ' . self::moment($quand) . ". Ce n'était pas vous\u{00A0}? Choisissez-en un nouveau tout de suite\u{00A0}:",
+            'Choisir un nouveau mot de passe',
+            $lienOubli,
+            ["Si c'était vous, il n'y a rien à faire. Les autres appareils connectés à votre compte ont été déconnectés."],
+        );
+    }
+
+    /**
+     * Une dictée que le traitement abandonne (Xavier, 2026-11-24) : sans ce courriel, l'artisan qui a rangé son
+     * téléphone attend une offre qui ne viendra pas.
+     *
+     * @param int|null $minutesMax la durée permise si la dictée était trop longue ; null : échec après plusieurs essais
+     */
+    public static function dicteeEchouee(\DateTimeInterface $recue, string $lien, ?int $minutesMax = null): self
+    {
+        $quand = self::moment($recue);
+        $pied = "Pour ne plus recevoir ce courriel\u{00A0}: Réglages, puis Courriels.";
+        if ($minutesMax !== null) {
+            return new self(
+                "Votre dictée n'a pas pu devenir une offre",
+                'Votre dictée est trop longue',
+                "Votre dictée du $quand dure plus de $minutesMax\u{00A0}minute" . ($minutesMax > 1 ? 's' : '') . ", la limite pour une offre. Elle ne vous est pas décomptée. Dictez-la à nouveau, plus courte\u{00A0}:",
+                'Dicter à nouveau',
+                $lien,
+                [],
+                $pied,
+            );
+        }
+        return new self(
+            "Votre dictée n'a pas pu devenir une offre",
+            "Votre dictée n'a pas pu être traitée",
+            "Votre dictée du $quand n'a pas pu être transformée en offre, malgré plusieurs essais. Elle ne vous est pas décomptée. Pour la relancer, touchez «\u{00A0}Réessayer\u{00A0}» dans la liste de vos offres\u{00A0}:",
+            'Ouvrir mes offres',
+            $lien,
+            ["Si l'échec revient, dictez à nouveau."],
+            $pied,
+        );
+    }
+
+    /**
+     * Rappel de fin de démo (Xavier, 2026-11-24) : deux jours avant la fin, puis douze heures avant ; deux en tout.
+     *
+     * @param bool $dernier le rappel des douze heures
+     * @param string|null $signataire la personne qui a présenté la démo
+     */
+    public static function rappelDemo(bool $dernier, \DateTimeInterface $fin, string $lien, ?string $signataire): self
+    {
+        $passage = "Pour continuer après la démo, touchez «\u{00A0}Passer à l'essai\u{00A0}» en haut de l'écran\u{00A0}: les offres que vous avez dictées restent sur votre compte.";
+        $secret = "Ce lien ouvre votre démo sans mot de passe\u{00A0}: gardez-le pour vous.";
+        if ($dernier) {
+            return new self(
+                'Votre démo Dicta se termine bientôt',
+                'Votre démo se termine ' . self::moment($fin),
+                "Pour y revenir d'ici là\u{00A0}:",
+                'Revenir dans ma démo',
+                $lien,
+                [$passage],
+                "C'est le dernier rappel. $secret",
+                $signataire,
+            );
+        }
+        return new self(
+            "Votre démo Dicta se termine dans 2\u{00A0}jours",
+            "Votre démo se termine dans 2\u{00A0}jours",
+            "Votre démo reste ouverte jusqu'au " . self::moment($fin) . ". Pour y revenir\u{00A0}:",
+            'Revenir dans ma démo',
+            $lien,
+            [$passage],
+            "Un dernier rappel partira 12\u{00A0}heures avant la fin. $secret",
+            $signataire,
+        );
+    }
+
+    /**
+     * Au membre de l'équipe qui a présenté la démo, quand elle devient un essai (Xavier, 2026-11-24). Un constat, sans
+     * consigne : le commercial est indépendant (docs/commerciaux, section 3).
+     */
+    public static function passageEssai(string $entreprise, string $courriel, \DateTimeInterface $quand, int $offres, string $lienFiche): self
+    {
+        return new self(
+            "Passage à l'essai\u{00A0}: $entreprise",
+            "$entreprise passe à l'essai",
+            "La démo que vous avez présentée à $entreprise ($courriel) est devenue un compte d'essai le " . self::moment($quand) . ", avec $offres\u{00A0}offres.",
+            'Voir sa fiche',
+            $lienFiche,
+        );
+    }
+
     public function envoyer(Messagerie $messagerie, string $destinataire, string $nomApplication, string $adresseApplication): void
     {
         $texte = $this->enTexte($nomApplication);

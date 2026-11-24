@@ -111,8 +111,8 @@ final class LiensAcces
     }
 
     /**
-     * @return array{artisan: int, version: int}|null le compte et son nouveau numéro de session ; null si le lien
-     *     a expiré, a déjà servi ou n'existe pas
+     * @return array{artisan: int, version: int, motif: string}|null le compte, son nouveau numéro de session et le motif
+     *     du lien (oubli ou accès) ; null si le lien a expiré, a déjà servi ou n'existe pas
      */
     public function utiliser(string $jeton, string $motDePasse): ?array
     {
@@ -130,8 +130,22 @@ final class LiensAcces
             $this->liens->annulerTout($lien['artisan_id'], $maintenant);
             $version = $this->artisans->remplacerMotDePasse($lien['artisan_id'], $hache)
                 ?? throw new \LogicException('Mot de passe non remplacé sans condition de version.');
-            return ['artisan' => $lien['artisan_id'], 'version' => $version];
+            return ['artisan' => $lien['artisan_id'], 'version' => $version, 'motif' => $lien['motif']];
         });
+    }
+
+    /**
+     * Le mot de passe vient de changer (réglages ou « Mot de passe oublié », Xavier, 2026-11-24). Pas pour le premier
+     * choix d'un mot de passe (lien d'accès) : rien n'a changé pour la personne. Rien pour une démonstration.
+     */
+    public function prevenirMotDePasseChange(int $artisanId): void
+    {
+        $artisan = $this->artisans->parId($artisanId);
+        if ($artisan === null || $artisan['demo'] === 1) {
+            return;
+        }
+        Courriel::motDePasseChange($this->horloge->now(), rtrim($this->adresseApplication, '/') . '/mot-de-passe/oubli')
+            ->envoyer($this->messagerie, $artisan['courriel'], $this->nomApplication, $this->adresseApplication);
     }
 
     /** Mot de passe changé dans les réglages : un lien encore ouvert ne doit plus le remplacer. */
@@ -205,10 +219,8 @@ final class LiensAcces
         if ($fin <= $maintenant) {
             return;
         }
-        $jeton = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
         $this->liens->annulerMotif($artisanId, self::DEMO_RETOUR, $maintenant);
-        $this->liens->creer($artisanId, self::empreinte($jeton), self::DEMO_RETOUR, $maintenant, $fin);
-        $lien = rtrim($this->adresseApplication, '/') . '/d/' . $jeton;
+        $lien = $this->lienRetourDemo($artisanId, $fin);
         (new Courriel(
             "Votre démo {$this->nomApplication}",
             "Votre démo reste ouverte jusqu'au " . Courriel::moment($fin),
@@ -219,6 +231,17 @@ final class LiensAcces
             "Vous n'avez pas essayé {$this->nomApplication}\u{00A0}? Ignorez ce courriel.",
             $presentePar,
         ))->envoyer($this->messagerie, $courriel, $this->nomApplication, $this->adresseApplication);
+    }
+
+    /**
+     * Un lien de retour de plus, valable jusqu'à la fin de la démo, sans fermer les précédents : un rappel ne doit pas
+     * rendre muet le premier courriel que le prospect a gardé.
+     */
+    public function lienRetourDemo(int $artisanId, \DateTimeImmutable $fin): string
+    {
+        $jeton = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+        $this->liens->creer($artisanId, self::empreinte($jeton), self::DEMO_RETOUR, $this->horloge->now(), $fin);
+        return rtrim($this->adresseApplication, '/') . '/d/' . $jeton;
     }
 
     /** Vrai si un lien de retour a déjà été envoyé pour cette démo. */

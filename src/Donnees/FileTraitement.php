@@ -44,8 +44,10 @@ final class FileTraitement
      * Verrou expiré sans avoir été rendu : le traitement qui le tenait est mort en route (processus tué, serveur
      * redémarré). Compte une tentative et libère le verrou ; à la dernière, l'enregistrement passe en échec. Sans
      * cela, il était repris toutes les quinze minutes, sans fin, et repayé (revue du 2026-11-18, M9).
+     *
+     * @return bool vrai si l'enregistrement vient de passer en échec (l'artisan est prévenu, une seule fois)
      */
-    public function noterAbandon(string $uuid, \DateTimeImmutable $maintenant, int $tentativesMax, \DateTimeImmutable $supprimerApres): void
+    public function noterAbandon(string $uuid, \DateTimeImmutable $maintenant, int $tentativesMax, \DateTimeImmutable $supprimerApres): bool
     {
         $abandonne = $this->base->ecrire(
             'UPDATE enregistrement SET tentatives = tentatives + 1, verrou_jeton = NULL, verrou_jusqu_a = NULL,
@@ -54,14 +56,15 @@ final class FileTraitement
             ['e' => 'Traitement interrompu en route, repris.', 'u' => $uuid, 'm' => Dates::versBase($maintenant),
              'pret' => Statut::PRET, 'echec' => Statut::ECHEC],
         );
-        if ($abandonne === 1) {
-            $this->base->ecrire(
-                'UPDATE enregistrement SET statut = :echec, supprimer_apres = :sa, erreur = :e
-                 WHERE uuid = :u AND tentatives >= :max AND statut NOT IN (:pret, :echec2)',
-                ['echec' => Statut::ECHEC, 'sa' => Dates::versBase($supprimerApres), 'e' => 'Traitement interrompu trop souvent.',
-                 'u' => $uuid, 'max' => $tentativesMax, 'pret' => Statut::PRET, 'echec2' => Statut::ECHEC],
-            );
+        if ($abandonne !== 1) {
+            return false;
         }
+        return $this->base->ecrire(
+            'UPDATE enregistrement SET statut = :echec, supprimer_apres = :sa, erreur = :e
+             WHERE uuid = :u AND tentatives >= :max AND statut NOT IN (:pret, :echec2)',
+            ['echec' => Statut::ECHEC, 'sa' => Dates::versBase($supprimerApres), 'e' => 'Traitement interrompu trop souvent.',
+             'u' => $uuid, 'max' => $tentativesMax, 'pret' => Statut::PRET, 'echec2' => Statut::ECHEC],
+        ) === 1;
     }
 
     public function rendreVerrou(string $uuid, string $jeton): void
@@ -136,6 +139,13 @@ final class FileTraitement
              'sa' => Dates::versBase($supprimerApres), 'u' => $uuid, 'j' => $jeton],
         );
         return (string) $this->base->valeur('SELECT statut FROM enregistrement WHERE uuid = :u', ['u' => $uuid]);
+    }
+
+    /** Le moment où l'enregistrement est arrivé au serveur : c'est par lui que l'artisan reconnaît sa dictée. */
+    public function recuLe(string $uuid): ?\DateTimeImmutable
+    {
+        $v = $this->base->valeur('SELECT recu_le FROM enregistrement WHERE uuid = :u', ['u' => $uuid]);
+        return is_string($v) ? Dates::depuisBase($v) : null;
     }
 
     /** Le dernier passage de l'écran d'attente sur cet enregistrement ; null s'il n'y est jamais venu. */

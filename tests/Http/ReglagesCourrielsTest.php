@@ -30,9 +30,9 @@ final class ReglagesCourrielsTest extends TestCase
         return $n;
     }
 
-    private function reglage(int $artisan): int
+    private function reglage(int $artisan, string $colonne = 'courriel_offre_prete'): int
     {
-        return (int) BaseDeTest::ligne("SELECT courriel_offre_prete FROM artisan WHERE id = $artisan")['courriel_offre_prete'];
+        return (int) BaseDeTest::ligne("SELECT $colonne AS v FROM artisan WHERE id = $artisan")['v'];
     }
 
     public function testLeReglageSeLitEtSeChange(): void
@@ -43,15 +43,24 @@ final class ReglagesCourrielsTest extends TestCase
         self::assertSame(200, $page->getStatusCode());
         // Par défaut, l'artisan est prévenu.
         self::assertStringContainsString('name="offre_prete" value="1" checked', (string) $page->getContent());
+        self::assertStringContainsString('name="dictee_echec" value="1" checked', (string) $page->getContent());
 
         self::assertSame(303, $n->post('/reglages/courriels', [])->getStatusCode());
         self::assertSame(0, $this->reglage($this->jeu->a));
+        self::assertSame(0, $this->reglage($this->jeu->a, 'courriel_dictee_echec'));
         self::assertStringNotContainsString('checked', (string) $n->get('/reglages/courriels')->getContent());
         // Le réglage d'un artisan ne touche pas celui d'un autre.
         self::assertSame(1, $this->reglage($this->jeu->b));
+        self::assertSame(1, $this->reglage($this->jeu->b, 'courriel_dictee_echec'));
 
+        // Les deux cases sont indépendantes.
         self::assertSame(303, $n->post('/reglages/courriels', ['offre_prete' => '1'])->getStatusCode());
         self::assertSame(1, $this->reglage($this->jeu->a));
+        self::assertSame(0, $this->reglage($this->jeu->a, 'courriel_dictee_echec'));
+        $n->get('/reglages/courriels');
+        self::assertSame(303, $n->post('/reglages/courriels', ['dictee_echec' => '1'])->getStatusCode());
+        self::assertSame(0, $this->reglage($this->jeu->a));
+        self::assertSame(1, $this->reglage($this->jeu->a, 'courriel_dictee_echec'));
     }
 
     public function testLEcranDAttenteDitQueLArtisanSuitSonOffre(): void

@@ -81,7 +81,9 @@ final class Traiteur
         $jeton = bin2hex(random_bytes(16));
         $maintenant = $this->horloge->now();
         // Un verrou expiré sans avoir été rendu : le traitement d'avant est mort en route (revue du 2026-11-18, M9).
-        $this->file->noterAbandon($uuid, $maintenant, self::TENTATIVES_MAX, $maintenant->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
+        if ($this->file->noterAbandon($uuid, $maintenant, self::TENTATIVES_MAX, $maintenant->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'))) {
+            $this->prevenirEchec($uuid, false);
+        }
         if (!$this->file->prendreVerrou($uuid, $jeton, $maintenant->modify('+' . self::DUREE_VERROU_SECONDES . ' seconds'), $maintenant)) {
             return $this->file->lire($uuid)['statut'] ?? 'inconnu';
         }
@@ -99,6 +101,9 @@ final class Traiteur
             $statut = $this->file->noterEchec($uuid, $jeton, $e->getMessage(), $e instanceof AudioTropLong ? 1 : self::TENTATIVES_MAX,
                 $this->horloge->now()->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
             $this->journal->error("offreGen, traitement de $uuid ($statut) : " . $e->getMessage());
+            if ($statut === Statut::ECHEC) {
+                $this->prevenirEchec($uuid, $e instanceof AudioTropLong);
+            }
             return $statut;
         } finally {
             $this->file->rendreVerrou($uuid, $jeton);
@@ -208,8 +213,7 @@ final class Traiteur
             }
             // S'il attend à l'écran, l'application lui ouvre l'offre : un courriel de plus serait du bruit. Le courriel
             // part quand l'offre sort sans lui : application fermée, téléphone en veille, reprise par le cron.
-            $suivi = $this->file->suiviLe($uuid);
-            if ($suivi !== null && $suivi > $this->horloge->now()->modify('-' . self::SUIVI_RECENT_SECONDES . ' seconds')) {
+            if ($this->devantLEcran($uuid)) {
                 return;
             }
             $lien = rtrim($this->adresseApplication, '/') . '/offres/' . $offreId;
@@ -217,5 +221,34 @@ final class Traiteur
         } catch (\Throwable $e) {
             $this->journal->error("offreGen, courriel « offre prête » pour l'offre $offreId : " . $e->getMessage());
         }
+    }
+
+    /**
+     * La dictée vient de passer en échec (Xavier, 2026-11-24) : même règle que « offre prête ». Rien pour une démo,
+     * rien si l'artisan n'en veut pas, rien s'il est devant l'écran d'attente, qui lui montre l'échec. Le courriel ne
+     * part qu'au passage en échec, une seule fois : un enregistrement en échec n'est plus repris.
+     */
+    private function prevenirEchec(string $uuid, bool $tropLong): void
+    {
+        try {
+            $e = $this->file->lire($uuid);
+            $artisan = $e === null ? null : $this->artisans->parId($e['artisan_id']);
+            if ($artisan === null || $artisan['demo'] === 1 || $artisan['courriel_dictee_echec'] !== 1 || $this->devantLEcran($uuid)) {
+                return;
+            }
+            Courriel::dicteeEchouee(
+                $this->file->recuLe($uuid) ?? $this->horloge->now(),
+                rtrim($this->adresseApplication, '/') . '/',
+                $tropLong ? (int) ceil($this->dureeMaxSecondes / 60) : null,
+            )->envoyer($this->messagerie, $artisan['courriel'], $this->nomApplication, $this->adresseApplication);
+        } catch (\Throwable $x) {
+            $this->journal->error("offreGen, courriel « dictée en échec » pour $uuid : " . $x->getMessage());
+        }
+    }
+
+    private function devantLEcran(string $uuid): bool
+    {
+        $suivi = $this->file->suiviLe($uuid);
+        return $suivi !== null && $suivi > $this->horloge->now()->modify('-' . self::SUIVI_RECENT_SECONDES . ' seconds');
     }
 }

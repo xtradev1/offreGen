@@ -276,6 +276,72 @@ final class TraiteurTest extends TestCase
         self::assertCount(0, $this->dossiers->courriels());
     }
 
+    /**
+     * Le contenu des courriels écrits, dans l'ordre.
+     *
+     * @return list<string>
+     */
+    private function courriels(): array
+    {
+        $fichiers = $this->dossiers->courriels();
+        sort($fichiers);
+        return array_map(static fn (string $f): string => (string) file_get_contents($f), $fichiers);
+    }
+
+    private function echouerCinqFois(): void
+    {
+        $toujours = new ExtracteurCapricieux(PHP_INT_MAX);
+        for ($i = 0; $i < 5; $i++) {
+            $this->traiteur(x: $toujours)->avancer(self::UUID);
+        }
+        self::assertSame(Statut::ECHEC, $this->etat()['statut']);
+    }
+
+    /** Xavier, 2026-11-24 : l'artisan qui a rangé son téléphone apprend que sa dictée ne deviendra pas une offre. */
+    public function testUneDicteeEnEchecPrevientLArtisanUneFois(): void
+    {
+        $this->echouerCinqFois();
+        $courriels = $this->courriels();
+        self::assertCount(1, $courriels);
+        self::assertStringContainsString("To: a@exemple.ch\r\n", $courriels[0]);
+        self::assertStringContainsString("Votre dictée n'a pas pu être traitée", $courriels[0]);
+        // La dictée se reconnaît à son heure d'arrivée, en heure de Zurich.
+        self::assertStringContainsString("samedi 7 novembre à 11\u{00A0}h\u{00A0}00", $courriels[0]);
+        self::assertStringContainsString('https://exemple.test/', $courriels[0]);
+        // En échec, l'enregistrement n'est plus repris : aucun second courriel.
+        $this->traiteur()->avancer(self::UUID);
+        self::assertCount(1, $this->courriels());
+    }
+
+    public function testAucunCourrielDEchecPourUneDemoNiSansLeReglageNiDevantLEcran(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET courriel_dictee_echec = 0 WHERE id = {$this->jeu->a}");
+        $this->echouerCinqFois();
+        self::assertSame([], $this->courriels());
+
+        BaseDeTest::pdo()->exec("UPDATE artisan SET courriel_dictee_echec = 1, demo = 1 WHERE id = {$this->jeu->a}");
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'transcrit', tentatives = 4 WHERE uuid = '" . self::UUID . "'");
+        $this->traiteur(x: new ExtracteurCapricieux(1))->avancer(self::UUID);
+        self::assertSame(Statut::ECHEC, $this->etat()['statut']);
+        self::assertSame([], $this->courriels());
+
+        // L'écran d'attente montre l'échec lui-même.
+        BaseDeTest::pdo()->exec("UPDATE artisan SET demo = 0 WHERE id = {$this->jeu->a}");
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'transcrit', tentatives = 4, suivi_le = '2026-11-07 09:59:55' WHERE uuid = '" . self::UUID . "'");
+        $this->traiteur(x: new ExtracteurCapricieux(1))->avancer(self::UUID);
+        self::assertSame(Statut::ECHEC, $this->etat()['statut']);
+        self::assertSame([], $this->courriels());
+    }
+
+    public function testUnTraitementMortTropSouventPrevientAussi(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE enregistrement SET verrou_jeton = 'mort', verrou_jusqu_a = '2026-11-07 09:00:00', tentatives = 4 WHERE uuid = '" . self::UUID . "'");
+        self::assertSame(Statut::ECHEC, $this->traiteur()->avancer(self::UUID));
+        $courriels = $this->courriels();
+        self::assertCount(1, $courriels);
+        self::assertStringContainsString("Votre dictée n'a pas pu être traitée", $courriels[0]);
+    }
+
     private function etatDepuis(): ?string
     {
         $v = BaseDeTest::ligne("SELECT transcription_depuis FROM enregistrement WHERE uuid = '" . self::UUID . "'")['transcription_depuis'];
@@ -332,6 +398,11 @@ final class TraiteurTest extends TestCase
         self::assertSame(Statut::ECHEC, $this->traiteur(t: $appele, dureeMax: 10)->avancer(self::UUID));
         self::assertFalse($appele->appele);
         self::assertStringContainsString('trop long', (string) $this->etat()['erreur']);
+        // Réessayer ne raccourcirait pas la dictée : le courriel dit d'en dicter une plus courte.
+        $courriels = $this->courriels();
+        self::assertCount(1, $courriels);
+        self::assertStringContainsString('Votre dictée est trop longue', $courriels[0]);
+        self::assertStringContainsString("plus de 1\u{00A0}minute, la limite", $courriels[0]);
     }
 
     public function testUnEnregistrementDansLaLimitePasse(): void

@@ -1,0 +1,21 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Lancé par cron toutes les dix minutes : rappels de fin de démo, 2 jours puis 12 heures avant la fin (Xavier,
+// 2026-11-24). Chaque démo reçoit chacun une fois au plus.
+// Usage : bin/rappeler-demos
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$envoyes = Conteneur::depuisEnvironnement(dirname(__DIR__))->rappelsDemo()->envoyer();
+if ($envoyes > 0) {
+    echo "$envoyes rappel(s) de fin de démo envoyé(s).\n";
+}
+exit(0);
