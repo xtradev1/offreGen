@@ -113,6 +113,8 @@ final class PassageDemoTest extends TestCase
         self::assertStringContainsString("To: a@exemple.ch\r\n", $courriel);
         self::assertStringContainsString("passe à l'essai", $courriel);
         self::assertStringContainsString('info@platrerie-roux.ch', $courriel);
+        // Les offres du mois gratuit, celles que le compte a vraiment reçues (E1).
+        self::assertStringContainsString("avec 50\u{00A0}offres", $courriel);
         self::assertStringContainsString("https://exemple.test/admin/artisans/$id", $courriel);
     }
 
