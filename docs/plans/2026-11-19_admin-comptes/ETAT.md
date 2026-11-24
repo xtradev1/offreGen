@@ -601,3 +601,42 @@ pc case échec avant true après false | case offre prête true | bandeau Enregi
 Piège noté : MariaDB ne compte pas une ligne réécrite à l'identique (`rowCount` = lignes changées). Un test de garde qui réécrit la même valeur passe avec ou sans la garde.
 
 Non vérifié : le rappel réel envoyé par le cron du serveur de test (il faut une démo dont la fin tombe dans les 48 heures) ; le courriel d'échec sur une vraie dictée ; le rendu dans Gmail, Outlook et iPhone. La migration a aussi été jouée sur `offregen_dev` (avec celle d'une autre session, `Version20261123230001`), pour la recette locale.
+
+Réponses de Xavier à la maquette v9 (2026-11-24), copiées telles quelles :
+
+> - V1 : Valider
+> - V2 : Valider · comment c'est possible que ce soit trop long, ça doit etre bloqué avant et refusé si on tente de contourner le système
+> - V3 : Valider · écrit jsute le prénom
+> - V5 : Valider · peut être pas essai mais le titre du compte et ensuite
+> - V6 : Pas valider · si c'est deja fais pas besoin de remettre un mail, sauf a la première comande et dans ce cas on remercie pour la commandfe et pas pour le paiement
+> - V7 : Valider
+> - V8 : Valider · on peut garder les données 6 mois voir 1 an c'est okay
+> - V9 : Valider · de nouveau ont remercie pour la commande pas pour le paiement c'est payreex qui fais cela
+> - V10 : Valider
+> - D1 : Le prestataire (recommandé)
+> - D2 : Téléchargement des offres et factures d'abord (recommandé) · ont peut imaginer une période de sauvegarde avant suppression
+> - D3 : Oui (recommandé)
+
+Suite donnée :
+- V2 : le micro s'arrêtait déjà à 30 minutes et le serveur refusait déjà au traitement, avant tout appel payant. Le trou : un fichier importé de plus de 30 minutes partait, le site de test ne pouvant pas lire sa durée à l'arrivée (pas de ffprobe sous le serveur web). Le navigateur lit maintenant la durée du fichier choisi et l'arrête avant l'envoi (`app.js`, `dureeDuFichier`, état « long » de `_nouvelle_offre.html.twig`). Il faut pour cela `media-src 'self' blob:` dans la CSP (`.htaccess` et `Noyau::ENTETES`) : prouvé, sans cette ligne le fichier de 31 minutes part. Contourner le navigateur reste refusé au traitement, avec le courriel « trop longue ».
+- V3 : « Votre prénom dans les courriels » dans « Plus » ; sans prénom choisi, le premier mot du nom du compte signe (`DepotEquipe::PRESENTE_PAR`).
+- V5 : le commentaire est coupé (« et ensuite ») : question reposée à Xavier, rien de changé.
+- V6, V8, V9, D1, D2, D3 : textes de l'abonnement réécrits et relus, rangés dans `DECOUPAGE-lot-B.md`. Durée de conservation retenue : 6 mois (Xavier : « 6 mois voire 1 an »).
+
+```
+$ recette-long.js (serveur local, /import sur PC et feuille de l'accueil au téléphone)
+pc 31 min : état « long » visible true | envois 0 | texte Fichier trop long : 30 minutes au maximum. Il n'a pas été envoyé.
+pc 20 s : envois 1 | état « long » visible false | CSP []
+tel 31 min : état « long » visible true | envois 0
+tel 20 s : envois 1 | état « long » visible false | CSP []
+$ même essai, media-src retiré de la CSP
+pc 31 min : état « long » visible false | envois 1   (violation CSP sur le blob: dans la console)
+$ DB_NOM=offregen_admin_test phpunit
+OK (1454 tests, 12104 assertions)
+$ vendor/bin/phpstan analyse --no-progress
+ [OK] No errors
+```
+
+Défaut vu sur la capture et corrigé : au téléphone, la croix de la feuille recouvrait le coin du message « trop long » ; l'état « long » rejoint la règle `padding-top` des autres messages (`app.css`).
+
+Erreur de ma part pendant l'essai : un `git checkout -- src/Http/Noyau.php` pour remettre le fichier après la mutation a aussi effacé ma modification non commitée de la CSP. Vue au `git status`, réécrite, essai rejoué vert.

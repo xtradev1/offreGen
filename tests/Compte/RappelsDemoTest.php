@@ -74,6 +74,16 @@ final class RappelsDemoTest extends TestCase
         self::assertCount(1, array_filter($courriels, static fn (string $c): bool => str_contains($c, "C'est le dernier rappel")));
     }
 
+    /** V3 de Xavier (2026-11-24) : « écrit juste le prénom ». Sans prénom choisi, le premier mot du nom du compte. */
+    public function testSansPrenomChoisiLeCourrielEstSigneDuPremierMot(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE artisan SET nom_affiche = NULL, entreprise = 'Nina Rey-Monnier' WHERE id = {$this->jeu->a}");
+        self::assertSame(1, $this->passage('2026-11-25 14:00:00'));
+        [$courriel] = $this->contenus();
+        self::assertStringContainsString("Nina\r\nDicta", $courriel);
+        self::assertStringNotContainsString('Rey-Monnier', $courriel);
+    }
+
     /** Une démo qui entre en retard dans la fenêtre (cron arrêté) ne reçoit que le dernier rappel. */
     public function testUneDemoEnRetardNeRecoitQueLeDernier(): void
     {

@@ -391,7 +391,7 @@ function nouvelleOffre() {
     // Pendant l'enregistrement et l'envoi, le retour ne ferme rien ; après un échec, il demande.
     retenir: () => {
       // Après l'envoi, le traitement continue au serveur : la fenêtre peut se fermer.
-      if (['choix', 'suivi', 'court', 'refus', 'reprise'].includes(etatCourant)) return false;
+      if (['choix', 'suivi', 'court', 'long', 'refus', 'reprise'].includes(etatCourant)) return false;
       if (etatCourant === 'echec') return !perteAcceptee();
       return true;
     },
@@ -401,7 +401,7 @@ function nouvelleOffre() {
     if (etatCourant === 'reprise' && etat !== 'reprise') plusTard(repriseCourante);
     etatCourant = etat;
     zone.querySelectorAll('[data-etat]').forEach((s) => { s.hidden = s.dataset.etat !== etat; });
-    if (fermerX) fermerX.hidden = !['echec', 'court', 'refus', 'reprise'].includes(etat);
+    if (fermerX) fermerX.hidden = !['echec', 'court', 'long', 'refus', 'reprise'].includes(etat);
     if (!fenetre) return;
     feuille.classList.toggle('pleine', etat === 'enregistrement');
     if (etat === 'choix') { calques.fermer(fenetre); return; }
@@ -494,10 +494,30 @@ function nouvelleOffre() {
   el('[data-reessayer]').addEventListener('click', envoyer);
 
   // Importer : le fichier choisi part aussitôt, avec la progression.
-  entree.addEventListener('change', (e) => {
+  // La durée d'un fichier, lue par le navigateur avant l'envoi (Xavier, 2026-11-24 : un fichier trop long « doit être
+  // bloqué avant »). Le serveur du site ne peut pas lancer ffprobe : sans ce contrôle, le fichier partait et n'était
+  // refusé qu'au traitement. null quand le navigateur ne sait pas lire le format : le serveur tranchera.
+  const dureeDuFichier = (f) => new Promise((resolve) => {
+    const lecteur = document.createElement('audio');
+    const url = URL.createObjectURL(f);
+    const fin = (s) => { URL.revokeObjectURL(url); resolve(s); };
+    lecteur.preload = 'metadata';
+    lecteur.addEventListener('loadedmetadata', () => fin(Number.isFinite(lecteur.duration) ? lecteur.duration : null), { once: true });
+    lecteur.addEventListener('error', () => fin(null), { once: true });
+    setTimeout(() => fin(null), 4000);
+    lecteur.src = url;
+  });
+  entree.addEventListener('change', async (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     if (bloquer()) { entree.value = ''; return; }
+    // La tolérance du serveur (DureeAudio::TOLERANCE_SECONDES) : un fichier à la limite passe des deux côtés.
+    const secondes = await dureeDuFichier(f);
+    if (secondes !== null && secondes > DUREE_MAX_S + 5) {
+      entree.value = '';
+      montrer('long');
+      return;
+    }
     fichier = f;
     duMicro = false;
     copieAbri = false;
@@ -505,6 +525,7 @@ function nouvelleOffre() {
     el('[data-garder]').hidden = true;
     envoyer();
   });
+  el('[data-autre-fichier]').addEventListener('click', () => { montrer('choix'); entree.click(); });
 
   // Parler.
   let flux = null;

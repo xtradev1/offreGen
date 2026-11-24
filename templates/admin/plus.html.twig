@@ -13,8 +13,9 @@
   <form class="carte-admin" method="post" action="/admin/plus/nom">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     <div class="champ">
-      <label for="nom_affiche">Votre nom dans les courriels</label>
-      <input id="nom_affiche" name="nom" type="text" maxlength="120" autocomplete="name" value="{{ nom_affiche }}">
+      {# V3 de Xavier (2026-11-24) : « écrit juste le prénom ». #}
+      <label for="nom_affiche">Votre prénom dans les courriels</label>
+      <input id="nom_affiche" name="nom" type="text" maxlength="120" autocomplete="given-name" value="{{ nom_affiche }}">
       <small class="muted">Il signe le courriel qu'un prospect reçoit après une démo, avec {{ nom_application }} dessous. Vide&nbsp;: «&nbsp;{{ nom_compte }}&nbsp;».</small>
     </div>
     <button class="btn" type="submit">Enregistrer</button>

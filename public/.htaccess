@@ -44,7 +44,9 @@ Header always set Referrer-Policy "strict-origin-when-cross-origin"
 # Fonctions du navigateur fermées par défaut. Micro autorisé sur ce site pour la dictée vocale.
 Header always set Permissions-Policy "camera=(), microphone=(self), geolocation=()"
 # Politique fermée : toute source externe s'ajoute explicitement, avec sa raison en commentaire.
-Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'"
+# media-src blob: (2026-11-24) : le navigateur lit la durée d'un fichier audio choisi, sur le téléphone, avant de
+# l'envoyer (app.js, dureeDuFichier). Un blob: ne vient que d'un fichier ou d'un objet créé par la page elle-même.
+Header always set Content-Security-Policy "default-src 'self'; media-src 'self' blob:; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'"
 Header always set Strict-Transport-Security "max-age=31536000"
 Header always unset X-Powered-By
 Header unset X-Powered-By

@@ -114,7 +114,7 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 8px auto 2px; }
 .x.coin { position: absolute; top: 4px; right: 14px; }
 /* Message sous la croix de fermeture : de la place pour elle. */
-.feuille [data-etat="court"], .feuille [data-etat="echec"], .feuille [data-etat="refus"] { padding-top: 40px; }
+.feuille [data-etat="court"], .feuille [data-etat="long"], .feuille [data-etat="echec"], .feuille [data-etat="refus"] { padding-top: 40px; }
 /* Fiche dans une fenêtre : le corps défile, les boutons restent en bas, au pouce. */
 .feuille.cadre { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; }
 .sh-corps { overflow-y: auto; flex: 1 1 auto; padding: 4px 2px 8px; }

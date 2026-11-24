@@ -262,7 +262,7 @@ final class DepotEquipe
     public function demo(int $id): ?array
     {
         /** @var array{id: int, entreprise: string, metier: string|null, metier_saisi: string|null, courriel_saisi: string|null, demo_fin: string|null, presente_par: string|null, cree_par: int|null, entrainement: int}|null */
-        return $this->base->un('SELECT a.id, a.entreprise, a.metier, a.metier_saisi, a.courriel_saisi, a.demo_fin, COALESCE(c.nom_affiche, c.entreprise) AS presente_par, a.cree_par, a.entrainement
+        return $this->base->un('SELECT a.id, a.entreprise, a.metier, a.metier_saisi, a.courriel_saisi, a.demo_fin, ' . self::PRESENTE_PAR . ' AS presente_par, a.cree_par, a.entrainement
              FROM artisan a LEFT JOIN artisan c ON c.id = a.cree_par WHERE a.id = :id AND a.demo = 1', ['id' => $id]);
     }
 
@@ -276,7 +276,7 @@ final class DepotEquipe
     {
         /** @var list<array{id: int, demo_fin: string, courriel_saisi: string, demo_rappel_2j_le: string|null, presente_par: string|null}> */
         return $this->base->lire(
-            'SELECT a.id, a.demo_fin, a.courriel_saisi, a.demo_rappel_2j_le, COALESCE(c.nom_affiche, c.entreprise) AS presente_par
+            'SELECT a.id, a.demo_fin, a.courriel_saisi, a.demo_rappel_2j_le, ' . self::PRESENTE_PAR . ' AS presente_par
              FROM artisan a LEFT JOIN artisan c ON c.id = a.cree_par
              WHERE a.demo = 1 AND a.entrainement = 0 AND a.courriel_saisi IS NOT NULL AND a.demo_rappel_12h_le IS NULL
                AND a.demo_fin > :m AND a.demo_fin <= :f
@@ -297,6 +297,18 @@ final class DepotEquipe
         return $dernier
             ? $this->base->ecrire('UPDATE artisan SET demo_rappel_12h_le = :q, demo_rappel_2j_le = COALESCE(demo_rappel_2j_le, :q2) WHERE id = :id AND demo = 1 AND demo_rappel_12h_le IS NULL', ['q' => $q, 'q2' => $q, 'id' => $id]) === 1
             : $this->base->ecrire('UPDATE artisan SET demo_rappel_2j_le = :q WHERE id = :id AND demo = 1 AND demo_rappel_2j_le IS NULL', ['q' => $q, 'id' => $id]) === 1;
+    }
+
+    /**
+     * Qui signe les courriels d'une démo (c : le membre qui l'a créée). Le prénom qu'il a choisi ; à défaut, le premier
+     * mot du nom de son compte (V3 de Xavier, 2026-11-24 : « écrit juste le prénom »).
+     */
+    private const PRESENTE_PAR = "COALESCE(c.nom_affiche, NULLIF(SUBSTRING_INDEX(TRIM(c.entreprise), ' ', 1), ''))";
+
+    /** Le premier mot d'un nom : le prénom affiché quand le membre n'en a pas choisi (même règle que PRESENTE_PAR). */
+    public static function prenom(string $nom): string
+    {
+        return explode(' ', trim($nom))[0];
     }
 
     /** Le nom d'un membre de l'équipe dans les courriels, s'il en a choisi un. */

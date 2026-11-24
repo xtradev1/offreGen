@@ -35,6 +35,12 @@
     <button class="btn primary large" type="button" data-recommencer>Recommencer</button>
   </div>
 
+  {# Fichier importé de plus de 30 minutes, vu par le navigateur avant l'envoi (Xavier, 2026-11-24). Rien n'est parti. #}
+  <div data-etat="long" hidden>
+    <p class="alerte warn" role="alert">Fichier trop long&nbsp;: {{ (duree_max_secondes / 60)|round(0, 'ceil') }}&nbsp;minutes au maximum. Il n'a pas été envoyé.</p>
+    <button class="btn primary large" type="button" data-autre-fichier>Choisir un autre fichier</button>
+  </div>
+
   <div data-etat="echec" hidden>
     <p class="alerte bad" role="alert" data-echec-texte>L'envoi a échoué.</p>
     <button class="btn primary large" type="button" data-reessayer>Réessayer l'envoi</button>

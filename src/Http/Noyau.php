@@ -77,7 +77,8 @@ final class Noyau
         'X-Frame-Options' => 'SAMEORIGIN',
         'Referrer-Policy' => 'strict-origin-when-cross-origin',
         'Permissions-Policy' => 'camera=(), microphone=(self), geolocation=()',
-        'Content-Security-Policy' => "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'",
+        // media-src blob: (2026-11-24) : durée d'un fichier audio lue par le navigateur avant l'envoi (public/.htaccess).
+        'Content-Security-Policy' => "default-src 'self'; media-src 'self' blob:; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'",
     ];
 
     public function traiter(Request $requete): Response

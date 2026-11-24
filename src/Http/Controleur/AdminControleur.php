@@ -120,7 +120,7 @@ final class AdminControleur
             'actif' => 'plus',
             'titre' => 'Plus',
             'nom_affiche' => $this->c->depotEquipe()->nomAffiche($this->acteur()) ?? '',
-            'nom_compte' => $this->c->depotEquipe()->nomDuCompte($this->acteur()) ?? '',
+            'nom_compte' => \OffreGen\Donnees\DepotEquipe::prenom($this->c->depotEquipe()->nomDuCompte($this->acteur()) ?? ''),
         ]);
     }
 
