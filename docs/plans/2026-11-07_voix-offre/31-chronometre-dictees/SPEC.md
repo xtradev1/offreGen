@@ -53,25 +53,35 @@ Avec le fichier : `origine` et la durée de l'audio vue par le téléphone (fin 
 
 ## 4. Page d'administration
 
-`/admin/dictees`, droit administrateur (`Route::ADMIN`). Les 100 dernières dictées, plus récentes d'abord, période réglable. Par dictée : date, offre, compte (numéro), durée de l'audio, taille, format, navigateur (lu en clair : « Safari, iPhone »), origine, puis la durée de chaque étape (tentatives additionnées), le total de l'envoi à l'offre prête, la part hors étapes, le nombre de tentatives. Une durée plus de deux fois la médiane de son étape sur la liste est marquée. Un clic ouvre le rapport de la dictée : chaque étape sur une frise, tentative par tentative, avec processus, modèle et jetons.
+`/admin/dictees`, droit administrateur (`Route::ADMIN`), entrée « Dictées » dans « Plus » et lien depuis le Tableau (D7). Les dictées par pages de 100, plus récentes d'abord, période réglable ; toutes restent accessibles page après page (D2 : « accès à toutes, du moins durant la période de test »). Filtres : toutes, avec une étape marquée, avec une reprise ou une erreur.
 
-Export CSV de la liste affichée (`/admin/dictees.csv`, même droit, même période), séparateur point-virgule, UTF-8 avec BOM pour Excel (décision D3 pour le format).
+En tête de page, les statistiques de la période (D1 : « surtout besoin de statistiques, voir les extrêmes et comprendre pourquoi ») : pour chaque étape, nombre, médiane, 90e centile et maximum, le maximum menant au rapport de sa dictée. Pour les appels à l'IA, en plus, la durée pour 100 jetons reçus (médiane et maximum) : une extraction longue avec beaucoup de jetons n'a pas la même cause qu'une extraction longue avec peu.
 
-## 5. Remède au verrou (décision D1)
+Par dictée : date, offre, compte (numéro), durée de l'audio, taille, format, navigateur (lu en clair : « Safari, iPhone »), origine, puis la durée de chaque étape (tentatives additionnées), le total de l'envoi à l'offre prête, la part hors étapes, le nombre de tentatives. Une durée plus de deux fois la médiane de son étape sur la liste est marquée. Un clic ouvre le rapport de la dictée : chaque étape sur une frise, tentative par tentative, avec processus, modèle et jetons.
 
-Proposé (A) : un bail court et un pouls.
-- Le verrou se prend pour 2 minutes au lieu de 15.
+Export CSV (`/admin/dictees.csv`, même droit) : toutes les dictées de la période et du filtre, sans limite de 100, une ligne par dictée (D3), séparateur point-virgule, UTF-8 avec BOM pour Excel, durées en ms, jetons de chaque appel.
+
+## 4 bis. Rejouer une dictée (D2, réponse du 2026-11-24 : « Rejouer »)
+
+Dans le rapport d'une dictée, un bouton « Rejouer » (administrateur, CSRF) relance sur l'audio gardé la conversion, la transcription et les appels à l'IA, avec le catalogue du compte au moment du rejeu. L'offre n'est jamais touchée. Le rejeu est chronométré comme une dictée, sous son propre numéro de passage (processus `rejeu`), et s'affiche à côté de l'original dans le rapport, avec le texte transcrit et le nombre de lignes trouvées des deux côtés. Il tourne après la réponse, comme un traitement ordinaire ; le rapport se recharge pour le suivre.
+
+Limites : possible tant que l'audio existe (purge à 30 jours) ; un rejeu à la fois par dictée ; environ 0,5 centime par rejeu (transcription et trois appels). Jamais de courriel, jamais de compteur de l'artisan touché (quota de démo, offres d'essai).
+
+## 5. Remède au verrou (D4 : A, D5 : 2 min 30)
+
+Retenu : un bail court et un pouls.
+- Le verrou se prend pour 2 min 30 au lieu de 15 minutes (Xavier, D5 : « à 2 minutes 30 pour avoir un peu de marge »).
 - Le traitement le prolonge à chaque étape, et pendant les longues attentes : `on_progress` du client HTTP de Symfony est appelé au moins une fois par seconde (contrat lu dans `HttpClientInterface.php`) ; le pouls y prolonge le verrou toutes les 20 secondes. Le même pouls garde la connexion à la base en vie.
 - Un pouls qui trouve le verrou repris par un autre arrête l'appel en cours : on ne paie pas deux fois.
-- Un traitement mort ne prolonge plus rien : le verrou expire en 2 minutes, le cron (chaque minute) reprend. Attente maximale : environ 3 minutes au lieu de 15.
+- Un traitement mort ne prolonge plus rien : le verrou expire en 2 min 30, le cron (chaque minute) reprend. Attente maximale : environ 3 min 30 au lieu de 15 minutes.
 
-À vérifier pendant le code : que ffmpeg et ffprobe, qui ne battent pas le pouls, restent sous 2 minutes sur une dictée de 30 minutes (le chronomètre le mesure, étape `conversion`).
+À vérifier pendant le code : que ffmpeg et ffprobe, qui ne battent pas le pouls, restent sous 2 min 30 sur une dictée de 30 minutes (le chronomètre le mesure, étape `conversion`).
 
 Autres voies : (B) garder 15 minutes, mais rendre le verrou à toute erreur par une connexion neuve et à l'arrêt de PHP (`register_shutdown_function`) : couvre l'offre 87, rien pour un processus tué ; (C) rien de plus que le correctif de `wait_timeout`.
 
-## 6. Message à l'artisan (décision D2)
+## 6. Message à l'artisan (D5 : validé)
 
-Proposé : quand le verrou a expiré sans que la dictée soit prête, l'écran d'attente le dit (« Le traitement s'est arrêté en route. Il reprend tout seul d'ici une minute. ») au lieu d'attendre sans rien dire. `/etat` ajoute `interrompu`. Avec la voie A, ce message apparaît au plus 2 minutes après la panne.
+Quand le verrou a expiré sans que la dictée soit prête, l'écran d'attente et la fenêtre du bas le disent (« Le traitement s'est arrêté en route. Il reprend tout seul d'ici une minute. »). `/etat` ajoute `interrompu`. Le message n'apparaît qu'à l'expiration du verrou, 2 min 30 après le dernier pouls : un appel lent ne le déclenche pas (Xavier : « peu de message d'erreur »). Il disparaît dès qu'un traitement reprend la dictée.
 
 ## 7. Hors périmètre
 
