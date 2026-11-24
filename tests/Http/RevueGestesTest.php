@@ -84,16 +84,19 @@ final class RevueGestesTest extends TestCase
         self::assertSame([1, 1], [self::enBase($v1)[2], self::enBase($v2)[2]]);
     }
 
-    /** C6 : une variante du catalogue dans une autre unité que sa ligne ne prend pas sa quantité (42 m² ne font pas 42 rouleaux). */
-    public function testUneVarianteDuCatalogueDAutreUniteGardeUnePiece(): void
+    /**
+     * C6, remplacée par V1 A de Xavier (2026-11-24, chantier documents et réglages) : une variante du catalogue dans une
+     * autre unité que sa ligne prend la quantité et l'unité de la ligne, le prix du produit, et passe dans « Relire »
+     * (42 m² ne font pas 42 rouleaux : l'artisan corrige).
+     */
+    public function testUneVarianteDuCatalogueDAutreUnitePasseDansRelire(): void
     {
         $produit = (int) $this->jeu->produit['a'];
-        $unite = (string) BaseDeTest::ligne("SELECT unite FROM produit WHERE id = $produit")['unite'];
         BaseDeTest::pdo()->exec("UPDATE ligne SET unite = 'rouleau' WHERE id = {$this->base}");
         $this->page("{$this->offre}/ajouter?nature=variante&remplace={$this->base}");
         $this->a->post("{$this->offre}/lignes", ['produit' => (string) $produit, 'reste' => '1', 'nature' => 'variante', 'remplace' => (string) $this->base]);
-        $l = BaseDeTest::ligne('SELECT quantite_milliemes, unite, nature FROM ligne WHERE offre_id = ' . $this->jeu->offre['a'] . ' ORDER BY id DESC LIMIT 1');
-        self::assertSame([1000, $unite, 'variante'], [(int) $l['quantite_milliemes'], (string) $l['unite'], (string) $l['nature']]);
+        $l = BaseDeTest::ligne('SELECT quantite_milliemes, unite, nature, a_verifier FROM ligne WHERE offre_id = ' . $this->jeu->offre['a'] . ' ORDER BY id DESC LIMIT 1');
+        self::assertSame([12500, 'rouleau', 'variante', 1], [(int) $l['quantite_milliemes'], (string) $l['unite'], (string) $l['nature'], (int) $l['a_verifier']]);
     }
 
     /** C7 : la ligne à remplacer a disparu entre l'affichage et l'envoi : la ligne entre en option, pas en variante d'une autre. */

@@ -493,6 +493,15 @@ final class DepotOffres implements SupportLignes
         });
     }
 
+    /** La ligne passe dans « Relire » (« À vérifier ») ; rien si elle n'est pas à l'artisan. */
+    public function marquerAVerifier(int $offreId, int $ligneId): void
+    {
+        $this->base->ecrire(
+            'UPDATE ligne SET a_verifier = 1 WHERE id = :l AND offre_id = :o AND artisan_id = :a AND supprimee_le IS NULL',
+            ['l' => $ligneId, 'o' => $offreId, 'a' => $this->portee->artisanId],
+        );
+    }
+
     /**
      * La nature d'une ligne (O4, E3) : dans le total, option, ou variante de la ligne $remplaceId. Faux, sans rien écrire,
      * si la ligne n'est pas à l'artisan, si la ligne remplacée n'est pas une ligne du total de la même offre (ou est la

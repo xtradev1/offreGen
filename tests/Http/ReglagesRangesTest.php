@@ -49,7 +49,7 @@ final class ReglagesRangesTest extends TestCase
         }
         self::assertStringContainsString('TVA et arrondi', $page);
         // Jeu : assujetti, sans adresse, ni IDE, ni IBAN.
-        self::assertStringContainsString('3 rubriques sur 4 complètes', $page);
+        self::assertStringContainsString('4 rubriques sur 5 complètes', $page);
         self::assertMatchesRegularExpression('#Mon entreprise\s*<span class="badge manque">à compléter</span>#', $page);
         self::assertStringContainsString('adresse, IDE et IBAN manquent', $page);
         self::assertStringContainsString('action="/deconnexion"', $page);
@@ -61,7 +61,7 @@ final class ReglagesRangesTest extends TestCase
         self::assertStringContainsString('value="CH93 0076 2011 6238 5295 7"', $this->page('/reglages/entreprise'), 'Montré en groupes de quatre.');
         self::assertSame('CH9300762011623852957', BaseDeTest::ligne('SELECT iban FROM artisan WHERE id = ' . $this->jeu->a)['iban']);
         $page = $this->page('/reglages');
-        self::assertStringContainsString('4 rubriques sur 4 complètes', $page);
+        self::assertStringContainsString('5 rubriques sur 5 complètes', $page);
         self::assertStringNotContainsString('à compléter', $page);
         self::assertStringContainsString('Entreprise A · Delémont', $page);
     }

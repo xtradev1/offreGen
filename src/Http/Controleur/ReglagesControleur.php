@@ -36,8 +36,11 @@ final class ReglagesControleur
                             'lettre_appel', 'lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin', 'lettre_partout',
                             'activite'];
 
-    /** Les rubriques du sommaire, dans l'ordre de la maquette validée le 2026-11-12. */
-    public const RUBRIQUES = ['entreprise' => 'Mon entreprise', 'marque' => 'Ma marque', 'conditions' => "Conditions de l'offre", 'tva' => 'TVA et arrondi'];
+    /**
+     * Les rubriques du sommaire, dans l'ordre de la maquette validée le 2026-11-12 ; les phrases du document, sorties de
+     * Ma marque, viennent après elle (LC-3, L1 A de Xavier, 2026-11-24).
+     */
+    public const RUBRIQUES = ['entreprise' => 'Mon entreprise', 'marque' => 'Ma marque', 'phrases' => 'Phrases du document', 'conditions' => "Conditions de l'offre", 'tva' => 'TVA et arrondi'];
 
     /**
      * Les étapes de l'assistant du premier lancement et du passage d'une démo à l'essai (mise en route, chantier
@@ -62,6 +65,7 @@ final class ReglagesControleur
             'entreprise' => ['complete' => $manque === [],
                 'resume' => $r->entreprise . ' · ' . ($manque === [] ? ($r->localite() !== '' ? $r->localite() : $r->telephone) : self::enumeration($manque) . (count($manque) > 1 ? ' manquent' : ' manque'))],
             'marque' => ['complete' => true, 'resume' => ($m->logo !== null ? 'Logo' : 'Sans logo') . ' · modèle ' . Marque::MODELES[$m->modele]],
+            'phrases' => ['complete' => true, 'resume' => self::resumePhrases($r->lettre)],
             'conditions' => ['complete' => true, 'resume' => 'Valable ' . $r->validiteJours . ' jours · ' . $r->resumePaiement()],
             'tva' => ['complete' => true,
                 'resume' => ($r->tvaPourDixMille > 0 ? 'Assujetti ' . Formats::taux($r->tvaPourDixMille) : 'Non assujetti') . ' · ' . ($r->arrondiCinqCentimes ? 'arrondi aux 5 centimes' : 'au centime')],
@@ -305,6 +309,14 @@ final class ReglagesControleur
                 'pastilles' => $p['pastilles'], 'origine' => PhrasesLettre::origine($cle, $activite)];
         }
         return $phrases;
+    }
+
+    /** « Dans Lettre seulement », ou « Dans les douze modèles · 2 phrases réécrites ». */
+    private static function resumePhrases(PhrasesLettre $p): string
+    {
+        $reecrites = count(array_intersect_key($p->reecrites, PhrasesLettre::DOCUMENT));
+        return ($p->partout ? 'Dans les douze modèles' : 'Dans Lettre seulement')
+            . ($reecrites > 0 ? ' · ' . $reecrites . ' phrase' . ($reecrites > 1 ? 's réécrites' : ' réécrite') : '');
     }
 
     /**

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Compte;
 
 /**
- * Les phrases du document, réglées par l'artisan dans « Ma marque ». Le nom vient du premier réglage, celui du modèle
+ * Les phrases du document, réglées par l'artisan dans « Phrases du document ». Le nom vient du premier réglage, celui du modèle
  * Lettre (maquette MAQUETTE-lettre-phrases.html, réponses de Xavier du 2026-11-20) : L2, la phrase de l'artisan, puis
  * la visite, le chantier ou le numéro de l'offre ; L3, formule d'appel la même pour tous ou selon le client ; L5, début
  * et fin pour l'offre et pour la facture ; L6, trois tournures par phrase, la première étant celle d'avant ce réglage.
@@ -222,7 +222,7 @@ final readonly class PhrasesLettre
     }
 
     /**
-     * Les champs de « Ma marque » : lettre_appel (« client », sinon la même pour tous), lettre_offre_debut,
+     * Les champs de « Phrases du document » : lettre_appel (« client », sinon la même pour tous), lettre_offre_debut,
      * lettre_offre_fin, lettre_facture_debut, lettre_facture_fin. Un champ absent ou vide vaut la phrase actuelle.
      *
      * @param array<string, string> $champs

@@ -546,23 +546,26 @@ const fluide = (() => {
 
   /**
    * Un produit ajouté sans réseau (« + Ligne ») : une ligne provisoire au bas de l'offre, le total estimé (D7). Le
-   * serveur la remplace par la vraie au retour du réseau (morceau « lignes »).
+   * serveur la remplace par la vraie au retour du réseau (morceau « lignes »). Une variante porte la quantité de sa ligne
+   * (V1 A, 2026-11-24) ; une option ou une variante reste hors du total.
    */
-  const ligneEnAttente = (designation, unite, prixCentimes) => {
+  const ligneEnAttente = (designation, unite, prixCentimes, quantiteMilliemes = 1000, horsTotal = false) => {
     const lignes = document.getElementById('lignes');
     if (!lignes) return;
     const row = document.createElement('div');
     row.className = 'row en-attente';
     const cellule = (balise, classe, texte) => { const el = document.createElement(balise); el.className = classe; el.textContent = texte; return el; };
-    const q = cellule('span', 'q fige', '1' + NB);
+    const quantite = quantiteMilliemes > 0 ? quantiteMilliemes : 1000;
+    const total = Math.round(prixCentimes * quantite / 1000);
+    const q = cellule('span', 'q fige', String(quantite / 1000) + NB);
     q.append(cellule('span', 'u', unite || ''));
     row.append(cellule('span', 'nm', designation), q, cellule('span', 'p fige', prixCentimes > 0 ? montant(prixCentimes) : ''),
-      cellule('div', 'tt provisoire', prixCentimes > 0 ? montant(prixCentimes) : ''), document.createElement('span'));
+      cellule('div', 'tt provisoire', total > 0 ? montant(total) : ''), document.createElement('span'));
     const note = cellule('div', 'note', '');
     note.append(cellule('span', '', 'En attente du réseau'));
     row.append(note);
     lignes.append(row);
-    if (prixCentimes > 0) ajusterTotal(prixCentimes);
+    if (total > 0 && !horsTotal) ajusterTotal(total);
   };
 
   /** Quantité, prix ou choix du client d'une ligne (app.js, corrections) : l'estimation au toucher, l'envoi suit. */
@@ -841,7 +844,7 @@ const fluide = (() => {
       file.push({ item, options: { gardee: true } });
       compter(item, 1);
       if (!memeEcran(item)) return;
-      if (item.provisoire) ligneEnAttente(item.provisoire.designation, item.provisoire.unite, item.provisoire.prix);
+      if (item.provisoire) ligneEnAttente(item.provisoire.designation, item.provisoire.unite, item.provisoire.prix, item.provisoire.quantite, item.provisoire.horsTotal);
       const porteur = item.champ && document.getElementById(item.champ.porteur);
       const champ = porteur && porteur.querySelector('[name="' + item.champ.nom + '"]:not([type=hidden])');
       if (champ) { champ.value = item.champ.valeur; champ.defaultValue = item.champ.valeur; }

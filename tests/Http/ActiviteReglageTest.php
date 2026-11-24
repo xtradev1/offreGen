@@ -75,12 +75,12 @@ final class ActiviteReglageTest extends TestCase
     {
         $this->a->get('/reglages/entreprise');
         $this->a->post('/reglages', ['activite' => 'prestations', 'retour' => '/reglages/entreprise']);
-        self::assertStringContainsString('>Nous vous remettons notre offre pour les prestations suivantes.</textarea>', (string) $this->a->get('/reglages/marque')->getContent());
+        self::assertStringContainsString('>Nous vous remettons notre offre pour les prestations suivantes.</textarea>', (string) $this->a->get('/reglages/phrases')->getContent());
         // Une phrase écrite par le titulaire reste la sienne d'une activité à l'autre.
-        $this->a->post('/reglages', ['lettre_offre_fin' => 'Merci pour ces travaux.', 'retour' => '/reglages/marque']);
+        $this->a->post('/reglages', ['lettre_offre_fin' => 'Merci pour ces travaux.', 'retour' => '/reglages/phrases']);
         $this->a->get('/reglages/entreprise');
         $this->a->post('/reglages', ['activite' => 'batiment', 'retour' => '/reglages/entreprise']);
-        $page = (string) $this->a->get('/reglages/marque')->getContent();
+        $page = (string) $this->a->get('/reglages/phrases')->getContent();
         self::assertStringContainsString('>Nous vous remettons notre offre pour les travaux suivants.</textarea>', $page);
         self::assertStringContainsString('>Merci pour ces travaux.</textarea>', $page);
         self::assertSame(['lettre_offre_debut' => null, 'lettre_offre_fin' => 'Merci pour ces travaux.'],

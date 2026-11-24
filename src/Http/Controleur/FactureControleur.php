@@ -645,7 +645,7 @@ final class FactureControleur
         $brouillon = $f['statut'] === DepotFactures::BROUILLON;
         $iban = $brouillon ? $r->iban : (string) $f['iban'];
         // L'aperçu d'une facture pas encore créée (id 0) n'a pas d'identifiant, dont la référence QR a besoin : il en
-        // prend un provisoire. Sa référence n'est qu'indicative, sous le filigrane « Aperçu » ; la vraie se fige à la création.
+        // prend un provisoire. Sa référence n'est qu'indicative, dans un aperçu ; la vraie se fige à la création.
         $reference = $brouillon ? ($iban === '' ? null : QrFacture::reference($iban, max(1, $f['id']), $numero)) : $f['reference'];
         return QrFacture::section($r->entreprise, $r->adresse, $iban, $reference, $numero, $aPayer, $f['client_nom'], Adresse::depuisBase($f, 'client_'));
     }

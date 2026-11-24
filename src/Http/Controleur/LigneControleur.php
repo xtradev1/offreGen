@@ -214,7 +214,9 @@ final class LigneControleur
         $q = mb_substr($requete->query->getString('q'), 0, 100);
         $piece = $requete->query->has('piece') ? Piece::lire($requete->query->getString('piece')) : null;
         [$nature, $base] = $this->natureDeLAjout($requete, $cible['id'], $requete->query->getString('nature'), $requete->query->getString('remplace'), $piece);
-        $champs = ['designation' => $q, 'quantite' => $base === null ? '1' : '', 'unite' => 'forfait', 'prix' => '', 'categorie' => '', 'nouvelle_categorie' => '', 'tva' => ''];
+        // Une variante part de la quantité et de l'unité de la ligne qu'elle remplace (V3, 2026-11-24).
+        $champs = ['designation' => $q, 'quantite' => $base === null ? '1' : self::reprise($requete->query->getString('quantite'), $base),
+            'unite' => $base === null ? 'forfait' : $base['unite'], 'prix' => '', 'categorie' => '', 'nouvelle_categorie' => '', 'tva' => ''];
         return $this->pageAjoutAvec($requete, $cible, $q, $champs, [], 200, $nature, $base);
     }
 
@@ -239,14 +241,27 @@ final class LigneControleur
         if ($nature !== Options::LIGNE) {
             $suite .= '&nature=' . $nature . ($base === null ? '' : '&remplace=' . $base['id']);
         }
+        // La quantité d'une variante (V2 A) : le champ « reprise » de chaque ajout, tapé en haut de la feuille ; illisible ou
+        // absent, celle de la ligne remplacée. Elle reste proposée à l'ajout suivant. La quantité d'une ligne libre
+        // détaillée est la sienne et ne la remplace pas.
+        $reprise = $base === null ? null : (Saisie::milliemes($r->getString('reprise')) ?? $base['quantite_milliemes']);
+        if ($reprise !== null) {
+            $suite .= '&quantite=' . rawurlencode(Formats::saisieQuantite($reprise));
+        }
 
         if ($r->has('produit')) {
             $p = $produits->parId(Parametres::id(['p' => $r->getString('produit')], 'p')) ?? throw new PageIntrouvable();
-            // Une variante prend la quantité de sa ligne si l'unité est la même (42 m² ne font pas 42 rouleaux ; revue, C6).
-            $quantite = $base !== null && $base['unite'] === $p['unite'] ? $base['quantite_milliemes'] : 1000;
-            $id = $support->ajouterLigne($cible['id'], $p['designation'], $quantite, $p['unite'], $p['prix_centimes'], $p['id']);
+            // Une variante prend cette quantité et l'unité de la ligne qu'elle remplace ; le prix est celui du produit (V1 A,
+            // V2 A de Xavier, 2026-11-24, à la place de C6 de la revue des options). D'une autre unité que le produit, elle
+            // passe dans « Relire » : 42 m² au prix de la pièce ne font pas un total juste.
+            $quantite = $reprise ?? 1000;
+            $unite = $base === null ? $p['unite'] : $base['unite'];
+            $id = $support->ajouterLigne($cible['id'], $p['designation'], $quantite, $unite, $p['prix_centimes'], $p['id']);
             $this->rangerDansLaPiece($requete, $cible['id'], $id, $base !== null ? $base['piece'] : $piece);
             $this->poserNature($requete, $cible['id'], $id, $nature, $base);
+            if ($base !== null && $id > 0 && $p['unite'] !== $base['unite']) {
+                $this->c->offres($this->portee($requete))->marquerAVerifier($cible['id'], $id);
+            }
             $this->modifiee($requete, $cible['id']);
             if ($r->getString('reste') === '1') {
                 return self::resterSurAjouter($cible, $id, $suite);
@@ -256,8 +271,10 @@ final class LigneControleur
         }
 
         $champs = self::champs($requete);
-        if ($base !== null && trim($champs['quantite']) === '') {
-            $champs['quantite'] = Formats::saisieQuantite($base['quantite_milliemes']);
+        // Ligne tapée sans quantité : celle de la variante ; si la ligne remplacée a disparu depuis l'affichage (la ligne
+        // entre en option), 1, comme une ligne tapée hors variante.
+        if (trim($champs['quantite']) === '' && ($reprise !== null || $r->has('reprise'))) {
+            $champs['quantite'] = $reprise !== null ? Formats::saisieQuantite($reprise) : '1';
         }
         $erreurs = [];
         $designation = Saisie::texte($champs['designation'], 255);
@@ -268,7 +285,8 @@ final class LigneControleur
         if ($quantite === null) {
             $erreurs['quantite'] = 'Quantité plus grande que 0, par exemple 1 ou 12.5.';
         }
-        $unite = Saisie::unite($champs['unite']);
+        // Une variante peut garder l'unité de sa ligne, même hors de la liste (une unité dictée).
+        $unite = Saisie::unite($champs['unite'], $base['unite'] ?? null);
         if ($unite === null) {
             $erreurs['unite'] = 'Choisissez une unité.';
         }
@@ -279,7 +297,7 @@ final class LigneControleur
         $produit = null;
         if ($r->getString('garder') === '1' && $erreurs === []) {
             try {
-                $produit = SaisieProduit::lire($champs + ['synonymes' => '']);
+                $produit = SaisieProduit::lire($champs + ['synonymes' => ''], $base['unite'] ?? null);
             } catch (SaisieRefusee $e) {
                 $erreurs += $e->erreurs;
             }
@@ -541,6 +559,16 @@ final class LigneControleur
     }
 
     /**
+     * La quantité d'une variante, comme l'artisan la tape : la sienne si elle se lit, sinon celle de la ligne remplacée.
+     *
+     * @param array{id: int, designation: string, quantite_milliemes: int, unite: string, piece: string|null} $base
+     */
+    private static function reprise(string $saisie, array $base): string
+    {
+        return Formats::saisieQuantite(Saisie::milliemes($saisie) ?? $base['quantite_milliemes']);
+    }
+
+    /**
      * @param Cible $cible
      * @param array<string, string> $champs
      * @param array<string, string> $erreurs
@@ -570,6 +598,7 @@ final class LigneControleur
             }
         }
         $ligne = $ajoutee > 0 ? $this->support($requete)->ligne($cible['id'], $ajoutee) : null;
+        $unites = $base !== null && !in_array($base['unite'], Saisie::UNITES, true) ? [...Saisie::UNITES, $base['unite']] : Saisie::UNITES;
         return new Response($this->c->twig()->render('ajout.html.twig', [
             'cible' => $cible,
             'ajoutee' => $ligne === null ? null : $ligne['designation'],
@@ -578,12 +607,14 @@ final class LigneControleur
             'trouves' => count($gardes),
             'champs' => $champs,
             'erreurs' => $erreurs,
-            'unites' => Saisie::UNITES,
+            'unites' => $unites,
             'categories' => $depot->categories(),
             'pieces' => $pieces,
             'piece_choisie' => $choisie,
             'nature' => $nature,
             'base' => $base,
+            // La page de l'adresse (?quantite=), ou le formulaire refusé (422) : la quantité de la variante ne se perd pas.
+            'reprise' => $base === null ? null : self::reprise($requete->query->has('quantite') ? $requete->query->getString('quantite') : $requete->request->getString('reprise'), $base),
             'bases' => $this->genre === self::OFFRE ? $this->bases($requete, $cible['id']) : [],
         ]), $code);
     }

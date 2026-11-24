@@ -446,6 +446,14 @@ a.carte-lien.conditions::after { content: '›'; color: var(--muted); font-size:
 .remplace-choix { flex-wrap: wrap; }
 .remplace-choix .lbl { flex-basis: 100%; margin: 0; }
 .remplace-choix select { flex: 1; min-width: 0; font: inherit; font-size: 16px; min-height: 48px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); }
+/* Quantité d'une variante (V2 A, 2026-11-24) : champ court, son unité, l'aide sur sa rangée. Un produit d'une autre
+   unité dit qu'il passera dans « Relire » (V1 A). */
+.quantite-choix { flex-wrap: wrap; align-items: center; }
+.quantite-choix .lbl { flex-basis: 100%; margin: 0; }
+.piece-autre.quantite-choix input { flex: 0 1 120px; }
+.quantite-choix .unite-reprise { font-weight: 600; }
+.quantite-choix small { flex-basis: 100%; }
+.pick .a-relire { color: var(--warn); }
 .puce { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--bord); border-radius: 999px; padding: 8px 14px; min-height: 48px; cursor: pointer; transition: background .15s ease, color .15s ease, scale .12s ease; -webkit-tap-highlight-color: transparent; }
 .puces.trois, .puces.quatre, .puces.cinq { display: grid; gap: 6px; }
 .puces.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -786,7 +794,6 @@ body:has(input[name="onglet_catalogue"][value="existant"]:checked) .panneau-cata
 .facture-mini:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .legende { margin: 6px 2px 0; }
 .apercu-facture { position: relative; }
-.apercu-facture .filigrane { position: absolute; z-index: 2; top: 330px; left: 50%; transform: translateX(-50%) rotate(-16deg); font-size: 48px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: rgba(35, 39, 45, .15); pointer-events: none; white-space: nowrap; }
 .actionbar.avec-phrase { flex-wrap: wrap; }
 .actionbar .phrase { flex-basis: 100%; margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
 .apercu-grand { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: var(--bg); }

@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documents et réglages : trois retouches</title>
+<style>
+:root { --ink: #23272D; --muted: #4A505A; --bg: #F4F1EA; --surface: #FFFFFF; --line: #DDD8CC; --accent: #23272D; --marque: #A8441F; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; } }
+:root[data-theme="dark"] { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 27px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 6px; scroll-margin-top: 70px; }
+h3 { font-size: 17px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 780px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; margin: 22px 0; }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; }
+figcaption { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+.paire { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 12px 0; }
+.trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 12px 0; }
+.mk-compare figure img, .paire figure img, .trio figure img { max-width: 360px; }
+.chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 14px 0; }
+.chiffre { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.chiffre .gros { font-size: 26px; font-weight: 750; line-height: 1.15; font-variant-numeric: tabular-nums; display: block; }
+.chiffre .gros .ok { color: var(--ok); }
+.chiffre small { display: block; color: var(--muted); font-size: 14px; margin-top: 4px; }
+.conseil { border-left: 4px solid var(--marque); background: var(--bg); padding: 10px 14px; border-radius: 0 10px 10px 0; margin: 12px 0; }
+.conseil b:first-child { display: block; margin-bottom: 2px; }
+.alerte { border: 1px solid var(--bad); background: var(--bad-soft); border-radius: 12px; padding: 12px 14px; margin: 14px 0; }
+.alerte b:first-child { color: var(--bad); }
+ul.serre { margin: 4px 0 10px; padding-left: 20px; }
+ul.serre li { margin: 3px 0; }
+code { font: 13.5px ui-monospace, Consolas, monospace; background: var(--bg); border-radius: 4px; padding: 1px 4px; overflow-wrap: anywhere; }
+.muted { color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 8px 0 12px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 650; background: var(--bg); position: sticky; top: 52px; }
+td small { display: block; color: var(--muted); font-size: 13px; }
+td.n b { font-variant-numeric: tabular-nums; }
+td.n .ok, b.ok { color: var(--ok); }
+.fleche { color: var(--muted); margin: 0 4px; }
+.pastille { display: inline-block; font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 1px 8px; margin-right: 4px; }
+.p-oui { background: var(--ok-soft); color: var(--ok); }
+.p-non { background: var(--warn-soft); color: var(--warn); }
+.simple td, .simple th { font-size: 14.5px; }
+.simple th { position: static; }
+@media (max-width: 760px) {
+  table.gestes thead { display: none; }
+  table.gestes tr[hidden] { display: none; }
+  table.gestes tr { display: block; border: 1px solid var(--line); border-radius: 10px; margin: 0 0 10px; padding: 6px 8px; background: var(--surface); }
+  table.gestes td { display: block; border: 0; padding: 4px 0; }
+  table.gestes td::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+}
+.mk-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.mk-filters button { font: inherit; font-size: 14.5px; min-height: 44px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.mk-filters button[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.demo { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 12px 0; }
+.demo .reglages-demo { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.demo .reglages-demo button { font: inherit; font-size: 15px; min-height: 44px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.demo .reglages-demo button[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.demo label.case { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; }
+.telephones { display: grid; grid-template-columns: repeat(2, minmax(0, 300px)); gap: 18px; justify-content: center; }
+.tel { background: #111; border-radius: 28px; padding: 10px; position: relative; }
+.tel figcaption { color: #fff; text-align: center; font-weight: 650; font-size: 15px; margin: 0 0 6px; }
+.tel .ecran { position: relative; border-radius: 18px; overflow: hidden; background: #fff; aspect-ratio: 390 / 844; }
+.tel .ecran img { width: 100%; height: 100%; object-fit: cover; object-position: top; border: 0; border-radius: 0; }
+.tel .chrono { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: rgba(0,0,0,.78); color: #fff; font-weight: 700; font-variant-numeric: tabular-nums; border-radius: 999px; padding: 3px 12px; font-size: 15px; }
+.tel .chrono[hidden] { display: none; }
+.tel .etat { color: #ddd; font-size: 13.5px; text-align: center; margin: 6px 0 0; min-height: 40px; }
+.demo .lancer { display: block; margin: 14px auto 0; font: inherit; font-weight: 700; min-height: 52px; padding: 10px 22px; border-radius: 12px; border: 0; background: var(--marque); color: #fff; cursor: pointer; }
+@media (max-width: 560px) { .telephones { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .tel { padding: 6px; border-radius: 18px; } .tel .etat { font-size: 12px; } }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.decision .aide { font-size: 14px; color: var(--muted); }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 650; }
+.opts button:focus-visible, textarea:focus-visible, .copier:focus-visible, .lancer:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+textarea { width: 100%; min-height: 60px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 170px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+.approches { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 12px 0; }
+.approche { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); }
+.approche h3 { margin-top: 0; }
+.approche.conseillee { border: 2px solid var(--marque); }
+.plus-moins { margin: 6px 0; padding-left: 0; list-style: none; }
+.plus-moins li { padding-left: 22px; position: relative; margin: 4px 0; font-size: 15px; }
+.plus-moins li.plus::before { content: "+"; position: absolute; left: 4px; color: var(--ok); font-weight: 800; }
+.plus-moins li.moins::before { content: "−"; position: absolute; left: 4px; color: var(--bad); font-weight: 800; }
+
+.deux { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0; align-items: start; }
+@media (max-width: 700px) { .deux { grid-template-columns: 1fr; } }
+figure { margin: 0; min-width: 0; }
+.mk-compare > *, .deux > * { min-width: 0; }
+.mk-compare { grid-template-columns: minmax(0, 1fr); }
+.mk-compare figure img { max-width: min(100%, 420px); }
+.mk-compare.large figure img { max-width: 100%; }
+figure img.mini, .mk-compare figure img.mini { width: 190px; max-width: 190px; }
+figure img.moyen, .mk-compare figure img.moyen { width: 300px; max-width: 100%; }
+figure.etroite { max-width: 640px; margin: 12px 0; }
+.chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 10px 0; }
+.chiffre .gros { font-size: 24px; font-weight: 750; }
+.petit { font-size: 14px; }
+ul.faits { padding-left: 20px; margin: 6px 0 12px; }
+ul.faits li { margin: 0 0 6px; }
+table.releve { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 15px; }
+table.releve th { position: static; }
+td.ok { color: var(--ok); font-weight: 650; }
+td.ko { color: var(--bad); font-weight: 650; }
+@media (max-width: 700px) {
+  table.releve thead { display: none; }
+  table.releve tr { display: block; border: 1px solid var(--line); border-radius: 10px; margin: 0 0 10px; padding: 6px 8px; background: var(--surface); }
+  table.releve td { display: block; border: 0; padding: 4px 0; }
+  table.releve td::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+}
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav id="mk-toc"></nav>
+<h1>Documents et réglages : trois retouches</h1>
+<p class="chapeau">Relevé du 24 novembre 2026 sur une copie locale de la tête de <code>chantier-voix-offre</code> (ff1ee21), compte de démo inventé. Toutes les images viennent des vraies pages ; les « après » sont ces mêmes pages retouchées à l'écran, rien n'est codé. Tes choix se posent sous chaque image ; « Copier le texte », en bas, les rassemble.</p>
+
+<h2 id="liste" data-toc="LC-3 Liste">LC-3 : la liste trop longue</h2>
+<section class="point">
+<p>Ta remarque : « la liste des règles est trop longue ; simplifier, ou ranger les détails dans une catégorie à part ». Le pas LC-3 touche deux listes, et le dépôt ne dit pas laquelle tu visais.</p>
+<div class="deux">
+<figure><img class="mini" src="MAQUETTE-documents-reglages-img/lc3-section4-avant.jpg" alt="Ma marque, section 4 Les phrases du document : formule d'appel, début et fin, puis 14 phrases tirées de l'offre" loading="lazy"><figcaption><b>1. Ma marque, « 4. Les phrases du document »</b>. Pour passer en Lettre, LC-3 fait passer par cet écran. Quatre champs avec leurs tournures, puis 14 phrases repliées.</figcaption></figure>
+<figure><img src="MAQUETTE-documents-reglages-img/lc3-doc-sobre.jpg" alt="Document Sobre : bloc Conditions de trois puces longues et colonne Non compris" loading="lazy"><figcaption><b>2. Le bloc « Conditions » du document</b>, ici en Sobre avec les textes, le début, la durée, les acomptes et l'escompte de LC-3 : trois puces de deux lignes.</figcaption></figure>
+</div>
+<figure class="etroite"><img src="MAQUETTE-documents-reglages-img/lc3-doc-lettre.jpg" alt="Document Lettre : délais, paiement, escompte, validité et non compris dans un seul paragraphe" loading="lazy"><figcaption>Le même bloc en Lettre : un seul paragraphe de cinq lignes.</figcaption></figure>
+<div class="decision" data-q="L0 Quelle liste">
+<p class="q">L0. De quelle liste parlais-tu&nbsp;?</p>
+<div class="opts"><button type="button" data-v="marque">1. Ma marque, les phrases du document</button><button type="button" data-v="document">2. Le bloc Conditions du document</button><button type="button" data-v="autre">Une autre (dis laquelle)</button></div>
+<textarea aria-label="Commentaire : L0" placeholder="Commentaire (facultatif)"></textarea>
+<p class="aide">Les captures de téléphone sont réduites ; touche une image pour la voir en grand. La suite de cette section propose pour la liste 1, la plus longue. Si c'est la 2, je refais une proposition pour elle avant tout code.</p>
+</div>
+
+<h3>Ce que mesure la liste 1</h3>
+<div class="chiffres">
+<div class="chiffre"><span class="gros">4'165 px</span><small>Ma marque au téléphone (390 px de large), soit cinq écrans.</small></div>
+<div class="chiffre"><span class="gros">53 %</span><small>de cette hauteur pour la section 4 (2'212 px).</small></div>
+<div class="chiffre"><span class="gros">18</span><small>réglages de mots : 4 champs de début et de fin, 14 phrases.</small></div>
+</div>
+<p class="muted petit">D'après le gabarit (<code>_reglages_marque.html.twig</code>, ligne 70), la section 4 paraît aussi dans l'étape « marque » de l'assistant du premier lancement. Non vérifié à l'écran.</p>
+
+<h3>A. Une catégorie à part&nbsp;: la rubrique « Phrases du document »</h3>
+<p>Ma marque garde l'aspect&nbsp;: logo, couleur, modèle. Les mots partent dans une rubrique à eux, sous Ma marque dans les réglages, telle qu'elle est aujourd'hui. Ma marque passe de 4'165 à 1'938 px.</p>
+<div class="mk-compare">
+<figure><img class="mini" src="MAQUETTE-documents-reglages-img/lc3-marque-avant.jpg" alt="Ma marque aujourd'hui, page entière : logo, couleur, douze modèles, puis la section des phrases" loading="lazy"><figcaption>Aujourd'hui : Ma marque, 4'165 px (page entière, même échelle des deux côtés).</figcaption></figure>
+<figure><img class="mini" src="MAQUETTE-documents-reglages-img/lc3-A-marque.jpg" alt="Ma marque proposée : logo, couleur et modèles seulement" loading="lazy"><figcaption>Proposé A : Ma marque, 1'938 px.</figcaption></figure>
+</div>
+<div class="deux">
+<figure><img class="moyen" src="MAQUETTE-documents-reglages-img/lc3-A-sommaire.jpg" alt="Sommaire des réglages avec la nouvelle rubrique Phrases du document sous Ma marque, encadrée" loading="lazy"><figcaption>Le sommaire des réglages : une ligne de plus, encadrée.</figcaption></figure>
+<figure><img class="mini" src="MAQUETTE-documents-reglages-img/lc3-A-rubrique.jpg" alt="La rubrique Phrases du document : formule d'appel, début et fin, phrases tirées de l'offre" loading="lazy"><figcaption>La rubrique : le contenu de la section 4, sans changement.</figcaption></figure>
+</div>
+
+<h3>B. Simplifier sur place&nbsp;: les 14 phrases derrière une ligne</h3>
+<p>La section 4 reste dans Ma marque. Les 14 phrases tirées de l'offre (date de la visite, chantier, début, durée, paiement…) passent derrière une seule ligne qui ouvre leur page. Ma marque passe de 4'165 à 3'338 px.</p>
+<div class="mk-compare">
+<figure><img class="mini" src="MAQUETTE-documents-reglages-img/lc3-section4-avant.jpg" alt="Section 4 aujourd'hui avec les 14 phrases" loading="lazy"><figcaption>Aujourd'hui : la section 4.</figcaption></figure>
+<figure><img class="mini" src="MAQUETTE-documents-reglages-img/lc3-B-section4.jpg" alt="Section 4 proposée : les 14 phrases remplacées par une ligne Phrases tirées de l'offre" loading="lazy"><figcaption>Proposé B : une ligne, encadrée, à la place des 14.</figcaption></figure>
+</div>
+
+<div class="conseil"><b>Je recommande A.</b> Ma marque se règle une fois, au départ ; les phrases, plus tard, par ceux qui veulent leurs mots. A divise l'écran par deux et allège l'assistant du premier lancement ; B ne gagne qu'un écran sur cinq.</div>
+<div class="decision" data-q="L1 Rangement de Ma marque">
+<p class="q">L1. Ma marque&nbsp;: quelle proposition&nbsp;?</p>
+<div class="opts"><button type="button" data-v="A">A. Rubrique « Phrases du document » à part</button><button type="button" data-v="B">B. Les 14 phrases derrière une ligne</button><button type="button" data-v="AB">A et B&nbsp;: rubrique à part, phrases repliées dedans</button><button type="button" data-v="rien">Ni l'une ni l'autre</button></div>
+<textarea aria-label="Commentaire : L1" placeholder="Commentaire (facultatif), par exemple un autre nom pour la rubrique"></textarea>
+</div>
+<div class="decision" data-q="L2 Assistant du premier lancement">
+<p class="q">L2. Avec A, l'assistant du premier lancement montre-t-il encore les phrases&nbsp;?</p>
+<div class="opts"><button type="button" data-v="non">Non, logo, couleur et modèle seulement (recommandé)</button><button type="button" data-v="oui">Oui, une étape de plus</button></div>
+<textarea aria-label="Commentaire : L2" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="filigrane" data-toc="OV-3 Filigrane">OV-3 : le filigrane « Aperçu »</h2>
+<section class="point">
+<h3>Pourquoi il est là</h3>
+<ul class="faits">
+<li>Il marque une facture <b>pas encore créée</b>&nbsp;: la vignette de la feuille « Facturer » et la page d'un brouillon de facture. Son numéro y est provisoire&nbsp;; il se fixe à « Créer la facture ».</li>
+<li>Aucun PDF ne le porte. Une fois créée, la facture sort sans filigrane, démo ou pas.</li>
+<li><b>Il ne marque pas les démos.</b> Preuve&nbsp;: depuis la démo du relevé, « Créer la facture » a sorti la facture 2026-001&nbsp;; son PDF ne porte ni « Aperçu », ni « Démonstration », ni « exemple » (texte lu par PyMuPDF).</li>
+<li>Le retirer n'ouvre donc rien&nbsp;: une démo sort déjà une vraie facture sans marque. La marque « Démonstration » est décidée pour l'espace de démonstration des commerciaux (Origin 557) et n'est pas codée.</li>
+</ul>
+<div class="mk-compare large">
+<figure><img src="MAQUETTE-documents-reglages-img/ov3-facturer-avant.jpg" alt="Facturer au PC aujourd'hui : APERÇU en travers de la facture" loading="lazy"><figcaption>Aujourd'hui, au PC : « APERÇU » en travers des lignes.</figcaption></figure>
+<figure><img src="MAQUETTE-documents-reglages-img/ov3-facturer-apres.jpg" alt="Facturer au PC sans filigrane, la légende Aperçu reste sous la vignette" loading="lazy"><figcaption>Proposé : sans filigrane ; la légende « Aperçu : rien n'est encore créé » reste sous la vignette.</figcaption></figure>
+</div>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-documents-reglages-img/ov3-tel-avant.jpg" alt="Facturer au téléphone aujourd'hui, avec le filigrane" loading="lazy"><figcaption>Aujourd'hui, au téléphone.</figcaption></figure>
+<figure><img src="MAQUETTE-documents-reglages-img/ov3-tel-apres.jpg" alt="Facturer au téléphone sans filigrane" loading="lazy"><figcaption>Proposé, au téléphone.</figcaption></figure>
+</div>
+<div class="decision" data-q="O1 Filigrane">
+<p class="q">O1. Le filigrane</p>
+<div class="opts"><button type="button" data-v="A">A. Retiré partout&nbsp;: Facturer et brouillon (recommandé)</button><button type="button" data-v="B">B. Retiré de Facturer, gardé sur le brouillon</button><button type="button" data-v="garder">C. Gardé</button></div>
+<textarea aria-label="Commentaire : O1" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="decision" data-q="O2 Marque des démos">
+<p class="q">O2. Ta crainte reste vraie sans le filigrane&nbsp;: une démo sort de vraies factures. On la traite où&nbsp;?</p>
+<div class="opts"><button type="button" data-v="ailleurs">Hors de ce chantier, avec Origin 557 et 509 (recommandé)</button><button type="button" data-v="ici">Ici&nbsp;: « Démonstration » sur chaque PDF d'un compte de démo</button></div>
+<textarea aria-label="Commentaire : O2" placeholder="Commentaire (facultatif)"></textarea>
+<p class="aide">Une démo dure quelques jours, dix dictées par jour au plus. Marquer ses PDF empêche de facturer avec, et montre au prospect un document moins propre que celui qu'il aura.</p>
+</div>
+</section>
+
+<h2 id="variantes" data-toc="Variantes">Variantes : quantité et unité reprises</h2>
+<section class="point">
+<p>Ta règle&nbsp;: une variante reprend par défaut la quantité et l'unité de la ligne qu'elle remplace (50 m²), modifiables ; l'article et le prix changent.</p>
+<h3>Ce que fait l'application aujourd'hui</h3>
+<p>Relevé par l'interface, variante de « Rebouchage et ponçage des murs », 42 m² à 9.00&nbsp;:</p>
+<table class="releve">
+<thead><tr><th>Ajout</th><th>Aujourd'hui</th><th>Avec ta règle</th></tr></thead>
+<tbody>
+<tr><td data-label="Ajout">Produit de même unité (Peinture anti-moisissure, m²)</td><td data-label="Aujourd'hui" class="ok">42 m²</td><td data-label="Avec ta règle">42 m²</td></tr>
+<tr><td data-label="Ajout">Produit d'une autre unité (Laquage de porte, à la pièce)</td><td data-label="Aujourd'hui">1 pce à 160.00</td><td data-label="Avec ta règle">42 m² à 160.00 (voir V1)</td></tr>
+<tr><td data-label="Ajout">Ligne tapée dans la recherche</td><td data-label="Aujourd'hui" class="ko">42 forfait</td><td data-label="Avec ta règle">42 m²</td></tr>
+<tr><td data-label="Ajout">Ligne libre détaillée, unité laissée</td><td data-label="Aujourd'hui" class="ko">42 forfait × 34 = 1'428.00</td><td data-label="Avec ta règle">42 m² × 34 = 1'428.00</td></tr>
+</tbody>
+</table>
+<p>Deux défauts&nbsp;: la quantité reprise ne se voit nulle part avant l'ajout, et une ligne libre en variante prend l'unité « forfait ».</p>
+<div class="mk-compare">
+<figure><img class="moyen" src="MAQUETTE-documents-reglages-img/var-avant.jpg" alt="Ajouter une variante aujourd'hui : aucune quantité visible, ligne libre en forfait" loading="lazy"><figcaption>Aujourd'hui : rien ne dit « 42 m² » ; la ligne libre propose « forfait ».</figcaption></figure>
+<figure><img class="moyen" src="MAQUETTE-documents-reglages-img/var-apres.jpg" alt="Proposé : champ Quantité 42 m² sous Elle remplace, produits d'une autre unité marqués 42 m² à relire, ligne libre 42 m²" loading="lazy"><figcaption>Proposé (encadré) : « Quantité 42 m² » modifiable sous « Elle remplace » ; les produits d'une autre unité disent « 42 m², à relire » ; la ligne libre part de 42 m².</figcaption></figure>
+</div>
+
+<div class="decision" data-q="V1 Produit d'une autre unité">
+<p class="q">V1. Un produit d'une autre unité (Laquage de porte, à la pièce) en variante de 42 m²</p>
+<p class="aide">Ta règle donne 42 m² au prix de la pièce&nbsp;: 42 × 160.00 = 6'720.00, un total faux tant que l'artisan ne corrige pas. La revue du chantier des options avait choisi « 1 pièce » pour cette raison (« 42 m² ne font pas 42 rouleaux »). Je le dis une fois ; à toi de trancher.</p>
+<div class="opts"><button type="button" data-v="A">A. Ta règle, 42 m², et la ligne passe dans « Relire » (recommandé)</button><button type="button" data-v="B">B. Ta règle, 42 m², sans marque</button><button type="button" data-v="C">C. Comme aujourd'hui&nbsp;: 1 pièce, unité du produit</button></div>
+<textarea aria-label="Commentaire : V1" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="decision" data-q="V2 Quantité visible avant l'ajout">
+<p class="q">V2. La quantité reprise, visible et modifiable avant de choisir le produit</p>
+<div class="opts"><button type="button" data-v="A">A. Champ « Quantité 42 m² » sous « Elle remplace » (recommandé)</button><button type="button" data-v="B">B. Pas de champ&nbsp;: on corrige sur la ligne, après l'ajout</button></div>
+<textarea aria-label="Commentaire : V2" placeholder="Commentaire (facultatif)"></textarea>
+<p class="aide">Avec A, la quantité tapée vaut pour le produit touché ensuite. Sans ligne à remplacer, la variante devient une option (règle actuelle) et le champ disparaît.</p>
+</div>
+<div class="decision" data-q="V3 Lignes libres">
+<p class="q">V3. Ligne libre en variante&nbsp;: quantité et unité de la ligne remplacée, préremplies (correction du « forfait »)</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire : V3" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="hors" data-toc="Hors champ">Hors de ce chantier</h2>
+<section class="point">
+<ul class="faits">
+<li>La marque « Démonstration » des PDF (Origin 557) et le code QR de démonstration (Origin 509), sauf choix « Ici » en O2.</li>
+<li>Le contenu des 14 phrases et leurs tournures&nbsp;: on range, on ne réécrit pas.</li>
+<li>La dictée des variantes&nbsp;: l'extraction donne déjà la quantité de la ligne remplacée (relevé du chantier des options, non revérifié ici).</li>
+</ul>
+<p class="muted petit">Chantier sans tâche Origin à ce jour&nbsp;: dis-moi s'il faut la créer.</p>
+</section>
+
+<h2 id="reponses" data-toc="Réponses">Copier mes réponses</h2>
+<div class="recap">
+<p>Ce texte se remplit avec tes choix. Copie-le et colle-le dans la conversation.</p>
+<textarea id="recap" readonly aria-label="Récapitulatif des réponses"></textarea>
+<p><button type="button" class="copier" id="copier">Copier le texte</button><span class="copie-ok" id="copie-ok" hidden>Copié.</span></p>
+</div>
+</main>
+
+<script>
+(function () {
+  var CLE = 'offregen-documents-reglages-2026-11-24';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  var blocs = document.querySelectorAll('.decision');
+  function recap() {
+    var lignes = [];
+    blocs.forEach(function (b) {
+      var q = b.getAttribute('data-q'), r = etat[q] || {};
+      var choisi = b.querySelector('.opts button[data-v="' + (r.v || '') + '"]');
+      var l = q + ' : ' + (choisi ? choisi.textContent : '(pas de réponse)');
+      if (r.c) l += '. Commentaire : ' + r.c.replace(/\s+/g, ' ').trim();
+      lignes.push(l);
+    });
+    document.getElementById('recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    etat[q] = etat[q] || {};
+    var boutons = b.querySelectorAll('.opts button');
+    var champ = b.querySelector('textarea');
+    boutons.forEach(function (bt) {
+      bt.setAttribute('aria-pressed', bt.getAttribute('data-v') === etat[q].v ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        etat[q].v = etat[q].v === bt.getAttribute('data-v') ? '' : bt.getAttribute('data-v');
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-v') === etat[q].v ? 'true' : 'false'); });
+        garder(); recap();
+      });
+    });
+    if (champ) {
+      champ.value = etat[q].c || '';
+      champ.addEventListener('input', function () { etat[q].c = champ.value; garder(); recap(); });
+    }
+  });
+  recap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('recap');
+    var ok = function () { var s = document.getElementById('copie-ok'); s.hidden = false; setTimeout(function () { s.hidden = true; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); document.execCommand('copy'); ok(); }); }
+    else { t.select(); document.execCommand('copy'); ok(); }
+  });
+
+  })();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

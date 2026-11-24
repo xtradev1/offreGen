@@ -1151,8 +1151,14 @@ function fichesEnFenetre() {
     const produit = !!(touche && touche.name === 'produit');
     const nomAjout = produit && touche.querySelector('.pn') ? touche.querySelector('.pn').textContent.trim() : champ('designation');
     const prixAjout = produit ? Number(touche.dataset.prix || 0) : Math.round((parseFloat(champ('prix').replace(',', '.')) || 0) * 100);
-    const uniteAjout = produit ? touche.dataset.unite : champ('unite');
-    const extra = ajout ? { libelle: '«' + fluide.NB + nomAjout + fluide.NB + '» ajoutée', provisoire: { designation: nomAjout, unite: uniteAjout, prix: prixAjout } } : {};
+    // Une variante : la quantité et l'unité de la ligne remplacée (V1 A, V2 A), celles que le serveur posera.
+    const repriseSource = form.querySelector('[data-quantite-reprise]') ? document.getElementById('quantite-reprise') : null;
+    const uniteAjout = repriseSource ? repriseSource.dataset.uniteReprise : (produit ? touche.dataset.unite : champ('unite'));
+    const quantiteTapee = Math.round((parseFloat((produit ? '' : champ('quantite')).replace(',', '.')) || 0) * 1000);
+    const quantiteReprise = Math.round((parseFloat(champ('reprise').replace(',', '.')) || 0) * 1000);
+    const quantiteAjout = repriseSource ? ((produit ? 0 : quantiteTapee) || quantiteReprise || 1000) : (quantiteTapee || 1000);
+    const horsTotal = !!form.querySelector('input[name="nature"][value="option"], input[name="nature"][value="variante"]');
+    const extra = ajout ? { libelle: '«' + fluide.NB + nomAjout + fluide.NB + '» ajoutée', provisoire: { designation: nomAjout, unite: uniteAjout, prix: prixAjout, quantite: quantiteAjout, horsTotal } } : {};
     if (ajout) annoncerAjout(form, touche);
     fluide.fenetre(form, touche, ajout ? ici : null, liste ? idsListe(modifie) : null, extra).then((r) => {
       rendre();
@@ -1180,7 +1186,7 @@ function fichesEnFenetre() {
       // paraît en attente dans l'offre derrière, avec le total estimé (lot 4, D7).
       if (r.etat === 'attente') {
         if (!ajout) { fermer(); return; }
-        fluide.ligneEnAttente(nomAjout, uniteAjout, prixAjout);
+        fluide.ligneEnAttente(nomAjout, uniteAjout, prixAjout, quantiteAjout, horsTotal);
         return;
       }
       // Champ refusé (422) : le formulaire revient dans la fenêtre, avec ses messages ; un autre refus s'y dit.
@@ -1758,7 +1764,7 @@ function tournuresLettre() {
   });
 }
 
-// Les phrases tirées de l'offre, dans « Ma marque » (M1 A, 2026-11-23) : une pastille se pose là où le curseur était
+// Les phrases tirées de l'offre, dans « Phrases du document » (M1 A, 2026-11-23) : une pastille se pose là où le curseur était
 // dans sa phrase, au bout si l'on n'y a jamais touché ; « Reprendre celle de l'application » remet la phrase d'origine.
 // L'enregistrement automatique suit (événement input), le serveur refuse une pastille inconnue ou retirée.
 function pastillesPhrases() {
@@ -2367,7 +2373,7 @@ function documentACote() {
         if (ce !== numero || !colonne) return; // une réponse plus récente est attendue
         const page = new DOMParser().parseFromString(html, 'text/html');
         importerStyles(page);
-        // Un brouillon de facture vient avec son filigrane « Aperçu ».
+        // Un brouillon de facture : sa feuille dans son cadre « apercu-facture ».
         const papier = page.querySelector('.apercu-facture') || page.querySelector('article.paper');
         if (papier) colonne.replaceChildren(document.importNode(papier, true));
       })
@@ -2446,6 +2452,22 @@ function optionsEtVariantes() {
     }
     const liste = e.target.closest('select[data-envoi-auto]');
     if (liste && liste.form) liste.form.requestSubmit();
+  });
+  // La quantité d'une variante (V2 A, 2026-11-24) : tapée une fois, elle part avec chaque produit touché ensuite et avec
+  // la ligne tapée ; la ligne libre détaillée la suit tant que l'artisan n'y a pas mis la sienne.
+  let reprise = null;
+  document.addEventListener('focusin', (e) => { if (e.target.id === 'quantite-reprise') reprise = e.target.value; });
+  document.addEventListener('input', (e) => {
+    if (e.target.id !== 'quantite-reprise') return;
+    // Illisible ou nulle, le serveur prend celle de la ligne remplacée : l'écran dit la même chose.
+    const tapee = e.target.value.trim();
+    const nombre = parseFloat(tapee.replace(/['’\s]/g, '').replace(',', '.'));
+    const valeur = nombre > 0 ? tapee : (e.target.dataset.defaut || '');
+    document.querySelectorAll('[data-quantite-reprise]').forEach((c) => { c.value = valeur; });
+    document.querySelectorAll('[data-quantite-texte]').forEach((t) => { t.textContent = valeur; });
+    const libre = document.querySelector('[data-suit-reprise]');
+    if (libre && (reprise === null || libre.value.trim() === reprise.trim())) libre.value = valeur;
+    reprise = valeur;
   });
 }
 
