@@ -13,11 +13,10 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Sur l'accord de Xavier : fetch, `HEAD` égal à `origin/chantier-voix-offre` (sinon rebase), `bash outils/deployer-test.sh` dans `~/offreGen-documents`, `/sante`, créer le compte `documents-recette@exemple.ch` (démo peintre) par SSH, lui donner le mot de passe. Puis sa recette (`RECETTE.md`). Clôture : supprimer `offregen_documents_test`, `offregen_documents_vue`, le compte de relevé et la copie ; `/roadmap-sync` (les deux roadmaps, par ajouts ciblés).
+Déployé (2ddda06) et compte `documents-recette@exemple.ch` créé. Attendre la recette de Xavier (`RECETTE.md`) ; s'il remonte des défauts, retour en phase 5. Clôture : supprimer `offregen_documents_test`, `offregen_documents_vue`, le compte de relevé et la copie ; `/roadmap-sync` (les deux roadmaps, par ajouts ciblés).
 
 ## En attente de toi
 
-- Accord pour déployer sur le test (et confirmer : toujours rien que des données inventées ?).
 - Dérouler `RECETTE.md` sur le test et dire ce qui casse.
 - Dire s'il faut créer la tâche Origin du chantier (projet 44).
 - Au choix : le résumé de la rubrique compte-t-il aussi la formule d'appel, le début et la fin (`REVUE.md`) ?
@@ -63,6 +62,7 @@ Sur l'accord de Xavier : fetch, `HEAD` égal à `origin/chantier-voix-offre` (si
 ## Journal
 
 - 2026-11-24 : chantier ouvert sur la consigne de Xavier (« Maquette avant le code »). Copie, bases, compte de relevé créés. Relevé du code et parcours par l'interface en local. Phase 1 menée par les constats ci-dessus ; le gate intention et le gate visuel se tiennent ensemble sur la maquette (les trois sujets sont des retouches d'écrans existants, chaque choix y a sa capture). Phase 2 (décomposition) sautée : trois retouches indépendantes, un lot chacune au plan.
+- 2026-11-24 : accord de Xavier (« oui déploie, pas de vraies données »). Une autre session avait poussé 2ddda06 ; copie avancée sur la tête, déployée, sonde verte, compte de recette créé, contrôle en lecture seule sur le test.
 - 2026-11-24 : réponses de Xavier à la maquette (L0 « tous le point 4 », L1 A, L2 non, O1 A, O2 hors chantier, V1 A, V2 A, V3 validé). PLAN.md, trois lots, tests écrits d'abord et vus rouges, code, suite complète verte, recette locale par l'interface, revue (six mineurs corrigés), RECETTE.md. Commit et push sur `chantier-voix-offre` ; déploiement en attente de l'accord de Xavier.
 - 2026-11-24 : LC-3 relu : la section 4 de Ma marque (14 phrases et quatre champs, 53 % de l'écran) est la lecture la plus probable ; la question L0 reste posée. Maquette livrée, gate ouvert (intention et visuel). Rien n'est codé, commité ni déployé.
 
@@ -153,6 +153,28 @@ après :
   Variante Peinture lessivable forfait 1’428.00 +1’050.00 Retenue par le client Pas dans votre catalogue Ajoutez-le pour la prochaine dictée
 erreurs JS []
 ```
+
+### Déploiement sur le test (accord de Xavier, 2026-11-24 : « oui déploie, pas de vraies données »)
+
+```
+copie avancée sur la tête ; HEAD = tête : 2ddda06 (contient ce510c5, ce chantier)
+LU     /sante : {"commit":"2ddda06df48cc127c687b2f37930f9a7f29d38f5","base":"ok","migrations":"ok"}
+SONDE VERTE
+DÉPLOYÉ : 2ddda06df48cc127c687b2f37930f9a7f29d38f5 sur https://easy-offres.xtradev.ch
+Compte créé : documents-recette@exemple.ch (démo, 10 imports par jour), catalogue Peintre
+```
+Contrôle en lecture seule sur le test (une connexion, Playwright 390 px) :
+```
+sommaire : Mon entreprise à compléter | Ma marque | Phrases du document | Conditions de l'offre | TVA et arrondi
+Ma marque : hauteur 1793 , phrases 0
+rubrique : phrases 14
+assistant marque : phrases 0 , modèles 12
+offre du séjour : /offres/91
+Facturer : filigranes 0 , légende 1
+ajout variante : quantité "42" m² , à relire 5 , libre "42" m²
+erreurs JS []
+```
+Capture de la page d'ajout regardée.
 
 ### Mesures de Ma marque (Playwright, 390 px, DOM retouché sans JavaScript, rien enregistré)
 

@@ -4,10 +4,10 @@ Sur le site de test, `https://easy-offres.xtradev.ch`, au téléphone. Tout se f
 
 ## Préalables
 
-- [ ] Accord de Xavier pour commiter, pousser sur `chantier-voix-offre` et déployer sur le test (données toujours inventées ?).
-- [ ] Déploiement de la tête de `chantier-voix-offre` par `outils/deployer-test.sh` (Claude, sur accord). Aucune migration.
-- [ ] Compte de recette : `documents-recette@exemple.ch`, démo peintre neuve (Claude la crée au déploiement ; mot de passe dans `~/.offregen-test-documents-recette-compte`, à te donner). Sa démo a deux offres d'exemple, dont « Rafraîchissement du séjour » avec la ligne « Rebouchage et ponçage des murs », 42 m² à 9.00.
-- [ ] Si la démo ouvre l'assistant du premier lancement, le scénario 2 commence là ; sinon `/bienvenue/marque` reste ouvrable à la main.
+- [x] Accord de Xavier, 2026-11-24 : « oui déploie, pas de vraies données ».
+- [x] Déployé : 2ddda06 (tête de `chantier-voix-offre`, contient ce510c5), sonde verte. Aucune migration de ce chantier.
+- [x] Compte de recette : `documents-recette@exemple.ch`, démo peintre neuve ; mot de passe dans `~/.offregen-test-documents-recette-compte` (WSL). Son offre « Rafraîchissement du séjour » : `https://easy-offres.xtradev.ch/offres/91`, ligne « Rebouchage et ponçage des murs », 42 m² à 9.00.
+- [ ] La connexion ouvre l'assistant du premier lancement (`/bienvenue/entreprise`) : le scénario 2 se joue là ; les autres URL s'ouvrent directement.
 
 ## Scénario 1 : la rubrique « Phrases du document » (LC-3)
 
@@ -65,7 +65,7 @@ Si ça casse : `templates/_apercu_facture.html.twig`, `templates/facture_documen
 
 | | |
 |---|---|
-| URL | l'offre « Rafraîchissement du séjour » (par `/clients`, puis son client) |
+| URL | `https://easy-offres.xtradev.ch/offres/91` (« Rafraîchissement du séjour ») |
 | Compte | `documents-recette@exemple.ch` |
 
 Gestes :
