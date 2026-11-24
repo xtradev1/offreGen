@@ -2271,6 +2271,37 @@ function hauteurDuBas() {
   if ('ResizeObserver' in window) new ResizeObserver(poser).observe(bas);
 }
 
+// iPhone, clavier refermé (Xavier, 2026-11-24 : « Enregistrer » sans effet jusqu'à ce qu'on fasse défiler la page).
+// Safari sous iOS 26 laisse les zones de toucher décalées après la fermeture du clavier, le bas de l'écran surtout,
+// où sont les boutons qu'on touche juste après une saisie (forums développeurs d'Apple, fil 800125, FB19889436 ;
+// encore signalé dans la bêta d'iOS 27). Un défilement les remet en place : on le fait à la place de l'artisan, un
+// pixel et retour, dès que le clavier est redescendu. Le clavier se lit à la hauteur visible : plus basse de 120 px
+// que la plus grande vue à cette largeur. Zoom des doigts : rien. Sans visualViewport : rien.
+function apresLeClavier() {
+  const vue = window.visualViewport;
+  if (!vue) return;
+  let largeur = vue.width;
+  let pleine = vue.height;
+  let clavier = false;
+  let minuterie = 0;
+  const recaler = () => {
+    const el = document.scrollingElement || document.documentElement;
+    const y = Math.min(window.scrollY, Math.max(0, el.scrollHeight - window.innerHeight));
+    window.scrollTo(window.scrollX, y > 0 ? y - 1 : y + 1);
+    requestAnimationFrame(() => window.scrollTo(window.scrollX, y));
+  };
+  vue.addEventListener('resize', () => {
+    if (vue.scale > 1.01) return;
+    if (Math.abs(vue.width - largeur) > 1) { largeur = vue.width; pleine = vue.height; clavier = false; return; }
+    pleine = Math.max(pleine, vue.height);
+    if (vue.height < pleine - 120) { clavier = true; return; }
+    if (!clavier) return;
+    clavier = false;
+    clearTimeout(minuterie);
+    minuterie = setTimeout(recaler, 60);
+  });
+}
+
 // Un message qui commente la recherche de départ disparaît dès qu'on en tape une autre.
 function messagesDeRecherche() {
   const messages = document.querySelectorAll('[data-cache-si-recherche]');
@@ -2468,6 +2499,7 @@ const brancher = () => {
   messagesDeRecherche();
   feuillesFacturer();
   hauteurDuBas();
+  apresLeClavier();
   ajoutPc();
   vignettesVivantes();
   avisCouleur();

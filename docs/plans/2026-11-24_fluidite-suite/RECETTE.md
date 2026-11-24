@@ -1,6 +1,6 @@
 # RECETTE : fluidité, suite de la recette du 24.11
 
-Sur l'iPhone, sur https://easy-offres.xtradev.ch, une fois le commit `7bb8dd8` (ou plus récent) déployé. Compte : celui de ta recette du 24.11 (`fluidite-test@exemple.ch`, ou le tien).
+Sur l'iPhone, sur https://easy-offres.xtradev.ch, déployé le 2026-11-24 (le commit en service se lit sur `/sante`). Compte : celui de ta recette du 24.11 (`fluidite-test@exemple.ch`, ou le tien).
 
 | N° | À faire | Attendu |
 |---|---|---|
@@ -11,6 +11,8 @@ Sur l'iPhone, sur https://easy-offres.xtradev.ch, une fois le commit `7bb8dd8` (
 | F-5 | Touche le nom d'une ligne d'une offre rangée par pièce ; touche la puce « Chambre », « Enregistrer ». | Les pièces de l'offre en puces, celle de la ligne choisie ; la ligne passe dans la Chambre, les sous-totaux suivent. |
 | F-6 | Même fiche : tape « Bureau » dans « Autre pièce », « Enregistrer ». | Les puces se décochent en tapant ; la ligne arrive dans une pièce « Bureau ». |
 | F-7 | Sur une offre dictée sans client : « Générer l'offre », « Créer la fiche « … » ». Corrige le nom, « Enregistrer et voir le PDF ». | La fiche s'ouvre dans la même fenêtre, nom et adresse remplis d'après la dictée ; le PDF s'ouvre avec le nom corrigé. |
+| F-8 | Fiche d'une ligne, puis fiche d'un client : tape dans un champ, ferme le clavier (« OK » ou toucher à côté), puis touche « Enregistrer » une fois, sans faire défiler. Cinq fois de suite. | Le premier toucher enregistre, chaque fois. Si un « Enregistrer » ne répond pas : note l'écran, si le clavier était ouvert ou fermé, et la version d'iOS (Réglages, Général, Informations). |
+| F-9 | Ferme une fenêtre du bas (fiche d'une ligne) et touche aussitôt une autre ligne. | La ligne touchée réagit, le toucher ne se perd pas. |
 
 Points ouverts, à ton choix (détail dans `REVUE.md`) :
 - M7 : une offre gardée dans le téléphone avant un déploiement, rouverte sans réseau, s'ouvre sans JavaScript (gestes en page entière, donc perdus hors réseau). Défaut ancien du service worker, que chaque déploiement déclenche.

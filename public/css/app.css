@@ -104,6 +104,9 @@ svg.i { width: 20px; height: 20px; flex: none; }
    posée par app.js). Nouvelle offre pendant l'enregistrement et l'envoi ; fiche produit du catalogue. */
 .feuille-fond { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .4); display: flex; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity .25s ease; }
 .feuille-fond.ouvert { opacity: 1; }
+/* Pendant les 330 ms où la fenêtre redescend, le fond presque transparent couvre encore l'écran : sans ceci, il prend
+   les touchers destinés à la page (2026-11-24). */
+.feuille-fond:not(.ouvert) { pointer-events: none; }
 .feuille { position: relative; background: var(--surface); width: 100%; max-width: 480px; border-radius: 18px 18px 0 0; padding: 0 16px calc(16px + env(safe-area-inset-bottom)); max-height: 92%; overflow-y: auto; transform: translateY(100%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); box-shadow: 0 -6px 24px rgba(0, 0, 0, .18); }
 .feuille-fond.ouvert .feuille { transform: none; }
 .feuille-fond.pleine .feuille { min-height: 70%; display: flex; flex-direction: column; }

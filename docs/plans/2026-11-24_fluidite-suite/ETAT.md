@@ -18,8 +18,7 @@ Attendre l'accord de Xavier pour déployer `7bb8dd8` (ou la tête du moment) sur
 
 ## En attente de toi
 
-- Dire si je déploie `7bb8dd8` sur le test (ordre du 2026-11-24 : ne plus déployer sans ton accord).
-- Après le déploiement : dérouler `RECETTE.md` (F-1 à F-7) sur l'iPhone.
+- Dérouler `RECETTE.md` (F-1 à F-9) sur l'iPhone ; F-8 dit si le recalage après le clavier suffit.
 - Dire si M7 (offre gardée avant un déploiement, rouverte sans réseau, sans JavaScript) se corrige maintenant ou plus tard.
 - Origin : créer la tâche du chantier dans le projet 44 (question du 2026-11-24 restée sans réponse).
 
@@ -41,6 +40,8 @@ Attendre l'accord de Xavier pour déployer `7bb8dd8` (ou la tête du moment) sur
 - 2026-11-24, phase 6 : suite complète verte, PHPStan sans erreur ; banc : SR-1, SR-6, MP-A14, MP-A19 sous Chromium et WebKit, recettes du chantier précédent (14 gestes, hors réseau) sans régression (preuves plus bas).
 - 2026-11-24, phase 7 : relecteur indépendant (Opus, lecture seule) ; aucune bloquante, 6 importantes et 10 mineures, relues dans le code ; I1 à I6 et M1 à M6 corrigées, M7 et M10 (préexistantes) laissées en points ouverts, M8 écartée, M9 compromis voulu (`REVUE.md`). Preuves neuves au banc : I1 (`sans-app.js`), I2 (`ordre-gestes.js`), I3 (`sr5-sr6.js` sans toucher « Envoyer »). Non-régression rejouée : 14 gestes, hors réseau, SR-6, MP-A14 et MP-A19 sous Chromium et WebKit, gestes dès l'affichage ; suite complète et PHPStan verts.
 - 2026-11-24, livraison : commit `e002880` rebasé sur 17 commits d'autres sessions (un conflit dans `fluide.js`, `reprendre` : gardé ma version avec les deux arguments neufs de `ligneEnAttente`) ; vérifié que la branche n'avait pas touché `corrections()` et que `brancher()` garde tous les démarrages de la branche (seul ajout : `piecesDeLaLigne`). Migrations jouées (`Version20261124230001`), instantané du banc réécrit. Version rebasée : phpunit OK (1577 tests, 12758 assertions), PHPStan sans erreur ; banc rejoué (14 gestes, hors réseau, MP-A14 et MP-A19 sous les deux moteurs, SR-6, gestes dès l'affichage, ordre des gestes). Poussé : `7c0274b..7bb8dd8` sur `chantier-voix-offre`. Rien déployé. `RECETTE.md` écrit, gate prod ouvert.
+- 2026-11-24, accord de Xavier (« ok déploie ») : tête `bd477f3` (mon travail plus les prospects d'une autre session) déployée sur le test, tests sur `offregen_fluidite_test`, sonde verte, `/sante` au bon commit.
+- 2026-11-24, Xavier : sur iPhone, les boutons « Enregistrer » ne répondent parfois plus, il faut faire défiler la page. Pas reproductible au banc (pas de clavier d'iOS). Cause probable, non prouvée sur l'appareil : Safari sous iOS 26 laisse les zones de toucher décalées après la fermeture du clavier (forums développeurs d'Apple, fil 800125, un développeur décrit des touchers qui ratent ; signalé encore dans la bêta d'iOS 27) ; « Enregistrer » est le bouton touché juste après une saisie. Correctif : `apresLeClavier()` (app.js) fait défiler d'un pixel et revenir quand la hauteur visible remonte de plus de 120 px. Second défaut, signalé par une autre session : le fond d'une fenêtre qui redescend prenait les touchers pendant 330 ms, `pointer-events: none` hors `.ouvert`. Banc `banc/clavier.js` (Chromium et WebKit) : clavier joué 844, 450, 844 px, défilements 399 puis 400 ; témoins (barre de Safari 84 px, rotation) sans recalage ; 60 ms après la fermeture, le toucher atteint la page (témoin, règle annulée : le fond) ; aucune erreur JavaScript. Preuve sur l'iPhone : F-8 et F-9 de `RECETTE.md`.
 
 ## Décisions
 
