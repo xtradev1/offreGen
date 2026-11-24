@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 8 livré en code le 2026-11-24 (catalogue en `prompt` de Whisper), non vérifié sur le test : déploiement à l'accord de Xavier, puis dictée A6 refaite et transcription relue en base. Ensuite lot 3 (traceur, de la dictée douteuse à la fenêtre de choix), sous-tâche Origin 518, dans `~/offreGen-sc30`, base `offregen_sc30_test` (son `.env.test.local` porte déjà `DB_NOM=offregen_sc30_test`). Le lot 2 est commité et poussé le 2026-11-24.
+Lot 8 en service sur le test depuis le 2026-11-24 (commit `0b20d96`, `/sante` vert) : attendre que Xavier refasse la dictée A6, puis relire la transcription en base. Ensuite lot 3 (traceur, de la dictée douteuse à la fenêtre de choix), sous-tâche Origin 518, dans `~/offreGen-sc30`, base `offregen_sc30_test` (son `.env.test.local` porte déjà `DB_NOM=offregen_sc30_test`). Le lot 2 est commité et poussé le 2026-11-24.
 
 À savoir à la reprise :
 - Ordre des migrations : la mienne, `Version20261122183001`, a un numéro plus ancien que deux migrations arrivées sur la branche entre-temps (`Version20261124100001`, `Version20261124140001`). Doctrine joue toute migration absente de la table des versions, quel que soit son rang ; à vérifier au déploiement du lot 7 (`migrations:status` sur le test avant et après), car le test aura déjà joué celles du 24.
@@ -20,8 +20,7 @@ Lot 8 livré en code le 2026-11-24 (catalogue en `prompt` de Whisper), non véri
 
 ## En attente de toi
 
-- MP-A8 : la ligne de l'offre 86 porte « Laquage de porte, 2 faces » (produit 374) et la transcription « le cadre de porte à la quai ». Aucune ligne ni transcription ne contient « laque porte » : lequel des deux as-tu vu ?
-- Lexique du métier écrit à la main, en plus du catalogue (corrige « imperméable », approche « à laquer ») : à écrire par toi, par moi, ou pas du tout ?
+- Refaire la dictée A6 sur le test (lot 8 en service), pour relire la transcription.
 - D4 (lecteur seulement sur les dictées douteuses) contredit ta demande du 21 ; appliqué tel que choisi, à confirmer.
 - Ma lecture de « moins familier les textes » : ton plus neutre.
 - Finir la phrase du 2026-11-21 : « ce matin, vu que j'avais pas trop le… ».
@@ -51,6 +50,12 @@ Lot 8 livré en code le 2026-11-24 (catalogue en `prompt` de Whisper), non véri
 - 2026-11-24 : arrêt demandé par Xavier. ETAT complété, lot 2 commité dans `~/offreGen-sc30` avec les documents du dossier, la ligne 30 de l'index de voix-offre et la décision du 29, puis poussé sur `chantier-voix-offre` après la suite complète sur la base migrée. Rien déployé sur le test, roadmap non touché.
 - 2026-11-24 : reprise sur le constat de la recette MP-A8 (« cadre de porte à laquer » transcrit « laque porte »). Dictée retrouvée en base du test : enregistrement 35, offre 86, compte de démo 29 (peintre). Banc `prompt` chez Infomaniak sur 9 dictées (preuves ci-dessous). Lot 8 ajouté au plan. Aucune autre copie ne touche au transcripteur (`git status` de toutes les copies, branches distantes depuis `ff1ee21`).
 - 2026-11-24 : lot 8 codé dans `~/offreGen-sc30` : tests rouges puis verts, suite complète et phpstan verts (preuves ci-dessous). Rien déployé. Au lot 4, surveiller qu'un `prompt` ne gonfle pas le compte de mots d'une voix faible (Whisper recopie parfois son `prompt` sur un silence ; rien vu sur 18 et 19).
+- 2026-11-24, Xavier (texte collé) : « Alors j'ai vu une ligne, mais ça s'appelle pas la cage de porte, elle s'appelait à la quai ou la quai, mais mal écrit. Ma question c'est, quelle est la plus-value d'un lexique par métier? […] quelqu'un qui est peintre et puis ensuite veut faire de la maçonnerie, il faudrait qu'il ait aussi ce lexique-là. […] Il faudrait presque qu'il y ait un côté phonétique. […] Et puis tu peux déployer du coup le tout. sur le test. » ; « oui déploie, pas de vraies données ».
+- 2026-11-24 : en base, la ligne 358 de l'offre 86 a pour désignation « Laquage de porte, 2 faces » et pour texte entendu « le cadre de porte à la quai en bloc de 200 francs » : le « à la quai » vu par Xavier est très probablement le rappel « Entendu : … » (déduction, non confirmée par lui).
+- 2026-11-24 : déploiement. La tête était déjà en cours de déploiement par la session de `~/offreGen-abri` (`0b20d96`, qui contient le lot 8) : je n'en ai pas lancé un second. En service ensuite : `releases/0b20d96…`, `/sante` vert (preuve ci-dessous). Ma migration `Version20261122183001` était déjà jouée sur le test (14:43:02) : le doute de l'ordre des migrations est levé.
+- 2026-11-24 : réponse à Xavier sur le lexique : pas de lexique par métier (gain mesuré d'un mot et demi, biaisé ; sept lexiques à tenir ; le catalogue de l'artisan couvre déjà le cas multi-métier). Mesure phonétique faite (preuves ci-dessous) : sur 29 dictées, le modèle d'extraction rattrape déjà les mots mal transcrits (6 lignes) ; un seul raté possible (ligne 281). Une couche phonétique en code ne se justifie pas à ce jour.
+- 2026-11-24 : Xavier demande un test : une règle de « réflexion » dans la consigne (« pourquoi ce mot ? laquais ou laqué ? le plus logique dans cette offre »), « si c'est pas possible ou que ça vaut pas la peine, on fait pas ». Banc `banc_consigne.php` lancé : consigne actuelle contre consigne avec la règle, 10 cas, 3 passes chacun.
+- 2026-11-24 : banc de la règle de réflexion fini : consigne actuelle et consigne avec la règle trouvent toutes deux les 54 produits visés sur 54, aucun produit interdit, même coût (0,21 ct par offre). Règle non retenue, consigne mesurée gardée. Scripts recopiés dans `banc/` (`banc_consigne.php`, `phonetique.py`), sans les données exportées du test.
 
 ## Réponses de Xavier à la maquette (2026-11-21, texte collé)
 
@@ -86,6 +91,8 @@ D8. Tâche Origin « Dictée mal comprise » dans offreGen, 12 h (estimation de 
 | 2026-11-22 | Statut `a_confirmer` sans changement de type | `statut` est un `VARCHAR(20)`, pas une énumération. |
 | 2026-11-24 | Le catalogue de l'artisan part en `prompt` de Whisper, forme « Offre. désignation, désignation. », produits les plus utilisés d'abord, 500 caractères au plus (lot 8) | Banc du 24.11 : « travertin », « plinthes » (deux dictées), « crépi » corrigés ; aucune régression sur 9 dictées ; voix faibles 18 et 19 sans hallucination du `prompt`. Whisper ne garde que 224 jetons de `prompt`. Le catalogue part déjà chez Infomaniak pour l'extraction : aucun flux nouveau. |
 | 2026-11-24 | Lexique par métier écrit à la main : pas retenu sans Xavier | « imperméable » et « à laquée » viennent du `prompt` P2, dont j'ai écrit le lexique en connaissant les fautes à corriger : mesure biaisée, et sept métiers à tenir. |
+| 2026-11-24 | Pas de couche phonétique en code pour l'instant | Mesure du 24.11 : 6 mots mal transcrits sur 29 dictées, tous rattrapés par le modèle d'extraction ; un seul raté possible (ligne 281, « arraché des tuyats », produit 316 peut-être créé après). Méthode aveugle aux fautes sans parenté de son (« quartier » pour « escalier »). |
+| 2026-11-24 | Règle de « réflexion » sur les mots mal transcrits : pas ajoutée à la consigne | Banc du 24.11 : 54 sur 54 avec et sans elle, sur 6 dictées réelles et 4 inventées, 3 passes chacune ; le modèle fait déjà ce rapprochement. Toucher la consigne mesurée a déjà fait reculer le banc (sous-chantier 29, 17.11). Ni second agent, ni raisonnement : rien à rattraper. |
 | 2026-11-24 | Lot 8 avant le lot 3 | Indépendant du verdict, petit, déployable seul ; il change la signature de `Transcripteur::demarrer`, que le lot 4 touche aussi : mieux vaut un seul changement d'interface à la fois. |
 
 ## Hors champ, noté
@@ -417,6 +424,139 @@ accents, long : 480 caractères, 165 jetons
 ```
 
 `whisper_serveur.py` : `py_compile` sans erreur ; le Whisper local n'a pas été relancé avec un `prompt`.
+
+### Déploiement du lot 8 sur le test (2026-11-24)
+
+```
+releases/0b20d96555fd3cd5c7f88546f0e1f2371c4032b1
+{"commit":"0b20d96555fd3cd5c7f88546f0e1f2371c4032b1","base":"ok","migrations":"ok"}
+HTTP 200
+OffreGen\\Migrations\\Version20261122183001	2026-11-24 14:43:02
+```
+
+### Mesure phonétique (2026-11-24, question de Xavier)
+
+`phonetique.py` (scratchpad, `phon/`) : lignes extraites d'une dictée avec leur texte entendu, exportées du test ; clé de prononciation française écrite pour la mesure (contrôlée sur plinthes et plaintes, crépi et crépit, travertin et « travers teint », imperméable et « interméable », Porrentruy et « Port-en-Truy ») ; mot du catalogue qui sonne pareil sans s'écrire pareil.
+
+```
+lignes lues (texte entendu gardé) : 96, dont hors catalogue : 69
+artisans : 9, dictées : 29
+
+=== HORS CATALOGUE, un mot y sonne comme le catalogue (5) : ratés possibles, à juger
+- ligne 249 (offre 53) « Tuyau cuivre, diamètre ordinaire » | entendu : à peu près 23 mètres de longueur de tuyau, diamètre ordinaire, en cuivre
+    tuyaux <- « tuyau » (produit 286 : Conduites d'alimentation, multicouche conduites, t)
+- ligne 275 (offre 64) « Terre végétale criblée, pose à 5 centimètres d'épaisseur » | entendu : 300 mètres carrés de terre végétale criblée à 5 centimètres d'épaisseur
+    métré <- « 300 mètres » (produit 306 : Visite et relevé sur place visite, relevé, métré)
+    métré <- « mètres » (produit 306 : Visite et relevé sur place visite, relevé, métré)
+- ligne 276 (offre 64) « Terre à rajouter sur la partie sud, 15 centimètres d'épaisseur » | entendu : 100 mètres carrés, comptez 15 centimètres de terre à rajouter sur la partie sud
+    métré <- « 100 mètres » (produit 306 : Visite et relevé sur place visite, relevé, métré)
+    métré <- « mètres » (produit 306 : Visite et relevé sur place visite, relevé, métré)
+- ligne 277 (offre 64) « Place de parc avec terrassement, coffre, planis » | entendu : place de parc, 93 mètres carrés avec terrassement, coffre, planis
+    métré <- « 93 mètres » (produit 306 : Visite et relevé sur place visite, relevé, métré)
+    métré <- « mètres » (produit 306 : Visite et relevé sur place visite, relevé, métré)
+- ligne 281 (offre 65) « Arrachage de tuyaux » | entendu : j'ai aussi arraché des tuyats. Puis là, je lui ai fait une fleur. Alors, je les ai fait à 60 francs de l'heure
+    tuyah <- « tuyats » (produit 316 : Arrachage des tuyah)
+
+=== AU CATALOGUE, mot mal écrit dans l'entendu (6) : le modèle a-t-il fait le rapprochement ?
+- ligne 250 (offre 54) « Crépi de mur » [même produit] | entendu : récupérer donc le crépit des endroits autour de la porte
+    crépi <- « crépit »
+- ligne 282 (offre 66) « Arrachage des tuyah » [même produit] | entendu : on refait l'arrachage des tuyats à 60 francs, 5 heures
+    arrachage <- « l'arrachage »
+    tuyah <- « tuyats »
+- ligne 356 (offre 86) « Peinture des plafonds, 2 couches » [même produit] | entendu : plafond 20 mètres carrés
+    plafonds <- « plafond 20 »
+    plafonds <- « plafond »
+- ligne 366 (offre 87) « Sol travertin » [même produit] | entendu : Fais-moi une offre pour un sol travers teint. On va mettre 200 mètres carrés à 60 francs le mètre ca
+    travertin <- « travers teint »
+- ligne 373 (offre 87) « Laquage des plinthes » [même produit] | entendu : on va rajouter le laquage des plaintes. Donc, le laquage des plaintes, c'est 5 francs par mètre carr
+    plinthes <- « plaintes »
+- ligne 378 (offre 88) « Laquage des plinthes » [même produit] | entendu : Et puis une option pour le laquage des plaintes
+    plinthes <- « plaintes »
+```
+
+Jugement des 5 lignes hors catalogue : 249 (tuyau en cuivre, le produit est multicouche) et 275 à 277 (« mètres » contre « métré ») sont de faux signaux ; 281 (« arraché des tuyats », produit 316 « Arrachage des tuyah ») est le seul raté possible, la même dictée faite à l'offre 66 est rattachée. Les 6 lignes au catalogue (crépi, tuyah, travertin, plinthes deux fois ; « plafond » est un faux signal) sont toutes rattachées au bon produit, comme la ligne 358 (« à la quai », que la clé ne relie pas à « laquage »).
+
+### Règle de réflexion dans la consigne (2026-11-24, demande de Xavier)
+
+`banc_consigne.php` : même extracteur que l'application (Qwen3.8-27B sans raisonnement, appels des pièces et des options compris), consigne actuelle (A) contre la même consigne et une règle de plus (B), chargée à part sans toucher au code. Règle B : « La dictée vient d'une reconnaissance vocale, qui écrit parfois un mot du métier de travers, en mots qui se prononcent presque pareil. Quand un mot n'a pas de sens dans une offre d'artisan, demande-toi quel mot du catalogue ou du métier il fait entendre, et garde la lecture la plus logique pour cette offre. Ne rattache pas au catalogue un travail qui ne lui ressemble que par le son. » Cas R : transcriptions d'Infomaniak d'avant le lot 8, catalogues actuels des comptes ; cas S et N : dictées écrites par moi avec des fautes du genre observé (biais : je connais les cibles, mais A et B ont les mêmes entrées) ; N1 est un piège (poignée, tringle : rien à rattacher).
+
+```
+== R35 à la quai
+  A actuelle passe 1 : cibles 1/1, 5 lignes, 0.21 ct | 371 Peinture des murs, 2 couches ; 372 Peinture des plafonds, 2 couches ; 371 Peinture des murs, 2 couches ; 374 Laquage de porte, 2 faces ; 378 Déplacement
+  A actuelle passe 2 : cibles 1/1, 5 lignes, 0.21 ct | 371 Peinture des murs, 2 couches ; 372 Peinture des plafonds, 2 couches ; 371 Peinture des murs, 2 couches ; 374 Laquage de porte, 2 faces ; 378 Déplacement
+  A actuelle passe 3 : cibles 1/1, 5 lignes, 0.21 ct | 371 Peinture des murs, 2 couches ; 372 Peinture des plafonds, 2 couches ; 371 Peinture des murs, 2 couches ; 374 Laquage de porte, 2 faces ; 378 Déplacement
+  B règle passe 1 : cibles 1/1, 5 lignes, 0.21 ct | 371 Peinture des murs, 2 couches ; 372 Peinture des plafonds, 2 couches ; 371 Peinture des murs, 2 couches ; 374 Laquage de porte, 2 faces ; 378 Déplacement
+  B règle passe 2 : cibles 1/1, 5 lignes, 0.21 ct | 371 Peinture des murs, 2 couches ; 372 Peinture des plafonds, 2 couches ; 371 Peinture des murs, 2 couches ; 374 Laquage de porte, 2 faces ; 378 Déplacement
+  B règle passe 3 : cibles 1/1, 5 lignes, 0.22 ct | 371 Peinture des murs, 2 couches ; 372 Peinture des plafonds, 2 couches ; 371 Peinture des murs, 2 couches ; 374 Laquage de porte, 2 faces ; 378 Déplacement
+== R34 travers teint, plaintes
+  A actuelle passe 1 : cibles 2/2, 8 lignes, 0.44 ct | 380 Sol travertin ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches ; 375 Peinture anti-moisissure ; 370 Couche d'impression ; libre Parquet en bois massif ; libre Stratifié ; 373 Laquage des plinthes
+  A actuelle passe 2 : cibles 2/2, 8 lignes, 0.44 ct | 380 Sol travertin ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches ; 375 Peinture anti-moisissure ; 370 Couche d'impression ; libre Parquet en bois massif ; libre Stratifié ; 373 Laquage des plinthes
+  A actuelle passe 3 : cibles 2/2, 8 lignes, 0.43 ct | 380 Sol travertin ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches ; 375 Peinture anti-moisissure ; 370 Couche d'impression ; libre Parquet en bois massif ; libre Stratifié ; 373 Laquage des plinthes
+  B règle passe 1 : cibles 2/2, 8 lignes, 0.43 ct | 380 Sol travertin ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches ; 375 Peinture anti-moisissure ; 370 Couche d'impression ; libre Parquet en bois massif ; libre Stratifié ; 373 Laquage des plinthes
+  B règle passe 2 : cibles 2/2, 8 lignes, 0.44 ct | 380 Sol travertin ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches ; 375 Peinture anti-moisissure ; 370 Couche d'impression ; libre Parquet bois massif ; libre Parquet stratifié (variante) ; 373 Laquage des plinthes
+  B règle passe 3 : cibles 2/2, 8 lignes, 0.43 ct | 380 Sol travertin ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches ; 375 Peinture anti-moisissure ; 370 Couche d'impression ; libre Parquet bois massif ; libre Stratifié ; 373 Laquage des plinthes
+== R36 plaintes
+  A actuelle passe 1 : cibles 1/1, 5 lignes, 0.28 ct | libre Parquet stratifié ; libre Parquet vinyle ; 371 Peinture des murs, 2 couches ; 370 Couche d'impression ; 373 Laquage des plinthes
+  A actuelle passe 2 : cibles 1/1, 5 lignes, 0.28 ct | libre Parquet stratifié ; libre Parquet vinyle ; 371 Peinture des murs, 2 couches ; 370 Couche d'impression ; 373 Laquage des plinthes
+  A actuelle passe 3 : cibles 1/1, 5 lignes, 0.28 ct | libre Parquet stratifié ; libre Parquet vinyle ; 371 Peinture des murs, 2 couches ; 370 Couche d'impression ; 373 Laquage des plinthes
+  B règle passe 1 : cibles 1/1, 5 lignes, 0.28 ct | libre Parquet stratifié ; libre Parquet vinyle ; 371 Peinture des murs, 2 couches ; 370 Couche d'impression ; 373 Laquage des plinthes
+  B règle passe 2 : cibles 1/1, 5 lignes, 0.28 ct | libre Parquet stratifié ; libre Parquet vinyle ; 371 Peinture des murs, 2 couches ; 370 Couche d'impression ; 373 Laquage des plinthes
+  B règle passe 3 : cibles 1/1, 5 lignes, 0.28 ct | libre Parquet stratifié ; libre Parquet vinyle ; 371 Peinture des murs, 2 couches ; 370 Couche d'impression ; 373 Laquage des plinthes
+== R14 crépit (maçon)
+  A actuelle passe 1 : cibles 1/1, 2 lignes, 0.17 ct | libre Construction d'un quartier extérieur sur la terrasse du jardin ; 300 Crépi de mur
+  A actuelle passe 2 : cibles 1/1, 2 lignes, 0.17 ct | libre Construction d'un quartier extérieur sur la terrasse du jardin ; 300 Crépi de mur
+  A actuelle passe 3 : cibles 1/1, 2 lignes, 0.16 ct | libre Construction d'un quartier extérieur sur la terrasse du jardin ; 300 Crépi de mur
+  B règle passe 1 : cibles 1/1, 2 lignes, 0.17 ct | libre Construction d'un quartier extérieur sur la terrasse du jardin ; 300 Crépi de mur
+  B règle passe 2 : cibles 1/1, 2 lignes, 0.17 ct | libre Construction d'un quartier extérieur sur la terrasse du jardin ; 300 Crépi de mur
+  B règle passe 3 : cibles 1/1, 2 lignes, 0.17 ct | libre Construction d'un quartier extérieur sur la terrasse du jardin ; 300 Crépi de mur
+== R23 tuyats
+  A actuelle passe 1 : cibles 1/1, 2 lignes, 0.16 ct | libre Travaux de paysagiste ; 316 Arrachage des tuyah
+  A actuelle passe 2 : cibles 1/1, 2 lignes, 0.16 ct | libre Travaux de paysagiste ; 316 Arrachage des tuyah
+  A actuelle passe 3 : cibles 1/1, 2 lignes, 0.16 ct | libre Travaux de paysagiste ; 316 Arrachage des tuyah
+  B règle passe 1 : cibles 1/1, 2 lignes, 0.16 ct | libre Travaux de paysagiste ; 316 Arrachage des tuyah
+  B règle passe 2 : cibles 1/1, 2 lignes, 0.16 ct | libre Travaux de paysagiste ; 316 Arrachage des tuyah
+  B règle passe 3 : cibles 1/1, 2 lignes, 0.16 ct | libre Travaux de paysagisme ; 316 Arrachage des tuyah
+== R24 tuyats
+  A actuelle passe 1 : cibles 1/1, 2 lignes, 0.17 ct | 316 Arrachage des tuyah ; libre Travaux de paysagiste
+  A actuelle passe 2 : cibles 1/1, 2 lignes, 0.17 ct | 316 Arrachage des tuyah ; libre Travaux de paysagiste
+  A actuelle passe 3 : cibles 1/1, 2 lignes, 0.17 ct | 316 Arrachage des tuyah ; libre Travaux de paysagiste
+  B règle passe 1 : cibles 1/1, 2 lignes, 0.17 ct | 316 Arrachage des tuyah ; libre Travaux de paysagiste
+  B règle passe 2 : cibles 1/1, 2 lignes, 0.17 ct | 316 Arrachage des tuyah ; libre Travaux de paysagiste
+  B règle passe 3 : cibles 1/1, 2 lignes, 0.17 ct | 316 Arrachage des tuyah ; libre Travaux de paysagiste
+== S1 saules, pont sage, dans pression
+  A actuelle passe 1 : cibles 4/4, 4 lignes, 0.19 ct | 368 Protection des sols et des meubles ; 369 Rebouchage et ponçage des murs ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches
+  A actuelle passe 2 : cibles 4/4, 4 lignes, 0.19 ct | 368 Protection des sols et des meubles ; 369 Rebouchage et ponçage des murs ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches
+  A actuelle passe 3 : cibles 4/4, 4 lignes, 0.19 ct | 368 Protection des sols et des meubles ; 369 Rebouchage et ponçage des murs ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches
+  B règle passe 1 : cibles 4/4, 4 lignes, 0.19 ct | 368 Protection des sols et des meubles ; 369 Rebouchage et ponçage des murs ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches
+  B règle passe 2 : cibles 4/4, 4 lignes, 0.19 ct | 368 Protection des sols et des meubles ; 369 Rebouchage et ponçage des murs ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches
+  B règle passe 3 : cibles 4/4, 4 lignes, 0.19 ct | 368 Protection des sols et des meubles ; 369 Rebouchage et ponçage des murs ; 370 Couche d'impression ; 371 Peinture des murs, 2 couches
+== S2 timoisissure, fa sade, chats faudages
+  A actuelle passe 1 : cibles 3/3, 3 lignes, 0.17 ct | 375 Peinture anti-moisissure ; 376 Peinture de façade, 2 couches ; 377 Échafaudage, montage et location
+  A actuelle passe 2 : cibles 3/3, 3 lignes, 0.17 ct | 375 Peinture anti-moisissure ; 376 Peinture de façade, 2 couches ; 377 Échafaudage, montage et location
+  A actuelle passe 3 : cibles 3/3, 3 lignes, 0.17 ct | 375 Peinture anti-moisissure ; 376 Peinture de façade, 2 couches ; 377 Échafaudage, montage et location
+  B règle passe 1 : cibles 3/3, 3 lignes, 0.17 ct | 375 Peinture anti-moisissure ; 376 Peinture de façade, 2 couches ; 377 Échafaudage, montage et location
+  B règle passe 2 : cibles 3/3, 3 lignes, 0.17 ct | 375 Peinture anti-moisissure ; 376 Peinture de façade, 2 couches ; 377 Échafaudage, montage et location
+  B règle passe 3 : cibles 3/3, 3 lignes, 0.17 ct | 375 Peinture anti-moisissure ; 376 Peinture de façade, 2 couches ; 377 Échafaudage, montage et location
+== S3 laquais les plaintes, rejet
+  A actuelle passe 1 : cibles 3/3, 3 lignes, 0.17 ct | 373 Laquage des plinthes ; 374 Laquage de porte, 2 faces ; 379 Heure de régie
+  A actuelle passe 2 : cibles 3/3, 3 lignes, 0.17 ct | 373 Laquage des plinthes ; 374 Laquage de porte, 2 faces ; 379 Heure de régie
+  A actuelle passe 3 : cibles 3/3, 3 lignes, 0.17 ct | 373 Laquage des plinthes ; 374 Laquage de porte, 2 faces ; 379 Heure de régie
+  B règle passe 1 : cibles 3/3, 3 lignes, 0.17 ct | 373 Laquage des plinthes ; 374 Laquage de porte, 2 faces ; 379 Heure de régie
+  B règle passe 2 : cibles 3/3, 3 lignes, 0.17 ct | 373 Laquage des plinthes ; 374 Laquage de porte, 2 faces ; 379 Heure de régie
+  B règle passe 3 : cibles 3/3, 3 lignes, 0.17 ct | 373 Laquage des plinthes ; 374 Laquage de porte, 2 faces ; 379 Heure de régie
+== N1 piège poignée, tringle
+  A actuelle passe 1 : cibles 1/1, 3 lignes, 0.18 ct | libre Changement de la poignée de la porte ; libre Pose d'une tringle à rideaux ; 371 Peinture des murs, 2 couches
+  A actuelle passe 2 : cibles 1/1, 3 lignes, 0.18 ct | libre Changement de la poignée de porte ; libre Pose d'une tringle à rideaux ; 371 Peinture des murs, 2 couches
+  A actuelle passe 3 : cibles 1/1, 3 lignes, 0.18 ct | libre Changement de la poignée de porte ; libre Pose d'une tringle à rideaux ; 371 Peinture des murs, 2 couches
+  B règle passe 1 : cibles 1/1, 3 lignes, 0.19 ct | libre Changement de la poignée de porte ; libre Pose d'une tringle à rideaux ; 371 Peinture des murs, 2 couches
+  B règle passe 2 : cibles 1/1, 3 lignes, 0.19 ct | libre Changement de la poignée de porte ; libre Pose d'une tringle à rideaux ; 371 Peinture des murs, 2 couches
+  B règle passe 3 : cibles 1/1, 3 lignes, 0.19 ct | libre Changement de la poignée de porte ; libre Pose d'une tringle à rideaux ; 371 Peinture des murs, 2 couches
+
+A actuelle : cibles 54/54 (100 %), produits interdits 0, 3.7 lignes par offre, 0.21 ct par offre, 30 passes, 0 échecs
+B règle : cibles 54/54 (100 %), produits interdits 0, 3.7 lignes par offre, 0.21 ct par offre, 30 passes, 0 échecs
+```
+
+Lecture : effet de plafond, le modèle retrouve déjà tous les produits visés, même sur les fautes inventées. La seule ligne restée fausse partout (R14, « quartier extérieur » pour un escalier) n'a ni produit au catalogue ni parenté de son : aucune des deux pistes ne la corrige.
 
 ### Lot 2 : migration (2026-11-22)
 
