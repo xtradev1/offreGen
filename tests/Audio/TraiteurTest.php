@@ -570,6 +570,76 @@ final class TraiteurTest extends TestCase
         self::assertSame(0, $this->etat()['tentatives']);
         self::assertSame(1, $this->offresDeLEnregistrement());
     }
+
+    /** Recette AB-1 (Xavier, 2026-11-24) : une dictée continuée « à la suite » arrive en parties, une seule offre. */
+    private function enParties(string ...$suites): void
+    {
+        $chemins = array_map(fn (string $s): string => "{$this->jeu->a}/" . self::UUID . $s, $suites);
+        BaseDeTest::pdo()->prepare('UPDATE enregistrement SET fichiers_suite = ? WHERE uuid = ?')
+            ->execute([json_encode($chemins), self::UUID]);
+    }
+
+    public function testUneDicteeEnPartiesEstTranscritePartieParPartieEtLesTextesJoints(): void
+    {
+        $this->enParties('-2.webm', '-3.m4a');
+        $parties = new TranscripteurParPartie();
+        self::assertSame(Statut::PRET, $this->traiteur($parties)->avancer(self::UUID));
+        self::assertSame([self::UUID . '.m4a', self::UUID . '-2.webm', self::UUID . '-3.m4a'], $parties->envoyes);
+        $e = BaseDeTest::ligne("SELECT transcription, transcription_ref FROM enregistrement WHERE uuid = '" . self::UUID . "'");
+        self::assertSame("Texte de 1.\nTexte de 2.\nTexte de 3.", $e['transcription']);
+        self::assertSame('lot-1 lot-2 lot-3', $e['transcription_ref']);
+        self::assertSame(1, $this->offresDeLEnregistrement());
+    }
+
+    /** Une partie pas encore transcrite : on attend, sans renvoyer les autres. */
+    public function testUnePartiePasPreteFaitAttendreLeTout(): void
+    {
+        $this->enParties('-2.webm');
+        $parties = new TranscripteurParPartie();
+        $parties->enAttente = ['lot-2'];
+        self::assertSame(Statut::TRANSCRIPTION, $this->traiteur($parties)->avancer(self::UUID));
+        $parties->enAttente = [];
+        self::assertSame(Statut::PRET, $this->traiteur($parties)->avancer(self::UUID));
+        self::assertCount(2, $parties->envoyes);
+        self::assertSame("Texte de 1.\nTexte de 2.", BaseDeTest::ligne("SELECT transcription FROM enregistrement WHERE uuid = '" . self::UUID . "'")['transcription']);
+    }
+
+    /** La limite des 30 minutes vaut pour la dictée entière : deux parties dans la limite, ensemble au-delà. */
+    public function testLaLimiteDeDureeVautPourLaSommeDesParties(): void
+    {
+        $dossier = $this->dossiers->env()['AUDIO_DOSSIER'] . "/{$this->jeu->a}";
+        if (!is_dir($dossier)) {
+            mkdir($dossier, 0700, true);
+        }
+        // 27,9 s chacune, 55,8 s ensemble, pour 40 s permises (plus la tolérance de 5 s).
+        copy(dirname(__DIR__) . '/fixtures/audio/dictee-peintre.ogg', "$dossier/" . self::UUID . '.m4a');
+        copy(dirname(__DIR__) . '/fixtures/audio/dictee-peintre.ogg', "$dossier/" . self::UUID . '-2.ogg');
+        $this->enParties('-2.ogg');
+        $parties = new TranscripteurParPartie();
+        self::assertSame(Statut::ECHEC, $this->traiteur(t: $parties, dureeMax: 40)->avancer(self::UUID));
+        self::assertSame([], $parties->envoyes);
+        self::assertStringContainsString('trop long', (string) $this->etat()['erreur']);
+    }
+}
+
+/** Rend « Texte de N. » pour la N-ième partie envoyée ; les lots de $enAttente ne sont pas encore prêts. */
+final class TranscripteurParPartie implements Transcripteur
+{
+    /** @var list<string> */
+    public array $envoyes = [];
+    /** @var list<string> */
+    public array $enAttente = [];
+
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
+    {
+        $this->envoyes[] = basename($cheminAudio);
+        return 'lot-' . count($this->envoyes);
+    }
+
+    public function resultat(string $reference): ?string
+    {
+        return in_array($reference, $this->enAttente, true) ? null : 'Texte de ' . substr($reference, 4) . '.';
+    }
 }
 
 /** Garde le vocabulaire reçu à chaque envoi. */

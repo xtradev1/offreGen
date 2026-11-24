@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OffreGen\Audio;
 
+use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\FileTraitement;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
@@ -36,7 +37,9 @@ final class Purge
         $erreurs = 0;
         foreach ($this->file->aPurger($this->horloge->now()) as $e) {
             try {
-                $this->stockage->supprimer($e['fichier']);
+                foreach ([$e['fichier'], ...DepotEnregistrements::suites($e['fichiers_suite'])] as $relatif) {
+                    $this->stockage->supprimer($relatif);
+                }
                 $this->file->audioSupprime($e['uuid']);
                 $supprimes++;
             } catch (\Throwable $ex) {

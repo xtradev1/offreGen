@@ -282,6 +282,37 @@ const abri = (() => {
     }), null),
     modifier,
     supprimer,
+    // Recette AB-1 (Xavier, 2026-11-24) : une dictée coupée repart à la suite. Les tranches de la suite prennent les
+    // numéros suivants ; « parties » note où chaque partie commence (deux enregistreurs ne se recollent pas en un seul
+    // fichier lisible) ; « avant » garde la durée des parties d'avant, « partie » l'heure où la dernière a commencé.
+    continuer: (d) => sans(ouvrir().then((db) => {
+      const t = db.transaction('dictees', 'readwrite');
+      const maintenant = Date.now();
+      t.objectStore('dictees').put(Object.assign({}, d, {
+        etat: 'enregistrement', parties: (d.parties || [0]).concat(d.tranches), avant: dureeMs(d), partie: maintenant, fin: maintenant, vu: maintenant,
+      }));
+      return fin(t).then(() => true);
+    }), false),
+    // Suite abandonnée : la dictée redevient ce qu'elle était, les tranches de la suite partent.
+    retablir: (d) => sans(ouvrir().then((db) => {
+      const t = db.transaction(['dictees', 'morceaux'], 'readwrite');
+      t.objectStore('dictees').put(Object.assign({}, d, { vu: 0 }));
+      t.objectStore('morceaux').delete(IDBKeyRange.bound([d.id, d.tranches], [d.id, Infinity]));
+      return fin(t);
+    }), null),
+    // Le verrou d'une dictée, tenu par l'onglet qui l'enregistre ou l'envoie. Le navigateur le lâche quand l'onglet
+    // meurt (Safari fermé de force) : à la réouverture, la dictée se propose tout de suite. Rend de quoi le lâcher.
+    tenir: (id) => {
+      if (!navigator.locks) return () => {};
+      let lacher = () => {};
+      const tenu = new Promise((ok) => { lacher = ok; });
+      navigator.locks.request(VERROU + id, () => tenu).catch(() => {});
+      return lacher;
+    },
+    // (id) => vrai si un onglet vivant tient la dictée ; null quand le navigateur n'a pas de verrous (Safari avant 15.4).
+    tenues: () => (navigator.locks
+      ? navigator.locks.query().then((q) => { const noms = new Set((q.held || []).map((l) => l.name)); return (id) => noms.has(VERROU + id); }).catch(() => null)
+      : Promise.resolve(null)),
     // L'offre de cet enregistrement est prête : la copie du téléphone n'a plus de raison d'être.
     oublier: (uuid) => sans(ouvrir()
       .then((db) => resultat(db.transaction('dictees').objectStore('dictees').index('uuid').getAll(uuid)))
@@ -300,21 +331,37 @@ const abri = (() => {
       };
       return fin(t);
     }), null),
-    // Le fichier de la dictée, ses tranches dans l'ordre. Rejette si le stockage ne répond pas.
-    fichier: (d) => avecDelai(ouvrir()
+    // Les fichiers de la dictée, un par partie, tranches dans l'ordre. Rejette si le stockage ne répond pas.
+    fichiers: (d) => avecDelai(ouvrir()
       .then((db) => resultat(db.transaction('morceaux').objectStore('morceaux').getAll(tranches(d.id))))
       .then((liste) => {
-        if (liste.length === 0) throw new Error('aucune tranche');
         liste.sort((a, b) => a.n - b.n);
-        return new File(liste.map((m) => m.blob), d.nom || nomDictee(d.type, new Date(d.debut)), { type: d.type });
+        const debuts = d.parties || [0];
+        const nom = d.nom || nomDictee(d.type, new Date(d.debut));
+        const fichiers = debuts.map((de, i) => liste.filter((m) => m.n >= de && (i + 1 === debuts.length || m.n < debuts[i + 1])))
+          .filter((morceaux) => morceaux.length > 0)
+          .map((morceaux, i) => new File(morceaux.map((m) => m.blob), i === 0 ? nom : nomPartie(nom, i + 1), { type: d.type }));
+        if (fichiers.length === 0) throw new Error('aucune tranche');
+        return fichiers;
       }), 8000),
   };
 })();
+const VERROU = 'offregen-abri-';
+
+// La durée dictée : les parties d'avant, plus la dernière jusqu'à sa dernière tranche.
+function dureeMs(d) {
+  return (d.avant || 0) + (d.fin || d.debut) - (d.partie || d.debut);
+}
 
 function nomDictee(type, d) {
   const extension = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
   const p = (n) => String(n).padStart(2, '0');
   return 'enregistrement-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' + p(d.getHours()) + 'h' + p(d.getMinutes()) + '.' + extension;
+}
+
+// enregistrement-2026-11-24-10h05.m4a, partie 2 : enregistrement-2026-11-24-10h05-partie-2.m4a
+function nomPartie(nom, n) {
+  return nom.replace(/(\.[a-z0-9]+)?$/, '-partie-' + n + '$1');
 }
 
 // Demande l'état chaque seconde et fait avancer les étapes ; appelle fini(offre) quand l'offre est prête.
@@ -407,6 +454,7 @@ function nouvelleOffre() {
       etatCourant = 'choix';
       occupe = false;
       arreterSuivi();
+      lacher();
     },
     // Pendant l'enregistrement et l'envoi, le retour ne ferme rien ; après un échec, il demande.
     retenir: () => {
@@ -418,13 +466,14 @@ function nouvelleOffre() {
   };
 
   const montrer = (etat) => {
-    if (etatCourant === 'reprise' && etat !== 'reprise') plusTard(repriseCourante);
+    // Continuer ou envoyer la dictée proposée n'est pas l'écarter : coupée de nouveau, elle doit revenir à l'ouverture.
+    if (etatCourant === 'reprise' && !['reprise', 'enregistrement', 'envoi'].includes(etat)) plusTard(repriseCourante);
     etatCourant = etat;
     zone.querySelectorAll('[data-etat]').forEach((s) => { s.hidden = s.dataset.etat !== etat; });
     if (fermerX) fermerX.hidden = !['echec', 'court', 'long', 'refus', 'reprise'].includes(etat);
     if (!fenetre) return;
     feuille.classList.toggle('pleine', etat === 'enregistrement');
-    if (etat === 'choix') { calques.fermer(fenetre); return; }
+    if (etat === 'choix') { lacher(); calques.fermer(fenetre); return; }
     if (calques.ouvert() !== fenetre) calques.ouvrir(fenetre);
   };
 
@@ -451,21 +500,42 @@ function nouvelleOffre() {
     if (calques.ouvert()) window.location.replace(url); else window.location.assign(url);
   };
 
-  let fichier = null;
+  // Les fichiers à envoyer : un seul, sauf pour une dictée continuée (le début, puis chaque suite).
+  let fichiers = [];
   // La clé de la dictée du fichier en cours : envoyée au serveur, qui reconnaît un second envoi de la même dictée
   // (réponse du premier perdue en route), et nom de sa copie à l'abri. null pour un fichier importé.
   let cleCourante = null;
+  // Le verrou de la dictée que cet onglet a en main (abri.tenir) : un autre onglet ne la propose pas.
+  let lacherVerrou = () => {};
+  const tenir = (cle) => { lacherVerrou(); lacherVerrou = cle ? abri.tenir(cle) : () => {}; };
+  const lacher = () => { lacherVerrou(); lacherVerrou = () => {}; };
   const echec = (texte) => { el('[data-echec-texte]').textContent = texte; montrer('echec'); };
   const liste = el('[data-etapes]');
-  const lienGarder = (f) => {
-    const garder = el('[data-garder]');
+  // Une partie par fichier ; plusieurs téléchargements de suite, espacés, que le navigateur accepte mieux.
+  const telecharger = (liste) => liste.forEach((f, i) => setTimeout(() => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(f);
+    a.download = f.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  }, i * 400));
+  const garder = el('[data-garder]');
+  const lienGarder = (liste) => {
     if (garder.href.startsWith('blob:')) URL.revokeObjectURL(garder.href);
-    garder.href = URL.createObjectURL(f);
-    garder.download = f.name;
+    if (liste.length === 1) {
+      garder.href = URL.createObjectURL(liste[0]);
+      garder.download = liste[0].name;
+    } else {
+      garder.href = '#';
+      garder.removeAttribute('download');
+    }
     garder.hidden = false;
   };
+  garder.addEventListener('click', (e) => { if (fichiers.length > 1) { e.preventDefault(); telecharger(fichiers); } });
   const envoyer = () => {
-    if (!fichier) return;
+    if (!fichiers.length) return;
     montrer('envoi');
     occupe = true;
     marquerEtapes(liste, 0, false);
@@ -477,8 +547,11 @@ function nouvelleOffre() {
     const cle = cleCourante;
     const donnees = new FormData();
     donnees.append('_csrf', form.querySelector('input[name=_csrf]').value);
-    if (cle) donnees.append('cle', cle);
-    donnees.append('audio', fichier, fichier.name);
+    // Une dictée continuée part sous une clé qui compte ses parties : si son début était arrivé sans que le téléphone
+    // le sache, la clé seule renverrait à l'enregistrement du début, et la suite serait perdue.
+    if (cle) donnees.append('cle', fichiers.length > 1 ? cle + 'p' + fichiers.length : cle);
+    donnees.append('audio', fichiers[0], fichiers[0].name);
+    fichiers.slice(1).forEach((f) => donnees.append('suite[]', f, f.name));
     const xhr = new XMLHttpRequest();
     let signe = 0;
     xhr.open('POST', '/import');
@@ -501,6 +574,7 @@ function nouvelleOffre() {
         const uuid = xhr.responseURL.split('/enregistrements/')[1].split(/[/?#]/)[0];
         // Arrivée au serveur : la copie reste jusqu'à l'offre prête (suivreEtapes, ou au prochain lancement).
         if (cle) abri.modifier(cle, { etat: 'envoye', uuid, vu: Date.now() });
+        lacher();
         arreterSuivi = suivreEtapes(liste, uuid, (offre) => setTimeout(() => { if (etatCourant === 'suivi') partir('/offres/' + offre); }, 900));
         return;
       }
@@ -538,10 +612,11 @@ function nouvelleOffre() {
       montrer('long');
       return;
     }
-    fichier = f;
+    fichiers = [f];
     duMicro = false;
     copieAbri = false;
     cleCourante = null;
+    lacher();
     el('[data-garder]').hidden = true;
     envoyer();
   });
@@ -575,9 +650,10 @@ function nouvelleOffre() {
   };
   const nouvelleCle = () => Date.now() + '-' + Math.random().toString(36).slice(2, 10);
 
-  // « Terminer » : la dictée part depuis la mémoire, sans attendre le stockage du navigateur.
+  // « Terminer » : la dictée part depuis la mémoire, sans attendre le stockage du navigateur. Une suite part avec les
+  // parties d'avant, relues à l'abri avant de rouvrir le micro (rec.suite.fichiers).
   const finir = (rec) => {
-    if ((finMs || Date.now()) - debut < DUREE_MIN_MS) {
+    if (!rec.suite && (finMs || Date.now()) - debut < DUREE_MIN_MS) {
       occupe = false;
       duMicro = false;
       rec.copie.then((ok) => ok && abri.supprimer(rec.cle));
@@ -585,35 +661,51 @@ function nouvelleOffre() {
       return;
     }
     const type = rec.mimeType || 'audio/webm';
-    fichier = new File(morceaux, nomDictee(type, new Date(debut)), { type });
+    const avant = rec.suite ? rec.suite.fichiers : [];
+    const nom = avant.length ? avant[0].name : nomDictee(type, new Date(debut));
+    // Une suite arrêtée avant sa première tranche n'ajoute rien : le début part seul.
+    fichiers = avant.concat(rec.suite && morceaux.length === 0 ? [] : [new File(morceaux, avant.length ? nomPartie(nom, avant.length + 1) : nom, { type })]);
     cleCourante = rec.cle;
-    lienGarder(fichier);
-    const nom = fichier.name;
+    lienGarder(fichiers);
     rec.copie.then((ok) => ok && abri.modifier(rec.cle, { etat: 'a_envoyer', nom }, ['enregistrement']));
     envoyer();
   };
 
-  const demarrer = async () => {
+  // suite : { dictee, fichiers } pour continuer une dictée coupée ; rien pour une nouvelle.
+  const demarrer = async (suite = null) => {
     if (bloquer()) return;
     if (!possible) { refus(); return; }
     if (enregistreur && enregistreur.state !== 'inactive') return;
+    const d = suite ? suite.dictee : null;
     try {
       flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
     } catch (e) {
       refus('Le micro est refusé ou absent. Autorisez-le pour ce site dans les réglages du navigateur, ou enregistrez avec le téléphone puis « Importer ».');
       return;
     }
-    const type = TYPES.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+    if (suite) {
+      try {
+        suite.fichiers = await suite.lecture;
+      } catch (e) {
+        libererMicro();
+        relectureImpossible();
+        return;
+      }
+    }
+    // Une suite garde le format du début : les parties d'une dictée sont rangées sous un seul type.
+    const type = (d && MediaRecorder.isTypeSupported(d.type) ? d.type : null) || TYPES.find((t) => MediaRecorder.isTypeSupported(t)) || '';
     const rec = new MediaRecorder(flux, type ? { mimeType: type, audioBitsPerSecond: 32000 } : {});
     enregistreur = rec;
     morceaux = [];
     // Chaque tranche part aussi à l'abri, dans l'ordre : coupé n'importe quand, le début de la dictée reste.
-    rec.cle = nouvelleCle();
+    rec.cle = d ? d.id : nouvelleCle();
+    rec.suite = suite;
     rec.arret = null;
-    rec.copie = compte ? abri.commencer(rec.cle, compte, type || rec.mimeType || 'audio/webm') : Promise.resolve(false);
+    rec.copie = !compte ? Promise.resolve(false) : d ? abri.continuer(d) : abri.commencer(rec.cle, compte, type || rec.mimeType || 'audio/webm');
     copieAbri = false;
     rec.copie.then((ok) => { if (enregistreur === rec) copieAbri = ok; });
-    let rang = 0;
+    tenir(rec.cle);
+    let rang = d ? d.tranches : 0;
     rec.addEventListener('dataavailable', (e) => {
       if (!e.data || e.data.size === 0) return;
       morceaux.push(e.data);
@@ -624,22 +716,23 @@ function nouvelleOffre() {
       finMs = Date.now();
       libererMicro();
       if (rec.arret === 'terminer') finir(rec);
-      else if (rec.arret === 'abandon') rec.copie.then((ok) => ok && abri.supprimer(rec.cle));
+      else if (rec.arret === 'abandon') rec.copie.then((ok) => ok && abandonnerCopie(rec));
       // Arrêt sans « Terminer » (appel entrant, autre application sur le micro) : ce qui est enregistré reste.
       else el('[data-consigne]').textContent = 'L’enregistrement s’est arrêté (appel ou autre application). « Terminer » envoie ce qui est enregistré.';
     });
     rec.start(1000);
     occupe = true;
     duMicro = true;
-    debut = Date.now();
+    // Une suite repart de la durée déjà dictée : le minuteur et la limite des 30 minutes valent pour la dictée entière.
+    debut = Date.now() - (d ? dureeMs(d) : 0);
     finMs = 0;
     const affichage = el('[data-minuteur]');
     const deux = (n) => String(n).padStart(2, '0');
-    affichage.textContent = '00:00';
     const consigne = el('[data-consigne]');
     // La phrase de l'activité du compte, écrite par le serveur dans l'attribut (_nouvelle_offre.html.twig).
     consigne.textContent = consigne.dataset.consigne;
-    minuteur = setInterval(() => {
+    // Un premier tour tout de suite : une suite s'affiche à sa durée déjà dictée, pas à 00:00.
+    const tour = () => {
       const s = Math.floor((Date.now() - debut) / 1000);
       const h = Math.floor(s / 3600);
       affichage.textContent = (h ? h + ':' : '') + deux(Math.floor(s / 60) % 60) + ':' + deux(s % 60);
@@ -650,11 +743,13 @@ function nouvelleOffre() {
         const reste = Math.ceil((DUREE_MAX_S - s) / 60);
         consigne.textContent = 'Encore ' + reste + ' min, puis l’enregistrement s’arrête et part.';
       }
-    }, 500);
+    };
+    tour();
+    minuteur = setInterval(tour, 500);
     if (navigator.wakeLock) navigator.wakeLock.request('screen').then((v) => { veille = v; }).catch(() => {});
     montrer('enregistrement');
   };
-  micros.forEach((m) => m.addEventListener('click', demarrer));
+  micros.forEach((m) => m.addEventListener('click', () => demarrer()));
 
   // Un seul « Terminer » compte (deux touchers, ou un toucher pendant l'arrêt automatique des 30 minutes).
   el('[data-terminer]').addEventListener('click', () => {
@@ -665,17 +760,21 @@ function nouvelleOffre() {
   });
 
   // Trop court : on recommence tout de suite, le micro se rouvre.
-  el('[data-recommencer]').addEventListener('click', demarrer);
+  el('[data-recommencer]').addEventListener('click', () => demarrer());
 
+  // Une suite abandonnée n'efface qu'elle : le début reste à l'abri et se propose de nouveau.
+  const abandonnerCopie = (rec) => (rec.suite ? abri.retablir(rec.suite.dictee).then(() => proposer(rec.suite.dictee)) : abri.supprimer(rec.cle));
   el('[data-abandonner]').addEventListener('click', () => {
-    if (!window.confirm('Abandonner l’enregistrement ? Il ne sera pas gardé.')) return;
+    const rec = enregistreur;
+    if (!window.confirm(rec && rec.suite
+      ? 'Abandonner la suite ? Le début de la dictée reste sur ce téléphone.'
+      : 'Abandonner l’enregistrement ? Il ne sera pas gardé.')) return;
     occupe = false;
     duMicro = false;
-    const rec = enregistreur;
     if (rec && !rec.arret) {
       rec.arret = 'abandon';
       // Supprimée après la dernière tranche, qui arrive avec l'arrêt.
-      if (rec.state !== 'inactive') rec.stop(); else rec.copie.then((ok) => ok && abri.supprimer(rec.cle));
+      if (rec.state !== 'inactive') rec.stop(); else rec.copie.then((ok) => ok && abandonnerCopie(rec));
     }
     libererMicro();
     montrer('choix');
@@ -683,20 +782,41 @@ function nouvelleOffre() {
 
   // Reprise (R1 B, Xavier, 2026-11-18) : à l'ouverture, une dictée restée sur ce téléphone sans être arrivée au
   // serveur est proposée dans la fenêtre du bas. Une dictée arrivée est oubliée dès que son offre est prête.
+  // Recette AB-1 (Xavier, 2026-11-24) : proposée dès la réouverture, et continuable à la suite.
   const ilYA = (jours) => Date.now() - jours * 86400000;
-  const dureeMs = (d) => (d.fin || d.debut) - d.debut;
+  const VIE_MS = 20000;
+  const PARTIES_MAX = 5;
   const decrire = (d) => {
     const quand = new Date(d.debut);
     const p = (n) => String(n).padStart(2, '0');
     const s = Math.round(dureeMs(d) / 1000);
-    const duree = s < 60 ? s + ' s' : Math.round(s / 60) + ' min';
-    return 'La dictée du ' + quand.toLocaleDateString('fr-CH', { day: 'numeric', month: 'long' }) + ' à ' + quand.getHours() + ' h ' + p(quand.getMinutes())
-      + ' (' + duree + ') est restée sur ce téléphone : elle n’est pas arrivée au serveur.';
+    const duree = s < 60 ? s + ' s' : Math.round(s / 60) + ' min';
+    const dictee = 'La dictée du ' + quand.toLocaleDateString('fr-CH', { day: 'numeric', month: 'long' }) + ' à ' + quand.getHours() + ' h ' + p(quand.getMinutes())
+      + ' (' + duree + ')';
+    return d.etat === 'enregistrement'
+      ? dictee + ' s’est arrêtée avant « Terminer » : elle est gardée sur ce téléphone.'
+      : dictee + ' est restée sur ce téléphone : elle n’est pas arrivée au serveur.';
+  };
+  // La suite garde le format du début, et la dictée entière tient dans les 30 minutes.
+  const peutContinuer = (d) => !!possible && !epuise && (d.parties || [0]).length < PARTIES_MAX
+    && dureeMs(d) < (DUREE_MAX_S - 10) * 1000 && (!d.type || MediaRecorder.isTypeSupported(d.type));
+  const proposer = (d) => {
+    if (etatCourant !== 'choix') return;
+    repriseCourante = d;
+    const suite = peutContinuer(d);
+    const envoi = el('[data-reprise-envoyer]');
+    el('[data-reprise-continuer]').hidden = !suite;
+    // Compte d'essai au bout de ses offres : la dictée ne peut pas partir, elle peut être gardée.
+    envoi.hidden = !!epuise;
+    envoi.classList.toggle('primary', !suite);
+    el('[data-reprise-texte]').textContent = decrire(d) + (epuise ? ' ' + epuise + ' Gardez-la dans un fichier.'
+      : suite ? ' Continuez-la, ou envoyez-la telle quelle pour en faire une offre.' : ' Envoyez-la maintenant pour en faire une offre.');
+    montrer('reprise');
   };
   const reprendre = async () => {
     // Sans la fenêtre du bas (page /import), rien n'est proposé : la page garde Parler et Importer.
     if (!compte || !fenetre) return;
-    const dictees = await abri.lister(compte);
+    const [dictees, tenue] = await Promise.all([abri.lister(compte), abri.tenues()]);
     abri.menage();
     dictees.forEach((d) => {
       if (d.etat !== 'envoye') return;
@@ -707,18 +827,21 @@ function nouvelleOffre() {
         .then((e) => { if (e && e.offre) abri.supprimer(d.id); })
         .catch(() => {});
     });
-    // Une dictée qu'un autre onglet tient encore (signe de vie depuis moins de 20 s) n'est pas proposée ici.
-    const libres = dictees.filter((d) => d.etat !== 'envoye' && Date.now() - (d.vu || d.debut) > 20000);
+    // Une dictée qu'un onglet vivant tient (il l'enregistre ou l'envoie) n'est pas proposée ici : son verrou le dit.
+    // Sans verrous dans ce navigateur, le signe de vie en tient lieu : moins de 20 s, elle est peut-être tenue, et la
+    // page refait le tour à l'échéance au lieu d'attendre le chargement suivant.
+    const enMain = dictees.filter((d) => d.etat !== 'envoye');
+    const recente = (d) => Date.now() - (d.vu || d.debut) <= VIE_MS;
+    const libres = enMain.filter((d) => (tenue ? !tenue(d.id) : !recente(d)));
+    if (!tenue) {
+      const attentes = enMain.filter(recente).map((d) => VIE_MS - (Date.now() - (d.vu || d.debut)));
+      if (attentes.length) setTimeout(reprendre, Math.max(0, Math.min(...attentes)) + 500);
+    }
     // Coupée avant 5 secondes : le serveur la refuserait. Une dictée terminée a déjà passé cette règle.
     const tropCourte = (d) => d.etat === 'enregistrement' && dureeMs(d) < DUREE_MIN_MS;
     libres.filter(tropCourte).forEach((d) => abri.supprimer(d.id));
     const d = libres.filter((x) => !tropCourte(x) && !remiseAPlusTard(x)).sort((a, b) => a.debut - b.debut)[0];
-    if (!d || etatCourant !== 'choix') return;
-    repriseCourante = d;
-    // Compte d'essai au bout de ses offres : la dictée ne peut pas partir, elle peut être gardée.
-    el('[data-reprise-envoyer]').hidden = !!epuise;
-    el('[data-reprise-texte]').textContent = decrire(d) + (epuise ? ' ' + epuise + ' Gardez-la dans un fichier.' : ' Envoyez-la maintenant pour en faire une offre.');
-    montrer('reprise');
+    if (d) proposer(d);
   };
   const relectureImpossible = () => {
     el('[data-reprise-texte]').textContent += ' Elle n’a pas pu être relue sur ce téléphone.';
@@ -728,9 +851,11 @@ function nouvelleOffre() {
     const d = repriseCourante;
     if (!d || relecture || bloquer()) return;
     relecture = true;
+    tenir(d.id);
     try {
-      fichier = await abri.fichier(d);
+      fichiers = await abri.fichiers(d);
     } catch (e) {
+      lacher();
       relectureImpossible();
       return;
     } finally {
@@ -739,29 +864,27 @@ function nouvelleOffre() {
     duMicro = true;
     copieAbri = true;
     cleCourante = d.id;
-    lienGarder(fichier);
+    lienGarder(fichiers);
     envoyer();
+  });
+  // Le micro se demande tout de suite, dans le geste (Safari) ; le début se relit pendant ce temps (demarrer l'attend).
+  el('[data-reprise-continuer]').addEventListener('click', () => {
+    const d = repriseCourante;
+    if (!d || relecture || bloquer()) return;
+    relecture = true;
+    demarrer({ dictee: d, lecture: abri.fichiers(d), fichiers: [] }).finally(() => { relecture = false; });
   });
   el('[data-reprise-garder]').addEventListener('click', async (e) => {
     e.preventDefault();
     if (!repriseCourante) return;
-    let f;
     try {
-      f = await abri.fichier(repriseCourante);
+      telecharger(await abri.fichiers(repriseCourante));
     } catch (erreur) {
       relectureImpossible();
-      return;
     }
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(f);
-    a.download = f.name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
   });
   el('[data-reprise-supprimer]').addEventListener('click', async () => {
-    if (!repriseCourante || !window.confirm('Supprimer cette dictée ? Elle ne pourra plus être envoyée.')) return;
+    if (!repriseCourante || !window.confirm('Supprimer cette dictée ? Elle ne pourra plus être envoyée.')) return;
     await abri.supprimer(repriseCourante.id);
     repriseCourante = null;
     montrer('choix');

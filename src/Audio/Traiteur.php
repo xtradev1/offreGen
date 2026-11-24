@@ -8,6 +8,7 @@ use OffreGen\Compte\Activite;
 use OffreGen\Donnees\Base;
 use OffreGen\Donnees\Dates;
 use OffreGen\Donnees\DepotArtisans;
+use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
 use OffreGen\Donnees\FileTraitement;
@@ -119,15 +120,17 @@ final class Traiteur
                     if ($e['fichier'] === null) {
                         throw new \RuntimeException("Plus d'audio pour cet enregistrement.");
                     }
-                    $chemin = $this->stockage->chemin($e['fichier']);
-                    $this->verifierDuree($chemin);
+                    // Une dictée continuée (recette AB-1, 2026-11-24) : une transcription par partie, références
+                    // séparées d'un espace. Le site web ne peut pas lancer ffmpeg pour recoller les fichiers.
+                    $chemins = array_map($this->stockage->chemin(...), [$e['fichier'], ...DepotEnregistrements::suites($e['fichiers_suite'])]);
+                    $this->verifierDuree($chemins);
                     $vocabulaire = VocabulaireDictee::depuis((new DepotProduits($this->base, new Portee($e['artisan_id'])))->designationsParUsage());
-                    $reference = $this->transcripteur->demarrer($chemin, $vocabulaire);
-                    $this->file->transcriptionDemarree($uuid, $jeton, $reference, $this->horloge->now());
+                    $references = array_map(fn (string $chemin): string => $this->transcripteur->demarrer($chemin, $vocabulaire), $chemins);
+                    $this->file->transcriptionDemarree($uuid, $jeton, implode(' ', $references), $this->horloge->now());
                     break;
                 case Statut::TRANSCRIPTION:
                     try {
-                        $texte = $this->transcripteur->resultat((string) $e['transcription_ref']);
+                        $texte = $this->textes(explode(' ', (string) $e['transcription_ref']));
                     } catch (TranscriptionEchouee $perdu) {
                         throw $perdu;
                     } catch (\Throwable $passagere) {
@@ -156,18 +159,42 @@ final class Traiteur
     }
 
     /**
-     * Revue du 2026-11-18 (H1) : le site web d'Infomaniak ne peut pas lancer ffprobe, la durée n'est donc pas lue à
-     * l'import. Ici, en ligne de commande, elle l'est, avant tout appel payant.
+     * Le texte de toutes les parties, dans l'ordre, ou null tant qu'une seule n'est pas prête.
+     *
+     * @param list<string> $references
      */
-    private function verifierDuree(string $chemin): void
+    private function textes(array $references): ?string
+    {
+        $textes = [];
+        foreach ($references as $reference) {
+            $texte = $this->transcripteur->resultat($reference);
+            if ($texte === null) {
+                return null;
+            }
+            $textes[] = $texte;
+        }
+        return implode("\n", array_filter($textes, static fn (string $t): bool => $t !== ''));
+    }
+
+    /**
+     * Revue du 2026-11-18 (H1) : le site web d'Infomaniak ne peut pas lancer ffprobe, la durée n'est donc pas lue à
+     * l'import. Ici, en ligne de commande, elle l'est, avant tout appel payant. Une dictée en parties se mesure entière.
+     *
+     * @param list<string> $chemins
+     */
+    private function verifierDuree(array $chemins): void
     {
         if ($this->duree === null) {
             return;
         }
-        $secondes = $this->duree->mesurer($chemin);
-        if ($secondes === null) {
-            $this->journal->warning('offreGen, traitement : durée illisible, transcription sans contrôle de durée.');
-            return;
+        $secondes = 0.0;
+        foreach ($chemins as $chemin) {
+            $partie = $this->duree->mesurer($chemin);
+            if ($partie === null) {
+                $this->journal->warning('offreGen, traitement : durée illisible, transcription sans contrôle de durée.');
+                return;
+            }
+            $secondes += $partie;
         }
         if ($secondes > $this->dureeMaxSecondes + DureeAudio::TOLERANCE_SECONDES) {
             throw new AudioTropLong(sprintf('Enregistrement trop long : %d min, %d min au maximum.', (int) ceil($secondes / 60), intdiv($this->dureeMaxSecondes, 60)));

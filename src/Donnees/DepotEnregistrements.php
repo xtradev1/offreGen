@@ -17,16 +17,32 @@ final class DepotEnregistrements
     {
     }
 
-    /** @param string|null $cleClient la clé que le téléphone donne à sa dictée (sous-chantier 27) */
-    public function creer(string $uuid, string $nomOrigine, string $mime, int $taille, string $fichier, \DateTimeImmutable $recuLe, ?string $cleClient = null): int
+    /**
+     * @param string|null $cleClient la clé que le téléphone donne à sa dictée (sous-chantier 27)
+     * @param list<string> $suites les fichiers de la suite d'une dictée continuée, dans l'ordre
+     */
+    public function creer(string $uuid, string $nomOrigine, string $mime, int $taille, string $fichier, \DateTimeImmutable $recuLe, ?string $cleClient = null, array $suites = []): int
     {
         $this->base->ecrire(
-            'INSERT INTO enregistrement (artisan_id, uuid, nom_origine, type_mime, taille, fichier, statut, recu_le, cle_client)
-             VALUES (:a, :u, :n, :m, :t, :f, :s, :r, :c)',
+            'INSERT INTO enregistrement (artisan_id, uuid, nom_origine, type_mime, taille, fichier, fichiers_suite, statut, recu_le, cle_client)
+             VALUES (:a, :u, :n, :m, :t, :f, :fs, :s, :r, :c)',
             ['a' => $this->portee->artisanId, 'u' => $uuid, 'n' => mb_substr($nomOrigine, 0, 255), 'm' => $mime,
-             't' => $taille, 'f' => $fichier, 's' => Statut::RECU, 'r' => Dates::versBase($recuLe), 'c' => $cleClient],
+             't' => $taille, 'f' => $fichier, 'fs' => $suites === [] ? null : json_encode($suites, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES),
+             's' => Statut::RECU, 'r' => Dates::versBase($recuLe), 'c' => $cleClient],
         );
         return $this->base->dernierId();
+    }
+
+    /**
+     * Les suites d'une dictée continuée, lues de la colonne JSON. Une valeur abîmée ne donne aucune suite : le chemin
+     * de chaque partie est de toute façon revérifié par StockageAudio::chemin avant tout accès au disque.
+     *
+     * @return list<string>
+     */
+    public static function suites(?string $json): array
+    {
+        $liste = $json === null ? null : json_decode($json, true);
+        return is_array($liste) && array_is_list($liste) ? array_values(array_filter($liste, 'is_string')) : [];
     }
 
     /** L'enregistrement déjà reçu sous cette clé, pour ce compte seulement. */
@@ -108,14 +124,17 @@ final class DepotEnregistrements
         );
     }
 
-    /** @return list<string> chemins relatifs des fichiers audio encore présents */
+    /** @return list<string> chemins relatifs des fichiers audio encore présents, suites comprises */
     public function fichiers(): array
     {
-        /** @var list<string> */
-        return array_column($this->base->lire(
-            'SELECT fichier FROM enregistrement WHERE artisan_id = :a AND fichier IS NOT NULL',
+        $fichiers = [];
+        foreach ($this->base->lire(
+            'SELECT fichier, fichiers_suite FROM enregistrement WHERE artisan_id = :a AND fichier IS NOT NULL',
             ['a' => $this->portee->artisanId],
-        ), 'fichier');
+        ) as $e) {
+            array_push($fichiers, (string) $e['fichier'], ...self::suites($e['fichiers_suite']));
+        }
+        return $fichiers;
     }
 
     /** Efface tous les enregistrements de l'artisan (réinitialisation d'un compte démo). */

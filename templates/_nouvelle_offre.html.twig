@@ -52,6 +52,10 @@
   <div class="suivi" data-etat="reprise" hidden>
     <h2 class="suivi-titre">Une dictée n'est pas partie</h2>
     <p data-reprise-texte></p>
+    {# Recette AB-1 (Xavier, 2026-11-24) : une dictée coupée se continue à la suite. app.js cache ce bouton quand la
+       dictée ne peut plus grandir (30 minutes atteintes, 5 parties, micro absent, essai épuisé) et rend alors
+       « Envoyer » principal. #}
+    <button class="btn primary large" type="button" data-reprise-continuer hidden>Continuer la dictée</button>
     <button class="btn primary large" type="button" data-reprise-envoyer>Envoyer et créer l'offre</button>
     <p class="centre"><a class="lien" href="#" data-reprise-garder>Garder dans un fichier</a></p>
     <p class="centre"><button class="lien" type="button" data-reprise-supprimer>Supprimer la dictée</button></p>

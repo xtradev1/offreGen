@@ -70,6 +70,24 @@ final class PurgeTest extends TestCase
         self::assertSame(['supprimes' => 0, 'erreurs' => 0], Monde::conteneur($horloge, $this->env())->purge()->purger());
     }
 
+    /** Une dictée continuée (recette AB-1, 2026-11-24) : ses suites partent avec le début. */
+    public function testLesSuitesDUneDicteePartentAvecLeDebut(): void
+    {
+        $uuid = $this->jeu->uuid['a'];
+        BaseDeTest::pdo()->prepare("UPDATE enregistrement SET statut = 'pret', supprimer_apres = '2026-12-07 10:00:00', fichiers_suite = ? WHERE uuid = ?")
+            ->execute([json_encode(["{$this->jeu->a}/$uuid-2.webm"]), $uuid]);
+        $debut = $this->audio($uuid);
+        $suite = dirname($debut) . "/$uuid-2.webm";
+        file_put_contents($suite, 'audio');
+
+        $resultat = Monde::conteneur(new MockClock('2026-12-07 10:00:01', 'UTC'), $this->env())->purge()->purger();
+
+        self::assertSame(['supprimes' => 1, 'erreurs' => 0], $resultat);
+        self::assertFileDoesNotExist($debut);
+        self::assertFileDoesNotExist($suite);
+        self::assertSame(1, BaseDeTest::compter('enregistrement', "uuid = '$uuid' AND fichier IS NULL AND fichiers_suite IS NULL"));
+    }
+
     /** Décision Q1 de Xavier (2026-11-18) : la purge est écrite, mais rien n'est effacé tant qu'il ne l'a pas allumée. */
     public function testPurgeEteinteParDefautRienNEstEfface(): void
     {

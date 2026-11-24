@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Audio\AudioRefuse;
+use OffreGen\Audio\AudioValide;
 use OffreGen\Audio\DureeAudio;
 use OffreGen\Audio\Uuid;
 use OffreGen\Audio\ValidateurAudio;
@@ -22,6 +23,9 @@ final class ImportControleur
     public const DEMO_TERMINEE = "Votre démo est terminée. Pour dicter ou importer de nouveau, passez à l'essai.";
 
     /** Le navigateur s'arrête pile à la limite ; le fichier qu'il produit peut la dépasser d'une fraction de seconde. */
+
+    /** Suites d'une dictée continuée, en plus du début : quatre coupures rattrapées, c'est déjà beaucoup. */
+    public const SUITES_MAX = 4;
 
     public function __construct(private readonly Conteneur $c)
     {
@@ -64,14 +68,30 @@ final class ImportControleur
         if (!$fichier instanceof UploadedFile) {
             return $this->page('Choisissez un fichier audio.', 422);
         }
+        // Une dictée continuée « à la suite » (recette AB-1, Xavier, 2026-11-24) : la suite arrive en fichiers à part,
+        // dans le même envoi. Toutes les parties sont contrôlées avant d'en ranger une seule.
+        $suites = $requete->files->has('suite') ? $requete->files->get('suite') : [];
+        if (!is_array($suites) || !array_is_list($suites) || array_filter($suites, static fn (mixed $f): bool => !$f instanceof UploadedFile) !== []) {
+            return $this->page("L'envoi a été interrompu. Réessayez.", 422);
+        }
+        if (count($suites) > self::SUITES_MAX) {
+            return $this->page('Une dictée compte ' . (self::SUITES_MAX + 1) . ' parties au plus.', 422);
+        }
+        /** @var list<UploadedFile> $parties */
+        $parties = [$fichier, ...$suites];
         try {
-            $audio = $this->c->validateurAudio()->valider($fichier);
+            $audios = array_map(fn (UploadedFile $f): AudioValide => $this->c->validateurAudio()->valider($f), $parties);
         } catch (AudioRefuse $e) {
             return $this->page($e->getMessage(), 422);
         }
         // Règle de Xavier (2026-11-12) : moins de 5 secondes, rien n'est gardé. Durée illisible : accepté.
+        // Une dictée en parties se compte entière.
         $minimum = (int) $this->c->parametre('DUREE_MIN_SECONDES', '5');
-        $duree = $this->c->dureeAudio()->secondes($fichier->getPathname());
+        $duree = 0.0;
+        foreach ($parties as $partie) {
+            $s = $this->c->dureeAudio()->secondes($partie->getPathname());
+            $duree = $s === null || $duree === null ? null : $duree + $s;
+        }
         if ($duree === null) {
             $this->c->journal()->warning('offreGen, import : durée illisible par ffprobe, minimum non vérifié.');
         } elseif ($duree < $minimum) {
@@ -82,12 +102,18 @@ final class ImportControleur
 
         $uuid = Uuid::v4();
         $stockage = $this->c->stockageAudio();
-        $relatif = $stockage->ranger($portee->artisanId, $uuid, $audio);
+        $ranges = [];
         try {
-            $enregistrements->creer($uuid, $fichier->getClientOriginalName(), $audio->mime, $audio->taille, $relatif, $this->c->horloge()->now(), $cle);
+            foreach ($audios as $i => $audio) {
+                $ranges[] = $stockage->ranger($portee->artisanId, $uuid, $audio, $i + 1);
+            }
+            $taille = array_sum(array_map(static fn (AudioValide $a): int => $a->taille, $audios));
+            $enregistrements->creer($uuid, $fichier->getClientOriginalName(), $audios[0]->mime, $taille, $ranges[0], $this->c->horloge()->now(), $cle, array_slice($ranges, 1));
         } catch (\Throwable $e) {
-            // Sans ligne en base, le fichier ne serait jamais traité ni purgé.
-            $stockage->supprimer($relatif);
+            // Sans ligne en base, les fichiers ne seraient jamais traités ni purgés.
+            foreach ($ranges as $relatif) {
+                $stockage->supprimer($relatif);
+            }
             throw $e;
         }
 

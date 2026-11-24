@@ -9,7 +9,7 @@ namespace OffreGen\Donnees;
  * Seule lecture hors portée sur les enregistrements : le traitement agit pour tous les artisans.
  * Chaque écriture exige le jeton du verrou : un traiteur qui a perdu son verrou n'écrit plus rien.
  *
- * @phpstan-type ATraiter array{id: int, artisan_id: int, uuid: string, fichier: string|null, statut: string, transcription_ref: string|null, transcription_depuis: string|null, transcription: string|null, tentatives: int}
+ * @phpstan-type ATraiter array{id: int, artisan_id: int, uuid: string, fichier: string|null, fichiers_suite: string|null, statut: string, transcription_ref: string|null, transcription_depuis: string|null, transcription: string|null, tentatives: int}
  */
 final class FileTraitement
 {
@@ -80,7 +80,7 @@ final class FileTraitement
     {
         /** @var ATraiter|null */
         return $this->base->un(
-            'SELECT id, artisan_id, uuid, fichier, statut, transcription_ref, transcription_depuis, transcription, tentatives FROM enregistrement WHERE uuid = :u',
+            'SELECT id, artisan_id, uuid, fichier, fichiers_suite, statut, transcription_ref, transcription_depuis, transcription, tentatives FROM enregistrement WHERE uuid = :u',
             ['u' => $uuid],
         );
     }
@@ -155,19 +155,19 @@ final class FileTraitement
         return is_string($v) ? Dates::depuisBase($v) : null;
     }
 
-    /** @return list<array{uuid: string, fichier: string}> audios dont la date de suppression est passée */
+    /** @return list<array{uuid: string, fichier: string, fichiers_suite: string|null}> audios dont la date de suppression est passée */
     public function aPurger(\DateTimeImmutable $maintenant): array
     {
-        /** @var list<array{uuid: string, fichier: string}> */
+        /** @var list<array{uuid: string, fichier: string, fichiers_suite: string|null}> */
         return $this->base->lire(
-            'SELECT uuid, fichier FROM enregistrement WHERE fichier IS NOT NULL AND supprimer_apres IS NOT NULL AND supprimer_apres < :m',
+            'SELECT uuid, fichier, fichiers_suite FROM enregistrement WHERE fichier IS NOT NULL AND supprimer_apres IS NOT NULL AND supprimer_apres < :m',
             ['m' => Dates::versBase($maintenant)],
         );
     }
 
     public function audioSupprime(string $uuid): void
     {
-        $this->base->ecrire('UPDATE enregistrement SET fichier = NULL WHERE uuid = :u', ['u' => $uuid]);
+        $this->base->ecrire('UPDATE enregistrement SET fichier = NULL, fichiers_suite = NULL WHERE uuid = :u', ['u' => $uuid]);
     }
 
     private function exiger(int $lignesTouchees): void
