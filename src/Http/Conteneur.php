@@ -17,6 +17,7 @@ use OffreGen\Compte\TraitementLogo;
 use OffreGen\Audio\PreparationAudio;
 use OffreGen\Audio\Purge;
 use OffreGen\Audio\StockageAudio;
+use OffreGen\Audio\Rejeu;
 use OffreGen\Audio\Traiteur;
 use OffreGen\Audio\Transcripteur;
 use OffreGen\Audio\TranscripteurApi;
@@ -772,6 +773,13 @@ final class Conteneur
             $this->nomApplication(),
             $this->chronometre(),
         ));
+    }
+
+    /** Rejouer une dictée depuis son rapport (sous-chantier 31) : mêmes transcripteur, extracteur et chronomètre. */
+    public function rejeu(): Rejeu
+    {
+        return $this->une(Rejeu::class, fn (): Rejeu => new Rejeu($this->base(), $this->etapes(), $this->transcripteur(), $this->extracteur(),
+            $this->artisans(), $this->stockageAudio(), $this->chronometre(), $this->journal()));
     }
 
     public function purge(): Purge

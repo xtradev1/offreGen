@@ -81,6 +81,8 @@
      écran, l'en-tête ne s'arrête plus au milieu. Le contenu garde une largeur lisible. */
   body.admin:has(.tabs) .app { max-width: none; }
   .admin .screen > * { max-width: 920px; }
+  /* Les tableaux du chronomètre ont plus de quinze colonnes : toute la largeur de l'écran. */
+  .admin .screen > .dictees-defile { max-width: 1400px; }
   .admin-tete.avec-action { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .admin-tete.avec-action .btn { flex: none; }
   .admin .screen > .equipe.avec-fiche { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; max-width: 1300px; }
@@ -128,3 +130,54 @@
 .tabs a { position: relative; }
 .compte-appels { position: absolute; top: 4px; left: calc(50% + 6px); min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--marque); color: var(--on-marque); font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; }
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .compte-appels { position: static; margin-left: auto; } }
+
+/* Chronomètre des dictées (sous-chantier 31). Palette de la frise validée (validate_palette.js, clair et sombre). */
+.admin { --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --attente: #B9B3A6; --critique: #d03b3b; --grille: #ECE8DF; }
+@media (prefers-color-scheme: dark) { .admin { --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --attente: #5A5F66; --grille: #2A2D32; } }
+.dictees-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin: 0 0 14px; }
+.dictees-outils label { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--muted); }
+.dictees-outils input, .dictees-outils select { font: inherit; font-size: 15px; min-height: 48px; border: 1px solid var(--bord); border-radius: 10px; padding: 6px 10px; background: var(--surface); color: var(--ink); }
+.dictees-titre { font-family: var(--titre); font-size: 17px; margin: 22px 0 8px; }
+.dictees-defile { overflow-x: auto; margin: 0 0 10px; }
+.dictees-stats, .dictees-liste, .dictee-etapes { font-size: 13px; }
+.dictees-stats th, .dictees-stats td, .dictees-liste th, .dictees-liste td, .dictee-etapes th, .dictee-etapes td { padding: 7px 8px; white-space: nowrap; }
+.dictees-liste td.lent { color: var(--bad); font-weight: 700; }
+.dictees-liste tr.accroc > :first-child { box-shadow: inset 4px 0 0 var(--critique); }
+.sous-info { display: block; font-size: 11px; color: var(--muted); white-space: normal; }
+.dictees-liste td .sous-info { white-space: nowrap; }
+.dictees-liste thead th, .dictee-etapes thead th { white-space: normal; }
+.dictees-liste th, .dictees-liste td { padding: 7px 6px; }
+.dictees-pages { display: flex; gap: 8px; justify-content: center; margin: 12px 0; }
+.dictees-cartes { list-style: none; padding: 0; margin: 0 0 10px; }
+.dictees-cartes a { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 0 0 8px; color: inherit; text-decoration: none; font-size: 14px; }
+.dictees-cartes .dc-haut { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+.dictees-cartes .dc-bas { display: block; color: var(--muted); font-size: 13px; }
+.dictees-cartes .dc-lent { display: block; color: var(--bad); font-weight: 700; }
+.barre-parts { display: block; width: 100%; height: 10px; margin: 8px 0 4px; border-radius: 5px; background: var(--chip); }
+.barre-parts .c-envoi { fill: var(--s1); } .barre-parts .c-attente { fill: var(--attente); } .barre-parts .c-transcription { fill: var(--s2); }
+.barre-parts .c-extraction, .barre-parts .c-pieces, .barre-parts .c-options { fill: var(--s3); } .barre-parts .c-ecriture { fill: var(--s4); }
+.dictee-fiche { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px; margin: 0 0 14px; font-size: 14px; }
+.dictee-fiche dt { font-size: 12px; color: var(--muted); font-weight: 600; }
+.dictee-fiche dd { margin: 0; }
+.frise-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; list-style: none; padding: 0; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.frise-legende i { display: inline-block; width: 14px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.frise-legende .f1 { background: var(--s1); } .frise-legende .f2 { background: var(--s2); } .frise-legende .f3 { background: var(--s3); }
+.frise-legende .f4 { background: var(--s4); } .frise-legende .fx { background: var(--critique); }
+.frise-legende .fa { background: repeating-linear-gradient(45deg, var(--attente) 0 3px, transparent 3px 6px); border: 1px solid var(--attente); }
+.frise-tete { font-size: 14px; margin: 14px 0 4px; }
+.frise-tete small { font-weight: 400; color: var(--muted); }
+.frise { list-style: none; padding: 0; margin: 0 0 6px; }
+.frise li, .frise-coupure { display: grid; grid-template-columns: 200px 1fr 96px; align-items: center; gap: 8px; min-height: 28px; font-size: 13px; }
+.frise .nom, .frise-coupure .nom { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.frise small, .frise-coupure small { color: var(--muted); }
+.frise .piste { width: 100%; height: 16px; background: repeating-linear-gradient(90deg, var(--grille) 0 1px, transparent 1px 10%); }
+.frise .duree, .frise-coupure .duree { text-align: right; font-variant-numeric: tabular-nums; }
+.frise .croix { color: var(--critique); font-weight: 700; }
+.frise .f1 { fill: var(--s1); } .frise .f2 { fill: var(--s2); } .frise .f3 { fill: var(--s3); } .frise .f4 { fill: var(--s4); }
+.frise .fa { fill: var(--attente); } .frise .fx { fill: var(--critique); }
+.frise-coupure { margin: 10px 0; }
+.frise-coupure .zz { border-top: 2px dashed var(--attente); border-bottom: 2px dashed var(--attente); text-align: center; font-size: 12px; color: var(--muted); padding: 2px 0; }
+@media (max-width: 700px) {
+  .frise li, .frise-coupure { grid-template-columns: 1fr auto; row-gap: 2px; padding: 3px 0; }
+  .frise .piste, .frise-coupure .zz { grid-column: 1 / -1; grid-row: 2; }
+}

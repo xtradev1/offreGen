@@ -6,5 +6,6 @@
 {% block contenu %}
   {% include 'admin/_a_rappeler.html.twig' %}
   {% if appels is empty %}<p class="muted">Aucune demande d'appel en attente.</p>{% endif %}
+  <p><a class="btn" href="/admin/dictees">Dictées : durée de chaque étape</a></p>
   <p class="muted">Le reste du tableau de bord arrive avec la suite du chantier.</p>
 {% endblock %}

@@ -9,6 +9,12 @@
     <a class="plus-ligne" href="/admin/aide-vente">
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>
       <span><b>{{ texte('k.titre') }}</b><small>{{ texte('k.sous') }}</small></span></a>
+    {# Chronomètre des dictées (sous-chantier 31, D7) : administrateur seulement, la route répond 404 aux autres rôles. #}
+    {% if role.value == 'administrateur' %}
+    <a class="plus-ligne" href="/admin/dictees">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/></svg>
+      <span><b>Dictées</b><small>Durée de chaque étape, statistiques, rapport et CSV</small></span></a>
+    {% endif %}
   </nav>
   <form class="carte-admin" method="post" action="/admin/plus/nom">
     <input type="hidden" name="_csrf" value="{{ csrf() }}">

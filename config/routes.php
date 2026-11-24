@@ -6,6 +6,7 @@ use OffreGen\Compte\DemandesEssai;
 use OffreGen\Compte\Marque;
 use OffreGen\Donnees\EtatBase;
 use OffreGen\Http\Conteneur;
+use OffreGen\Http\Controleur\DicteesControleur;
 use OffreGen\Http\Controleur\AccueilControleur;
 use OffreGen\Http\Controleur\AdminControleur;
 use OffreGen\Http\Controleur\AppelControleur;
@@ -226,6 +227,11 @@ return static function (Conteneur $c): array {
     // Administration (docs/plans/2026-11-19_admin-comptes/PLAN-lot-A.md) : 404 pour qui n'a pas le rôle.
     $routes[] = new Route('admin', '/admin', ['GET'], static fn (Request $r): Response => $admin()->accueil($r), Route::EQUIPE);
     $routes[] = new Route('admin_tableau', '/admin/tableau', ['GET'], static fn (): Response => $admin()->tableau(), Route::ADMIN);
+    // Chronomètre des dictées (sous-chantier 31, D7 : dans « Plus » et depuis le Tableau), administrateur seulement.
+    $routes[] = new Route('admin_dictees', '/admin/dictees', ['GET'], static fn (Request $r): Response => (new DicteesControleur($c))->liste($r), Route::ADMIN);
+    $routes[] = new Route('admin_dictees_csv', '/admin/dictees.csv', ['GET'], static fn (Request $r): Response => (new DicteesControleur($c))->csv($r), Route::ADMIN);
+    $routes[] = new Route('admin_dictee', '/admin/dictees/{id}', ['GET'], static fn (Request $r, array $p): Response => (new DicteesControleur($c))->rapport($p), Route::ADMIN);
+    $routes[] = new Route('admin_dictee_rejouer', '/admin/dictees/{id}/rejouer', ['POST'], static fn (Request $r, array $p): Response => (new DicteesControleur($c))->rejouer($r, $p), Route::ADMIN);
     $routes[] = new Route('admin_aider', '/admin/a-aider', ['GET'], static fn (): Response => $admin()->ossature('aider', 'À aider'), Route::MODERATION);
     $routes[] = new Route('admin_suivi', '/admin/suivi', ['GET'], static fn (): Response => $admin()->suivi(), Route::EQUIPE);
     $routes[] = new Route('admin_artisans', '/admin/artisans', ['GET'], static fn (Request $r): Response => $admin()->artisans($r), Route::EQUIPE);

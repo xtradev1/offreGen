@@ -32,7 +32,32 @@ final class Formats extends AbstractExtension
             new TwigFilter('iban', [Iban::class, 'lisible']),
             new TwigFilter('date_longue', [self::class, 'dateLongue']),
             new TwigFilter('phrase', [self::class, 'phrase'], ['is_safe' => ['html']]),
+            new TwigFilter('duree_ms', [self::class, 'dureeMs']),
+            new TwigFilter('heure_ms', [self::class, 'heureMs']),
         ];
+    }
+
+    /** Chronomètre des dictées : 40 donne « 40 ms », 3800 « 3,8 s », 788000 « 13 min 08 s » ; null : « - ». */
+    public static function dureeMs(?int $ms): string
+    {
+        if ($ms === null) {
+            return '-';
+        }
+        if ($ms < 1000) {
+            return $ms . self::NB . 'ms';
+        }
+        if ($ms < 60000) {
+            return str_replace('.', ',', (string) (round($ms / 100) / 10)) . self::NB . 's';
+        }
+        $s = (int) round($ms / 1000);
+        return intdiv($s, 60) . self::NB . 'min' . self::NB . sprintf('%02d', $s % 60) . self::NB . 's';
+    }
+
+    /** Heure de Zurich au dixième de seconde, d'une date UTC à la milliseconde : « 12:05:39,2 ». */
+    public static function heureMs(string $utc): string
+    {
+        $d = (new \DateTimeImmutable($utc, new \DateTimeZone('UTC')))->setTimezone(new \DateTimeZone('Europe/Zurich'));
+        return $d->format('H:i:s') . ',' . intdiv((int) $d->format('v'), 100);
     }
 
     /**

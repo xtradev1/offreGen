@@ -1,0 +1,89 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Rapport d'une dictée (sous-chantier 31, D1) : une frise par tentative, chacune à sa propre échelle ; une reprise
+   s'affiche en coupure ; le tableau donne chaque étape en clair. Les barres sont en SVG : la politique de sécurité du
+   site interdit les styles écrits dans la page. #}
+{% block retour %}<a class="back" href="/admin/dictees">Dictées</a>{% endblock %}
+{% block sous %}<p class="muted">Reçue le {{ d.recu_le|date_locale }}{% if d.offre_id %}, offre n°&nbsp;{{ d.offre_id }}{% endif %}, statut {{ d.statut }}.</p>{% endblock %}
+{% block contenu %}
+  <dl class="dictee-fiche">
+    <div><dt>Compte</dt><dd>n°&nbsp;{{ d.artisan_id }}</dd></div>
+    <div><dt>Audio</dt><dd>{{ d.duree_ms|duree_ms }}</dd></div>
+    <div><dt>Taille, format</dt><dd>{{ (d.taille / 1024)|round }}&nbsp;Ko, {{ d.type_mime }}</dd></div>
+    <div><dt>Navigateur</dt><dd>{{ ligne.navigateur }}</dd></div>
+    <div><dt>Origine</dt><dd>{{ d.origine ?? '-' }}</dd></div>
+    <div><dt>Total</dt><dd>{{ ligne.total|duree_ms }}, {{ ligne.essais }} tentative{{ ligne.essais > 1 ? 's' : '' }}</dd></div>
+  </dl>
+
+  <section class="dictee-rejeux" id="rejeux">
+    <h2 class="dictees-titre">Rejouer la dictée</h2>
+    <p class="muted petit">Refait la transcription et les appels à l'IA sur l'audio gardé, avec le catalogue actuel du compte. L'offre n'est pas touchée. Environ 0,5 centime.</p>
+    {% if audio %}
+      <form method="post" action="/admin/dictees/{{ d.id }}/rejouer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="btn" type="submit">Rejouer</button></form>
+    {% else %}
+      <p class="muted">Audio supprimé : rejeu impossible.</p>
+    {% endif %}
+    {% if rejeux is not empty %}
+      <div class="dictees-defile">
+        <table class="table-admin dictees-rejeux">
+          <thead><tr><th>Dictée</th><th>Statut</th><th class="n">Lignes</th>{% for colonne, libelle in colonnes %}<th class="n">{{ libelle }}</th>{% endfor %}<th class="n">Total</th></tr></thead>
+          <tbody>
+            <tr><th>Original</th><td>{{ d.statut }}</td><td class="n">{{ original.lignes }}</td>{% for colonne, libelle in colonnes %}<td class="n">{{ ligne.colonnes[colonne]|duree_ms }}</td>{% endfor %}<td class="n">{{ ligne.total|duree_ms }}</td></tr>
+            {% for rj in rejeux %}
+              <tr><th>Rejeu du {{ rj.demande_le|date_locale }}</th><td>{{ rj.statut }}{% if rj.erreur %}<small class="sous-info">{{ rj.erreur }}</small>{% endif %}</td><td class="n">{{ rj.lignes ?? '-' }}</td>{% for colonne, libelle in colonnes %}<td class="n">{{ rj.colonnes[colonne]|duree_ms }}</td>{% endfor %}<td class="n">{{ rj.total|duree_ms }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <details class="dictee-textes"><summary>Textes transcrits</summary>
+        <h3>Original</h3><p>{{ original.transcription ?? '-' }}</p>
+        {% for rj in rejeux %}<h3>Rejeu du {{ rj.demande_le|date_locale }}</h3><p>{{ rj.transcription ?? '-' }}</p>{% endfor %}
+      </details>
+    {% endif %}
+  </section>
+
+  {% if frise is empty %}
+    <p class="muted">Aucune étape chronométrée pour cette dictée (reçue avant le chronomètre).</p>
+  {% else %}
+    <ul class="frise-legende">
+      <li><i class="f1"></i>Téléphone et réception</li><li><i class="f2"></i>Transcription</li><li><i class="f3"></i>IA</li>
+      <li><i class="f4"></i>Écriture de l'offre</li><li><i class="fa"></i>Attente</li><li><i class="fx"></i>✕ Erreur ou interruption</li>
+    </ul>
+    {% for b in frise %}
+      {% if b.reprise %}
+        <div class="frise-coupure"><span class="nom">Reprise <small>{{ b.processus }}</small></span><span class="zz">verrou d'un traitement mort, frise coupée</span><span class="duree">{{ b.reprise.duree_ms|duree_ms }}</span></div>
+      {% endif %}
+      <h3 class="frise-tete">Tentative {{ b.tentative }}, {{ b.processus }} <small>{{ b.debut|heure_ms }} à {{ b.fin|heure_ms }}, {{ b.duree|duree_ms }}</small></h3>
+      <ol class="frise">
+        {% for e in b.lignes %}
+          <li>
+            <span class="nom">{% if e.classe == 'fx' %}<span class="croix">✕</span> {% endif %}{{ e.nom }} <small>{{ e.nom_processus }}</small></span>
+            <svg class="piste" viewBox="0 0 1000 16" preserveAspectRatio="none" role="img" aria-label="{{ e.nom }} : {{ e.duree_ms|duree_ms }}">
+              <title>{{ e.nom }} ({{ e.nom_processus }}) : {{ e.debut|heure_ms }}{% if e.fin %} à {{ e.fin|heure_ms }}, {{ e.duree_ms|duree_ms }}{% endif %}{% if e.modele %}, {{ e.modele }}{% endif %}{% if e.jetons_recus is not null %}, {{ e.jetons_envoyes }} jetons envoyés, {{ e.jetons_recus }} reçus{% endif %}, {{ e.issue }}</title>
+              <rect class="{{ e.classe }}" x="{{ e.x }}" y="2" width="{{ e.largeur }}" height="12" rx="3"/>
+            </svg>
+            <span class="duree">{{ e.issue == 'ok' ? e.duree_ms|duree_ms : e.issue }}</span>
+          </li>
+        {% endfor %}
+      </ol>
+    {% endfor %}
+
+    <h2 class="dictees-titre">Les étapes en tableau</h2>
+    <div class="dictees-defile">
+      <table class="table-admin dictee-etapes">
+        <thead><tr><th class="n">Tent.</th><th>Étape</th><th>Processus</th><th>Début</th><th>Fin</th><th class="n">Durée</th><th>Issue</th><th class="n">Jetons envoyés</th><th class="n">reçus</th><th class="n">Premier octet</th></tr></thead>
+        <tbody>
+          {% for e in etapes %}
+            <tr>
+              <td class="n">{{ e.tentative }}</td><th>{{ e.nom }}{% if e.modele %}<small class="sous-info">{{ e.modele }}</small>{% endif %}</th><td>{{ e.nom_processus }}</td>
+              <td>{{ e.debut|heure_ms }}</td><td>{{ e.fin ? e.fin|heure_ms : '-' }}</td><td class="n">{{ e.duree_ms|duree_ms }}</td>
+              <td>{{ e.issue }}{% if e.erreur %}<small class="sous-info">{{ e.erreur }}</small>{% endif %}</td>
+              <td class="n">{{ e.jetons_envoyes ?? '' }}</td><td class="n">{{ e.jetons_recus ?? '' }}</td>
+              <td class="n">{{ e.premier_octet_ms is null ? '' : e.premier_octet_ms|duree_ms }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endblock %}

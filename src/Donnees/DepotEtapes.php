@@ -133,6 +133,31 @@ final class DepotEtapes
         return is_string($v) ? self::depuisBase($v) : null;
     }
 
+    /**
+     * Un rejeu à exécuter (traitement de fond) : la dictée, son audio et son compte.
+     *
+     * @return array{id: int, enregistrement_id: int, artisan_id: int, fichier: string|null, fichiers_suite: string|null, statut: string}|null
+     */
+    public function rejeu(int $id): ?array
+    {
+        /** @var array{id: int, enregistrement_id: int, artisan_id: int, fichier: string|null, fichiers_suite: string|null, statut: string}|null */
+        return $this->base->un(
+            'SELECT r.id, r.enregistrement_id, e.artisan_id, e.fichier, e.fichiers_suite, r.statut
+             FROM dictee_rejeu r JOIN enregistrement e ON e.id = r.enregistrement_id WHERE r.id = :id',
+            ['id' => $id],
+        );
+    }
+
+    public function finirRejeu(int $id, string $statut, \DateTimeImmutable $finiLe, ?string $transcription, ?string $titre, ?int $lignes, ?string $erreur): void
+    {
+        $this->base->ecrire(
+            "UPDATE dictee_rejeu SET statut = :s, fini_le = :f, transcription = :t, titre = :ti, lignes = :l, erreur = :e
+             WHERE id = :id AND statut = 'en_cours'",
+            ['s' => $statut, 'f' => Dates::versBase($finiLe), 't' => $transcription, 'ti' => $titre === null ? null : mb_substr($titre, 0, 190),
+             'l' => $lignes === null ? null : min(65535, $lignes), 'e' => $erreur === null ? null : mb_substr($erreur, 0, 190), 'id' => $id],
+        );
+    }
+
     public static function versBase(\DateTimeImmutable $d): string
     {
         return $d->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s.v');
