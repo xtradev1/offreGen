@@ -620,6 +620,40 @@ final class TraiteurTest extends TestCase
         self::assertSame([], $parties->envoyes);
         self::assertStringContainsString('trop long', (string) $this->etat()['erreur']);
     }
+
+    /**
+     * Revue du 2026-11-24 (sécurité, point 1) : une partie que ffprobe ne lit pas ne doit pas faire sauter le contrôle
+     * pour les autres. Les parties lisibles se comptent quand même.
+     */
+    public function testUnePartieIllisibleNeFaitPasSauterLaLimite(): void
+    {
+        $dossier = $this->dossiers->env()['AUDIO_DOSSIER'] . "/{$this->jeu->a}";
+        if (!is_dir($dossier)) {
+            mkdir($dossier, 0700, true);
+        }
+        copy(dirname(__DIR__) . '/fixtures/audio/dictee-peintre.ogg', "$dossier/" . self::UUID . '.m4a');
+        file_put_contents("$dossier/" . self::UUID . '-2.webm', "\x1A\x45\xDF\xA3 pas un audio lisible");
+        $this->enParties('-2.webm');
+        $parties = new TranscripteurParPartie();
+        self::assertSame(Statut::ECHEC, $this->traiteur(t: $parties, dureeMax: 20)->avancer(self::UUID));
+        self::assertSame([], $parties->envoyes);
+    }
+
+    /**
+     * Revue du 2026-11-24 (points 2 des deux relecteurs) : chaque transcription lancée se paie. Une panne au lancement
+     * de la partie 2 ne doit pas faire relancer la partie 1 au passage suivant.
+     */
+    public function testUnePanneAuMilieuNeRelancePasLesPartiesDejaParties(): void
+    {
+        $this->enParties('-2.webm', '-3.m4a');
+        $parties = new TranscripteurParPartie();
+        $parties->panneUneFois = self::UUID . '-2.webm';
+        self::assertSame(Statut::RECU, $this->traiteur($parties)->avancer(self::UUID));
+        self::assertSame('lot-1', BaseDeTest::ligne("SELECT transcription_ref FROM enregistrement WHERE uuid = '" . self::UUID . "'")['transcription_ref']);
+        self::assertSame(Statut::PRET, $this->traiteur($parties)->avancer(self::UUID));
+        self::assertSame([self::UUID . '.m4a', self::UUID . '-2.webm', self::UUID . '-3.m4a'], $parties->envoyes);
+        self::assertSame("Texte de 1.\nTexte de 2.\nTexte de 3.", BaseDeTest::ligne("SELECT transcription FROM enregistrement WHERE uuid = '" . self::UUID . "'")['transcription']);
+    }
 }
 
 /** Rend « Texte de N. » pour la N-ième partie envoyée ; les lots de $enAttente ne sont pas encore prêts. */
@@ -629,9 +663,15 @@ final class TranscripteurParPartie implements Transcripteur
     public array $envoyes = [];
     /** @var list<string> */
     public array $enAttente = [];
+    /** Le nom de la partie dont le premier lancement échoue (service en panne). */
+    public ?string $panneUneFois = null;
 
     public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
     {
+        if (basename($cheminAudio) === $this->panneUneFois) {
+            $this->panneUneFois = null;
+            throw new \RuntimeException('502 Bad Gateway');
+        }
         $this->envoyes[] = basename($cheminAudio);
         return 'lot-' . count($this->envoyes);
     }

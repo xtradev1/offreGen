@@ -125,7 +125,15 @@ final class Traiteur
                     $chemins = array_map($this->stockage->chemin(...), [$e['fichier'], ...DepotEnregistrements::suites($e['fichiers_suite'])]);
                     $this->verifierDuree($chemins);
                     $vocabulaire = VocabulaireDictee::depuis((new DepotProduits($this->base, new Portee($e['artisan_id'])))->designationsParUsage());
-                    $references = array_map(fn (string $chemin): string => $this->transcripteur->demarrer($chemin, $vocabulaire), $chemins);
+                    // Chaque partie lancée se paie : sa référence est notée tout de suite, et un passage repris après une
+                    // panne repart de la première partie qui manque (revue du 2026-11-24).
+                    $references = $e['transcription_ref'] === null || $e['transcription_ref'] === '' ? [] : explode(' ', $e['transcription_ref']);
+                    for ($i = count($references); $i < count($chemins); $i++) {
+                        $references[] = $this->transcripteur->demarrer($chemins[$i], $vocabulaire);
+                        if ($i + 1 < count($chemins)) {
+                            $this->file->transcriptionEnCours($uuid, $jeton, implode(' ', $references));
+                        }
+                    }
                     $this->file->transcriptionDemarree($uuid, $jeton, implode(' ', $references), $this->horloge->now());
                     break;
                 case Statut::TRANSCRIPTION:
@@ -187,12 +195,13 @@ final class Traiteur
         if ($this->duree === null) {
             return;
         }
+        // Une partie illisible n'efface pas les autres : les parties lisibles se comptent quand même (revue du 2026-11-24).
         $secondes = 0.0;
         foreach ($chemins as $chemin) {
             $partie = $this->duree->mesurer($chemin);
             if ($partie === null) {
-                $this->journal->warning('offreGen, traitement : durée illisible, transcription sans contrôle de durée.');
-                return;
+                $this->journal->warning('offreGen, traitement : durée illisible, transcription sans contrôle de durée de cette partie.');
+                continue;
             }
             $secondes += $partie;
         }

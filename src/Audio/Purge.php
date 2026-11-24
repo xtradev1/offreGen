@@ -37,7 +37,7 @@ final class Purge
         $erreurs = 0;
         foreach ($this->file->aPurger($this->horloge->now()) as $e) {
             try {
-                foreach ([$e['fichier'], ...DepotEnregistrements::suites($e['fichiers_suite'])] as $relatif) {
+                foreach (array_filter([$e['fichier'], ...DepotEnregistrements::suites($e['fichiers_suite'])], 'is_string') as $relatif) {
                     $this->stockage->supprimer($relatif);
                 }
                 $this->file->audioSupprime($e['uuid']);

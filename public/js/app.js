@@ -289,7 +289,9 @@ const abri = (() => {
       const t = db.transaction('dictees', 'readwrite');
       const maintenant = Date.now();
       t.objectStore('dictees').put(Object.assign({}, d, {
-        etat: 'enregistrement', parties: (d.parties || [0]).concat(d.tranches), avant: dureeMs(d), partie: maintenant, fin: maintenant, vu: maintenant,
+        // Une suite coupée avant sa première tranche n'a rien ajouté : pas de nouvelle partie vide (revue du 2026-11-24).
+        etat: 'enregistrement', parties: (d.parties || [0]).includes(d.tranches) ? d.parties || [0] : (d.parties || [0]).concat(d.tranches),
+        avant: dureeMs(d), partie: maintenant, fin: maintenant, vu: maintenant,
       }));
       return fin(t).then(() => true);
     }), false),
@@ -467,7 +469,8 @@ function nouvelleOffre() {
 
   const montrer = (etat) => {
     // Continuer ou envoyer la dictée proposée n'est pas l'écarter : coupée de nouveau, elle doit revenir à l'ouverture.
-    if (etatCourant === 'reprise' && !['reprise', 'enregistrement', 'envoi'].includes(etat)) plusTard(repriseCourante);
+    // Le micro refusé non plus (revue du 2026-11-24) : l'artisan n'a rien écarté.
+    if (etatCourant === 'reprise' && !['reprise', 'enregistrement', 'envoi', 'refus'].includes(etat)) plusTard(repriseCourante);
     etatCourant = etat;
     zone.querySelectorAll('[data-etat]').forEach((s) => { s.hidden = s.dataset.etat !== etat; });
     if (fermerX) fermerX.hidden = !['echec', 'court', 'long', 'refus', 'reprise'].includes(etat);
@@ -562,6 +565,10 @@ function nouvelleOffre() {
       progression.value = Math.round((e.loaded / e.total) * 100);
       texte.textContent = (e.loaded / 1048576).toFixed(1) + ' sur ' + (e.total / 1048576).toFixed(1) + ' Mo';
     });
+    // Le verrou ne couvre que l'envoi lui-même (revue du 2026-11-24) : un onglet resté sur un échec, puis suspendu par
+    // le téléphone, ne doit pas cacher la dictée aux autres onglets.
+    tenir(cle);
+    xhr.addEventListener('loadend', lacher);
     xhr.addEventListener('load', () => {
       // Le serveur répond par une redirection vers la page de préparation, que XHR suit. L'envoi est
       // fait : l'audio est au serveur, la fenêtre peut se fermer. Les étapes suivantes avancent ici.
@@ -574,7 +581,6 @@ function nouvelleOffre() {
         const uuid = xhr.responseURL.split('/enregistrements/')[1].split(/[/?#]/)[0];
         // Arrivée au serveur : la copie reste jusqu'à l'offre prête (suivreEtapes, ou au prochain lancement).
         if (cle) abri.modifier(cle, { etat: 'envoye', uuid, vu: Date.now() });
-        lacher();
         arreterSuivi = suivreEtapes(liste, uuid, (offre) => setTimeout(() => { if (etatCourant === 'suivi') partir('/offres/' + offre); }, 900));
         return;
       }
@@ -684,6 +690,13 @@ function nouvelleOffre() {
       return;
     }
     if (suite) {
+      // Un autre onglet a pris la même dictée pendant que le micro s'ouvrait : il la garde.
+      const tenue = await abri.tenues();
+      if (tenue && tenue(d.id)) {
+        libererMicro();
+        autreOnglet();
+        return;
+      }
       try {
         suite.fichiers = await suite.lecture;
       } catch (e) {
@@ -715,8 +728,9 @@ function nouvelleOffre() {
     rec.addEventListener('stop', () => {
       finMs = Date.now();
       libererMicro();
+      lacher();
       if (rec.arret === 'terminer') finir(rec);
-      else if (rec.arret === 'abandon') rec.copie.then((ok) => ok && abandonnerCopie(rec));
+      else if (rec.arret === 'abandon') abandonnerCopie(rec);
       // Arrêt sans « Terminer » (appel entrant, autre application sur le micro) : ce qui est enregistré reste.
       else el('[data-consigne]').textContent = 'L’enregistrement s’est arrêté (appel ou autre application). « Terminer » envoie ce qui est enregistré.';
     });
@@ -762,8 +776,12 @@ function nouvelleOffre() {
   // Trop court : on recommence tout de suite, le micro se rouvre.
   el('[data-recommencer]').addEventListener('click', () => demarrer());
 
-  // Une suite abandonnée n'efface qu'elle : le début reste à l'abri et se propose de nouveau.
-  const abandonnerCopie = (rec) => (rec.suite ? abri.retablir(rec.suite.dictee).then(() => proposer(rec.suite.dictee)) : abri.supprimer(rec.cle));
+  // Une suite abandonnée n'efface qu'elle : le début reste à l'abri et se propose de nouveau, dans la fenêtre restée
+  // ouverte (la fermer puis la rouvrir croisait le retour de l'historique, qui la remettait « à plus tard » : revue du
+  // 2026-11-24).
+  const abandonnerCopie = (rec) => (rec.suite
+    ? rec.copie.then((ok) => ok && abri.retablir(rec.suite.dictee)).then(() => proposer(rec.suite.dictee, true))
+    : rec.copie.then((ok) => ok && abri.supprimer(rec.cle)));
   el('[data-abandonner]').addEventListener('click', () => {
     const rec = enregistreur;
     if (!window.confirm(rec && rec.suite
@@ -774,10 +792,10 @@ function nouvelleOffre() {
     if (rec && !rec.arret) {
       rec.arret = 'abandon';
       // Supprimée après la dernière tranche, qui arrive avec l'arrêt.
-      if (rec.state !== 'inactive') rec.stop(); else rec.copie.then((ok) => ok && abandonnerCopie(rec));
+      if (rec.state !== 'inactive') rec.stop(); else abandonnerCopie(rec);
     }
     libererMicro();
-    montrer('choix');
+    if (!(rec && rec.suite)) montrer('choix');
   });
 
   // Reprise (R1 B, Xavier, 2026-11-18) : à l'ouverture, une dictée restée sur ce téléphone sans être arrivée au
@@ -797,11 +815,14 @@ function nouvelleOffre() {
       ? dictee + ' s’est arrêtée avant « Terminer » : elle est gardée sur ce téléphone.'
       : dictee + ' est restée sur ce téléphone : elle n’est pas arrivée au serveur.';
   };
-  // La suite garde le format du début, et la dictée entière tient dans les 30 minutes.
-  const peutContinuer = (d) => !!possible && !epuise && (d.parties || [0]).length < PARTIES_MAX
+  // Seule une dictée coupée avant « Terminer » se continue : une dictée terminée a pu arriver au serveur sans que le
+  // téléphone le sache, sa suite ferait une seconde offre (revue du 2026-11-24). La suite garde le format du début, et
+  // la dictée entière tient dans les 30 minutes.
+  const peutContinuer = (d) => d.etat === 'enregistrement' && !!possible && !epuise && (d.parties || [0]).length < PARTIES_MAX
     && dureeMs(d) < (DUREE_MAX_S - 10) * 1000 && (!d.type || MediaRecorder.isTypeSupported(d.type));
-  const proposer = (d) => {
-    if (etatCourant !== 'choix') return;
+  // force : proposée depuis la fenêtre déjà ouverte (suite abandonnée), sans attendre qu'elle soit fermée.
+  const proposer = (d, force = false) => {
+    if (etatCourant !== 'choix' && !force) return;
     repriseCourante = d;
     const suite = peutContinuer(d);
     const envoi = el('[data-reprise-envoyer]');
@@ -846,16 +867,23 @@ function nouvelleOffre() {
   const relectureImpossible = () => {
     el('[data-reprise-texte]').textContent += ' Elle n’a pas pu être relue sur ce téléphone.';
   };
+  const autreOnglet = () => {
+    el('[data-reprise-texte]').textContent += ' Elle est reprise dans un autre onglet.';
+  };
   let relecture = false; // un seul envoi, même pour deux touchers
   el('[data-reprise-envoyer]').addEventListener('click', async () => {
     const d = repriseCourante;
     if (!d || relecture || bloquer()) return;
     relecture = true;
-    tenir(d.id);
     try {
+      // Deux onglets qui proposent la même dictée : celui qui l'a prise la garde.
+      const tenue = await abri.tenues();
+      if (tenue && tenue(d.id)) {
+        autreOnglet();
+        return;
+      }
       fichiers = await abri.fichiers(d);
     } catch (e) {
-      lacher();
       relectureImpossible();
       return;
     } finally {

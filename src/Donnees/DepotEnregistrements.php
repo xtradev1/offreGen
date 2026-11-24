@@ -129,10 +129,13 @@ final class DepotEnregistrements
     {
         $fichiers = [];
         foreach ($this->base->lire(
-            'SELECT fichier, fichiers_suite FROM enregistrement WHERE artisan_id = :a AND fichier IS NOT NULL',
+            'SELECT fichier, fichiers_suite FROM enregistrement WHERE artisan_id = :a AND (fichier IS NOT NULL OR fichiers_suite IS NOT NULL)',
             ['a' => $this->portee->artisanId],
         ) as $e) {
-            array_push($fichiers, (string) $e['fichier'], ...self::suites($e['fichiers_suite']));
+            if (is_string($e['fichier'])) {
+                $fichiers[] = $e['fichier'];
+            }
+            array_push($fichiers, ...self::suites($e['fichiers_suite']));
         }
         return $fichiers;
     }

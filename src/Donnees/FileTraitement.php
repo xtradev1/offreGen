@@ -93,6 +93,15 @@ final class FileTraitement
         ));
     }
 
+    /** Les références des parties déjà lancées d'une dictée continuée, notées avant de lancer la suivante. */
+    public function transcriptionEnCours(string $uuid, string $jeton, string $references): void
+    {
+        $this->exiger($this->base->ecrire(
+            'UPDATE enregistrement SET transcription_ref = :r WHERE uuid = :u AND verrou_jeton = :j AND statut = :s',
+            ['r' => $references, 'u' => $uuid, 'j' => $jeton, 's' => Statut::RECU],
+        ));
+    }
+
     /** Le lot de transcription est perdu : l'enregistrement repart de « reçu » et l'audio sera renvoyé. */
     public function transcriptionAReprendre(string $uuid, string $jeton): void
     {
@@ -155,12 +164,17 @@ final class FileTraitement
         return is_string($v) ? Dates::depuisBase($v) : null;
     }
 
-    /** @return list<array{uuid: string, fichier: string, fichiers_suite: string|null}> audios dont la date de suppression est passée */
+    /**
+     * Les suites seules comptent aussi : l'ancienne version, après un retour arrière, ne vide que « fichier ».
+     *
+     * @return list<array{uuid: string, fichier: string|null, fichiers_suite: string|null}> audios dont la date de suppression est passée
+     */
     public function aPurger(\DateTimeImmutable $maintenant): array
     {
-        /** @var list<array{uuid: string, fichier: string, fichiers_suite: string|null}> */
+        /** @var list<array{uuid: string, fichier: string|null, fichiers_suite: string|null}> */
         return $this->base->lire(
-            'SELECT uuid, fichier, fichiers_suite FROM enregistrement WHERE fichier IS NOT NULL AND supprimer_apres IS NOT NULL AND supprimer_apres < :m',
+            'SELECT uuid, fichier, fichiers_suite FROM enregistrement
+             WHERE (fichier IS NOT NULL OR fichiers_suite IS NOT NULL) AND supprimer_apres IS NOT NULL AND supprimer_apres < :m',
             ['m' => Dates::versBase($maintenant)],
         );
     }

@@ -88,6 +88,24 @@ final class PurgeTest extends TestCase
         self::assertSame(1, BaseDeTest::compter('enregistrement', "uuid = '$uuid' AND fichier IS NULL AND fichiers_suite IS NULL"));
     }
 
+    /**
+     * Revue du 2026-11-24 : après un retour à l'ancienne version, qui ne vide que « fichier », les suites restaient sur
+     * le disque sans que rien ne les voie. La version suivante les efface.
+     */
+    public function testDesSuitesSansDebutSontPurgeesAussi(): void
+    {
+        $uuid = $this->jeu->uuid['a'];
+        BaseDeTest::pdo()->prepare("UPDATE enregistrement SET statut = 'pret', supprimer_apres = '2026-12-07 10:00:00', fichier = NULL, fichiers_suite = ? WHERE uuid = ?")
+            ->execute([json_encode(["{$this->jeu->a}/$uuid-2.webm"]), $uuid]);
+        $suite = dirname($this->audio($uuid)) . "/$uuid-2.webm";
+        file_put_contents($suite, 'audio');
+
+        Monde::conteneur(new MockClock('2026-12-07 10:00:01', 'UTC'), $this->env())->purge()->purger();
+
+        self::assertFileDoesNotExist($suite);
+        self::assertSame(1, BaseDeTest::compter('enregistrement', "uuid = '$uuid' AND fichiers_suite IS NULL"));
+    }
+
     /** Décision Q1 de Xavier (2026-11-18) : la purge est écrite, mais rien n'est effacé tant qu'il ne l'a pas allumée. */
     public function testPurgeEteinteParDefautRienNEstEfface(): void
     {

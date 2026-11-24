@@ -1,19 +1,22 @@
 ---
 chantier: De la voix à l'offre, 27 enregistrement à l'abri
 slug: 2026-11-07_voix-offre/27-enregistrement-abri
-phase: 6
-statut: non_verifie
-gate_attendu: aucun
+phase: 8
+statut: gate_ouvert
+gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
 
 ## Prochaine action
 
-Essai sur un vrai iPhone (sous-tâche 432) : dictée coupée (application fermée pendant l'enregistrement), réouverture, fenêtre de reprise, envoi. Puis rhabiller la fenêtre avec la marque.
+Recette AB-1 bis sur l'iPhone de Xavier, une fois le test déployé (son accord d'abord). Puis rhabiller la fenêtre avec la marque.
 
 ## En attente de toi
 
-- Essayer sur ton iPhone, une fois le test déployé : enregistrer 10 secondes, fermer Safari pendant l'enregistrement, rouvrir l'application.
+- Ton accord pour déployer `chantier-voix-offre` (tête, avec ce correctif) sur le site de test.
+- Sur ton iPhone, après le déploiement : dicter 10 s, fermer Safari de force, le rouvrir aussitôt. La fenêtre « Une dictée n'est pas partie » doit être là dès l'ouverture.
+- Toucher « Continuer la dictée », parler 10 s, « Terminer » : une seule offre, avec ce qui a été dit avant et après la coupure.
+- Refaire une coupure pendant la suite, rouvrir : la dictée revient avec sa durée totale.
 
 ## Suivi Origin
 
@@ -39,6 +42,10 @@ Essai sur un vrai iPhone (sous-tâche 432) : dictée coupée (application ferm�
 
 - 2026-11-18 : livré en code. `public/js/app.js` : module `abri` (IndexedDB, une tranche par seconde, rangée sous le compte de la page), reprise dans la fenêtre du bas (Envoyer, Garder dans un fichier, Supprimer, Fermer) ; `templates/_nouvelle_offre.html.twig` : état « reprise » ; `base.html.twig` : `data-compte`. Parcours cliqué dans Chromium avec micro simulé, sur le serveur local (IA factice) : tout passe. Non vérifié : Safari sur iPhone (format mp4 coupé, effacement du stockage).
 
+- 2026-11-24 : recette AB-1 de Xavier (voir Décisions). Livré en code, commits sur `chantier-voix-offre` : verrou du navigateur par dictée (Web Locks), tenu pendant l'enregistrement et l'envoi seulement ; repli des 20 s qui refait le tour à l'échéance ; « Continuer la dictée » (dictée coupée avant « Terminer » seulement) ; envoi en parties `suite[]`, rangement `<uuid>-<n>`, colonne `fichiers_suite`, une transcription par partie, textes joints ; migration `Version20261124200001` (additive, `transcription_ref` élargie à 512). Revue en trois lentilles : `REVUE.md`, onze points retenus et corrigés, deux laissés en limite connue.
+- Limites connues, à porter à la recette : un lot de transcription perdu chez le prestataire renvoie toutes les parties (rare, refacturé, rien de perdu) ; après un retour à l'ancienne version du code, une dictée en parties déjà en transcription donnerait une offre de la seule première partie.
+- Base de test du chantier : `offregen_abri_test` (phpunit), `offregen_abri_vue` (recette locale, compte `abri-recette@exemple.ch`, mot de passe dans `~/.offregen-abri-vue-compte`), copie `~/offreGen-abri`. À supprimer à la clôture.
+
 ## Preuves
 
 ```
@@ -57,4 +64,32 @@ $ ffmpeg -v error -i enregistrement-2026-11-18-17h28.webm -f null -   (dictée c
 [matroska,webm] File ended prematurely at pos. 26121 ; code de sortie 0
 $ env APP_ENV=test vendor/bin/phpunit --filter EnregistrementAbriTest
 OK (3 tests, 13 assertions)
+```
+
+```
+Recette AB-1 bis dans Chromium (micro simulé, serveur local, IA factice), scripts dans le scratchpad de la session :
+- Ancien app.js : dictée 8 s, Chromium tué (taskkill /F), relancé 763 ms après : « reprise affichée JAMAIS en 30 s ».
+- Nouveau : relancé 700 ms après la coupure, « reprise affichée 15 ms après le chargement de /clients ».
+  texte : La dictée du 24 novembre à 14 h 11 (8 s) s’est arrêtée avant « Terminer » : elle est gardée sur ce téléphone.
+  Continuez-la, ou envoyez-la telle quelle pour en faire une offre. ; boutons : continuer principal, envoyer secondaire
+- Suite abandonnée : « Abandonner la suite ? Le début de la dictée reste sur ce téléphone. », reprise de nouveau
+  proposée, abri {tranches: 8} (la suite effacée, le début intact).
+- Suite gardée : minuteur au départ 00:08, offre ouverte /offres/3, abri vide après l'offre.
+- Base : cle_client 1795525000743-8d71hxump2, fichiers_suite ["2/<uuid>-2.webm"],
+  transcription_ref « factice-353273799be217c3 factice-0a82250245c92c9f », transcription = deux textes joints.
+  ffprobe : début coupé 8,04 s (« File ended prematurely », décodé, code 0), suite 6,96 s.
+- Double coupure : rouvert 802 ms après, reprise en 12 ms, « (14 s) », parties [0,8] ; « Garder dans un fichier » :
+  enregistrement-2026-11-24-14h11.webm (30319 o) et enregistrement-2026-11-24-14h11-partie-2.webm (23157 o) ;
+  envoi : offre /offres/4.
+- Sans navigator.locks (Safari avant 15.4 simulé) : reprise affichée 19674 ms après le chargement, sans recharger.
+- Deux onglets : celui qui ne dicte pas ne propose rien (reprise visible = false).
+- Envoi en échec (réseau coupé) : second onglet, reprise visible, « n’est pas arrivée au serveur », continuer caché,
+  envoyer principal.
+- Fenêtre à 390x844, 375x667, 320x568 : aucune cible couverte, rien ne défile, boutons 56 px, liens 48 px
+  (captures ab1-reprise-*.png ouvertes).
+erreurs JS : [] dans chaque parcours
+$ vendor/bin/phpunit (base offregen_abri_test)
+OK (1511 tests, 12395 assertions)
+$ vendor/bin/phpstan analyse
+[OK] No errors
 ```
