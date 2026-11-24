@@ -640,3 +640,22 @@ $ vendor/bin/phpstan analyse --no-progress
 Défaut vu sur la capture et corrigé : au téléphone, la croix de la feuille recouvrait le coin du message « trop long » ; l'état « long » rejoint la règle `padding-top` des autres messages (`app.css`).
 
 Erreur de ma part pendant l'essai : un `git checkout -- src/Http/Noyau.php` pour remettre le fichier après la mutation a aussi effacé ma modification non commitée de la CSP. Vue au `git status`, réécrite, essai rejoué vert.
+
+Fenêtre d'envoi réel du site de test (2026-11-24). Xavier, après avoir vu « [pour info@lcageniecivil.ch] » dans un objet : « je voulais juste être sûr. Pas le spammer sans faire exprès ». Vérifié sur le serveur : messagerie en service `MessagerieRedirigee`, tout part vers son adresse. L'adresse vient de la démo n° 22, créée depuis son compte le 21.11 (« Démo Genie Civil ») ; Xavier : « considère-les comme fictives », le prospect a donné son accord. Sa demande : « on va les limiter à une période de 1 ou 2 heures. Et dans cette période […] tester que ça envoie à tout le monde. Comme ça, ensuite on repasse en test en mode sécurisé ».
+
+Construit : `MessagerieRedirigee` envoie au vrai destinataire tant que `COURRIELS_ENVOI_REEL_JUSQU_A` n'est pas passée, chaque envoi noté au journal ; une fin à plus de 2 heures n'ouvre rien ; `outils/courriels-reels-test.sh <minutes>|fermer|etat` (120 minutes au plus, refus sans redirection configurée). Fermée par défaut. Ne s'ouvre qu'à la demande de Xavier.
+
+```
+$ outils/courriels-reels-test.sh etat        (lecture du test)
+Fermée : tout est redirigé.
+$ outils/courriels-reels-test.sh 121 | abc | 0
+REFUS : de 1 à 120 minutes. (code 1, trois fois)
+$ phpunit --filter 'MessagerieTest|CourrielTest|AlertesTest|LiensAccesTest|RappelsDemoTest'
+OK (55 tests, 201 assertions)
+$ mutations de MessagerieRedirigee
+plafond de 2 heures retiré : Tests: 12, Assertions: 29, Failures: 1.
+fermeture à l'heure dite retirée : Tests: 12, Assertions: 30, Failures: 2.
+envoi réel jamais ouvert : Tests: 12, Assertions: 27, Failures: 1.
+```
+
+Non vérifié : une vraie fenêtre ouverte sur le test (à faire avec Xavier, à sa demande).

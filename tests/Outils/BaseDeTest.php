@@ -24,7 +24,7 @@ final class BaseDeTest
         // ADRESSES aussi : aucun test n'appelle swisstopo.
         // Rien ne part non plus par courriel : ni envoi réel, ni redirection, ni alerte.
         unset($env['TRAITEMENT_IMMEDIAT'], $env['AUDIO_DOSSIER'], $env['COURRIELS_DOSSIER'], $env['TRANSCRIPTION'], $env['EXTRACTION'], $env['ADRESSES'],
-            $env['MESSAGERIE'], $env['MAILER_DSN'], $env['COURRIELS_EXPEDITEUR'], $env['COURRIELS_REDIRIGER_VERS'], $env['ALERTES_A'], $env['PURGE_AUDIO']);
+            $env['MESSAGERIE'], $env['MAILER_DSN'], $env['COURRIELS_EXPEDITEUR'], $env['COURRIELS_REDIRIGER_VERS'], $env['COURRIELS_ENVOI_REEL_JUSQU_A'], $env['ALERTES_A'], $env['PURGE_AUDIO']);
         return $env;
     }
 

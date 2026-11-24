@@ -665,8 +665,27 @@ final class Conteneur
                 default => throw new \RuntimeException('Réglage MESSAGERIE inconnu : « smtp » ou « fichier ».'),
             };
             $redirection = $this->parametre('COURRIELS_REDIRIGER_VERS');
-            return $redirection === '' ? $messagerie : new MessagerieRedirigee($messagerie, $redirection);
+            return $redirection === '' ? $messagerie
+                : new MessagerieRedirigee($messagerie, $redirection, $this->finEnvoiReel(), $this->horloge(), $this->journal());
         });
+    }
+
+    /**
+     * Fin de la fenêtre d'envoi réel du site de test (COURRIELS_ENVOI_REEL_JUSQU_A, écrite par
+     * outils/courriels-reels-test.sh) ; null si absente ou illisible : tout reste redirigé.
+     */
+    private function finEnvoiReel(): ?\DateTimeImmutable
+    {
+        $valeur = $this->parametre('COURRIELS_ENVOI_REEL_JUSQU_A');
+        if ($valeur === '') {
+            return null;
+        }
+        try {
+            return new \DateTimeImmutable($valeur);
+        } catch (\Exception) {
+            $this->journal()->warning("offreGen, COURRIELS_ENVOI_REEL_JUSQU_A illisible : les courriels restent redirigés.");
+            return null;
+        }
     }
 
     /**
