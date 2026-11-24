@@ -73,13 +73,23 @@
         {% endif %}
       </fieldset>
     {% endif %}
-    {# Offre rangée par pièce (sous-chantier 28, P5) : la ligne se déplace d'une pièce à l'autre ; vide, « Général ». #}
+    {# Offre rangée par pièce (sous-chantier 28, P5) : la ligne se déplace d'une pièce à l'autre ; vide, « Général ».
+       Les pièces de l'offre en puces, celle de la ligne choisie, et « Autre pièce » à taper, qui l'emporte (recette du
+       2026-11-24, MP-A14, D3 A ; le même choix que les puces de « + Ligne »). Sans JavaScript, tout marche. #}
     {% if pieces is not empty %}
-      <div class="champ">
-        <label for="piece">{{ mots().groupe|capitalize }}</label>
-        <input id="piece" name="piece" value="{{ champs.piece ?? '' }}" maxlength="80" list="pieces-offre" autocomplete="off" placeholder="Général">
-        <datalist id="pieces-offre">{% for p in pieces %}<option value="{{ p }}">{% endfor %}</datalist>
-      </div>
+      {% set groupe = mots().groupe %}
+      {% set actuelle = (champs.piece ?? '')|lower %}
+      <fieldset class="groupe choix" data-pieces>
+        <legend>{{ groupe|capitalize }}</legend>
+        <div class="puces">
+          {% for p in [''] | merge(pieces) %}
+            <label class="puce"><input type="radio" name="piece" value="{{ p }}"{% if p|lower == actuelle and not (champs.piece_autre ?? '') %} checked{% endif %}>{{ p == '' ? 'Général' : p }}</label>
+          {% endfor %}
+        </div>
+        <div class="champ">
+          <input name="piece_autre" value="{{ champs.piece_autre ?? '' }}" maxlength="80" autocomplete="off" placeholder="Autre {{ groupe }}" aria-label="Autre {{ groupe }}">
+        </div>
+      </fieldset>
     {% endif %}
     {% if tva_habituelle %}
       {% include '_tva_exception.html.twig' with {actuel: champs.tva ?? '', habituel: 'Taux ' ~ tva_habituelle.de ~ ' (' ~ tva_habituelle.taux|taux ~ ')'} %}

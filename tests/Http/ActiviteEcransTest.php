@@ -104,7 +104,8 @@ final class ActiviteEcransTest extends TestCase
 
         // Bâtiment : les mots d'avant.
         self::assertStringContainsString('Renommer la pièce', $this->page($offre . '/pieces?nom=Devant+la+maison'));
-        self::assertStringContainsString('<label for="piece">Pièce</label>', $this->page("$offre/lignes/$ligne"));
+        // Fiche d'une ligne : les pièces en puces sous leur titre (recette du 2026-11-24, MP-A14).
+        self::assertStringContainsString('<legend>Pièce</legend>', $this->page("$offre/lignes/$ligne"));
 
         $this->activite('exterieur');
         $page = $this->page($offre . '/pieces?nom=Devant+la+maison');
@@ -112,7 +113,9 @@ final class ActiviteEcransTest extends TestCase
             self::assertStringContainsString($attendu, $page);
         }
         self::assertStringNotContainsString('pièce', $page);
-        self::assertStringContainsString('<label for="piece">Zone</label>', $this->page("$offre/lignes/$ligne"));
+        $fiche = $this->page("$offre/lignes/$ligne");
+        self::assertStringContainsString('<legend>Zone</legend>', $fiche);
+        self::assertStringContainsString('placeholder="Autre zone"', $fiche);
         $ajout = $this->page($offre . '/ajouter');
         self::assertStringContainsString('aria-label="Zone de la ligne"', $ajout);
         self::assertStringContainsString('placeholder="Autre zone"', $ajout);
@@ -137,7 +140,7 @@ final class ActiviteEcransTest extends TestCase
             self::assertStringContainsString($attendu, $page);
         }
         self::assertStringNotContainsString('pièce', $page);
-        self::assertStringContainsString('<label for="piece">Catégorie</label>', $this->page("$offre/lignes/$ligne"));
+        self::assertStringContainsString('<legend>Catégorie</legend>', $this->page("$offre/lignes/$ligne"));
         $ajout = $this->page($offre . '/ajouter');
         self::assertStringContainsString('aria-label="Catégorie de la ligne"', $ajout);
         self::assertStringContainsString('placeholder="Autre catégorie"', $ajout);

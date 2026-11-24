@@ -1,0 +1,54 @@
+[
+ {
+  "etiquette": "essai0",
+  "profil": "chantier",
+  "passe": 0,
+  "otes": 2,
+  "lignes_visibles_ms": 1942,
+  "gestes_ms": 1954,
+  "fcp": 2004,
+  "css": 572,
+  "fluide": 1839,
+  "app": 2161,
+  "dcl": 2163
+ },
+ {
+  "etiquette": "essai0",
+  "profil": "chantier",
+  "passe": 1,
+  "otes": 2,
+  "lignes_visibles_ms": 1945,
+  "gestes_ms": 1957,
+  "fcp": 2012,
+  "css": 583,
+  "fluide": 1836,
+  "app": 2171,
+  "dcl": 2172
+ },
+ {
+  "etiquette": "essai0",
+  "profil": "4g",
+  "passe": 0,
+  "otes": 2,
+  "lignes_visibles_ms": 417,
+  "gestes_ms": 429,
+  "fcp": 460,
+  "css": 129,
+  "fluide": 292,
+  "app": 308,
+  "dcl": 386
+ },
+ {
+  "etiquette": "essai0",
+  "profil": "4g",
+  "passe": 1,
+  "otes": 2,
+  "lignes_visibles_ms": 422,
+  "gestes_ms": 434,
+  "fcp": 468,
+  "css": 133,
+  "fluide": 296,
+  "app": 312,
+  "dcl": 389
+ }
+]

@@ -1,0 +1,137 @@
+[
+ {
+  "cle": "service worker aux commandes",
+  "valeur": true
+ },
+ {
+  "cle": "pages gardées d'avance",
+  "valeur": [
+   "/",
+   "/catalogue",
+   "/clients",
+   "/offres/2",
+   "/offres/3",
+   "/offres/4"
+  ]
+ },
+ {
+  "cle": "« C'est juste » sans réseau : étiquette partie",
+  "valeur": true
+ },
+ {
+  "cle": "bandeau après un geste",
+  "valeur": "Hors réseau : 1 changement attend, il partira au retour du réseau."
+ },
+ {
+  "cle": "montant estimé de la ligne",
+  "valeur": "1’984.50 (provisoire)"
+ },
+ {
+  "cle": "total estimé",
+  "valeur": "CHF 23’505.25 (provisoire)"
+ },
+ {
+  "cle": "« + Ligne » sans réseau : fenêtre ouverte",
+  "valeur": true
+ },
+ {
+  "cle": "ligne provisoire dans l'offre",
+  "valeur": "Bâche de protection1 forfait22.5022.50En attente du réseau"
+ },
+ {
+  "cle": "bandeau après trois gestes",
+  "valeur": "Hors réseau : 3 changements attendent (offre 3, quantité 9), ils partiront au retour du réseau."
+ },
+ {
+  "cle": "en base pendant la coupure : lignes",
+  "valeur": 0
+ },
+ {
+  "cle": "liste sans réseau : page gardée",
+  "valeur": "oui, Mes offres · Dicta"
+ },
+ {
+  "cle": "bandeau de la liste",
+  "valeur": "Hors réseau : page gardée dans le téléphone du 24.11.2026 à 15:55."
+ },
+ {
+  "cle": "autre offre sans réseau (/offres/2)",
+  "valeur": "gardée, Rafraîchissement du séjour · Dicta, scripts là, style là"
+ },
+ {
+  "cle": "bandeau de l'autre offre",
+  "valeur": "Hors réseau : page gardée dans le téléphone du 24.11.2026 à 15:55."
+ },
+ {
+  "cle": "page jamais vue sans réseau",
+  "valeur": "Hors réseau : Hors réseauCette page n’a pas été gardée dans le téléphone. Les offres ouvertes "
+ },
+ {
+  "cle": "offre 3 rouverte : affichée après (ms)",
+  "valeur": 19
+ },
+ {
+  "cle": "offre 3 rouverte : état",
+  "valeur": {
+   "titre": "Appartement Rue du Marché, rénovation complète · Dicta",
+   "etat": "complete",
+   "gardee": true,
+   "scripts": true,
+   "enLigne": true,
+   "file": 3
+  }
+ },
+ {
+  "cle": "offre 3 rouverte sans réseau : bandeau",
+  "valeur": "Hors réseau : 3 changements attendent (offre 3, quantité 9), ils partiront au retour du réseau."
+ },
+ {
+  "cle": "offre 3, 27 s plus tard : bandeau",
+  "valeur": "Hors réseau : 3 changements attendent (offre 3, quantité 9), ils partiront au retour du réseau."
+ },
+ {
+  "cle": "en base au retour du réseau",
+  "valeur": {
+   "etiquette": "0",
+   "quantite": "9000",
+   "lignes_en_plus": 1,
+   "produit_ajoute": "1",
+   "cles": "3"
+  }
+ },
+ {
+  "cle": "après rechargement : lignes en plus (1 attendue)",
+  "valeur": 1
+ },
+ {
+  "cle": "file vide dans le téléphone",
+  "valeur": 0
+ },
+ {
+  "cle": "session perdue : bandeau",
+  "valeur": "Session expirée : 1 changement attend (offre 3, quantité 4). Se reconnecter"
+ },
+ {
+  "cle": "session perdue : en base",
+  "valeur": "48000"
+ },
+ {
+  "cle": "session revenue : en base (4000 attendu)",
+  "valeur": "4000"
+ },
+ {
+  "cle": "après déconnexion : caches de pages",
+  "valeur": []
+ },
+ {
+  "cle": "après déconnexion : base du téléphone",
+  "valeur": [
+   "offregen-abri",
+   "offregen-fluide"
+  ]
+ },
+ {
+  "cle": "erreurs JavaScript",
+  "valeur": []
+ }
+]

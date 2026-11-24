@@ -104,13 +104,14 @@ const horsReseau = async () => {
 
 // Les fichiers qu'une page cite (feuilles de style, scripts, images) : gardés avec elle, sinon la page rouverte sans réseau
 // s'afficherait sans style ni script (ceux chargés avant le service worker, ou ceux d'une page préchargée, manquent).
-// Toujours après coup, jamais avant de rendre la page, et seulement ceux qui manquent encore. Pas les polices que citent
+// Toujours après coup, jamais avant de rendre la page, et seulement ceux qui manquent encore. app.js est cité par
+// data-app : fluide.js le demande lui-même (base.html.twig, SR-1 du 2026-11-24). Pas les polices que citent
 // les feuilles : document.css en cite pour douze modèles, 900 Ko lus en arrière-plan à l'ouverture de « Facturer » (banc
 // du 2026-11-23) ; celles dont une page a besoin passent ici quand le navigateur les demande.
 const garderFichiers = async (texte) => {
   const cache = await caches.open(FICHIERS);
   const deja = new Set((await cache.keys()).map((k) => cle(new URL(k.url))));
-  const adresses = [...texte.matchAll(/\s(?:href|src|srcset)="(\/(?:css|js|img)\/[^"\s]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
+  const adresses = [...texte.matchAll(/\s(?:href|src|srcset|data-app)="(\/(?:css|js|img)\/[^"\s]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
   for (const adresse of [...new Set(adresses)]) {
     if (deja.has(adresse) || await cache.match(adresse)) continue;
     try {

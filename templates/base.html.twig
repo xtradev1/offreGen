@@ -10,9 +10,11 @@
   <link rel="icon" type="image/svg+xml" href="{{ fichier('/img/dicta-icone.svg') }}">
   <link rel="apple-touch-icon" href="{{ fichier('/img/dicta-icone-180.png') }}">
   <link rel="stylesheet" href="{{ fichier('/css/app.css') }}">
-  {# fluide.js avant app.js : les gestes sans rechargement (chantier 2026-11-23_sans-rechargement). #}
-  <script src="{{ fichier('/js/fluide.js') }}" defer></script>
-  <script src="{{ fichier('/js/app.js') }}" defer></script>
+  {# Les gestes sans rechargement (chantier 2026-11-23_sans-rechargement) prêts dès que la page paraît (recette du
+     2026-11-24, SR-1). fluide.js sans defer : gardé dans le téléphone, il s'exécute aussitôt et n'écoute que le
+     document. Il demande ensuite app.js (data-app) : téléchargés ensemble, après un déploiement qui les change, ils se
+     partageaient le débit et l'offre paraissait 1,4 s plus tard sur un réseau faible. #}
+  <script src="{{ fichier('/js/fluide.js') }}" data-app="{{ fichier('/js/app.js') }}"></script>
 </head>
 {# data-compte : le navigateur range les dictées à l'abri sous ce compte (sous-chantier 27). #}
 {% set compte_courant = compte() %}

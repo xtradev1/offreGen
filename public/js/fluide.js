@@ -7,6 +7,8 @@
 'use strict';
 
 const fluide = (() => {
+  // Le script en cours, lu pendant son exécution : il porte l'adresse d'app.js (data-app, base.html.twig).
+  const SCRIPT = document.currentScript;
   const NB = String.fromCharCode(0xA0);
   const PC = '(min-width: 1024px) and (hover: hover) and (pointer: fine)';
   const ecran = () => document.querySelector('main.screen');
@@ -187,8 +189,14 @@ const fluide = (() => {
       messages.empiler();
     };
     const attente = (n) => (n > 1 ? n + ' changements attendent' : n === 1 ? '1 changement attend' : 'rien n’attend');
-    // Ce qui attend, dit par son premier geste nommé : l'artisan ne refait pas un ajout qui attend déjà (revue, B-I7).
-    const lequel = () => { const nomme = file.find((f) => f.item.libelle); return nomme ? ' (' + nomme.item.libelle + ')' : ''; };
+    // Ce qui attend, dit par son premier geste nommé, avec son offre : l'artisan ne refait pas un ajout qui attend déjà
+    // (revue, B-I7), et sait de quelle offre est le changement (recette du 2026-11-24, SR-6).
+    const lequel = () => {
+      const nomme = file.find((f) => f.item.libelle);
+      if (!nomme) return '';
+      const offre = nomme.item.offreNom ? nomme.item.offreNom.charAt(0).toLowerCase() + nomme.item.offreNom.slice(1) + ', ' : '';
+      return ' (' + offre + nomme.item.libelle + ')';
+    };
     return {
       horsReseau: (n) => poser('Hors réseau' + NB + ': ' + attente(n) + lequel() + (n > 1 ? ', ils partiront' : ', il partira') + ' au retour du réseau.', 'hors'),
       session: (n) => poser('Session expirée' + NB + ': ' + attente(n) + lequel() + '.', 'session', { href: '/connexion', texte: 'Se reconnecter' }),
@@ -259,6 +267,29 @@ const fluide = (() => {
   });
 
   const memeEcran = (item) => item.ici.split('?')[0] === window.location.pathname;
+  // L'offre (ou la facture) d'un geste : celle de son adresse, sinon celle de l'écran où il a été fait.
+  const BASE_OFFRE = /^\/(offres|factures)\/\d+/;
+  const baseDe = (adresse) => (BASE_OFFRE.exec(String(adresse || '').split('?')[0]) || [null])[0];
+  const offreDe = (item) => item.offre || baseDe(item.action) || baseDe(item.ici);
+  // Son nom, lu dans la barre du haut quand l'écran est l'offre elle-même (« Offre 2 ») ; ailleurs (fiche d'une ligne,
+  // aperçu), la barre dit autre chose : pas de nom (revue, M3).
+  const nomDeLOffre = (base) => {
+    const h = document.querySelector('header.bar h1');
+    if (!base || window.location.pathname !== base || !h) return '';
+    return h.textContent.split('·')[0].trim();
+  };
+  // Ce qui retient l'envoi du PDF d'une offre : ses gestes, sauf ceux qui ne changent pas le PDF (l'envoi noté, archiver,
+  // remettre ou supprimer l'offre, revue M1) ; et une fiche client modifiée hors de toute offre, qui peut être la sienne
+  // (revue, I6).
+  const SANS_PDF = /^\/(offres|factures)\/\d+\/(envoyee|archiver|restaurer|supprimer)$/;
+  const retientLePdf = (item, base) => {
+    const action = String(item.action || '').split('?')[0];
+    if (SANS_PDF.test(action)) return false;
+    const o = offreDe(item);
+    return o === base || (o === null && /^\/clients(\/|$)/.test(action));
+  };
+  /** Les gestes qui attendent encore et changeraient le PDF de cette offre (adresse de base : /offres/N ou /factures/N). */
+  const enAttentePour = (base) => file.map((f) => f.item).filter((item) => retientLePdf(item, base));
   // La file attend le réseau (ou la session) : chaque geste en file le sait, même derrière un autre (ligne provisoire,
   // fenêtre fermée) ; une seule fois par geste.
   const direAttente = () => file.forEach(({ item, options }) => {
@@ -315,10 +346,17 @@ const fluide = (() => {
     document.querySelectorAll('input[name="_csrf"]').forEach((c) => { c.value = m[1]; });
   };
 
+  // La relecture des gestes rangés par une page précédente (reprendre) : la file l'attend, 3 s au plus (revue, I2).
+  let finReprise = () => {};
+  const repris = new Promise((ok) => { finReprise = ok; });
+  // Le geste parti sort de la file par son identité : des gestes rangés ont pu passer devant pendant son envoi.
+  const sortir = (item) => { const i = file.findIndex((f) => f.item === item); if (i >= 0) file.splice(i, 1); };
+
   const pomper = async () => {
     if (pompe) return;
     pompe = true;
     try {
+      await Promise.race([repris, new Promise((ok) => setTimeout(ok, 3000))]);
       while (file.length && !sessionPerdue) {
         const { item, options } = file[0];
         if (navigator.onLine === false) { horsReseau = true; bandeau.horsReseau(file.length); direAttente(); break; }
@@ -347,20 +385,24 @@ const fluide = (() => {
             direAttente();
             break;
           }
-          file.shift();
+          sortir(item);
           compter(item, -1);
           await garde.oublier(item.cle);
           // Un geste que l'écran disait « en attente » (fenêtre fermée, ligne provisoire) : son refus se dit toujours.
           if (item.attenteDite || !options.refus) messages.dire((item.attenteDite ? 'Un changement fait sans réseau n’est pas accepté' : 'Pas enregistré') + NB + ': ' + e.message, true);
           if (options.refus) options.refus(e);
+          // Refusé : rien n'a changé au serveur, l'aperçu n'a pas à se refaire (et son rechargement effacerait ce refus).
+          document.dispatchEvent(new CustomEvent('geste-parti', { detail: { offre: offreDe(item), action: item.action, refus: true } }));
           // Ce que montre l'écran redevient ce que dit le serveur.
           if (memeEcran(item)) rafraichir([...item.morceaux, ...(options.aRelire || [])]);
           continue;
         }
         horsReseau = false;
-        file.shift();
+        sortir(item);
         compter(item, -1);
         await garde.oublier(item.cle);
+        // L'aperçu d'une offre se refait dès que ses propres gestes sont partis (apercu-pdf.js, SR-6).
+        document.dispatchEvent(new CustomEvent('geste-parti', { detail: { offre: offreDe(item), action: item.action, refus: false } }));
         if (reponse.aller && reponse.ici && !options.gardee) {
           // Une fenêtre suit l'action dans la fenêtre (« Facturer » après le choix du client) ; ailleurs, la page entière.
           if (!options.aller) { window.location.assign(reponse.adresse); return; }
@@ -372,11 +414,7 @@ const fluide = (() => {
         if (options.apres) options.apres(reponse);
         if (reponse.ici && /^\/(offres|factures)\/\d+/.test(window.location.pathname)) document.dispatchEvent(new Event('offre-modifiee'));
       }
-      if (!file.length && !sessionPerdue) {
-        bandeau.ok();
-        // L'aperçu du PDF attend la fin de la file pour se refaire avec les changements (revue, B-I6).
-        document.dispatchEvent(new Event('file-vide'));
-      }
+      if (!file.length && !sessionPerdue) bandeau.ok();
     } finally {
       pompe = false;
     }
@@ -429,7 +467,10 @@ const fluide = (() => {
       libelle: options.libelle || '',
       provisoire: options.provisoire || null,
       champ: options.champ || null,
+      ligneNom: options.ligneNom || '',
     };
+    item.offre = baseDe(item.action) || baseDe(item.ici);
+    item.offreNom = nomDeLOffre(item.offre);
     if (options.anticiper) options.anticiper();
     mettreEnFile(item, options);
     return item;
@@ -574,7 +615,10 @@ const fluide = (() => {
     const row = form.closest('.row');
     const caseACocher = champ.type === 'checkbox';
     const avant = row ? montantDe(row) : null;
+    const quoi = caseACocher ? 'choix du client' : (champ.name === 'quantite' ? 'quantité ' : champ.name === 'prix' ? 'prix ' : champ.name + ' ') + champ.value.trim();
     envoyer(form, {
+      libelle: quoi,
+      ligneNom: row ? nomDeLaLigne(row) : '',
       // Retenir une variante décoche les autres de sa ligne et remplace la ligne : toute la liste revient.
       morceaux: caseACocher ? ['lignes'] : idsDeLaLigne(row),
       champ: !caseACocher && row ? { porteur: row.id, nom: champ.name, valeur: champ.value } : null,
@@ -585,6 +629,35 @@ const fluide = (() => {
       },
     });
   };
+
+  // Corrections de quantité et de prix sur l'offre, choix du client d'une option ou d'une variante : chaque champ
+  // modifié part seul, par la file. Écoutées dès le chargement de ce fichier, dans l'en-tête de la page : une quantité
+  // tapée dès que l'offre paraît part comme les autres (recette du 2026-11-24, SR-1 ; elles étaient dans app.js,
+  // branchées à la fin du chargement de la page, et un Entrée tapé avant envoyait le formulaire en page entière).
+  const caseACocher = (champ) => champ.type === 'checkbox';
+  const corriger = (champ) => {
+    if (!champ.form || (caseACocher(champ) ? champ.checked === champ.defaultChecked : champ.value === champ.defaultValue)) return;
+    if (caseACocher(champ)) champ.defaultChecked = champ.checked; else champ.defaultValue = champ.value;
+    ligne(champ);
+  };
+  document.addEventListener('change', (e) => { if (e.target.matches && e.target.matches('input[data-envoi-change]')) corriger(e.target); });
+  document.addEventListener('keydown', (e) => {
+    if (!e.target.matches || !e.target.matches('input[data-envoi-change]')) return;
+    // Entrée : enregistre, puis le même champ de la ligne suivante (PC, D12) ; sur la dernière ligne, on reste.
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      corriger(e.target);
+      const memes = [...document.querySelectorAll('input[data-envoi-change][name=' + e.target.name + ']')];
+      const suivant = memes[memes.indexOf(e.target) + 1];
+      if (suivant) suivant.focus(); else e.target.select();
+    }
+    if (e.key === 'Escape') { e.target.value = e.target.defaultValue; e.target.blur(); }
+  });
+  document.addEventListener('focusin', (e) => { if (e.target.matches && e.target.matches('input[data-envoi-change]')) e.target.select(); });
+  // Filet : un champ encore modifié quand la page s'en va part quand même.
+  window.addEventListener('pagehide', () => {
+    document.querySelectorAll('input[data-envoi-change]').forEach((c) => { if (c.value !== c.defaultValue) corriger(c); });
+  });
 
   /** Un texte avant ou après les lignes (app.js, textesOffre). */
   const texte = (form) => envoyer(form, { sansResume: true, morceaux: ['sauvegarde', 'renvoi', 'etat-offre'] });
@@ -833,24 +906,35 @@ const fluide = (() => {
   // ils ne partent plus (le serveur oublie les clés après 30 jours, et l'offre a pu changer ailleurs), l'écran le dit.
   // Sur l'écran où ils ont été faits, la ligne ajoutée et la valeur tapée se remontrent (revue, B-I7).
   const SEMAINE = 7 * 86400000;
+  // Les gestes rangés passent DEVANT ceux faits sur cette page pendant son chargement (fluide.js écoute dès l'en-tête
+  // depuis SR-1) : la file attend leur relecture (pomper, `repris`). Une valeur tapée ici depuis n'est pas écrasée à
+  // l'écran par une plus ancienne (revue du 2026-11-24, I2).
   const reprendre = async () => {
-    const c = compte();
-    if (!c) return;
-    const gardes = await garde.relire(c);
-    const connus = new Set(file.map((f) => f.item.cle));
-    let perimes = 0;
-    gardes.filter((item) => !connus.has(item.cle)).forEach((item) => {
-      if (Date.now() - item.cree > SEMAINE) { perimes++; garde.oublier(item.cle); return; }
-      file.push({ item, options: { gardee: true } });
-      compter(item, 1);
-      if (!memeEcran(item)) return;
-      if (item.provisoire) ligneEnAttente(item.provisoire.designation, item.provisoire.unite, item.provisoire.prix, item.provisoire.quantite, item.provisoire.horsTotal);
-      const porteur = item.champ && document.getElementById(item.champ.porteur);
-      const champ = porteur && porteur.querySelector('[name="' + item.champ.nom + '"]:not([type=hidden])');
-      if (champ) { champ.value = item.champ.valeur; champ.defaultValue = item.champ.valeur; }
-    });
-    if (perimes) messages.dire((perimes > 1 ? perimes + ' changements faits' : 'Un changement fait') + ' sans réseau il y a plus d’une semaine ne partent plus.', true);
-    if (file.length) { if (navigator.onLine === false) { horsReseau = true; bandeau.horsReseau(file.length); } else pomper(); }
+    try {
+      const c = compte();
+      if (!c) return;
+      const gardes = await garde.relire(c);
+      const connus = new Set(file.map((f) => f.item.cle));
+      const recents = file.map((f) => f.item);
+      let perimes = 0;
+      const anciens = [];
+      gardes.filter((item) => !connus.has(item.cle)).forEach((item) => {
+        if (Date.now() - item.cree > SEMAINE) { perimes++; garde.oublier(item.cle); return; }
+        anciens.push({ item, options: { gardee: true } });
+        compter(item, 1);
+        if (!memeEcran(item)) return;
+        if (item.provisoire) ligneEnAttente(item.provisoire.designation, item.provisoire.unite, item.provisoire.prix, item.provisoire.quantite, item.provisoire.horsTotal);
+        const plusRecent = item.champ && recents.some((r) => r.champ && r.champ.porteur === item.champ.porteur && r.champ.nom === item.champ.nom);
+        const porteur = item.champ && !plusRecent && document.getElementById(item.champ.porteur);
+        const champ = porteur && porteur.querySelector('[name="' + item.champ.nom + '"]:not([type=hidden])');
+        if (champ) { champ.value = item.champ.valeur; champ.defaultValue = item.champ.valeur; }
+      });
+      file.unshift(...anciens);
+      if (perimes) messages.dire((perimes > 1 ? perimes + ' changements faits' : 'Un changement fait') + ' sans réseau il y a plus d’une semaine ne partent plus.', true);
+      if (file.length) { if (navigator.onLine === false) { horsReseau = true; bandeau.horsReseau(file.length); } else pomper(); }
+    } finally {
+      finReprise();
+    }
   };
 
   // Lot 4 : le service worker garde les fichiers et les pages (public/sw.js). Ce que le téléphone garde d'avance (D6) :
@@ -907,7 +991,49 @@ const fluide = (() => {
     oublierTout();
   }, true);
 
+  // Les touchers faits avant qu'app.js soit prêt (il se branche à la fin du chargement de la page : 0,1 à 0,2 s sur un
+  // réseau faible, plus s'il vient d'être déployé) sur ce qu'il ouvre en fenêtre : une ligne, « + Ligne », le client.
+  // Sans cela, le lien partait en page entière (recette du 2026-11-24, SR-1). Ils sont retenus, puis rejoués dès
+  // qu'app.js écoute (appPrete). Seul le dernier toucher compte (deux fenêtres ne s'ouvrent pas à la suite) ; il est
+  // marqué en attente à l'écran. Ctrl, Cmd ou Maj + clic passent tels quels (nouvel onglet). app.js qui plante ou ne
+  // vient pas : 5 s après la fin du chargement, le toucher repart comme un simple lien (revue du 2026-11-24, I1 et M4).
+  const ADRESSE_APP = SCRIPT && SCRIPT.dataset ? SCRIPT.dataset.app : '';
+  let appPret = !ADRESSE_APP || document.readyState !== 'loading';
+  let retenu = null;
+  const OUVRE_EN_FENETRE = 'a[data-en-feuille], a[data-en-feuille-pc], .rows .row[data-glisse-ligne]';
+  document.addEventListener('click', (e) => {
+    if (appPret || e.button !== 0 || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !e.target.closest) return;
+    const cible = e.target.closest(OUVRE_EN_FENETRE);
+    if (!cible) return;
+    // Sur une ligne : ses champs, boutons et formulaires sont à fluide.js, ils marchent déjà.
+    if (cible.matches('.row') && e.target.closest('input, button, select, textarea, label, form')) return;
+    // Une fenêtre « PC seulement » s'ouvre en page au téléphone : rien à attendre.
+    if (cible.matches('a[data-en-feuille-pc]') && !window.matchMedia(PC).matches) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (retenu) retenu.removeAttribute('aria-busy');
+    retenu = e.target.closest('a[href]') || e.target;
+    retenu.setAttribute('aria-busy', 'true');
+  }, true);
+  const rejouer = () => {
+    appPret = true;
+    const el = retenu;
+    retenu = null;
+    if (!el) return;
+    el.removeAttribute('aria-busy');
+    if (el.isConnected) el.click();
+  };
+  // app.js, demandé une fois ce fichier exécuté : il ne lui prend plus de débit. Introuvable (pas de réseau, pas
+  // gardé) : le toucher retenu repart comme un simple lien.
+  if (ADRESSE_APP && document.head) {
+    const s = document.createElement('script');
+    s.src = ADRESSE_APP;
+    s.onerror = rejouer;
+    document.head.append(s);
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    if (!appPret) setTimeout(() => { if (!appPret) rejouer(); }, 5000);
     relecture();
     // Les bandeaux posés par le serveur avec la page s'empilent aussi.
     messages.empiler();
@@ -939,7 +1065,7 @@ const fluide = (() => {
   // Un geste attend ou part encore : le préchargement attend (D4), le banc aussi.
   const occupe = () => pompe || file.length > 0;
 
-  return { envoyer, appliquer, rafraichir, ligne, texte, fenetre, ligneEnAttente, messages, garde, bandeau, file, occupe, retirer, remettre, NB, PC, jeton, compte, montant, lireMontant };
+  return { envoyer, appliquer, rafraichir, ligne, texte, fenetre, ligneEnAttente, messages, garde, bandeau, file, occupe, retirer, remettre, enAttentePour, retientLePdf, appPrete: rejouer, NB, PC, jeton, compte, montant, lireMontant };
 })();
 // Une constante du script n'est pas une propriété de window : app.js teste window.fluide pour savoir s'il est là.
 window.fluide = fluide;

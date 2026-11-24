@@ -155,6 +155,32 @@ final class OffreParPieceTest extends TestCase
         self::assertSame('Chambre', $this->pieces()[1]);
     }
 
+    /** Recette du 2026-11-24, MP-A14 (D3 A) : les pièces de l'offre en puces dans la fiche, celle de la ligne choisie. */
+    public function testLaFicheDUneLigneProposeLesPiecesEnPuces(): void
+    {
+        $page = $this->page("{$this->chemin}/lignes/{$this->ligne(2)}");
+        self::assertMatchesRegularExpression('/<input type="radio" name="piece" value="Salon" checked>/', $page);
+        self::assertMatchesRegularExpression('/<input type="radio" name="piece" value="Chambre">/', $page);
+        self::assertMatchesRegularExpression('/<input type="radio" name="piece" value="">Général/', $page);
+        self::assertStringContainsString('name="piece_autre"', $page);
+        self::assertStringNotContainsString('<datalist id="pieces-offre">', $page);
+        // Une ligne du « Général » : la puce « Général » est choisie.
+        self::assertMatchesRegularExpression('/<input type="radio" name="piece" value="" checked>Général/', $this->page("{$this->chemin}/lignes/{$this->ligne(1)}"));
+    }
+
+    /** « Autre pièce » tapée l'emporte sur la puce cochée ; vide, la puce compte. */
+    public function testUneAutrePieceTapeeDansLaFicheLEmporte(): void
+    {
+        $id = $this->ligne(2);
+        $champs = ['designation' => 'Rebouchage', 'quantite' => '38', 'unite' => 'm²', 'prix' => '9', 'piece' => 'Salon'];
+        $this->page("{$this->chemin}/lignes/$id");
+        self::assertSame(303, $this->a->post("{$this->chemin}/lignes/$id", $champs + ['piece_autre' => '  bureau '])->getStatusCode());
+        self::assertSame('Bureau', $this->pieces()[1]);
+        $this->page("{$this->chemin}/lignes/$id");
+        self::assertSame(303, $this->a->post("{$this->chemin}/lignes/$id", ['piece' => 'Chambre', 'piece_autre' => ''] + $champs)->getStatusCode());
+        self::assertSame('Chambre', $this->pieces()[1]);
+    }
+
     public function testUnAutreArtisanNeRenommePasLesPieces(): void
     {
         $b = new Navigateur(Monde::conteneur());

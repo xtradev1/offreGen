@@ -191,6 +191,52 @@ final class ClientsEcranTest extends TestCase
             BaseDeTest::ligne("SELECT c.npa, c.adresse FROM client c JOIN offre o ON o.client_id = c.id WHERE o.id = {$this->jeu->offre['a']}"));
     }
 
+    /**
+     * Recette du 2026-11-24, MP-A19 (D2 A) : « Créer la fiche » ouvre la fiche, remplie d'après la dictée, pour corriger
+     * le nom mal écrit par l'IA ; « Enregistrer et voir le PDF » la crée et mène au PDF.
+     */
+    public function testCreerLaFicheDuNomDicteOuvreLaFicheRemplie(): void
+    {
+        $o = $this->jeu->offre['a'];
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL, client_dicte = 'Madame Gerber-Monin', lieu_dicte = 'Delémont' WHERE id = $o");
+        $choix = $this->page($this->offreA() . '/client?suite=apercu');
+        self::assertStringContainsString('<a class="btn primary" href="/clients/nouveau?offre=' . $o . '&amp;suite=apercu&amp;dictee=1">Créer la fiche «&nbsp;Madame Gerber-Monin&nbsp;»</a>', $choix);
+        self::assertStringNotContainsString('name="creer"', $choix);
+
+        $fiche = $this->page("/clients/nouveau?offre=$o&suite=apercu&dictee=1");
+        self::assertStringContainsString('value="Madame Gerber-Monin"', $fiche);
+        self::assertMatchesRegularExpression('/name="adresse_npa" value="2800"/', $fiche);
+        self::assertMatchesRegularExpression('/name="adresse_localite" value="Delémont"/', $fiche);
+        self::assertStringContainsString('Remplie d’après la dictée', $fiche);
+        self::assertStringContainsString('Enregistrer et voir le PDF', $fiche);
+        self::assertStringContainsString('<input type="hidden" name="suite" value="apercu">', $fiche);
+        self::assertSame(0, BaseDeTest::compter('client', "nom LIKE 'Madame Gerber%'"), 'la fiche ne naît qu’à l’enregistrement');
+
+        // Le nom corrigé : la fiche naît, devient le client de l'offre, le PDF suit.
+        $r = $this->a->post('/clients', ['nom' => 'Madame Gerber-Monnin', 'adresse_npa' => '2800', 'adresse_localite' => 'Delémont', 'offre' => (string) $o, 'suite' => 'apercu']);
+        self::assertSame($this->offreA() . '/apercu', $r->headers->get('Location'));
+        self::assertSame(['nom' => 'Madame Gerber-Monnin', 'npa' => '2800'], BaseDeTest::ligne("SELECT c.nom, c.npa FROM client c JOIN offre o ON o.client_id = c.id WHERE o.id = $o"));
+
+        // Un lieu qui ne se découpe pas : à reporter, dit comme un lieu entendu.
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL, client_dicte = 'Monsieur Tardy', lieu_dicte = 'près de la gare' WHERE id = $o");
+        $fiche = $this->page("/clients/nouveau?offre=$o&dictee=1");
+        self::assertStringContainsString('Lieu entendu dans la dictée, à reporter dans les champs', $fiche);
+        self::assertStringContainsString('<b>près de la gare</b>', $fiche);
+        // Refusée (nom vide) : réaffichée remplie d'après la dictée ; enregistrée sans adresse : le lieu gardé en texte.
+        $refus = $this->a->post('/clients', ['nom' => ' ', 'offre' => (string) $o, 'dictee' => '1', 'adresse_ancienne' => 'près de la gare']);
+        self::assertSame(422, $refus->getStatusCode());
+        self::assertStringContainsString('Remplie d’après la dictée', (string) $refus->getContent());
+        self::assertStringContainsString('<b>près de la gare</b>', (string) $refus->getContent());
+        $this->a->post('/clients', ['nom' => 'Monsieur Tardy', 'offre' => (string) $o, 'dictee' => '1', 'adresse_ancienne' => 'près de la gare']);
+        self::assertSame(['nom' => 'Monsieur Tardy', 'adresse' => 'près de la gare'], BaseDeTest::ligne("SELECT c.nom, c.adresse FROM client c JOIN offre o ON o.client_id = c.id WHERE o.id = $o"));
+
+        // L'offre d'un autre artisan : introuvable, rien de sa dictée.
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = NULL, client_dicte = 'Pirate de B' WHERE id = {$this->jeu->offre['b']}");
+        $r = $this->a->get('/clients/nouveau?offre=' . $this->jeu->offre['b'] . '&dictee=1');
+        self::assertSame(404, $r->getStatusCode());
+        self::assertStringNotContainsString('Pirate de B', (string) $r->getContent());
+    }
+
     public function testLaFicheDUnAutreArtisanNeSeRattachePas(): void
     {
         $this->page($this->offreA() . '/client');

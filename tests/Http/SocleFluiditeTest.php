@@ -61,8 +61,9 @@ final class SocleFluiditeTest extends TestCase
     {
         $page = (string) (new Navigateur(Monde::conteneur()))->get('/connexion')->getContent();
         self::assertMatchesRegularExpression('#href="/css/app\.css\?v=[0-9a-f]{12}"#', $page);
-        self::assertMatchesRegularExpression('#src="/js/app\.js\?v=[0-9a-f]{12}"#', $page);
-        self::assertDoesNotMatchRegularExpression('#(href|src)="/(css|js)/[^"?]+"#', $page);
+        // app.js : demandé par fluide.js, qui lit son adresse dans data-app (recette du 2026-11-24, SR-1).
+        self::assertMatchesRegularExpression('#<script src="/js/fluide\.js\?v=[0-9a-f]{12}" data-app="/js/app\.js\?v=[0-9a-f]{12}"></script>#', $page);
+        self::assertDoesNotMatchRegularExpression('#(href|src|data-app)="/(css|js)/[^"?]+"#', $page);
     }
 
     public function testUnSeulJetonParPageValideEtNeufALaPageSuivante(): void

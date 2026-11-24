@@ -1,0 +1,54 @@
+[
+ {
+  "etiquette": "defer",
+  "profil": "chantier",
+  "passe": 0,
+  "otes": 2,
+  "lignes_visibles_ms": 689,
+  "gestes_ms": 2563,
+  "fcp": 620,
+  "css": 581,
+  "fluide": 2553,
+  "app": 3492,
+  "dcl": 3493
+ },
+ {
+  "etiquette": "defer",
+  "profil": "chantier",
+  "passe": 1,
+  "otes": 2,
+  "lignes_visibles_ms": 681,
+  "gestes_ms": 2567,
+  "fcp": 616,
+  "css": 581,
+  "fluide": 2554,
+  "app": 3492,
+  "dcl": 3494
+ },
+ {
+  "etiquette": "defer",
+  "profil": "4g",
+  "passe": 0,
+  "otes": 2,
+  "lignes_visibles_ms": 256,
+  "gestes_ms": 333,
+  "fcp": 312,
+  "css": 140,
+  "fluide": 319,
+  "app": 366,
+  "dcl": 368
+ },
+ {
+  "etiquette": "defer",
+  "profil": "4g",
+  "passe": 1,
+  "otes": 2,
+  "lignes_visibles_ms": 255,
+  "gestes_ms": 312,
+  "fcp": 340,
+  "css": 132,
+  "fluide": 294,
+  "app": 345,
+  "dcl": 347
+ }
+]

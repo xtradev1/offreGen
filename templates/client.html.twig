@@ -5,25 +5,28 @@
    de la saisie (app.js, data-auto) ; une nouvelle attend « Ajouter », pour ne pas naître à la première lettre.
    offre : la fiche créée devient le client de cette offre. #}
 {% import '_reglages_macros.html.twig' as f %}
-{% set titre = k ? k.nom : 'Nouveau client' %}
+{% set titre = k ? k.nom : ((dictee ?? false) ? 'Fiche du client' : 'Nouveau client') %}
 {% block titre %}{{ titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="{{ offre ? '/offres/' ~ offre.id : '/clients' }}">{{ offre ? 'Offre' : 'Clients' }}</a>{% endblock %}
 {% block entete %}{{ titre }}{% endblock %}
 
 {% block contenu %}
   {% if erreurs is not empty and not k %}<p class="alerte bad" role="alert">La fiche n'est pas créée&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  {# Remplie d'après la dictée (« Créer la fiche » de l'offre, MP-A19 du 2026-11-24) : le nom se corrige avant qu'elle naisse. #}
+  {% if dictee ?? false %}<p class="dicte">Remplie d’après la dictée&nbsp;: corrigez le nom s’il est mal écrit, puis enregistrez.</p>{% endif %}
   {# Depuis « Générer l'offre » (suite=apercu, E6) : la fiche créée mène au PDF de l'offre. #}
   <form id="client" method="post" action="{{ k ? '/clients/' ~ k.id : '/clients' }}"{% if k %} data-auto{% endif %}{% if suite ?? null %} data-sortir{% endif %}>
     <input type="hidden" name="_csrf" value="{{ csrf() }}">
     {% if offre %}<input type="hidden" name="offre" value="{{ offre.id }}">{% endif %}
     {% if suite ?? null %}<input type="hidden" name="suite" value="{{ suite }}">{% endif %}
+    {% if dictee ?? false %}<input type="hidden" name="dictee" value="1"><input type="hidden" name="adresse_ancienne" value="{{ champs.adresse_ancienne ?? '' }}">{% endif %}
     {% if k %}<p class="auto-etat" data-auto-etat aria-live="polite"></p>{% endif %}
     <div class="champ">
       <label for="nom">Nom</label>
       <input id="nom" name="nom" value="{{ champs.nom }}" maxlength="190" required autocomplete="off"{% if not k %} data-premier{% endif %}{{ f.invalide(erreurs, 'nom') }}>
       {{ f.erreur(erreurs, 'nom') }}
     </div>
-    {% include '_adresse.html.twig' with {p: 'adresse_', manque: false, ancienne: champs.adresse_ancienne ?? ''} %}
+    {% include '_adresse.html.twig' with {p: 'adresse_', manque: false, ancienne: champs.adresse_ancienne ?? '', ancienne_texte: (dictee ?? false) ? 'Lieu entendu dans la dictée' : null} %}
     <div class="duo">
       <div class="champ">
         <label for="telephone">Téléphone</label>
@@ -65,7 +68,7 @@
       <button class="btn primary" type="submit" form="client" data-sans-auto>Enregistrer</button>
     {% else %}
       <a class="btn" href="{{ offre ? '/offres/' ~ offre.id : '/clients' }}">Annuler</a>
-      <button class="btn primary" type="submit" form="client">Ajouter</button>
+      <button class="btn primary" type="submit" form="client">{{ (suite ?? null) ? 'Enregistrer et voir le PDF' : 'Ajouter' }}</button>
     {% endif %}
   </div>
 {% endblock %}

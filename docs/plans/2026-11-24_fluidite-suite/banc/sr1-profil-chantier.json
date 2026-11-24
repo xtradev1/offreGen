@@ -1,0 +1,97 @@
+[
+ {
+  "profil": "chantier",
+  "delai_apres_ouverture_ms": 800,
+  "offre_visible_ms": 2917,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 1,
+  "confirme_ms": 612,
+  "recharge": false,
+  "en_vol_au_toucher": [],
+  "requetes_pendant": [
+   "POST /offres/3/lignes/14/juste 43..641"
+  ]
+ },
+ {
+  "profil": "chantier",
+  "delai_apres_ouverture_ms": 2000,
+  "offre_visible_ms": 2883,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 1,
+  "confirme_ms": 620,
+  "recharge": false,
+  "en_vol_au_toucher": [],
+  "requetes_pendant": [
+   "POST /offres/3/lignes/14/juste 41..645"
+  ]
+ },
+ {
+  "profil": "chantier",
+  "delai_apres_ouverture_ms": 4000,
+  "offre_visible_ms": 2869,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 1,
+  "confirme_ms": 648,
+  "recharge": false,
+  "en_vol_au_toucher": [
+   "GET /offres/3/ajouter",
+   "GET /offres/3/ajouter (sw)"
+  ],
+  "requetes_pendant": [
+   "GET /offres/3/ajouter (sw) -545..192",
+   "GET /offres/3/ajouter -545..192",
+   "POST /offres/3/lignes/14/juste 38..673"
+  ]
+ },
+ {
+  "profil": "chantier",
+  "delai_apres_ouverture_ms": 6000,
+  "offre_visible_ms": 2867,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 1,
+  "confirme_ms": 636,
+  "recharge": false,
+  "en_vol_au_toucher": [],
+  "requetes_pendant": [
+   "POST /offres/3/lignes/14/juste 34..656"
+  ]
+ },
+ {
+  "profil": "chantier",
+  "delai_apres_ouverture_ms": 9000,
+  "offre_visible_ms": 2909,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 2,
+  "confirme_ms": 630,
+  "recharge": false,
+  "en_vol_au_toucher": [
+   "GET /css/vos-prix.css?v=0500a9921e4c (sw)"
+  ],
+  "requetes_pendant": [
+   "GET /css/vos-prix.css?v=0500a9921e4c (sw) -272..302",
+   "POST /offres/3/lignes/14/juste 41..658"
+  ]
+ },
+ {
+  "profil": "chantier",
+  "delai_apres_ouverture_ms": 15000,
+  "offre_visible_ms": 2874,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 1,
+  "confirme_ms": 644,
+  "recharge": false,
+  "en_vol_au_toucher": [
+   "GET /offres/4 (sw)"
+  ],
+  "requetes_pendant": [
+   "GET /offres/4 (sw) -699..29",
+   "POST /offres/3/lignes/14/juste 37..665"
+  ]
+ }
+]

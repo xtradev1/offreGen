@@ -137,9 +137,11 @@ final class LigneControleur
         if ($tva !== $l['tva_ligne']) {
             $support->changerTauxLigne($cible['id'], $l['id'], $tva);
         }
-        // Déplacer une ligne d'offre dans une autre pièce (sous-chantier 28, P5), depuis sa fiche.
-        if ($this->genre === self::OFFRE && $r->has('piece')) {
-            $this->c->offres($this->portee($requete))->changerPiece($cible['id'], $l['id'], Piece::lire($r->getString('piece')));
+        // Déplacer une ligne d'offre dans une autre pièce (sous-chantier 28, P5), depuis sa fiche : une puce, ou « Autre
+        // pièce » tapée, qui l'emporte (recette du 2026-11-24, MP-A14).
+        $autre = trim($r->getString('piece_autre'));
+        if ($this->genre === self::OFFRE && ($autre !== '' || $r->has('piece'))) {
+            $this->c->offres($this->portee($requete))->changerPiece($cible['id'], $l['id'], Piece::lire($autre !== '' ? $autre : $r->getString('piece')));
         }
         if ($produit !== null) {
             $support->rattacherProduit($cible['id'], $l['id'], $this->c->produits($this->portee($requete))->creer($produit));
@@ -503,7 +505,7 @@ final class LigneControleur
         $r = $requete->request;
         return ['designation' => $r->getString('designation'), 'quantite' => $r->getString('quantite'), 'unite' => $r->getString('unite'),
                 'prix' => $r->getString('prix'), 'categorie' => $r->getString('categorie'), 'nouvelle_categorie' => $r->getString('nouvelle_categorie'),
-                'tva' => $r->getString('tva'), 'piece' => $r->getString('piece'),
+                'tva' => $r->getString('tva'), 'piece' => $r->getString('piece'), 'piece_autre' => $r->getString('piece_autre'),
                 'offerte' => $r->getString('offerte') === Offerte::CHOIX_OFFERTE ? Offerte::CHOIX_OFFERTE : Offerte::CHOIX_FACTUREE,
                 'nature' => in_array($r->getString('nature'), Options::NATURES, true) ? $r->getString('nature') : Options::LIGNE, 'remplace' => $r->getString('remplace')];
     }

@@ -1,0 +1,76 @@
+[
+ {
+  "cle": "A14 pièce avant (base)",
+  "valeur": "Général"
+ },
+ {
+  "cle": "A14 puces proposées",
+  "valeur": [
+   "Général",
+   "Séjour",
+   "Chambre",
+   "Cuisine",
+   "Salle de bain"
+  ]
+ },
+ {
+  "cle": "A14 puce cochée à l’ouverture",
+  "valeur": "Général"
+ },
+ {
+  "cle": "A14 pièce après (base)",
+  "valeur": "Chambre"
+ },
+ {
+  "cle": "A14 groupe de la ligne à l’écran",
+  "valeur": "Chambre 6’878.00 RenommerQtéPrixTotal"
+ },
+ {
+  "cle": "A14 page rechargée",
+  "valeur": false
+ },
+ {
+  "cle": "A14 puces cochées après « bureau » tapé",
+  "valeur": 0
+ },
+ {
+  "cle": "A14 pièce après « bureau » (base)",
+  "valeur": "Bureau"
+ },
+ {
+  "cle": "A19 fiche dans la fenêtre, sans page entière",
+  "valeur": true
+ },
+ {
+  "cle": "A19 nom rempli",
+  "valeur": "Madame Gerber-Monin"
+ },
+ {
+  "cle": "A19 adresse remplie",
+  "valeur": "Rue du Lac | 12 | 2000 | Neuchâtel"
+ },
+ {
+  "cle": "A19 bandeau",
+  "valeur": "Remplie d’après la dictée : corrigez le nom s’il est mal écrit, puis enregistrez."
+ },
+ {
+  "cle": "A19 bouton",
+  "valeur": "Enregistrer et voir le PDF"
+ },
+ {
+  "cle": "A19 fiches en base avant l’enregistrement",
+  "valeur": "0"
+ },
+ {
+  "cle": "A19 après « Enregistrer et voir le PDF »",
+  "valeur": "/offres/2/apercu"
+ },
+ {
+  "cle": "A19 client de l’offre (base)",
+  "valeur": "Madame Gerber-Monnin"
+ },
+ {
+  "cle": "erreurs JavaScript",
+  "valeur": []
+ }
+]

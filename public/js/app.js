@@ -5,44 +5,13 @@
 // Même règle que Catalogue\Recherche::normaliser côté serveur : minuscules, sans accents.
 const normaliser = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/\p{Mn}+/gu, '').replace(/\s+/g, ' ').trim();
 
-// Corrections de quantité et de prix sur l'offre. Chaque champ modifié part tout seul, par fetch avec
-// keepalive : l'envoi aboutit même si l'artisan quitte la page aussitôt (retour, onglet). Constaté le
-// 2026-11-12 : un envoi de formulaire classique était annulé par le lien touché juste après.
+// Corrections de quantité et de prix sur l'offre : dans fluide.js depuis le 2026-11-24 (SR-1), branchées dès l'en-tête
+// de la page. Ici, les boutons prévus pour qui n'a pas JavaScript (choix du client) se cachent.
 function corrections() {
-  // Le choix du client (options et variantes, 2026-11-22) est une case : elle part quand son état change.
-  const caseACocher = (champ) => champ.type === 'checkbox';
   const choixSansJs = () => document.querySelectorAll('form[data-choix] [data-sans-js]').forEach((b) => { b.hidden = true; });
   choixSansJs();
   // Les morceaux posés par fluide.js ramènent les boutons prévus pour qui n'a pas JavaScript.
   document.addEventListener('morceaux-poses', choixSansJs);
-  // Chantier sans rechargement (2026-11-23) : la correction part dans la file de fluide.js, qui estime le montant au
-  // toucher, ne reçoit que la ligne et les totaux (avant : l'offre entière à chaque chiffre), garde le geste sans
-  // réseau et le renvoie au retour du réseau, une seule fois.
-  const envoyer = (champ) => {
-    const form = champ.form;
-    if (!form || (caseACocher(champ) ? champ.checked === champ.defaultChecked : champ.value === champ.defaultValue)) return;
-    if (caseACocher(champ)) champ.defaultChecked = champ.checked; else champ.defaultValue = champ.value;
-    fluide.ligne(champ);
-  };
-
-  document.addEventListener('change', (e) => { if (e.target.matches('input[data-envoi-change]')) envoyer(e.target); });
-  document.addEventListener('keydown', (e) => {
-    if (!e.target.matches('input[data-envoi-change]')) return;
-    // Entrée : enregistre, puis le même champ de la ligne suivante (PC, D12) ; sur la dernière ligne, on reste.
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      envoyer(e.target);
-      const memes = [...document.querySelectorAll('input[data-envoi-change][name=' + e.target.name + ']')];
-      const suivant = memes[memes.indexOf(e.target) + 1];
-      if (suivant) suivant.focus(); else e.target.select();
-    }
-    if (e.key === 'Escape') { e.target.value = e.target.defaultValue; e.target.blur(); }
-  });
-  document.addEventListener('focusin', (e) => { if (e.target.matches('input[data-envoi-change]')) e.target.select(); });
-  // Filet : un champ encore modifié quand la page s'en va part quand même.
-  window.addEventListener('pagehide', () => {
-    document.querySelectorAll('input[data-envoi-change]').forEach((c) => { if (c.value !== c.defaultValue) envoyer(c); });
-  });
 }
 
 function envoisDeFormulaires() {
@@ -2461,8 +2430,37 @@ function optionsEtVariantes() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// Fiche d'une ligne (recette du 2026-11-24, MP-A14) : « Autre pièce » tapée décoche les puces, vidée elle rend la puce
+// de départ ; une puce touchée vide « Autre pièce ». Le serveur fait déjà gagner « Autre pièce » : ici, l'écran dit la
+// même chose que ce qui partira (revue, M5).
+function piecesDeLaLigne() {
+  document.addEventListener('input', (e) => {
+    const autre = e.target.closest && e.target.closest('[data-pieces] input[name="piece_autre"]');
+    if (!autre) return;
+    const tapee = autre.value.trim() !== '';
+    autre.closest('[data-pieces]').querySelectorAll('input[name="piece"]').forEach((r) => { r.checked = !tapee && r.defaultChecked; });
+  });
+  document.addEventListener('change', (e) => {
+    const puce = e.target.closest && e.target.closest('[data-pieces] input[name="piece"]');
+    if (!puce) return;
+    const autre = puce.closest('[data-pieces]').querySelector('input[name="piece_autre"]');
+    if (autre) autre.value = '';
+  });
+}
+
+// app.js arrive après fluide.js, qui le demande (base.html.twig, SR-1 du 2026-11-24) : avant ou après la fin du
+// chargement de la page. Une fois branché, fluide.js rejoue les touchers qu'il a retenus en l'attendant.
+// Un branchement qui plante ne laisse pas les touchers retenus par fluide.js en suspens (revue du 2026-11-24, I1).
+const demarrer = () => {
+  try {
+    brancher();
+  } finally {
+    if (window.fluide && window.fluide.appPrete) window.fluide.appPrete();
+  }
+};
+const brancher = () => {
   optionsEtVariantes();
+  piecesDeLaLigne();
   oeilMotDePasse();
   premiereErreur();
   clavierPc();
@@ -2495,4 +2493,5 @@ document.addEventListener('DOMContentLoaded', () => {
   preparation();
   balayage();
   fichesEnFenetre();
-});
+};
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer); else demarrer();

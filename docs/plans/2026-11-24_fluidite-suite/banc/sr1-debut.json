@@ -1,0 +1,122 @@
+[
+ {
+  "profil": "chantier",
+  "geste": "juste",
+  "quand": "debut",
+  "offre_visible_ms": 694,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "loading",
+   "origine": 1795532223178.8
+  },
+  "ecran_change_ms": 71,
+  "confirme_ms": 781,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "juste",
+  "quand": "apres10s",
+  "offre_visible_ms": 663,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795532225506
+  },
+  "ecran_change_ms": 41,
+  "confirme_ms": 660,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "corbeille",
+  "quand": "debut",
+  "offre_visible_ms": 648,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "loading",
+   "origine": 1795532237696.8
+  },
+  "ecran_change_ms": 87,
+  "confirme_ms": 777,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "corbeille",
+  "quand": "apres10s",
+  "offre_visible_ms": 656,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795532240031.8
+  },
+  "ecran_change_ms": 114,
+  "confirme_ms": 723,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "fiche",
+  "quand": "debut",
+  "offre_visible_ms": 668,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "loading",
+   "origine": 1795532252309.9
+  },
+  "ecran_change_ms": 785,
+  "confirme_ms": 786,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "fiche",
+  "quand": "apres10s",
+  "offre_visible_ms": 669,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795532254650.2
+  },
+  "ecran_change_ms": 689,
+  "confirme_ms": 691,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "quantite",
+  "quand": "debut",
+  "offre_visible_ms": 667,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "loading",
+   "origine": 1795532266919.9
+  },
+  "ecran_change_ms": 87,
+  "confirme_ms": 791,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "quantite",
+  "quand": "apres10s",
+  "offre_visible_ms": 685,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795532269351.7
+  },
+  "ecran_change_ms": 69,
+  "confirme_ms": 705,
+  "recharge": false,
+  "erreurs": []
+ }
+]

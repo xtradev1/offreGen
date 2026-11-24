@@ -51,13 +51,39 @@ final class ClientControleur
         ]));
     }
 
-    /** Nouvelle fiche ; avec ?offre=N, la fiche créée devient le client de cette offre. */
+    /**
+     * Nouvelle fiche ; avec ?offre=N, la fiche créée devient le client de cette offre. Avec &dictee=1, sur une offre
+     * sans client, elle s'ouvre remplie d'après la dictée : le nom mal écrit par l'IA se corrige avant qu'elle naisse
+     * (recette du 2026-11-24, MP-A19, D2 A).
+     */
     public function nouveau(Request $requete): Response
     {
         $offre = $this->offreDemandee($requete, $requete->query->getString('offre'));
         $champs = array_fill_keys(self::CHAMPS, '');
         $champs['nom'] = mb_substr($requete->query->getString('nom'), 0, 190);
-        return $this->fiche($requete, null, $champs, [], 200, $offre);
+        $dictee = $requete->query->getString('dictee') === '1' && $offre !== null && $offre['client_id'] === null && $offre['client_dicte'] !== null;
+        if ($dictee) {
+            $d = self::depuisLaDictee($offre);
+            $a = $d['adresse'];
+            $champs = ['nom' => $d['nom'], 'adresse_rue' => $a->rue, 'adresse_numero' => $a->numero, 'adresse_npa' => $a->npa,
+                       'adresse_localite' => $a->localite, 'adresse_pays' => $a->pays, 'adresse_ancienne' => $d['ancienne'] ?? '',
+                       'telephone' => '', 'courriel' => ''];
+        }
+        return $this->fiche($requete, null, $champs, [], 200, $offre, $dictee);
+    }
+
+    /**
+     * La fiche telle que la dictée la donne : le nom entendu ; le lieu découpé en champs s'il se lit (« Delémont » donne
+     * 2800 Delémont), sinon gardé en texte, à reporter dans les champs.
+     *
+     * @param Offre $offre
+     * @return array{nom: string, adresse: Adresse, ancienne: string|null}
+     */
+    private static function depuisLaDictee(array $offre): array
+    {
+        $adresse = Adresse::depuisTexte($offre['lieu_dicte']);
+        return ['nom' => mb_substr((string) $offre['client_dicte'], 0, 190), 'adresse' => $adresse ?? new Adresse(),
+                'ancienne' => $adresse === null ? $offre['lieu_dicte'] : null];
     }
 
     /**
@@ -81,10 +107,18 @@ final class ClientControleur
     {
         $offre = $this->offreDemandee($requete, $requete->request->getString('offre'));
         $champs = self::champs($requete);
+        // Remplie d'après la dictée (MP-A19) : un refus la réaffiche telle quelle (bandeau, lieu entendu), et le lieu qui
+        // ne se découpe pas, laissé tel quel, est gardé en texte à reporter, comme le faisait « Créer la fiche » (revue, I5).
+        $dictee = $offre !== null && $requete->request->getString('dictee') === '1';
+        $lieu = $dictee ? mb_substr(trim($requete->request->getString('adresse_ancienne')), 0, 300) : '';
+        $champs['adresse_ancienne'] = $lieu;
         try {
             $f = SaisieClient::lire($champs);
         } catch (SaisieRefusee $e) {
-            return $this->fiche($requete, null, $champs, $e->erreurs, 422, $offre);
+            return $this->fiche($requete, null, $champs, $e->erreurs, 422, $offre, $dictee);
+        }
+        if ($lieu !== '' && $f['adresse']->estVide()) {
+            $f['ancienne'] = $lieu;
         }
         $maintenant = $this->c->horloge()->now();
         $id = $this->clients($requete)->creer($f, $maintenant);
@@ -186,15 +220,13 @@ final class ClientControleur
     {
         $offre = $this->offre($requete, $parametres);
         $maintenant = $this->c->horloge()->now();
+        // creer=1 : plus aucun gabarit ne l'envoie depuis le 2026-11-24 (MP-A19 : la fiche s'ouvre remplie) ; gardé pour les
+        // pages « Pour qui » encore gardées dans les téléphones (14 jours, sw.js), à retirer après le 2026-12-09.
         if ($requete->request->getString('creer') === '1') {
             if ($offre['client_dicte'] === null) {
                 return new RedirectResponse('/offres/' . $offre['id'] . '/client', 303);
             }
-            // Le lieu dicté est découpé en champs s'il se lit (« Delémont » donne 2800 Delémont) ; sinon il reste en
-            // texte sur la fiche, à reporter dans les champs.
-            $adresse = Adresse::depuisTexte($offre['lieu_dicte']);
-            $f = ['nom' => mb_substr($offre['client_dicte'], 0, 190), 'adresse' => $adresse ?? new Adresse(),
-                  'ancienne' => $adresse === null ? $offre['lieu_dicte'] : null, 'telephone' => null, 'courriel' => null];
+            $f = self::depuisLaDictee($offre) + ['telephone' => null, 'courriel' => null];
             $id = $this->clients($requete)->creer($f, $maintenant);
             $this->offres($requete)->rattacherClient($offre['id'], $id, $maintenant);
             Flash::dire($requete, 'info', 'Fiche ' . Flash::cite($f['nom']) . ' créée');
@@ -212,8 +244,9 @@ final class ClientControleur
      * @param array<string, string> $champs
      * @param array<string, string> $erreurs
      * @param Offre|null $offre l'offre qui recevra la nouvelle fiche
+     * @param bool $dictee remplie d'après la dictée de cette offre (bandeau, lieu entendu)
      */
-    private function fiche(Request $requete, ?array $k, array $champs, array $erreurs, int $code, ?array $offre): Response
+    private function fiche(Request $requete, ?array $k, array $champs, array $erreurs, int $code, ?array $offre, bool $dictee = false): Response
     {
         $offres = [];
         if ($k !== null) {
@@ -231,6 +264,7 @@ final class ClientControleur
             'offres' => $offres,
             'offre' => $offre,
             'suite' => $offre === null ? null : self::suite($requete),
+            'dictee' => $dictee,
         ]), $code);
     }
 

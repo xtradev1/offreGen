@@ -1,0 +1,54 @@
+[
+ {
+  "etiquette": "priorite",
+  "profil": "chantier",
+  "passe": 0,
+  "otes": 2,
+  "lignes_visibles_ms": 1936,
+  "gestes_ms": 1954,
+  "fcp": 2008,
+  "css": 555,
+  "fluide": 1814,
+  "app": 2142,
+  "dcl": 2144
+ },
+ {
+  "etiquette": "priorite",
+  "profil": "chantier",
+  "passe": 1,
+  "otes": 2,
+  "lignes_visibles_ms": 1971,
+  "gestes_ms": 1989,
+  "fcp": 2060,
+  "css": 581,
+  "fluide": 1837,
+  "app": 2163,
+  "dcl": 2166
+ },
+ {
+  "etiquette": "priorite",
+  "profil": "4g",
+  "passe": 0,
+  "otes": 2,
+  "lignes_visibles_ms": 426,
+  "gestes_ms": 438,
+  "fcp": 468,
+  "css": 140,
+  "fluide": 300,
+  "app": 316,
+  "dcl": 391
+ },
+ {
+  "etiquette": "priorite",
+  "profil": "4g",
+  "passe": 1,
+  "otes": 2,
+  "lignes_visibles_ms": 420,
+  "gestes_ms": 433,
+  "fcp": 476,
+  "css": 136,
+  "fluide": 296,
+  "app": 312,
+  "dcl": 388
+ }
+]

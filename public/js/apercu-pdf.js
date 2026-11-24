@@ -46,25 +46,47 @@ if (zone) {
     const marque = document.querySelector('form[data-apres-partage]');
     if (!marque) return;
     if (window.fluide) {
-      window.fluide.envoyer(marque, { sansResume: true, page: window.location.pathname, morceaux: ['etat-envoi'] });
+      // Sans réseau, le partage a eu lieu : l'envoi noté attend, l'écran le dit.
+      window.fluide.envoyer(marque, {
+        sansResume: true, page: window.location.pathname, morceaux: ['etat-envoi'],
+        attente: () => window.fluide.messages.dire('PDF partagé. L’envoi sera noté au retour du réseau.'),
+      });
       return;
     }
     marque.submit();
   };
-  // Des changements de l'offre attendent le réseau : ce PDF ne les contient pas. « Envoyer » le dit et attend ; la file
-  // partie, l'aperçu se refait avec le PDF à jour (revue du 2026-11-23, B-I6).
-  const enAttente = () => !!(window.fluide && window.fluide.file.length);
-  document.addEventListener('file-vide', () => { if (zone.dataset.attendait) window.location.reload(); });
+  // Des changements de CETTE offre attendent le réseau : ce PDF ne les contient pas. « Envoyer » le dit, nomme le
+  // changement et attend ; ses gestes partis, l'aperçu se refait avec le PDF à jour (revue du 2026-11-23, B-I6). Un
+  // changement d'une autre offre ne retient rien (recette du 2026-11-24, SR-6 : il bloquait l'envoi d'un PDF juste).
+  const base = window.location.pathname.replace(/\/apercu$/, '');
+  const enAttente = () => (window.fluide && window.fluide.enAttentePour ? window.fluide.enAttentePour(base) : []);
+  const NB = String.fromCharCode(0xA0);
+  // Le premier changement nommé (une quantité, un prix) dit lequel ; sans nom, le message reste général (revue, M2).
+  const nommer = (gestes) => {
+    const nomme = gestes.find((g) => g.libelle);
+    const quoi = nomme ? [nomme.libelle, nomme.ligneNom ? '«' + NB + nomme.ligneNom + NB + '»' : ''].filter(Boolean).join(', ') : '';
+    const autres = quoi && gestes.length > 1 ? ', et ' + (gestes.length - 1) + (gestes.length > 2 ? ' autres' : ' autre') : '';
+    const qui = gestes.length > 1 ? 'vos ' + gestes.length + ' changements' : 'votre changement';
+    return 'Ce PDF n’a pas encore ' + qui + (quoi ? ' (' + quoi + autres + ')' : '') + '. Il se refera dès qu’' + (gestes.length > 1 ? 'ils seront partis.' : 'il sera parti.');
+  };
+  // Un changement de cette offre est parti (rangé sans réseau, renvoyé depuis cette page) : le PDF affiché, et ses octets
+  // gardés pour le partage, sont d'avant ; l'aperçu se refait dès que plus rien de l'offre n'attend, « Envoyer » touché
+  // ou non (revue du 2026-11-24, I3). Un refus ne change rien au serveur : pas de rechargement, son message reste (I4).
+  document.addEventListener('geste-parti', (e) => {
+    const d = e.detail || {};
+    if (d.refus || !window.fluide.retientLePdf({ action: d.action, offre: d.offre }, base)) return;
+    if (!enAttente().length) window.location.reload();
+  });
 
   // « Envoyer » (décision D8) : le partage du téléphone, le PDF joint. Partage réussi : l'offre est notée envoyée
   // (formulaire data-apres-partage). Partage annulé : rien. Pas de partage de fichier (certains navigateurs de PC) : le
   // lien garde son effet, le PDF se télécharge, rien n'est noté.
   document.querySelectorAll('[data-partager]').forEach((lien) => {
     lien.addEventListener('click', async (e) => {
-      if (enAttente()) {
+      const attendent = enAttente();
+      if (attendent.length) {
         e.preventDefault();
-        zone.dataset.attendait = '1';
-        window.fluide.messages.dire('Des changements de l’offre attendent le réseau' + String.fromCharCode(0xA0) + ': ce PDF ne les contient pas encore. Il se refera dès qu’ils seront partis.', true);
+        window.fluide.messages.dire(nommer(attendent), true);
         return;
       }
       if (!navigator.canShare) return;

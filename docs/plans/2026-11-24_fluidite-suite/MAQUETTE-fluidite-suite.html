@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fluidité, suite de la recette du 24.11</title>
+<style>
+:root { --ink: #23272D; --muted: #4A505A; --bg: #F4F1EA; --surface: #FFFFFF; --line: #DDD8CC; --accent: #23272D; --marque: #A8441F; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; } }
+:root[data-theme="dark"] { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 27px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 26px 0 6px; scroll-margin-top: 70px; }
+h3 { font-size: 17px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 780px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; margin: 12px 0 22px; }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; }
+figcaption { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+.trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin: 12px 0; }
+.trio figure img, .mk-compare figure img { max-width: 330px; }
+.chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 14px 0; }
+.chiffre { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.chiffre .gros { font-size: 22px; font-weight: 750; line-height: 1.2; display: block; }
+.chiffre small { display: block; color: var(--muted); font-size: 14px; margin-top: 4px; }
+.conseil { border-left: 4px solid var(--marque); background: var(--bg); padding: 10px 14px; border-radius: 0 10px 10px 0; margin: 12px 0; }
+.conseil b:first-child { display: block; margin-bottom: 2px; }
+.alerte { border: 1px solid var(--bad); background: var(--bad-soft); border-radius: 12px; padding: 12px 14px; margin: 14px 0; }
+.regle { border: 1px solid var(--ok); background: var(--ok-soft); border-radius: 12px; padding: 12px 14px; margin: 14px 0; }
+.inconnu { border: 1px dashed var(--warn); background: var(--warn-soft); border-radius: 12px; padding: 12px 14px; margin: 14px 0; color: var(--ink); }
+ul.serre { margin: 4px 0 10px; padding-left: 20px; }
+ul.serre li { margin: 3px 0; }
+code { font: 13.5px ui-monospace, Consolas, monospace; background: var(--bg); border-radius: 4px; padding: 1px 4px; overflow-wrap: anywhere; }
+.muted { color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 8px 0 12px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 650; background: var(--bg); }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.frise { margin: 12px 0; }
+.frise .rangee { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: center; margin: 8px 0; }
+.frise .nom { font-size: 14px; font-weight: 650; }
+.frise .piste { position: relative; height: 30px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.frise .seg { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 650; white-space: nowrap; overflow: hidden; }
+.frise .att { background: var(--line); color: var(--muted); }
+.frise .trou { background: var(--bad-soft); color: var(--bad); border-left: 2px solid var(--bad); }
+.frise .pret { background: var(--ok-soft); color: var(--ok); border-left: 2px solid var(--ok); }
+.frise .echelle { display: grid; grid-template-columns: 150px 1fr; gap: 10px; font-size: 12.5px; color: var(--muted); }
+.frise .echelle > span:last-child { display: flex; justify-content: space-between; }
+@media (max-width: 560px) { .frise .rangee, .frise .echelle { grid-template-columns: 1fr; gap: 2px; } .frise .echelle > span:first-child { display: none; } }
+.approches { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin: 12px 0; }
+.approche { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); }
+.approche h3 { margin-top: 0; }
+.approche.conseillee { border: 2px solid var(--marque); }
+.plus-moins { margin: 6px 0; padding-left: 0; list-style: none; }
+.plus-moins li { padding-left: 22px; position: relative; margin: 4px 0; font-size: 15px; }
+.plus-moins li.plus::before { content: "+"; position: absolute; left: 4px; color: var(--ok); font-weight: 800; }
+.plus-moins li.moins::before { content: "-"; position: absolute; left: 6px; color: var(--bad); font-weight: 800; }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.decision .aide { font-size: 14px; color: var(--muted); }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 650; }
+.opts button:focus-visible, textarea:focus-visible, .copier:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+textarea { width: 100%; min-height: 60px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 150px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Fluidité, suite de la recette du 24.11 : quatre points</h1>
+<p class="chapeau">SR-1, MP-A19, MP-A14 et SR-6, relevés le 24 novembre 2026 sur le banc local (copie à jour de <code>chantier-voix-offre</code>, données inventées, Chromium et WebKit, le moteur de Safari). Les captures « proposé » sont l'application réelle, retouchée dans la page : rien n'est encore codé. Tes choix se posent sous chaque écran ; « Copier mes réponses », en bas, les rassemble.</p>
+
+<h2 id="bref" data-toc="Bref">En bref</h2>
+<div class="chiffres">
+<div class="chiffre"><span class="gros">SR-1 : cause trouvée</span><small>Quand l'offre paraît avant ses scripts, un toucher recharge la page entière : 1,8 s avant de voir le changement, 4,2 s pour finir, sur un réseau de chantier. Cette fenêtre dure 0,1 à 0,2 s d'habitude, 1,8 à 2 s juste après un déploiement.</small></div>
+<div class="chiffre"><span class="gros">SR-6 : défaut reproduit</span><small>Un changement fait hors réseau sur une autre offre bloque « Envoyer » et dit « Des changements de l'offre attendent le réseau ». L'offre affichée n'en a aucun.</small></div>
+<div class="chiffre"><span class="gros">MP-A19 : deux façons</span><small>Ouvrir la fiche remplie d'après la dictée (ta demande, un toucher de plus à chaque offre), ou corriger le nom sur place, dans le cadre jaune (aucun toucher de plus).</small></div>
+<div class="chiffre"><span class="gros">MP-A14 : les pièces en puces</span><small>La liste des pièces existe déjà dans la fiche, mais le navigateur ne la montre qu'en tapant. Proposé : les pièces de l'offre en puces, comme dans « + Ligne ».</small></div>
+</div>
+
+<h2 id="sr1" data-toc="SR-1">SR-1 : le geste qui ne répond pas au début de l'offre</h2>
+<section class="point">
+<p><b>Ce que j'ai mesuré.</b> L'offre s'affiche dès que ses premières lignes arrivent. Ses gestes (<code>fluide.js</code> et <code>app.js</code>) ne sont branchés qu'à la fin du téléchargement de la page et de ses scripts. Un toucher dans l'intervalle part comme un formulaire ordinaire : la page entière se recharge, et la corbeille la ramène tout en haut.</p>
+<div class="frise" aria-label="Offre de 32 lignes, réseau de chantier : du toucher de l'offre aux gestes branchés">
+<div class="echelle"><span></span><span><span>0 s</span><span>1 s</span><span>2 s</span><span>3 s</span></span></div>
+<div class="rangee"><span class="nom">Scripts gardés</span><div class="piste"><span class="seg att" style="left:0;width:22.5%">attente</span><span class="seg trou" style="left:22.5%;width:5.9%"></span><span class="seg pret" style="left:28.4%;width:71.6%">gestes branchés</span></div></div>
+<div class="rangee"><span class="nom">Juste après un déploiement</span><div class="piste"><span class="seg att" style="left:0;width:21.3%">attente</span><span class="seg trou" style="left:21.3%;width:68.1%">lignes visibles, gestes muets</span><span class="seg pret" style="left:89.4%;width:10.6%"></span></div></div>
+</div>
+<p class="muted">Offre de 32 lignes, réseau de chantier simulé (500 ms, 400 kbit/s), Chromium. Rouge : l'offre est à l'écran, un toucher recharge la page. Vert : gestes branchés.</p>
+<table>
+<thead><tr><th>Réseau</th><th>Scripts gardés</th><th>Juste après un déploiement</th></tr></thead>
+<tbody>
+<tr><td>Fibre</td><td class="n">0,01 à 0,11 s</td><td class="n">0,01 à 0,05 s</td></tr>
+<tr><td>4G</td><td class="n">0,01 s</td><td class="n">0,18 s</td></tr>
+<tr><td>Chantier</td><td class="n">0,11 à 0,18 s</td><td class="n">1,8 à 2,0 s</td></tr>
+</tbody>
+</table>
+<p class="muted">Durée de la fenêtre « lignes visibles, gestes muets », trois offres (3, 6 et 32 lignes). Après un déploiement, les scripts changent d'adresse : le téléphone doit les recharger (50 Ko compressés).</p>
+<table>
+<thead><tr><th>Toucher sur le réseau de chantier</th><th>Écran changé</th><th>Fini</th><th>Page</th></tr></thead>
+<tbody>
+<tr><td>« C'est juste », dans la fenêtre</td><td class="n">1,85 s</td><td class="n">4,16 s</td><td>rechargée</td></tr>
+<tr><td>« C'est juste », 10 s après</td><td class="n">0,05 s</td><td class="n">0,64 s</td><td>sur place</td></tr>
+<tr><td>Corbeille, dans la fenêtre</td><td class="n">1,85 s</td><td class="n">4,16 s</td><td>rechargée</td></tr>
+<tr><td>Quantité, dans la fenêtre</td><td class="n">1,88 s</td><td class="n">4,16 s</td><td>rechargée</td></tr>
+</tbody>
+</table>
+<div class="regle"><b>Écarté par la mesure.</b> Un geste fait 0,8 s à 15 s après l'ouverture, préchargement de « + Ligne » et des pages en cours : l'écran change en 1 à 2 ms (Chromium, 4G et chantier). Sous WebKit, sur le banc : 60 à 120 ms du toucher au changement, à toute heure, ce que coûte Playwright lui-même. Le retour en arrière si le serveur refuse est en place depuis le 23.11 : la ligne revient, « Non supprimée » ou « Non enregistré » dit pourquoi.</div>
+<div class="inconnu"><b>Non vérifié : ton iPhone sur un vrai réseau.</b> WebKit ne se bride pas sur ce poste. Ta recette a suivi le déploiement de 11 h 03 : la première offre ouverte était dans le cas « juste après un déploiement ». Dis dans le commentaire ce que tu as vu : la page qui clignote et remonte (rechargée), ou l'étiquette qui part en retard sans clignoter. Le second cas aurait une autre cause, que je n'ai pas trouvée.</div>
+<div class="approches">
+<div class="approche conseillee"><h3>A. Une amorce retient le toucher (conseillé)</h3>
+<p>Un petit script (moins de 2 Ko) chargé avant l'affichage. Son adresse ne change que s'il change : après un déploiement, le téléphone l'a déjà. Tant que les gestes ne sont pas branchés, il retient le toucher et enfonce le bouton ; dès qu'ils le sont, le geste part comme d'habitude, sans rechargement.</p>
+<ul class="plus-moins"><li class="plus">Plus jamais de page rechargée par un geste trop tôt.</li><li class="plus">L'offre s'affiche aussi vite qu'aujourd'hui.</li><li class="moins">Juste après un déploiement, sur le chantier, le changement arrive jusqu'à 2 s après le toucher (bouton enfoncé pendant ce temps).</li></ul></div>
+<div class="approche"><h3>B. Les scripts avant l'affichage</h3>
+<p>La page attend ses scripts avant de montrer les lignes.</p>
+<ul class="plus-moins"><li class="plus">Chaque geste répond au toucher dès que l'offre paraît.</li><li class="moins">Juste après un déploiement, sur le chantier : écran blanc 1,8 à 2 s de plus à l'ouverture de la première page.</li></ul></div>
+<div class="approche"><h3>C. Laisser ainsi</h3>
+<ul class="plus-moins"><li class="plus">Rien à faire.</li><li class="moins">Le cas reste : une page rechargée de temps en temps, surtout après un déploiement et sur un réseau faible.</li></ul></div>
+</div>
+<div class="decision" data-q="D1 SR-1, geste trop tôt">
+<p class="q">D1. Un toucher arrive avant que les gestes soient branchés</p>
+<div class="opts"><button type="button" data-v="A">A. Une amorce retient le toucher (conseillé)</button><button type="button" data-v="B">B. Les scripts avant l'affichage</button><button type="button" data-v="C">C. Laisser ainsi</button></div>
+<textarea aria-label="Commentaire : D1 SR-1, geste trop tôt" placeholder="Ce que tu as vu sur l'iPhone : page rechargée, ou étiquette en retard ?"></textarea>
+</div>
+</section>
+
+<h2 id="a19" data-toc="MP-A19">MP-A19 : corriger le nom mal écrit par l'IA</h2>
+<section class="point">
+<p>« Générer l'offre » sur une offre sans client : « Créer la fiche » enregistre le nom entendu tel quel et ouvre le PDF. Un nom mal écrit (« Gerber-Monin » pour « Gerber-Monnin ») part sur le PDF ; le corriger demande ensuite d'aller dans « Clients », d'ouvrir la fiche, de la modifier, puis de régénérer.</p>
+<div class="trio">
+<figure><img src="MAQUETTE-fluidite-suite-img/a19-avant.jpg" alt="Aujourd'hui : « Pour qui est cette offre ? », le nom entendu en gras et le bouton Créer la fiche" loading="lazy"><figcaption>Aujourd'hui : le nom se lit, il ne se corrige pas.</figcaption></figure>
+<figure><img src="MAQUETTE-fluidite-suite-img/a19-a.jpg" alt="Proposé A : la fiche du client, nom et adresse remplis d'après la dictée, bouton Enregistrer et voir le PDF" loading="lazy"><figcaption>A. « Créer la fiche » ouvre la fiche, remplie d'après la dictée (nom, rue, NPA, localité). « Enregistrer et voir le PDF ».</figcaption></figure>
+<figure><img src="MAQUETTE-fluidite-suite-img/a19-b.jpg" alt="Proposé B : dans le cadre jaune, le nom entendu dans un champ modifiable, corrigé en Gerber-Monnin, puis Créer la fiche et voir le PDF" loading="lazy"><figcaption>B. Le nom entendu est un champ, dans le cadre jaune. Juste : un toucher, comme aujourd'hui. Faux : on le corrige sur place.</figcaption></figure>
+</div>
+<p>Ta demande dit « ouvrir la fiche » et « sans clic de plus » : A ouvre la fiche et coûte un toucher de plus à chaque offre, même quand le nom est juste ; B corrige sans toucher de plus, mais seulement le nom (l'adresse se lit, elle se corrige ensuite dans la fiche). Le téléphone et le courriel ne servent pas au PDF.</p>
+<div class="decision" data-q="D2 MP-A19, nom entendu">
+<p class="q">D2. Corriger le nom entendu avant de créer la fiche</p>
+<div class="opts"><button type="button" data-v="A">A. Ouvrir la fiche remplie, « Enregistrer et voir le PDF »</button><button type="button" data-v="B">B. Le nom modifiable dans le cadre jaune (conseillé)</button></div>
+<p class="aide">Les fiches qui ressemblent et « Toutes les fiches » restent dessous, inchangées, dans les deux cas.</p>
+<textarea aria-label="Commentaire : D2 MP-A19, nom entendu" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="a14" data-toc="MP-A14">MP-A14 : les pièces existantes dans la fiche d'une ligne</h2>
+<section class="point">
+<p>La fiche d'une ligne a un champ « Pièce » relié à la liste des pièces de l'offre. Cette sorte de liste (« datalist ») ne paraît qu'au clavier, filtrée par ce qui est déjà écrit : une ligne déjà dans le « Séjour » ne propose que « Séjour ». Sur ton iPhone, son affichage n'est pas vérifié.</p>
+<div class="trio">
+<figure><img src="MAQUETTE-fluidite-suite-img/a14-avant.jpg" alt="Aujourd'hui : la fiche d'une ligne, le champ Pièce vide avec Général en gris" loading="lazy"><figcaption>Aujourd'hui : un champ à taper, rien ne dit quelles pièces existent.</figcaption></figure>
+<figure><img src="MAQUETTE-fluidite-suite-img/a14-a.jpg" alt="Proposé A : les pièces en puces, Général, Séjour, Chambre choisie, Cuisine, Salle de bain, et un champ Autre pièce" loading="lazy"><figcaption>A. Les pièces de l'offre en puces, un toucher choisit ; « Autre pièce » pour en créer une. Les mêmes puces que dans « + Ligne ».</figcaption></figure>
+<figure><img src="MAQUETTE-fluidite-suite-img/a14-b.jpg" alt="Proposé B : le champ Pièce et, dessous, la liste des pièces ouverte" loading="lazy"><figcaption>B. Le champ reste ; au toucher, la liste complète s'ouvre dessous, filtrée en tapant.</figcaption></figure>
+</div>
+<ul class="serre"><li>A marche sans JavaScript (boutons radio) et se lit sans clavier ; avec dix pièces, les puces prennent trois rangées.</li><li>B garde l'écran court ; il faut un toucher pour voir les pièces, et le clavier s'ouvre en même temps.</li><li>Une offre sans pièce n'a pas ce champ aujourd'hui : inchangé.</li></ul>
+<div class="decision" data-q="D3 MP-A14, pièces">
+<p class="q">D3. Choisir la pièce dans la fiche d'une ligne</p>
+<div class="opts"><button type="button" data-v="A">A. Les pièces en puces, plus « Autre pièce » (conseillé)</button><button type="button" data-v="B">B. Le champ et sa liste ouverte au toucher</button></div>
+<textarea aria-label="Commentaire : D3 MP-A14, pièces" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="sr6" data-toc="SR-6">SR-6 : « des changements attendent » sans changement</h2>
+<section class="point">
+<p><b>Reproduit.</b> Dans ta recette, SR-5 (juste avant) laisse exprès un changement en attente : quantité changée en mode avion, « Annuler » à la déconnexion. « Envoyer » refuse de partir dès qu'un changement attend, quelle que soit son offre, et dit « Des changements de l'offre attendent le réseau ». Sur une autre offre, c'est faux, et l'artisan ne peut pas envoyer un PDF juste.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-fluidite-suite-img/sr6-avant-autre.jpg" alt="Aujourd'hui : PDF de l'offre 1, message rouge « Des changements de l'offre attendent le réseau », alors que le changement est sur l'offre 2" loading="lazy"><figcaption>Aujourd'hui : le changement attend sur l'offre 2, « Envoyer » de l'offre 1 est bloqué.</figcaption></figure>
+<figure><img src="MAQUETTE-fluidite-suite-img/sr6-apres-autre.jpg" alt="Proposé : l'offre 1 partagée, « Envoyée » notée au retour du réseau, le bandeau jaune dit que le changement est sur l'offre 2" loading="lazy"><figcaption>Proposé : « Envoyer » ne regarde que les changements de cette offre ; le bandeau dit de quelle offre est celui qui attend.</figcaption></figure>
+</div>
+<div class="regle"><b>Correction sans choix.</b> C'est un défaut : je le corrige, avec un test qui échoue avant. Le bandeau jaune nomme l'offre et le changement qui attendent.</div>
+<p class="muted">Non reproduit avec le réseau revenu : huit passages (Chromium et WebKit, retour par le lien ou par l'historique, réseau rendu sur « Plus » ou sur l'offre). Le changement part, « Envoyer » marche, « Offre 1 envoyée ».</p>
+<h3>Et quand le changement en attente est sur cette offre-là</h3>
+<p>Le PDF affiché ne le contient pas encore : l'envoyer enverrait l'ancienne version. Aujourd'hui, « Envoyer » attend le réseau, refait le PDF, puis l'artisan retouche « Envoyer ».</p>
+<div class="trio">
+<figure><img src="MAQUETTE-fluidite-suite-img/sr6-avant-meme.jpg" alt="Aujourd'hui : même message rouge, le changement est bien sur l'offre 1" loading="lazy"><figcaption>Aujourd'hui : juste, mais il ne dit pas lequel.</figcaption></figure>
+<figure><img src="MAQUETTE-fluidite-suite-img/sr6-meme-a.jpg" alt="Proposé A : le message nomme le changement, quantité 9 sur Échafaudage, montage et location" loading="lazy"><figcaption>A. Le message nomme le changement ; « Envoyer » attend le réseau.</figcaption></figure>
+<figure><img src="MAQUETTE-fluidite-suite-img/sr6-meme-b.jpg" alt="Proposé B : le même message avec un lien Envoyer quand même" loading="lazy"><figcaption>B. Pareil, plus « Envoyer quand même » : l'ancienne version part.</figcaption></figure>
+</div>
+<div class="decision" data-q="D4 SR-6, changement de cette offre">
+<p class="q">D4. Un changement de cette offre attend le réseau, l'artisan touche « Envoyer »</p>
+<div class="opts"><button type="button" data-v="A">A. Nommer le changement et attendre (conseillé)</button><button type="button" data-v="B">B. Nommer le changement et proposer « Envoyer quand même »</button></div>
+<p class="aide">A : jamais de PDF faux chez le client. B : l'artisan peut envoyer sans réseau, au risque d'un prix ou d'une quantité d'avant.</p>
+<textarea aria-label="Commentaire : D4 SR-6, changement de cette offre" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="ordre" data-toc="Ordre">Ordre et estimation</h2>
+<section class="point">
+<table>
+<thead><tr><th>Ordre</th><th>Point</th><th>Estimation</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>SR-6 : « Envoyer » ne regarde que cette offre, bandeau et message qui nomment le changement</td><td class="n">1,5 h</td></tr>
+<tr><td>2</td><td>SR-1 : selon D1</td><td class="n">3 h</td></tr>
+<tr><td>3</td><td>MP-A14 : les pièces dans la fiche d'une ligne</td><td class="n">2 h</td></tr>
+<tr><td>4</td><td>MP-A19 : le nom entendu, selon D2</td><td class="n">2 h</td></tr>
+<tr><td>5</td><td>Revue, recette par l'interface sur le banc (Chromium et WebKit), déploiement sur le test avec ton accord</td><td class="n">2,5 h</td></tr>
+</tbody>
+</table>
+<p>Environ 11 h. Le déploiement sur le test attend ton accord : tu as demandé ce matin de ne plus y déployer.</p>
+<div class="decision" data-q="D5 Ordre">
+<p class="q">D5. Cet ordre</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire : D5 Ordre" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="reponses" data-toc="Réponses">Copier mes réponses</h2>
+<div class="recap">
+<p>Ce texte se remplit avec tes choix. Copie-le et colle-le dans la conversation.</p>
+<textarea id="recap" readonly aria-label="Récapitulatif des réponses"></textarea>
+<p><button type="button" class="copier" id="copier">Copier le texte</button><span class="copie-ok" id="copie-ok" hidden>Copié.</span></p>
+</div>
+</main>
+
+<script>
+(function () {
+  var CLE = 'offregen-fluidite-suite-2026-11-24';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  var blocs = document.querySelectorAll('.decision');
+  function recap() {
+    var lignes = [];
+    blocs.forEach(function (b) {
+      var q = b.getAttribute('data-q'), r = etat[q] || {};
+      var choisi = b.querySelector('.opts button[data-v="' + (r.v || '') + '"]');
+      var l = q + ' : ' + (choisi ? choisi.textContent : '(pas de réponse)');
+      if (r.c) l += '. Commentaire : ' + r.c.replace(/\s+/g, ' ').trim();
+      lignes.push(l);
+    });
+    document.getElementById('recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    etat[q] = etat[q] || {};
+    var boutons = b.querySelectorAll('.opts button');
+    var champ = b.querySelector('textarea');
+    boutons.forEach(function (bt) {
+      bt.setAttribute('aria-pressed', bt.getAttribute('data-v') === etat[q].v ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        etat[q].v = etat[q].v === bt.getAttribute('data-v') ? '' : bt.getAttribute('data-v');
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-v') === etat[q].v ? 'true' : 'false'); });
+        garder(); recap();
+      });
+    });
+    if (champ) {
+      champ.value = etat[q].c || '';
+      champ.addEventListener('input', function () { etat[q].c = champ.value; garder(); recap(); });
+    }
+  });
+  recap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('recap');
+    var ok = function () { var s = document.getElementById('copie-ok'); s.hidden = false; setTimeout(function () { s.hidden = true; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); document.execCommand('copy'); ok(); }); }
+    else { t.select(); document.execCommand('copy'); ok(); }
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

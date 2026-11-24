@@ -27,12 +27,9 @@
     <div class="dicte">
       <p class="muted petit">Entendu dans la dictée</p>
       <p><b>{{ offre.client_dicte }}</b>{% if offre.lieu_dicte %}, {{ offre.lieu_dicte|replace({"\n": ', '}) }}{% endif %}</p>
-      <form method="post" action="/offres/{{ offre.id }}/client"{% if suite %} data-sortir{% endif %}>
-        <input type="hidden" name="_csrf" value="{{ csrf() }}">
-        {% if suite %}<input type="hidden" name="suite" value="{{ suite }}">{% endif %}
-        <input type="hidden" name="creer" value="1">
-        <button class="btn primary" type="submit">Créer la fiche «&nbsp;{{ offre.client_dicte }}&nbsp;»</button>
-      </form>
+      {# La fiche s'ouvre remplie d'après la dictée, dans la même fenêtre : le nom mal écrit par l'IA se corrige avant
+         qu'elle naisse (recette du 2026-11-24, MP-A19, D2 A). #}
+      <a class="btn primary" href="/clients/nouveau?offre={{ offre.id }}{% if suite %}&amp;suite={{ suite }}{% endif %}&amp;dictee=1">Créer la fiche «&nbsp;{{ offre.client_dicte }}&nbsp;»</a>
     </div>
     {% if proches is not empty %}
       <h3 class="sous-titre">Ou une fiche qui ressemble</h3>

@@ -1,0 +1,182 @@
+[
+ {
+  "profil": "4g",
+  "geste": "juste",
+  "quand": "debut",
+  "offre_visible_ms": 273,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "interactive",
+   "origine": 1795524144883
+  },
+  "ecran_change_ms": 167,
+  "confirme_ms": 315,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "juste",
+  "quand": "apres10s",
+  "offre_visible_ms": 264,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524146374
+  },
+  "ecran_change_ms": 39,
+  "confirme_ms": 183,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "corbeille",
+  "quand": "debut",
+  "offre_visible_ms": 259,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "interactive",
+   "origine": 1795524157742.3
+  },
+  "ecran_change_ms": 152,
+  "confirme_ms": 278,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "corbeille",
+  "quand": "apres10s",
+  "offre_visible_ms": 252,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524159345.6
+  },
+  "ecran_change_ms": 113,
+  "confirme_ms": 260,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "quantite",
+  "quand": "debut",
+  "offre_visible_ms": 258,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "interactive",
+   "origine": 1795524170794.1
+  },
+  "ecran_change_ms": 58,
+  "confirme_ms": 201,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "quantite",
+  "quand": "apres10s",
+  "offre_visible_ms": 281,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524172191.1
+  },
+  "ecran_change_ms": 64,
+  "confirme_ms": 204,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "juste",
+  "quand": "debut",
+  "offre_visible_ms": 674,
+  "au_toucher": {
+   "fluide": false,
+   "etat": "loading",
+   "origine": 1795524183823
+  },
+  "ecran_change_ms": 1849,
+  "confirme_ms": 4155,
+  "recharge": true,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "juste",
+  "quand": "apres10s",
+  "offre_visible_ms": 658,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524189603.5
+  },
+  "ecran_change_ms": 47,
+  "confirme_ms": 643,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "corbeille",
+  "quand": "debut",
+  "offre_visible_ms": 666,
+  "au_toucher": {
+   "fluide": false,
+   "etat": "loading",
+   "origine": 1795524201826.6
+  },
+  "ecran_change_ms": 1847,
+  "confirme_ms": 4157,
+  "recharge": true,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "corbeille",
+  "quand": "apres10s",
+  "offre_visible_ms": 664,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524207500.1
+  },
+  "ecran_change_ms": 120,
+  "confirme_ms": 725,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "quantite",
+  "quand": "debut",
+  "offre_visible_ms": 653,
+  "au_toucher": {
+   "fluide": false,
+   "etat": "loading",
+   "origine": 1795524220226.1
+  },
+  "ecran_change_ms": 1882,
+  "confirme_ms": 4157,
+  "recharge": true,
+  "erreurs": []
+ },
+ {
+  "profil": "chantier",
+  "geste": "quantite",
+  "quand": "apres10s",
+  "offre_visible_ms": 655,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524225925.5
+  },
+  "ecran_change_ms": 59,
+  "confirme_ms": 676,
+  "recharge": false,
+  "erreurs": []
+ }
+]
