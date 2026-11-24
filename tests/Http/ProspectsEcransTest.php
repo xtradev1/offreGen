@@ -266,6 +266,28 @@ final class ProspectsEcransTest extends TestCase
         self::assertStringNotContainsString('079 555 01 42', (string) $nina->get("/admin/prospects/$id")->getContent());
     }
 
+    /**
+     * Recette du 2026-11-24 sur le site de test : « mercredi 26.11 » pour un jeudi. Le serveur est à l'heure de Zurich,
+     * le poste de développement en UTC : le jour de la semaine se lisait dans un autre fuseau que la date.
+     */
+    public function testLeJourDeLaSemaineNeDependPasDuFuseauDuServeur(): void
+    {
+        $fuseau = date_default_timezone_get();
+        try {
+            foreach (['UTC', 'Europe/Zurich', 'America/New_York'] as $zone) {
+                date_default_timezone_set($zone);
+                $nina = $this->navigateur('a@exemple.ch');
+                $id = $this->fichDeNina($nina);
+                // Le 10 novembre 2026 est un mardi.
+                self::assertSame(303, $this->poster($nina, "/admin/prospects/$id/pas", ['texte' => 'Rappeler', 'date' => '2026-11-10'])->getStatusCode(), $zone);
+                self::assertStringContainsString('Rappeler · mardi 10.11', (string) $nina->get('/admin/prospects')->getContent(), $zone);
+                BaseDeTest::pdo()->exec('DELETE FROM prospect');
+            }
+        } finally {
+            date_default_timezone_set($fuseau);
+        }
+    }
+
     public function testCreerUneDemoDepuisLaFiche(): void
     {
         $nina = $this->navigateur('a@exemple.ch');

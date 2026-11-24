@@ -371,8 +371,10 @@ final class ProspectControleur
     /** Un jour comme on le dit : « aujourd'hui », « demain », « hier », sinon « jeudi 26.11 ». */
     private function jour(string $date): string
     {
-        $aujourdhui = new \DateTimeImmutable($this->prospects()->aujourdhui());
-        $jour = new \DateTimeImmutable($date);
+        // Les deux jours dans le fuseau du formateur : le nom du jour ne dépend pas du fuseau du serveur.
+        $utc = new \DateTimeZone('UTC');
+        $aujourdhui = new \DateTimeImmutable($this->prospects()->aujourdhui(), $utc);
+        $jour = new \DateTimeImmutable($date, $utc);
         $ecart = (int) $aujourdhui->diff($jour)->format('%r%a');
         if ($ecart >= -1 && $ecart <= 1) {
             return ['hier', "aujourd'hui", 'demain'][$ecart + 1];
