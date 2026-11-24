@@ -41,6 +41,7 @@
 - [2026-11-23] Options et variantes (décisions de Xavier, planche des douze modèles) : une variante retenue efface ses sœurs sur le document, l'écran garde la ligne remplacée barrée ; facture : ligne « Payé jusqu'au …, escompte de 2 % » sous le total, offre : phrase du paiement seule ; la facture garde la pièce (`facture_ligne.piece`) ; PDF resserré gardé s'il gagne une page, page 2 de signature gardée sinon. Dépendance : faces italiques IBM Plex (OFL) dans `public/fonts/`. Détail : `docs/plans/2026-11-22_options-variantes/ETAT.md`.
 - [2026-11-24] **Sans rechargement** (choix D1 à D10 du 23.11) : morceaux de page découpés dans le noyau, script maison `fluide.js`, file d'envoi à clé unique (table `envoi`), service worker (copies par compte, 14 jours au plus), fichiers versionnés par l'empreinte de leur contenu (`fichier()`). Les fenêtres de l'offre et « Prendre » attendent le serveur (choix A de Xavier, 24.11). Détail : `docs/plans/2026-11-23_sans-rechargement/ETAT.md`.
 - [2026-11-23] Commerciaux (Xavier) : deux codes par commercial. Le code de parrainage donne un mois gratuit à l'artisan et la commission au commercial (pourcentage réservé aux commerciaux). Le code personnel ouvre un seul compte, payant : prix plein sous 5 artisans payants, moitié dès 5, offert dès 10, aucune commission pour personne. Échange de codes entre commerciaux : fraude des deux, repérée au passage au paiement (IBAN, IDE, adresse, téléphone). Espace de démonstration marqué « Démonstration », envoi bloqué ; 200 dictées de démonstration par mois et par commercial, alerte à Xavier à 80 %, ajouter ou bloquer d'un clic. Règles C1, C9, C13 à C17 de `docs/commerciaux/PROJET-regles-commission.md`, tâche Origin 555.
+- [2026-11-24] Dictée et vocabulaire du métier (sous-chantier 30, recette MP-A8) : le catalogue de l'artisan part en `prompt` de Whisper (produits les plus utilisés d'abord, 500 caractères au plus). Écartés après mesure : un lexique par métier écrit à la main, une couche phonétique en code, une règle de « réflexion » dans la consigne (54 produits visés sur 54 avec et sans elle). Détail : `docs/plans/2026-11-07_voix-offre/30-dictee-mal-comprise/ETAT.md`.
 
 ## Current state
 ### Done
@@ -53,6 +54,7 @@
 - [ ] Options et variantes (tâche 547) : livré en code et déployé sur le test (`e046e57`, sonde verte), planche close. Reste avant la mise en service : le banc sur les vraies dictées de Xavier (fiches 21 à 28), puis la clôture du chantier. Détail : `docs/plans/2026-11-22_options-variantes/ETAT.md`.
 - [ ] Mise en production : étapes 1 et 2 faites, contrôles GitHub en place. Le 18.11 : courriels, liens d'accès et mot de passe, droit administrateur, purge écrite et éteinte, alertes, dictée à l'abri, livrés en code et revus (588 tests), commit `475ef57` déployé sur le test (`PLAN-completer.md`, `REVUE.md`). Écrans en attente de la marque (gate visuel). Le 20.11 : page d'accueil de Dicta validée par Xavier (« je te valide le tout ») et déployée sur le test, connexion en carte sur grand écran, `/decouvrir`, logo de l'application vers le site (`2091e9b`).
 - [ ] Sans rechargement (tâche 593) : livré et déployé sur le test (`93a61d1`, sonde verte), recette de Xavier attendue (`RECETTE.md`), deux choix ouverts (mention dans la politique de confidentialité, durée de garde). Détail : `docs/plans/2026-11-23_sans-rechargement/ETAT.md`.
+- [ ] Dictée mal comprise (sous-chantier 30, Origin 514) : lots 1, 2 et 8 faits ; le lot 8 (catalogue en `prompt` de Whisper) est en service sur le test (`8bb25b1`, sonde verte). Reste : la dictée A6 refaite par Xavier, puis les lots 3 à 7 (fenêtre de choix, verdict, jauge, revue). Détail : `docs/plans/2026-11-07_voix-offre/30-dictee-mal-comprise/ETAT.md`.
 
 ### Next
 - [ ] Recette regroupée par Xavier sur le test (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
@@ -126,7 +128,6 @@
 
 ## Session log
 - Entrées plus anciennes → `docs/roadmap-archive-2026-11.md`.
-- [2026-11-07] Réponses sur la v3, maquette v4 (acompte à part, offre figée après l'envoi), validée et fusionnée. Environnement WSL installé, clone de travail. Chantier « de la voix à l'offre » ouvert, phase 0.
 - [2026-11-07] Chantier : cadrage, découpage en neuf sous-chantiers, sous-chantier 01 enchaîné jusqu'au lot 8 (Xavier : « enchaîne jusqu'au dernier lot »). Défauts trouvés en route : variables d'environnement ignorées sous Ubuntu, en-têtes de sécurité absents hors Apache, purge oubliée pour les échecs, variable PHP avalée par une espace insécable.
 - [2026-11-12] Sous-chantier 10 : documentation d'Infomaniak lue, Whisper local au même protocole, extraction par Qwen dans Ollama, test de bout en bout et parcours cliqué sur les vrais services.
 - [2026-11-12 au 16] **Sous-chantiers 11 à 25**, écrans, offre, clients, facture, ergonomie, site de test monté (14.11) et branché sur Infomaniak.
@@ -158,3 +159,7 @@
   - Deux codes par commercial (parrainage avec commission, personnel sans commission) ; compte personnel payant, moitié dès 5 artisans payants, offert dès 10 ; échange de codes repéré au paiement.
   - Espace de démonstration marqué, envoi bloqué, 200 dictées par mois, alerte à 80 %. Projet de règles v0.3, commit `9cf9b49` (document seul, rien à déployer).
   - Tâche Origin 555. Détail : `docs/commerciaux/PROJET-regles-commission.md`.
+- [2026-11-24] **Dictée : vocabulaire du métier (sous-chantier 30, lot 8)**
+  - Recette MP-A8 : « à laquer » transcrit « à la quai ». Le catalogue de l'artisan part en `prompt` de Whisper : travertin, plinthes et crépi corrigés au banc, sans régression ; « à la quai » reste.
+  - Lexique par métier, couche phonétique et règle de réflexion mesurés puis écartés : le modèle d'extraction rattrape déjà les mots mal transcrits.
+  - `8bb25b1` en service sur le test, sonde verte. Détail : `docs/plans/2026-11-07_voix-offre/30-dictee-mal-comprise/ETAT.md`.
