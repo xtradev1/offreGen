@@ -13,8 +13,8 @@ Recette AB-1 bis sur l'iPhone de Xavier : le test porte le correctif depuis le 2
 
 ## En attente de toi
 
-- Sur ton iPhone, après le déploiement : dicter 10 s, fermer Safari de force, le rouvrir aussitôt. La fenêtre « Une dictée n'est pas partie » doit être là dès l'ouverture.
-- Toucher « Continuer la dictée », parler 10 s, « Terminer » : une seule offre, avec ce qui a été dit avant et après la coupure.
+- Fait le 2026-11-24 (reprise immédiate validée). À refaire après le prochain déploiement : dicter 10 s, fermer Safari de force, le rouvrir aussitôt. La fenêtre « Une dictée n'est pas partie » doit être là dès l'ouverture.
+- Toucher « Continuer la dictée », parler 5 s, « Abandonner » : la dictée disparaît, rien ne revient. Puis une autre dictée coupée, « Continuer la dictée », parler 10 s, « Terminer » : une seule offre, avec ce qui a été dit avant et après la coupure.
 - Refaire une coupure pendant la suite, rouvrir : la dictée revient avec sa durée totale.
 
 ## Suivi Origin
@@ -32,6 +32,9 @@ Recette AB-1 bis sur l'iPhone de Xavier : le test porte le correctif depuis le 2
 - 2026-11-24, Claude, correction : l'onglet qui enregistre ou envoie une dictée tient un verrou du navigateur à son nom (Web Locks, `navigator.locks`, Safari 15.4 et plus). Le navigateur le lâche quand l'onglet meurt : à la réouverture, une dictée sans verrou est proposée tout de suite. Sans `navigator.locks`, la règle des 20 s reste, et la page refait le tour d'elle-même à leur échéance.
 - 2026-11-24, Claude, « Continuer la dictée » : bouton de la fenêtre de reprise. Le micro se rouvre, le minuteur repart de la durée déjà dictée, la limite des 30 min vaut pour le tout. La suite est un fichier à part (deux enregistreurs ne se recollent pas en un fichier lisible, webm comme mp4) : l'envoi porte `audio` puis `suite[]`, 5 parties au plus. Le serveur transcrit chaque partie et joint les textes dans l'ordre : une seule offre, un seul import compté. La jonction par ffmpeg est écartée : le site web ne peut pas le lancer, l'offre attendrait le cron. « Abandonner » pendant la suite n'efface que la suite ; le début reste proposé. « Garder dans un fichier » rend une partie par fichier.
 - 2026-11-24, Claude : pas de nouvelle maquette, un bouton de plus dans une fenêtre validée (R1 B) ; la recette sur iPhone tranche.
+- 2026-11-24, Xavier, recette AB-1 bis sur iPhone : « La dictée, elle est reprise directement quand je relance le truc, ça c'est bien. Le problème, c'est que j'y ai fait continuer, j'y ai continué à parler, et après j'ai cliqué sur annuler la dictée, donc supprimer, et là ça m'a refait apparaître l'élément. Et il a fallu que je clique deuxième fois sur supprimer. Donc ça, il faut que, si on relance la dictée, c'est simple, ça enlève le point, et puis on reprend. Et ça ne doit plus remettre le système comme ça. »
+- 2026-11-24, Claude, en conséquence : remplace « Abandonner pendant la suite n'efface que la suite ». Continuée, la dictée est une dictée en cours comme une autre : « Abandonner » l'efface entière, début compris (« Abandonner la dictée ? Elle ne sera pas gardée, début compris. »), et rien ne se repropose. Une coupure pendant la suite la fait toujours revenir à la réouverture.
+- 2026-11-24, Xavier, même recette : Safari redemande le micro à chaque rechargement. Réponse de Claude : un site ne peut pas prolonger cette permission, c'est un réglage de Safari (par site : aA, Réglages du site web, Micro, Autoriser ; pour tous les sites : Réglages, Safari, Micro).
 
 ## Journal
 

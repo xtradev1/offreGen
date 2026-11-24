@@ -295,13 +295,6 @@ const abri = (() => {
       }));
       return fin(t).then(() => true);
     }), false),
-    // Suite abandonnée : la dictée redevient ce qu'elle était, les tranches de la suite partent.
-    retablir: (d) => sans(ouvrir().then((db) => {
-      const t = db.transaction(['dictees', 'morceaux'], 'readwrite');
-      t.objectStore('dictees').put(Object.assign({}, d, { vu: 0 }));
-      t.objectStore('morceaux').delete(IDBKeyRange.bound([d.id, d.tranches], [d.id, Infinity]));
-      return fin(t);
-    }), null),
     // Le verrou d'une dictée, tenu par l'onglet qui l'enregistre ou l'envoie. Le navigateur le lâche quand l'onglet
     // meurt (Safari fermé de force) : à la réouverture, la dictée se propose tout de suite. Rend de quoi le lâcher.
     tenir: (id) => {
@@ -799,16 +792,14 @@ function nouvelleOffre() {
   // Trop court : on recommence tout de suite, le micro se rouvre.
   el('[data-recommencer]').addEventListener('click', () => demarrer());
 
-  // Une suite abandonnée n'efface qu'elle : le début reste à l'abri et se propose de nouveau, dans la fenêtre restée
-  // ouverte (la fermer puis la rouvrir croisait le retour de l'historique, qui la remettait « à plus tard » : revue du
-  // 2026-11-24).
-  const abandonnerCopie = (rec) => (rec.suite
-    ? rec.copie.then((ok) => ok && abri.retablir(rec.suite.dictee)).then(() => proposer(rec.suite.dictee, true))
-    : rec.copie.then((ok) => ok && abri.supprimer(rec.cle)));
+  // Recette AB-1 bis (Xavier, 2026-11-24) : une dictée continuée redevient une dictée en cours comme une autre.
+  // L'abandonner l'efface entière, début compris, et la fenêtre ne la repropose pas.
+  // Une suite efface son début même si sa propre copie n'a pas pu commencer : le début, lui, est à l'abri.
+  const abandonnerCopie = (rec) => rec.copie.then((ok) => (ok || rec.suite) && abri.supprimer(rec.cle));
   el('[data-abandonner]').addEventListener('click', () => {
     const rec = enregistreur;
     if (!window.confirm(rec && rec.suite
-      ? 'Abandonner la suite ? Le début de la dictée reste sur ce téléphone.'
+      ? 'Abandonner la dictée ? Elle ne sera pas gardée, début compris.'
       : 'Abandonner l’enregistrement ? Il ne sera pas gardé.')) return;
     occupe = false;
     duMicro = false;
@@ -818,7 +809,7 @@ function nouvelleOffre() {
       if (rec.state !== 'inactive') rec.stop(); else abandonnerCopie(rec);
     }
     libererMicro();
-    if (!(rec && rec.suite)) montrer('choix');
+    montrer('choix');
   });
 
   // Reprise (R1 B, Xavier, 2026-11-18) : à l'ouverture, une dictée restée sur ce téléphone sans être arrivée au
@@ -843,9 +834,8 @@ function nouvelleOffre() {
   // la dictée entière tient dans les 30 minutes.
   const peutContinuer = (d) => d.etat === 'enregistrement' && !!possible && !epuise && (d.parties || [0]).length < PARTIES_MAX
     && dureeMs(d) < (DUREE_MAX_S - 10) * 1000 && (!d.type || MediaRecorder.isTypeSupported(d.type));
-  // force : proposée depuis la fenêtre déjà ouverte (suite abandonnée), sans attendre qu'elle soit fermée.
-  const proposer = (d, force = false) => {
-    if (etatCourant !== 'choix' && !force) return;
+  const proposer = (d) => {
+    if (etatCourant !== 'choix') return;
     repriseCourante = d;
     const suite = peutContinuer(d);
     const envoi = el('[data-reprise-envoyer]');
