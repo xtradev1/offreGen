@@ -9,8 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * La page où un correcteur relit les textes de Dicta (chantier 2026-11-24_relecture-textes) : captures des écrans et
- * textes numérotés, construite hors de l'application (relecture/index.html, public/relecture/). Une page statique :
- * aucune donnée lue ni écrite. Les corrections restent dans le navigateur du correcteur.
+ * textes numérotés, construite hors de l'application (relecture/index.html, public/relecture-textes/). Une page
+ * statique : aucune donnée lue ni écrite. Les corrections restent dans le navigateur du correcteur.
  *
  * La route n'existe que là où RELECTURE_TEXTES=1 (le site de test, config/routes.php) : la production ne la sert pas.
  */

@@ -1,7 +1,8 @@
 """Construit la page de relecture des textes de Dicta à partir des captures (captures/captures.json).
 
 Deux sorties, même contenu :
-- le site : relecture/index.html (servi par la route /relecture) et public/relecture/ (styles, scripts, images) ;
+- le site : relecture/index.html (servi par la route /relecture) et public/relecture-textes/ (styles, scripts,
+  images). Le dossier ne s'appelle pas « relecture » : Apache redirigerait /relecture vers /relecture/ (404).
 - la maquette locale du chantier : docs/plans/2026-11-24_relecture-textes/MAQUETTE-textes.html, kit en ligne.
 Les textes de l'application vont dans un bloc JSON : aucun outil de mise en forme ne les retouche.
 """
@@ -120,7 +121,7 @@ css = (ICI / 'relecture.css').read_text(encoding='utf-8')
 js = (ICI / 'relecture.js').read_text(encoding='utf-8')
 
 # 1. Le site : fichiers à part, aucune ligne de style ni de script dans la page (politique de sécurité du site).
-pub = DEPOT / 'public/relecture'
+pub = DEPOT / 'public/relecture-textes'
 if pub.exists():
     shutil.rmtree(pub)
 (pub / 'img').mkdir(parents=True)
@@ -131,9 +132,9 @@ for f in (CAPTURES / 'img').glob('*.jpg'):
 shutil.copy(KIT / 'assets/maquette-kit.css', pub / 'kit.css')
 shutil.copy(KIT / 'assets/maquette-kit.js', pub / 'kit.js')
 site = (gabarit
-        .replace('%%CSS%%', '<link rel="stylesheet" href="/relecture/kit.css">\n<link rel="stylesheet" href="/relecture/relecture.css">')
-        .replace('%%JS%%', '<script src="/relecture/relecture.js"></script>\n<script src="/relecture/kit.js"></script>')
-        .replace('%%DONNEES%%', donnees('/relecture/img/')))
+        .replace('%%CSS%%', '<link rel="stylesheet" href="/relecture-textes/kit.css">\n<link rel="stylesheet" href="/relecture-textes/relecture.css">')
+        .replace('%%JS%%', '<script src="/relecture-textes/relecture.js"></script>\n<script src="/relecture-textes/kit.js"></script>')
+        .replace('%%DONNEES%%', donnees('/relecture-textes/img/')))
 (DEPOT / 'relecture').mkdir(exist_ok=True)
 (DEPOT / 'relecture/index.html').write_text(site, encoding='utf-8', newline='\n')
 
@@ -143,7 +144,7 @@ chantier.mkdir(parents=True, exist_ok=True)
 locale = (gabarit
           .replace('%%CSS%%', '<style>\n' + css.replace('%%POLICES%%', '../../../public/fonts') + '</style>')
           .replace('%%JS%%', '<script>\n' + js + '</script>')
-          .replace('%%DONNEES%%', donnees('../../../public/relecture/img/')))
+          .replace('%%DONNEES%%', donnees('../../../public/relecture-textes/img/')))
 cible = chantier / 'MAQUETTE-textes.html'
 cible.write_text(locale, encoding='utf-8', newline='\n')
 r = subprocess.run([sys.executable, str(KIT / 'scripts/inject_kit.py'), str(cible)], capture_output=True, text=True, encoding='utf-8')

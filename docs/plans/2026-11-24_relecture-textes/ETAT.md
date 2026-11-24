@@ -4,6 +4,11 @@ Ouvert le 2026-11-24 à la demande de Xavier : « une maquette sur le site, avec
 exemples, le site web, le guide », « on doit pouvoir mettre des commentaires comme dans les maquettes ».
 Une première version (2 186 textes extraits du code, page claude.ai) a été refusée : « beaucoup trop ».
 
+## Suivi Origin
+
+- Projet 44 (offreGen), tâche 622 « Relecture des textes par un correcteur ». Sous-tâches : 623 (page de relecture,
+  conversation du 2026-11-24 rattachée), 624 (reporter les corrections), 625 (retirer la page).
+
 ## Ce qui est livré
 
 - Une page de relecture : 36 écrans capturés, 389 textes numérotés T001 à T389. Un texte qui revient sur un autre
@@ -13,10 +18,11 @@ Une première version (2 186 textes extraits du code, page claude.ai) a été re
     le navigateur du correcteur (localStorage) ; « Copier mes corrections » rassemble le tout pour un courriel.
   - « Surligner les espaces insécables » montre où l'application en pose.
 - Sur le site : route `/relecture` (`TextesARelireControleur`), qui n'existe que si le `.env` porte
-  `RELECTURE_TEXTES=1`. Page `relecture/index.html`, fichiers dans `public/relecture/` (styles, scripts, kit des
-  maquettes recopié en entier, captures). Conforme à la CSP fermée : aucun style ni script dans la page, les textes
+  `RELECTURE_TEXTES=1`. Page `relecture/index.html`, fichiers dans `public/relecture-textes/` (styles, scripts, kit
+  des maquettes recopié en entier, captures). Piège constaté au premier déploiement : avec un dossier
+  `public/relecture`, Apache redirigeait `/relecture` vers `/relecture/` (404) avant PHP. Un test l'interdit. Conforme à la CSP fermée : aucun style ni script dans la page, les textes
   dans un bloc JSON que le navigateur n'exécute pas. Test : `tests/Http/TextesARelireTest.php`.
-- En local : `MAQUETTE-textes.html` (kit en ligne, images lues dans `public/relecture/img/`).
+- En local : `MAQUETTE-textes.html` (kit en ligne, images lues dans `public/relecture-textes/img/`).
 
 ## Décisions de Claude, à valider
 
@@ -47,6 +53,8 @@ Une première version (2 186 textes extraits du code, page claude.ai) a été re
 
 ## Reste à faire
 
-- Déployer sur le test et ajouter `RELECTURE_TEXTES=1` à `partage/.env` (accord de Xavier à demander).
-- Recevoir les corrections, les reporter dans les gabarits, `config/textes-onboarding.json` et `src/`.
-- Retirer la route et `public/relecture/` quand la relecture est finie, ou retirer la ligne du `.env`.
+- Fait le 2026-11-24 avec l'accord de Xavier : déploiement sur le test, ligne `RELECTURE_TEXTES=1` ajoutée à
+  `partage/.env` (avec un commentaire). Adresse : https://easy-offres.xtradev.ch/relecture
+- Recevoir les corrections, les reporter dans les gabarits, `config/textes-onboarding.json` et `src/` (tâche 624).
+- Retirer la route, `relecture/` et `public/relecture-textes/` quand la relecture est finie, et la ligne du `.env`
+  du test (tâche 625).

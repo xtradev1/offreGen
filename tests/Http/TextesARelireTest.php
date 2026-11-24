@@ -40,15 +40,24 @@ final class TextesARelireTest extends TestCase
         preg_match_all('/<script\b([^>]*)>/', $page, $scripts);
         self::assertNotEmpty($scripts[1]);
         foreach ($scripts[1] as $attributs) {
-            self::assertMatchesRegularExpression('#^\s+(src="/relecture/[a-z-]+\.js"|type="application/json" id="donnees")$#', $attributs);
+            self::assertMatchesRegularExpression('#^\s+(src="/relecture-textes/[a-z-]+\.js"|type="application/json" id="donnees")$#', $attributs);
         }
         self::assertDoesNotMatchRegularExpression('/\s(?:src|href)="(?!\/|#)/', $page, 'Une ressource vient d\'un autre site.');
+    }
+
+    /**
+     * Apache sert un dossier de public/ avant de passer la main à PHP : un dossier public/relecture ferait rediriger
+     * /relecture vers /relecture/ (constaté sur le test le 2026-11-24), et la page ne s'ouvrirait jamais.
+     */
+    public function testAucunDossierPublicNePorteLeNomDeLaRoute(): void
+    {
+        self::assertDirectoryDoesNotExist(self::RACINE . '/public/relecture');
     }
 
     public function testChaqueFichierAppeleExiste(): void
     {
         $page = (string) file_get_contents(self::RACINE . '/relecture/index.html');
-        preg_match_all('#(?:src|href)="(/relecture/[^"]+)"#', $page, $fichiers);
+        preg_match_all('#(?:src|href)="(/relecture-textes/[^"]+)"#', $page, $fichiers);
         self::assertCount(4, $fichiers[1], 'Deux feuilles de style et deux scripts.');
         if (preg_match('#<script type="application/json" id="donnees">(.*?)</script>#s', $page, $bloc) !== 1) {
             self::fail('La page n\'a pas de bloc de données.');
@@ -74,7 +83,7 @@ final class TextesARelireTest extends TestCase
 
     public function testAucunTiretLong(): void
     {
-        foreach (['/relecture/index.html', '/public/relecture/relecture.js', '/public/relecture/relecture.css'] as $fichier) {
+        foreach (['/relecture/index.html', '/public/relecture-textes/relecture.js', '/public/relecture-textes/relecture.css'] as $fichier) {
             self::assertDoesNotMatchRegularExpression('/\x{2014}|\x{2013}/u', (string) file_get_contents(self::RACINE . $fichier), $fichier);
         }
     }

@@ -306,7 +306,8 @@ return static function (Conteneur $c): array {
         $routes[] = new Route("bienvenue_{$nom}_enregistrer", "/bienvenue/$nom", ['POST'], static fn (Request $r): Response => $reglages()->enregistrerEtape($r, $nom), Route::ARTISAN);
     }
     // La relecture des textes par un correcteur (chantier 2026-11-24_relecture-textes) : seulement là où le .env porte
-    // RELECTURE_TEXTES=1, le site de test. Ailleurs, production comprise, la route n'existe pas.
+    // RELECTURE_TEXTES=1, le site de test. Ailleurs, production comprise, la route n'existe pas. Ses fichiers sont dans
+    // public/relecture-textes : un dossier public/relecture ferait rediriger /relecture vers /relecture/ par Apache.
     if ($c->parametre('RELECTURE_TEXTES') === '1') {
         $routes[] = new Route('relecture_textes', '/relecture', ['GET'], static fn (): Response => (new TextesARelireControleur($c->racine() . '/relecture/index.html'))->page(), Route::PUBLIC);
     }
