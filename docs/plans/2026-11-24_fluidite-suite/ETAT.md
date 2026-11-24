@@ -1,9 +1,9 @@
 ---
 chantier: Fluidité, suite de la recette du 24.11 (SR-1, MP-A19, MP-A14, SR-6)
 slug: 2026-11-24_fluidite-suite
-phase: 5
-statut: en_cours
-gate_attendu: aucun
+phase: 8
+statut: gate_ouvert
+gate_attendu: prod
 profil: .claude/atoz-profile.md
 ---
 
@@ -14,10 +14,13 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Commit et push faits (voir le journal). Gate prod : déploiement sur le test seulement avec l'accord de Xavier, puis sa recette sur iPhone (`RECETTE.md`).
+Attendre l'accord de Xavier pour déployer `7bb8dd8` (ou la tête du moment) sur le test, puis sa recette sur iPhone (`RECETTE.md`). Défaut remonté : retour en phase 5. Recette validée : `statut: termine`, `/roadmap-sync`.
 
 ## En attente de toi
 
+- Dire si je déploie `7bb8dd8` sur le test (ordre du 2026-11-24 : ne plus déployer sans ton accord).
+- Après le déploiement : dérouler `RECETTE.md` (F-1 à F-7) sur l'iPhone.
+- Dire si M7 (offre gardée avant un déploiement, rouverte sans réseau, sans JavaScript) se corrige maintenant ou plus tard.
 - Origin : créer la tâche du chantier dans le projet 44 (question du 2026-11-24 restée sans réponse).
 
 ## Journal
@@ -37,6 +40,7 @@ Commit et push faits (voir le journal). Gate prod : déploiement sur le test seu
 - 2026-11-24, phase 5, MP-A19 : lien « Créer la fiche » vers `/clients/nouveau?offre=N&dictee=1` (et `suite=apercu`) ; `ClientControleur::nouveau` remplit nom et adresse d'après la dictée (`depuisLaDictee`, partagé avec `choisirPourOffre`) ; titre « Fiche du client », bandeau, bouton « Enregistrer et voir le PDF », lieu non découpé « Lieu entendu dans la dictée, à reporter ». Test `ClientsEcranTest` neuf (rouge avant) ; l'offre d'un autre artisan donne 404. `SocleFluiditeTest` adapté (`data-app`).
 - 2026-11-24, phase 6 : suite complète verte, PHPStan sans erreur ; banc : SR-1, SR-6, MP-A14, MP-A19 sous Chromium et WebKit, recettes du chantier précédent (14 gestes, hors réseau) sans régression (preuves plus bas).
 - 2026-11-24, phase 7 : relecteur indépendant (Opus, lecture seule) ; aucune bloquante, 6 importantes et 10 mineures, relues dans le code ; I1 à I6 et M1 à M6 corrigées, M7 et M10 (préexistantes) laissées en points ouverts, M8 écartée, M9 compromis voulu (`REVUE.md`). Preuves neuves au banc : I1 (`sans-app.js`), I2 (`ordre-gestes.js`), I3 (`sr5-sr6.js` sans toucher « Envoyer »). Non-régression rejouée : 14 gestes, hors réseau, SR-6, MP-A14 et MP-A19 sous Chromium et WebKit, gestes dès l'affichage ; suite complète et PHPStan verts.
+- 2026-11-24, livraison : commit `e002880` rebasé sur 17 commits d'autres sessions (un conflit dans `fluide.js`, `reprendre` : gardé ma version avec les deux arguments neufs de `ligneEnAttente`) ; vérifié que la branche n'avait pas touché `corrections()` et que `brancher()` garde tous les démarrages de la branche (seul ajout : `piecesDeLaLigne`). Migrations jouées (`Version20261124230001`), instantané du banc réécrit. Version rebasée : phpunit OK (1577 tests, 12758 assertions), PHPStan sans erreur ; banc rejoué (14 gestes, hors réseau, MP-A14 et MP-A19 sous les deux moteurs, SR-6, gestes dès l'affichage, ordre des gestes). Poussé : `7c0274b..7bb8dd8` sur `chantier-voix-offre`. Rien déployé. `RECETTE.md` écrit, gate prod ouvert.
 
 ## Décisions
 
@@ -57,6 +61,7 @@ Commit et push faits (voir le journal). Gate prod : déploiement sur le test seu
 | `MAQUETTE-fluidite-suite.html` et `MAQUETTE-fluidite-suite-img/` | 3 | écrite, contrôlée, captures relues |
 | `PLAN.md` | 4 | écrit |
 | `REVUE.md` | 7 | écrit, trouvailles et verdicts |
+| `RECETTE.md` | 8 | écrit, à dérouler par Xavier après le déploiement |
 | `banc/` | 1 à 7 | scripts de mesure, de capture et de recette, résultats JSON ; ni session ni mot de passe |
 
 Hors dépôt : ceux du chantier précédent (copie `~/offreGen-fluidite`, bases `offregen_fluidite_vue` et `offregen_fluidite_test`, `~/offreGen-fluidite-banc`) ; captures PNG dans le scratchpad de la session.
