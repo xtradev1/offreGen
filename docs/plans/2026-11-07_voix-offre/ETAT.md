@@ -94,6 +94,7 @@ Par livrable testable de bout en bout, dans l'ordre de dépendance.
 | 27 | Enregistrement à l'abri dans le téléphone jusqu'à ce que l'offre soit traitée (décision de Xavier du 2026-11-17) | `27-enregistrement-abri/` | 15 | SPEC à écrire ; étape 5 de la mise en production |
 | 28 | Offre par pièce : pièce relevée par un second appel, offre, ajout et PDF groupés par pièce (demande de Xavier du 2026-11-17) | `28-offre-par-piece/` | 24 | livré en code, déployé sur le test, recette regroupée |
 | 29 | Qualité de l'extraction : corpus de vraies dictées, objectif 95 % (demande de Xavier du 2026-11-17) | `29-qualite-extraction/` | 10 | SPEC écrite ; attend les dictées de Xavier |
+| 30 | Dictée mal comprise : jauge lissée et message Bluetooth pendant l'enregistrement, verdict à la réception, fenêtre de choix avant de créer une offre douteuse, réécoute, refaire (offres 60 et 61 du test, 2026-11-21) | `30-dictee-mal-comprise/` | 15, 27 | maquette validée (D1 à D8) ; PLAN à écrire ; tâche Origin 514 |
 
 ## Décisions
 

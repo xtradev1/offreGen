@@ -23,6 +23,7 @@ Quand les premières dictées sont dans `OffreGen/corpus/audio/` : transcrire, 
 ## Décisions
 
 - 2026-11-17, Xavier : « si le mec il fait 50 offres, il doit avoir max une ligne ou deux par offre. On doit vraiment être de l'ordre de 95 % de taux de réussite » ; « comment on améliore, quel modèle on utilise, est-ce qu'on veut que le modèle il tourne un peu plus longtemps ».
+- 2026-11-22, Xavier : « oui pour le 29 ». L'offre attendue de chaque dictée du corpus s'écrit d'après l'audio (ce que Xavier a dicté), ou d'après la transcription locale complète relue par lui, jamais d'après la transcription d'Infomaniak : celle-ci perd des phrases sur certaines dictées (sous-chantier 30, dictées 14, 18 et 19 du test), et une offre attendue tronquée ferait dire 100 % au banc. La ligne « La transcription » de `SPEC.md` est à corriger à la reprise du 29 (non modifiée par la session du 30).
 
 ## Journal
 
