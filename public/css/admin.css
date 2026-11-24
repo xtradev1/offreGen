@@ -82,7 +82,7 @@
   body.admin:has(.tabs) .app { max-width: none; }
   .admin .screen > * { max-width: 920px; }
   /* Les tableaux du chronomètre ont plus de quinze colonnes : toute la largeur de l'écran. */
-  .admin .screen > .dictees-defile { max-width: 1400px; }
+  .admin .screen > .dictees-defile, .admin .screen > .dictee-rejeux { max-width: 1400px; }
   .admin-tete.avec-action { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .admin-tete.avec-action .btn { flex: none; }
   .admin .screen > .equipe.avec-fiche { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; max-width: 1300px; }
@@ -139,13 +139,13 @@
 .dictees-outils input, .dictees-outils select { font: inherit; font-size: 15px; min-height: 48px; border: 1px solid var(--bord); border-radius: 10px; padding: 6px 10px; background: var(--surface); color: var(--ink); }
 .dictees-titre { font-family: var(--titre); font-size: 17px; margin: 22px 0 8px; }
 .dictees-defile { overflow-x: auto; margin: 0 0 10px; }
-.dictees-stats, .dictees-liste, .dictee-etapes { font-size: 13px; }
-.dictees-stats th, .dictees-stats td, .dictees-liste th, .dictees-liste td, .dictee-etapes th, .dictee-etapes td { padding: 7px 8px; white-space: nowrap; }
+.dictees-stats, .dictees-liste, .dictee-etapes, .dictees-rejeux { font-size: 13px; }
+.dictees-stats th, .dictees-stats td, .dictees-liste th, .dictees-liste td, .dictee-etapes th, .dictee-etapes td, .dictees-rejeux th, .dictees-rejeux td { padding: 7px 8px; white-space: nowrap; }
 .dictees-liste td.lent { color: var(--bad); font-weight: 700; }
 .dictees-liste tr.accroc > :first-child { box-shadow: inset 4px 0 0 var(--critique); }
 .sous-info { display: block; font-size: 11px; color: var(--muted); white-space: normal; }
 .dictees-liste td .sous-info { white-space: nowrap; }
-.dictees-liste thead th, .dictee-etapes thead th { white-space: normal; }
+.dictees-liste thead th, .dictee-etapes thead th, .dictees-rejeux thead th { white-space: normal; }
 .dictees-liste th, .dictees-liste td { padding: 7px 6px; }
 .dictees-pages { display: flex; gap: 8px; justify-content: center; margin: 12px 0; }
 .dictees-cartes { list-style: none; padding: 0; margin: 0 0 10px; }

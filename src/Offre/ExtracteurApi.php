@@ -351,7 +351,8 @@ final class ExtracteurApi implements Extracteur
             $reponse = $this->http->request('POST', rtrim($this->url, '/') . '/chat/completions', [
                 'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
                 'json' => $corps,
-                'on_progress' => static function () use ($chrono): void {
+                'on_progress' => static function (int $recu, int $taille, array $info) use ($chrono, $mesure): void {
+                    $mesure->progres($info);
                     $chrono->pouls();
                 },
             ] + $bornes);
@@ -360,7 +361,7 @@ final class ExtracteurApi implements Extracteur
             $mesure->echouer($e);
             throw $e;
         }
-        $mesure->finir(is_array($donnees['usage'] ?? null) ? $donnees['usage'] : null, $reponse);
+        $mesure->finir(is_array($donnees['usage'] ?? null) ? $donnees['usage'] : null);
         return $donnees;
     }
 

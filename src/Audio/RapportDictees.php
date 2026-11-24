@@ -193,6 +193,10 @@ final class RapportDictees
         'erreur' => 'Erreur',
     ];
 
+    /** Statuts d'une dictée (Statut) et d'un rejeu, lisibles. Le CSV garde les codes, plus simples à filtrer. */
+    public const NOMS_STATUTS = ['recu' => 'reçue', 'transcription' => 'en transcription', 'transcrit' => 'transcrite', 'pret' => 'prête',
+        'echec' => 'en échec', 'en_cours' => 'en cours', 'fini' => 'fini'];
+
     public const NOMS_PROCESSUS = ['telephone' => 'téléphone', 'web' => 'web', 'apres_reponse' => 'après réponse', 'cron' => 'cron', 'rejeu' => 'rejeu'];
 
     /** Famille de couleur de chaque étape sur la frise (palette validée, MAQUETTE-chronometre.html). */

@@ -91,6 +91,9 @@ final class RejeuDicteeTest extends TestCase
         $page = (string) $this->n->get("/admin/dictees/{$this->id}")->getContent();
         self::assertStringContainsString('Rejeu du', $page);
         self::assertStringContainsString(TranscripteurFactice::TEXTE, $page);
+        // Recette du 2026-11-24 : les codes de statut (« pret », « en_cours », « recu ») s'affichaient tels quels.
+        self::assertStringContainsString('<tr><th>Original</th><td>reçue</td>', $page);
+        self::assertStringNotContainsString('>recu<', $page);
     }
 
     public function testUnSeulRejeuEnCoursEtPasSansAudio(): void

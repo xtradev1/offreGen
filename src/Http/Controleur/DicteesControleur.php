@@ -118,6 +118,7 @@ final class DicteesControleur
             'rejeux' => $rejeux,
             'audio' => $depot->audioPresent($id),
             'colonnes' => array_intersect_key(RapportDictees::LIBELLES, RapportDictees::COLONNES),
+            'statuts' => RapportDictees::NOMS_STATUTS,
             'etapes' => array_map(static fn (array $e): array => $e + [
                 'nom' => RapportDictees::NOMS_ETAPES[$e['etape']] ?? $e['etape'],
                 'nom_processus' => RapportDictees::NOMS_PROCESSUS[$e['processus']] ?? $e['processus'],

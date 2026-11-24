@@ -69,7 +69,8 @@ final class TranscripteurApi implements Transcripteur
                 'body' => $formulaire->bodyToIterable(),
                 'timeout' => 300,
                 'max_duration' => 600,
-                'on_progress' => static function () use ($chrono): void {
+                'on_progress' => static function (int $recu, int $taille, array $info) use ($chrono, $envoi): void {
+                    $envoi->progres($info);
                     $chrono->pouls();
                 },
             ]);
@@ -80,7 +81,7 @@ final class TranscripteurApi implements Transcripteur
         } finally {
             $fichier->nettoyer();
         }
-        $envoi->finir(null, $reponse);
+        $envoi->finir();
         $lot = $donnees['batch_id'] ?? null;
         if (!is_string($lot) || preg_match('/^[A-Za-z0-9-]{1,100}$/', $lot) !== 1) {
             throw new \RuntimeException('Envoi à la transcription : aucun numéro de lot dans la réponse.');

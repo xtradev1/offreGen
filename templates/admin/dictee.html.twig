@@ -4,7 +4,7 @@
    s'affiche en coupure ; le tableau donne chaque étape en clair. Les barres sont en SVG : la politique de sécurité du
    site interdit les styles écrits dans la page. #}
 {% block retour %}<a class="back" href="/admin/dictees">Dictées</a>{% endblock %}
-{% block sous %}<p class="muted">Reçue le {{ d.recu_le|date_locale }}{% if d.offre_id %}, offre n°&nbsp;{{ d.offre_id }}{% endif %}, statut {{ d.statut }}.</p>{% endblock %}
+{% block sous %}<p class="muted">Reçue le {{ d.recu_le|date_locale }}{% if d.offre_id %}, offre n°&nbsp;{{ d.offre_id }}{% endif %}, statut {{ statuts[d.statut] ?? d.statut }}.</p>{% endblock %}
 {% block contenu %}
   <dl class="dictee-fiche">
     <div><dt>Compte</dt><dd>n°&nbsp;{{ d.artisan_id }}</dd></div>
@@ -28,9 +28,9 @@
         <table class="table-admin dictees-rejeux">
           <thead><tr><th>Dictée</th><th>Statut</th><th class="n">Lignes</th>{% for colonne, libelle in colonnes %}<th class="n">{{ libelle }}</th>{% endfor %}<th class="n">Total</th></tr></thead>
           <tbody>
-            <tr><th>Original</th><td>{{ d.statut }}</td><td class="n">{{ original.lignes }}</td>{% for colonne, libelle in colonnes %}<td class="n">{{ ligne.colonnes[colonne]|duree_ms }}</td>{% endfor %}<td class="n">{{ ligne.total|duree_ms }}</td></tr>
+            <tr><th>Original</th><td>{{ statuts[d.statut] ?? d.statut }}</td><td class="n">{{ original.lignes }}</td>{% for colonne, libelle in colonnes %}<td class="n">{{ ligne.colonnes[colonne]|duree_ms }}</td>{% endfor %}<td class="n">{{ ligne.total|duree_ms }}</td></tr>
             {% for rj in rejeux %}
-              <tr><th>Rejeu du {{ rj.demande_le|date_locale }}</th><td>{{ rj.statut }}{% if rj.erreur %}<small class="sous-info">{{ rj.erreur }}</small>{% endif %}</td><td class="n">{{ rj.lignes ?? '-' }}</td>{% for colonne, libelle in colonnes %}<td class="n">{{ rj.colonnes[colonne]|duree_ms }}</td>{% endfor %}<td class="n">{{ rj.total|duree_ms }}</td></tr>
+              <tr><th>Rejeu du {{ rj.demande_le|date_locale }}</th><td>{{ statuts[rj.statut] ?? rj.statut }}{% if rj.erreur %}<small class="sous-info">{{ rj.erreur }}</small>{% endif %}</td><td class="n">{{ rj.lignes ?? '-' }}</td>{% for colonne, libelle in colonnes %}<td class="n">{{ rj.colonnes[colonne]|duree_ms }}</td>{% endfor %}<td class="n">{{ rj.total|duree_ms }}</td></tr>
             {% endfor %}
           </tbody>
         </table>

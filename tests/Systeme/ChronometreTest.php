@@ -20,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Psr\Log\NullLogger;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\HttpClient\CurlHttpClient;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
@@ -188,7 +189,9 @@ final class ChronometreTest extends TestCase
         // Dernier pouls au dernier morceau, 200 s après la prise du verrou : verrou jusqu'à 200 + 150 s. Sans pouls, il
         // aurait expiré à 11:08:13, pendant l'appel.
         self::assertSame('2026-11-24 11:11:33', $this->verrouJusqua());
-        self::assertSame('ok', BaseDeTest::ligne("SELECT issue FROM dictee_etape WHERE etape = 'ia_extraction'")['issue']);
+        $ligne = BaseDeTest::ligne("SELECT issue, premier_octet_ms FROM dictee_etape WHERE etape = 'ia_extraction'");
+        self::assertSame('ok', $ligne['issue']);
+        self::assertNotNull($ligne['premier_octet_ms'], 'premier octet noté par on_progress');
     }
 
     /** La transcription : préparation de l'audio, puis envoi chez le prestataire, avec le modèle ; un envoi refusé reste en erreur. */
@@ -215,6 +218,48 @@ final class ChronometreTest extends TestCase
             ['conversion', 'ok', null], ['transcription_envoi', 'ok', 'whisper'],
             ['conversion', 'ok', null], ['transcription_envoi', 'erreur', 'whisper'],
         ], $r->fetchAll(\PDO::FETCH_NUM));
+        self::assertNotNull(BaseDeTest::ligne("SELECT premier_octet_ms FROM dictee_etape WHERE etape = 'transcription_envoi' AND issue = 'ok'")['premier_octet_ms']);
+    }
+
+    /**
+     * Le premier octet est l'arrivée de la réponse, mesurée par curl réel sur un POST. Recette du 2026-11-24 : le
+     * starttransfer_time du curl 7.74 du serveur de test valait 0 ms sur chaque appel à l'IA (début de l'envoi du corps).
+     */
+    public function testLePremierOctetEstLArriveeDeLaReponse(): void
+    {
+        $prise = stream_socket_server('tcp://127.0.0.1:0');
+        self::assertNotFalse($prise);
+        $adresse = (string) stream_socket_get_name($prise, false);
+        fclose($prise);
+        $serveur = proc_open([PHP_BINARY, '-S', $adresse, dirname(__DIR__) . '/fixtures/http/lente.php'], [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $tubes);
+        self::assertIsResource($serveur);
+        try {
+            $limite = microtime(true) + 5;
+            while (($s = @fsockopen('tcp://' . $adresse)) === false && microtime(true) < $limite) {
+                usleep(50000);
+            }
+            self::assertNotFalse($s, 'serveur local démarré');
+            fclose($s);
+
+            $c = $this->chrono();
+            $c->ouvrirPassage($this->id, self::UUID, null, 1, Chronometre::APRES_REPONSE);
+            $e = $c->commencer('ia_extraction', 'm');
+            $reponse = (new CurlHttpClient())->request('POST', 'http://' . $adresse . '/', [
+                'json' => ['corps' => str_repeat('a', 60000)],
+                'on_progress' => static function (int $recu, int $taille, array $info) use ($e): void {
+                    $e->progres($info);
+                },
+            ]);
+            self::assertSame(['ok' => true], $reponse->toArray());
+            $e->finir();
+        } finally {
+            proc_terminate($serveur);
+            proc_close($serveur);
+        }
+        $premier = BaseDeTest::ligne("SELECT premier_octet_ms FROM dictee_etape WHERE etape = 'ia_extraction'")['premier_octet_ms'];
+        self::assertIsInt($premier);
+        self::assertGreaterThanOrEqual(290, $premier, 'le serveur répond après 300 ms');
+        self::assertLessThan(2000, $premier);
     }
 
     /** Un autre traitement a repris la dictée : le pouls coupe l'appel en cours, l'exception se reconnaît. */
