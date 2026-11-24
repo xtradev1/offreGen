@@ -659,3 +659,36 @@ envoi réel jamais ouvert : Tests: 12, Assertions: 27, Failures: 1.
 ```
 
 Non vérifié : une vraie fenêtre ouverte sur le test (à faire avec Xavier, à sa demande).
+
+## Arrêt de session du 2026-11-24 : ce qui n'existait que dans la conversation
+
+Session arrêtée à la demande de Xavier (« Stop »). Dernier déploiement sur le test : `dcf54d0` (sonde verte, 1471 tests). Plus de déploiement par cette session.
+
+### Constats
+
+- **SPF, DMARC, DKIM** (DNS publics lus le 2026-11-24) : dicta.ch et xtradev.ch publient `v=spf1 include:spf.infomaniak.ch -all`. DMARC : dicta.ch `p=reject` (le plus strict), xtradev.ch `p=quarantine`. DKIM : aucun enregistrement trouvé sous les sélecteurs courants ; Infomaniak signe seul quand la zone est chez lui (c'est le cas, ns11/ns12.infomaniak.ch), avec un sélecteur en forme de date qu'on ne peut pas deviner. **Non prouvé.** Preuve demandée à Xavier : « Afficher l'original » dans Gmail, lignes SPF, DKIM, DMARC.
+- Le compte d'envoi du test est sur dicta.ch, par `mail.infomaniak.com` (domaine lu dans `MAILER_DSN`, sans le mot de passe) : SPF aligné, DMARC passe par SPF même sans DKIM.
+- Conséquence du `p=reject` : un prestataire (Payrexx, Stripe) qui enverrait au nom de @dicta.ch sans sa propre clé DKIM verrait ses courriels rejetés.
+- Pas d'adresse de réponse : un artisan qui répond écrit à `notifications@dicta.ch`. À trancher : adresse de support (tâche Origin 471).
+- **Courriels des prestataires de paiement** (documentation lue le 2026-11-24, non essayée) : Payrexx envoie une confirmation après chaque prélèvement d'abonnement et un courriel d'échec ; une de ses pages dit qu'il ne prévient pas au renouvellement, l'autre se contredit ; on peut changer l'apparence de ses courriels, pas prouvé pour leur texte. Stripe : reçus, échec de paiement avec lien pour changer de carte, rappel avant renouvellement (débit automatique seulement), à la marque du vendeur. Questions ajoutées pour l'appel Payrexx (tâche Origin 568) : quels courriels exactement et peut-on couper chacun ; envoi au nom de dicta.ch (clé DKIM) ; rappel avant renouvellement annuel ; confirmation de remboursement ; langue française.
+- Rappels réels attendus pour la démo n° 22 (`info@lcageniecivil.ch`, redirigés vers Xavier) : 2 jours le 26.11 vers 9 h 56, 12 heures le 27.11 vers 21 h 56 (heure suisse). Premier vrai passage du cron à regarder.
+- Le chantier onboarding a adapté `Courriel::passageEssai` au mois gratuit (50 offres, commits `2dc3fd8`, `551fe16`). Les rappels de démo citent le bouton « Passer à l'essai » du ruban (`_ruban_demo.html.twig`) : si ce libellé change, changer `Courriel::rappelDemo`.
+- Une fenêtre d'envoi réel ouverte fait partir aussi les rappels du cron chez les vrais prospects.
+
+### Décisions proposées, en attente de Xavier
+
+- **Remboursement de l'abonnement** (pour les conditions générales, tâche 463, à faire relire) : complet dans les 30 jours, sans justification ; ensuite, au mois : arrêt quand il veut, mois en cours non remboursé ; à l'année : l'abonnement court jusqu'au terme, résiliation pour l'échéance. Un geste commercial (rembourser les mois entiers restants) reste au choix de Xavier, au cas par cas. Rappel donné : entre entreprises, pas de droit de rétractation général en Suisse.
+- **Commission et remboursement** (proposé pour C18 de `docs/commerciaux/PROJET-regles-commission.md`, fichier non commité d'une autre session, non touché) : remboursé dans les 30 jours : pas de commission ; au 31e jour, la commission du paiement est acquise (à l'année : d'un bloc) ; un remboursement accordé ensuite par geste reste à la charge de Dicta, la commission reste due (art. 418h CO, à confirmer par le juriste) ; exception : remboursement causé par une faute du commercial, prouvée par écrit (plainte du client) : pas de commission sur la part remboursée ; retenue seulement par ligne négative sur les relevés suivants, jamais par facture ; journal des commissions où l'on n'ajoute que des lignes. Exemple chiffré donné : geste de 6 mois sur CHF 449.00 à 10 % : CHF 224.50 remboursés + CHF 22.45 de commission due = CHF 246.95. Ma première proposition (« acquise mois par mois », puis le geste réduit la commission) est abandonnée : Xavier a relevé qu'elle faisait payer au commercial une décision qui n'est pas la sienne. C3 du projet de règles devient « après les remboursements faits dans les 30 jours ». Question 15 pour le juriste : l'art. 418h laisse-t-il écrire autre chose dans le contrat.
+- **V5** : le commentaire de Xavier est coupé (« peut être pas essai mais le titre du compte et ensuite »). Lecture proposée : l'objet commence par le nom du compte (« Plâtrerie Roux passe à l'essai »). Rien changé.
+- **Durée de conservation** d'un compte non payé : 6 mois retenus dans « 6 mois voire 1 an », à confirmer.
+- Choix laissés par le relecteur : « Merci de votre confiance » (renouvellement) jugé superflu, gardé ; qui est « nous » dans les courriels ; catalogue et clients supprimés sans copie.
+
+### Ce qui reste
+
+- Recette par Xavier sur le test : les six courriels du lot reçus dans sa boîte le 24.11 (rendu Gmail, Outlook, iPhone, mode sombre non vérifiés) ; réglage « Courriels » à deux cases ; import d'un fichier de plus de 30 minutes sur un vrai téléphone (formats .amr et .3gp illisibles par un navigateur : le serveur tranche) ; « Votre prénom dans les courriels » à remplir dans « Plus » (sinon « XtraDev » signe).
+- Une vraie fenêtre d'envoi réel, avec Xavier, à sa demande.
+- Défaut signalé, hors de ce chantier : la page d'un enregistrement en échec dit « Importez le fichier une nouvelle fois », faux pour une dictée.
+- Lot A restant, lot B (paiement : les textes des courriels sont dans `DECOUPAGE-lot-B.md`, le téléchargement des offres et factures doit exister avant le courriel « suppression annoncée »).
+- Bases et données locales : `offregen_admin_test` à supprimer à la clôture du chantier ; `offregen_deploiement_test` sert au script de déploiement de toutes les sessions, à garder ; `offregen_dev` a reçu les migrations `Version20261123230001` et `Version20261124100001` et une vingtaine d'offres de recette du compte `dev@exemple.ch` (imports de 20 s du 24.11).
+- Scripts hors dépôt (scratchpad de la session, perdus au nettoyage) : envoi des courriels d'exemple (`pack_courriels.php`, `pack_v9.php`), rendu et captures de la maquette v9, recettes Playwright (`recette-v9.js`, `recette-long.js`), mutations.
+- Origin : tâche 600 et sous-tâches 601 à 606 créées le 24.11 ; 601, 602, 603 faites en code ; 604 (DKIM), 605 (prestataire), 606 (commission) attendent Xavier.
