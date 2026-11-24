@@ -19,8 +19,8 @@ Attendre la recette de Xavier (`RECETTE.md`) et ses trois choix de la page `COMP
 
 ## En attente de toi
 
-- Dérouler `RECETTE.md` sur https://easy-offres.xtradev.ch (commit `93a61d1` déployé le 2026-11-23 à 21 h 29, migration `Version20261123230001` jouée) et dire ce qui casse.
-- Répondre aux trois choix posés dans `COMPARATIF-sans-rechargement.html` : mention dans la politique de confidentialité ; durée de garde dans le téléphone (14 jours aujourd'hui) ; fenêtres de l'offre et « Prendre 30.00 » qui attendent le serveur (écart à D2).
+- Dérouler `RECETTE.md` sur https://easy-offres.xtradev.ch et dire ce qui casse.
+- Deux choix restés sans réponse le 2026-11-24 (page `COMPARATIF-sans-rechargement.html`) : mention dans la politique de confidentialité des copies gardées dans le téléphone ; durée de garde (14 jours aujourd'hui, inchangée tant que rien n'est décidé).
 - Dire si « Se déconnecter » sans réseau (copies du téléphone effacées, puis page d'erreur de Chrome, session encore ouverte au serveur) se corrige maintenant ou plus tard.
 - La production : par le workflow de déploiement, à ton heure (gate prod).
 
@@ -81,6 +81,8 @@ Attendre la recette de Xavier (`RECETTE.md`) et ses trois choix de la page `COMP
 | 2026-11-23 | Dans le détail du comparatif, « pareil » sous 50 ms d'écart | Écart entre deux passages du même geste au banc (le champ de la fiche client, mécanisme inchangé, sort à +30 et +44 ms). |
 | 2026-11-23 | « Se déconnecter » sans réseau : noté, pas corrigé ce soir | Cas rare, rien de perdu au serveur ; la correction (refuser tant que le serveur ne répond pas) touche un geste sensible et mérite sa propre recette. À Xavier de dire quand. |
 | 2026-11-23 | Compte de démo propre au chantier sur le test (`fluidite-test@exemple.ch`) pour la recette par l'interface | Les comptes existants appartiennent à d'autres sessions ou à Xavier (mémoire du projet) ; une seule connexion par script (cinq échecs bloquent le courriel et l'IP). |
+| 2026-11-24 | Fenêtres de l'offre et prix dicté : « A. Les laisser ainsi (conseillé) » ; mention dans la politique de confidentialité : « (pas de réponse) » ; durée de garde dans le téléphone : « (pas de réponse) » ; « Super boulot. Tu peux tout push. Sur le test. » | Réponses de Xavier collées de la page du comparatif. Les fenêtres attendent le serveur, comme livré ; la durée reste à 14 jours. Tête `85302c4` redéployée sur le test le même jour. |
+| 2026-11-24 | Roadmaps : même entrée dans celui de la branche (commité, deux décisions du 2026-11-07 archivées) et dans celui de `~/offreGen` (non commité, ajouts ciblés seulement) | Mémoire du projet (deux roadmaps divergents). Celui de `~/offreGen` dépasse ses budgets (25 décisions, 15 entrées) : compaction à faire avec la fusion des deux, à demander à Xavier. |
 
 ## Artefacts
 

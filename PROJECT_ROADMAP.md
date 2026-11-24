@@ -5,7 +5,7 @@
 - Goal : application d'offres vocales pour artisans. L'artisan décrit les travaux à voix haute pendant la visite, l'application produit une offre à partir de son catalogue, il la corrige à la voix ou à l'écran.
 - Owner : Xavier Frelechoz (XtraDev)
 - Created : 2026-11-05
-- Last updated : 2026-11-23
+- Last updated : 2026-11-24
 
 ## Executive summary
 - L'application tourne de bout en bout sur le site de test (`easy-offres.xtradev.ch`) : dictée ou import, Whisper et Qwen 27B chez Infomaniak, offre rangée par pièce, corrections, catalogue, clients, PDF, facture avec QR-facture. Suite verte et PHPStan sans erreur au déploiement de `e046e57` (2026-11-23). La page d'accueil de Dicta est en ligne sur le test (`/`, `/decouvrir`).
@@ -22,8 +22,6 @@
 
 ## Decisions
 - Décisions du 2026-11-05 au 2026-11-07 (pile, socle, maquette, environnement, report de l'audit externe) → `docs/roadmap-archive-decisions.md`.
-- [2026-11-07] **Entorse au socle :** de vraies visites au banc de mesure, avec l'accord des clients, en plus de visites rejouées (Xavier : « on peut bosser avec de vraies données, c'est le mieux »). Compensations : stockage dans WSL hors dépôt et hors SynologyDrive, envoi seulement à Infomaniak, Claude ne lit ni l'audio ni la transcription d'une vraie visite, suppression en fin de banc. Conditions dans la SPEC du chantier.
-- [2026-11-07] Les en-têtes de sécurité sont posés deux fois : par `public/.htaccess` chez l'hébergeur, par `Noyau` en secours et en local. Un test exige que les deux copies restent identiques.
 - [2026-11-12] IA réelle en local d'abord (Xavier : « ensuite on ajoutera juste les clés API ») : Whisper turbo dans WSL sur le processeur, Qwen 27B dans l'Ollama de Windows (variante `offregen-qwen3.8`, contexte 16 384 jetons). Le PHP parle le protocole d'Infomaniak ; passer au serveur ne change que le `.env`. Détail : `docs/plans/2026-11-07_voix-offre/10-ia-locale/`.
 - [2026-11-12] Dépendances : `symfony/http-client` et `symfony/mime` 7.4. Hors dépôt : `python3.12-venv` dans Ubuntu, faster-whisper 1.2.1 dans `~/offregen-ia`.
 - [2026-11-14] **Entorse au protocole de déploiement :** le site de test (`easy-offres.xtradev.ch`) est déployé par Claude en SSH avec `outils/deployer-test.sh`, en attendant le workflow GitHub (sous-chantier 02). Mêmes étapes que le workflow, sans maintenance ni sauvegarde (données inventées seulement). Déclencheur de fin : le workflow GitHub en place. Accès de Claude au test accordé par Xavier tant que les données sont inventées.
@@ -41,6 +39,7 @@
 - [2026-11-20] **Affirmations maintenues par Xavier contre l'avis du relecteur :** « 100% » dans la croix du tampon, « 100 % conçue en Suisse », « l'une des seules applications de ce genre dont l'IA tourne en Suisse ». À faire relire par un juriste avant la production, avec la croix suisse.
 - [2026-11-20] Responsive (téléphone, tablette, PC) : décisions de Xavier en cinq tours de maquette (R1 à R10, B2 à B4, points 1 à 9, 2b, 3 A, 4a B, 4b, 5, 7a), consignées telles quelles dans `docs/plans/2026-11-19_responsive/ETAT.md`. Notables : champs de l'offre à 16 px (zoom de l'iPhone), cibles de 48 px, facture annulée avec PDF « Annulée » et date d'envoi, pastilles de marque à 7:1.
 - [2026-11-23] Options et variantes (décisions de Xavier, planche des douze modèles) : une variante retenue efface ses sœurs sur le document, l'écran garde la ligne remplacée barrée ; facture : ligne « Payé jusqu'au …, escompte de 2 % » sous le total, offre : phrase du paiement seule ; la facture garde la pièce (`facture_ligne.piece`) ; PDF resserré gardé s'il gagne une page, page 2 de signature gardée sinon. Dépendance : faces italiques IBM Plex (OFL) dans `public/fonts/`. Détail : `docs/plans/2026-11-22_options-variantes/ETAT.md`.
+- [2026-11-24] **Sans rechargement** (choix D1 à D10 du 23.11) : morceaux de page découpés dans le noyau, script maison `fluide.js`, file d'envoi à clé unique (table `envoi`), service worker (copies par compte, 14 jours au plus), fichiers versionnés par l'empreinte de leur contenu (`fichier()`). Les fenêtres de l'offre et « Prendre » attendent le serveur (choix A de Xavier, 24.11). Détail : `docs/plans/2026-11-23_sans-rechargement/ETAT.md`.
 
 ## Current state
 ### Done
@@ -52,6 +51,7 @@
 ### In progress
 - [ ] Options et variantes (tâche 547) : livré en code et déployé sur le test (`e046e57`, sonde verte), planche close. Reste avant la mise en service : le banc sur les vraies dictées de Xavier (fiches 21 à 28), puis la clôture du chantier. Détail : `docs/plans/2026-11-22_options-variantes/ETAT.md`.
 - [ ] Mise en production : étapes 1 et 2 faites, contrôles GitHub en place. Le 18.11 : courriels, liens d'accès et mot de passe, droit administrateur, purge écrite et éteinte, alertes, dictée à l'abri, livrés en code et revus (588 tests), commit `475ef57` déployé sur le test (`PLAN-completer.md`, `REVUE.md`). Écrans en attente de la marque (gate visuel). Le 20.11 : page d'accueil de Dicta validée par Xavier (« je te valide le tout ») et déployée sur le test, connexion en carte sur grand écran, `/decouvrir`, logo de l'application vers le site (`2091e9b`).
+- [ ] Sans rechargement (tâche 593) : livré et déployé sur le test (`93a61d1`, sonde verte), recette de Xavier attendue (`RECETTE.md`), deux choix ouverts (mention dans la politique de confidentialité, durée de garde). Détail : `docs/plans/2026-11-23_sans-rechargement/ETAT.md`.
 
 ### Next
 - [ ] Recette regroupée par Xavier sur le test (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
@@ -115,6 +115,7 @@
 - Domaine : le test s'appelle `easy-offres` (avec un s), la production envisagée `easy-offre.ch` (sans). Une seule orthographe à choisir.
 - 2026-11-20 : la phrase de la page d'accueil « Vos dictées ne sont ni conservées ni utilisées pour entraîner ses modèles » (mots de Xavier) est fausse : l'audio reste sur le serveur (`PURGE_AUDIO=0`) et la transcription est gardée. Question S1 ouverte.
 - 2026-11-20 : plusieurs sessions dans `~/offreGen` ; une session a construit sur les fichiers non commités d'une autre puis commité sans eux. `~/offreGen` garde en double les fichiers non commités des tours 1 à 4 du responsive, mêlés à d'autres : ne pas les commiter depuis là. Une copie propre par chantier.
+- 2026-11-24 : le téléphone garde 14 jours des pages avec noms, adresses et prix des clients : à écrire dans la politique de confidentialité (question ouverte à Xavier). « Se déconnecter » sans réseau efface ces copies puis tombe sur la page d'erreur de Chrome : noté, pas corrigé.
 - Obsolètes (résolus) : accès de Claude au test (accordé le 14.11) ; jeton Infomaniak (fourni le 14.11) ; format `data` et envoi multipart de Whisper (vérifiés le 14.11) ; ffmpeg sur le test (déposé le 14.11).
 
 ## Archives
@@ -147,3 +148,7 @@
   - Options, variantes, choix du client, facture qui suit ; italique, escompte sous le total, variantes sœurs retirées, pièces sur la facture, PDF resserré.
   - Planche des douze modèles validée par Xavier ; contrôle de compatibilité vert (`f13de2e`, 1254 tests sur la base migrée), `e046e57` déployé, sonde verte.
   - Détail : `docs/plans/2026-11-22_options-variantes/ETAT.md`.
+- [2026-11-23] **Application sans rechargement déployée sur le test**
+  - Lots 1 à 5, revue (4 bloquantes, 19 importantes corrigées), comparatif avant / après : sur réseau de chantier, médiane à l'écran 2,1 s → 632 ms, 31 → 10 rechargements, gestes gardés hors réseau.
+  - Banc et service worker corrigés en route ; `93a61d1` déployé, sonde verte. Recette de Xavier attendue.
+  - Détail : `docs/plans/2026-11-23_sans-rechargement/ETAT.md`.
