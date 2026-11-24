@@ -31,6 +31,26 @@ final class DepotProduits
         );
     }
 
+    /**
+     * Le vocabulaire d'une dictée (sous-chantier 30, lot 8) : les produits les plus repris dans les offres de
+     * l'artisan d'abord, puis les autres dans l'ordre de création.
+     *
+     * @return list<string>
+     */
+    public function designationsParUsage(int $max = 200): array
+    {
+        $lignes = $this->base->lire(
+            'SELECT p.designation FROM produit p
+             LEFT JOIN ligne l ON l.produit_id = p.id AND l.artisan_id = :a_ligne
+             WHERE p.artisan_id = :a
+             GROUP BY p.id, p.designation
+             ORDER BY COUNT(l.id) DESC, p.id
+             LIMIT ' . max(1, $max),
+            ['a' => $this->portee->artisanId, 'a_ligne' => $this->portee->artisanId],
+        );
+        return array_map(static fn (array $l): string => (string) $l['designation'], $lignes);
+    }
+
     /** @return Produit|null */
     public function parId(int $id): ?array
     {

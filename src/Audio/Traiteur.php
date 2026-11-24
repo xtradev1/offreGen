@@ -121,7 +121,8 @@ final class Traiteur
                     }
                     $chemin = $this->stockage->chemin($e['fichier']);
                     $this->verifierDuree($chemin);
-                    $reference = $this->transcripteur->demarrer($chemin);
+                    $vocabulaire = VocabulaireDictee::depuis((new DepotProduits($this->base, new Portee($e['artisan_id'])))->designationsParUsage());
+                    $reference = $this->transcripteur->demarrer($chemin, $vocabulaire);
                     $this->file->transcriptionDemarree($uuid, $jeton, $reference, $this->horloge->now());
                     break;
                 case Statut::TRANSCRIPTION:

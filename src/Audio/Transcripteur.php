@@ -10,8 +10,11 @@ namespace OffreGen\Audio;
  */
 interface Transcripteur
 {
-    /** @return string référence de la transcription chez le prestataire */
-    public function demarrer(string $cheminAudio): string;
+    /**
+     * @param string $vocabulaire mots du métier qui guident la transcription (VocabulaireDictee) ; vide : aucun
+     * @return string référence de la transcription chez le prestataire
+     */
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string;
 
     /** @return string|null le texte, ou null s'il n'est pas encore prêt */
     public function resultat(string $reference): ?string;

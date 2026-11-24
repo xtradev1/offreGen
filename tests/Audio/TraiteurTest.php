@@ -103,6 +103,24 @@ final class TraiteurTest extends TestCase
         self::assertStringNotContainsString('offreGen', (string) file_get_contents($courriels[0]));
     }
 
+    /** Sous-chantier 30, lot 8 : la dictée part avec le catalogue de son artisan, jamais celui d'un autre. */
+    public function testLaDicteePartAvecLeCatalogueDeSonArtisan(): void
+    {
+        $ecoute = new TranscripteurEcoute();
+
+        self::assertSame(Statut::PRET, $this->traiteur($ecoute)->avancer(self::UUID));
+        self::assertSame(['Offre. Peinture murale a.'], $ecoute->vocabulaires);
+    }
+
+    public function testSansCatalogueLaDicteePartSansVocabulaire(): void
+    {
+        BaseDeTest::pdo()->exec("DELETE FROM produit WHERE artisan_id = {$this->jeu->a}");
+        $ecoute = new TranscripteurEcoute();
+
+        self::assertSame(Statut::PRET, $this->traiteur($ecoute)->avancer(self::UUID));
+        self::assertSame([''], $ecoute->vocabulaires);
+    }
+
     /** Un compte de démonstration a une adresse inventée : avec un vrai envoi, le courriel reviendrait en erreur. */
     public function testUnCompteDeDemonstrationNeRecoitPasDeCourriel(): void
     {
@@ -115,7 +133,7 @@ final class TraiteurTest extends TestCase
     {
         // Règle de Xavier (2026-11-12) : s'il n'a rien dit, l'offre est vide, et elle compte quand même.
         $muet = new class implements Transcripteur {
-            public function demarrer(string $cheminAudio): string
+            public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
             {
                 return 'ref-muet';
             }
@@ -383,7 +401,7 @@ final class TraiteurTest extends TestCase
         $appele = new class implements Transcripteur {
             public bool $appele = false;
 
-            public function demarrer(string $chemin): string
+            public function demarrer(string $chemin, string $vocabulaire = ''): string
             {
                 $this->appele = true;
                 return 'lot';
@@ -424,7 +442,7 @@ final class TraiteurTest extends TestCase
         $instable = new class implements Transcripteur {
             public int $appels = 0;
 
-            public function demarrer(string $chemin): string
+            public function demarrer(string $chemin, string $vocabulaire = ''): string
             {
                 return 'lot-1';
             }
@@ -554,10 +572,28 @@ final class TraiteurTest extends TestCase
     }
 }
 
+/** Garde le vocabulaire reçu à chaque envoi. */
+final class TranscripteurEcoute implements Transcripteur
+{
+    /** @var list<string> */
+    public array $vocabulaires = [];
+
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
+    {
+        $this->vocabulaires[] = $vocabulaire;
+        return 'ref-ecoute';
+    }
+
+    public function resultat(string $reference): string
+    {
+        return TranscripteurFactice::TEXTE;
+    }
+}
+
 /** Le factice vérifie que le fichier existe ; ici, l'audio n'est jamais écrit sur disque. */
 final class TranscripteurSansFichier implements Transcripteur
 {
-    public function demarrer(string $cheminAudio): string
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
     {
         return 'ref-test';
     }
@@ -573,7 +609,7 @@ final class TranscripteurLent implements Transcripteur
     public bool $pret = false;
     public int $demarrages = 0;
 
-    public function demarrer(string $cheminAudio): string
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
     {
         $this->demarrages++;
         return 'ref-lente';
@@ -593,7 +629,7 @@ final class TranscripteurPretApres implements Transcripteur
     {
     }
 
-    public function demarrer(string $cheminAudio): string
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
     {
         return 'lot-patient';
     }
@@ -609,7 +645,7 @@ final class TranscripteurPerdu implements Transcripteur
 {
     public int $demarrages = 0;
 
-    public function demarrer(string $cheminAudio): string
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
     {
         $this->demarrages++;
         return 'lot-' . $this->demarrages;
@@ -633,7 +669,7 @@ final class TranscripteurVoleur implements Transcripteur
     {
     }
 
-    public function demarrer(string $cheminAudio): string
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
     {
         BaseDeTest::pdo()->exec("UPDATE enregistrement SET verrou_jeton = '" . self::JETON . "' WHERE uuid = '{$this->uuid}'");
         return 'ref-volee';

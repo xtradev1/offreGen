@@ -34,14 +34,20 @@ final class TranscripteurApi implements Transcripteur
         }
     }
 
-    public function demarrer(string $cheminAudio): string
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
     {
         $fichier = $this->preparation->preparer($cheminAudio);
         try {
-            $formulaire = new FormDataPart([
+            $champs = [
                 'model' => $this->modele,
                 'language' => 'fr',
                 'response_format' => 'text',
+            ];
+            // Infomaniak ignore vad_filter et temperature, mais tient compte du prompt (bancs des 2026-11-21 et 24).
+            if (trim($vocabulaire) !== '') {
+                $champs['prompt'] = $vocabulaire;
+            }
+            $formulaire = new FormDataPart($champs + [
                 'file' => DataPart::fromPath($fichier->chemin, 'audio.' . strtolower(pathinfo($fichier->chemin, PATHINFO_EXTENSION))),
             ]);
             // Longueur annoncée : sans elle, l'envoi part par morceaux, qu'un service peut refuser (411).

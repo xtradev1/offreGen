@@ -3,7 +3,7 @@
 Imite les deux routes de transcription d'Infomaniak (documentation lue le 2026-11-12), pour que
 l'application parle le même protocole en local et en production :
 
-  POST /1/ai/{produit}/openai/audio/transcriptions   (multipart : file, model, language, response_format)
+  POST /1/ai/{produit}/openai/audio/transcriptions   (multipart : file, model, language, response_format, prompt)
        -> {"batch_id": "..."}
   GET  /1/ai/{produit}/results/{batch_id}
        -> {"status": "pending|processing|success|failed", "url", "file_name", "file_size", "data"}
@@ -62,7 +62,7 @@ class Moteur:
         self.dernier_usage = 0.0
         self.verrou = threading.Lock()
 
-    def transcrire(self, chemin, langue):
+    def transcrire(self, chemin, langue, invite=""):
         with self.verrou:
             if self.modele is None:
                 from faster_whisper import WhisperModel
@@ -74,7 +74,7 @@ class Moteur:
                 capture_output=True, check=True,
             ).stdout
             audio = np.frombuffer(brut, np.float32)
-            segments, info = self.modele.transcribe(audio, language=langue or None, vad_filter=True, beam_size=5)
+            segments, info = self.modele.transcribe(audio, language=langue or None, initial_prompt=invite or None, vad_filter=True, beam_size=5)
             texte = " ".join(s.text.strip() for s in segments).strip()
             self.dernier_usage = time.time()
             return texte, info.duration
@@ -97,7 +97,7 @@ def travailleur():
             lot["status"] = "processing"
         debut = time.time()
         try:
-            texte, duree = moteur.transcrire(lot["chemin"], lot["langue"])
+            texte, duree = moteur.transcrire(lot["chemin"], lot["langue"], lot["prompt"])
             donnees = texte if lot["format"] == "text" else json.dumps({"text": texte}, ensure_ascii=False)
             with verrou_lots:
                 lot.update(status="success", data=donnees, file_size=len(donnees.encode()))
@@ -192,7 +192,7 @@ class Gestionnaire(BaseHTTPRequestHandler):
         with verrou_lots:
             lots[batch_id] = {
                 "status": "pending", "data": "", "file_size": 0, "chemin": chemin,
-                "langue": champs.get("language", ""), "format": champs.get("response_format", "json"),
+                "langue": champs.get("language", ""), "prompt": champs.get("prompt", ""), "format": champs.get("response_format", "json"),
             }
         file_attente.put(batch_id)
         journal(f"lot {batch_id} reçu : {len(fichier) // 1024} Ko, {extension}")

@@ -13,7 +13,7 @@ final class TranscripteurFactice implements Transcripteur
         . "environ douze mètres carrés et demi, deux couches. Il y a aussi trois portes à laquer. "
         . "Pour la chambre, je dois encore vérifier la surface du plafond.";
 
-    public function demarrer(string $cheminAudio): string
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
     {
         if (!is_file($cheminAudio)) {
             throw new \RuntimeException('Audio introuvable : ' . basename($cheminAudio));

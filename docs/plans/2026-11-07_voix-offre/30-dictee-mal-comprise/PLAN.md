@@ -158,6 +158,14 @@ estBluetooth(nomMicro, frequence) -> boolean
 - **Vérification** : sonde verte sur le test, `REVUE.md` sans trouvaille ouverte, recette de Xavier par l'interface.
 - **Dépend de** : 1 à 6.
 
+### Lot 8 : vocabulaire du métier (ajouté le 2026-11-24, recette MP-A8)
+
+- **Objectif** : chaque dictée part chez Whisper avec le catalogue de son artisan en `prompt` (« Offre. désignation, désignation. »), les produits les plus utilisés d'abord, 500 caractères au plus, aucun produit coupé. Catalogue vide : aucun `prompt`, l'envoi reste celui d'aujourd'hui.
+- **Fichiers** : `src/Audio/Transcripteur.php` (paramètre `$vocabulaire`), `src/Audio/TranscripteurApi.php`, `src/Audio/TranscripteurFactice.php`, `src/Audio/VocabulaireDictee.php` (à créer), `src/Donnees/DepotProduits.php` (`designationsParUsage`), `src/Audio/Traiteur.php`, `outils/ia-locale/whisper_serveur.py` (`initial_prompt`, pour que le local suive).
+- **Tests** : `tests/Audio/VocabulaireDicteeTest.php` (à créer : forme, doublons, plafond sans produit coupé, catalogue vide) ; `tests/Audio/TranscripteurApiTest.php` (champ `prompt` présent avec le vocabulaire, absent sans) ; `tests/Audio/TraiteurTest.php` (le transcripteur reçoit le catalogue de A, jamais celui de B) ; `tests/Donnees/DepotProduitsVocabulaireTest.php` (à créer : ordre par usage, les lignes de B ne comptent pas).
+- **Vérification** : tests rouges puis verts, suite complète et phpstan verts sur `offregen_sc30_test` ; sur le test, après déploiement (accord de Xavier), la dictée A6 refaite et la transcription relue en base.
+- **Dépend de** : rien. Placé avant le lot 3.
+
 ## Où coder
 
 `~/offreGen` porte des fichiers non commités d'autres sessions (`public/css/app.css`, `config/routes.php`, le roadmap, le 2026-11-21). Les lots 2 à 6 se codent dans une copie à soi, sur la tête de la branche (mémoire « Cadrage offreGen ») : `git worktree add --detach ~/offreGen-sc30 origin/chantier-voix-offre`, `.env` et `.env.test.local` copiés, `composer install`, puis `git push origin HEAD:chantier-voix-offre` sur demande de Xavier. Les documents de ce dossier y sont recopiés au premier commit.

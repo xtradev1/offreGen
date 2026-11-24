@@ -71,6 +71,27 @@ final class TranscripteurApiTest extends TestCase
         self::assertStringContainsString((string) file_get_contents(self::fixture('visite.m4a')), $r['corps']);
     }
 
+    /** Sous-chantier 30, lot 8 : le catalogue de l'artisan guide Whisper sur les mots du métier. */
+    public function testLeVocabulairePartEnPrompt(): void
+    {
+        $this->transcripteur([self::json(['batch_id' => 'lot-vocabulaire'])])
+            ->demarrer(self::fixture('visite.m4a'), 'Offre. Sol travertin, Laquage des plinthes.');
+
+        self::assertMatchesRegularExpression('/name="prompt"\r\n(?:[^\r\n]+\r\n)*\r\nOffre\. Sol travertin, Laquage des plinthes\.\r\n/', $this->requetes[0]['corps']);
+    }
+
+    public function testSansVocabulaireAucunPrompt(): void
+    {
+        $t =$this->transcripteur([self::json(['batch_id' => 'lot-1']), self::json(['batch_id' => 'lot-2'])]);
+        $t->demarrer(self::fixture('visite.m4a'));
+        $t->demarrer(self::fixture('visite.m4a'), "  \n");
+
+        self::assertCount(2, $this->requetes);
+        foreach ($this->requetes as $r) {
+            self::assertStringNotContainsString('name="prompt"', $r['corps']);
+        }
+    }
+
     public function testSansCleAucunEnteteAuthorization(): void
     {
         $this->transcripteur([self::json(['batch_id' => 'abc'])], '')->demarrer(self::fixture('visite.m4a'));

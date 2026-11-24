@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 3 (traceur, de la dictée douteuse à la fenêtre de choix), sous-tâche Origin 518, dans `~/offreGen-sc30`, base `offregen_sc30_test` (son `.env.test.local` porte déjà `DB_NOM=offregen_sc30_test`). Le lot 2 est commité et poussé le 2026-11-24.
+Lot 8 livré en code le 2026-11-24 (catalogue en `prompt` de Whisper), non vérifié sur le test : déploiement à l'accord de Xavier, puis dictée A6 refaite et transcription relue en base. Ensuite lot 3 (traceur, de la dictée douteuse à la fenêtre de choix), sous-tâche Origin 518, dans `~/offreGen-sc30`, base `offregen_sc30_test` (son `.env.test.local` porte déjà `DB_NOM=offregen_sc30_test`). Le lot 2 est commité et poussé le 2026-11-24.
 
 À savoir à la reprise :
 - Ordre des migrations : la mienne, `Version20261122183001`, a un numéro plus ancien que deux migrations arrivées sur la branche entre-temps (`Version20261124100001`, `Version20261124140001`). Doctrine joue toute migration absente de la table des versions, quel que soit son rang ; à vérifier au déploiement du lot 7 (`migrations:status` sur le test avant et après), car le test aura déjà joué celles du 24.
@@ -20,6 +20,8 @@ Lot 3 (traceur, de la dictée douteuse à la fenêtre de choix), sous-tâche Ori
 
 ## En attente de toi
 
+- MP-A8 : la ligne de l'offre 86 porte « Laquage de porte, 2 faces » (produit 374) et la transcription « le cadre de porte à la quai ». Aucune ligne ni transcription ne contient « laque porte » : lequel des deux as-tu vu ?
+- Lexique du métier écrit à la main, en plus du catalogue (corrige « imperméable », approche « à laquer ») : à écrire par toi, par moi, ou pas du tout ?
 - D4 (lecteur seulement sur les dictées douteuses) contredit ta demande du 21 ; appliqué tel que choisi, à confirmer.
 - Ma lecture de « moins familier les textes » : ton plus neutre.
 - Finir la phrase du 2026-11-21 : « ce matin, vu que j'avais pas trop le… ».
@@ -47,6 +49,8 @@ Lot 3 (traceur, de la dictée douteuse à la fenêtre de choix), sous-tâche Ori
 - 2026-11-22 : lot 2 fait. Copie `~/offreGen-sc30` (tête 8385e78), base à soi `offregen_sc30_test` (droits recopiés de `offregen_test`), migration `Version20261122183001`, `SchemaTest::testLaDicteeDouteuseASesColonnes` vu rouge puis vert, retour arrière vérifié, suite complète verte sur la base migrée (preuves ci-dessous). Rien de commité.
 - 2026-11-23 : Xavier demande ce qui reste et comment l'ensemble marche techniquement. Réponses données sans nouvelle décision ; elles suivent PLAN.md (flux, seuils, routes, statut `a_confirmer`, relance). Point du jour Origin fait.
 - 2026-11-24 : arrêt demandé par Xavier. ETAT complété, lot 2 commité dans `~/offreGen-sc30` avec les documents du dossier, la ligne 30 de l'index de voix-offre et la décision du 29, puis poussé sur `chantier-voix-offre` après la suite complète sur la base migrée. Rien déployé sur le test, roadmap non touché.
+- 2026-11-24 : reprise sur le constat de la recette MP-A8 (« cadre de porte à laquer » transcrit « laque porte »). Dictée retrouvée en base du test : enregistrement 35, offre 86, compte de démo 29 (peintre). Banc `prompt` chez Infomaniak sur 9 dictées (preuves ci-dessous). Lot 8 ajouté au plan. Aucune autre copie ne touche au transcripteur (`git status` de toutes les copies, branches distantes depuis `ff1ee21`).
+- 2026-11-24 : lot 8 codé dans `~/offreGen-sc30` : tests rouges puis verts, suite complète et phpstan verts (preuves ci-dessous). Rien déployé. Au lot 4, surveiller qu'un `prompt` ne gonfle pas le compte de mots d'une voix faible (Whisper recopie parfois son `prompt` sur un silence ; rien vu sur 18 et 19).
 
 ## Réponses de Xavier à la maquette (2026-11-21, texte collé)
 
@@ -80,6 +84,9 @@ D8. Tâche Origin « Dictée mal comprise » dans offreGen, 12 h (estimation de 
 | 2026-11-22 | Migration `Version20261122183001`, numéro pris sur l'heure | Six migrations du 22 existent déjà sur la branche (000001 à 000006) et d'autres copies travaillent en parallèle : un numéro à l'heure évite la collision. |
 | 2026-11-22 | `remplace_offre_id` avec clé étrangère vers `offre`, `ON DELETE SET NULL` | Une offre supprimée ne bloque pas la suppression et n'emporte pas l'enregistrement. |
 | 2026-11-22 | Statut `a_confirmer` sans changement de type | `statut` est un `VARCHAR(20)`, pas une énumération. |
+| 2026-11-24 | Le catalogue de l'artisan part en `prompt` de Whisper, forme « Offre. désignation, désignation. », produits les plus utilisés d'abord, 500 caractères au plus (lot 8) | Banc du 24.11 : « travertin », « plinthes » (deux dictées), « crépi » corrigés ; aucune régression sur 9 dictées ; voix faibles 18 et 19 sans hallucination du `prompt`. Whisper ne garde que 224 jetons de `prompt`. Le catalogue part déjà chez Infomaniak pour l'extraction : aucun flux nouveau. |
+| 2026-11-24 | Lexique par métier écrit à la main : pas retenu sans Xavier | « imperméable » et « à laquée » viennent du `prompt` P2, dont j'ai écrit le lexique en connaissant les fautes à corriger : mesure biaisée, et sept métiers à tenir. |
+| 2026-11-24 | Lot 8 avant le lot 3 | Indépendant du verdict, petit, déployable seul ; il change la signature de `Transcripteur::demarrer`, que le lot 4 touche aussi : mieux vaut un seul changement d'interface à la fois. |
 
 ## Hors champ, noté
 
@@ -94,7 +101,7 @@ D8. Tâche Origin « Dictée mal comprise » dans offreGen, 12 h (estimation de 
 |---|---|---|
 | `SPEC.md` | 1 | corrigée avec D1 à D8 |
 | `MAQUETTE-dictee.html` | 3 | validée (D1 à D8) ; ses textes de messages sont remplacés par ceux de la SPEC, section 3 |
-| `PLAN.md` | 4 | écrit, sept lots ; lot 1 fait |
+| `PLAN.md` | 4 | écrit, huit lots ; lots 1 et 2 faits, lot 8 livré en code |
 
 ## Preuves
 
@@ -294,6 +301,122 @@ Limites : une seule mesure par cas ; les pauses de la dictée 14 ont été pri
 Textes relus pour 10, 15 et 25 : l'écart vient des mots de remplissage (« voilà », « tu vois », « disons ») et de « 4 » contre « quatre » ; rien d'utile à l'offre ne manque, sauf « d'oeuvre » après « 7-8 heures de main » (15).
 
 Bancs de qualité existants : sous-chantier 20, « quatre dictées écrites à la main » (`banc/donnees.php`) ; sous-chantier 26, dictées longues inventées en texte. Aucun ne passe par Whisper.
+
+### Vocabulaire du métier : catalogue en `prompt` (2026-11-24, recette MP-A8)
+
+Base du test, dictée A6 de la recette (enregistrement 35, compte 29, peintre) :
+
+```
+transcription : ... Dans la chambre, mur 20 mètres carrés et le cadre de porte à la quai en bloc de 200 francs. ...
+offre 86 | 4 | Laquage de porte, 2 faces | 1 pce | 200.00 | a_verifier 0 | produit 374 (modifiée à la main le 24.11 à 11:35)
+lignes « %laqu% » depuis l'offre 60 : Laquage des plinthes, Laquage, Laquage de porte, 2 faces ; aucune « laque porte »
+```
+
+Banc `banc_prompt.sh` (copie de `calib.sh`, lecture seule, `response_format=text`, audio brut sans `PreparationAudio`). « sans » : envoi actuel ; P1 : `prompt` « Offre. » suivi des désignations du catalogue du compte ; P2 : P1 et un lexique de peintre écrit à la main. 18 et 19 (compte 16, sans catalogue) reçoivent le catalogue du compte 29 pour mesurer le risque d'hallucination.
+
+```
+===== 35 29/eebdc699-0d97-460d-ab2f-18c9da3dd0cc.webm
+artisan 29, métier « peintre », 18 produits
+--- sans  : Alors, donc, une offre pour Madame Test à Port-en-Truy. Alors, dans le salon, on a des murs environ 30 mètres carrés, deux couches, plafond 20 mètres carrés. Dans la chambre, mur 20 mètres carrés et le cadre de porte à la quai en bloc de 200 francs. Et puis, pour tout le chantier, un déplacement. / 
+--- P1    : Alors, donc, une offre pour Madame Teste à Port-en-Truy. Alors, dans le salon, on a des murs environ 30 mètres carrés, 2 couches, plafond 20 mètres carrés, dans la chambre, mur 20 mètres carrés et le cadre de porte à la quai en bloc de 200 francs et puis pour tout le chantier, un déplacement. / 
+--- P2    : Alors, donc, une offre pour Madame Teste à Port-en-Truy. Alors, dans le salon, on a des murs environ 30 mètres carrés, 2 couches, plafond 20 mètres carrés, dans la chambre, mur 20 mètres carrés et le cadre de porte à laquée en bloc de 200 francs et puis pour tout le chantier, un déplacement. / 
+===== 34 29/5fedd9c6-7116-41de-8345-36f39739404a.webm
+artisan 29, métier « peintre », 18 produits
+--- sans  : Alors, on va faire une offre pour le comte Dracula. Donc, on va refaire pas mal d'éléments dans son château. Fais-moi une offre pour un sol travers teint. On va mettre 200 mètres carrés à 60 francs le mètre carré. Ensuite, on va repeindre les murs. On a 500 mètres carrés de murs. Donc, pour les murs, il faut une sous-couche isolante. / deux couches de peinture. Et ensuite, il faut rajouter 50 m² de peinture interméable pour la salle de bain. Du coup, tu peux rajouter encore 50 m² de sous-couche isolante pour la salle de bain aussi. Et puis ensuite, ce qu'on va faire, on va, dans la chambre, mettre du parquet. On va mettre du bois massif. Donc le bois massif, il y en a pour 40 m². / Et puis, c'est 120 francs le mètre carré. Ajoute une variante pour du stratifié. Le stratifié, il est à 80 francs le mètre carré. Et puis, on va rajouter le laquage des plaintes. Donc, le laquage des plaintes, c'est 5 francs par mètre carré. Et puis, on a au total, si on veut faire toutes les plaintes partout, on en a pour... / 200 mètres carrés. Enfin, mètres linéaires. Et puis, c'est à peu près tout. / 
+--- P1    : Alors, on va faire une offre pour le comte Dracula. Donc, on va refaire pas mal d'éléments dans son château. Fais-moi une offre pour un sol travertin. On va mettre 200 m² à 60 francs le m². Ensuite, on va repeindre les murs. On a 500 m² de murs. Donc, pour les murs, il faut une sous-couche isolante, / 2 couches de peinture. Et ensuite, il faut rajouter 50 m² de peinture interméable pour la salle de bain. Du coup, tu peux rajouter encore 50 m² de sous-couche isolante pour la salle de bain aussi. Et puis ensuite, ce qu'on va faire, on va, dans la chambre, mettre du parquet. On va mettre du bois massif. Donc le bois massif, il y en a pour 40 m². / Et puis, c'est 120 francs le mètre carré. Ajoute une variante pour du stratifié. Le stratifié, il est à 80 francs le mètre carré. Et puis, on va rajouter le laquage des plinthes. Donc, le laquage des plinthes, on va... Il y a... C'est 5 francs par mètre carré. Et puis, on a au total... Si on veut faire toutes les plinthes partout, on en a pour... / 200 mètres carrés. Enfin, mètres linéaires. Et puis, c'est à peu près tout. / 
+--- P2    : Alors, on va faire une offre pour le comte Dracula. Donc, on va refaire pas mal d'éléments dans son château. Fais-moi une offre pour un sol travertin. On va mettre 200 m² à 60 francs le m². Ensuite, on va repeindre les murs. On a 500 m² de murs. Donc, pour les murs, il faut une sous-couche isolante, / Deux couches de peinture. Et ensuite, il faut rajouter 50 mètres carrés de peinture imperméable pour la salle de bain. Du coup, tu peux rajouter encore 50 mètres carrés de sous-couche isolante pour la salle de bain aussi. Et puis ensuite, ce qu'on va faire, on va, dans la chambre, mettre du parquet. On va mettre du bois massif. Donc le bois massif, il y en a pour 40 mètres carrés. / Et puis, c'est 120 francs le mètre carré. Ajoute une variante pour du stratifié. Le stratifié, il est à 80 francs le mètre carré. Et puis, on va rajouter le laquage des plinthes. Donc, le laquage des plinthes, c'est 5 francs par mètre carré. Et puis, on a au total, si on veut faire toutes les plinthes partout, on en a pour... / 200 mètres carrés. Enfin, mètres linéaires. Et puis, c'est à peu près tout. / 
+===== 36 29/da87bec5-30f6-493d-8606-d294a8169bfb.webm
+artisan 29, métier « peintre », 18 produits
+--- sans  : Donc, on va créer un parquet de 50 m² en stratifié à 80 m². Tu peux me faire une variante à 60 m² si on prend du parquet vinyle. Et puis, tu me rajoutes aussi la peinture des murs, deux couches, et puis une sous-couche aussi que tu peux mettre. Et tout ça pour... / Et puis une option pour le laquage des plaintes. / 
+--- P1    : Donc, on va créer un parquet de 50 m² en stratifié à 80 m². Tu peux me faire une variante à 60 m² si on prend du parquet vinyle. Et puis, tu me rajoutes aussi la peinture des murs, 2 couches, et puis une sous-couche aussi que tu peux mettre. Et tout ça pour... / Et puis une option pour le laquage des plinthes. / 
+--- P2    : Donc, on va créer un parquet de 50 m² en stratifié à 80 m². Tu peux me faire une variante à 60 m² si on prend du parquet vinyle. Et puis, tu me rajoutes aussi la peinture des murs, 2 couches, et puis une sous-couche aussi que tu peux mettre. Et tout ça pour... / Et puis une option pour le laquage des plinthes. / 
+===== 37 29/a7d45ec0-0553-499c-9a67-acf98a699210.webm
+artisan 29, métier « peintre », 18 produits
+--- sans  : On va tester tout ça. J'aimerais qu'on travaille ensemble sur une petite offre. L'idée de l'offre, c'est de mettre du parquet. On parle de 30 m² de parquet stratifié avec une variante en vinyle. Ensuite, on va rajouter de la peinture. / 
+--- P1    : On va tester tout ça. J'aimerais qu'on travaille ensemble sur une petite offre. L'idée de l'offre, c'est de mettre du parquet. On parle de 30 m² de parquet stratifié avec une variante en vinyle. Ensuite, on va rajouter de la peinture. / 
+--- P2    : Alors, on va tester tout ça. Donc, moi j'aimerais qu'on travaille ensemble sur une petite offre. L'idée de l'offre, c'est de mettre du parquet. Donc on parle de 30 m² de parquet stratifié avec une variante en vinyle. Ensuite, on va rajouter de la peinture pour... / 
+===== 32 5/8b355fe7-9d76-4aca-8a0a-c1e373d2abab.webm
+bash: line 41: LEXIQUE: bad array subscript
+artisan 5, métier «  », 5 produits
+--- sans  : J'aimerais faire une offre pour refaire un parquet. J'aimerais un parquet en vinyle à 35 francs le mètre carré et à 40 mètres carrés de parquet. J'aimerais que tu me fasses une variation avec du bois massif à 120 francs le mètre carré et une variation en stratifié à 55 francs le mètre carré. Ensuite... / En option, tu peux mettre un laquage. / 
+--- P1    : J'aimerais faire une offre pour refaire un parquet. J'aimerais un parquet en vinyle à 35 francs le mètre carré. Il y a 40 mètres carrés de parquet. J'aimerais que tu me fasses une variation avec du bois massif à 120 francs le mètre carré et une variation en stratifié à 55 francs le mètre carré. Ensuite, / En option, tu peux mettre un laquage. / 
+--- P2    : J'aimerais faire une offre pour refaire un parquet. J'aimerais un parquet en vinyle à 35 francs le mètre carré. Il y a 40 mètres carrés de parquet. J'aimerais que tu me fasses une variation avec du bois massif à 120 francs le mètre carré et une variation en stratifié à 55 francs le mètre carré. Ensuite, / En option, tu peux mettre un laquage. / 
+===== 17 5/fec9ce41-81be-41e3-afa4-cfc850b83e37.webm
+bash: line 41: LEXIQUE: bad array subscript
+artisan 5, métier «  », 5 produits
+--- sans  : Je donne le micro. Alors, je suis du coup avec LCA, à côté de chez lui. Donc, il a une pièce, on va appeler ça le salon. Il a besoin qu'on repeigne les murs avec deux couches. On va dire comme ça. Le plafond, c'est bon, il n'y a pas besoin de refaire. Il faut changer le chauffe-eau. Le chauffe-eau, tu me la mets à 3000 balles. Et puis, dans la salle de bain, il faut changer la robinetterie. Un robinet à 200 francs. / 
+--- P1    : Je donne le micro. Alors, je suis du coup avec LCA, à côté de chez lui. Donc, il a une pièce, on va appeler ça le salon. Il a besoin qu'on repeigne les murs avec deux couches. On va dire comme ça. Le plafond, c'est bon, il n'y a pas besoin de refaire. Il faut changer le chauffe-eau. Le chauffe-eau, tu me la mets à 3000 balles. Et puis, dans la salle de bain, il faut changer la robinetterie. Un robinet à 200 francs. / 
+--- P2    : Je donne le micro. Alors, je suis du coup avec LCA, à côté de chez lui. Donc, il a une pièce, on va appeler ça le salon. Il a besoin qu'on repeigne les murs avec deux couches. On va dire comme ça. Le plafond, c'est bon, il n'y a pas besoin de refaire. Il faut changer le chauffe-eau. Le chauffe-eau, tu me la mets à 3000 balles. Et puis, dans la salle de bain, il faut changer la robinetterie. Un robinet à 200 francs. / 
+===== 19 16/dd5a2160-ff78-46c5-9aae-796d61ce95aa.webm
+artisan 29, métier « peintre », 18 produits
+--- sans  : Il y a une personne qui s'est retrouvée bloquée et puis ça a bloqué tout le monde. / 
+--- P1    : Il y a une personne qui s'est retrouvée bloquée et puis ça a bloqué tout le monde. / 
+--- P2    : Il y a une personne qui s'est retrouvée bloquée et puis ça a bloqué tout le monde. / 
+===== 18 16/f5de67e4-468f-4894-898d-a4c48e95db49.webm
+artisan 29, métier « peintre », 18 produits
+--- sans  : C'est les gens qui arrivent pour... C'est une barrière. / Il faut lever la barrière, tu rentres, tu lèves la barrière. Pourquoi tu mets des prix pour ces trucs ? Tu mets des francs, mais après tu peux toujours dire que les prix ne parlent pas le bon, mais tu donnes des prix. C'est un travail. / 
+--- P1    : C'est les gens qui arrivent pour ça. / Il faut lever la barrière, tu rentres, lever la barrière. Pourquoi tu mets des prix pour ces trucs ? Tu mets des francs, mais après tu peux toujours dire qu'il n'y a pas de prix, mais tu donnes des prix. C'est un travail. / 
+--- P2    : C'est les gens qui arrivent pour ça. / Il faut lever la barrière, tu rentres, lever la barrière. Pourquoi tu mets des prix pour ces trucs ? Tu mets des francs, mais après tu peux toujours dire qu'il n'y a pas de prix, mais tu donnes des prix. C'est un travail. / 
+===== 14 20/38be7aeb-af52-48b5-9af0-57706677083d.webm
+artisan 20, métier « macon », 16 produits
+--- sans  : Ok, je suis chez mon client qui s'appelle Frédéric Aliette. Ils veulent construire un quartier extérieur sur la terrasse de leur jardin. Je dois leur dire que j'ajoute à déléguer et commissionner ces deux autres travaux auprès de nos collègues. Oui, récupérer donc le crépit des endroits autour de la porte, qui pourront être commissionnés. / 
+--- P1    : Ok, je suis chez mon client qui s'appelle Frédécho Aliette. Ils veulent construire un quartier extérieur sur la terrasse de leur jardin. Je dois leur dire que j'ajoute à déléguer et commissionner ces deux autres travaux auprès de nos collègues. Oui, récupérer donc le crépi des endroits autour de la porte, qui pourront être commissionnés, mais / 
+--- P2    : Ok, je suis chez mon client qui s'appelle Frédécho Aliette. Ils veulent construire un quartier extérieur sur la terrasse de leur jardin. Je dois leur dire que j'ajoute à déléguer et commissionner ces deux autres travaux auprès de nos collègues. Oui, récupérer donc le crépi des endroits autour de la porte, qui pourront être commissionnés, mais / 
+```
+
+Décompte des mots visés sur toute la sortie (`grep -o | uniq -c`) :
+
+```
+      2 à la quai        (sans, P1)
+      1 à laquée         (P2)
+      1 travers teint    (sans)
+      2 travertin        (P1, P2)
+      4 plaintes         (sans, deux dictées)
+      8 plinthes         (P1, P2)
+      2 interméable      (sans, P1)
+      1 imperméable      (P2)
+      1 crépit / 2 crépi (sans / P1, P2)
+      1 Madame Test / 2 Madame Teste (sans / P1, P2)
+```
+
+Lecture : le catalogue corrige les mots qu'il contient (travertin, plinthes, crépi) et rien d'autre ; « à laquer » n'y est pas sous cette forme (« Laquage de porte »). « Port-en-Truy » reste faux partout : aucune localité dans le `prompt`. Petites variations de ponctuation et de mots de remplissage, aucune perte de contenu. Une seule mesure par cas.
+
+### Lot 8 : catalogue en `prompt` (2026-11-24)
+
+Tests écrits d'abord, rouges :
+
+```
+VocabulaireDicteeTest        : Error: Class "OffreGen\Audio\VocabulaireDictee" not found (5 erreurs)
+TranscripteurApiTest         : testLeVocabulairePartEnPrompt, Failed asserting that ... matches PCRE pattern "/name="prompt"..."
+DepotProduitsVocabulaireTest : Error: Call to undefined method OffreGen\Donnees\DepotProduits::designationsParUsage() (2 erreurs)
+TraiteurTest                 : -    0 => 'Offre. Peinture murale a.',
+                               +    0 => '',
+```
+
+Après le code :
+
+```
+VocabulaireDicteeTest        OK (5 tests, 10 assertions)
+TranscripteurApiTest         OK (15 tests, 38 assertions)
+DepotProduitsVocabulaireTest OK (2 tests, 3 assertions)
+TraiteurTest                 OK (33 tests, 124 assertions)
+--- migrations de offregen_sc30_test
+ [OK] Up-to-date! No migrations to execute.
+--- phpstan
+ [OK] No errors
+--- phpunit (suite complète, DB_NOM=offregen_sc30_test)
+Time: 03:17.730, Memory: 130.50 MB
+OK (1497 tests, 12347 assertions)
+```
+
+Plafond de 500 caractères contre la limite de 224 jetons (tokeniseur de large-v3-turbo, même vocabulaire que V3, `jetons.py`) :
+
+```
+peintre (13 produits) : 343 caractères, 119 jetons
+accents, long : 480 caractères, 165 jetons
+```
+
+`whisper_serveur.py` : `py_compile` sans erreur ; le Whisper local n'a pas été relancé avec un `prompt`.
 
 ### Lot 2 : migration (2026-11-22)
 
