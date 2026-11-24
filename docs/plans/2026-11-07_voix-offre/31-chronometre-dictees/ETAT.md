@@ -9,7 +9,7 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lot 8 : revue faite et corrigée (`REVUE.md`). Reste : déploiement sur le test **avec l'accord de Xavier**, `migrations:status` avant et après, recette par l'interface sur le test, `RECETTE.md`. Sous-tâche Origin : 614.
+Lot 8 fait : déployé sur le test (`0ec9fff`), recette par l'interface jouée par Claude, trois défauts corrigés, `RECETTE.md` écrit. Reste : la recette de Xavier et S1. Ensuite clôture (base, copie, `/roadmap-sync`). Sous-tâche Origin : 614.
 
 À savoir à la reprise :
 - Copie à soi : `~/offreGen-chrono` (worktree détaché sur `origin/chantier-voix-offre`), base de test `offregen_chrono_test` (droits recopiés de `offregen_test`, `DB_NOM` posé dans son `.env.test.local`).
@@ -19,14 +19,15 @@ Lot 8 : revue faite et corrigée (`REVUE.md`). Reste : déploiement sur le test 
 
 ## En attente de toi
 
-- Dire si je déploie le chronomètre sur le test (tête de `chantier-voix-offre`, migration `Version20261124230001`), et confirmer qu'il n'y a toujours que des données inventées.
+- Jouer `RECETTE.md`, section « À toi » (iPhone, environ 15 minutes).
 - Trancher S1 de `REVUE.md` : le texte des dictées dans le rapport de l'administration (garder, journaliser chaque ouverture, ou cacher derrière un clic journalisé).
+- Dire si je supprime `~/offreGen-base-coupee` (copie d'une autre session, correctif de connexion en double).
 
 ## Suivi Origin
 
 - Projet 44 (offreGen), tâche 607 « Chronomètre des dictées (sous-chantier 31) », 17 h, créée le 2026-11-24 (D8).
 - Sous-tâches : 608 SPEC, maquette, D1 à D8 ; 609 table et chronomètre dans le traitement ; 610 envoi mesuré par le téléphone ; 611 page, statistiques, rapport, CSV ; 612 verrou de 2 min 30, pouls, message de panne ; 613 rejeu ; 614 revue, déploiement, recette.
-- Conversation rattachée à 609 le 2026-11-24.
+- Conversation rattachée à 609, puis à 614 le 2026-11-24.
 
 ## Réponses de Xavier à la maquette (2026-11-24, texte collé)
 
@@ -60,6 +61,8 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 | 2026-11-24 | D2 : pages de 100, toutes les dictées accessibles ; CSV de toute la période. | « Accès à toutes, du moins durant la période de test ». |
 | 2026-11-24 | Rejeu : table `dictee_rejeu`, étapes sous `rejeu_id`, après la réponse, sans cron. Un rejeu mort reste visible et se relance après 15 minutes. | Le moins de pièces mobiles ; un rejeu n'a ni artisan ni offre qui l'attendent. |
 | 2026-11-24 | Correctif de connexion déployé sans attendre le chronomètre. | Accord de Xavier (« Oui, données inventées ») ; il supprime la cause de la panne du 24.11. |
+| 2026-11-24 | Premier octet mesuré par `on_progress` (arrivée des en-têtes), plus par `starttransfer_time`. | Le curl 7.74 du test y met, pour un POST, le début de l'envoi du corps (0 ms) ; la preuve locale de la phase 4 (curl 8.5, 6,005 s) ne le montrait pas. |
+| 2026-11-24 | Recette avec une démo à soi (`chrono-claude@exemple.ch`), pas avec la démo d'une autre recette. | `recette-e1` et `fluidite-test` ouvrent l'assistant de bienvenue et servent à d'autres recettes. |
 
 ## Journal
 
@@ -77,7 +80,42 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 - 2026-11-24 : lots 6 et 7 : page des dictées, statistiques, CSV, rapport, rejeu. Recette visuelle locale (base de test semée, `php -S` sur le port 8099, parcours cliqué par Playwright depuis « Plus ») : quatre défauts vus sur les captures et corrigés (tableaux coupés au PC, cartes du téléphone sans titre à cause de la classe `.bas` de l'application, statistiques sans maximum au téléphone, en-tête « 90E »). Commit `2ddda06`, rebasé.
 - 2026-11-24 : phase 7, revue lourde lancée (exactitude, sécurité, concurrence du verrou), environ 8 $ estimés, sans phpunit pour les relecteurs.
 - 2026-11-24 : revue rendue : aucune faille haute ; T1 (ffmpeg et ffprobe sans pouls) élevée, E1, E2 importantes, T2, S2 moyennes, le reste mineur. Toutes relues dans le code, corrigées sauf S1 (décision de Xavier) et cinq acceptées avec leur raison (`REVUE.md`). Trois mutations vérifiées (T2, E1, E2 rouges sans leur correction). Suite complète verte. Gate prod ouvert.
+- 2026-11-24 : accord de Xavier (« oui déploie, pas de vraies données »). Constat : le chronomètre était déjà en service, déployé par la session Prospects (`5d60a46` contient `bee22cc`), migration jouée (49 sur 49), avant cet accord. Défaut de la règle « ne déployer que la tête » quand plusieurs chantiers partagent la branche : à signaler à Xavier.
+- 2026-11-24 : recette par l'interface sur le test. Deux échecs de connexion de ma part (intitulé « Mot de passe, affiché une seule fois » puis courriel suivi de « (démo, …) » mal lus), aucun blocage. Démo `chrono-claude@exemple.ch` créée par `bin/creer-compte --demo --metier=peintre`. Trois défauts : premier octet à 0 ms, statuts en code, tableau des rejeux coupé au PC. Corrigés (`0ec9fff`), test du premier octet contre un vrai serveur local, deux mutations rouges, suite complète verte, poussé, déployé, recette rejouée : conforme.
 ## Preuves
+
+### Recette sur le test (2026-11-24, `0ec9fff`)
+
+```
+$ php-8.5 distant.php   # serveur de test, curl 7.74.0
+GET : 200, mesuré 42 ms, starttransfer 0.040101
+POST petit : 405, mesuré 31 ms, starttransfer 0.000116, pretransfer 0.000114
+$ php client.php   # en-têtes vus par on_progress
+local : total 1708 ms, en-têtes vus par on_progress à 1207 ms, starttransfer curl 1205 ms
+test  : total 80 ms, en-têtes vus par on_progress à 79 ms, starttransfer curl 16 ms
+--- extracteur sans progres : premier octet noté par on_progress  Tests: 1, Failures: 1
+--- transcripteur sans progres : Failed asserting that null is not null.  Tests: 1, Failures: 1
+$ php vendor/bin/phpunit   # tête rebasée sur 6708161
+OK (1609 tests, 13147 assertions)
+   6708161..0ec9fff  HEAD -> chantier-voix-offre
+SONDE VERTE
+DÉPLOYÉ : 0ec9fff9eeaa84ed160a199db9923302dcfff950 sur https://easy-offres.xtradev.ch
+$ node recette.js
+envoi /import 303 après 191 ms
+offre ouverte /offres/103 après 17166 ms
+Dictées ouverte depuis /admin/plus
+CSV dictees-2026-11-24.csv 3851 octets, trois premiers octets efbbbf
+  1 Transcription, envoi whisper après réponse 18:17:33,5 18:17:33,6 102 ms ok 97 ms
+  1 IA, extraction Qwen/Qwen3.8-27B-FP8 après réponse 18:17:42,9 18:17:47,7 4,8 s ok 1529 348 4,8 s
+  1 IA, pièces Qwen/Qwen3.8-27B-FP8 après réponse 18:17:47,7 18:17:49,2 1,5 s ok 737 110 1,5 s
+rejeu : Rejeu du 24.11.2026 18:17 fini 6 - - 6,3 s 2,1 s 2,2 s - - 10,6 s après 20 s environ
+original : Original prête 6 171 ms 13 ms 9,3 s 4,8 s 1,5 s - 10 ms 15,9 s
+débordement horizontal, liste au PC : 0 px
+débordement horizontal, rapport au PC : 0 px
+réponses : POST /import 303 ; POST /enregistrements/5ff5d244-…/envoi 204 ; POST /admin/dictees/41/rejouer 303
+erreurs JS : aucune
+```
+Captures ouvertes : rapport au PC, liste au téléphone, rapport au téléphone (première passe).
 
 ### Revue (2026-11-24)
 
