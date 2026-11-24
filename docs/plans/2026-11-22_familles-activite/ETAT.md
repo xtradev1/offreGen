@@ -13,12 +13,14 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Lire le retour de Xavier sur `RECETTE.md` (scénarios 2, 3 et 5 changés par le lot 7), sur le site de test. Défauts : phase 5. Recette validée : clôture (`statut: termine`, `roadmap-sync`, suppression des bases `offregen_familles_test` et `offregen_familles_vue`).
+Arrêt demandé par Xavier le 2026-11-24 : ne plus déployer sur le test, ne pas toucher au roadmap. À la reprise : lire le retour de Xavier sur `RECETTE.md` (scénarios 2, 3 et 5 changés par le lot 7). Défauts : phase 5, dans une copie remise sur la tête de `chantier-voix-offre`. Recette validée : clôture (`statut: termine`, `roadmap-sync`, suppression des bases `offregen_familles_test` et `offregen_familles_vue`).
 
 ## En attente de toi
 
-- Dérouler `RECETTE.md` sur le site de test, dont cinq dictées de prestations (avec et sans parties annoncées) et cinq de jardinier.
-- Corriger les prix des catalogues de prestations s'ils sont faux.
+- Dérouler `RECETTE.md` sur le site de test, dont cinq dictées de prestations (avec et sans parties annoncées) et cinq de jardinier. Le rangement par catégorie et la consigne hors bâtiment n'ont jamais été essayés sur une vraie dictée : seuls des appels simulés les testent.
+- Corriger les prix des catalogues de prestations s'ils sont faux (sources S16 à S18, résumés de recherche, pages non ouvertes).
+- Décider du débordement des boutons de suppression (`button.del`) sur l'écran de l'offre à 390 px : antérieur à ce chantier, hors périmètre, non corrigé.
+- Fermer les tâches Origin 538 et 539.
 
 ## Journal
 
@@ -59,6 +61,12 @@ Append-only. Une ligne datée par événement. On ajoute, on ne réécrit pas.
 - 2026-11-23 : lot 7 fait (accès replié, catégorie et second appel des Prestations, plus de « Hors catalogue »). Deux assertions d'`EcransTest` attendaient « Hors catalogue » : remplacées, la spec change ce comportement.
 - 2026-11-23 : recette visuelle locale du lot 7 (base `offregen_familles_vue`, compte inventé) : en-tête replié puis ouvert, offre avec une ligne libre, document. La sonde de disposition relève trois chevauchements sur l'en-tête replié : le champ « Accès » caché dans le `<details>` fermé garde une boîte (117 px de haut, au rang de « Début »), sans être peint ; replié ouvert, zéro chevauchement, et la capture ne montre rien. Les cinq débordements de l'écran de l'offre sont les boutons de suppression déjà relevés avant ce chantier.
 
+- 2026-11-23 : les deux lignes du jour sur l'accord et le déploiement du lot 7 ont été ajoutées par erreur en fin de fichier, après les preuves ; elles y restent (journal en ajout seul).
+- 2026-11-23 : non vérifié après le déploiement du lot 7 : les écrans du site de test. Seul `/sante` prouve le commit en service ; l'accès replié, les catégories et l'absence de « Hors catalogue » sont vérifiés en local seulement.
+- 2026-11-23 : la ligne « en cours » du roadmap de `~/offreGen` cite encore `cedc573` ; à mettre à jour à la clôture par `roadmap-sync`. Conversation rattachée à la sous-tâche Origin 543.
+- 2026-11-24 : constat, à la question de Xavier (« on dirait que tu travailles sur le même qu'un autre ») : toutes les sessions poussent sur la même branche `chantier-voix-offre`, chacune depuis sa copie (`git worktree list` : 18 copies). Aucune autre session ne travaille dans `~/offreGen-familles`. `f0771cd` est dans la branche ; 15 commits d'autres sessions l'ont suivi (onboarding, options, administration, commerciaux).
+- 2026-11-24 : arrêt demandé par Xavier : état écrit ici, commit par chemins, push ; plus de déploiement sur le test, roadmap non touché.
+
 ## Décisions
 
 Ce qui a été tranché sans demander, et pourquoi.
@@ -95,11 +103,12 @@ Ce qui a été tranché sans demander, et pourquoi.
 | Chemin | Phase | État |
 |---|---|---|
 | `docs/plans/2026-11-22_familles-activite/SPEC.md` | 1 | validée au gate intention le 2026-11-22 |
-| `docs/plans/2026-11-22_familles-activite/PLAN.md` | 4 | six lots cochés le 2026-11-22 |
-| code et tests (46 fichiers modifiés, 8 neufs, voir Preuves) | 5 | commit `cedc573`, en service sur le test le 2026-11-22, recette de Xavier attendue |
+| `docs/plans/2026-11-22_familles-activite/PLAN.md` | 4 | six lots cochés le 2026-11-22, lot 7 coché le 2026-11-23 |
+| code et tests (46 fichiers modifiés, 8 neufs, voir Preuves ; lot 7 : 17 fichiers) | 5 | commits `cedc573` et `f0771cd`, lot 7 en service sur le test le 2026-11-23, recette de Xavier attendue |
 | `docs/plans/2026-11-19_metiers-demo/CATALOGUES.md` | 5 | section « Prestations » et sources S16 à S18 ajoutées |
+| `docs/plans/2026-11-22_familles-activite/MAQUETTE-activites.html` | 3 | réponses de Xavier reportées dans `SPEC.md` le 2026-11-23 |
 | `docs/plans/2026-11-22_familles-activite/REVUE.md` | 7 | écrite, trouvailles retenues corrigées |
-| `docs/plans/2026-11-22_familles-activite/RECETTE.md` | 8 | écrite, en attente de Xavier |
+| `docs/plans/2026-11-22_familles-activite/RECETTE.md` | 8 | écrite, scénarios 2, 3 et 5 mis à jour au lot 7, en attente de Xavier |
 | bases locales `offregen_familles_test` et `offregen_familles_vue` | 5, 6 | à supprimer à la clôture |
 
 ## Preuves
@@ -274,3 +283,4 @@ $ node lot7c.js   # boîtes des champs, en-tête replié : [id, haut, hauteur, l
 ```
 
 - 2026-11-23 : accord de Xavier : « oui commite, pousse et déploie, ok pour autres postes ».
+- 2026-11-23 : lot 7 commité (`f0771cd`, 17 fichiers), rebasé sur trois commits d'autres sessions (onboarding, options), suite complète verte avant le push (1312 tests), poussé sur `chantier-voix-offre`, déployé sur le test : 1312 tests verts dans le script, analyse statique sans erreur, sonde verte, `/sante` annonce `f0771cd`. Version précédente gardée : `c8afd28`. Après le déploiement, une autre session a poussé `7b4b4ed` (escompte) : son prochain déploiement emportera ce lot.
