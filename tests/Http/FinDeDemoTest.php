@@ -103,8 +103,12 @@ final class FinDeDemoTest extends TestCase
         self::assertStringContainsString("Vos offres restent consultables jusqu'au 06.12.2026, puis elles sont supprimées.", $fin);
         self::assertStringContainsString('un mois gratuit, sans carte bancaire', $fin);
         self::assertStringContainsString('href="/demander-un-appel"', $fin);
-        self::assertStringContainsString('<b>Démo</b> · terminée', $fin);
-        self::assertSame(200, $n->get('/')->getStatusCode());
+        // Sans le ruban : il répétait le titre et un second « Passer à l'essai » (recette sur le test, 2026-11-24).
+        self::assertSame(1, substr_count($fin, 'href="/passer-a-l-essai"'));
+        self::assertStringNotContainsString('<b>Démo</b> · terminée', $fin);
+        $offres = $n->get('/');
+        self::assertSame(200, $offres->getStatusCode());
+        self::assertStringContainsString('<b>Démo</b> · terminée', (string) $offres->getContent());
     }
 
     public function testAvantLaFinLEcranDeFinRenvoieAuxOffresEtUnCompteOrdinaireRecoit404(): void

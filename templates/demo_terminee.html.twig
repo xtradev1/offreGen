@@ -2,7 +2,10 @@
 
 {# La fin d'une démo : K1 de la maquette v4 de l'administration, validé par Xavier le 2026-11-19, remis tel quel le
    2026-11-24 (E1 de Xavier, chantier onboarding : « on laisse et on fait »). La date est celle de la suppression
-   (Compte\SuppressionDemos, 30 jours après la fin) ; « Demander un appel » va au commercial qui suit la démo. #}
+   (Compte\SuppressionDemos, 30 jours après la fin) ; « Demander un appel » va au commercial qui suit la démo.
+   Sans ruban pour le prospect : il répétait le titre et le bouton « Passer à l'essai ». Le membre dans sa démo
+   d'entraînement le garde, pour « Revenir à mon espace ». #}
+{% set sans_ruban = not retour_equipe() %}
 {% block titre %}Démo terminée · {{ nom_application }}{% endblock %}
 {% block entete %}{{ entreprise }}{% endblock %}
 {% block ecran_classe %} gris{% endblock %}

@@ -140,6 +140,11 @@ final class ArriveeCommercialTest extends TestCase
         $offres = (string) $nina->get('/')->getContent();
         self::assertStringContainsString('Revenir à mon espace', $offres);
         self::assertStringNotContainsString('href="/passer-a-l-essai"', $offres);
+        // Sa démo finie, l'écran de fin garde le ruban et son retour (le prospect, lui, ne l'a plus : recette du 24.11).
+        BaseDeTest::pdo()->exec("UPDATE artisan SET demo_fin = '2026-11-01 00:00:00' WHERE id = $id");
+        $fin = (string) $nina->get('/fin-de-demo')->getContent();
+        self::assertStringContainsString('Votre démo est terminée', $fin);
+        self::assertStringContainsString('Revenir à mon espace', $fin);
         $r = $nina->post('/retour-espace', []);
         // Démo ouverte par le guide : le retour mène à la carte de fin du guide.
         self::assertSame('/admin/suivi?guide=fin', $r->headers->get('Location'));
