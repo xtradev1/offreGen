@@ -9,30 +9,21 @@ namespace OffreGen\Donnees;
  * Hors portée d'artisan par nature, comme DepotEquipe : ces lectures ne servent que des routes réservées à l'équipe.
  * Ce dépôt rend toujours la fiche entière ; c'est Compte\Prospects qui décide de ce qu'un lecteur en voit.
  *
- * Une fiche est « tenue » quand quelqu'un la suit et que son échéance n'est pas passée (ou qu'un compte lui est lié).
- * L'échéance : sept jours après le prochain pas, à défaut sept jours après la dernière action. Rien n'écrit la
- * libération : elle se calcule ici, à la lecture, et prendre() la constate.
+ * Une fiche est « tenue » quand quelqu'un de l'équipe la suit, jusqu'à ce qu'il la lâche (Xavier, 2026-11-24 : « une
+ * fiche pour l'instant est gardée tant qu'on la libère pas »). Ni échéance, ni plafond.
  *
- * @phpstan-type Fiche array{id: int, entreprise: string, nom_cle: string, npa: string|null, localite: string, metier: string|null, metier_saisi: string|null, telephone: string|null, telephone_cle: string|null, courriel: string|null, contact: string|null, origine: string|null, ide: string|null, etat: string, suivi_par: int|null, suivi_depuis: string|null, suivi_avant: int|null, libre_depuis: string|null, pas_texte: string|null, pas_le: string|null, derniere_action_le: string, compte_id: int|null, cree_par: int|null, cree_le: string, suiveur: string|null, avant: string|null, createur: string|null, echeance: string, tenue: int, c_demo: int|null, c_demo_fin: string|null, c_offres_max: int|null, c_dictees: int, c_derniere: string|null}
+ * @phpstan-type Fiche array{id: int, entreprise: string, nom_cle: string, npa: string|null, localite: string, metier: string|null, metier_saisi: string|null, telephone: string|null, telephone_cle: string|null, courriel: string|null, contact: string|null, origine: string|null, ide: string|null, etat: string, suivi_par: int|null, suivi_depuis: string|null, suivi_avant: int|null, libre_depuis: string|null, pas_texte: string|null, pas_le: string|null, derniere_action_le: string, compte_id: int|null, cree_par: int|null, cree_le: string, suiveur: string|null, avant: string|null, createur: string|null, tenue: int, c_demo: int|null, c_demo_fin: string|null, c_offres_max: int|null, c_dictees: int, c_derniere: string|null}
  * @phpstan-type Champs array{entreprise: string, nom_cle: string, npa: string|null, localite: string, metier: string|null, metier_saisi: string|null, telephone: string|null, telephone_cle: string|null, courriel: string|null, contact: string|null, origine: string|null, ide: string|null}
  * @phpstan-type CompteProche array{id: int, entreprise: string, demo: int, offres_max: int|null, apporteur: string|null}
  */
 final class DepotProspects
 {
-    public const JOURS_LIBRE = 7;
-
-    /**
-     * Le jour de la dernière action se lit deux heures après l'heure UTC de la base : le jour de Zurich, été comme
-     * hiver, à une heure près en faveur de celui qui suit (revue du 2026-11-24, C4).
-     */
-    private const ECHEANCE = 'DATE_ADD(COALESCE(p.pas_le, DATE(DATE_ADD(p.derniere_action_le, INTERVAL 2 HOUR))), INTERVAL ' . self::JOURS_LIBRE . ' DAY)';
-
     /** Celui qui suit est encore dans l'équipe : les fiches d'un membre retiré sont libres (revue, R1). */
     private const DANS_L_EQUIPE = "p.suivi_par IN (SELECT m.id FROM artisan m WHERE m.administrateur = 1 OR m.role IN ('moderateur', 'commercial'))";
 
     private const FICHES = 'SELECT p.id, p.entreprise, p.nom_cle, p.npa, p.localite, p.metier, p.metier_saisi, p.telephone, p.telephone_cle, p.courriel, p.contact, p.origine, p.ide, p.etat,
                 p.suivi_par, p.suivi_depuis, p.suivi_avant, p.libre_depuis, p.pas_texte, p.pas_le, p.derniere_action_le, p.compte_id, p.cree_par, p.cree_le,
-                s.entreprise AS suiveur, av.entreprise AS avant, cr.entreprise AS createur, ' . self::ECHEANCE . ' AS echeance, %s AS tenue,
+                s.entreprise AS suiveur, av.entreprise AS avant, cr.entreprise AS createur, %s AS tenue,
                 c.demo AS c_demo, c.demo_fin AS c_demo_fin, c.offres_max AS c_offres_max,
                 (SELECT COUNT(*) FROM enregistrement e WHERE e.artisan_id = c.id) AS c_dictees,
                 (SELECT MAX(e.recu_le) FROM enregistrement e WHERE e.artisan_id = c.id) AS c_derniere
@@ -48,10 +39,10 @@ final class DepotProspects
     {
     }
 
-    /** La condition « tenue », avec son paramètre du jour (un nom par emploi : PDO ne répète pas un paramètre). */
-    private static function tenue(string $jour): string
+    /** La condition « tenue ». */
+    private static function tenue(): string
     {
-        return '(p.suivi_par IS NOT NULL AND ' . self::DANS_L_EQUIPE . ' AND (p.compte_id IS NOT NULL OR ' . self::ECHEANCE . " >= :$jour))";
+        return '(p.suivi_par IS NOT NULL AND ' . self::DANS_L_EQUIPE . ')';
     }
 
     /**
@@ -79,35 +70,31 @@ final class DepotProspects
         );
     }
 
-    /**
-     * @param string $aujourdhui le jour à Zurich, AAAA-MM-JJ
-     * @return Fiche|null
-     */
-    public function fiche(int $id, string $aujourdhui): ?array
+    /** @return Fiche|null */
+    public function fiche(int $id): ?array
     {
         /** @var Fiche|null */
-        return $this->base->un(sprintf(self::FICHES, self::tenue('j1')) . ' WHERE p.id = :id', ['j1' => $aujourdhui, 'id' => $id]);
+        return $this->base->un(sprintf(self::FICHES, self::tenue()) . ' WHERE p.id = :id', ['id' => $id]);
     }
 
     /**
      * @param string $vue « miens » : tenues par l'acteur, le pas le plus proche d'abord ; « libres » : que personne ne
      *        tient, hors « pas intéressé » ; « retard » : tenues, pas dépassé ; tout autre mot : toutes, par nom
      * @param list<string> $mots les mots cherchés dans le nom réduit (nom_cle), tous exigés, dans n'importe quel ordre
+     * @param string $aujourdhui le jour à Zurich, AAAA-MM-JJ : un pas d'avant ce jour est en retard
      * @return list<Fiche> 200 au plus
      */
     public function lister(string $vue, int $acteur, array $mots, string $aujourdhui): array
     {
-        $params = ['j1' => $aujourdhui];
         [$ou, $ordre] = match ($vue) {
-            'miens' => ['p.suivi_par = :a AND ' . self::tenue('j2'), 'p.pas_le IS NULL, p.pas_le, p.entreprise, p.id'],
-            'libres' => ['NOT ' . self::tenue('j2') . " AND p.etat <> 'pas_interesse'", 'p.entreprise, p.id'],
-            'retard' => [self::tenue('j2') . ' AND p.pas_le < :j3', 'p.pas_le, p.entreprise, p.id'],
+            'miens' => ['p.suivi_par = :a AND ' . self::tenue(), 'p.pas_le IS NULL, p.pas_le, p.entreprise, p.id'],
+            'libres' => ['NOT ' . self::tenue() . " AND p.etat <> 'pas_interesse'", 'p.entreprise, p.id'],
+            'retard' => [self::tenue() . ' AND p.pas_le < :j', 'p.pas_le, p.entreprise, p.id'],
             default => ['1 = 1', 'p.entreprise, p.id'],
         };
-        $params += match ($vue) {
-            'miens' => ['a' => $acteur, 'j2' => $aujourdhui],
-            'libres' => ['j2' => $aujourdhui],
-            'retard' => ['j2' => $aujourdhui, 'j3' => $aujourdhui],
+        $params = match ($vue) {
+            'miens' => ['a' => $acteur],
+            'retard' => ['j' => $aujourdhui],
             default => [],
         };
         // Le nom seulement : une recherche ne doit rien rendre des champs qu'un collègue ne voit pas.
@@ -116,28 +103,27 @@ final class DepotProspects
             $params += ["m$i" => '%' . addcslashes($mot, '%_\\') . '%'];
         }
         /** @var list<Fiche> */
-        return $this->base->lire(sprintf(self::FICHES, self::tenue('j1')) . " WHERE $ou ORDER BY $ordre LIMIT 200", $params);
+        return $this->base->lire(sprintf(self::FICHES, self::tenue()) . " WHERE $ou ORDER BY $ordre LIMIT 200", $params);
     }
 
     /**
-     * Les nombres des onglets. « tenues » : les fiches que l'acteur tient sans compte lié, celles que le plafond compte.
+     * Les nombres des onglets.
      *
-     * @return array{miens: int, libres: int, tous: int, retard: int, tenues: int}
+     * @return array{miens: int, libres: int, tous: int, retard: int}
      */
     public function compter(int $acteur, string $aujourdhui): array
     {
-        $t = self::tenue('j1');
+        $t = self::tenue();
         $l = $this->base->un(
             "SELECT COUNT(*) AS tous,
-                    COALESCE(SUM(t.tenue = 1 AND t.suivi_par = :a1), 0) AS miens,
+                    COALESCE(SUM(t.tenue = 1 AND t.suivi_par = :a), 0) AS miens,
                     COALESCE(SUM(t.tenue = 0 AND t.etat <> 'pas_interesse'), 0) AS libres,
-                    COALESCE(SUM(t.tenue = 1 AND t.pas_le < :j2), 0) AS retard,
-                    COALESCE(SUM(t.tenue = 1 AND t.suivi_par = :a2 AND t.compte_id IS NULL), 0) AS tenues
-             FROM (SELECT p.suivi_par, p.etat, p.pas_le, p.compte_id, $t AS tenue FROM prospect p) t",
-            ['j1' => $aujourdhui, 'j2' => $aujourdhui, 'a1' => $acteur, 'a2' => $acteur],
+                    COALESCE(SUM(t.tenue = 1 AND t.pas_le < :j), 0) AS retard
+             FROM (SELECT p.suivi_par, p.etat, p.pas_le, $t AS tenue FROM prospect p) t",
+            ['j' => $aujourdhui, 'a' => $acteur],
         ) ?? [];
         $n = static fn (string $cle): int => is_numeric($l[$cle] ?? null) ? (int) $l[$cle] : 0;
-        return ['miens' => $n('miens'), 'libres' => $n('libres'), 'tous' => $n('tous'), 'retard' => $n('retard'), 'tenues' => $n('tenues')];
+        return ['miens' => $n('miens'), 'libres' => $n('libres'), 'tous' => $n('tous'), 'retard' => $n('retard')];
     }
 
     /**
@@ -207,14 +193,14 @@ final class DepotProspects
      *
      * @return bool false si la fiche était tenue : rien n'est écrit
      */
-    public function prendre(int $id, int $acteur, string $aujourdhui, \DateTimeImmutable $quand): bool
+    public function prendre(int $id, int $acteur, \DateTimeImmutable $quand): bool
     {
         $q = Dates::versBase($quand);
         return $this->base->ecrire(
             "UPDATE prospect p SET p.suivi_par = :a, p.suivi_depuis = :q1, p.suivi_avant = NULL, p.libre_depuis = NULL, p.pas_texte = NULL, p.pas_le = NULL,
                     p.derniere_action_le = :q2, p.etat = IF(p.etat = 'pas_interesse', 'a_contacter', p.etat)
-             WHERE p.id = :id AND NOT " . self::tenue('j1'),
-            ['a' => $acteur, 'q1' => $q, 'q2' => $q, 'id' => $id, 'j1' => $aujourdhui],
+             WHERE p.id = :id AND NOT " . self::tenue(),
+            ['a' => $acteur, 'q1' => $q, 'q2' => $q, 'id' => $id],
         ) === 1;
     }
 
@@ -243,7 +229,7 @@ final class DepotProspects
         $this->base->ecrire('UPDATE prospect SET pas_texte = :t, pas_le = :d, derniere_action_le = :q WHERE id = :id', ['t' => $texte, 'd' => $date, 'q' => Dates::versBase($quand), 'id' => $id]);
     }
 
-    /** Une note datée. $action : la note compte comme une action sur la fiche et repousse son échéance. */
+    /** Une note datée. $action : la note compte comme une action sur la fiche (sa date se lit sur la fiche). */
     public function noter(int $id, ?int $auteur, string $texte, \DateTimeImmutable $quand, bool $action = true): void
     {
         $q = Dates::versBase($quand);

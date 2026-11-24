@@ -9,19 +9,18 @@ profil: .claude/atoz-profile.md
 
 ## Suivi Origin
 
-- Projet 44 (offreGen). Conversation rattachée au projet le 2026-11-24, sans tâche.
-- Aucune tâche créée : question posée à Xavier deux fois le 2026-11-24, sans réponse.
+- Projet 44 (offreGen), tâche 616 « Prospects : catalogue partagé des commerciaux », créée le 2026-11-24 à la demande de Xavier.
+- Sous-tâches : 617 proposition et maquette, 618 code, revue et recette sur le test, 619 fiche gardée jusqu'à ce qu'on la lâche (conversation rattachée ici), 620 recette de Xavier, 621 mise en production.
 
 ## Prochaine action
 
-Attendre la recette de Xavier sur le site de test (`RECETTE.md`). S'il remonte des défauts : phase 5, test rouge d'abord, puis commit, push et déploiement sur le test. À la clôture : supprimer les bases locales `offregen_prospects_test` et `offregen_prospects_vue`, la copie `~/offreGen-prospects` et le fichier `~/.offregen-prospects-vue-comptes`, puis `/roadmap-sync`.
+Attendre la recette de Xavier sur le site de test (`RECETTE.md`, revue pour la nouvelle règle). S'il remonte des défauts : phase 5, test rouge d'abord, puis commit, push et déploiement sur le test. À la clôture : supprimer les bases locales `offregen_prospects_test` et `offregen_prospects_vue`, la copie `~/offreGen-prospects` et le fichier `~/.offregen-prospects-vue-comptes`, puis `/roadmap-sync`.
 
 ## En attente de toi
 
 - Dérouler `RECETTE.md` sur `https://easy-offres.xtradev.ch` (sept scénarios, comptes `prospects-nina@exemple.ch` et `prospects-leo@exemple.ch`, mots de passe dans `~/.offregen-test-prospects-nina-compte` et `-leo-compte` de WSL) et dire ce qui casse.
 - Confirmer ou refuser l'exception à la règle du 19.11 : en cherchant un nom, un commercial apprend qu'un compte d'un collègue existe (nom, sorte, qui l'a amené), et la fiche d'un collègue dit si l'artisan a une démo, un essai ou un abonnement.
-- Dire si le plafond de 30 fiches tenues par personne te convient (chiffre de Claude).
-- Dire si je crée la tâche Origin du chantier dans le projet offreGen (demandé trois fois, sans réponse).
+- Dire si l'administrateur doit pouvoir libérer la fiche d'un commercial : sans plafond ni libération à date, rien d'autre n'arrête celui qui garde 100 fiches.
 - Dire quel rôle a la responsable commerciale dans l'application : aujourd'hui administrateur et modérateur lisent toutes les fiches.
 - Créer le site de production chez Infomaniak : sans lui, aucun vrai prospect ne peut être saisi.
 
@@ -45,6 +44,9 @@ Attendre la recette de Xavier sur le site de test (`RECETTE.md`). S'il remonte d
 - 2026-11-24 : phase 8, recette cliquée par Claude sur le site de test (Playwright, Chromium, 390 px et 1440 px) : deux comptes inventés créés par `outils/compte-essai-test.sh` puis entrés dans l'équipe par l'écran « Ajouter un membre » (aucun courriel : comptes existants). Parcours complet sans erreur de console, douze captures regardées. Un échec de connexion de mon fait sur `recette-e1@exemple.ch` (mauvaise ligne lue dans le fichier du compte), sans blocage.
 - 2026-11-24 : défaut trouvé par cette recette : « mercredi 26.11 » pour un jeudi. Le serveur de test est à l'heure de Zurich, le poste en UTC. Test rouge dans trois fuseaux, correction, commit `5d60a46` poussé et déployé (sonde verte, 1608 tests verts dans la suite du déploiement). Relu sur le test : « jeudi 26.11 ».
 - 2026-11-24 : `RECETTE.md` écrite, gate prod ouvert. La démo de la recette part d'une fiche sans courriel : aucun rappel de démo ne part vers la boîte de Xavier.
+- 2026-11-24 : réponse de Xavier : « oui crée la tâche Origin, pas de plafond, une fiche pour l'instant est gardé tant quon la libère pas puis commit et push et /roadmap-sync ». Tâche Origin 616 créée (sous-tâches 617 à 621), conversation rattachée à 619.
+- 2026-11-24 : phase 5 : copie rebasée sur `origin/chantier-voix-offre` (`81a6856`, avance rapide). Trois tests rouges d'abord, chacun pour sa raison : pas au 15.03.2027 refusé (borne de 30 jours), `OverflowException` du plafond, « redevient libre » sur la fiche. Puis retrait de l'échéance (`DepotProspects::ECHEANCE`, `JOURS_LIBRE`), du plafond (`Prospects::PLAFOND`, `refuserAuPlafond`), de l'encart « redevient libre » et du badge « Libre dans N jours ». Un prochain pas se date dans l'année.
+- 2026-11-24 : vérification : tests des prospects 30 tests, 324 assertions ; suite complète 1608 tests, 13 144 assertions ; PHPStan sans erreur.
 
 ## Décisions
 
@@ -58,11 +60,11 @@ Ce qui a été tranché sans demander, et pourquoi.
 | 2026-11-24 | Registre du commerce et registre IDE hors de la version 1 | accès non confirmé, registre IDE annoncé comme remplacé |
 | 2026-11-24 | Menu à cinq entrées montré dans les écrans (P7 = A) | aucune entrée existante retirée sans accord |
 | 2026-11-24 | La carte du prochain pas perd son filet terracotta à gauche (aucune bordure de couleur) | réponse P1 de Xavier ; la charte réserve le terracotta au logo, au micro et au contour actif |
-| 2026-11-24 | Plafond de 30 fiches suivies à la fois par personne (états à contacter, contacté, rendez-vous, plus tard) ; démos, mois gratuits et clients ne comptent pas ; « Je prends » et la création d'une fiche à soi sont refusés au-delà, avec la phrase qui le dit | question de Xavier sous P2 ; avec P3 = B, il ferme la voie « prendre tous les libres ». Chiffre de Claude, à contester |
-| 2026-11-24 | « Libres » = fiches que personne ne suit : saisies sans être prises, lâchées, ou libérées par la règle P3 | confirmation de Xavier sous P2 |
-| 2026-11-24 | La libération se calcule à la lecture (échéance = prochain pas + 7 jours, à défaut dernière action + 7 jours) ; aucun cron, aucune écriture en GET | pas de tâche de nuit à surveiller, « Je prends » constate la liberté dans son UPDATE |
+| 2026-11-24 | **Remplacée le 2026-11-24, voir plus bas.** Plafond de 30 fiches suivies à la fois par personne (états à contacter, contacté, rendez-vous, plus tard) ; démos, mois gratuits et clients ne comptent pas ; « Je prends » et la création d'une fiche à soi sont refusés au-delà, avec la phrase qui le dit | question de Xavier sous P2 ; avec P3 = B, il ferme la voie « prendre tous les libres ». Chiffre de Claude, à contester |
+| 2026-11-24 | **Remplacée le 2026-11-24, voir plus bas.** « Libres » = fiches que personne ne suit : saisies sans être prises, lâchées, ou libérées par la règle P3 | confirmation de Xavier sous P2 |
+| 2026-11-24 | **Remplacée le 2026-11-24, voir plus bas.** La libération se calcule à la lecture (échéance = prochain pas + 7 jours, à défaut dernière action + 7 jours) ; aucun cron, aucune écriture en GET | pas de tâche de nuit à surveiller, « Je prends » constate la liberté dans son UPDATE |
 | 2026-11-24 | « Pas intéressé » classe la fiche : plus personne ne la tient, elle reste dans « Tous », hors de « Libres », et peut être reprise | garde la trace pour les collègues sans occuper le plafond |
-| 2026-11-24 | Un prochain pas se date à 30 jours au plus pour tous les états, « Plus tard » compris | P3 = B de Xavier ; au-delà il faut redater ou lâcher |
+| 2026-11-24 | **Remplacée le 2026-11-24, voir plus bas.** Un prochain pas se date à 30 jours au plus pour tous les états, « Plus tard » compris | P3 = B de Xavier ; au-delà il faut redater ou lâcher |
 | 2026-11-24 | Les comptes d'un collègue n'apparaissent que par la recherche d'un nom et dans l'avertissement de doublon (nom, sorte, qui l'a amené) ; « Tous » ne liste que des fiches | exception minimale à R1 du 19.11 (« le commercial ne voit que ses artisans »), à faire confirmer par Xavier |
 | 2026-11-24 | Une démo créée hors d'une fiche ne crée pas de fiche (point 12 de la SPEC, seconde phrase, retiré) | le compte se retrouve par la recherche ; une fiche « Démo Peintre » créée d'office polluerait le catalogue |
 | 2026-11-24 | Numéro IDE contrôlé par sa forme seule | clé de contrôle non prouvée ici |
@@ -74,6 +76,9 @@ Ce qui a été tranché sans demander, et pourquoi.
 | 2026-11-24 | Les comptes ne se rapprochent d'une saisie que par le nom, plus par le courriel | revue S3 ; un courriel deviné désignait le compte d'un collègue |
 | 2026-11-24 | La recherche exige un mot de trois lettres au moins | revue S2 ; des lettres isolées listaient les comptes des collègues |
 | 2026-11-24 | Perdre la course à « Je prends » rouvre la fiche avec un message au lieu d'une page introuvable | revue C3 |
+| 2026-11-24 | Une fiche reste suivie jusqu'à ce que celui qui la suit la lâche, ou quitte l'équipe ; aucun plafond | Xavier, 2026-11-24, « pour l'instant » ; remplace P3 = B, le plafond de 30 et le calcul d'échéance |
+| 2026-11-24 | Un prochain pas se date d'aujourd'hui à dans un an | la borne de 30 jours ne servait qu'à P3 = B ; un an arrête une faute de frappe |
+| 2026-11-24 | `ProspectsRevueTest::testUneActionApresMinuitCompteSurLeJourDeZurich` supprimé | C4 portait sur l'échéance, qui n'existe plus |
 
 Lectures de Claude à confirmer par Xavier : « au bout d'une semaine » lu comme 7 jours sans action notée (P3 = A), avec une variante B recommandée ; « une liste globale où les prospects qui existent, on peut directement les prendre » lu comme l'onglet « Libres » et « Je prends ».
 

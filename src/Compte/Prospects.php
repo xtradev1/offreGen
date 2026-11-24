@@ -19,10 +19,10 @@ use Psr\Clock\ClockInterface;
  * La liste informe, elle ne réserve rien : la commission reste réglée par le code tapé à l'inscription (C1).
  *
  * - P2 = A : un collègue voit le nom, la localité, le métier, qui suit et depuis quand ; ni téléphone, ni notes.
- * - P3 = B : une fiche est tenue tant qu'un prochain pas est daté (30 jours au plus) ; libre 7 jours après un pas
- *   manqué, ou 7 jours après la dernière action s'il n'y a pas de pas.
+ * - Une fiche est tenue tant que celui qui la suit ne la lâche pas, sans plafond (Xavier, 2026-11-24, « pour
+ *   l'instant » : remplace P3 = B, la libération 7 jours après un pas manqué, et le plafond de 30 fiches). Elle se
+ *   libère aussi quand il quitte l'équipe.
  * - P6 = A : les notes suivent la fiche quand elle change de main.
- * - Plafond : 30 fiches tenues par personne, pour qu'on ne puisse pas « bloquer une liste de 100 prospects ».
  * - Seul celui qui tient la fiche y écrit. L'administrateur et le modérateur lisent tout.
  *
  * @phpstan-import-type Fiche from DepotProspects
@@ -32,10 +32,8 @@ final class Prospects
 {
     public const ETATS = ['a_contacter' => 'À contacter', 'contacte' => 'Contacté', 'rendez_vous' => 'Rendez-vous', 'plus_tard' => 'Plus tard', 'pas_interesse' => 'Pas intéressé'];
     public const ORIGINES = ['salon' => 'Salon', 'grossiste' => 'Grossiste', 'recommande' => 'Recommandé', 'autre' => 'Autre'];
-    /** Fiches tenues à la fois par une personne, hors fiches liées à un compte (chiffre de Claude, 2026-11-24). */
-    public const PLAFOND = 30;
-    /** Un prochain pas se date à 30 jours au plus (P3 = B). */
-    public const JOURS_PAS = 30;
+    /** Un prochain pas se date dans l'année : une borne contre la faute de frappe (« 2062 »), sans autre rôle. */
+    public const JOURS_PAS = 365;
     public const NOTE_MAX = 1000;
     /** Les formes juridiques, retirées du nom pour rapprocher « Peinture Roux Sàrl » de « Peinture Roux ». */
     private const FORMES = ['sarl', 'sa', 'gmbh', 'ag', 'sagl', 'snc'];
@@ -97,7 +95,6 @@ final class Prospects
      * @return int la fiche créée
      * @throws \InvalidArgumentException saisie refusée, avec la phrase à montrer
      * @throws DoublonProspect
-     * @throws \OverflowException plafond de fiches tenues atteint
      */
     public function creer(int $acteur, array $saisie, bool $prend, bool $confirme): int
     {
@@ -107,9 +104,6 @@ final class Prospects
             throw new \InvalidArgumentException("Un prochain pas se pose sur un prospect que vous suivez\u{00A0}: cochez «\u{00A0}Je m'en occupe\u{00A0}», ou videz le prochain pas.");
         }
         $this->refuserDoublon($champs, null, $confirme);
-        if ($prend) {
-            $this->refuserAuPlafond($acteur);
-        }
         $maintenant = $this->maintenant();
         return $this->base->transaction(function () use ($champs, $pas, $prend, $acteur, $maintenant): int {
             $id = $this->depot->inserer($champs, $prend ? $acteur : null, $acteur, $maintenant);
@@ -140,7 +134,7 @@ final class Prospects
      */
     public function fiche(int $id): array
     {
-        return $this->depot->fiche($id, $this->aujourdhui()) ?? throw new \DomainException('Fiche inconnue.');
+        return $this->depot->fiche($id) ?? throw new \DomainException('Fiche inconnue.');
     }
 
     /**
@@ -159,28 +153,25 @@ final class Prospects
         $commun = [
             'compte' => self::sorteDeCompte($f),
             'a_moi' => $ecrit,
-            // Libre faute de suite : celui qui la suivait reste nommé, à la date où elle s'est libérée.
+            // Libre parce que son suiveur a quitté l'équipe : il reste nommé, sans date. Lâchée : qui, et depuis quand.
             'avant' => $tenue ? null : ($f['suivi_par'] !== null ? $f['suiveur'] : $f['avant']),
-            'libre_le' => $tenue ? null : ($f['suivi_par'] !== null ? self::jourPasse(self::lendemain($f['echeance']), $aujourdhui) : ($f['libre_depuis'] === null ? null : self::jourDeZurich($f['libre_depuis']))),
+            'libre_le' => $tenue || $f['suivi_par'] !== null || $f['libre_depuis'] === null ? null : self::jourDeZurich($f['libre_depuis']),
         ];
         if (!$entiere) {
             return ['entiere' => false, 'ecrit' => false, 'fiche' => $commun + [
                 'id' => $f['id'], 'entreprise' => $f['entreprise'], 'localite' => $f['localite'], 'metier' => $f['metier'], 'metier_saisi' => $f['metier_saisi'],
-                'suiveur' => $f['suiveur'], 'suivi_depuis' => $f['suivi_depuis'], 'derniere_action_le' => $f['derniere_action_le'],
-                'echeance' => $f['compte_id'] === null ? $f['echeance'] : null, 'tenue' => 1,
+                'suiveur' => $f['suiveur'], 'suivi_depuis' => $f['suivi_depuis'], 'derniere_action_le' => $f['derniere_action_le'], 'tenue' => 1,
             ]];
         }
         return ['entiere' => true, 'ecrit' => $ecrit, 'fiche' => $commun + $f + [
             'retard' => $f['pas_le'] !== null && $f['pas_le'] < $aujourdhui,
             'pas_aujourdhui' => $f['pas_le'] === $aujourdhui,
-            // Jours avant que la fiche redevienne libre ; null quand rien ne presse (libre, ou liée à un compte).
-            'libre_dans' => $tenue && $f['compte_id'] === null ? (int) (new \DateTimeImmutable($aujourdhui))->diff(new \DateTimeImmutable($f['echeance']))->format('%r%a') : null,
         ]];
     }
 
     /**
      * @param string $vue miens, libres, tous, ou retard (réservé à qui lit tout)
-     * @return array{vue: string, fiches: list<array{entiere: bool, ecrit: bool, fiche: array<string, mixed>}>, nombres: array{miens: int, libres: int, tous: int, retard: int, tenues: int}}
+     * @return array{vue: string, fiches: list<array{entiere: bool, ecrit: bool, fiche: array<string, mixed>}>, nombres: array{miens: int, libres: int, tous: int, retard: int}}
      */
     public function liste(int $acteur, bool $toutVoir, string $vue, string $recherche): array
     {
@@ -238,7 +229,6 @@ final class Prospects
     /**
      * « Je prends » : une fiche que personne ne tient.
      *
-     * @throws \OverflowException plafond atteint
      * @throws \DomainException fiche inconnue, ou tenue par quelqu'un
      */
     public function prendre(int $acteur, int $id): void
@@ -247,10 +237,9 @@ final class Prospects
         if ($fiche['tenue'] === 1) {
             throw new \DomainException('Cette fiche est déjà suivie.');
         }
-        $this->refuserAuPlafond($acteur);
         $maintenant = $this->maintenant();
         $this->base->transaction(function () use ($id, $acteur, $maintenant): void {
-            if (!$this->depot->prendre($id, $acteur, $this->aujourdhui(), $maintenant)) {
+            if (!$this->depot->prendre($id, $acteur, $maintenant)) {
                 throw new \DomainException('Cette fiche vient d\'être prise.');
             }
             $this->depot->noter($id, $acteur, 'Prospect pris.', $maintenant);
@@ -294,7 +283,7 @@ final class Prospects
     }
 
     /**
-     * @param string $date AAAA-MM-JJ, d'aujourd'hui à dans 30 jours
+     * @param string $date AAAA-MM-JJ, d'aujourd'hui à dans un an
      * @throws \DomainException
      * @throws \InvalidArgumentException
      */
@@ -421,13 +410,6 @@ final class Prospects
         return $fiche;
     }
 
-    private function refuserAuPlafond(int $acteur): void
-    {
-        if ($this->depot->compter($acteur, $this->aujourdhui())['tenues'] >= self::PLAFOND) {
-            throw new \OverflowException('Vous suivez déjà ' . self::PLAFOND . ' prospects : c\'est la limite. Lâchez-en un, ou créez la démo de l\'un d\'eux.');
-        }
-    }
-
     /**
      * @param Champs $champs
      * @throws DoublonProspect
@@ -484,7 +466,7 @@ final class Prospects
     }
 
     /**
-     * Un prochain pas : son texte et son jour, d'aujourd'hui à dans 30 jours.
+     * Un prochain pas : son texte et son jour, d'aujourd'hui à dans un an.
      *
      * @return array{string, string}|null null quand rien n'est saisi et que le pas n'est pas exigé
      * @throws \InvalidArgumentException
@@ -515,17 +497,6 @@ final class Prospects
             return null;
         }
         return $f['c_demo'] === 1 ? 'demo' : ($f['c_offres_max'] === null ? 'client' : 'essai');
-    }
-
-    private static function lendemain(string $jour): string
-    {
-        return (new \DateTimeImmutable($jour))->modify('+1 day')->format('Y-m-d');
-    }
-
-    /** Ce jour, s'il est passé ou présent ; null sinon (la fiche d'un membre retiré est libre sans date). */
-    private static function jourPasse(string $jour, string $aujourdhui): ?string
-    {
-        return $jour <= $aujourdhui ? $jour : null;
     }
 
     /** Le jour à Zurich d'un moment de la base (UTC). */

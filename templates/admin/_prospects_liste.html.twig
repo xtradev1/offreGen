@@ -7,7 +7,7 @@
   <div class="admin-tete avec-action">
     <div>
       {% if p is defined %}<h2>Prospects</h2>{% else %}<h1>Prospects</h1>{% endif %}
-      <p>{% if nombres.miens == 0 %}Vous n'en suivez aucun pour l'instant.{% else %}{{ nombres.miens }} suivi{{ nombres.miens > 1 ? 's' : '' }} par vous{% endif %}{% if nombres.tenues >= plafond %} · limite de {{ plafond }} atteinte{% endif %}</p>
+      <p>{% if nombres.miens == 0 %}Vous n'en suivez aucun pour l'instant.{% else %}{{ nombres.miens }} suivi{{ nombres.miens > 1 ? 's' : '' }} par vous{% endif %}</p>
     </div>
     <a class="btn pc-seul{% if p is not defined %} primary{% endif %}" href="/admin/prospects/chercher">Ajouter un prospect</a>
   </div>

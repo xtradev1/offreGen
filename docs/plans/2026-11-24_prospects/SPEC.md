@@ -29,7 +29,7 @@ Le rôle de la responsable commerciale dans l'application reste à nommer (admin
 6. Des notes datées, en ajout seulement.
 7. Trois listes : « Les miens » (pas dus en tête), « Libres », « Tous ».
 8. « Je prends » sur une fiche libre, « Je lâche ce prospect » sur une fiche à soi. Personne ne prend ni n'attribue pour un autre (« Le commercial prend lui-même un prospect »).
-9. Une fiche laissée sans suite redevient libre (règle exacte : P3 de la maquette). La fiche prévient deux jours avant.
+9. Une fiche laissée sans suite redevient libre (règle exacte : P3 de la maquette). La fiche prévient deux jours avant. **Remplacé le 2026-11-24 par Xavier** : une fiche reste suivie tant qu'on ne la lâche pas, sans plafond, « pour l'instant ».
 10. Chercher avant de créer : la recherche couvre les prospects et les comptes (démos, essais, clients).
 11. Avertissement à l'enregistrement sur un téléphone, un courriel, ou un nom et un numéro postal déjà connus ; refus sur un numéro IDE déjà connu, avec ouverture de la fiche existante.
 12. « Créer une démo » depuis la fiche, champs préremplis, compte lié à la fiche. Une démo créée sans fiche crée la sienne.
@@ -50,7 +50,7 @@ Le rôle de la responsable commerciale dans l'application reste à nommer (admin
 - Un commercial saisit un artisan rencontré en moins de 30 secondes au téléphone, avec deux champs obligatoires.
 - La saisie d'un artisan déjà présent (prospect ou compte) affiche la fiche existante avant la création.
 - Un commercial voit, pour tout prospect, s'il est libre ou suivi, et par qui selon P2.
-- Une fiche sans suite redevient libre à l'échéance de P3, sans intervention.
+- Une fiche sans suite redevient libre à l'échéance de P3, sans intervention. Remplacé le 2026-11-24 : elle reste suivie jusqu'à ce qu'on la lâche.
 - La démo créée depuis une fiche porte le lien vers elle, et l'état de la fiche suit le compte.
 - Un commercial ne lit par aucune route le téléphone ni les notes d'une fiche suivie par un collègue (si P2 = A ou C), prouvé par un test par route.
 
@@ -68,7 +68,7 @@ Le rôle de la responsable commerciale dans l'application reste à nommer (admin
 - **Données personnelles.** Notes sur des raisons individuelles et des personnes de contact : mention dans la politique de confidentialité, durée de garde, à traiter avec le lot juridique (Origin 463). Proposition de Claude : effacement d'une fiche « pas intéressé » 24 mois après la dernière action.
 - **Indépendance des commerciaux.** Le modérateur et l'administrateur lisent tout. Lire reste compatible avec la section 3 des règles ; toute fonction d'attribution la contredirait. Question 4 du juriste.
 - **Fuite entre commerciaux.** Si P2 = A ou C, le cloisonnement doit tenir sur chaque route, recherche comprise (la recherche ne doit rien rendre des champs masqués).
-- **Libération contournable.** Avec P3 = B, un pas daté tous les 30 jours garde un prospect indéfiniment. Accepté tant que la liste ne donne aucun droit.
+- **Accaparement possible.** Depuis le 2026-11-24, ni libération à date, ni plafond : rien n'empêche un commercial de garder 100 fiches. Restent la liste qui ne donne aucun droit, la libération quand il quitte l'équipe, et la responsable qui voit tout.
 - **Notes après changement de main.** P6 : les notes d'un commercial indépendant passent au suivant, ou non.
 - **Doublons résiduels.** Sans registre, deux orthographes d'une même entreprise sans téléphone commun passent. La fusion sert à cela.
 - **Priorité.** Aucun client payant, mise en production en cours, plusieurs recettes en attente : ce chantier s'ajoute à la file.

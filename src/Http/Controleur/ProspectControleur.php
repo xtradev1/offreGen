@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * La rubrique « Prospects » de l'administration (docs/plans/2026-11-24_prospects, maquette validée par Xavier le
- * 2026-11-24). Le noyau a vérifié le rôle ; les règles (qui voit quoi, qui écrit, doublons, plafond) sont dans
+ * 2026-11-24). Le noyau a vérifié le rôle ; les règles (qui voit quoi, qui écrit, doublons) sont dans
  * Compte\Prospects. Ici : lire la requête, appeler la règle, préparer les mots de l'écran.
  */
 final class ProspectControleur
@@ -64,7 +64,7 @@ final class ProspectControleur
             $id = $this->prospects()->creer($this->acteur(), $saisie, $prend, $requete->request->getString('confirme') === '1');
         } catch (DoublonProspect $d) {
             return $this->doublon($d, $saisie, $prend, '/admin/prospects');
-        } catch (\InvalidArgumentException | \OverflowException $e) {
+        } catch (\InvalidArgumentException $e) {
             return $this->formulaire(null, $saisie + ['prend' => $prend ? '1' : ''], $e->getMessage(), 422);
         }
         Flash::dire($requete, 'info', 'Prospect enregistré.');
@@ -147,8 +147,6 @@ final class ProspectControleur
             // La fiche existe et quelqu'un la tient : un collègue l'a prise entre-temps. Rien n'est écrit, on le dit.
             Flash::dire($requete, 'erreur', "Ce prospect est déjà suivi\u{00A0}: il n'est plus libre.");
             return new RedirectResponse("/admin/prospects/$id", 303);
-        } catch (\OverflowException $e) {
-            return $this->fiche($p, $e->getMessage(), 422);
         }
         Flash::dire($requete, 'info', 'Ce prospect est à vous.');
         return new RedirectResponse("/admin/prospects/$id", 303);
@@ -255,7 +253,7 @@ final class ProspectControleur
             $geste($id);
         } catch (\DomainException) {
             throw new PageIntrouvable();
-        } catch (\InvalidArgumentException | \OverflowException $e) {
+        } catch (\InvalidArgumentException $e) {
             return $this->fiche($p, $e->getMessage(), 422);
         }
         Flash::dire($requete, 'info', $dit);
@@ -322,7 +320,6 @@ final class ProspectControleur
             'q' => $q,
             'lignes' => $lignes,
             'nombres' => $liste['nombres'],
-            'plafond' => Prospects::PLAFOND,
             'tout_voir' => $this->toutVoir(),
             // « À faire » : les pas dus ou en retard de « Les miens ».
             'a_faire' => $liste['vue'] === 'miens' ? array_values(array_filter($lignes, static fn (array $l): bool => ($l['retard'] ?? false) || ($l['pas_aujourdhui'] ?? false))) : [],
@@ -351,12 +348,11 @@ final class ProspectControleur
             'libre_quand' => $lu('libre_le') === null ? null : (new \DateTimeImmutable($lu('libre_le')))->format('d.m'),
             'suivi_quand' => $lu('suivi_depuis') === null ? null : Dates::depuisBase($lu('suivi_depuis'))->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y'),
             'action_quand' => $lu('derniere_action_le') === null ? null : Dates::depuisBase($lu('derniere_action_le'))->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y'),
-            'echeance_quand' => $lu('echeance') === null ? null : (new \DateTimeImmutable($lu('echeance')))->modify('+1 day')->format('d.m.Y'),
             'tel' => $tel === null ? null : (string) preg_replace('/[^0-9+]/', '', $tel),
             'cree_quand' => $lu('cree_le') === null ? null : Dates::depuisBase($lu('cree_le'))->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m'),
             'etat_nom' => Prospects::ETATS[$lu('etat') ?? ''] ?? null,
             // Une fiche réduite n'a pas ces champs : les gabarits les lisent vides.
-        ] + array_fill_keys(['etat', 'telephone', 'courriel', 'contact', 'origine', 'ide', 'pas_texte', 'pas_le', 'createur', 'compte_id', 'libre_dans', 'npa'], null) + ['retard' => false, 'pas_aujourdhui' => false];
+        ] + array_fill_keys(['etat', 'telephone', 'courriel', 'contact', 'origine', 'ide', 'pas_texte', 'pas_le', 'createur', 'compte_id', 'npa'], null) + ['retard' => false, 'pas_aujourdhui' => false];
     }
 
     /**

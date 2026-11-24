@@ -24,7 +24,7 @@ Gestes :
 2. Tape « chapuis », touche « Chercher », puis « Créer « chapuis » ».
 3. Complète le nom en « Façades Chapuis », la localité « 2854 Bassecourt », touche « Enregistrer ».
 
-Attendu : la fiche « Façades Chapuis » s'ouvre, avec le message « Prospect enregistré. », l'état « À contacter » et l'encart « Aucun pas prévu. Sans suite, ce prospect redevient libre le … » (dans huit jours). « Les miens » compte une fiche de plus.
+Attendu : la fiche « Façades Chapuis » s'ouvre, avec le message « Prospect enregistré. » et l'état « À contacter ». Aucune date de libération n'est annoncée. « Les miens » compte une fiche de plus.
 
 Si ça casse : `src/Http/Controleur/ProspectControleur.php` (`creer`), table `prospect`.
 
@@ -55,7 +55,7 @@ Gestes :
 1. Ouvre « Tous », puis touche « Peinture Roux Sàrl ».
 2. Cherche « roux » dans le champ de la liste.
 
-Attendu : la liste dit « suivi par Nina Rey depuis le … ». La fiche montre le nom, « Delémont · Peintre », « Suivi par Nina Rey », la date de sa dernière action et le jour où la fiche redevient libre. Elle ne montre ni le 079 555 01 42, ni « Marc Roux », ni la note sur Word, ni aucun bouton.
+Attendu : la liste dit « suivi par Nina Rey depuis le … ». La fiche montre le nom, « Delémont · Peintre », « Suivi par Nina Rey » et la date de sa dernière action, sans date de libération. Elle ne montre ni le 079 555 01 42, ni « Marc Roux », ni la note sur Word, ni aucun bouton.
 
 Si ça casse : `Prospects::vue` (fiche réduite), `templates/admin/prospect.html.twig`.
 
@@ -122,20 +122,20 @@ Si ça casse : `Prospects::fusionner`, `DepotProspects::fusionner`.
 
 ## Ce qui n'est PAS couvert
 
-- **La libération après sept jours** : elle ne se rejoue pas à la main en une passe. Elle est prouvée par les tests automatiques seulement (`ProspectsTest::testUneFicheSansSuiteRedevientLibre`, `ProspectsRevueTest::testUneActionApresMinuitCompteSurLeJourDeZurich`).
-- **Le plafond de 30 fiches** : prouvé par test seulement.
+- **Une fiche gardée longtemps** : depuis le 2026-11-24 (décision de Xavier), une fiche reste suivie tant qu'on ne la lâche pas, sans plafond. Quatre mois sans action et 42 fiches pour une seule personne sont prouvés par test seulement (`ProspectsTest::testUneFicheResteSuivieTantQuOnNeLaLachePas`, `ProspectsTest::testAucunPlafondDeFichesSuivies`).
+- **Un prochain pas daté loin** : accepté jusqu'à un an, refusé au-delà ; prouvé par test seulement.
 - **Deux gestes au même instant** (deux « Je prends », deux « Créer une démo ») : les garde-fous sont dans le SQL, testés un à la fois, jamais en vraie course.
 - **Un vrai téléphone** : Claude a joué le parcours dans Chromium à 390 px. iPhone, Safari et Firefox non essayés.
 - **La production** : rien n'y est. Les vrais prospects attendent le site de production.
 - **Hors périmètre, acté dans `SPEC.md`** : recherche dans le registre du commerce ou le registre IDE, import en masse, attribution par un tiers, envoi de messages aux prospects, agenda.
 - **Données personnelles** : mention dans la politique de confidentialité et durée de garde des fiches, à traiter avec le lot juridique (Origin 463). Rien n'efface une fiche aujourd'hui.
-- **Quand une démo finie est supprimée** (30 jours après sa fin), la fiche redevient libre et perd la trace de la démo (REVUE, C5 et R2).
+- **Quand une démo finie est supprimée** (30 jours après sa fin), la fiche reste suivie et perd la trace de la démo (REVUE, C5 et R2).
 
 ## État des vérifications automatiques
 
 | Vérification | Résultat | Preuve |
 |---|---|---|
 | Lint | vert | PHPStan niveau 8 : « No errors », dans `ETAT.md` |
-| Suite de tests | verte | 1541 tests avant la correction du jour de la semaine, puis la suite complète rejouée par le script de déploiement ; détail dans `ETAT.md` |
+| Suite de tests | verte | 1608 tests, 13 144 assertions après le retrait de la libération et du plafond ; détail dans `ETAT.md` |
 | Revue | faite | `REVUE.md` : trois relecteurs, onze trouvailles retenues et corrigées, sept écartées avec leur raison |
 | Recette cliquée par Claude | passée sur le test | parcours Playwright, douze captures regardées ; un défaut trouvé (jour de la semaine) et corrigé |

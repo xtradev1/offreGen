@@ -135,18 +135,6 @@ final class ProspectsRevueTest extends TestCase
         self::assertFalse($depot->lierCompte($id, $this->compte('deux@exemple.ch', 'Démo deux'), $quand));
     }
 
-    /** C4 : l'échéance se comptait sur le jour UTC ; une action après minuit à Zurich perdait un jour. */
-    public function testUneActionApresMinuitCompteSurLeJourDeZurich(): void
-    {
-        // Le 24.11 à 23 h 30 UTC : le 25.11 à 0 h 30 à Zurich. Tenue jusqu'au 02.12 compris.
-        $this->horloge->modify('2026-11-24 23:30:00');
-        $id = $this->creer($this->nina);
-        $this->horloge->modify('2026-12-02 12:00:00');
-        self::assertSame(1, $this->prospects->fiche($id)['tenue']);
-        $this->horloge->modify('2026-12-03 12:00:00');
-        self::assertSame(0, $this->prospects->fiche($id)['tenue']);
-    }
-
     /** C7 : le prochain pas saisi disparaissait sans un mot quand « Je m'en occupe » était décoché. */
     public function testUnPasDemandeDeSuivreLeProspect(): void
     {

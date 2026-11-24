@@ -15,8 +15,9 @@ use Symfony\Component\Clock\MockClock;
 
 /**
  * Les règles du catalogue des prospects (docs/plans/2026-11-24_prospects, réponses de Xavier du 2026-11-24) : chacun
- * prend lui-même, un collègue voit qu'une fiche est suivie sans en lire le téléphone ni les notes (P2 = A), une fiche
- * sans suite redevient libre (P3 = B), les notes suivent la fiche (P6 = A), 30 fiches tenues au plus par personne.
+ * prend lui-même, un collègue voit qu'une fiche est suivie sans en lire le téléphone ni les notes (P2 = A), les notes
+ * suivent la fiche (P6 = A). Depuis le second message de Xavier du 2026-11-24 : une fiche reste suivie tant qu'on ne la
+ * lâche pas, sans plafond (P3 = B et le plafond de 30 sont retirés « pour l'instant »).
  */
 final class ProspectsTest extends TestCase
 {
@@ -84,7 +85,7 @@ final class ProspectsTest extends TestCase
     public function testUneSaisieIncompleteEstRefusee(): void
     {
         foreach ([['entreprise' => ' '], ['localite' => ''], ['metier' => 'astronaute'], ['telephone' => '12'], ['courriel' => 'pas un courriel'], ['origine' => 'radio'],
-            ['pas_texte' => 'Rappeler', 'pas_date' => ''], ['pas_texte' => 'Rappeler', 'pas_date' => '2026-11-20'], ['pas_texte' => 'Rappeler', 'pas_date' => '2026-12-25']] as $faux) {
+            ['pas_texte' => 'Rappeler', 'pas_date' => ''], ['pas_texte' => 'Rappeler', 'pas_date' => '2026-11-20'], ['pas_texte' => 'Rappeler', 'pas_date' => '2027-11-25']] as $faux) {
             try {
                 $this->creer($this->nina, $faux);
                 self::fail('Accepté : ' . json_encode($faux));
@@ -188,28 +189,28 @@ final class ProspectsTest extends TestCase
         self::assertSame(0, BaseDeTest::compter('prospect_note'));
     }
 
-    public function testUneFicheSansSuiteRedevientLibre(): void
+    public function testUneFicheResteSuivieTantQuOnNeLaLachePas(): void
     {
         $sansPas = $this->creer($this->nina);
         $avecPas = $this->creer($this->nina, ['entreprise' => 'Carrelage du Mont', 'localite' => '2900 Porrentruy', 'telephone' => '', 'courriel' => '', 'pas_texte' => 'Rendez-vous', 'pas_date' => '2026-12-04']);
-        // Sept jours après la dernière action, la fiche tient encore ; le huitième, elle est libre.
-        $this->horloge->modify('2026-12-01 09:00:00');
-        self::assertTrue($this->vue($this->nina, $sansPas)['ecrit']);
-        self::assertSame(0, $this->vue($this->nina, $sansPas)['fiche']['libre_dans']);
-        $this->horloge->modify('2026-12-02 09:00:00');
-        self::assertFalse($this->vue($this->nina, $sansPas)['ecrit']);
-        self::assertTrue($this->vue($this->leo, $sansPas)['entiere']);
-        // Un pas daté garde la fiche jusqu'à sept jours après lui (P3 = B).
-        self::assertTrue($this->vue($this->nina, $avecPas)['ecrit']);
-        $this->horloge->modify('2026-12-11 09:00:00');
-        self::assertTrue($this->vue($this->nina, $avecPas)['ecrit']);
-        $this->horloge->modify('2026-12-12 09:00:00');
-        self::assertFalse($this->vue($this->nina, $avecPas)['ecrit']);
-
-        $liste = $this->prospects->liste($this->leo, false, 'libres', '');
-        self::assertSame(['Carrelage du Mont', 'Peinture Roux Sàrl'], array_column(array_column($liste['fiches'], 'fiche'), 'entreprise'));
-        self::assertSame(2, $liste['nombres']['libres']);
-        // Léo la prend : Nina ne la tient plus, les notes suivent la fiche (P6 = A).
+        // Un pas se date au-delà de 30 jours : il ne sert plus à garder la fiche.
+        $this->prospects->poserPas($this->nina, $avecPas, 'Rappeler après l\'hiver', '2027-03-15');
+        // Quatre mois sans rien noter, pas manqué ou non : Nina suit toujours les deux fiches.
+        $this->horloge->modify('2027-04-01 09:00:00');
+        foreach ([$sansPas, $avecPas] as $id) {
+            self::assertTrue($this->vue($this->nina, $id)['ecrit']);
+            self::assertFalse($this->vue($this->leo, $id)['entiere']);
+            self::assertArrayNotHasKey('echeance', $this->vue($this->leo, $id)['fiche']);
+        }
+        self::assertSame([], $this->prospects->liste($this->leo, false, 'libres', '')['fiches']);
+        try {
+            $this->prospects->prendre($this->leo, $sansPas);
+            self::fail('Fiche suivie prise par un collègue.');
+        } catch (\DomainException) {
+        }
+        // Nina la lâche : Léo la prend, les notes suivent la fiche (P6 = A).
+        $this->prospects->lacher($this->nina, $sansPas);
+        self::assertSame(1, $this->prospects->liste($this->leo, false, 'libres', '')['nombres']['libres']);
         $this->prospects->prendre($this->leo, $sansPas);
         self::assertSame('Léo Favre', $this->vue($this->nina, $sansPas)['fiche']['suiveur']);
         self::assertFalse($this->vue($this->nina, $sansPas)['entiere']);
@@ -234,27 +235,16 @@ final class ProspectsTest extends TestCase
         self::assertSame('a_contacter', $this->vue($this->nina, $id)['fiche']['etat']);
     }
 
-    public function testLePlafondDeFichesTenues(): void
+    public function testAucunPlafondDeFichesSuivies(): void
     {
         $pdo = BaseDeTest::pdo();
-        for ($i = 1; $i <= Prospects::PLAFOND; $i++) {
+        for ($i = 1; $i <= 40; $i++) {
             $pdo->exec("INSERT INTO prospect (entreprise, nom_cle, localite, suivi_par, suivi_depuis, derniere_action_le, cree_par, cree_le) VALUES ('Fiche $i', 'fiche $i', 'Alle', {$this->nina}, '2026-11-24 08:00:00', '2026-11-24 08:00:00', {$this->nina}, '2026-11-24 08:00:00')");
         }
         $libre = $this->creer($this->leo, [], false);
-        try {
-            $this->prospects->prendre($this->nina, $libre);
-            self::fail('Plafond dépassé en prenant.');
-        } catch (\OverflowException) {
-        }
-        try {
-            $this->creer($this->nina, ['entreprise' => 'Une de plus', 'localite' => 'Bure', 'telephone' => '', 'courriel' => '']);
-            self::fail('Plafond dépassé en créant.');
-        } catch (\OverflowException) {
-        }
-        // Saisir sans prendre reste possible, et Léo n'est pas concerné par le plafond de Nina.
-        self::assertGreaterThan(0, $this->creer($this->nina, ['entreprise' => 'Pour les autres', 'localite' => 'Bure', 'telephone' => '', 'courriel' => ''], false));
-        $this->prospects->prendre($this->leo, $libre);
-        self::assertSame(Prospects::PLAFOND, $this->prospects->liste($this->nina, false, 'miens', '')['nombres']['tenues']);
+        $this->prospects->prendre($this->nina, $libre);
+        $this->creer($this->nina, ['entreprise' => 'Une de plus', 'localite' => 'Bure', 'telephone' => '', 'courriel' => '']);
+        self::assertSame(42, $this->prospects->liste($this->nina, false, 'miens', '')['nombres']['miens']);
     }
 
     public function testLeProchainPasEtSonRetard(): void
@@ -282,10 +272,9 @@ final class ProspectsTest extends TestCase
             [$demo['entreprise'], (int) $demo['demo'], $demo['metier'], $demo['courriel_saisi'], (int) $demo['cree_par'], (int) $demo['apporte_par']]);
         $fiche = $this->vue($this->nina, $id)['fiche'];
         self::assertSame([$compte, 'demo'], [$fiche['compte_id'], $fiche['compte']]);
-        // Liée à un compte, la fiche ne redevient pas libre et ne compte plus dans le plafond.
+        // Liée à un compte, la fiche reste suivie.
         $this->horloge->modify('2027-01-15 09:00:00');
         self::assertSame(1, $this->vue($this->nina, $id)['fiche']['tenue']);
-        self::assertSame(0, $this->prospects->liste($this->nina, false, 'miens', '')['nombres']['tenues']);
         // Le compte devient un essai : la fiche le dit sans que personne ne la touche.
         BaseDeTest::pdo()->exec("UPDATE artisan SET demo = 0 WHERE id = $compte");
         self::assertSame('essai', $this->vue($this->leo, $id)['fiche']['compte']);

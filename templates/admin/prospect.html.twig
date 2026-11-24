@@ -23,8 +23,6 @@
       <div class="card"><h2 class="carte-titre">Suivi par {{ p.suiveur }}</h2><p class="muted">Depuis le {{ p.suivi_quand }}. Dernière action notée le {{ p.action_quand }}.</p></div>
       {% if p.compte_nom %}
         <p class="alerte info">{{ p.compte_nom }} chez {{ nom_application }}.</p>
-      {% elseif p.echeance_quand %}
-        <p class="alerte info">Sans nouvelle action de {{ p.suiveur }}, ce prospect redevient libre le {{ p.echeance_quand }}.</p>
       {% endif %}
       <p class="muted">Le téléphone et les notes restent chez {{ p.suiveur }}.</p>
       <p class="muted">Cette liste informe, elle ne réserve aucun artisan. La commission revient à celui dont le code est tapé à l'inscription.</p>
@@ -67,7 +65,6 @@
             </div>
           </div>
         {% else %}
-          {% if p.libre_dans is not null %}<p class="alerte {{ p.libre_dans <= 2 ? 'warn' : 'info' }}">Aucun pas prévu. Sans suite, ce prospect redevient libre le {{ p.echeance_quand }}.</p>{% endif %}
           {% if p.telephone %}<a class="btn large" href="tel:{{ p.tel }}">{{ p.telephone }}</a>{% endif %}
         {% endif %}
         <details class="plus pas-nouveau"{% if not p.pas_texte %} open{% endif %}>

@@ -121,8 +121,12 @@ final class ProspectsEcransTest extends TestCase
 
     public function testUnCollegueVoitLeNomEtQuiSuitRienDAutre(): void
     {
-        $id = $this->fichDeNina($this->navigateur('a@exemple.ch'));
+        $nina = $this->navigateur('a@exemple.ch');
+        $id = $this->fichDeNina($nina);
+        // Plus de libération à date (Xavier, 2026-11-24) : aucune des deux fiches n'annonce un jour où elle se libère.
+        self::assertStringNotContainsString('redevient libre', (string) $nina->get("/admin/prospects/$id")->getContent());
         $leo = $this->navigateur('b@exemple.ch');
+        self::assertStringNotContainsString('redevient libre', (string) $leo->get("/admin/prospects/$id")->getContent());
         $pages = [
             'liste' => (string) $leo->get('/admin/prospects?vue=tous')->getContent(),
             'fiche' => (string) $leo->get("/admin/prospects/$id")->getContent(),
@@ -238,7 +242,7 @@ final class ProspectsEcransTest extends TestCase
         $nina = $this->navigateur('a@exemple.ch');
         $id = $this->fichDeNina($nina);
         // Le prochain pas, dû aujourd'hui : il monte dans « À faire ».
-        self::assertSame(422, $this->poster($nina, "/admin/prospects/$id/pas", ['texte' => 'Rappeler', 'date' => '2027-03-01'])->getStatusCode());
+        self::assertSame(422, $this->poster($nina, "/admin/prospects/$id/pas", ['texte' => 'Rappeler', 'date' => '2027-12-01'])->getStatusCode());
         self::assertSame(303, $this->poster($nina, "/admin/prospects/$id/pas", ['texte' => 'Rappeler pour fixer la visite', 'date' => '2026-11-07'])->getStatusCode());
         $liste = (string) $nina->get('/admin/prospects')->getContent();
         foreach (['À faire', 'Rappeler pour fixer la visite', 'prévu aujourd&#039;hui', 'href="tel:0795550142"', "/admin/prospects/$id/pas-fait"] as $attendu) {
