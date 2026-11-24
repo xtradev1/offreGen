@@ -35,6 +35,7 @@ use OffreGen\Http\Controleur\RangementControleur;
 use OffreGen\Http\Controleur\RelectureControleur;
 use OffreGen\Http\Controleur\RepresentantControleur;
 use OffreGen\Http\Controleur\SanteControleur;
+use OffreGen\Http\Controleur\TextesARelireControleur;
 use OffreGen\Http\Controleur\VosPrixControleur;
 use OffreGen\Http\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -303,6 +304,11 @@ return static function (Conteneur $c): array {
     foreach (array_keys(ReglagesControleur::ETAPES) as $nom) {
         $routes[] = new Route("bienvenue_$nom", "/bienvenue/$nom", ['GET'], static fn (Request $r): Response => $reglages()->etape($r, $nom), Route::ARTISAN);
         $routes[] = new Route("bienvenue_{$nom}_enregistrer", "/bienvenue/$nom", ['POST'], static fn (Request $r): Response => $reglages()->enregistrerEtape($r, $nom), Route::ARTISAN);
+    }
+    // La relecture des textes par un correcteur (chantier 2026-11-24_relecture-textes) : seulement là où le .env porte
+    // RELECTURE_TEXTES=1, le site de test. Ailleurs, production comprise, la route n'existe pas.
+    if ($c->parametre('RELECTURE_TEXTES') === '1') {
+        $routes[] = new Route('relecture_textes', '/relecture', ['GET'], static fn (): Response => (new TextesARelireControleur($c->racine() . '/relecture/index.html'))->page(), Route::PUBLIC);
     }
     return $routes;
 };

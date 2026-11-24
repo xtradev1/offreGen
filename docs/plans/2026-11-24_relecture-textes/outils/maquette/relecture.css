@@ -1,0 +1,84 @@
+/* Page de relecture des textes de Dicta (chantier 2026-11-24_relecture-textes). Charte Dicta du 19.11 : encre ardoise,
+   fond pierre, terracotta du micro pour les numéros. Mise en page : une colonne, la capture à gauche et ses textes à
+   droite sur ordinateur, l'une sous l'autre sur téléphone. Aucun style dans le HTML : la politique de sécurité du site
+   (default-src 'self') refuse les styles en ligne. */
+@font-face { font-family: "Archivo"; font-weight: 500 800; font-display: swap; src: url("%%POLICES%%/archivo-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("%%POLICES%%/inter-latin.woff2") format("woff2"); }
+:root {
+  --fond: #F4F1EA; --carte: #FFFFFF; --encre: #23272D; --doux: #545A63; --trait: #DDD8CC; --etiquette: #EBE7DE;
+  --mic: #B24A25; --ok: #13553A; --ok-fond: #E1EFE6; --att-fond: #FFF0B3; --nb: #FFD666;
+  --mk-ink: var(--encre); --mk-bg: var(--fond); --mk-surface: var(--carte); --mk-line: var(--trait); --mk-accent: var(--mic);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #AEB4BC; --trait: #33373D; --etiquette: #26292E;
+  --mic: #F08A5D; --ok: #7DD3A8; --ok-fond: #183126; --att-fond: #3A2A10; --nb: #6B5512; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #AEB4BC; --trait: #33373D; --etiquette: #26292E;
+  --mic: #F08A5D; --ok: #7DD3A8; --ok-fond: #183126; --att-fond: #3A2A10; --nb: #6B5512; color-scheme: dark; }
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--fond); color: var(--encre); font: 16px/1.55 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+button, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.2px; text-wrap: balance; }
+
+.page { max-width: 1120px; margin: 0 auto; padding: 8px 16px 120px; }
+.tete h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.1; margin: 28px 0 10px; }
+.tete .chapeau { max-width: 70ch; margin: 0 0 18px; color: var(--doux); font-size: 17px; }
+.consignes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 0 0 16px; }
+.consignes section { background: var(--carte); border: 1px solid var(--trait); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.consignes h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .06em; color: var(--doux); margin: 0 0 6px; font-family: "Inter", system-ui, sans-serif; }
+.consignes p { margin: 0 0 8px; }
+.consignes p:last-child { margin: 0; }
+.qui { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 0 0 8px; }
+.qui > label:first-child { font-weight: 600; }
+.qui input[type=text] { padding: 10px 12px; border: 1px solid var(--trait); border-radius: 8px; background: var(--carte); min-width: 0; flex: 1 1 220px; max-width: 360px; }
+.bascule { font-weight: 400; display: inline-flex; gap: 8px; align-items: center; color: var(--doux); font-size: 15px; cursor: pointer; }
+
+.partie { margin-top: 40px; }
+.partie > h2 { font-size: 28px; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--encre); }
+.partie > .intro { color: var(--doux); margin: 8px 0 18px; max-width: 70ch; }
+
+.ecran { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--trait); }
+.ecran.large { grid-template-columns: minmax(0, 1fr); }
+.ecran h3 { font-size: 20px; margin: 0 0 4px; }
+.ecran .contexte { color: var(--doux); margin: 0 0 12px; font-size: 15px; }
+.ecran figure { margin: 0; }
+.ecran figure img { display: block; width: 100%; height: auto; border: 1px solid var(--trait); border-radius: 12px; background: var(--carte); }
+.ecran.large figure img { max-height: none; }
+.ecran figcaption { font-size: 13px; color: var(--doux); margin-top: 6px; }
+.note { font-size: 14px; color: var(--doux); background: var(--etiquette); border-radius: 8px; padding: 8px 10px; margin: 0 0 12px; }
+
+.textes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.texte { background: var(--carte); border: 1px solid var(--trait); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
+.texte.corrige { background: var(--att-fond); border-color: var(--mic); }
+.num { font: 600 13px/1.6 ui-monospace, "Cascadia Mono", Consolas, monospace; color: var(--mic); user-select: all; }
+.original { margin: 0; overflow-wrap: anywhere; }
+.voir-nb .nb { background: var(--nb); border-radius: 2px; }
+.corriger { border: 1px solid var(--encre); background: transparent; border-radius: 8px; padding: 6px 12px; min-height: 40px; cursor: pointer; font-size: 14px; font-weight: 600; }
+.texte.corrige .corriger { background: var(--encre); color: var(--carte); }
+.zone { grid-column: 1 / -1; display: grid; gap: 6px; }
+.zone label { font-size: 13px; color: var(--doux); }
+.zone textarea, .remarque textarea { width: 100%; min-height: 72px; padding: 10px 12px; border: 1px solid var(--encre); border-radius: 8px; background: var(--carte); resize: vertical; }
+.zone .retirer { justify-self: start; border: 0; background: none; padding: 4px 0; text-decoration: underline; cursor: pointer; color: var(--doux); font-size: 14px; }
+.deja { font-size: 14px; color: var(--doux); margin: 10px 0 0; }
+.remarque { margin-top: 14px; display: grid; gap: 6px; }
+.remarque label { font-weight: 600; font-size: 15px; }
+
+.barre { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--encre); color: var(--fond); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: center; }
+.barre .compte { font-variant-numeric: tabular-nums; }
+.barre button { border: 0; border-radius: 10px; background: var(--mic); color: #FFFFFF; font-weight: 700; padding: 12px 20px; min-height: 48px; cursor: pointer; }
+.barre .etat { font-size: 14px; }
+.export { margin-top: 32px; }
+.export textarea { width: 100%; min-height: 220px; padding: 12px; border: 1px solid var(--trait); border-radius: 10px; background: var(--carte); font: 14px/1.5 ui-monospace, Consolas, monospace; }
+
+@media (max-width: 760px) {
+  .ecran { grid-template-columns: minmax(0, 1fr); }
+  .ecran figure { max-width: 360px; }
+  .ecran.large figure { max-width: none; }
+}
+
+/* Les boutons du kit (thème, retour en haut) au-dessus de la barre des corrections. */
+body .mk-tools { bottom: calc(132px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 761px) { body .mk-tools { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); } }
