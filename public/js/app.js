@@ -146,6 +146,26 @@ const disparaitre = (el) => {
   minuteries.set(el, setTimeout(() => { el.hidden = true; }, DUREE_ANIMATION));
 };
 
+// Une fenêtre fermée rend le focus au bouton qui l'a ouverte (clavier, lecteur d'écran). Safari dessine l'anneau de
+// focus sur tout focus posé par script, même après un toucher : un cadre orange restait autour du produit touché
+// (Xavier, 2026-11-24, reproduit sous WebKit). Après un toucher ou un clic, l'élément garde le focus sans l'anneau ;
+// la première touche du clavier le rend.
+let dernierGeste = 'clavier';
+document.addEventListener('pointerdown', () => { dernierGeste = 'pointeur'; }, true);
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  dernierGeste = 'clavier';
+  document.querySelectorAll('[data-sans-anneau]').forEach((el) => el.removeAttribute('data-sans-anneau'));
+}, true);
+function rendreFocus(el) {
+  if (!el || !el.isConnected) return;
+  if (dernierGeste === 'pointeur') {
+    el.setAttribute('data-sans-anneau', '');
+    el.addEventListener('blur', () => el.removeAttribute('data-sans-anneau'), { once: true });
+  }
+  el.focus({ preventScroll: true });
+}
+
 const calques = (() => {
   const pile = [];
   const ouvert = () => pile[pile.length - 1] || null;
@@ -790,7 +810,7 @@ function fichesEnFenetre() {
       disparaitre(fond);
       if (ajoutees.length) { eclairer(ajoutees); ajoutees = []; }
       prechargerAjout();
-      if (declencheur && declencheur.isConnected) declencheur.focus({ preventScroll: true });
+      rendreFocus(declencheur);
       // Une fiche enregistrée au fil de la saisie : la liste derrière se met à jour.
       if (enregistreSeul !== null) {
         const id = enregistreSeul;
@@ -1669,7 +1689,7 @@ function modelesEnGrand() {
   };
   const calque = {
     montrer() { vue.hidden = false; document.body.classList.add('agrandi-ouvert'); vue.querySelector('[data-choisir]').focus(); },
-    cacher() { vue.hidden = true; document.body.classList.remove('agrandi-ouvert'); liens[rang].focus(); },
+    cacher() { vue.hidden = true; document.body.classList.remove('agrandi-ouvert'); rendreFocus(liens[rang]); },
   };
   const fermer = () => calques.fermer(calque);
   liens.forEach((l, i) => l.addEventListener('click', (e) => { e.preventDefault(); montrer(i); calques.ouvrir(calque); }));
@@ -1973,7 +1993,7 @@ function brancherFacturer(form) {
     const fermer = () => {
       fond.remove();
       document.removeEventListener('keydown', echap, true);
-      if (ouvrir) ouvrir.focus({ preventScroll: true });
+      rendreFocus(ouvrir);
     };
     retour.addEventListener('click', fermer);
     creer.addEventListener('click', () => setTimeout(() => { fond.remove(); document.removeEventListener('keydown', echap, true); }, 0));

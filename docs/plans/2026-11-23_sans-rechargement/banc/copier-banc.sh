@@ -18,7 +18,7 @@ for f in apres-scenarios.js apres-mesurer.js comparatif.js comparatif-page.js de
          verifier-prechargement.js preuve-d1.js regarder-comparatif.js recette-test.js recette-test.json \
          mesure-corbeille.js mesure-corbeille.json recette-sans-js.js recette-sans-js.json sans-js-liste.js \
          apres-resultats.jsonl apres-resultats-avant-correctif-sw.jsonl apres-resultats-sw-libre.jsonl comparatif.json \
-         recette-gestes-chantier.json recette-hors-ligne.json recette-session.json preuve-prechargement.json preuve-d1.json deploiement.json; do
+         recette-gestes-chantier.json recette-gestes-local.json recette-reannuler.js verif-reannuler.js recette-carre.js recette-carre-webkit.js recette-hors-ligne.json recette-session.json preuve-prechargement.json preuve-d1.json deploiement.json; do
   [ -f "$SRC/$f" ] && cp "$SRC/$f" "$DST/$f"
 done
 for f in routeur.php serveur.sh base.sh semis.py offre-mesure.sql; do

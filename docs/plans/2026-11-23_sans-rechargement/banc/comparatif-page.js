@@ -232,7 +232,7 @@ const sansJs = lireJson('recette-sans-js.json', []);
 const sj = (cle) => (sansJs.find((c) => c.cle.startsWith(cle)) || {}).valeur;
 const c = (id) => ap(id, 'chantier') || {};
 const geste = (nom, id) => `${nom} ${ms(c(id).vu)}, ${c(id).requetes} req., ${ko(c(id).octets)}`;
-const mediane = (v) => { const t = [...v].sort((x, y) => x - y); return t[Math.floor((t.length - 1) / 2)]; };
+const mediane = (v) => { const t = [...v].sort((x, y) => x - y); return Math.round(t[Math.floor((t.length - 1) / 2)]); };
 const CRITERES = [
   ['« C\'est juste », corbeille, « Annuler », prix dicté, option : écran changé en moins de 100 ms, une requête, moins de 3 Ko, l\'écran ne saute pas',
     `${geste('« C\'est juste »', 'offre-juste')} ; corbeille ${corbeille ? mediane(corbeille.chantier) + ' ms dans la page, du clic au masquage' : ms(c('offre-corbeille').vu)} (${ms(c('offre-corbeille').vu)} au banc, défilement de Playwright jusqu'à la ligne compris), ${ko(c('offre-corbeille').octets)} ; ${geste('« Annuler »', 'offre-annuler')} ; ${geste('option', 'offre-option')} ; ${geste('prix dicté', 'offre-prix-dicte')}.`,
@@ -295,7 +295,7 @@ th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line
 thead th { font-weight: 650; background: var(--bg); }
 th small, td small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; }
 td.n b { font-variant-numeric: tabular-nums; }
-.pastille { display: inline-block; font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 1px 8px; }
+.pastille { display: inline-block; font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
 .p-bad { background: var(--bad-soft); color: var(--bad); }
 .p-ok { background: var(--ok-soft); color: var(--ok); }
 .p-warn { background: var(--warn-soft); color: var(--warn); }
@@ -380,7 +380,7 @@ ${figure(b('recette-offre-juste'), 'Après : l\'étiquette est partie, l\'écran
 <section class="point">
 <h3>Deux corbeilles touchées vite, réseau lent</h3>
 ${chiffresDe('offre-corbeille', 'Une corbeille :')}
-${corbeille ? `<p class="muted">Mesurée dans la page, du clic au masquage de la ligne : ${mediane(corbeille.chantier)} ms sur le chantier (cinq passages : ${corbeille.chantier.join(', ')}). Le chiffre du banc compte en plus le défilement de Playwright jusqu'à la ligne.</p>` : ''}
+${corbeille ? `<p class="muted">Mesurée dans la page, du clic au masquage de la ligne : ${mediane(corbeille.chantier)} ms sur le chantier (cinq passages, de ${Math.round(Math.min(...corbeille.chantier))} à ${Math.round(Math.max(...corbeille.chantier))} ms). Le chiffre du banc compte en plus le défilement de Playwright jusqu'à la ligne.</p>` : ''}
 <div class="mk-compare">
 ${figure(a('lent-deux-corbeilles'), 'Avant : deux lignes supprimées, un seul Annuler', 'Avant : deux lignes supprimées en base, un seul « Annuler » à l\'écran. La première ne pouvait plus être remise.')}
 ${figure(b('recette-offre-deux-corbeilles'), 'Après : deux lignes supprimées, deux Annuler', 'Après : chaque ligne a son « Annuler ». Au-dessus, « Ligne remise » : un « Annuler » touché juste avant.')}
@@ -533,6 +533,7 @@ ${lignesDetail}
 <li><b>Safari (iPhone)</b> efface ce qu'un site garde s'il n'est pas ouvert pendant 7 jours. Sur iPhone, une offre gardée peut donc manquer après une semaine sans ouvrir l'application. « Envoyer » sur iPhone n'a pas été essayé (le banc tourne sous Chrome).</li>
 <li><b>Le rattachement à un produit et la fiche produit</b> ne sont pas préparés d'avance ; la fenêtre « + Ligne » l'est, et se refait en fond après chaque usage.</li>
 <li><b>Défaut ancien, trouvé en vérifiant le critère « sans JavaScript »</b> : sans JavaScript, le bouton « Archiver » d'une carte de la liste est recouvert par la carte ; le toucher ouvre l'offre. Le chantier n'y a rien changé (il n'a ajouté que des attributs à la carte). Presque personne ne navigue sans JavaScript : noté, pas corrigé.</li>
+<li><b>Se déconnecter sans réseau</b> : la question « un changement attend » vient bien ; confirmée, elle efface les copies du téléphone, puis la déconnexion tombe sur la page d'erreur de Chrome (le serveur n'a rien reçu, la session reste ouverte). Trouvé en écrivant la recette, pas corrigé ce soir : refuser la déconnexion tant que le serveur ne répond pas, et le dire.</li>
 <li><b>Une page gardée ne dit qu'une chose à la fois</b> : quand des changements attendent, le bandeau les compte et ne dit plus de quelle heure date la copie.</li>
 <li><b>Mesures</b> : réseau simulé par Chrome sur cette machine, pas un vrai téléphone sur un vrai chantier ; les fibre, 4G et chantier sont des profils, pas des relevés. Le hors réseau est prouvé par une vraie coupure du serveur.</li>
 </ul>

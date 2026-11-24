@@ -1047,3 +1047,6 @@ h2, h3, .btn, .tabs .marque-pc, label { font-family: var(--titre); }
 .app > .reseau a { color: inherit; font-weight: 700; text-decoration: underline; min-height: 40px; display: inline-flex; align-items: center; }
 .app:has(.bas > .tabs:not(.pc-seul)):not(:has(.bas .actionbar)) > .reseau { bottom: calc(var(--bas, 120px) + 36px); }
 @media (prefers-reduced-motion: reduce) { .app > .snack { transition: none; } .row.eclair, .row.en-attente { animation: none; } }
+
+/* Focus rendu par script après un toucher ou un clic (app.js, rendreFocus) : Safari y dessinait l'anneau. */
+:root [data-sans-anneau]:focus-visible { outline: none; }

@@ -72,6 +72,9 @@ const fluide = (() => {
       return messages.poser(el, mauvais ? 7000 : 4000);
     },
     annuler(action, texte) {
+      // Un nouveau geste sur la même ligne (supprimée, remise, supprimée encore) : son « Annuler » à lui se pose, le
+      // garde du précédent ne vaut plus (Xavier, 2026-11-24 : la seconde corbeille partait sans bandeau).
+      annulees.delete(action);
       const f = document.createElement('form');
       f.className = 'snack';
       f.method = 'post';
@@ -446,7 +449,8 @@ const fluide = (() => {
   const retirees = new Map();
   const retirer = (cle, noeuds) => {
     const dernier = noeuds[noeuds.length - 1];
-    retirees.set(cle, { noeuds, parent: dernier.parentNode, suivant: dernier.nextElementSibling });
+    const entree = { noeuds, parent: dernier.parentNode, suivant: dernier.nextElementSibling };
+    retirees.set(cle, entree);
     // Une ligne glissée garde son décalage (glisserLignes) : remise, elle doit revenir droite.
     noeuds.forEach((n) => {
       n.hidden = true;
@@ -455,7 +459,8 @@ const fluide = (() => {
       n.classList.remove('ouverte', 'tire', 'assez');
       n.style.removeProperty('--dx');
     });
-    setTimeout(() => { const r = retirees.get(cle); if (r) r.noeuds.forEach((n) => cachees.delete(n.id)); retirees.delete(cle); }, 120000);
+    // Le minuteur ne libère que son propre retrait : la même ligne, remise puis supprimée encore, a le sien.
+    setTimeout(() => { if (retirees.get(cle) !== entree) return; entree.noeuds.forEach((n) => cachees.delete(n.id)); retirees.delete(cle); }, 120000);
   };
   // Remet ce qui a été retiré à sa place ; faux si la place a disparu (la liste a été remplacée entre-temps) : le serveur
   // renverra alors la liste entière.

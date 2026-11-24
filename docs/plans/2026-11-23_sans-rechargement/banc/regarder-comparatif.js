@@ -23,7 +23,7 @@ const url = require('url').pathToFileURL(fichier).href; // chemin UNC de WSL com
       return Object.entries(n).filter(([, c]) => c > 1).map(([i, c]) => i + ' x' + c);
     });
     console.log(nom, 'ids en double :', doubles.length ? doubles.join(', ') : 'aucun');
-    for (const id of ['bref', 'gestes', 'hors-reseau', 'question-d5', 'question-d1', 'question-d4', 'revue', 'detail', 'limites']) {
+    for (const id of ['bref', 'criteres', 'gestes', 'hors-reseau', 'question-d5', 'question-d1', 'question-d4', 'revue', 'detail', 'limites']) {
       await page.evaluate((i) => { const el = document.getElementById(i); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 60); }, id);
       await page.waitForTimeout(150);
       await page.screenshot({ path: path.join(sortie, `${nom}-${id}.png`) });
