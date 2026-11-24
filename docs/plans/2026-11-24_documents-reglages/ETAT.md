@@ -62,6 +62,7 @@ Déployé (2ddda06) et compte `documents-recette@exemple.ch` créé. Attendre la
 ## Journal
 
 - 2026-11-24 : chantier ouvert sur la consigne de Xavier (« Maquette avant le code »). Copie, bases, compte de relevé créés. Relevé du code et parcours par l'interface en local. Phase 1 menée par les constats ci-dessus ; le gate intention et le gate visuel se tiennent ensemble sur la maquette (les trois sujets sont des retouches d'écrans existants, chaque choix y a sa capture). Phase 2 (décomposition) sautée : trois retouches indépendantes, un lot chacune au plan.
+- 2026-11-24 : à la demande de Xavier, recette complète sur le test par Claude, avec sa démo `documents-claude@exemple.ch` (fichier `~/.offregen-test-documents-claude-compte`) : les quatre scénarios conformes, sans erreur JS.
 - 2026-11-24 : accord de Xavier (« oui déploie, pas de vraies données »). Une autre session avait poussé 2ddda06 ; copie avancée sur la tête, déployée, sonde verte, compte de recette créé, contrôle en lecture seule sur le test.
 - 2026-11-24 : réponses de Xavier à la maquette (L0 « tous le point 4 », L1 A, L2 non, O1 A, O2 hors chantier, V1 A, V2 A, V3 validé). PLAN.md, trois lots, tests écrits d'abord et vus rouges, code, suite complète verte, recette locale par l'interface, revue (six mineurs corrigés), RECETTE.md. Commit et push sur `chantier-voix-offre` ; déploiement en attente de l'accord de Xavier.
 - 2026-11-24 : LC-3 relu : la section 4 de Ma marque (14 phrases et quatre champs, 53 % de l'écran) est la lecture la plus probable ; la question L0 reste posée. Maquette livrée, gate ouvert (intention et visuel). Rien n'est codé, commité ni déployé.
@@ -175,6 +176,32 @@ ajout variante : quantité "42" m² , à relire 5 , libre "42" m²
 erreurs JS []
 ```
 Capture de la page d'ajout regardée.
+
+### Recette complète sur le test par Claude (demande de Xavier, compte documents-claude@exemple.ch, démo inventée)
+
+Playwright, 390 px, JavaScript actif, gestes enregistrés sur la démo de Claude seulement.
+```
+S2 assistant : phrases 0 , formule d'appel 0 , modèles 12
+S1.1 sommaire : … | Ma marque Sans logo · modèle Marge › | Phrases du document Dans Lettre seulement › | … | 4 rubriques sur 5 complètes
+S1.2 Ma marque : hauteur 1793 , phrases 0
+S1.3 état : Réécrite , enregistrement : "Enregistré"
+S1.4 résumé : Phrases du document Dans Lettre seulement · 1 phrase réécrite ›
+S1.5 après retour : "Offre valable jusqu'au [date]. Bon pour un mois."
+S3.1 Facturer : filigranes 0 , légende "Aperçu : rien n'est encore créé. Touchez la facture pour la voir en grand."
+S3.2 en grand : ouvert 1 , filigranes 0 , texte APERÇU dans la facture 0
+S3.3 brouillon : /factures/21 ; aperçu du brouillon : titre "Brouillon Aperçu du brouillon" , filigranes 0
+S4.2 quantité : "42" m² | reprise de la ligne remplacée, à changer si besoin
+S4.4 mentions : 30 m², à relire (×5)
+S4.6 ligne libre : quantité "30" , unité m²
+S4.7 Variante Peinture anti-moisissure | 42 m² | … Prix manquant
+S4.7 Variante Laquage de porte, 2 faces | 30 m² | … m² 4'800.00 +4'422.00 … À vérifier C'est juste
+S4.7 Variante Peinture silicate | 30 m² | … Prix manquant
+S4.7 Variante Peinture lessivable | 30 m² | … 1'020.00 +642.00
+bouton principal visible : "Relire 3 lignes CHF 3'106.80 -> /offres/93/relire" ; après : /offres/93/relire , Laquage affiché 1
+« C'est juste » sur la ligne Laquage de l'offre : Laquage encore à vérifier 0 ; bouton principal "Relire 2 lignes CHF 3'106.80"
+erreurs JS []
+```
+Décision fragile n° 2 levée : avec une ligne à vérifier, le bouton principal de l'offre mène à « Relire », pas à « Envoyer ». Un premier essai de « C'est juste » dans « Relire » a touché la mauvaise ligne (Relire montre une ligne à la fois, la première était la variante sans prix) : défaut du script, pas de l'application. Captures regardées : brouillon, page d'ajout, Relire, offre après « C'est juste ». Non vérifié : la ligne provisoire hors réseau.
 
 ### Mesures de Ma marque (Playwright, 390 px, DOM retouché sans JavaScript, rien enregistré)
 

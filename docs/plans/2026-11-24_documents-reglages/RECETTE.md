@@ -91,7 +91,6 @@ Si ça casse : `LigneControleur::ajouter` et `pageAjout`, `templates/ajout.html.
 
 - La ligne provisoire d'un ajout sans réseau (quantité reprise, hors du total pour une option ou une variante) : codée, non vérifiée, ni par un test ni par l'interface.
 - Le bouton « OK » de la quantité sans JavaScript : vérifié par un test serveur (`?quantite=30`), pas cliqué.
-- « Envoyer » une offre dont une variante est « À vérifier » : je n'ai pas vérifié qu'il passe par « Relire » (décision fragile n° 2 du plan).
 - La marque « Démonstration » des PDF d'une démo : hors chantier (O2, Origin 557 et 509). Une démo sort toujours des factures sans marque.
 - Le texte des phrases et des tournures : inchangé.
 - La dictée des variantes : l'extraction n'a pas été touchée.
@@ -103,4 +102,5 @@ Si ça casse : `LigneControleur::ajouter` et `pageAjout`, `templates/ajout.html.
 | Analyse statique | sans erreur | `ETAT.md`, Preuves |
 | Suite de tests | 1506 tests, 12437 assertions, verts | `ETAT.md`, Preuves |
 | Recette locale par l'interface | les quatre scénarios joués en local, sans erreur JS | `ETAT.md`, Preuves |
+| Recette sur le test par Claude | les quatre scénarios conformes (démo `documents-claude`), sans erreur JS ; une ligne à vérifier mène le bouton principal à « Relire » | `ETAT.md`, Preuves |
 | Revue | 6 trouvailles mineures, corrigées et testées ; 3 points laissés à ta connaissance | `REVUE.md` |
