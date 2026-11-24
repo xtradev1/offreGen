@@ -110,6 +110,8 @@ return static function (Conteneur $c): array {
         new Route('adresses_suggestions', '/adresses/suggestions', ['GET'], static fn (Request $r): Response => (new AdresseControleur($c))->suggestions($r), Route::ARTISAN),
         new Route('adresses_verification', '/adresses/verification', ['GET'], static fn (Request $r): Response => (new AdresseControleur($c))->verification($r), Route::ARTISAN),
         new Route('enregistrement_etat', '/enregistrements/{uuid}/etat', ['GET'], static fn (Request $r, array $p): Response => (new EnregistrementControleur($c))->etat($r, $p), Route::ARTISAN),
+        // Sous-chantier 31 : durée de l'envoi mesurée par le téléphone, envoyée après coup (sendBeacon).
+        new Route('enregistrement_envoi', '/enregistrements/{uuid}/envoi', ['POST'], static fn (Request $r, array $p): Response => (new EnregistrementControleur($c))->envoi($r, $p), Route::ARTISAN),
         new Route('enregistrement_reessayer', '/enregistrements/{uuid}/reessayer', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->reessayer($r, $p), Route::ARTISAN),
         new Route('enregistrement_retirer', '/enregistrements/{uuid}/retirer', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->retirer($r, $p), Route::ARTISAN),
         new Route('offre_archiver', '/offres/{id}/archiver', ['POST'], static fn (Request $r, array $p): Response => (new RangementControleur($c))->archiver($r, $p), Route::ARTISAN),

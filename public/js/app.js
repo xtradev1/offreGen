@@ -370,6 +370,7 @@ function nomPartie(nom, n) {
 // Rend une fonction qui arrête le suivi.
 function suivreEtapes(liste, uuid, fini) {
   const message = liste.parentElement.querySelector('[data-etapes-message]');
+  const panne = liste.parentElement.querySelector('[data-etapes-panne]');
   const dire = (t) => { if (message) message.textContent = t; };
   let arret = false;
   const tour = () => fetch('/enregistrements/' + uuid + '/etat', { credentials: 'same-origin', cache: 'no-store' })
@@ -377,6 +378,7 @@ function suivreEtapes(liste, uuid, fini) {
     .then((e) => {
       if (arret) return;
       marquerEtapes(liste, e.faites, e.echec);
+      if (panne) panne.hidden = !e.interrompu;
       dire(e.echec ? 'La préparation a échoué après plusieurs essais.' : e.essais > 0 ? 'Un souci passager, nouvel essai en cours…' : '');
       if (e.offre) { arret = true; abri.oublier(uuid); fini(e.offre); }
       if (e.echec) arret = true;
@@ -537,6 +539,18 @@ function nouvelleOffre() {
     garder.hidden = false;
   };
   garder.addEventListener('click', (e) => { if (fichiers.length > 1) { e.preventDefault(); telecharger(fichiers); } });
+  // Chronomètre des dictées (sous-chantier 31) : la durée de la dictée vue par le téléphone ; 0 si elle est inconnue.
+  let dureeAudioMs = 0;
+  // Après l'envoi, la durée de l'envoi du fichier part par un petit message (D6 de Xavier, 2026-11-24). Seule la durée
+  // compte : le serveur n'utilise jamais l'horloge du téléphone.
+  const signalerEnvoi = (uuid, ms) => {
+    const f = new FormData();
+    f.append('_csrf', form.querySelector('input[name=_csrf]').value);
+    f.append('envoi_ms', String(ms));
+    const adresse = '/enregistrements/' + uuid + '/envoi';
+    if (navigator.sendBeacon && navigator.sendBeacon(adresse, f)) return;
+    fetch(adresse, { method: 'POST', body: f, credentials: 'same-origin', keepalive: true }).catch(() => {});
+  };
   const envoyer = () => {
     if (!fichiers.length) return;
     montrer('envoi');
@@ -555,9 +569,15 @@ function nouvelleOffre() {
     if (cle) donnees.append('cle', fichiers.length > 1 ? cle + 'p' + fichiers.length : cle);
     donnees.append('audio', fichiers[0], fichiers[0].name);
     fichiers.slice(1).forEach((f) => donnees.append('suite[]', f, f.name));
+    donnees.append('origine', duMicro ? 'micro' : 'fichier');
+    if (dureeAudioMs > 0) donnees.append('duree_ms', String(Math.round(dureeAudioMs)));
     const xhr = new XMLHttpRequest();
     let signe = 0;
+    let debutEnvoi = 0;
+    let finEnvoi = 0;
     xhr.open('POST', '/import');
+    xhr.upload.addEventListener('loadstart', () => { debutEnvoi = performance.now(); });
+    xhr.upload.addEventListener('load', () => { finEnvoi = performance.now(); });
     xhr.upload.addEventListener('progress', (e) => {
       // Signe de vie : un autre onglet ne propose pas une dictée en cours d'envoi.
       if (cle && Date.now() - signe > 5000) { signe = Date.now(); abri.modifier(cle, { vu: signe }); }
@@ -581,6 +601,7 @@ function nouvelleOffre() {
         const uuid = xhr.responseURL.split('/enregistrements/')[1].split(/[/?#]/)[0];
         // Arrivée au serveur : la copie reste jusqu'à l'offre prête (suivreEtapes, ou au prochain lancement).
         if (cle) abri.modifier(cle, { etat: 'envoye', uuid, vu: Date.now() });
+        if (debutEnvoi > 0 && finEnvoi > debutEnvoi) signalerEnvoi(uuid, Math.max(1, Math.round(finEnvoi - debutEnvoi)));
         arreterSuivi = suivreEtapes(liste, uuid, (offre) => setTimeout(() => { if (etatCourant === 'suivi') partir('/offres/' + offre); }, 900));
         return;
       }
@@ -619,6 +640,7 @@ function nouvelleOffre() {
       return;
     }
     fichiers = [f];
+    dureeAudioMs = secondes ? Math.round(secondes * 1000) : 0;
     duMicro = false;
     copieAbri = false;
     cleCourante = null;
@@ -674,6 +696,7 @@ function nouvelleOffre() {
     cleCourante = rec.cle;
     lienGarder(fichiers);
     rec.copie.then((ok) => ok && abri.modifier(rec.cle, { etat: 'a_envoyer', nom }, ['enregistrement']));
+    dureeAudioMs = (finMs || Date.now()) - debut;
     envoyer();
   };
 
@@ -893,6 +916,7 @@ function nouvelleOffre() {
     copieAbri = true;
     cleCourante = d.id;
     lienGarder(fichiers);
+    dureeAudioMs = dureeMs(d);
     envoyer();
   });
   // Le micro se demande tout de suite, dans le geste (Safari) ; le début se relit pendant ce temps (demarrer l'attend).

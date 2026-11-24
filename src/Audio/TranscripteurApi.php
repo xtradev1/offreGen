@@ -6,6 +6,7 @@ namespace OffreGen\Audio;
 
 use OffreGen\Ia\ErreurApi;
 use OffreGen\Ia\ReponseApi;
+use OffreGen\Systeme\Chronometre;
 use Symfony\Component\Mime\Part\DataPart;
 use Symfony\Component\Mime\Part\Multipart\FormDataPart;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -28,6 +29,8 @@ final class TranscripteurApi implements Transcripteur
         private readonly string $produit,
         private readonly string $cle,
         private readonly string $modele,
+        /** Chronomètre des dictées (sous-chantier 31) ; null : bancs et outils, rien n'est écrit. */
+        private readonly ?Chronometre $chrono = null,
     ) {
         if (preg_match('/^\d+$/', $produit) !== 1) {
             throw new \InvalidArgumentException('TRANSCRIPTION_PRODUIT doit être un nombre.');
@@ -36,7 +39,10 @@ final class TranscripteurApi implements Transcripteur
 
     public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
     {
-        $fichier = $this->preparation->preparer($cheminAudio);
+        $chrono = $this->chrono ?? Chronometre::inactif();
+        // ffmpeg ne bat pas le pouls : 11 s pour 30 minutes de WAV en local, loin du bail de 150 s (ETAT du sous-chantier 31).
+        $fichier = $chrono->mesurer('conversion', fn (): FichierPrepare => $this->preparation->preparer($cheminAudio));
+        $envoi = $chrono->commencer('transcription_envoi', $this->modele);
         try {
             $champs = [
                 'model' => $this->modele,
@@ -61,11 +67,18 @@ final class TranscripteurApi implements Transcripteur
                 'body' => $formulaire->bodyToIterable(),
                 'timeout' => 300,
                 'max_duration' => 600,
+                'on_progress' => static function () use ($chrono): void {
+                    $chrono->pouls();
+                },
             ]);
             $donnees = ReponseApi::lire($reponse, 'Envoi à la transcription');
+        } catch (\Throwable $e) {
+            $envoi->echouer($e);
+            throw $e;
         } finally {
             $fichier->nettoyer();
         }
+        $envoi->finir(null, $reponse);
         $lot = $donnees['batch_id'] ?? null;
         if (!is_string($lot) || preg_match('/^[A-Za-z0-9-]{1,100}$/', $lot) !== 1) {
             throw new \RuntimeException('Envoi à la transcription : aucun numéro de lot dans la réponse.');
@@ -79,10 +92,14 @@ final class TranscripteurApi implements Transcripteur
             throw new TranscriptionEchouee('Référence de transcription invalide.');
         }
         try {
+            $chrono = $this->chrono ?? Chronometre::inactif();
             $reponse = $this->http->request('GET', $this->base() . '/results/' . $reference, [
                 'headers' => $this->entetes(),
                 'timeout' => 60,
                 'max_duration' => 90,
+                'on_progress' => static function () use ($chrono): void {
+                    $chrono->pouls();
+                },
             ]);
             $donnees = ReponseApi::lire($reponse, 'Résultat de la transcription');
         } catch (ErreurApi $e) {

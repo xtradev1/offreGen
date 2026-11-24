@@ -175,6 +175,8 @@ final class IsolationRoutesTest extends TestCase
             'offre_restaurer' => ['/offres/' . $this->jeu->offre['b'] . '/restaurer', []],
             'enregistrement_reessayer' => ['/enregistrements/' . $this->jeu->uuid['b'] . '/reessayer', []],
             'enregistrement_retirer' => ['/enregistrements/' . $this->jeu->uuid['b'] . '/retirer', []],
+            // Sous-chantier 31 : A n'écrit pas la durée d'envoi d'une dictée de B.
+            'enregistrement_envoi' => ['/enregistrements/' . $this->jeu->uuid['b'] . '/envoi', ['envoi_ms' => '3800']],
             'offre_facturer_creer' => ['/offres/' . $this->jeu->offre['b'] . '/facturer', ['genre' => 'finale', 'numero' => '2026-009', 'date' => '2026-11-07', 'echeance' => '2026-12-07']],
             'facture_entete_enregistrer' => [$this->cheminFacture('b', '/modifier'), ['numero' => 'VOL-1', 'date' => '2026-11-07', 'echeance' => '2026-12-07']],
             'facture_supprimer' => [$this->cheminFacture('b', '/supprimer'), []],

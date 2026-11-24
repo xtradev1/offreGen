@@ -43,6 +43,7 @@ use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\DepotProduits;
 use OffreGen\Donnees\DepotReglages;
 use OffreGen\Donnees\FabriqueConnexion;
+use OffreGen\Donnees\DepotEtapes;
 use OffreGen\Donnees\FileTraitement;
 use OffreGen\Donnees\JournalConnexions;
 use OffreGen\Donnees\Portee;
@@ -58,6 +59,7 @@ use OffreGen\Catalogue\Lecteur;
 use OffreGen\Catalogue\LecteurApi;
 use OffreGen\Catalogue\LecteurFactice;
 use OffreGen\Donnees\DepotImports;
+use OffreGen\Systeme\Chronometre;
 use OffreGen\Systeme\Messagerie;
 use OffreGen\Systeme\Alertes;
 use OffreGen\Systeme\GestionnaireAlertes;
@@ -541,6 +543,18 @@ final class Conteneur
         return $this->une(FileTraitement::class, fn (): FileTraitement => new FileTraitement($this->base()));
     }
 
+    /** Le chronomètre des dictées (sous-chantier 31), partagé par le traitement, la transcription et l'extraction. */
+    public function chronometre(): Chronometre
+    {
+        return $this->une(Chronometre::class, fn (): Chronometre => new Chronometre(fn (): DepotEtapes => $this->etapes(),
+            fn (): FileTraitement => $this->fileTraitement(), $this->horloge(), $this->journal()));
+    }
+
+    public function etapes(): DepotEtapes
+    {
+        return $this->une(DepotEtapes::class, fn (): DepotEtapes => new DepotEtapes($this->base()));
+    }
+
     /**
      * TRANSCRIPTION=api : protocole d'Infomaniak, vers TRANSCRIPTION_URL (le Whisper local ou Infomaniak).
      * Autre valeur ou absente : transcripteur factice.
@@ -558,6 +572,7 @@ final class Conteneur
                 $this->parametre('TRANSCRIPTION_PRODUIT', '0'),
                 $this->parametre('TRANSCRIPTION_CLE'),
                 $this->parametre('TRANSCRIPTION_MODELE', 'whisper'),
+                $this->chronometre(),
             );
         });
     }
@@ -580,6 +595,7 @@ final class Conteneur
                 $this->journal(),
                 $this->parametre('EXTRACTION_SANS_RAISONNEMENT', '1') === '1',
                 $this->parametre('EXTRACTION_MODELE_PIECES') === '' ? null : $this->parametre('EXTRACTION_MODELE_PIECES'),
+                chrono: $this->chronometre(),
             );
         });
     }
@@ -754,6 +770,7 @@ final class Conteneur
             $this->dureeAudio(),
             $this->dureeMaxSecondes(),
             $this->nomApplication(),
+            $this->chronometre(),
         ));
     }
 
@@ -770,7 +787,7 @@ final class Conteneur
             return;
         }
         $this->apresReponse()->ajouter(function () use ($uuid): void {
-            $this->traiteur()->avancer($uuid, Traiteur::ATTENTE_IMMEDIATE_SECONDES);
+            $this->traiteur()->avancer($uuid, Traiteur::ATTENTE_IMMEDIATE_SECONDES, Chronometre::APRES_REPONSE);
         });
     }
 

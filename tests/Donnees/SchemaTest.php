@@ -108,6 +108,65 @@ final class SchemaTest extends TestCase
     }
 
     /**
+     * Chronomètre des dictées (sous-chantier 31, PLAN lot 1) : une ligne par étape et par passage, les rejeux, et sur la
+     * dictée le navigateur et l'origine. Les étapes et les rejeux partent avec leur dictée.
+     */
+    public function testLeChronometreASesTables(): void
+    {
+        self::assertSame([
+            'debut' => ['datetime(3)', 'NO', null],
+            'duree_ms' => ['int(10) unsigned', 'YES', 'NULL'],
+            'enregistrement_id' => ['int(10) unsigned', 'NO', null],
+            'erreur' => ['varchar(190)', 'YES', 'NULL'],
+            'etape' => ['varchar(24)', 'NO', null],
+            'fin' => ['datetime(3)', 'YES', 'NULL'],
+            'issue' => ['varchar(12)', 'NO', null],
+            'jetons_envoyes' => ['int(10) unsigned', 'YES', 'NULL'],
+            'jetons_recus' => ['int(10) unsigned', 'YES', 'NULL'],
+            'modele' => ['varchar(100)', 'YES', 'NULL'],
+            'premier_octet_ms' => ['int(10) unsigned', 'YES', 'NULL'],
+            'processus' => ['varchar(16)', 'NO', null],
+            'rejeu_id' => ['int(10) unsigned', 'YES', 'NULL'],
+            'tentative' => ['tinyint(3) unsigned', 'NO', null],
+        ], self::colonnes('dictee_etape', [
+            'enregistrement_id', 'rejeu_id', 'tentative', 'etape', 'processus', 'debut', 'fin', 'duree_ms', 'issue', 'erreur',
+            'modele', 'jetons_envoyes', 'jetons_recus', 'premier_octet_ms',
+        ]));
+        self::assertSame([
+            'demande_le' => ['datetime', 'NO', null],
+            'demande_par' => ['int(10) unsigned', 'YES', 'NULL'],
+            'enregistrement_id' => ['int(10) unsigned', 'NO', null],
+            'erreur' => ['varchar(190)', 'YES', 'NULL'],
+            'fini_le' => ['datetime', 'YES', 'NULL'],
+            'lignes' => ['smallint(5) unsigned', 'YES', 'NULL'],
+            'statut' => ['varchar(12)', 'NO', null],
+            'titre' => ['varchar(190)', 'YES', 'NULL'],
+            'transcription' => ['mediumtext', 'YES', 'NULL'],
+        ], self::colonnes('dictee_rejeu', [
+            'enregistrement_id', 'demande_par', 'demande_le', 'fini_le', 'statut', 'transcription', 'titre', 'lignes', 'erreur',
+        ]));
+        self::assertSame([
+            'navigateur' => ['varchar(255)', 'YES', 'NULL'],
+            'origine' => ['varchar(10)', 'YES', 'NULL'],
+        ], self::colonnes('enregistrement', ['navigateur', 'origine']));
+
+        $requete = BaseDeTest::pdo()->query(
+            "SELECT k.TABLE_NAME, k.COLUMN_NAME, r.REFERENCED_TABLE_NAME, r.DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS r
+             JOIN information_schema.KEY_COLUMN_USAGE k
+               ON k.CONSTRAINT_SCHEMA = r.CONSTRAINT_SCHEMA AND k.CONSTRAINT_NAME = r.CONSTRAINT_NAME
+             WHERE r.CONSTRAINT_SCHEMA = DATABASE() AND k.TABLE_NAME IN ('dictee_etape', 'dictee_rejeu')
+             ORDER BY k.TABLE_NAME, k.COLUMN_NAME"
+        );
+        self::assertNotFalse($requete);
+        self::assertSame([
+            ['dictee_etape', 'enregistrement_id', 'enregistrement', 'CASCADE'],
+            ['dictee_etape', 'rejeu_id', 'dictee_rejeu', 'CASCADE'],
+            ['dictee_rejeu', 'demande_par', 'artisan', 'SET NULL'],
+            ['dictee_rejeu', 'enregistrement_id', 'enregistrement', 'CASCADE'],
+        ], $requete->fetchAll(\PDO::FETCH_NUM));
+    }
+
+    /**
      * @param list<string> $noms
      * @return array<string, array{string, string, ?string}>
      */

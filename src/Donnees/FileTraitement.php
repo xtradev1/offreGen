@@ -67,6 +67,25 @@ final class FileTraitement
         ) === 1;
     }
 
+    /**
+     * Le pouls du traitement (sous-chantier 31) : repousse la fin du verrou tant que celui qui le tient vit encore.
+     * Faux si un autre traitement l'a repris. La nouvelle fin diffère toujours de l'ancienne (pouls espacés de 20 s au
+     * moins) : MariaDB ne compte pas une ligne inchangée.
+     */
+    public function prolonger(string $uuid, string $jeton, \DateTimeImmutable $jusqua): bool
+    {
+        return $this->base->ecrire(
+            'UPDATE enregistrement SET verrou_jusqu_a = :jusqua WHERE uuid = :u AND verrou_jeton = :j',
+            ['jusqua' => Dates::versBase($jusqua), 'u' => $uuid, 'j' => $jeton],
+        ) === 1;
+    }
+
+    /** Durée de l'audio mesurée au serveur (ffprobe), qui remplace celle donnée par le téléphone. */
+    public function noterDuree(string $uuid, int $millisecondes): void
+    {
+        $this->base->ecrire('UPDATE enregistrement SET duree_ms = :d WHERE uuid = :u', ['d' => $millisecondes, 'u' => $uuid]);
+    }
+
     public function rendreVerrou(string $uuid, string $jeton): void
     {
         $this->base->ecrire(

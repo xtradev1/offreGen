@@ -15,6 +15,7 @@ use OffreGen\Donnees\Base;
 use OffreGen\Donnees\DepotArtisans;
 use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\DepotEnregistrements;
+use OffreGen\Donnees\DepotEtapes;
 use OffreGen\Donnees\FileTraitement;
 use OffreGen\Donnees\Portee;
 use OffreGen\Donnees\Statut;
@@ -22,6 +23,7 @@ use OffreGen\Offre\Extracteur;
 use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\ExtracteurFactice;
 use OffreGen\Offre\LigneExtraite;
+use OffreGen\Systeme\Chronometre;
 use OffreGen\Systeme\Messagerie;
 use OffreGen\Systeme\MessagerieFichier;
 use OffreGen\Offre\ResultatExtraction;
@@ -185,6 +187,86 @@ final class TraiteurTest extends TestCase
         $this->horloge->modify('+16 minutes');
         self::assertContains(self::UUID, $file->aReprendre($this->horloge->now(), 10));
         self::assertSame(Statut::PRET, $this->traiteur()->avancer(self::UUID));
+    }
+
+    private function chrono(): Chronometre
+    {
+        return new Chronometre(new DepotEtapes($this->jeu->base), new FileTraitement($this->jeu->base), $this->horloge, new NullLogger());
+    }
+
+    private function traiteurChronometre(Chronometre $chrono, ?Transcripteur $t = null): Traiteur
+    {
+        return new Traiteur($this->jeu->base, new FileTraitement($this->jeu->base), $t ?? new TranscripteurSansFichier(), new ExtracteurFactice(),
+            new MessagerieFichier($this->dossiers->env()['COURRIELS_DOSSIER'], $this->horloge), new DepotArtisans($this->jeu->base),
+            new StockageAudio($this->dossiers->env()['AUDIO_DOSSIER']), $this->horloge, new NullLogger(), 'https://exemple.test',
+            chrono: $chrono);
+    }
+
+    /** @return list<string> étape, issue, tentative et processus de chaque ligne du chronomètre, dans l'ordre d'écriture */
+    private function etapesChrono(): array
+    {
+        $r = BaseDeTest::pdo()->query("SELECT CONCAT(d.etape, ' ', d.issue, ' ', d.tentative, ' ', d.processus) FROM dictee_etape d
+            JOIN enregistrement e ON e.id = d.enregistrement_id WHERE e.uuid = '" . self::UUID . "' ORDER BY d.id");
+        self::assertNotFalse($r);
+        /** @var list<string> */
+        return $r->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    /** Sous-chantier 31 : chaque étape d'un traitement complet est écrite, avec son processus et sa tentative. */
+    public function testLesEtapesDUnTraitementCompletSontChronometrees(): void
+    {
+        self::assertSame(Statut::PRET, $this->traiteurChronometre($this->chrono())->avancer(self::UUID, 0, Chronometre::APRES_REPONSE));
+        self::assertSame([
+            'attente ok 1 apres_reponse',
+            'mesure ok 1 apres_reponse',
+            'transcription ok 1 apres_reponse',
+            'ecriture ok 1 apres_reponse',
+        ], $this->etapesChrono());
+    }
+
+    /** Une transcription qui n'est pas prête au premier passage se ferme au passage du cron qui reçoit le texte. */
+    public function testLaTranscriptionSeFermeAuPassageQuiRecoitLeTexte(): void
+    {
+        $lent = new TranscripteurLent();
+        $chrono = $this->chrono();
+        self::assertSame(Statut::TRANSCRIPTION, $this->traiteurChronometre($chrono, $lent)->avancer(self::UUID, 0, Chronometre::APRES_REPONSE));
+        $this->horloge->sleep(42);
+        $lent->pret = true;
+        self::assertSame(Statut::PRET, $this->traiteurChronometre($chrono, $lent)->avancer(self::UUID));
+        self::assertSame(['attente ok 1 apres_reponse', 'mesure ok 1 apres_reponse', 'transcription ok 1 apres_reponse', 'ecriture ok 1 cron'],
+            $this->etapesChrono());
+        self::assertSame(42000, BaseDeTest::ligne("SELECT duree_ms FROM dictee_etape WHERE etape = 'transcription'")['duree_ms']);
+    }
+
+    /**
+     * D4 et D5 de Xavier (2026-11-24) : un traitement mort ne bloque plus la dictée 15 minutes. Son verrou expire au bout
+     * du bail de 150 s ; le passage suivant marque l'étape abandonnée et écrit la reprise.
+     */
+    public function testUnTraitementMortEstReprisApresLeBailDe150Secondes(): void
+    {
+        $file = new FileTraitement($this->jeu->base);
+        $mort = $this->chrono();
+        $jeton = str_repeat('d', 32);
+        self::assertTrue($file->prendreVerrou(self::UUID, $jeton, $this->horloge->now()->modify('+' . Traiteur::DUREE_VERROU_SECONDES . ' seconds'), $this->horloge->now()));
+        $id = (int) BaseDeTest::ligne("SELECT id FROM enregistrement WHERE uuid = '" . self::UUID . "'")['id'];
+        $mort->ouvrirPassage($id, self::UUID, $jeton, 1, Chronometre::APRES_REPONSE);
+        $mort->commencer('mesure');
+        // Le processus meurt ici : ni fin d'étape, ni verrou rendu.
+
+        $this->horloge->sleep(149);
+        self::assertSame(Statut::RECU, $this->traiteurChronometre($this->chrono())->avancer(self::UUID), 'verrou encore valable');
+        $this->horloge->sleep(2);
+        self::assertSame(Statut::PRET, $this->traiteurChronometre($this->chrono())->avancer(self::UUID));
+
+        self::assertSame([
+            'attente ok 1 apres_reponse',
+            'mesure interrompue 1 apres_reponse',
+            'reprise ok 2 cron',
+            'mesure ok 2 cron',
+            'transcription ok 2 cron',
+            'ecriture ok 2 cron',
+        ], $this->etapesChrono());
+        self::assertSame(151000, BaseDeTest::ligne("SELECT duree_ms FROM dictee_etape WHERE etape = 'reprise'")['duree_ms']);
     }
 
     public function testVerrouVoleEnCoursDeRouteNEcritRienEtNeCompteRien(): void

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Audio\Uuid;
+use OffreGen\Donnees\Dates;
 use OffreGen\Donnees\DepotEnregistrements;
 use OffreGen\Donnees\Portee;
 use OffreGen\Donnees\Statut;
 use OffreGen\Http\Conteneur;
 use OffreGen\Http\PageIntrouvable;
+use OffreGen\Systeme\Chronometre;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,6 +49,7 @@ final class EnregistrementControleur
             'etapes' => self::etapes(self::FAITES[$e['statut']] ?? 1, $echec),
             'fini' => Statut::estFinal($e['statut']),
             'echec' => $echec,
+            'interrompu' => self::interrompu($e, $this->c->horloge()->now()),
             // Même règle que Traiteur::prevenir : un compte de démonstration ne reçoit aucun courriel.
             'sans_courriel' => ($this->c->artisans()->parId($requete->attributes->getInt('_artisan'))['demo'] ?? 0) === 1,
         ]));
@@ -70,10 +73,44 @@ final class EnregistrementControleur
             'faites' => self::FAITES[$e['statut']] ?? 1,
             'echec' => $e['statut'] === Statut::ECHEC,
             'essais' => $e['tentatives'],
+            'interrompu' => self::interrompu($e, $this->c->horloge()->now()),
             'offre' => $e['statut'] === Statut::PRET ? $e['offre_id'] : null,
         ]);
         $reponse->headers->set('Cache-Control', 'no-store');
         return $reponse;
+    }
+
+    /**
+     * D6 de Xavier (2026-11-24) : le téléphone envoie, après coup, la durée de l'envoi du fichier qu'il a mesurée. Une
+     * seule fois par dictée ; ses heures se déduisent du début de la réception, jamais de l'horloge du téléphone.
+     *
+     * @param array<string, string> $parametres
+     */
+    public function envoi(Request $requete, array $parametres): Response
+    {
+        $e = $this->enregistrement($requete, $parametres);
+        $ms = ImportControleur::entier($requete->request->getString('envoi_ms'), 1, 3600 * 1000);
+        if ($ms === null) {
+            return new Response('', 422);
+        }
+        $etapes = $this->c->etapes();
+        if ($etapes->debutDe($e['id'], 'envoi') === null) {
+            $fin = $etapes->debutDe($e['id'], 'reception') ?? Dates::depuisBase($e['recu_le']);
+            $etapes->ajouter($e['id'], null, 1, 'envoi', Chronometre::TELEPHONE, $fin->modify("-$ms milliseconds"), $fin);
+        }
+        return new Response('', 204);
+    }
+
+    /**
+     * Le traitement s'est arrêté en route (D5 de Xavier, 2026-11-24) : la dictée n'est pas finie et son verrou a expiré
+     * sans être rendu. Le pouls le prolonge tant que le traitement vit ; un appel lent ne le fait donc pas expirer. Le cron
+     * reprend la dictée dans la minute, le message disparaît alors.
+     *
+     * @param array{statut: string, verrou_jusqu_a: string|null} $e
+     */
+    public static function interrompu(array $e, \DateTimeImmutable $maintenant): bool
+    {
+        return !Statut::estFinal($e['statut']) && $e['verrou_jusqu_a'] !== null && Dates::depuisBase($e['verrou_jusqu_a']) < $maintenant;
     }
 
     /** @return list<array{libelle: string, etat: string}> fait, en cours, en échec ou à venir */

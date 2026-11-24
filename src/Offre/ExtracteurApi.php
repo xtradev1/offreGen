@@ -6,6 +6,7 @@ namespace OffreGen\Offre;
 
 use OffreGen\Compte\Activite;
 use OffreGen\Ia\ReponseApi;
+use OffreGen\Systeme\Chronometre;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -148,6 +149,8 @@ final class ExtracteurApi implements Extracteur
         private readonly ?string $modelePieces = null,
         /** Troisième appel des options et variantes ; faux : le banc mesure l'extraction sans lui. */
         private readonly bool $classerOptions = true,
+        /** Chronomètre des dictées (sous-chantier 31) ; null : bancs et outils, rien n'est écrit. */
+        private readonly ?Chronometre $chrono = null,
     ) {
     }
 
@@ -170,14 +173,9 @@ final class ExtracteurApi implements Extracteur
         if ($this->sansRaisonnement) {
             $corps['reasoning_effort'] = 'none';
         }
-        $reponse = $this->http->request('POST', rtrim($this->url, '/') . '/chat/completions', [
-            'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
-            'json' => $corps,
-            'timeout' => 300,
-            // Durée totale bornée, sous le verrou de 900 s du traitement (revue du 2026-11-18, B2).
-            'max_duration' => 600,
-        ]);
-        $donnees = ReponseApi::lire($reponse, 'Extraction');
+        // Durée totale bornée (revue du 2026-11-18, B2) : 600 s au plus. Le pouls du chronomètre garde le verrou du
+        // traitement pendant l'attente.
+        $donnees = $this->appeler('ia_extraction', $this->modele, $corps, ['timeout' => 300, 'max_duration' => 600], 'Extraction');
         $this->noterJetons($donnees, 'extraction', $this->modele);
         $proposition = self::argumentsDeLOutil($donnees, 'proposer_offre');
         if ($proposition === null) {
@@ -224,18 +222,14 @@ final class ExtracteurApi implements Extracteur
             $corps['reasoning_effort'] = 'none';
         }
         try {
-            // Durée bornée : avec l'appel principal (600 s) et les pièces (180 s), 870 s, sous le verrou de 900 s du
-            // traitement (Audio\Traiteur ; revue du chantier des options, S1).
-            $reponse = $this->http->request('POST', rtrim($this->url, '/') . '/chat/completions', [
-                'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
-                'json' => $corps,
-                'timeout' => 60,
-                'max_duration' => 90,
-            ]);
-            $donnees = ReponseApi::lire($reponse, 'Options');
+            // Durée bornée (revue du chantier des options, S1) : 90 s au plus.
+            $donnees = $this->appeler('ia_options', $this->modelePieces ?? $this->modele, $corps, ['timeout' => 60, 'max_duration' => 90], 'Options');
             $this->noterJetons($donnees, 'options', $this->modelePieces ?? $this->modele);
             $arguments = self::argumentsDeLOutil($donnees, 'classer_lignes') ?? [];
         } catch (\Throwable $e) {
+            if (Chronometre::verrouPerdu($e)) {
+                throw $e;
+            }
             $this->journal->warning('offreGen, options : troisième appel en échec, toutes les lignes dans le total (' . $e::class . ').');
             return $resultat;
         }
@@ -317,16 +311,13 @@ final class ExtracteurApi implements Extracteur
             $corps['reasoning_effort'] = 'none';
         }
         try {
-            $reponse = $this->http->request('POST', rtrim($this->url, '/') . '/chat/completions', [
-                'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
-                'json' => $corps,
-                'timeout' => 120,
-                'max_duration' => 180,
-            ]);
-            $donnees = ReponseApi::lire($reponse, 'Pièces');
+            $donnees = $this->appeler('ia_pieces', $this->modelePieces ?? $this->modele, $corps, ['timeout' => 120, 'max_duration' => 180], 'Pièces');
             $this->noterJetons($donnees, 'pièces', $this->modelePieces ?? $this->modele);
             $arguments = self::argumentsDeLOutil($donnees, 'ranger_par_piece');
         } catch (\Throwable $e) {
+            if (Chronometre::verrouPerdu($e)) {
+                throw $e;
+            }
             $this->journal->warning('offreGen, pièces : second appel en échec, offre sans pièces (' . $e::class . ').');
             return $resultat;
         }
@@ -342,6 +333,35 @@ final class ExtracteurApi implements Extracteur
                 $l->entendu, $l->prixDicteCentimes, $pieces[$i] ?? null, $l->nature, $l->remplace);
         }
         return new ResultatExtraction($resultat->titre, $lignes, $resultat->client, $resultat->lieu, $resultat->postesCoupes);
+    }
+
+    /**
+     * Un appel au modèle, chronométré (sous-chantier 31) : étape écrite avant la requête, fermée avec les jetons et le
+     * temps jusqu'au premier octet. Pendant l'attente, on_progress (au moins une fois par seconde) bat le pouls du verrou.
+     *
+     * @param array<string, mixed> $corps
+     * @param array{timeout: int, max_duration: int} $bornes
+     * @return array<string, mixed>
+     */
+    private function appeler(string $etape, string $modele, array $corps, array $bornes, string $quoi): array
+    {
+        $chrono = $this->chrono ?? Chronometre::inactif();
+        $mesure = $chrono->commencer($etape, $modele);
+        try {
+            $reponse = $this->http->request('POST', rtrim($this->url, '/') . '/chat/completions', [
+                'headers' => $this->cle === '' ? [] : ['Authorization' => 'Bearer ' . $this->cle],
+                'json' => $corps,
+                'on_progress' => static function () use ($chrono): void {
+                    $chrono->pouls();
+                },
+            ] + $bornes);
+            $donnees = ReponseApi::lire($reponse, $quoi);
+        } catch (\Throwable $e) {
+            $mesure->echouer($e);
+            throw $e;
+        }
+        $mesure->finir(is_array($donnees['usage'] ?? null) ? $donnees['usage'] : null, $reponse);
+        return $donnees;
     }
 
     /**

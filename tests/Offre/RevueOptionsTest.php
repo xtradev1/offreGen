@@ -8,6 +8,7 @@ use OffreGen\Audio\Traiteur;
 use OffreGen\Http\Controleur\OffreControleur;
 use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\LigneExtraite;
+use OffreGen\Systeme\Chronometre;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -25,20 +26,24 @@ final class RevueOptionsTest extends TestCase
         ]]]]]), ['http_code' => 200]);
     }
 
-    /** S1, R3 : les trois appels tiennent sous le verrou du traitement, sinon une dictée lente se rejoue et se paie deux fois. */
-    public function testLesTroisAppelsTiennentSousLeVerrou(): void
+    /**
+     * S1, R3 : une dictée lente ne doit pas se rejouer ni se payer deux fois. Jusqu'au 2026-11-24, les trois appels
+     * tenaient sous un verrou de 900 s ; depuis le sous-chantier 31 (D4 de Xavier), le verrou est un bail court que le
+     * pouls prolonge : chaque appel bat le pouls pendant son attente, et le bail laisse plusieurs pouls de marge.
+     */
+    public function testLesTroisAppelsBattentLePoulsDuVerrou(): void
     {
-        $durees = [];
+        $pouls = [];
         $reponses = [self::outil('proposer_offre', '{"titre":"T","lignes":[{"produit_id":null,"designation":"Murs","quantite":42,"unite":"m²","certitude":"sure","extrait":"murs"},'
             . '{"produit_id":null,"designation":"Portes","quantite":3,"unite":"pce","certitude":"sure","extrait":"en option les portes"}]}'),
             self::outil('ranger_par_piece', '{"pieces":[]}'), self::outil('classer_lignes', '{"lignes":[]}')];
-        $http = new MockHttpClient(function (string $m, string $u, array $options) use (&$reponses, &$durees): MockResponse {
-            $durees[] = $options['max_duration'];
+        $http = new MockHttpClient(function (string $m, string $u, array $options) use (&$reponses, &$pouls): MockResponse {
+            $pouls[] = is_callable($options['on_progress'] ?? null);
             return array_shift($reponses) ?? throw new \LogicException('Appel en trop.');
         });
         (new ExtracteurApi($http, 'https://api.exemple.test/v1', 'j', 'm', new NullLogger()))->extraire('Les murs. En option, les portes.', []);
-        self::assertCount(3, $durees);
-        self::assertLessThanOrEqual(Traiteur::DUREE_VERROU_SECONDES - 30, array_sum($durees), 'somme des durées maximales : ' . implode(' + ', $durees));
+        self::assertSame([true, true, true], $pouls);
+        self::assertGreaterThanOrEqual(5 * Chronometre::POULS_SECONDES, Traiteur::DUREE_VERROU_SECONDES);
     }
 
     private static function extracteur(): ExtracteurApi

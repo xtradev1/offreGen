@@ -8,3 +8,5 @@
   {% endfor %}
 </ol>
 <p class="muted petit centre" data-etapes-message aria-live="polite"></p>
+{# Sous-chantier 31, D5 : le traitement s'est arrêté en route (verrou expiré sans être rendu). app.js l'affiche ou le cache. #}
+<p class="alerte warn" role="status" data-etapes-panne{% if not (interrompu ?? false) %} hidden{% endif %}><b>Le traitement s'est arrêté en route.</b> Il reprend tout seul d'ici une minute. Vous pouvez rester sur cet écran ou revenir plus tard.</p>

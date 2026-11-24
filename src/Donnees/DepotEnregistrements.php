@@ -7,11 +7,11 @@ namespace OffreGen\Donnees;
 /**
  * Les enregistrements d'un artisan, vus depuis ses pages. Le traitement de fond passe par FileTraitement.
  *
- * @phpstan-type Enregistrement array{id: int, uuid: string, nom_origine: string, type_mime: string, taille: int, fichier: string|null, statut: string, tentatives: int, erreur: string|null, recu_le: string, pret_le: string|null, offre_id: int|null}
+ * @phpstan-type Enregistrement array{id: int, uuid: string, nom_origine: string, type_mime: string, taille: int, fichier: string|null, statut: string, tentatives: int, erreur: string|null, recu_le: string, pret_le: string|null, verrou_jusqu_a: string|null, offre_id: int|null}
  */
 final class DepotEnregistrements
 {
-    private const COLONNES = 'e.id, e.uuid, e.nom_origine, e.type_mime, e.taille, e.fichier, e.statut, e.tentatives, e.erreur, e.recu_le, e.pret_le, o.id AS offre_id';
+    private const COLONNES = 'e.id, e.uuid, e.nom_origine, e.type_mime, e.taille, e.fichier, e.statut, e.tentatives, e.erreur, e.recu_le, e.pret_le, e.verrou_jusqu_a, o.id AS offre_id';
 
     public function __construct(private readonly Base $base, private readonly Portee $portee)
     {
@@ -21,14 +21,16 @@ final class DepotEnregistrements
      * @param string|null $cleClient la clé que le téléphone donne à sa dictée (sous-chantier 27)
      * @param list<string> $suites les fichiers de la suite d'une dictée continuée, dans l'ordre
      */
-    public function creer(string $uuid, string $nomOrigine, string $mime, int $taille, string $fichier, \DateTimeImmutable $recuLe, ?string $cleClient = null, array $suites = []): int
+    public function creer(string $uuid, string $nomOrigine, string $mime, int $taille, string $fichier, \DateTimeImmutable $recuLe, ?string $cleClient = null, array $suites = [],
+        ?string $navigateur = null, ?string $origine = null, ?int $dureeMs = null): int
     {
         $this->base->ecrire(
-            'INSERT INTO enregistrement (artisan_id, uuid, nom_origine, type_mime, taille, fichier, fichiers_suite, statut, recu_le, cle_client)
-             VALUES (:a, :u, :n, :m, :t, :f, :fs, :s, :r, :c)',
+            'INSERT INTO enregistrement (artisan_id, uuid, nom_origine, type_mime, taille, fichier, fichiers_suite, statut, recu_le, cle_client, navigateur, origine, duree_ms)
+             VALUES (:a, :u, :n, :m, :t, :f, :fs, :s, :r, :c, :nav, :o, :d)',
             ['a' => $this->portee->artisanId, 'u' => $uuid, 'n' => mb_substr($nomOrigine, 0, 255), 'm' => $mime,
              't' => $taille, 'f' => $fichier, 'fs' => $suites === [] ? null : json_encode($suites, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES),
-             's' => Statut::RECU, 'r' => Dates::versBase($recuLe), 'c' => $cleClient],
+             's' => Statut::RECU, 'r' => Dates::versBase($recuLe), 'c' => $cleClient,
+             'nav' => $navigateur === null ? null : mb_substr($navigateur, 0, 255), 'o' => $origine, 'd' => $dureeMs],
         );
         return $this->base->dernierId();
     }

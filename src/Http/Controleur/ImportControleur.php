@@ -12,6 +12,7 @@ use OffreGen\Audio\ValidateurAudio;
 use OffreGen\Compte\Demos;
 use OffreGen\Donnees\Portee;
 use OffreGen\Http\Conteneur;
+use OffreGen\Systeme\Chronometre;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -108,7 +109,11 @@ final class ImportControleur
                 $ranges[] = $stockage->ranger($portee->artisanId, $uuid, $audio, $i + 1);
             }
             $taille = array_sum(array_map(static fn (AudioValide $a): int => $a->taille, $audios));
-            $enregistrements->creer($uuid, $fichier->getClientOriginalName(), $audios[0]->mime, $taille, $ranges[0], $this->c->horloge()->now(), $cle, array_slice($ranges, 1));
+            // Sous-chantier 31 : navigateur, origine et durée (mesurée ici quand ffprobe tourne, sinon celle du téléphone).
+            $dureeMs = $duree !== null ? (int) round($duree * 1000) : self::entier($requete->request->getString('duree_ms'), 1, 2 * 3600 * 1000);
+            $origine = in_array($requete->request->getString('origine'), ['micro', 'fichier'], true) ? $requete->request->getString('origine') : null;
+            $id = $enregistrements->creer($uuid, $fichier->getClientOriginalName(), $audios[0]->mime, $taille, $ranges[0], $this->c->horloge()->now(), $cle,
+                array_slice($ranges, 1), $requete->headers->get('User-Agent'), $origine, $dureeMs);
         } catch (\Throwable $e) {
             // Sans ligne en base, les fichiers ne seraient jamais traités ni purgés.
             foreach ($ranges as $relatif) {
@@ -118,7 +123,34 @@ final class ImportControleur
         }
 
         $this->c->programmerTraitement($uuid);
+        $this->noterReception($requete, $id);
         return new RedirectResponse('/enregistrements/' . $uuid, 303);
+    }
+
+    /**
+     * L'étape « réception » du chronomètre : de l'arrivée de la requête à la réponse. Sa durée vient de l'horloge du
+     * processus (REQUEST_TIME_FLOAT), ses heures de l'horloge de l'application. Jamais bloquante pour l'import.
+     */
+    private function noterReception(Request $requete, int $enregistrementId): void
+    {
+        try {
+            $arrivee = $requete->server->get('REQUEST_TIME_FLOAT');
+            $ms = is_float($arrivee) ? max(0, (int) round((microtime(true) - $arrivee) * 1000)) : 0;
+            $fin = $this->c->horloge()->now();
+            $this->c->etapes()->ajouter($enregistrementId, null, 1, 'reception', Chronometre::WEB, $fin->modify("-$ms milliseconds"), $fin);
+        } catch (\Throwable $e) {
+            $this->c->journal()->warning('offreGen, chronomètre de la réception : ' . $e::class);
+        }
+    }
+
+    /** Un entier de texte entre deux bornes, ou null. */
+    public static function entier(string $texte, int $min, int $max): ?int
+    {
+        if (preg_match('/^\d{1,10}$/', $texte) !== 1) {
+            return null;
+        }
+        $n = (int) $texte;
+        return $n >= $min && $n <= $max ? $n : null;
     }
 
     /** 3600 : « 1 heure » ; 1800 : « 30 minutes » ; 5 : « 5 secondes ». */

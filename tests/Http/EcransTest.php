@@ -538,12 +538,12 @@ final class EcransTest extends TestCase
 
         $etat = $this->a->get("/enregistrements/$uuid/etat");
         self::assertSame('no-store, private', $etat->headers->get('Cache-Control'));
-        self::assertSame(['statut' => 'recu', 'faites' => 1, 'echec' => false, 'essais' => 0, 'offre' => null], json_decode((string) $etat->getContent(), true));
+        self::assertSame(['statut' => 'recu', 'faites' => 1, 'echec' => false, 'essais' => 0, 'interrompu' => false, 'offre' => null], json_decode((string) $etat->getContent(), true));
 
         BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'transcrit' WHERE uuid = '$uuid'");
         self::assertSame(2, json_decode((string) $this->a->get("/enregistrements/$uuid/etat")->getContent(), true)['faites']);
         BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'pret' WHERE uuid = '$uuid'");
-        self::assertSame(['statut' => 'pret', 'faites' => 4, 'echec' => false, 'essais' => 0, 'offre' => $this->jeu->offre['a']],
+        self::assertSame(['statut' => 'pret', 'faites' => 4, 'echec' => false, 'essais' => 0, 'interrompu' => false, 'offre' => $this->jeu->offre['a']],
             json_decode((string) $this->a->get("/enregistrements/$uuid/etat")->getContent(), true));
         // Prête : plus de suivi sur la page, le bouton mène à l'offre.
         $page = $this->page("/enregistrements/$uuid");

@@ -18,6 +18,7 @@ use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\Statut;
 use OffreGen\Donnees\VerrouPerdu;
 use OffreGen\Offre\Extracteur;
+use OffreGen\Systeme\Chronometre;
 use OffreGen\Systeme\Courriel;
 use OffreGen\Systeme\Messagerie;
 use Symfony\Component\Clock\ClockInterface;
@@ -31,7 +32,11 @@ use Psr\Log\LoggerInterface;
 final class Traiteur
 {
     public const TENTATIVES_MAX = 5;
-    public const DUREE_VERROU_SECONDES = 900;
+    /**
+     * Bail du verrou, prolongé par le pouls du chronomètre tant que le traitement vit (D4 et D5 de Xavier, 2026-11-24).
+     * Il était de 900 s : un traitement mort bloquait la dictée 15 minutes (offres 70 et 87 du test).
+     */
+    public const DUREE_VERROU_SECONDES = Chronometre::BAIL_SECONDES;
     public const CONSERVATION_AUDIO_JOURS = 30;
     /** Au-delà, le lot est tenu pour perdu et l'audio renvoyé. */
     public const ATTENTE_TRANSCRIPTION_MAX_HEURES = 2;
@@ -57,19 +62,24 @@ final class Traiteur
         private readonly ?DureeAudio $duree = null,
         private readonly int $dureeMaxSecondes = 1800,
         private readonly string $nomApplication = 'Dicta',
+        ?Chronometre $chrono = null,
     ) {
+        $this->chrono = $chrono ?? Chronometre::inactif();
     }
+
+    private readonly Chronometre $chrono;
 
     /**
      * @param int $attenteSecondes temps pendant lequel on redemande une transcription pas encore prête
      *                             (traitement juste après l'import) ; 0 pour cron, qui repasse chaque minute
+     * @param string $processus qui traite, pour le chronomètre : Chronometre::APRES_REPONSE ou Chronometre::CRON
      * @return string le statut atteint (celui d'avant si un autre traitement tient le verrou)
      */
-    public function avancer(string $uuid, int $attenteSecondes = 0): string
+    public function avancer(string $uuid, int $attenteSecondes = 0, string $processus = Chronometre::CRON): string
     {
         $limite = $this->horloge->now()->modify("+$attenteSecondes seconds");
         while (true) {
-            $statut = $this->avancerUneFois($uuid);
+            $statut = $this->avancerUneFois($uuid, $processus);
             if ($statut !== Statut::TRANSCRIPTION || $this->horloge->now() >= $limite) {
                 return $statut;
             }
@@ -77,7 +87,7 @@ final class Traiteur
         }
     }
 
-    private function avancerUneFois(string $uuid): string
+    private function avancerUneFois(string $uuid, string $processus): string
     {
         $jeton = bin2hex(random_bytes(16));
         $maintenant = $this->horloge->now();
@@ -88,13 +98,20 @@ final class Traiteur
         if (!$this->file->prendreVerrou($uuid, $jeton, $maintenant->modify('+' . self::DUREE_VERROU_SECONDES . ' seconds'), $maintenant)) {
             return $this->file->lire($uuid)['statut'] ?? 'inconnu';
         }
+        $tenu = $this->file->lire($uuid);
+        if ($tenu !== null) {
+            $this->chrono->ouvrirPassage($tenu['id'], $uuid, $jeton, $tenu['tentatives'] + 1, $processus);
+        }
         try {
             return $this->enchainer($uuid, $jeton);
-        } catch (VerrouPerdu $e) {
-            // Un autre traitement a repris la main : ce n'est pas un échec de cet enregistrement.
-            $this->journal->warning("offreGen, $uuid : " . $e->getMessage());
-            return $this->file->lire($uuid)['statut'] ?? 'inconnu';
         } catch (\Throwable $e) {
+            $this->chrono->echouerOuvertes($e);
+            if (Chronometre::verrouPerdu($e)) {
+                // Un autre traitement a repris la main : ce n'est pas un échec de cet enregistrement. Le pouls coupe l'appel
+                // en cours, que le client HTTP enveloppe dans sa propre exception.
+                $this->journal->warning("offreGen, $uuid : verrou perdu, un autre traitement a repris cet enregistrement.");
+                return $this->file->lire($uuid)['statut'] ?? 'inconnu';
+            }
             if ($e instanceof TranscriptionEchouee) {
                 $this->file->transcriptionAReprendre($uuid, $jeton);
             }
@@ -107,6 +124,7 @@ final class Traiteur
             }
             return $statut;
         } finally {
+            $this->chrono->fermerPassage();
             $this->file->rendreVerrou($uuid, $jeton);
         }
     }
@@ -123,7 +141,10 @@ final class Traiteur
                     // Une dictée continuée (recette AB-1, 2026-11-24) : une transcription par partie, références
                     // séparées d'un espace. Le site web ne peut pas lancer ffmpeg pour recoller les fichiers.
                     $chemins = array_map($this->stockage->chemin(...), [$e['fichier'], ...DepotEnregistrements::suites($e['fichiers_suite'])]);
-                    $this->verifierDuree($chemins);
+                    $secondes = $this->chrono->mesurer('mesure', fn (): ?float => $this->verifierDuree($chemins));
+                    if ($secondes !== null) {
+                        $this->file->noterDuree($uuid, (int) round($secondes * 1000));
+                    }
                     $vocabulaire = VocabulaireDictee::depuis((new DepotProduits($this->base, new Portee($e['artisan_id'])))->designationsParUsage());
                     // Chaque partie lancée se paie : sa référence est notée tout de suite, et un passage repris après une
                     // panne repart de la première partie qui manque (revue du 2026-11-24).
@@ -135,11 +156,14 @@ final class Traiteur
                         }
                     }
                     $this->file->transcriptionDemarree($uuid, $jeton, implode(' ', $references), $this->horloge->now());
+                    // Le lot travaille chez le prestataire : l'étape reste ouverte jusqu'au passage qui reçoit le texte.
+                    $this->chrono->commencer('transcription');
                     break;
                 case Statut::TRANSCRIPTION:
                     try {
                         $texte = $this->textes(explode(' ', (string) $e['transcription_ref']));
                     } catch (TranscriptionEchouee $perdu) {
+                        $this->chrono->finirOuverte('transcription', $perdu);
                         throw $perdu;
                     } catch (\Throwable $passagere) {
                         // Revue du 2026-11-18 (M8) : une erreur passagère pendant l'attente ne compte pas de tentative ;
@@ -150,10 +174,13 @@ final class Traiteur
                     if ($texte === null) {
                         $depuis = $e['transcription_depuis'] === null ? null : Dates::depuisBase($e['transcription_depuis']);
                         if ($depuis !== null && $depuis->modify('+' . self::ATTENTE_TRANSCRIPTION_MAX_HEURES . ' hours') < $this->horloge->now()) {
-                            throw new TranscriptionEchouee('Transcription sans résultat après ' . self::ATTENTE_TRANSCRIPTION_MAX_HEURES . ' heures.');
+                            $trop = new TranscriptionEchouee('Transcription sans résultat après ' . self::ATTENTE_TRANSCRIPTION_MAX_HEURES . ' heures.');
+                            $this->chrono->finirOuverte('transcription', $trop);
+                            throw $trop;
                         }
                         return Statut::TRANSCRIPTION;
                     }
+                    $this->chrono->finirOuverte('transcription');
                     $this->file->transcrit($uuid, $jeton, $texte);
                     break;
                 case Statut::TRANSCRIT:
@@ -189,12 +216,14 @@ final class Traiteur
      * l'import. Ici, en ligne de commande, elle l'est, avant tout appel payant. Une dictée en parties se mesure entière.
      *
      * @param list<string> $chemins
+     * @return float|null la durée lue en secondes (parties lisibles additionnées) ; null sans mesure possible
      */
-    private function verifierDuree(array $chemins): void
+    private function verifierDuree(array $chemins): ?float
     {
         if ($this->duree === null) {
-            return;
+            return null;
         }
+        $lue = false;
         // Une partie illisible n'efface pas les autres : les parties lisibles se comptent quand même (revue du 2026-11-24).
         $secondes = 0.0;
         foreach ($chemins as $chemin) {
@@ -204,10 +233,12 @@ final class Traiteur
                 continue;
             }
             $secondes += $partie;
+            $lue = true;
         }
         if ($secondes > $this->dureeMaxSecondes + DureeAudio::TOLERANCE_SECONDES) {
             throw new AudioTropLong(sprintf('Enregistrement trop long : %d min, %d min au maximum.', (int) ceil($secondes / 60), intdiv($this->dureeMaxSecondes, 60)));
         }
+        return $lue ? $secondes : null;
     }
 
     /** @param array{id: int, artisan_id: int, uuid: string, transcription: string|null} $e */
@@ -220,19 +251,28 @@ final class Traiteur
         $resultat = $this->extracteur->extraire((string) $e['transcription'], (new DepotProduits($this->base, $portee))->tous(), $activite);
         $lignes = $resultat->lignes;
         $offres = new DepotOffres($this->base, $portee);
+        // Rapprochement du client, puis transaction de l'offre : l'étape se ferme une fois l'offre validée.
+        $ecriture = $this->chrono->commencer('ecriture');
         $maintenant = $this->horloge->now();
         $titre = $resultat->titre ?? $activite->mots()['titre_defaut'] . ' du ' . $maintenant->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y');
         // Plus de 80 % de ressemblance avec une fiche : l'offre la désigne. Sinon le nom dicté reste une
         // proposition, que l'artisan confirme ou remplace (règle de Xavier du 2026-11-12).
         $clientId = $resultat->client === null ? null : Rapprochement::meilleur($resultat->client, (new DepotClients($this->base, $portee))->pourRapprochement(), $resultat->lieu);
 
-        return $this->base->transaction(function () use ($offres, $e, $jeton, $titre, $lignes, $maintenant, $resultat, $clientId): int {
-            $offreId = $offres->idParEnregistrement($e['id'])
-                ?? $offres->creerDepuisEnregistrement($e['id'], $titre, $lignes, $maintenant, $clientId, $resultat->client, $resultat->lieu, $resultat->postesCoupes);
-            // Si le verrou est perdu ici, VerrouPerdu annule aussi l'offre : jamais d'offre sans statut prêt.
-            $this->file->pret($e['uuid'], $jeton, $maintenant, $maintenant->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
-            return $offreId;
-        });
+        try {
+            $offreId = $this->base->transaction(function () use ($offres, $e, $jeton, $titre, $lignes, $maintenant, $resultat, $clientId): int {
+                $offreId = $offres->idParEnregistrement($e['id'])
+                    ?? $offres->creerDepuisEnregistrement($e['id'], $titre, $lignes, $maintenant, $clientId, $resultat->client, $resultat->lieu, $resultat->postesCoupes);
+                // Si le verrou est perdu ici, VerrouPerdu annule aussi l'offre : jamais d'offre sans statut prêt.
+                $this->file->pret($e['uuid'], $jeton, $maintenant, $maintenant->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
+                return $offreId;
+            });
+        } catch (\Throwable $x) {
+            $ecriture->echouer($x);
+            throw $x;
+        }
+        $ecriture->finir();
+        return $offreId;
     }
 
     /** Le courriel part après la validation : son échec ne défait pas une offre prête. */
