@@ -17,6 +17,10 @@
     <button class="btn danger large" type="button" data-terminer>
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>Terminer et créer l'offre</button>
     <button class="lien" type="button" data-abandonner>Abandonner sans envoyer</button>
+    {# iPhone et iPad, Safari : une fois par appareil, quand Safari vient de demander le micro (Xavier, 2026-11-24).
+       Un site ne peut pas rendre l'autorisation permanente ; Safari le peut, réglé par l'artisan. data-ecran : l'icône de l'écran d'accueil, sans barre d'adresse. #}
+    <p class="muted petit centre" data-astuce-micro hidden
+       data-ecran="Pour ne plus autoriser le micro à chaque fois&nbsp;: dans les Réglages, ouvrez Safari, puis Micro, Autoriser.">Pour ne plus autoriser le micro à chaque fois&nbsp;: touchez «&nbsp;aA&nbsp;» à côté de l'adresse, puis Réglages du site web, Micro, Autoriser.</p>
   </div>
 
   {# Dès « Terminer » ou le fichier choisi : les étapes, la première en cours avec sa barre d'envoi. #}

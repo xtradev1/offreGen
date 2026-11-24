@@ -16,6 +16,7 @@ Recette AB-1 bis sur l'iPhone de Xavier : le test porte le correctif depuis le 2
 - Fait le 2026-11-24 (reprise immédiate validée). À refaire après le prochain déploiement : dicter 10 s, fermer Safari de force, le rouvrir aussitôt. La fenêtre « Une dictée n'est pas partie » doit être là dès l'ouverture.
 - Toucher « Continuer la dictée », parler 5 s, « Abandonner » : la dictée disparaît, rien ne revient. Puis une autre dictée coupée, « Continuer la dictée », parler 10 s, « Terminer » : une seule offre, avec ce qui a été dit avant et après la coupure.
 - Refaire une coupure pendant la suite, rouvrir : la dictée revient avec sa durée totale.
+- Rappel du micro : laisser Safari sur « Demander », dicter : la ligne « Pour ne plus autoriser le micro à chaque fois … » paraît sous « Abandonner sans envoyer », une seule fois. Suivre son chemin (« aA », Réglages du site web, Micro, Autoriser) et dire s'il existe tel quel sur ton iPhone. Recharger, dicter : Safari ne demande plus le micro.
 
 ## Suivi Origin
 
@@ -35,6 +36,7 @@ Recette AB-1 bis sur l'iPhone de Xavier : le test porte le correctif depuis le 2
 - 2026-11-24, Xavier, recette AB-1 bis sur iPhone : « La dictée, elle est reprise directement quand je relance le truc, ça c'est bien. Le problème, c'est que j'y ai fait continuer, j'y ai continué à parler, et après j'ai cliqué sur annuler la dictée, donc supprimer, et là ça m'a refait apparaître l'élément. Et il a fallu que je clique deuxième fois sur supprimer. Donc ça, il faut que, si on relance la dictée, c'est simple, ça enlève le point, et puis on reprend. Et ça ne doit plus remettre le système comme ça. »
 - 2026-11-24, Claude, en conséquence : remplace « Abandonner pendant la suite n'efface que la suite ». Continuée, la dictée est une dictée en cours comme une autre : « Abandonner » l'efface entière, début compris (« Abandonner la dictée ? Elle ne sera pas gardée, début compris. »), et rien ne se repropose. Une coupure pendant la suite la fait toujours revenir à la réouverture.
 - 2026-11-24, Xavier, même recette : Safari redemande le micro à chaque rechargement. Réponse de Claude : un site ne peut pas prolonger cette permission, c'est un réglage de Safari (par site : aA, Réglages du site web, Micro, Autoriser ; pour tous les sites : Réglages, Safari, Micro).
+- 2026-11-24, Xavier : « ok va pour le 1 » (le rappel dans l'application). Claude : une ligne sous « Abandonner sans envoyer », sur iPhone et iPad dans Safari seulement (ni Chrome ni Firefox sur iOS), quand la permission valait « prompt » juste avant la demande (Safari a donc posé la question), une fois par appareil (localStorage `offregen-astuce-micro`). Depuis l'icône de l'écran d'accueil, le chemin des Réglages de l'iPhone, faute de « aA ». Le chemin par « aA » vient de guides tiers et n'est pas vérifié sur l'iOS de Xavier.
 
 ## Journal
 

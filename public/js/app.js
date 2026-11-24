@@ -662,12 +662,38 @@ function nouvelleOffre() {
     envoyer();
   };
 
+  // L'état de la permission juste avant la demande : « prompt » veut dire que Safari va poser la question.
+  // null quand le navigateur ne le dit pas (Safari avant 16).
+  const etatMicro = () => {
+    if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve(null);
+    return navigator.permissions.query({ name: 'microphone' }).then((p) => p.state, () => null);
+  };
+  // iPhone et iPad (un iPad se dit Mac, mais tactile) ; Chrome et Firefox sur iOS n'ont pas les réglages de Safari.
+  const SAFARI_IOS = (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+    && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+  const ASTUCE_MICRO = 'offregen-astuce-micro';
+  // Une fois par appareil, et seulement si Safari vient de demander : réglé sur « Autoriser », il ne demande plus et la ligne ne vient pas.
+  const astuceMicro = (avant) => {
+    const ligne = el('[data-astuce-micro]');
+    if (!ligne) return;
+    ligne.hidden = true;
+    if (!SAFARI_IOS || avant === 'granted' || etatCourant !== 'enregistrement') return;
+    try {
+      if (window.localStorage.getItem(ASTUCE_MICRO)) return;
+      window.localStorage.setItem(ASTUCE_MICRO, '1');
+    } catch (err) { return; /* stockage refusé : la ligne reviendrait à chaque dictée */ }
+    const ecran = navigator.standalone === true; // propre à iOS : l'icône de l'écran d'accueil
+    if (ecran) ligne.textContent = ligne.dataset.ecran;
+    ligne.hidden = false;
+  };
+
   // suite : { dictee, fichiers } pour continuer une dictée coupée ; rien pour une nouvelle.
   const demarrer = async (suite = null) => {
     if (bloquer()) return;
     if (!possible) { refus(); return; }
     if (enregistreur && enregistreur.state !== 'inactive') return;
     const d = suite ? suite.dictee : null;
+    const demande = etatMicro();
     try {
       flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
     } catch (e) {
@@ -747,6 +773,7 @@ function nouvelleOffre() {
     minuteur = setInterval(tour, 500);
     if (navigator.wakeLock) navigator.wakeLock.request('screen').then((v) => { veille = v; }).catch(() => {});
     montrer('enregistrement');
+    demande.then(astuceMicro);
   };
   micros.forEach((m) => m.addEventListener('click', () => demarrer()));
 
