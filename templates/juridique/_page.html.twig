@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  {# Comme la page de présentation : pas d'indexation tant que le site n'est pas l'accueil public de dicta.ch. #}
+  <meta name="robots" content="noindex">
+  <title>{{ block('titre') }}, Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  <link rel="icon" type="image/svg+xml" href="/img/dicta-icone.svg">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/juridique.css">
+</head>
+{# Pages statiques, mêmes règles que la présentation : aucun attribut style, aucun script (CSP fermée). #}
+<body>
+<div class="bande"><div class="in"><a class="vers-accueil" href="/"><img class="logo" src="/img/dicta-logo-sombre.svg" alt="Dicta, page d'accueil" width="177" height="64"></a></div></div>
+<main class="juridique"><div class="in">
+{# À retirer quand plus aucun passage « a-completer » ne reste dans les trois pages. #}
+<p class="brouillon"><b>Projet de texte.</b> Les passages surlignés restent à compléter ou à décider avant la mise en service.</p>
+<h1>{{ block('titre') }}</h1>
+<p class="version">{% block version %}{% endblock %}</p>
+{% block contenu %}{% endblock %}
+</div></main>
+<footer><div class="in"><p>Dicta est développée à Delémont par Xavier Freléchoz, XtraDev.</p>
+{%- for chemin, libelle in {'/mentions-legales': 'Mentions légales', '/protection-des-donnees': 'Protection des données', '/conditions': 'Conditions'} -%}
+<a href="{{ chemin }}"{% if chemin == page %} aria-current="page"{% endif %}>{{ libelle }}</a>
+{%- endfor -%}
+</div></footer>
+</body>
+</html>

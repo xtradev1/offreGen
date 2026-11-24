@@ -89,6 +89,11 @@ return static function (Conteneur $c): array {
         // y trouve « Mes offres » à la place de « Se connecter » et plus de bouton d'essai.
         new Route('decouvrir', '/decouvrir', ['GET'], static fn (Request $r): Response => $presentation($r, true), Route::ARTISAN,
             static fn (Request $r): Response => $presentation($r, false)),
+        // Pages juridiques du pied de page (tâche Origin 463, 2026-11-20) : statiques, aucune donnée lue ni écrite.
+        ...array_map(static fn (string $nom, string $chemin): Route => new Route($nom, $chemin, ['GET'],
+            static fn (): Response => new Response($c->twig()->render("juridique/$nom.html.twig", ['page' => $chemin])), Route::PUBLIC),
+            ['mentions_legales', 'protection_donnees', 'conditions'],
+            ['/mentions-legales', '/protection-des-donnees', '/conditions']),
         // « Bon pour essai » : tant que l'inscription n'existe pas, le courriel du visiteur part à l'exploitant (2026-11-20).
         new Route('demande_essai', '/essai', ['POST'], static fn (Request $r): Response => (new DemandeEssaiControleur($c))->deposer($r), Route::PUBLIC),
         // « Plus » (décision D2, 2026-11-15) : catalogue, réglages, import, déconnexion. Lecture seule.
