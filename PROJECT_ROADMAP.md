@@ -42,6 +42,7 @@
 - [2026-11-23] Commerciaux (Xavier) : deux codes par commercial. Le code de parrainage donne un mois gratuit à l'artisan et la commission au commercial (pourcentage réservé aux commerciaux). Le code personnel ouvre un seul compte, payant : prix plein sous 5 artisans payants, moitié dès 5, offert dès 10, aucune commission pour personne. Échange de codes entre commerciaux : fraude des deux, repérée au passage au paiement (IBAN, IDE, adresse, téléphone). Espace de démonstration marqué « Démonstration », envoi bloqué ; 200 dictées de démonstration par mois et par commercial, alerte à Xavier à 80 %, ajouter ou bloquer d'un clic. Règles C1, C9, C13 à C17 de `docs/commerciaux/PROJET-regles-commission.md`, tâche Origin 555.
 - [2026-11-24] Dictée et vocabulaire du métier (sous-chantier 30, recette MP-A8) : le catalogue de l'artisan part en `prompt` de Whisper (produits les plus utilisés d'abord, 500 caractères au plus). Écartés après mesure : un lexique par métier écrit à la main, une couche phonétique en code, une règle de « réflexion » dans la consigne (54 produits visés sur 54 avec et sans elle). Détail : `docs/plans/2026-11-07_voix-offre/30-dictee-mal-comprise/ETAT.md`.
 - [2026-11-24] **Prospects** (réponses de Xavier à la maquette, P1 à P9, puis sa décision du même jour) : un catalogue pour que les commerciaux s'organisent entre eux, sans ordres ; chacun prend lui-même une fiche ; un collègue voit le nom, la localité, le métier, qui la suit et depuis quand, sans téléphone ni notes (P2 = A) ; les notes suivent la fiche (P6 = A) ; la liste ne donne aucun droit, la commission reste réglée par C1. Une fiche reste suivie tant qu'on ne la lâche pas, sans plafond, « pour l'instant » (remplace P3 = B et le plafond de 30). À confirmer : un compte d'un collègue se voit en cherchant son nom (exception à « le commercial ne voit que ses artisans » du 19.11). Détail : `docs/plans/2026-11-24_prospects/ETAT.md`.
+- [2026-11-25] **Fluidité sur iPhone** (Xavier, 24 et 25.11) : `fluide.js` chargé dès l'en-tête et `app.js` injecté par lui, pour que les gestes marchent dès que l'offre paraît (« l'interface ne doit pas apparaître en 2 s ») ; zoom de Safari à l'entrée d'un champ coupé par `maximum-scale=1`, posé dans Safari sur iOS seulement (Chrome sur iPhone et Android perdraient le zoom à deux doigts) ; le service worker garde les anciennes versions des scripts tant qu'une page gardée les cite (M7). Détail : `docs/plans/2026-11-24_fluidite-suite/ETAT.md`.
 
 ## Current state
 ### Done
@@ -57,6 +58,7 @@
 - [ ] Dictée mal comprise (sous-chantier 30, Origin 514) : lots 1, 2 et 8 faits ; le lot 8 (catalogue en `prompt` de Whisper) est en service sur le test (`8bb25b1`, sonde verte). Reste : la dictée A6 refaite par Xavier, puis les lots 3 à 7 (fenêtre de choix, verdict, jauge, revue). Détail : `docs/plans/2026-11-07_voix-offre/30-dictee-mal-comprise/ETAT.md`.
 - [ ] Prospects, le catalogue des commerciaux (`docs/plans/2026-11-24_prospects/`, copie `~/offreGen-prospects`, Origin 616) : rubrique « Prospects » de l'administration en service sur le test (`ec8bab0`, sonde verte, migration `Version20261124210001`), fiche gardée jusqu'à ce qu'on la lâche, sans plafond. Gate prod ouvert : recette de Xavier attendue (`RECETTE.md`, sept scénarios). Les vrais prospects attendent le site de production.
 - [ ] Documents et réglages (`docs/plans/2026-11-24_documents-reglages/`, copie `~/offreGen-documents`, Origin projet 44, tâche à créer sur accord de Xavier) : choix de Xavier L1 à V3 appliqués. « Phrases du document » devient une rubrique des réglages, hors de l'assistant ; filigrane « Aperçu » retiré de Facturer et du brouillon ; une variante reprend la quantité et l'unité de la ligne remplacée, et un produit d'une autre unité passe dans « Relire ». En service sur le test (`2ddda06`, sonde verte, aucune migration), recette de Claude conforme. Gate prod ouvert : recette de Xavier attendue (`RECETTE.md`, quatre scénarios).
+- [ ] Fluidité, suite de la recette du 24.11 (`docs/plans/2026-11-24_fluidite-suite/`, copie `~/offreGen-fluidite`, Origin projet 44, sans tâche à la demande de Xavier) : gestes dès l'affichage (SR-1), « Envoyer » par offre (SR-6), pièces en puces (MP-A14), fiche remplie d'après la dictée (MP-A19), « Enregistrer » après le clavier d'iOS, zoom de Safari, offre gardée sans réseau après un déploiement (M7). En service sur le test (`1c5929e`, sonde verte). Xavier, 25.11 : « c'est top » sur le clavier et le zoom. Reste : sa recette F-1 à F-11 (`RECETTE.md`).
 
 ### Next
 - [ ] Recette regroupée par Xavier sur le test (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
@@ -125,6 +127,7 @@
 - Obsolètes (résolus) : accès de Claude au test (accordé le 14.11) ; jeton Infomaniak (fourni le 14.11) ; format `data` et envoi multipart de Whisper (vérifiés le 14.11) ; ffmpeg sur le test (déposé le 14.11).
 - 2026-11-24 : prospects. Les fiches portent des données personnelles (raisons individuelles, personnes de contact, notes libres) : mention dans la politique de confidentialité et durée de garde à fixer avec le lot juridique (Origin 463), rien n'efface une fiche aujourd'hui. Registre du commerce et registre IDE hors de la version 1 (accès non confirmé, registre IDE annoncé comme remplacé par le BER). Une démo finie supprimée détache sa fiche, qui perd la trace de la démo. Détail : `docs/plans/2026-11-24_prospects/REVUE.md` et `RECETTE.md`. Depuis le 24.11, ni plafond ni libération à date : rien n'empêche un commercial de garder 100 fiches ; question posée à Xavier (l'administrateur doit-il pouvoir libérer une fiche ?).
 - 2026-11-24 : documents. Le filigrane « Aperçu » ne marquait que l'aperçu d'une facture pas encore créée ; il est retiré. Les PDF d'une démo ne portent aucune marque « Démonstration » : une démo sort une facture sans marque, comme avant ce retrait. Suite : Origin 557 et 509. Détail : `docs/plans/2026-11-24_documents-reglages/ETAT.md`.
+- 2026-11-25 : fluidité. Cause du zoom de Safari sur toutes les cases non trouvée au banc (champs à 16 px) : `maximum-scale=1` le coupe sans l'expliquer. Recalage après le clavier d'iOS : contournement d'un défaut de WebKit (iOS 26, encore signalé dans la bêta d'iOS 27), prouvé au banc, pas sur l'appareil. M7 : une ancienne version des scripts reste jusqu'à 14 jours si une page gardée la cite ; la reprise par une nouvelle version du service worker n'est pas jouée au banc. M10 (« Envoyer » touché dans les premières dizaines de millisecondes) reste ouvert. Détail : `docs/plans/2026-11-24_fluidite-suite/REVUE.md`.
 
 ## Archives
 - Décisions anciennes → `docs/roadmap-archive-decisions.md`
@@ -132,9 +135,6 @@
 
 ## Session log
 - Entrées plus anciennes → `docs/roadmap-archive-2026-11.md`.
-- [2026-11-17] **Luigi, limites, pièces, prix dicté, formules**
-  - Réunion avec Luigi ; limites 30 min et 300 postes ; plafond des comptes d'essai ; sous-chantier 28 (pièces) et prix dicté livrés sur le test.
-  - Coûts, prix, paiement et formules étudiés. Détail : `26-couts-ia/`, `docs/terrain/2026-11-17_luigi-peintre.md`.
 - [2026-11-18] **Mise en production ouverte**
   - Inventaire, plan, recette regroupée ; `ETAT.md` des sous-chantiers remis à jour ; démo du test remise à zéro, compte `essai-recette` créé.
   - Détail : `docs/plans/2026-11-17_mise-en-production/`.
@@ -174,3 +174,11 @@
   - Maquette et choix de Xavier (L1 à V3), code, revue (six défauts mineurs corrigés), 1550 tests verts ; aucune migration.
   - `2ddda06` déployé, sonde verte ; recette de Claude sur le test conforme sur les quatre scénarios. Non vérifié : la ligne provisoire d'un ajout hors réseau. Recette de Xavier attendue.
   - Détail : `docs/plans/2026-11-24_documents-reglages/ETAT.md`.
+- [2026-11-24] **Fluidité, suite : gestes dès l'affichage, Envoyer par offre, pièces en puces, fiche d'après la dictée**
+  - Maquette et choix de Xavier (D1 à D5), code, revue indépendante (six défauts importants corrigés), 1577 tests ; un geste touché pendant le chargement change l'écran en 70 à 90 ms, sans rechargement.
+  - « Enregistrer » sans effet après le clavier d'iOS : recalage au retour du clavier ; le fond d'une fenêtre qui redescend ne prend plus les touchers. `6708161` déployé, sonde verte.
+  - Détail : `docs/plans/2026-11-24_fluidite-suite/ETAT.md`.
+- [2026-11-25] **Fluidité, suite : zoom de Safari et offre gardée sans réseau (M7)**
+  - Zoom à l'entrée d'un champ coupé dans Safari sur iOS, texte de l'offre à 16 px. Xavier : « c'est top ».
+  - M7 : anciennes versions des scripts gardées tant qu'une page gardée les cite, version récente en secours ; défaut reproduit au banc avec l'ancien service worker, absent avec le correctif ; 1618 tests.
+  - `1c5929e` déployé, sonde verte. Recette F-1 à F-11 attendue. Détail : `docs/plans/2026-11-24_fluidite-suite/ETAT.md`.

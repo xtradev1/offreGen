@@ -12,3 +12,6 @@ Entrées sorties de `PROJECT_ROADMAP.md`, telles quelles.
 - [2026-11-12 au 16] **Sous-chantiers 11 à 25**, écrans, offre, clients, facture, ergonomie, site de test monté (14.11) et branché sur Infomaniak.
   - Détail : `docs/plans/2026-11-07_voix-offre/ETAT.md`.
 - [2026-11-17] Stratégie d'acquisition discutée et notée (`docs/strategie/acquisition.md`), tâche Origin 458 créée (19 sous-tâches).
+- [2026-11-17] **Luigi, limites, pièces, prix dicté, formules**
+  - Réunion avec Luigi ; limites 30 min et 300 postes ; plafond des comptes d'essai ; sous-chantier 28 (pièces) et prix dicté livrés sur le test.
+  - Coûts, prix, paiement et formules étudiés. Détail : `26-couts-ia/`, `docs/terrain/2026-11-17_luigi-peintre.md`.
