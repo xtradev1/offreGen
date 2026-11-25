@@ -16,7 +16,7 @@ Recette AB-1 bis sur l'iPhone de Xavier : le test porte le correctif depuis le 2
 - Fait le 2026-11-24 (reprise immédiate validée). À refaire après le prochain déploiement : dicter 10 s, fermer Safari de force, le rouvrir aussitôt. La fenêtre « Une dictée n'est pas partie » doit être là dès l'ouverture.
 - Toucher « Continuer la dictée », parler 5 s, « Abandonner » : la dictée disparaît, rien ne revient. Puis une autre dictée coupée, « Continuer la dictée », parler 10 s, « Terminer » : une seule offre, avec ce qui a été dit avant et après la coupure.
 - Refaire une coupure pendant la suite, rouvrir : la dictée revient avec sa durée totale.
-- Rappel du micro : laisser Safari sur « Demander », dicter : la ligne « Pour ne plus autoriser le micro à chaque fois … » paraît sous « Abandonner sans envoyer », une seule fois. Vérifier que le texte est le chemin que tu as trouvé (bouton de la page, trois petits points, Micro, Autoriser). Recharger, dicter : Safari ne demande plus le micro.
+- Rappel du micro : texte validé le 2026-11-25 (« c'est bon, le texte s'affiche bien sur mon iPhone »). Reste à voir : micro réglé sur « Autoriser », recharger, dicter : Safari ne demande plus le micro et la ligne ne vient pas.
 
 ## Suivi Origin
 
@@ -51,6 +51,8 @@ Recette AB-1 bis sur l'iPhone de Xavier : le test porte le correctif depuis le 2
 - Limites connues, à porter à la recette : un lot de transcription perdu chez le prestataire renvoie toutes les parties (rare, refacturé, rien de perdu) ; après un retour à l'ancienne version du code, une dictée en parties déjà en transcription donnerait une offre de la seule première partie.
 - Base de test du chantier : `offregen_abri_test` (phpunit), `offregen_abri_vue` (recette locale, compte `abri-recette@exemple.ch`, mot de passe dans `~/.offregen-abri-vue-compte`), copie `~/offreGen-abri`. À supprimer à la clôture.
 - 2026-11-24, Xavier : « oui déploie, pas de vraies données ». Déployé : `0b20d96` (tête de `chantier-voix-offre`, qui contient `fb63939`) sur easy-offres.xtradev.ch, sonde verte, `/sante` {"commit":"0b20d96…","base":"ok","migrations":"ok"} ; `js/app.js` servi contient `data-reprise-continuer`.
+- 2026-11-24 et 25 : rappel du réglage du micro (iPhone et iPad, Safari, une fois par appareil, seulement si Safari a posé la question). `6708161` puis `4e43739` (chemin de Safari 26 trouvé par Xavier), déployés sur le test avec son accord (« pousse ensuite direct en test ») : 1 614 tests verts sur `offregen_deploiement_test`, sonde verte. Contrôle dans Chromium déguisé en iPhone, six cas, permission « prompt » simulée. Xavier, 2026-11-25 : « c'est bon, le texte s'affiche bien sur mon iPhone ».
+- Piège : `outils/deployer-test.sh` se lance avec `bash` (il fait `set -o pipefail`) ; avec `sh`, il s'arrête sans rien déployer et `tail` rend le code 0.
 
 ## Preuves
 
