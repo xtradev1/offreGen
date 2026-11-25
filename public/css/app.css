@@ -363,7 +363,7 @@ form[data-rabais]:has(input[name="choix"]:checked) .si-pct + .si-chf::before { c
 /* Textes et conditions propres à l'offre (D5 A, 2026-11-21). */
 .texte-offre { display: grid; gap: 4px; margin: 12px 0; }
 .texte-offre label { font-size: 14px; color: var(--muted); }
-.texte-offre textarea { font: inherit; font-size: 15px; width: 100%; min-height: 64px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.texte-offre textarea { font: inherit; font-size: 16px; width: 100%; min-height: 64px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
 a.carte-lien.conditions { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 14px; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: 15px; }
 a.carte-lien.conditions > span { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-wrap: anywhere; }
 a.carte-lien.conditions small { color: var(--muted); font-size: 14px; }

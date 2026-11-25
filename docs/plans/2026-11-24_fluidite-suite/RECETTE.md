@@ -13,6 +13,7 @@ Sur l'iPhone, sur https://easy-offres.xtradev.ch, déployé le 2026-11-24 (le co
 | F-7 | Sur une offre dictée sans client : « Générer l'offre », « Créer la fiche « … » ». Corrige le nom, « Enregistrer et voir le PDF ». | La fiche s'ouvre dans la même fenêtre, nom et adresse remplis d'après la dictée ; le PDF s'ouvre avec le nom corrigé. |
 | F-8 | Fiche d'une ligne, puis fiche d'un client : tape dans un champ, ferme le clavier (« OK » ou toucher à côté), puis touche « Enregistrer » une fois, sans faire défiler. Cinq fois de suite. | Le premier toucher enregistre, chaque fois. Si un « Enregistrer » ne répond pas : note l'écran, si le clavier était ouvert ou fermé, et la version d'iOS (Réglages, Général, Informations). |
 | F-9 | Ferme une fenêtre du bas (fiche d'une ligne) et touche aussitôt une autre ligne. | La ligne touchée réagit, le toucher ne se perd pas. |
+| F-10 | Dans Safari : touche une quantité, le texte de l'offre, puis un champ de la fiche d'un client. Ensuite, écarte deux doigts sur la page. | Le clavier monte sans que la page s'agrandisse, chaque case garde sa taille ; le zoom à deux doigts marche toujours. |
 
 Points ouverts, à ton choix (détail dans `REVUE.md`) :
 - M7 : une offre gardée dans le téléphone avant un déploiement, rouverte sans réseau, s'ouvre sans JavaScript (gestes en page entière, donc perdus hors réseau). Défaut ancien du service worker, que chaque déploiement déclenche.

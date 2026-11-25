@@ -2302,6 +2302,21 @@ function hauteurDuBas() {
   if ('ResizeObserver' in window) new ResizeObserver(poser).observe(bas);
 }
 
+// iPhone et iPad : Safari agrandit la page à l'entrée dans un champ dont le texte fait moins de 16 px, et la laisse
+// agrandie (Xavier, 2026-11-25 : « il faut que la case, ça reste la même taille »). Relevé au banc le 2026-11-25
+// (banc/zoom-champs.js) : tous les champs du téléphone font 16 px, sauf le texte de l'offre (15 px, corrigé) ; Xavier
+// voit le zoom à chaque case touchée, cause non trouvée au banc. maximum-scale=1 coupe ce zoom quelle qu'en
+// soit la cause ; sur iPhone et iPad, le zoom à deux doigts reste permis (Safari ignore cette limite pour les doigts
+// depuis iOS 10). Sur Android, et dans Chrome ou Firefox sur iPhone, la même limite empêcherait de zoomer : elle ne
+// se pose que dans Safari sur iOS.
+function sansZoomAuToucher() {
+  const ua = navigator.userAgent;
+  const ios = (/iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!ios || !meta || /maximum-scale/.test(meta.content)) return;
+  meta.content += ', maximum-scale=1';
+}
+
 // iPhone, clavier refermé (Xavier, 2026-11-24 : « Enregistrer » sans effet jusqu'à ce qu'on fasse défiler la page).
 // Safari sous iOS 26 laisse les zones de toucher décalées après la fermeture du clavier, le bas de l'écran surtout,
 // où sont les boutons qu'on touche juste après une saisie (forums développeurs d'Apple, fil 800125, FB19889436 ;
@@ -2521,6 +2536,7 @@ const demarrer = () => {
   }
 };
 const brancher = () => {
+  sansZoomAuToucher();
   optionsEtVariantes();
   piecesDeLaLigne();
   oeilMotDePasse();

@@ -1,0 +1,20 @@
+[
+ {
+  "nom": "Safari, iPhone",
+  "viewport": "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1",
+  "texteOffre": "16px",
+  "erreurs": []
+ },
+ {
+  "nom": "Chrome, iPhone",
+  "viewport": "width=device-width, initial-scale=1, viewport-fit=cover",
+  "texteOffre": "16px",
+  "erreurs": []
+ },
+ {
+  "nom": "Chrome, Android",
+  "viewport": "width=device-width, initial-scale=1, viewport-fit=cover",
+  "texteOffre": "16px",
+  "erreurs": []
+ }
+]

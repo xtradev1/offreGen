@@ -1,0 +1,57 @@
+{
+ "ecrans": {
+  "/offres/3": {
+   "url": "/offres/3",
+   "champs": 70,
+   "sous16": [
+    {
+     "champ": "input[name=q]",
+     "parent": "ajout-pc pc-seul",
+     "px": 15,
+     "visible": false
+    }
+   ]
+  },
+  "/clients": {
+   "url": "/clients",
+   "champs": 1,
+   "sous16": []
+  },
+  "/clients/nouveau": {
+   "url": "/clients/nouveau",
+   "champs": 8,
+   "sous16": []
+  },
+  "/catalogue": {
+   "url": "/catalogue",
+   "champs": 1,
+   "sous16": []
+  },
+  "/reglages": {
+   "url": "/reglages",
+   "champs": 0,
+   "sous16": []
+  },
+  "/offres/3/entete": {
+   "url": "/offres/3/entete",
+   "champs": 0,
+   "sous16": []
+  },
+  "/offres/3/conditions": {
+   "url": "/offres/3/conditions",
+   "champs": 5,
+   "sous16": []
+  },
+  "/offres": {
+   "url": "/offres",
+   "champs": 0,
+   "sous16": []
+  },
+  "/offres/3/lignes/10": {
+   "url": "/offres/3/lignes/10",
+   "champs": 6,
+   "sous16": []
+  }
+ },
+ "total": 91
+}
