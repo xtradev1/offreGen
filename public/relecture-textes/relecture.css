@@ -1,21 +1,22 @@
 /* Page de relecture des textes de Dicta (chantier 2026-11-24_relecture-textes). Charte Dicta du 19.11 : encre ardoise,
-   fond pierre, terracotta du micro pour les numéros. Mise en page : une colonne, la capture à gauche et ses textes à
-   droite sur ordinateur, l'une sous l'autre sur téléphone. Aucun style dans le HTML : la politique de sécurité du site
+   fond pierre, terracotta du micro pour les numéros. Mise en page : la capture à gauche, ses textes à droite en trois
+   colonnes (original, version du correcteur, différences) ; tout s'empile sur téléphone. Aucun style dans le HTML : la politique de sécurité du site
    (default-src 'self') refuse les styles en ligne. */
 @font-face { font-family: "Archivo"; font-weight: 500 800; font-display: swap; src: url("/fonts/archivo-latin.woff2") format("woff2"); }
 @font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("/fonts/inter-latin.woff2") format("woff2"); }
 :root {
   --fond: #F4F1EA; --carte: #FFFFFF; --encre: #23272D; --doux: #545A63; --trait: #DDD8CC; --etiquette: #EBE7DE;
-  --mic: #B24A25; --ok: #13553A; --ok-fond: #E1EFE6; --att-fond: #FFF0B3; --nb: #FFD666;
+  --mic: #B24A25; --ok: #13553A; --ok-fond: #E1EFE6; --att-fond: #FFF8D6; --nb: #FFD666;
+  --ajout: #0F4D31; --ajout-fond: #CDEBD9; --retrait: #8C1D18; --retrait-fond: #F8D7D3; --champ: #FFFFFF; --bord-champ: #A8AEB6;
   --mk-ink: var(--encre); --mk-bg: var(--fond); --mk-surface: var(--carte); --mk-line: var(--trait); --mk-accent: var(--mic);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #AEB4BC; --trait: #33373D; --etiquette: #26292E;
-  --mic: #F08A5D; --ok: #7DD3A8; --ok-fond: #183126; --att-fond: #3A2A10; --nb: #6B5512; color-scheme: dark; } }
+  --mic: #F08A5D; --ok: #7DD3A8; --ok-fond: #183126; --att-fond: #2E2616; --nb: #6B5512; --ajout: #A6E3C1; --ajout-fond: #1D3A2B; --retrait: #FFB4AB; --retrait-fond: #4A1C18; --champ: #15171A; --bord-champ: #5A6069; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #AEB4BC; --trait: #33373D; --etiquette: #26292E;
-  --mic: #F08A5D; --ok: #7DD3A8; --ok-fond: #183126; --att-fond: #3A2A10; --nb: #6B5512; color-scheme: dark; }
+  --mic: #F08A5D; --ok: #7DD3A8; --ok-fond: #183126; --att-fond: #2E2616; --nb: #6B5512; --ajout: #A6E3C1; --ajout-fond: #1D3A2B; --retrait: #FFB4AB; --retrait-fond: #4A1C18; --champ: #15171A; --bord-champ: #5A6069; color-scheme: dark; }
 
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; background: var(--fond); color: var(--encre); font: 16px/1.55 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -23,7 +24,7 @@ button, input, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
 h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.2px; text-wrap: balance; }
 
-.page { max-width: 1120px; margin: 0 auto; padding: 8px 16px 120px; }
+.page { max-width: 1440px; margin: 0 auto; padding: 8px 16px 120px; }
 .tete h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.1; margin: 28px 0 10px; }
 .tete .chapeau { max-width: 70ch; margin: 0 0 18px; color: var(--doux); font-size: 17px; }
 .consignes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 0 0 16px; }
@@ -40,28 +41,38 @@ h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.2p
 .partie > h2 { font-size: 28px; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--encre); }
 .partie > .intro { color: var(--doux); margin: 8px 0 18px; max-width: 70ch; }
 
-.ecran { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--trait); }
-.ecran.large { grid-template-columns: minmax(0, 1fr); }
-.ecran h3 { font-size: 20px; margin: 0 0 4px; }
-.ecran .contexte { color: var(--doux); margin: 0 0 12px; font-size: 15px; }
-.ecran figure { margin: 0; }
-.ecran figure img { display: block; width: 100%; height: auto; border: 1px solid var(--trait); border-radius: 12px; background: var(--carte); }
-.ecran.large figure img { max-height: none; }
-.ecran figcaption { font-size: 13px; color: var(--doux); margin-top: 6px; }
-.note { font-size: 14px; color: var(--doux); background: var(--etiquette); border-radius: 8px; padding: 8px 10px; margin: 0 0 12px; }
+/* Un écran : le titre en haut ; la capture à gauche, collée pendant qu'on lit ses textes ; à droite, une ligne par
+   texte en trois colonnes (original, version du correcteur, différences). */
+.ecran { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); grid-template-areas: "tete tete" "capture corps"; gap: 12px 24px; padding: 24px 0; border-top: 1px solid var(--trait); }
+.ecran.large { grid-template-columns: minmax(0, 1fr); grid-template-areas: "tete" "capture" "corps"; }
+.ecran-tete { grid-area: tete; }
+.ecran h3 { font-size: 21px; margin: 0 0 4px; }
+.ecran .contexte { color: var(--doux); margin: 0; font-size: 15px; }
+.capture { grid-area: capture; margin: 0; align-self: start; position: sticky; top: 64px; }
+.ecran.large .capture { position: static; }
+.capture img { display: block; width: 100%; height: auto; border: 1px solid var(--trait); border-radius: 12px; background: var(--carte); }
+.capture figcaption { font-size: 13px; color: var(--doux); margin-top: 6px; }
+.corps { grid-area: corps; min-width: 0; }
+.note { font-size: 14px; color: var(--doux); background: var(--etiquette); border-radius: 8px; padding: 8px 10px; margin: 8px 0 0; }
 
+.titres-col, .texte { display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 0 12px; }
+.titres-col { padding: 0 12px 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--doux); }
 .textes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.texte { background: var(--carte); border: 1px solid var(--trait); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
-.texte.corrige { background: var(--att-fond); border-color: var(--mic); }
-.num { font: 600 13px/1.6 ui-monospace, "Cascadia Mono", Consolas, monospace; color: var(--mic); user-select: all; }
-.original { margin: 0; overflow-wrap: anywhere; }
+.texte { background: var(--carte); border: 1px solid var(--trait); border-radius: 10px; padding: 10px 12px; align-items: start; }
+.texte.change { border-color: var(--mic); }
+.num { font: 600 13px/1.9 ui-monospace, "Cascadia Mono", Consolas, monospace; color: var(--mic); user-select: all; }
+.colonne { min-width: 0; }
+.colonne p { margin: 0; overflow-wrap: anywhere; line-height: 1.5; padding: 6px 0; }
+.etiquette-col { display: none; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--doux); margin-bottom: 2px; }
+.version textarea { display: block; width: 100%; min-height: 38px; padding: 6px 10px; border: 1px solid var(--bord-champ); border-radius: 8px; background: var(--champ); line-height: 1.5; resize: vertical; overflow: hidden; }
+.version textarea:focus { border-color: var(--encre); }
+.texte.change .version textarea { background: var(--att-fond); }
+.diff ins { text-decoration: none; background: var(--ajout-fond); color: var(--ajout); border-radius: 3px; padding: 0 1px; }
+.diff del { background: var(--retrait-fond); color: var(--retrait); border-radius: 3px; padding: 0 1px; }
+.signe { font-weight: 700; padding: 0 2px; }
+.inchange { color: var(--doux); font-size: 14px; }
+.revenir { border: 0; background: none; padding: 2px 0; text-decoration: underline; cursor: pointer; color: var(--doux); font-size: 14px; }
 .voir-nb .nb { background: var(--nb); border-radius: 2px; }
-.corriger { border: 1px solid var(--encre); background: transparent; border-radius: 8px; padding: 6px 12px; min-height: 40px; cursor: pointer; font-size: 14px; font-weight: 600; }
-.texte.corrige .corriger { background: var(--encre); color: var(--carte); }
-.zone { grid-column: 1 / -1; display: grid; gap: 6px; }
-.zone label { font-size: 13px; color: var(--doux); }
-.zone textarea, .remarque textarea { width: 100%; min-height: 72px; padding: 10px 12px; border: 1px solid var(--encre); border-radius: 8px; background: var(--carte); resize: vertical; }
-.zone .retirer { justify-self: start; border: 0; background: none; padding: 4px 0; text-decoration: underline; cursor: pointer; color: var(--doux); font-size: 14px; }
 .deja { font-size: 14px; color: var(--doux); margin: 10px 0 0; }
 .remarque { margin-top: 14px; display: grid; gap: 6px; }
 .remarque label { font-weight: 600; font-size: 15px; }
@@ -73,10 +84,17 @@ h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.2p
 .export { margin-top: 32px; }
 .export textarea { width: 100%; min-height: 220px; padding: 12px; border: 1px solid var(--trait); border-radius: 10px; background: var(--carte); font: 14px/1.5 ui-monospace, Consolas, monospace; }
 
+/* Écran moyen : la capture au-dessus des textes. Téléphone : chaque texte en colonne, avec ses titres. */
+@media (max-width: 1100px) {
+  .ecran { grid-template-columns: minmax(0, 1fr); grid-template-areas: "tete" "capture" "corps"; }
+  .capture { position: static; max-width: 300px; }
+  .ecran.large .capture { max-width: none; }
+}
 @media (max-width: 760px) {
-  .ecran { grid-template-columns: minmax(0, 1fr); }
-  .ecran figure { max-width: 360px; }
-  .ecran.large figure { max-width: none; }
+  .titres-col { display: none; }
+  .texte { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .etiquette-col { display: block; }
+  .num { line-height: 1.4; }
 }
 
 /* Les boutons du kit (thème, retour en haut) au-dessus de la barre des corrections. */

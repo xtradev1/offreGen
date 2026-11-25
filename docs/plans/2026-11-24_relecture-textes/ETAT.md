@@ -14,8 +14,11 @@ Une première version (2 186 textes extraits du code, page claude.ai) a été re
 - Une page de relecture : 36 écrans capturés, 389 textes numérotés T001 à T389. Un texte qui revient sur un autre
   écran n'est numéroté qu'une fois.
   - Le site (9 vues), la démo et son guide (11), le passage à l'essai et la mise en route (7), les courriels (9).
-  - Sous chaque texte, « Corriger » ouvre un champ prérempli ; sous chaque écran, une remarque libre. Tout reste dans
-    le navigateur du correcteur (localStorage) ; « Copier mes corrections » rassemble le tout pour un courriel.
+  - Trois colonnes par texte (demande de Xavier du 2026-11-25) : l'original, la version du correcteur (toujours
+    modifiable, préremplie), les différences mot à mot (ajouts en vert, retraits en rouge barré, ␣ espace, ⍽ espace
+    insécable ; Ctrl+Maj+Espace en pose une). La capture de l'écran reste collée à gauche. Sous chaque écran, une
+    remarque libre. Tout reste dans le navigateur du correcteur (localStorage) ; « Copier mes corrections »
+    rassemble le tout pour un courriel, les insécables écrites « [insécable] ».
   - « Surligner les espaces insécables » montre où l'application en pose.
 - Sur le site : route `/relecture` (`TextesARelireControleur`), qui n'existe que si le `.env` porte
   `RELECTURE_TEXTES=1`. Page `relecture/index.html`, fichiers dans `public/relecture-textes/` (styles, scripts, kit
