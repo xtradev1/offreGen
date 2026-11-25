@@ -5,7 +5,7 @@
 - Goal : application d'offres vocales pour artisans. L'artisan décrit les travaux à voix haute pendant la visite, l'application produit une offre à partir de son catalogue, il la corrige à la voix ou à l'écran.
 - Owner : Xavier Frelechoz (XtraDev)
 - Created : 2026-11-05
-- Last updated : 2026-11-24
+- Last updated : 2026-11-25
 
 ## Executive summary
 - L'application tourne de bout en bout sur le site de test (`easy-offres.xtradev.ch`) : dictée ou import, Whisper et Qwen 27B chez Infomaniak, offre rangée par pièce, corrections, catalogue, clients, PDF, facture avec QR-facture. Suite verte et PHPStan sans erreur au déploiement de `e046e57` (2026-11-23). La page d'accueil de Dicta est en ligne sur le test (`/`, `/decouvrir`).
@@ -56,6 +56,7 @@
 - [ ] Sans rechargement (tâche 593) : livré et déployé sur le test (`93a61d1`, sonde verte), recette de Xavier attendue (`RECETTE.md`), deux choix ouverts (mention dans la politique de confidentialité, durée de garde). Détail : `docs/plans/2026-11-23_sans-rechargement/ETAT.md`.
 - [ ] Dictée mal comprise (sous-chantier 30, Origin 514) : lots 1, 2 et 8 faits ; le lot 8 (catalogue en `prompt` de Whisper) est en service sur le test (`8bb25b1`, sonde verte). Reste : la dictée A6 refaite par Xavier, puis les lots 3 à 7 (fenêtre de choix, verdict, jauge, revue). Détail : `docs/plans/2026-11-07_voix-offre/30-dictee-mal-comprise/ETAT.md`.
 - [ ] Prospects, le catalogue des commerciaux (`docs/plans/2026-11-24_prospects/`, copie `~/offreGen-prospects`, Origin 616) : rubrique « Prospects » de l'administration en service sur le test (`ec8bab0`, sonde verte, migration `Version20261124210001`), fiche gardée jusqu'à ce qu'on la lâche, sans plafond. Gate prod ouvert : recette de Xavier attendue (`RECETTE.md`, sept scénarios). Les vrais prospects attendent le site de production.
+- [ ] Documents et réglages (`docs/plans/2026-11-24_documents-reglages/`, copie `~/offreGen-documents`, Origin projet 44, tâche à créer sur accord de Xavier) : choix de Xavier L1 à V3 appliqués. « Phrases du document » devient une rubrique des réglages, hors de l'assistant ; filigrane « Aperçu » retiré de Facturer et du brouillon ; une variante reprend la quantité et l'unité de la ligne remplacée, et un produit d'une autre unité passe dans « Relire ». En service sur le test (`2ddda06`, sonde verte, aucune migration), recette de Claude conforme. Gate prod ouvert : recette de Xavier attendue (`RECETTE.md`, quatre scénarios).
 
 ### Next
 - [ ] Recette regroupée par Xavier sur le test (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
@@ -123,6 +124,7 @@
 - 2026-11-24 : le téléphone garde 14 jours des pages avec noms, adresses et prix des clients : à écrire dans la politique de confidentialité (question ouverte à Xavier). « Se déconnecter » sans réseau efface ces copies puis tombe sur la page d'erreur de Chrome : noté, pas corrigé.
 - Obsolètes (résolus) : accès de Claude au test (accordé le 14.11) ; jeton Infomaniak (fourni le 14.11) ; format `data` et envoi multipart de Whisper (vérifiés le 14.11) ; ffmpeg sur le test (déposé le 14.11).
 - 2026-11-24 : prospects. Les fiches portent des données personnelles (raisons individuelles, personnes de contact, notes libres) : mention dans la politique de confidentialité et durée de garde à fixer avec le lot juridique (Origin 463), rien n'efface une fiche aujourd'hui. Registre du commerce et registre IDE hors de la version 1 (accès non confirmé, registre IDE annoncé comme remplacé par le BER). Une démo finie supprimée détache sa fiche, qui perd la trace de la démo. Détail : `docs/plans/2026-11-24_prospects/REVUE.md` et `RECETTE.md`. Depuis le 24.11, ni plafond ni libération à date : rien n'empêche un commercial de garder 100 fiches ; question posée à Xavier (l'administrateur doit-il pouvoir libérer une fiche ?).
+- 2026-11-24 : documents. Le filigrane « Aperçu » ne marquait que l'aperçu d'une facture pas encore créée ; il est retiré. Les PDF d'une démo ne portent aucune marque « Démonstration » : une démo sort une facture sans marque, comme avant ce retrait. Suite : Origin 557 et 509. Détail : `docs/plans/2026-11-24_documents-reglages/ETAT.md`.
 
 ## Archives
 - Décisions anciennes → `docs/roadmap-archive-decisions.md`
@@ -168,3 +170,7 @@
   - Décision de Xavier : plus de libération 7 jours après un pas manqué, plus de plafond de 30 ; un pas se date dans l'année. Tâche Origin 616 créée.
   - Tests rouges puis verts, suite complète 1608 tests ; `ec8bab0` déployé, sonde verte, relu en cliquant sur le test.
   - Détail : `docs/plans/2026-11-24_prospects/ETAT.md`.
+- [2026-11-24] **Documents et réglages en service sur le test**
+  - Maquette et choix de Xavier (L1 à V3), code, revue (six défauts mineurs corrigés), 1550 tests verts ; aucune migration.
+  - `2ddda06` déployé, sonde verte ; recette de Claude sur le test conforme sur les quatre scénarios. Non vérifié : la ligne provisoire d'un ajout hors réseau. Recette de Xavier attendue.
+  - Détail : `docs/plans/2026-11-24_documents-reglages/ETAT.md`.
