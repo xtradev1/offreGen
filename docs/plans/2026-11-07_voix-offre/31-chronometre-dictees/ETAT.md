@@ -22,7 +22,8 @@ Lot 8 fait : déployé sur le test (`0ec9fff`), recette par l'interface jouée p
 - Jouer `RECETTE.md`, section « À toi » (iPhone, environ 15 minutes).
 - Trancher S1 de `REVUE.md` : le texte des dictées dans le rapport de l'administration (garder, journaliser chaque ouverture, ou cacher derrière un clic journalisé).
 - Dire si je supprime `~/offreGen-base-coupee` (copie d'une autre session, correctif de connexion en double).
-- Remplir `ALERTES_A` sur le test (vide le 2026-11-25 : aucune alerte ne part), et sur la production avant les premiers artisans. Sur le test, `COURRIELS_REDIRIGER_VERS` envoie de toute façon tout à l'adresse de redirection.
+- Dire si l'alerte d'essai du 2026-11-25 (« essai d'alerte », vers 14 h 50) est arrivée dans la boîte XtraDev.
+- Production : remplir `ALERTES_A` dans le `.env` avant le premier artisan (noté dans `docs/DEPLOIEMENT.md`, contrôles en production).
 
 ## Suivi Origin
 
@@ -68,6 +69,8 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 | 2026-11-25 | Lot 10 : après 30 s, redemande toutes les 1,5 s (au lieu de 3 s). Rythme rapide gardé à 1 s, pas 0,5 s. | Xavier : « fait toutes les secondes […] À la limite, tu peux mettre une seconde et demie ». Rafale du 25.11 : 130 demandes en 58 s sans refus. |
 | 2026-11-25 | Lot 10 : l'offre prête s'ouvre 300 ms après la dernière étape cochée (au lieu de 900 ms). | Xavier : « tu peux passer le gain facile à 300 millisecondes ». |
 | 2026-11-25 | Lot 11, point de vérification : un refus d'Infomaniak (HTTP 429 ou 503), sur n'importe quel appel, devient une erreur « Infomaniak refuse des appels » ; cron signale chaque minute les dictées qui attendent leur offre depuis plus de 5 minutes (« dictées bloquées »). Les deux passent par le courriel d'alerte existant (Alertes, une fois par heure la même panne). | Xavier : « si demain il y a 10 ou 20 utilisateurs […] et que ça commence à bloquer, il faut vraiment que je sache vite ». Avant ce lot, un refus pendant la redemande du texte et un refus des pièces ou des options n'étaient que des avertissements : la dictée attendait ou l'offre sortait dégradée sans courriel. 5 minutes : une dictée normale est prête en moins d'une minute. Pas d'encart dans la page des dictées : ses durées (médiane, 90e centile, maximum) disent déjà la lenteur, le courriel dit l'urgence. |
+| 2026-11-25 | Seuil des dictées bloquées gardé à 5 minutes pour commencer ; cible 2 minutes, à resserrer plus tard. | Xavier : « je dirais jusqu'à 2 minutes, c'est bien […] dans un premier temps, 5 minutes, ça fera le travail. Et après, il faudra améliorer ». |
+| 2026-11-25 | `ALERTES_A` rempli sur le test avec l'adresse XtraDev de Xavier. | Xavier : « pour l'instant, ça partira sur XtraDev, mais tu peux déjà le remplir toi-même ». En production, les valeurs clés du `.env` changent au moment de la mise en service. |
 | 2026-11-24 | Recette avec une démo à soi (`chrono-claude@exemple.ch`), pas avec la démo d'une autre recette. | `recette-e1` et `fluidite-test` ouvrent l'assistant de bienvenue et servent à d'autres recettes. |
 
 ## Journal
@@ -93,8 +96,26 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 - 2026-11-25 : sortie JSON allégée (sous-chantier 20) : pas en service. Banc du 20.11 (lot `2026-11-20-fiabilite`, appels l'un après l'autre) : extraction en service 18,4 à 26,9 s en moyenne, extraction allégée en JSON 6,9 à 7,6 s, jetons reçus 1 344 à 1 396 contre 768 à 800, fiabilité égale ou meilleure. Travail non commité, dans `~/offreGen` ; gate intention ouvert depuis le 20.11 (tâche Origin 546).
 - 2026-11-25 : réponses de Xavier : 1 s gardé, 1,5 s après 30 s, 300 ms avant l'ouverture de l'offre, JSON « un peu plus tard », rafale permise (« il n'y a personne qui va faire ces appels »). Rafale jouée depuis le serveur de test : aucune limite atteinte à 130 par minute. Réserve : des demandes sur un lot inexistant (404) ; une limite comptée seulement sur les lots réels resterait invisible. Lot 10 codé, suite complète verte.
 - 2026-11-25 : accord de Xavier pour déployer (« Tu peux déployer ») et demande d'un point de vérification. Premier déploiement de `6f49927` refusé à l'analyse statique : `deployer-test.sh` lance phpstan sur la copie de travail, où j'écrivais déjà les fichiers du lot 11. Rien n'est parti (refus avant la construction). Constat : `ALERTES_A` vide sur le test, aucune alerte n'y part. Lot 11 codé ; deux anciens tests simulaient la panne des pièces et des options par un 503, passés à 500 (503 est désormais un refus).
+- 2026-11-25 : lot 11 déployé (`e73398f`, sonde verte). Le test tournait déjà sur `1c5929e` (déployé par la session fluidité), qui contenait les lots 9 et 10 ; les deux commits de cette session non encore en service ne touchaient que des documents. `ALERTES_A` ajouté au `.env` du test (copie gardée : `partage/.env.avant-alertes-2026-11-25`), une alerte d'essai écrite au journal : état des alertes écrit, aucun « alerte non envoyée ». L'arrivée dans la boîte reste à confirmer par Xavier.
 
 ## Preuves
+
+### Lot 11 en service et ALERTES_A (2026-11-25)
+
+```
+DÉPLOYÉ : e73398fa0a5422b21545d1711b44cc58367419ba sur https://easy-offres.xtradev.ch   (SONDE VERTE)
+$ php-8.5 bin/traiter-file        # sur le test, comme cron
+0 enregistrement(s) repris.
+code 0
+$ diff .env.avant-alertes-2026-11-25 .env
+> ALERTES_A=<adresse XtraDev de Xavier>
+$ tail -1 partage/var/log/app.log
+[2026-11-25T14:50:22.114505+01:00] offregen.ERROR: offreGen, essai d'alerte : courriel envoyé à la main par Claude le 2026-11-25 pour vérifier ALERTES_A. Rien à faire.
+$ ls partage/var/alertes
+derniere-613f84259d81a9605289e47cb3d28bbc282f972a  jour-20261125  verrou
+$ grep -c "alerte non envoyée" partage/var/log/app.log
+0
+```
 
 ### Lot 11, point de vérification (2026-11-25)
 
