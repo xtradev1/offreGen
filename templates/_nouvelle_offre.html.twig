@@ -8,15 +8,18 @@
 {% set sans_micro %}Le micro demande une connexion sécurisée (https). En attendant, enregistrez avec le téléphone, puis importez le fichier.{% endset %}
 {% set rond = rond|default(false) %}
 {% set etats %}
+  {# La fenêtre monte dès le toucher (Xavier, 2026-11-25) : tant que le micro s'ouvre, app.js pose la classe
+     « ouverture », l'état le dit, et ni la consigne ni « Terminer » ne se montrent. #}
   <div class="rec" data-etat="enregistrement" hidden>
+    <p class="rec-etat" role="status" data-etat-micro data-ouverture="Le micro s'ouvre…" data-en-cours="Enregistrement en cours">Enregistrement en cours</p>
     <div class="timer" data-minuteur>00:00</div>
-    <div class="dot on" aria-hidden="true"></div>
+    <div class="dot" aria-hidden="true">{{ icone_micro }}</div>
     {# La phrase de l'activité du compte ; l'attribut la garde pour app.js, qui la remet à chaque enregistrement. #}
     {% set dictee = mots().dictee %}
     <p data-consigne="{{ dictee }}">{{ dictee }}</p>
     <button class="btn danger large" type="button" data-terminer>
       <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>Terminer et créer l'offre</button>
-    <button class="lien" type="button" data-abandonner>Abandonner sans envoyer</button>
+    <button class="lien" type="button" data-abandonner data-abandonner-texte="Abandonner sans envoyer" data-annuler="Annuler">Abandonner sans envoyer</button>
     {# iPhone et iPad, Safari : une fois par appareil, quand Safari vient de demander le micro (Xavier, 2026-11-24).
        Un site ne peut pas rendre l'autorisation permanente ; Safari le peut, réglé par l'artisan.
        Texte : Safari 26, chemin trouvé par Xavier le 2026-11-25. data-ancien : Safari 18 et avant (bouton « aA », guides tiers).

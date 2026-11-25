@@ -425,6 +425,8 @@ function nouvelleOffre() {
     },
     // Pendant l'enregistrement et l'envoi, le retour ne ferme rien ; après un échec, il demande.
     retenir: () => {
+      // Le micro s'ouvre encore : le retour annule, rien n'est enregistré.
+      if (annulerOuverture()) return false;
       // Après l'envoi, le traitement continue au serveur : la fenêtre peut se fermer.
       if (['choix', 'suivi', 'court', 'long', 'refus', 'reprise'].includes(etatCourant)) return false;
       if (etatCourant === 'echec') return !perteAcceptee();
@@ -692,34 +694,92 @@ function nouvelleOffre() {
     ligne.hidden = false;
   };
 
+  // Le toucher du micro répond tout de suite (Xavier, 2026-11-25) : la fenêtre monte pendant que le navigateur ouvre le
+  // micro. Avant, rien ne bougeait jusqu'à son ouverture, puis la fenêtre montait (330 ms de plus). L'écran dit que le
+  // micro s'ouvre et ne montre ni « Parlez » ni « Terminer » : rien n'est enregistré avant que le micro réponde.
+  // ouverture : le rang de la demande de micro en cours, 0 sans demande. Une demande annulée (lien du bas, retour du
+  // téléphone) laisse le micro s'ouvrir dans le vide : demarrer le referme à son arrivée.
+  let demandes = 0;
+  let ouverture = 0;
+  const blocMicro = el('[data-etat="enregistrement"]');
+  const etatMicroEcran = el('[data-etat-micro]');
+  const affichage = el('[data-minuteur]');
+  const abandon = el('[data-abandonner]');
+  const deux = (n) => String(n).padStart(2, '0');
+  const horloge = (s) => {
+    const h = Math.floor(s / 3600);
+    return (h ? h + ':' : '') + deux(Math.floor(s / 60) % 60) + ':' + deux(s % 60);
+  };
+  const attendreMicro = (rang, d) => {
+    ouverture = rang;
+    blocMicro.classList.add('ouverture');
+    etatMicroEcran.textContent = etatMicroEcran.dataset.ouverture;
+    abandon.textContent = abandon.dataset.annuler;
+    affichage.textContent = horloge(d ? Math.floor(dureeMs(d) / 1000) : 0);
+    montrer('enregistrement');
+  };
+  const finAttente = () => {
+    ouverture = 0;
+    blocMicro.classList.remove('ouverture');
+    etatMicroEcran.textContent = etatMicroEcran.dataset.enCours;
+    abandon.textContent = abandon.dataset.abandonnerTexte;
+  };
+  const annulerOuverture = () => {
+    if (!ouverture) return false;
+    finAttente();
+    return true;
+  };
+
   // suite : { dictee, fichiers } pour continuer une dictée coupée ; rien pour une nouvelle.
   const demarrer = async (suite = null) => {
     if (bloquer()) return;
     if (!possible) { refus(); return; }
-    if (enregistreur && enregistreur.state !== 'inactive') return;
+    if (ouverture || (enregistreur && enregistreur.state !== 'inactive')) return;
     const d = suite ? suite.dictee : null;
     const demande = etatMicro();
+    const maDemande = ++demandes;
+    // Le micro se demande avant tout affichage : monter la fenêtre ne retarde pas son ouverture (11 ms mesurées sur un
+    // processeur ralenti quatre fois quand la fenêtre passait devant).
+    const micro = navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+    attendreMicro(maDemande, d);
+    let pris = null;
     try {
-      flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+      pris = await micro;
     } catch (e) {
+      if (ouverture !== maDemande) return;
+      finAttente();
+      // Page /import, sans fenêtre : Parler et Importer reviennent, avec le message.
+      if (!feuille) montrer('choix');
       refus('Le micro est refusé ou absent. Autorisez-le pour ce site dans les réglages du navigateur, ou enregistrez avec le téléphone puis « Importer ».');
       return;
     }
+    // Annulée pendant que le micro s'ouvrait : il se referme, rien n'est enregistré. Seul le micro de cette demande
+    // se ferme : une demande plus récente a peut-être déjà le sien.
+    const fermerPris = () => {
+      pris.getTracks().forEach((t) => t.stop());
+      if (flux === pris) flux = null;
+    };
+    if (ouverture !== maDemande) { fermerPris(); return; }
+    flux = pris;
     if (suite) {
+      // La dictée proposée revient à l'écran avec la raison : la suite n'a pas commencé.
+      const retour = (dire) => {
+        finAttente();
+        libererMicro();
+        montrer('reprise');
+        dire();
+      };
       // Un autre onglet a pris la même dictée pendant que le micro s'ouvrait : il la garde.
       const tenue = await abri.tenues();
-      if (tenue && tenue(d.id)) {
-        libererMicro();
-        autreOnglet();
-        return;
-      }
+      if (ouverture !== maDemande) { fermerPris(); return; }
+      if (tenue && tenue(d.id)) { retour(autreOnglet); return; }
       try {
         suite.fichiers = await suite.lecture;
       } catch (e) {
-        libererMicro();
-        relectureImpossible();
+        if (ouverture === maDemande) retour(relectureImpossible); else fermerPris();
         return;
       }
+      if (ouverture !== maDemande) { fermerPris(); return; }
     }
     // Une suite garde le format du début : les parties d'une dictée sont rangées sous un seul type.
     const type = (d && MediaRecorder.isTypeSupported(d.type) ? d.type : null) || TYPES.find((t) => MediaRecorder.isTypeSupported(t)) || '';
@@ -751,21 +811,19 @@ function nouvelleOffre() {
       else el('[data-consigne]').textContent = 'L’enregistrement s’est arrêté (appel ou autre application). « Terminer » envoie ce qui est enregistré.';
     });
     rec.start(1000);
+    finAttente();
     occupe = true;
     duMicro = true;
     // Une suite repart de la durée déjà dictée : le minuteur et la limite des 30 minutes valent pour la dictée entière.
     debut = Date.now() - (d ? dureeMs(d) : 0);
     finMs = 0;
-    const affichage = el('[data-minuteur]');
-    const deux = (n) => String(n).padStart(2, '0');
     const consigne = el('[data-consigne]');
     // La phrase de l'activité du compte, écrite par le serveur dans l'attribut (_nouvelle_offre.html.twig).
     consigne.textContent = consigne.dataset.consigne;
     // Un premier tour tout de suite : une suite s'affiche à sa durée déjà dictée, pas à 00:00.
     const tour = () => {
       const s = Math.floor((Date.now() - debut) / 1000);
-      const h = Math.floor(s / 3600);
-      affichage.textContent = (h ? h + ':' : '') + deux(Math.floor(s / 60) % 60) + ':' + deux(s % 60);
+      affichage.textContent = horloge(s);
       if (s >= DUREE_MAX_S) {
         clearInterval(minuteur);
         el('[data-terminer]').click();
@@ -798,6 +856,11 @@ function nouvelleOffre() {
   // Une suite efface son début même si sa propre copie n'a pas pu commencer : le début, lui, est à l'abri.
   const abandonnerCopie = (rec) => rec.copie.then((ok) => (ok || rec.suite) && abri.supprimer(rec.cle));
   el('[data-abandonner]').addEventListener('click', () => {
+    // Le micro s'ouvre encore : rien n'est enregistré, rien à confirmer.
+    if (annulerOuverture()) {
+      montrer('choix');
+      return;
+    }
     const rec = enregistreur;
     if (!window.confirm(rec && rec.suite
       ? 'Abandonner la dictée ? Elle ne sera pas gardée, début compris.'

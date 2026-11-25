@@ -44,8 +44,12 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .tabs a[aria-current="page"] { color: var(--accent); font-weight: 600; }
 .tabs a:focus-visible { outline: 3px solid var(--focus); outline-offset: -2px; }
 /* Micro au centre de la barre, sur chaque écran (décision D1, 2026-11-15) : 72 px, au-dessus de la barre. */
-.tabs .micro-central { flex: 1.15; position: relative; border: 0; background: none; padding: 0; min-height: 56px; cursor: pointer; font: inherit; }
-.tabs .micro-central > span { position: absolute; left: 50%; top: -24px; transform: translateX(-50%); width: 72px; height: 72px; border-radius: 50%; background: var(--marque); color: var(--on-marque); display: grid; place-items: center; border: 5px solid var(--surface); }
+.tabs .micro-central { flex: 1.15; position: relative; border: 0; background: none; padding: 0; min-height: 56px; cursor: pointer; font: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.tabs .micro-central > span { position: absolute; left: 50%; top: -24px; transform: translateX(-50%); width: 72px; height: 72px; border-radius: 50%; background: var(--marque); color: var(--on-marque); display: grid; place-items: center; border: 5px solid var(--surface); box-shadow: 0 6px 16px rgba(35, 39, 45, .24); transition: scale .09s ease-out, box-shadow .09s ease-out; }
+/* Le bouton s'enfonce sous le doigt, avant même que le toucher soit relâché (2026-11-25) : le rectangle gris du
+   navigateur est retiré, le rond répond à sa place. L'ombre intérieure fonce le rond sans griser son anneau. */
+.tabs .micro-central:active > span { scale: .92; box-shadow: inset 0 0 0 40px rgba(0, 0, 0, .14), 0 2px 6px rgba(35, 39, 45, .24); }
+@media (prefers-reduced-motion: reduce) { .tabs .micro-central > span { transition: none; } }
 .tabs .micro-central svg { width: 30px; height: 30px; }
 .tabs .micro-central:focus-visible { outline: none; }
 .tabs .micro-central:focus-visible > span { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -112,6 +116,8 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .feuille-fond.pleine .feuille { min-height: 70%; display: flex; flex-direction: column; }
 /* Pendant l'enregistrement, « Terminer » descend sous le pouce (écran F de la maquette 24). */
 .feuille-fond.pleine .rec:not([hidden]) { flex: 1; display: flex; flex-direction: column; align-items: center; }
+/* L'état, le minuteur, le rond et la consigne se tiennent au milieu de la place libre, « Terminer » reste en bas. */
+.feuille-fond.pleine .rec .rec-etat { margin-top: auto; }
 .feuille-fond.pleine .rec [data-terminer] { margin-top: auto; width: 100%; min-height: 72px; font-size: 19px; }
 .feuille:focus { outline: none; }
 .poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 8px auto 2px; }
@@ -236,11 +242,32 @@ body.calque-ouvert { overflow: hidden; }
 .intro { margin: 8px 0 16px; }
 .intro ul { padding-left: 18px; }
 .rec { text-align: center; padding: 32px 0; }
-.rec .dot { width: 110px; height: 110px; border-radius: 50%; margin: 14px auto 18px; background: var(--bad); }
-.rec .dot.on { animation: pulse 1.2s infinite; }
-@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.88); opacity: .75; } }
-@media (prefers-reduced-motion: reduce) { .rec .dot.on { animation: none; } }
-.timer { font: 600 34px ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+/* Écran d'enregistrement (2026-11-25) : le rond reprend le micro de la barre, à sa couleur ; deux halos en partent
+   tant que le micro écoute. L'état est écrit (« Enregistrement en cours »), le point rouge ne fait que l'accompagner. */
+.rec-etat { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 4px; min-height: 24px; font-size: 14px; font-weight: 600; color: var(--bad); }
+.rec-etat::before { content: ""; flex: none; box-sizing: border-box; width: 10px; height: 10px; border-radius: 50%; background: currentColor; animation: clignote 1.4s ease-in-out infinite; }
+@keyframes clignote { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+.timer { font-size: 46px; line-height: 1.1; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.01em; transition: color .2s ease; }
+/* La boîte du rond a la taille du halo le plus large (104 px x 1,5) : rien n'en dépasse. Le rond est le fond de l'icône. */
+.rec .dot { position: relative; width: 156px; height: 156px; margin: 4px auto; color: var(--on-marque); display: grid; place-items: center; }
+.rec .dot svg { position: relative; z-index: 1; box-sizing: border-box; width: 104px; height: 104px; padding: 32px; border-radius: 50%; background: var(--marque); transition: background-color .2s ease, color .2s ease; }
+.rec .dot::before, .rec .dot::after { content: ""; position: absolute; inset: 26px; border-radius: 50%; background: var(--marque); opacity: 0; pointer-events: none; animation: halo 2.2s ease-out infinite; }
+.rec .dot::after { animation-delay: 1.1s; }
+@keyframes halo { from { transform: scale(1); opacity: .3; } to { transform: scale(1.5); opacity: 0; } }
+.rec [data-consigne] { margin: 0 0 12px; font-size: 17px; }
+.rec [data-terminer], .rec [data-consigne] { transition: opacity .18s ease; }
+/* Le micro s'ouvre : rond neutre, sans halo, un rond qui tourne devant l'état ; rien n'invite encore à parler. */
+.rec.ouverture .rec-etat { color: var(--muted); }
+.rec.ouverture .rec-etat::before { width: 14px; height: 14px; background: none; border: 2.5px solid currentColor; border-right-color: transparent; animation: tourne .8s linear infinite; }
+.rec.ouverture .timer { color: var(--muted); }
+.rec.ouverture .dot svg { background: var(--chip); color: var(--muted); }
+.rec.ouverture .dot::before, .rec.ouverture .dot::after { animation: none; }
+.rec.ouverture [data-consigne], .rec.ouverture [data-terminer] { opacity: 0; visibility: hidden; }
+.rec.ouverture [data-astuce-micro] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .rec-etat::before, .rec .dot::before, .rec .dot::after { animation: none; }
+  .timer, .rec .dot svg, .rec [data-terminer], .rec [data-consigne] { transition: none; }
+}
 /* Étapes du traitement : un rond qui tourne sur l'étape en cours, une coche verte qui saute quand elle
    est faite, un trait qui se colore de l'une à l'autre. */
 .suivi { padding: 4px 0 8px; }
@@ -862,6 +889,9 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
   .tabs a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
   .tabs .micro-central { order: 1; flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; margin-top: 18px; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-size: 15px; }
   .tabs .micro-central > span { position: static; transform: none; width: auto; height: auto; border: 0; box-shadow: none; background: none; color: inherit; display: inline-flex; }
+  /* Sur PC le bouton entier est le rectangle : c'est lui qui s'enfonce, pas l'icône. */
+  .tabs .micro-central:active > span { scale: none; box-shadow: none; }
+  .tabs .micro-central:active { filter: brightness(.9); }
   .tabs .micro-central svg { width: 20px; height: 20px; }
   .tabs .micro-central:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
   .tabs a.importer { order: 2; justify-content: center; margin-top: 8px; border: 1px solid var(--line); font-weight: 550; }
@@ -1026,7 +1056,10 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
   .bar { min-height: 44px; padding: 2px 20px; }
   .bar .logo { height: 24px; }
   .rec { padding: 8px 0; }
-  .rec .dot { width: 64px; height: 64px; margin: 6px auto 8px; }
+  .rec .dot { width: 84px; height: 84px; margin: 4px auto 2px; }
+  .rec .dot svg { width: 56px; height: 56px; padding: 15px; }
+  .rec .dot::before, .rec .dot::after { inset: 14px; }
+  .timer { font-size: 30px; }
 }
 /* Fenêtre étroite d'un PC : la largeur sert aux lignes ; les fiches et formulaires restent une colonne. */
 @media (min-width: 700px) and (max-width: 1023px) and (hover: hover) and (pointer: fine) {
