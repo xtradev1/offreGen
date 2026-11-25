@@ -286,4 +286,38 @@ final class ChronometreTest extends TestCase
         }
         self::assertSame('erreur', BaseDeTest::ligne("SELECT issue FROM dictee_etape WHERE etape = 'ia_extraction'")['issue']);
     }
+
+    /** Pièces et options lancées ensemble (2026-11-25) : le verrou perdu pendant les pièces coupe aussi les options. */
+    public function testLeVerrouPerduPendantLesPiecesCoupeAussiLesOptions(): void
+    {
+        $this->prendreVerrou();
+        $c = $this->chrono();
+        $c->ouvrirPassage($this->id, self::UUID, self::JETON, 1, Chronometre::APRES_REPONSE);
+        $horloge = $this->horloge;
+        $id = $this->id;
+        $outil = static fn (string $nom, string $arguments): string => (string) json_encode(['choices' => [['message' => ['role' => 'assistant', 'content' => '',
+            'tool_calls' => [['id' => 'a', 'type' => 'function', 'function' => ['name' => $nom, 'arguments' => $arguments]]]]]]]);
+        $pieces = (static function () use ($horloge, $id): \Generator {
+            $horloge->sleep(30);
+            BaseDeTest::pdo()->exec("UPDATE enregistrement SET verrou_jeton = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' WHERE id = $id");
+            yield '{"choices":[';
+            $horloge->sleep(30);
+            yield ']}';
+        })();
+        $http = new MockHttpClient([
+            new MockResponse($outil('proposer_offre', '{"titre":"T","lignes":[{"produit_id":null,"designation":"Murs","quantite":42,"unite":"m²","certitude":"sure","extrait":"murs"},'
+                . '{"produit_id":null,"designation":"Portes","quantite":3,"unite":"pce","certitude":"sure","extrait":"en option les portes"}]}'), ['http_code' => 200]),
+            new MockResponse($pieces, ['http_code' => 200]),
+            new MockResponse($outil('classer_lignes', '{"lignes":[]}'), ['http_code' => 200]),
+        ]);
+        try {
+            (new ExtracteurApi($http, 'https://api.exemple.test/v1', 'j', 'm', new NullLogger(), chrono: $c))->extraire('Les murs. En option, les portes.', []);
+            self::fail('L\'appel aurait dû être coupé.');
+        } catch (\Throwable $e) {
+            self::assertTrue(Chronometre::verrouPerdu($e), $e::class . ' : ' . $e->getMessage());
+        }
+        $r = BaseDeTest::pdo()->query("SELECT etape, issue FROM dictee_etape WHERE enregistrement_id = {$this->id} AND etape LIKE 'ia_%' ORDER BY id");
+        self::assertNotFalse($r);
+        self::assertSame([['ia_extraction', 'ok'], ['ia_pieces', 'erreur'], ['ia_options', 'erreur']], $r->fetchAll(\PDO::FETCH_NUM));
+    }
 }

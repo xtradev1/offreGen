@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace OffreGen\Offre;
 
 use OffreGen\Compte\Activite;
-use OffreGen\Ia\ReponseApi;
 use OffreGen\Systeme\Chronometre;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -185,10 +184,21 @@ final class ExtracteurApi implements Extracteur
             return new ResultatExtraction(null, []);
         }
         $resultat = $this->valider($proposition, $catalogue);
-        if ($resultat->lignes !== []) {
-            $resultat = $this->rangerParPiece($transcription, $resultat, $activite);
+        if ($resultat->lignes === []) {
+            return $resultat;
         }
-        return $resultat->lignes !== [] && $this->classerOptions && self::aDesMotsDOption($transcription) ? $this->classerOptions($transcription, $resultat) : $resultat;
+        // Pièces et options partent ensemble (Xavier, 2026-11-25) : les options ne lisent que la désignation et
+        // l'extrait de chaque ligne. Les réponses s'appliquent dans l'ordre, pièces d'abord : une variante prend la
+        // pièce de sa ligne de base.
+        $pieces = $this->lancerPieces($transcription, $resultat, $activite);
+        $options = $this->classerOptions && self::aDesMotsDOption($transcription) ? $this->lancerOptions($transcription, $resultat) : null;
+        try {
+            $resultat = $this->rangerParPiece($pieces, $resultat);
+        } catch (\Throwable $e) {
+            $options?->abandonner($e);
+            throw $e;
+        }
+        return $options === null ? $resultat : $this->classerOptions($options, $resultat);
     }
 
     /** La dictée parle peut-être d'options ou de variantes : le troisième appel vaut la peine. */
@@ -197,11 +207,8 @@ final class ExtracteurApi implements Extracteur
         return preg_match(self::MOTS_OPTIONS, $transcription) === 1;
     }
 
-    /**
-     * Les options et variantes parmi les lignes trouvées, par un troisième appel sans catalogue. Un échec ne coûte que
-     * cette information : l'offre sort avec toutes ses lignes dans le total, comme avant.
-     */
-    private function classerOptions(string $transcription, ResultatExtraction $resultat): ResultatExtraction
+    /** Lance le troisième appel, celui des options et variantes, sans en attendre la réponse. */
+    private function lancerOptions(string $transcription, ResultatExtraction $resultat): ?AppelEnCours
     {
         $liste = [];
         foreach ($resultat->lignes as $i => $l) {
@@ -221,9 +228,21 @@ final class ExtracteurApi implements Extracteur
         if ($this->sansRaisonnement) {
             $corps['reasoning_effort'] = 'none';
         }
+        // Durée bornée (revue du chantier des options, S1) : 90 s au plus.
+        return $this->lancerOuRien('ia_options', $corps, ['timeout' => 60, 'max_duration' => 90], 'Options', 'options : troisième appel en échec, toutes les lignes dans le total');
+    }
+
+    /**
+     * Les options et variantes parmi les lignes trouvées, par le troisième appel, sans catalogue. Un échec ne coûte que
+     * cette information : l'offre sort avec toutes ses lignes dans le total, comme avant.
+     */
+    private function classerOptions(?AppelEnCours $appel, ResultatExtraction $resultat): ResultatExtraction
+    {
+        if ($appel === null) {
+            return $resultat;
+        }
         try {
-            // Durée bornée (revue du chantier des options, S1) : 90 s au plus.
-            $donnees = $this->appeler('ia_options', $this->modelePieces ?? $this->modele, $corps, ['timeout' => 60, 'max_duration' => 90], 'Options');
+            $donnees = $appel->recevoir();
             $this->noterJetons($donnees, 'options', $this->modelePieces ?? $this->modele);
             $arguments = self::argumentsDeLOutil($donnees, 'classer_lignes') ?? [];
         } catch (\Throwable $e) {
@@ -290,7 +309,7 @@ final class ExtracteurApi implements Extracteur
      * Range les lignes dans leurs pièces (leurs zones, en Extérieur) par un second appel, sans le catalogue (de quelques
      * dixièmes de centime). Un échec ne coûte que les pièces : l'offre sort comme avant, rangée par catégorie.
      */
-    private function rangerParPiece(string $transcription, ResultatExtraction $resultat, Activite $activite): ResultatExtraction
+    private function lancerPieces(string $transcription, ResultatExtraction $resultat, Activite $activite): ?AppelEnCours
     {
         $liste = [];
         foreach ($resultat->lignes as $i => $l) {
@@ -310,8 +329,17 @@ final class ExtracteurApi implements Extracteur
         if ($this->sansRaisonnement) {
             $corps['reasoning_effort'] = 'none';
         }
+        return $this->lancerOuRien('ia_pieces', $corps, ['timeout' => 120, 'max_duration' => 180], 'Pièces', 'pièces : second appel en échec, offre sans pièces');
+    }
+
+    /** La réponse du second appel appliquée aux lignes. Un échec ne coûte que les pièces. */
+    private function rangerParPiece(?AppelEnCours $appel, ResultatExtraction $resultat): ResultatExtraction
+    {
+        if ($appel === null) {
+            return $resultat;
+        }
         try {
-            $donnees = $this->appeler('ia_pieces', $this->modelePieces ?? $this->modele, $corps, ['timeout' => 120, 'max_duration' => 180], 'Pièces');
+            $donnees = $appel->recevoir();
             $this->noterJetons($donnees, 'pièces', $this->modelePieces ?? $this->modele);
             $arguments = self::argumentsDeLOutil($donnees, 'ranger_par_piece');
         } catch (\Throwable $e) {
@@ -345,6 +373,17 @@ final class ExtracteurApi implements Extracteur
      */
     private function appeler(string $etape, string $modele, array $corps, array $bornes, string $quoi): array
     {
+        return $this->lancer($etape, $modele, $corps, $bornes, $quoi)->recevoir();
+    }
+
+    /**
+     * Ouvre l'étape et envoie la requête, sans attendre la réponse.
+     *
+     * @param array<string, mixed> $corps
+     * @param array{timeout: int, max_duration: int} $bornes
+     */
+    private function lancer(string $etape, string $modele, array $corps, array $bornes, string $quoi): AppelEnCours
+    {
         $chrono = $this->chrono ?? Chronometre::inactif();
         $mesure = $chrono->commencer($etape, $modele);
         try {
@@ -356,13 +395,31 @@ final class ExtracteurApi implements Extracteur
                     $chrono->pouls();
                 },
             ] + $bornes);
-            $donnees = ReponseApi::lire($reponse, $quoi);
         } catch (\Throwable $e) {
             $mesure->echouer($e);
             throw $e;
         }
-        $mesure->finir(is_array($donnees['usage'] ?? null) ? $donnees['usage'] : null);
-        return $donnees;
+        return new AppelEnCours($mesure, $reponse, $quoi);
+    }
+
+    /**
+     * Un appel facultatif (pièces, options) : un départ impossible se note et l'offre sort sans cette information ;
+     * seul le verrou perdu remonte.
+     *
+     * @param array<string, mixed> $corps
+     * @param array{timeout: int, max_duration: int} $bornes
+     */
+    private function lancerOuRien(string $etape, array $corps, array $bornes, string $quoi, string $echec): ?AppelEnCours
+    {
+        try {
+            return $this->lancer($etape, $this->modelePieces ?? $this->modele, $corps, $bornes, $quoi);
+        } catch (\Throwable $e) {
+            if (Chronometre::verrouPerdu($e)) {
+                throw $e;
+            }
+            $this->journal->warning('offreGen, ' . $echec . ' (' . $e::class . ').');
+            return null;
+        }
     }
 
     /**

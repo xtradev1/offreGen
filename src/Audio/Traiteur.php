@@ -42,7 +42,15 @@ final class Traiteur
     public const ATTENTE_TRANSCRIPTION_MAX_HEURES = 2;
     /** Juste après l'import : une dictée courte est transcrite dans ce délai, l'offre suit sans attendre cron. */
     public const ATTENTE_IMMEDIATE_SECONDES = 90;
-    public const INTERVALLE_ATTENTE_SECONDES = 3;
+    /**
+     * Rythme des redemandes du texte (Xavier, 2026-11-25) : chaque seconde pendant les ATTENTE_RAPIDE_SECONDES premières
+     * secondes, puis toutes les INTERVALLE_LENT_SECONDES. Le texte arrive en général en moins de 10 s ; une attente qui
+     * traîne n'envoie pas une requête par seconde chez Infomaniak (limite générale de leur API : 60 par minute et par
+     * clé, non confirmée pour la transcription, aucun en-tête de limite relevé le 2026-11-25).
+     */
+    public const INTERVALLE_ATTENTE_SECONDES = 1;
+    public const INTERVALLE_LENT_SECONDES = 3;
+    public const ATTENTE_RAPIDE_SECONDES = 30;
 
     /** Un passage de l'écran d'attente plus récent que cela : l'artisan est devant son offre. */
     private const SUIVI_RECENT_SECONDES = 20;
@@ -77,14 +85,22 @@ final class Traiteur
      */
     public function avancer(string $uuid, int $attenteSecondes = 0, string $processus = Chronometre::CRON): string
     {
-        $limite = $this->horloge->now()->modify("+$attenteSecondes seconds");
+        $debut = $this->horloge->now();
+        $limite = $debut->modify("+$attenteSecondes seconds");
         while (true) {
             $statut = $this->avancerUneFois($uuid, $processus);
             if ($statut !== Statut::TRANSCRIPTION || $this->horloge->now() >= $limite) {
                 return $statut;
             }
-            $this->horloge->sleep(self::INTERVALLE_ATTENTE_SECONDES);
+            $this->horloge->sleep(self::intervalle($debut, $this->horloge->now()));
         }
+    }
+
+    /** Secondes avant la prochaine redemande du texte, selon le temps déjà attendu. */
+    public static function intervalle(\DateTimeImmutable $depuis, \DateTimeImmutable $maintenant): int
+    {
+        return $maintenant->getTimestamp() - $depuis->getTimestamp() < self::ATTENTE_RAPIDE_SECONDES
+            ? self::INTERVALLE_ATTENTE_SECONDES : self::INTERVALLE_LENT_SECONDES;
     }
 
     private function avancerUneFois(string $uuid, string $processus): string

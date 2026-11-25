@@ -24,7 +24,6 @@ use Psr\Log\LoggerInterface;
 final class Rejeu
 {
     public const ATTENTE_TRANSCRIPTION_SECONDES = 600;
-    public const INTERVALLE_SECONDES = 3;
     /**
      * Un rejeu plus ancien encore « en cours » est tenu pour mort : on peut en relancer un. Plus long que le rejeu vivant
      * le plus long (envoi 600 s, attente du texte 600 s, appels 870 s : environ 35 minutes ; revue M6).
@@ -65,12 +64,13 @@ final class Rejeu
                 $references[] = $this->transcripteur->demarrer($chemin, $vocabulaire);
             }
             $attente = $this->chrono->commencer('transcription');
-            $limite = $horloge->now()->modify('+' . self::ATTENTE_TRANSCRIPTION_SECONDES . ' seconds');
+            $depuis = $horloge->now();
+            $limite = $depuis->modify('+' . self::ATTENTE_TRANSCRIPTION_SECONDES . ' seconds');
             while (($texte = $this->textes($references)) === null) {
                 if ($horloge->now() >= $limite) {
                     throw new TranscriptionEchouee('Transcription sans résultat après ' . self::ATTENTE_TRANSCRIPTION_SECONDES . ' s.');
                 }
-                $horloge->sleep(self::INTERVALLE_SECONDES);
+                $horloge->sleep(Traiteur::intervalle($depuis, $horloge->now()));
             }
             $attente->finir();
             $activite = Activite::lire($this->artisans->parId($r['artisan_id'])['activite'] ?? null);

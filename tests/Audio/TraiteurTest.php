@@ -382,10 +382,18 @@ final class TraiteurTest extends TestCase
 
     public function testTraitementImmediatAttendLaTranscriptionPuisPasseLaMain(): void
     {
-        // Prête au 4e appel : 3 attentes de 3 s, sous les 90 s permises.
+        // Prête au 4e appel : 3 attentes d'une seconde (3 s chacune jusqu'au 2026-11-25), sous les 90 s permises.
         $lent = new TranscripteurPretApres(4);
         self::assertSame(Statut::PRET, $this->traiteur($lent)->avancer(self::UUID, Traiteur::ATTENTE_IMMEDIATE_SECONDES));
-        self::assertSame('2026-11-07 10:00:09', $this->horloge->now()->format('Y-m-d H:i:s'));
+        self::assertSame('2026-11-07 10:00:03', $this->horloge->now()->format('Y-m-d H:i:s'));
+    }
+
+    /** Après 30 s d'attente, la redemande passe à toutes les 3 s : 31 appels de 0 à 30 s, puis 33, 36… le 41e à 60 s. */
+    public function testLaRedemandeRalentitApresTrenteSecondes(): void
+    {
+        $lent = new TranscripteurPretApres(41);
+        self::assertSame(Statut::PRET, $this->traiteur($lent)->avancer(self::UUID, Traiteur::ATTENTE_IMMEDIATE_SECONDES));
+        self::assertSame('2026-11-07 10:01:00', $this->horloge->now()->format('Y-m-d H:i:s'));
     }
 
     public function testTraitementImmediatRendLaMainACronApresQuatreVingtDixSecondes(): void
