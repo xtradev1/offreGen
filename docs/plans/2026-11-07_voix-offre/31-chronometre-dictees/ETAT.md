@@ -22,7 +22,7 @@ Lot 8 fait : déployé sur le test (`0ec9fff`), recette par l'interface jouée p
 - Jouer `RECETTE.md`, section « À toi » (iPhone, environ 15 minutes).
 - Trancher S1 de `REVUE.md` : le texte des dictées dans le rapport de l'administration (garder, journaliser chaque ouverture, ou cacher derrière un clic journalisé).
 - Dire si je supprime `~/offreGen-base-coupee` (copie d'une autre session, correctif de connexion en double).
-- Lots 9 et 10 (vitesse) : accord pour les déployer sur le test.
+- Remplir `ALERTES_A` sur le test (vide le 2026-11-25 : aucune alerte ne part), et sur la production avant les premiers artisans. Sur le test, `COURRIELS_REDIRIGER_VERS` envoie de toute façon tout à l'adresse de redirection.
 
 ## Suivi Origin
 
@@ -67,6 +67,7 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 | 2026-11-25 | Lot 9 : pièces et options lancées ensemble, réponses appliquées dans l'ordre (pièces d'abord). | Demande de Xavier (« on peut fusionner »). Les options ne lisent que la désignation et l'extrait ; une variante prend la pièce de sa ligne de base. |
 | 2026-11-25 | Lot 10 : après 30 s, redemande toutes les 1,5 s (au lieu de 3 s). Rythme rapide gardé à 1 s, pas 0,5 s. | Xavier : « fait toutes les secondes […] À la limite, tu peux mettre une seconde et demie ». Rafale du 25.11 : 130 demandes en 58 s sans refus. |
 | 2026-11-25 | Lot 10 : l'offre prête s'ouvre 300 ms après la dernière étape cochée (au lieu de 900 ms). | Xavier : « tu peux passer le gain facile à 300 millisecondes ». |
+| 2026-11-25 | Lot 11, point de vérification : un refus d'Infomaniak (HTTP 429 ou 503), sur n'importe quel appel, devient une erreur « Infomaniak refuse des appels » ; cron signale chaque minute les dictées qui attendent leur offre depuis plus de 5 minutes (« dictées bloquées »). Les deux passent par le courriel d'alerte existant (Alertes, une fois par heure la même panne). | Xavier : « si demain il y a 10 ou 20 utilisateurs […] et que ça commence à bloquer, il faut vraiment que je sache vite ». Avant ce lot, un refus pendant la redemande du texte et un refus des pièces ou des options n'étaient que des avertissements : la dictée attendait ou l'offre sortait dégradée sans courriel. 5 minutes : une dictée normale est prête en moins d'une minute. Pas d'encart dans la page des dictées : ses durées (médiane, 90e centile, maximum) disent déjà la lenteur, le courriel dit l'urgence. |
 | 2026-11-24 | Recette avec une démo à soi (`chrono-claude@exemple.ch`), pas avec la démo d'une autre recette. | `recette-e1` et `fluidite-test` ouvrent l'assistant de bienvenue et servent à d'autres recettes. |
 
 ## Journal
@@ -91,8 +92,27 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 - 2026-11-25 : lot 9 codé. `AppelEnCours` (appel lancé, lu plus tard) ; `ExtracteurApi` lance pièces et options ensemble ; `Traiteur::intervalle` (1 s pendant 30 s, puis 3 s), repris par `Rejeu`. Test chronométré sur `php -S` abandonné : un de ses processus accepte parfois les deux connexions et les sert l'une après l'autre (1,20 s ou 0,60 s pour deux requêtes de 600 ms selon le lancement). Remplacé par un test d'ordre (`PiecesOptionsEnsembleTest`) ; la marche en parallèle de curl est mesurée à part (ci-dessous). Défaut trouvé par `testLeVerrouPerduPendantLesPiecesCoupeAussiLesOptions` : `cancel()` relevait le verrou perdu avant que l'étape des options soit fermée ; l'étape se ferme d'abord.
 - 2026-11-25 : sortie JSON allégée (sous-chantier 20) : pas en service. Banc du 20.11 (lot `2026-11-20-fiabilite`, appels l'un après l'autre) : extraction en service 18,4 à 26,9 s en moyenne, extraction allégée en JSON 6,9 à 7,6 s, jetons reçus 1 344 à 1 396 contre 768 à 800, fiabilité égale ou meilleure. Travail non commité, dans `~/offreGen` ; gate intention ouvert depuis le 20.11 (tâche Origin 546).
 - 2026-11-25 : réponses de Xavier : 1 s gardé, 1,5 s après 30 s, 300 ms avant l'ouverture de l'offre, JSON « un peu plus tard », rafale permise (« il n'y a personne qui va faire ces appels »). Rafale jouée depuis le serveur de test : aucune limite atteinte à 130 par minute. Réserve : des demandes sur un lot inexistant (404) ; une limite comptée seulement sur les lots réels resterait invisible. Lot 10 codé, suite complète verte.
+- 2026-11-25 : accord de Xavier pour déployer (« Tu peux déployer ») et demande d'un point de vérification. Premier déploiement de `6f49927` refusé à l'analyse statique : `deployer-test.sh` lance phpstan sur la copie de travail, où j'écrivais déjà les fichiers du lot 11. Rien n'est parti (refus avant la construction). Constat : `ALERTES_A` vide sur le test, aucune alerte n'y part. Lot 11 codé ; deux anciens tests simulaient la panne des pièces et des options par un 503, passés à 500 (503 est désormais un refus).
 
 ## Preuves
+
+### Lot 11, point de vérification (2026-11-25)
+
+```
+$ php vendor/bin/phpunit tests/Systeme/AlertesTest.php tests/Audio/VeilleDicteesTest.php tests/Audio/TraiteurTest.php tests/Offre/PiecesOptionsEnsembleTest.php
+OK (63 tests, 216 assertions)
+--- mutation : src/Audio/Traiteur.php (refus pendant la redemande gardé en avertissement)
+Tests: 1, Assertions: 3, Failures: 1.
+--- mutation : src/Offre/ExtracteurApi.php (refus des pièces gardé en avertissement)
+Tests: 1, Assertions: 2, Failures: 1.
+--- mutation : src/Donnees/FileTraitement.php (toute dictée en cours comptée en retard)
+Tests: 3, Assertions: 4, Failures: 2.
+$ php vendor/bin/phpunit
+OK (1626 tests, 13372 assertions)
+$ php vendor/bin/phpstan analyse
+ [OK] No errors
+# sur le test : ALERTES_A rempli : 0 ; dictées par statut : pret 39, aucune en cours (pas de fausse alerte au démarrage)
+```
 
 ### Lot 10, rythme et ouverture (2026-11-25)
 

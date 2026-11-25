@@ -102,7 +102,7 @@ final class ExtracteurOptionsTest extends TestCase
             }
         };
         $r = $this->extracteur([self::outil('proposer_offre', self::PRINCIPAL), self::outil('ranger_par_piece', '{"pieces":[]}'),
-            new MockResponse('{"erreur":"surcharge"}', ['http_code' => 503])], true, $journal)->extraire('En option, les portes.', []);
+            new MockResponse('{"erreur":"panne"}', ['http_code' => 500])], true, $journal)->extraire('En option, les portes.', []);
         self::assertSame(['ligne', 'ligne', 'ligne'], array_map(static fn (LigneExtraite $l): string => $l->nature, $r->lignes));
         self::assertStringContainsString('warning offreGen, options : troisième appel en échec', implode("\n", $journal->lignes));
     }

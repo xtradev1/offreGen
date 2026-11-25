@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Offre;
 
 use OffreGen\Compte\Activite;
+use OffreGen\Ia\ErreurApi;
 use OffreGen\Systeme\Chronometre;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -249,7 +250,7 @@ final class ExtracteurApi implements Extracteur
             if (Chronometre::verrouPerdu($e)) {
                 throw $e;
             }
-            $this->journal->warning('offreGen, options : troisième appel en échec, toutes les lignes dans le total (' . $e::class . ').');
+            $this->noterEchecSecondaire($e, 'options : troisième appel en échec, toutes les lignes dans le total');
             return $resultat;
         }
         return new ResultatExtraction($resultat->titre, $this->validerOptions($arguments, $resultat->lignes), $resultat->client, $resultat->lieu, $resultat->postesCoupes);
@@ -346,7 +347,7 @@ final class ExtracteurApi implements Extracteur
             if (Chronometre::verrouPerdu($e)) {
                 throw $e;
             }
-            $this->journal->warning('offreGen, pièces : second appel en échec, offre sans pièces (' . $e::class . ').');
+            $this->noterEchecSecondaire($e, 'pièces : second appel en échec, offre sans pièces');
             return $resultat;
         }
         $pieces = [];
@@ -417,9 +418,23 @@ final class ExtracteurApi implements Extracteur
             if (Chronometre::verrouPerdu($e)) {
                 throw $e;
             }
-            $this->journal->warning('offreGen, ' . $echec . ' (' . $e::class . ').');
+            $this->noterEchecSecondaire($e, $echec);
             return null;
         }
+    }
+
+    /**
+     * Un appel secondaire en échec : l'offre sort sans cette information, un avertissement suffit. Un refus d'Infomaniak
+     * devient une erreur, donc un courriel d'alerte : l'offre sort dégradée sans que personne le voie (Xavier, 2026-11-25).
+     */
+    private function noterEchecSecondaire(\Throwable $e, string $echec): void
+    {
+        $refus = ErreurApi::refus($e);
+        if ($refus !== null) {
+            $this->journal->error(ErreurApi::alerteRefus($refus, $echec));
+            return;
+        }
+        $this->journal->warning('offreGen, ' . $echec . ' (' . $e::class . ').');
     }
 
     /**

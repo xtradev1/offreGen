@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OffreGen\Tests\Systeme;
 
 use Monolog\Logger;
+use OffreGen\Ia\ErreurApi;
 use OffreGen\Systeme\Alertes;
 use OffreGen\Systeme\GestionnaireAlertes;
 use OffreGen\Systeme\Messagerie;
@@ -85,6 +86,28 @@ final class AlertesTest extends TestCase
         self::assertStringContainsString('base indisponible', $texte);
         self::assertStringContainsString('https://exemple.test', $texte);
         self::assertStringContainsString('var/log/app.log', $texte);
+    }
+
+    /**
+     * Le point de vérification (Xavier, 2026-11-25) : un refus d'Infomaniak et des dictées bloquées arrivent par
+     * courriel, l'objet dit lequel, et la même panne ne repart pas dans l'heure même si ses chiffres changent.
+     */
+    public function testRefusEtDicteesBloqueesArriventParCourrielUneFoisParHeure(): void
+    {
+        $c = Monde::conteneur($this->horloge, $this->dossiers->env() + ['ALERTES_A' => 'xavier@exemple.ch', 'ALERTES_DOSSIER' => $this->dossiers->racine . '/alertes']);
+        $c->journal()->error(ErreurApi::alerteRefus(429, 'pièces : second appel en échec, offre sans pièces'));
+        $c->journal()->error(ErreurApi::alerteRefus(503, 'pièces : second appel en échec, offre sans pièces'));
+        $c->journal()->error('offreGen, dictées bloquées : 2 dictée(s) attendent leur offre depuis plus de 5 minutes, la plus ancienne depuis 7 min (3 en cours en tout).');
+        $this->horloge->sleep(60);
+        $c->journal()->error('offreGen, dictées bloquées : 4 dictée(s) attendent leur offre depuis plus de 5 minutes, la plus ancienne depuis 8 min (6 en cours en tout).');
+
+        $objets = [];
+        foreach ($this->dossiers->courriels() as $fichier) {
+            preg_match('/^Subject: (.+)$/m', (string) file_get_contents($fichier), $m);
+            $objets[] = mb_decode_mimeheader(trim($m[1] ?? ''));
+        }
+        sort($objets);
+        self::assertSame(["Alerte offreGen\u{00A0}: Infomaniak refuse des appels", "Alerte offreGen\u{00A0}: dictées bloquées"], $objets);
     }
 
     public function testLeJournalAlerteSurUneErreurPasSurUnAvertissement(): void

@@ -6,6 +6,7 @@ namespace OffreGen\Tests\Offre;
 
 use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\Options;
+use OffreGen\Tests\Outils\JournalDeTest;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -56,5 +57,31 @@ final class PiecesOptionsEnsembleTest extends TestCase
         self::assertSame(0, $resultat->lignes[1]->remplace);
         // L'appel des pièces met la variante en cuisine ; elle prend la pièce de sa ligne de base, appliquée après.
         self::assertSame('Salon', $resultat->lignes[1]->piece);
+    }
+
+    /**
+     * Un refus d'Infomaniak sur les pièces : l'offre sort sans pièces, et l'erreur part en alerte ; une autre panne du
+     * même appel reste un avertissement (Xavier, 2026-11-25).
+     */
+    public function testUnRefusSurLesPiecesPartEnAlerte(): void
+    {
+        foreach ([429 => 1, 500 => 0] as $code => $alertes) {
+            $journal = new JournalDeTest();
+            $http = new MockHttpClient(function (string $m, string $u, array $options) use ($code): MockResponse {
+                $nom = (string) (json_decode((string) $options['body'], true)['tool_choice']['function']['name'] ?? '');
+                if ($nom === 'ranger_par_piece') {
+                    return new MockResponse('{"error":{"code":"too_many_requests"}}', ['http_code' => $code]);
+                }
+                $sans = [];
+                return self::outil($nom, '{"titre":"Salon","lignes":[{"produit_id":null,"designation":"Peinture des murs","quantite":42,"unite":"m²","certitude":"sure","extrait":"les murs du salon"}]}', $sans);
+            });
+            $resultat = (new ExtracteurApi($http, 'https://api.exemple.test/v1', 'j', 'm', $journal))->extraire('Les murs du salon, 42 mètres carrés.', []);
+
+            self::assertCount(1, $resultat->lignes, (string) $code);
+            self::assertCount($alertes, $journal->erreurs(), (string) $code);
+            if ($alertes === 1) {
+                self::assertStringStartsWith('error offreGen, Infomaniak refuse des appels : HTTP 429 (pièces : second appel en échec', $journal->erreurs()[0]);
+            }
+        }
     }
 }

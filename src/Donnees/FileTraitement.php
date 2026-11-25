@@ -29,6 +29,22 @@ final class FileTraitement
         ), 'uuid');
     }
 
+    /**
+     * Les dictées ni prêtes ni en échec : combien en tout, combien reçues avant $avant, et la plus ancienne (VeilleDictees).
+     *
+     * @return array{en_cours: int, en_retard: int, plus_ancienne: string|null}
+     */
+    public function enAttente(\DateTimeImmutable $avant): array
+    {
+        $r = $this->base->lire(
+            'SELECT COUNT(*) AS en_cours, COALESCE(SUM(recu_le < :avant), 0) AS en_retard, MIN(recu_le) AS plus_ancienne
+             FROM enregistrement WHERE statut NOT IN (:pret, :echec)',
+            ['avant' => Dates::versBase($avant), 'pret' => Statut::PRET, 'echec' => Statut::ECHEC],
+        )[0] ?? [];
+        return ['en_cours' => (int) ($r['en_cours'] ?? 0), 'en_retard' => (int) ($r['en_retard'] ?? 0),
+            'plus_ancienne' => is_string($r['plus_ancienne'] ?? null) ? $r['plus_ancienne'] : null];
+    }
+
     /** Prend le verrou si personne ne le tient ; une seule requête, donc un seul gagnant. */
     public function prendreVerrou(string $uuid, string $jeton, \DateTimeImmutable $jusqua, \DateTimeImmutable $maintenant): bool
     {

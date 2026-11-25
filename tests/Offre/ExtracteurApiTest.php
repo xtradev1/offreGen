@@ -284,7 +284,7 @@ final class ExtracteurApiTest extends TestCase
 
     public function testSansSecondAppelLOffreSortEntiereSansPieces(): void
     {
-        $reponses = [self::reponseOutil(self::ARGUMENTS_REELS), new MockResponse('{"erreur":"surcharge"}', ['http_code' => 503])];
+        $reponses = [self::reponseOutil(self::ARGUMENTS_REELS), new MockResponse('{"erreur":"panne"}', ['http_code' => 500])];
         $http = new MockHttpClient(function () use (&$reponses): MockResponse {
             return array_shift($reponses) ?? throw new \LogicException('Appel en trop.');
         });

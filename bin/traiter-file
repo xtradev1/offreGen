@@ -7,6 +7,7 @@ declare(strict_types=1);
 // est libre ou expiré. Deux lancements qui se chevauchent ne traitent pas le même enregistrement.
 // Usage : bin/traiter-file [--silencieux]
 
+use OffreGen\Audio\VeilleDictees;
 use OffreGen\Http\Conteneur;
 
 if (PHP_SAPI !== 'cli') {
@@ -39,4 +40,10 @@ foreach ($c->fileTraitement()->aReprendre($c->horloge()->now(), 20) as $uuid) {
 }
 if (!$silencieux) {
     echo "$vus enregistrement(s) repris.\n";
+}
+// Point de vérification (Xavier, 2026-11-25) : une dictée qui attend depuis plus de 5 minutes part en alerte.
+try {
+    (new VeilleDictees($c->fileTraitement(), $c->journal()))->verifier($c->horloge()->now());
+} catch (\Throwable $e) {
+    $c->journal()->error('offreGen, traiter-file, veille des dictées : ' . $e::class . ' : ' . $e->getMessage());
 }

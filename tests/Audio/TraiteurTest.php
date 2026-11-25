@@ -19,6 +19,7 @@ use OffreGen\Donnees\DepotEtapes;
 use OffreGen\Donnees\FileTraitement;
 use OffreGen\Donnees\Portee;
 use OffreGen\Donnees\Statut;
+use OffreGen\Ia\ErreurApi;
 use OffreGen\Offre\Extracteur;
 use OffreGen\Offre\ExtracteurApi;
 use OffreGen\Offre\ExtracteurFactice;
@@ -30,7 +31,9 @@ use OffreGen\Offre\ResultatExtraction;
 use OffreGen\Tests\Outils\BaseDeTest;
 use OffreGen\Tests\Outils\Dossiers;
 use OffreGen\Tests\Outils\Jeu;
+use OffreGen\Tests\Outils\JournalDeTest;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -57,7 +60,7 @@ final class TraiteurTest extends TestCase
         $this->dossiers->effacer();
     }
 
-    private function traiteur(?Transcripteur $t = null, ?Extracteur $x = null, ?Messagerie $m = null, ?int $dureeMax = null): Traiteur
+    private function traiteur(?Transcripteur $t = null, ?Extracteur $x = null, ?Messagerie $m = null, ?int $dureeMax = null, ?LoggerInterface $journal = null): Traiteur
     {
         return new Traiteur(
             $this->jeu->base,
@@ -68,7 +71,7 @@ final class TraiteurTest extends TestCase
             new DepotArtisans($this->jeu->base),
             new StockageAudio($this->dossiers->env()['AUDIO_DOSSIER']),
             $this->horloge,
-            new NullLogger(),
+            $journal ?? new NullLogger(),
             'https://exemple.test',
             $dureeMax === null ? null : new DureeAudio(),
             $dureeMax ?? 1800,
@@ -403,6 +406,39 @@ final class TraiteurTest extends TestCase
         self::assertSame('2026-11-07 10:01:30', $this->horloge->now()->format('Y-m-d H:i:s'));
         self::assertNull($this->etat()['verrou_jeton']);
         self::assertSame(1, $jamais->demarrages);
+    }
+
+    /** Un refus d'Infomaniak pendant la redemande du texte : la dictée attend, et l'erreur part en alerte (2026-11-25). */
+    public function testUnRefusDInfomaniakPendantLAttenteDuTextePartEnAlerte(): void
+    {
+        $journal = new JournalDeTest();
+        $traiteur = $this->traiteur(new TranscripteurRefuse(429), journal: $journal);
+        $traiteur->avancer(self::UUID);
+        self::assertSame(Statut::TRANSCRIPTION, $traiteur->avancer(self::UUID));
+        // Une erreur par redemande refusée ; Alertes n'en envoie qu'un courriel par heure.
+        $attendu = "error offreGen, Infomaniak refuse des appels : HTTP 429 (résultat de la transcription de " . self::UUID . ", la dictée attend). "
+            . "Trop d'appels en même temps, ou service surchargé.";
+        self::assertSame([$attendu, $attendu], $journal->erreurs());
+        // Aucune tentative comptée : le refus est passager, la dictée reprendra.
+        self::assertSame(0, $this->etat()['tentatives']);
+    }
+
+    public function testUneAutreErreurPassagereResteUnAvertissement(): void
+    {
+        $journal = new JournalDeTest();
+        $traiteur = $this->traiteur(new TranscripteurRefuse(500), journal: $journal);
+        $traiteur->avancer(self::UUID);
+        $traiteur->avancer(self::UUID);
+        self::assertSame([], $journal->erreurs());
+        self::assertStringContainsString('pas encore lisible', implode("\n", $journal->lignes));
+    }
+
+    public function testUnRefusDInfomaniakALEnvoiNommeLeRefus(): void
+    {
+        $journal = new JournalDeTest();
+        $this->traiteur(new TranscripteurRefuse(503, aLEnvoi: true), journal: $journal)->avancer(self::UUID);
+        self::assertCount(1, $journal->erreurs());
+        self::assertStringStartsWith('error offreGen, Infomaniak refuse des appels : HTTP 503 (traitement de ' . self::UUID, $journal->erreurs()[0]);
     }
 
     public function testCronNAttendPas(): void
@@ -870,6 +906,27 @@ final class TranscripteurLent implements Transcripteur
     public function resultat(string $reference): ?string
     {
         return $this->pret ? 'Texte enfin prêt.' : null;
+    }
+}
+
+/** Infomaniak répond par un code d'erreur, à la redemande du texte ou dès l'envoi. */
+final class TranscripteurRefuse implements Transcripteur
+{
+    public function __construct(private readonly int $code, private readonly bool $aLEnvoi = false)
+    {
+    }
+
+    public function demarrer(string $cheminAudio, string $vocabulaire = ''): string
+    {
+        if ($this->aLEnvoi) {
+            throw new ErreurApi("Envoi à la transcription : réponse HTTP {$this->code}", $this->code);
+        }
+        return 'lot-refuse';
+    }
+
+    public function resultat(string $reference): ?string
+    {
+        throw new ErreurApi("Résultat de la transcription : réponse HTTP {$this->code}", $this->code);
     }
 }
 

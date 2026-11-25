@@ -17,6 +17,7 @@ use OffreGen\Client\Rapprochement;
 use OffreGen\Donnees\DepotClients;
 use OffreGen\Donnees\Statut;
 use OffreGen\Donnees\VerrouPerdu;
+use OffreGen\Ia\ErreurApi;
 use OffreGen\Offre\Extracteur;
 use OffreGen\Systeme\Chronometre;
 use OffreGen\Systeme\Courriel;
@@ -140,7 +141,9 @@ final class Traiteur
                 $this->horloge->now()->modify('+' . self::CONSERVATION_AUDIO_JOURS . ' days'));
             // Verrou repris entre-temps : l'échec n'est pas noté, et le courriel ne part pas d'ici (revue T2).
             $statut = $note ?? ($this->file->lire($uuid)['statut'] ?? 'inconnu');
-            $this->journal->error("offreGen, traitement de $uuid ($statut) : " . $e->getMessage());
+            $refus = ErreurApi::refus($e);
+            $this->journal->error($refus === null ? "offreGen, traitement de $uuid ($statut) : " . $e->getMessage()
+                : ErreurApi::alerteRefus($refus, "traitement de $uuid, $statut : " . $e->getMessage()));
             if ($note === Statut::ECHEC) {
                 $this->prevenirEchec($uuid, $e instanceof AudioTropLong);
             }
@@ -193,7 +196,13 @@ final class Traiteur
                         }
                         // Revue du 2026-11-18 (M8) : une erreur passagère pendant l'attente ne compte pas de tentative ;
                         // le délai de ATTENTE_TRANSCRIPTION_MAX_HEURES borne l'attente.
-                        $this->journal->warning("offreGen, $uuid : résultat de la transcription pas encore lisible (" . $passagere::class . ').');
+                        // Un refus d'Infomaniak fait attendre la dictée sans bruit : il part en alerte (Xavier, 2026-11-25).
+                        $refus = ErreurApi::refus($passagere);
+                        if ($refus !== null) {
+                            $this->journal->error(ErreurApi::alerteRefus($refus, "résultat de la transcription de $uuid, la dictée attend"));
+                        } else {
+                            $this->journal->warning("offreGen, $uuid : résultat de la transcription pas encore lisible (" . $passagere::class . ').');
+                        }
                         $texte = null;
                     }
                     if ($texte === null) {
