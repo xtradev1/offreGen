@@ -671,7 +671,8 @@ function nouvelleOffre() {
   // iPhone et iPad (un iPad se dit Mac, mais tactile) ; Chrome et Firefox sur iOS n'ont pas les réglages de Safari.
   const SAFARI_IOS = (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
     && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
-  const ASTUCE_MICRO = 'offregen-astuce-micro';
+  // -2 : le premier texte (« aA ») était faux sur Safari 26 ; qui l'a vu revoit le bon une fois.
+  const ASTUCE_MICRO = 'offregen-astuce-micro-2';
   // Une fois par appareil, et seulement si Safari vient de demander : réglé sur « Autoriser », il ne demande plus et la ligne ne vient pas.
   const astuceMicro = (avant) => {
     const ligne = el('[data-astuce-micro]');
@@ -683,7 +684,10 @@ function nouvelleOffre() {
       window.localStorage.setItem(ASTUCE_MICRO, '1');
     } catch (err) { return; /* stockage refusé : la ligne reviendrait à chaque dictée */ }
     const ecran = navigator.standalone === true; // propre à iOS : l'icône de l'écran d'accueil
+    // Safari 26 a remplacé le bouton « aA » ; « Version/ » donne la version de Safari (celle d'iOS est figée dans l'agent).
+    const version = Number((/Version\/(\d+)/.exec(navigator.userAgent) || [])[1] || 0);
     if (ecran) ligne.textContent = ligne.dataset.ecran;
+    else if (version && version < 26) ligne.textContent = ligne.dataset.ancien;
     ligne.hidden = false;
   };
 
