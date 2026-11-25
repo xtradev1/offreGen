@@ -22,8 +22,7 @@ Lot 8 fait : déployé sur le test (`0ec9fff`), recette par l'interface jouée p
 - Jouer `RECETTE.md`, section « À toi » (iPhone, environ 15 minutes).
 - Trancher S1 de `REVUE.md` : le texte des dictées dans le rapport de l'administration (garder, journaliser chaque ouverture, ou cacher derrière un clic journalisé).
 - Dire si je supprime `~/offreGen-base-coupee` (copie d'une autre session, correctif de connexion en double).
-- Lot 9 (vitesse) : accord pour le déployer sur le test.
-- Redemande toutes les 0,5 s : accord pour mesurer la limite d'Infomaniak (une rafale d'environ 130 demandes de résultat en une minute, le site de test peut refuser des appels pendant cette minute).
+- Lots 9 et 10 (vitesse) : accord pour les déployer sur le test.
 
 ## Suivi Origin
 
@@ -66,6 +65,8 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 | 2026-11-24 | Premier octet mesuré par `on_progress` (arrivée des en-têtes), plus par `starttransfer_time`. | Le curl 7.74 du test y met, pour un POST, le début de l'envoi du corps (0 ms) ; la preuve locale de la phase 4 (curl 8.5, 6,005 s) ne le montrait pas. |
 | 2026-11-25 | Lot 9 : texte redemandé chaque seconde pendant 30 s, puis toutes les 3 s (au lieu de 3 s d'emblée). Pas 0,5 s. | Le retard dû à la redemande ne s'additionne pas : il vaut en moyenne la moitié de l'intervalle, une seule fois par attente. 1 s au lieu de 3 s : 1 s gagnée en moyenne ; 0,5 s au lieu de 1 s : 0,25 s de plus, pour deux fois plus de requêtes. Infomaniak annonce 60 requêtes par minute et par clé pour son API (non confirmé pour la transcription, aucun en-tête de limite relevé) : la clé est commune à tout le site. |
 | 2026-11-25 | Lot 9 : pièces et options lancées ensemble, réponses appliquées dans l'ordre (pièces d'abord). | Demande de Xavier (« on peut fusionner »). Les options ne lisent que la désignation et l'extrait ; une variante prend la pièce de sa ligne de base. |
+| 2026-11-25 | Lot 10 : après 30 s, redemande toutes les 1,5 s (au lieu de 3 s). Rythme rapide gardé à 1 s, pas 0,5 s. | Xavier : « fait toutes les secondes […] À la limite, tu peux mettre une seconde et demie ». Rafale du 25.11 : 130 demandes en 58 s sans refus. |
+| 2026-11-25 | Lot 10 : l'offre prête s'ouvre 300 ms après la dernière étape cochée (au lieu de 900 ms). | Xavier : « tu peux passer le gain facile à 300 millisecondes ». |
 | 2026-11-24 | Recette avec une démo à soi (`chrono-claude@exemple.ch`), pas avec la démo d'une autre recette. | `recette-e1` et `fluidite-test` ouvrent l'assistant de bienvenue et servent à d'autres recettes. |
 
 ## Journal
@@ -85,10 +86,29 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 - 2026-11-24 : phase 7, revue lourde lancée (exactitude, sécurité, concurrence du verrou), environ 8 $ estimés, sans phpunit pour les relecteurs.
 - 2026-11-24 : revue rendue : aucune faille haute ; T1 (ffmpeg et ffprobe sans pouls) élevée, E1, E2 importantes, T2, S2 moyennes, le reste mineur. Toutes relues dans le code, corrigées sauf S1 (décision de Xavier) et cinq acceptées avec leur raison (`REVUE.md`). Trois mutations vérifiées (T2, E1, E2 rouges sans leur correction). Suite complète verte. Gate prod ouvert.
 - 2026-11-24 : accord de Xavier (« oui déploie, pas de vraies données »). Constat : le chronomètre était déjà en service, déployé par la session Prospects (`5d60a46` contient `bee22cc`), migration jouée (49 sur 49), avant cet accord. Défaut de la règle « ne déployer que la tête » quand plusieurs chantiers partagent la branche : à signaler à Xavier.
-- 2026-11-24 : recette par l'interface sur le test. Deux échecs de connexion de ma part (intitulé « Mot de passe, affiché une seule fois » puis courriel suivi de « (démo, …) » mal lus), aucun blocage. Démo `chrono-claude@exemple.ch` créée par `bin/creer-compte --demo --metier=peintre`. Trois défauts : premier octet à 0 ms, statuts en code, tableau des rejeux coupé au PC. Corrigés (`0ec9fff`), test du premier octet contre un vrai serveur local, deux mutations rouges, suite complète verte, poussé, déployé, recette rejouée : conforme.- 2026-11-25 : question de Xavier sur la vitesse de Whisper et Qwen. Durées de transcription relevées sur le test, toutes juste au-dessus d'un multiple de 3 s (6,2 ; 9,2 ; 6,3 ; 21,6 s) : le retard vient de la redemande toutes les 3 s.
+- 2026-11-24 : recette par l'interface sur le test. Deux échecs de connexion de ma part (intitulé « Mot de passe, affiché une seule fois » puis courriel suivi de « (démo, …) » mal lus), aucun blocage. Démo `chrono-claude@exemple.ch` créée par `bin/creer-compte --demo --metier=peintre`. Trois défauts : premier octet à 0 ms, statuts en code, tableau des rejeux coupé au PC. Corrigés (`0ec9fff`), test du premier octet contre un vrai serveur local, deux mutations rouges, suite complète verte, poussé, déployé, recette rejouée : conforme.
+- 2026-11-25 : question de Xavier sur la vitesse de Whisper et Qwen. Durées de transcription relevées sur le test, toutes juste au-dessus d'un multiple de 3 s (6,2 ; 9,2 ; 6,3 ; 21,6 s) : le retard vient de la redemande toutes les 3 s.
 - 2026-11-25 : lot 9 codé. `AppelEnCours` (appel lancé, lu plus tard) ; `ExtracteurApi` lance pièces et options ensemble ; `Traiteur::intervalle` (1 s pendant 30 s, puis 3 s), repris par `Rejeu`. Test chronométré sur `php -S` abandonné : un de ses processus accepte parfois les deux connexions et les sert l'une après l'autre (1,20 s ou 0,60 s pour deux requêtes de 600 ms selon le lancement). Remplacé par un test d'ordre (`PiecesOptionsEnsembleTest`) ; la marche en parallèle de curl est mesurée à part (ci-dessous). Défaut trouvé par `testLeVerrouPerduPendantLesPiecesCoupeAussiLesOptions` : `cancel()` relevait le verrou perdu avant que l'étape des options soit fermée ; l'étape se ferme d'abord.
 - 2026-11-25 : sortie JSON allégée (sous-chantier 20) : pas en service. Banc du 20.11 (lot `2026-11-20-fiabilite`, appels l'un après l'autre) : extraction en service 18,4 à 26,9 s en moyenne, extraction allégée en JSON 6,9 à 7,6 s, jetons reçus 1 344 à 1 396 contre 768 à 800, fiabilité égale ou meilleure. Travail non commité, dans `~/offreGen` ; gate intention ouvert depuis le 20.11 (tâche Origin 546).
+- 2026-11-25 : réponses de Xavier : 1 s gardé, 1,5 s après 30 s, 300 ms avant l'ouverture de l'offre, JSON « un peu plus tard », rafale permise (« il n'y a personne qui va faire ces appels »). Rafale jouée depuis le serveur de test : aucune limite atteinte à 130 par minute. Réserve : des demandes sur un lot inexistant (404) ; une limite comptée seulement sur les lots réels resterait invisible. Lot 10 codé, suite complète verte.
+
 ## Preuves
+
+### Lot 10, rythme et ouverture (2026-11-25)
+
+```
+$ rafale.sh 130 0.45   # depuis current sur le test, GET /1/ai/<produit>/results/lot-inexistant-0000, clé du site
+  1 à   0.0 s : code 404
+ 60 à  26.6 s : code 404
+120 à  53.6 s : code 404
+fin : 130 demandes en 58.1 s ; codes {"404":130}     # aucun 429, aucun en-tête rate, limit, retry ou remaining
+$ php vendor/bin/phpunit tests/Audio
+OK (101 tests, 319 assertions)                       # testLaRedemandeRalentitApresTrenteSecondes : 41e appel à 10:00:45 (10:01:00 avec 3 s)
+$ php vendor/bin/phpunit
+OK (1618 tests, 13353 assertions)
+$ php vendor/bin/phpstan analyse
+ [OK] No errors
+```
 
 ### Lot 9, vitesse (2026-11-25)
 

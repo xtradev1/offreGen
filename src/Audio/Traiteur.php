@@ -44,12 +44,13 @@ final class Traiteur
     public const ATTENTE_IMMEDIATE_SECONDES = 90;
     /**
      * Rythme des redemandes du texte (Xavier, 2026-11-25) : chaque seconde pendant les ATTENTE_RAPIDE_SECONDES premières
-     * secondes, puis toutes les INTERVALLE_LENT_SECONDES. Le texte arrive en général en moins de 10 s ; une attente qui
-     * traîne n'envoie pas une requête par seconde chez Infomaniak (limite générale de leur API : 60 par minute et par
-     * clé, non confirmée pour la transcription, aucun en-tête de limite relevé le 2026-11-25).
+     * secondes, puis toutes les INTERVALLE_LENT_SECONDES (1,5 s, Xavier, 2026-11-25 ; 3 s au premier jet). Le texte
+     * arrive en général en moins de 10 s ; une attente qui traîne n'envoie pas une requête par seconde chez Infomaniak
+     * (limite générale de leur API : 60 par minute et par clé, non confirmée pour la transcription, aucun en-tête de
+     * limite relevé le 2026-11-25).
      */
     public const INTERVALLE_ATTENTE_SECONDES = 1;
-    public const INTERVALLE_LENT_SECONDES = 3;
+    public const INTERVALLE_LENT_SECONDES = 1.5;
     public const ATTENTE_RAPIDE_SECONDES = 30;
 
     /** Un passage de l'écran d'attente plus récent que cela : l'artisan est devant son offre. */
@@ -97,7 +98,7 @@ final class Traiteur
     }
 
     /** Secondes avant la prochaine redemande du texte, selon le temps déjà attendu. */
-    public static function intervalle(\DateTimeImmutable $depuis, \DateTimeImmutable $maintenant): int
+    public static function intervalle(\DateTimeImmutable $depuis, \DateTimeImmutable $maintenant): float
     {
         return $maintenant->getTimestamp() - $depuis->getTimestamp() < self::ATTENTE_RAPIDE_SECONDES
             ? self::INTERVALLE_ATTENTE_SECONDES : self::INTERVALLE_LENT_SECONDES;

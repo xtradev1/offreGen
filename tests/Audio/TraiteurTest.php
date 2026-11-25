@@ -388,12 +388,12 @@ final class TraiteurTest extends TestCase
         self::assertSame('2026-11-07 10:00:03', $this->horloge->now()->format('Y-m-d H:i:s'));
     }
 
-    /** Après 30 s d'attente, la redemande passe à toutes les 3 s : 31 appels de 0 à 30 s, puis 33, 36… le 41e à 60 s. */
+    /** Après 30 s d'attente, la redemande passe à toutes les 1,5 s : 31 appels de 0 à 30 s, puis 31,5, 33… le 41e à 45 s. */
     public function testLaRedemandeRalentitApresTrenteSecondes(): void
     {
         $lent = new TranscripteurPretApres(41);
         self::assertSame(Statut::PRET, $this->traiteur($lent)->avancer(self::UUID, Traiteur::ATTENTE_IMMEDIATE_SECONDES));
-        self::assertSame('2026-11-07 10:01:00', $this->horloge->now()->format('Y-m-d H:i:s'));
+        self::assertSame('2026-11-07 10:00:45', $this->horloge->now()->format('Y-m-d H:i:s'));
     }
 
     public function testTraitementImmediatRendLaMainACronApresQuatreVingtDixSecondes(): void

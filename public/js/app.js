@@ -355,7 +355,8 @@ function suivreEtapes(liste, uuid, fini) {
 function preparation() {
   const liste = document.querySelector('main [data-etapes][data-uuid]');
   if (!liste) return;
-  suivreEtapes(liste, liste.dataset.uuid, (offre) => setTimeout(() => window.location.replace('/offres/' + offre), 900));
+  // 300 ms : l'étape cochée se voit, puis l'offre s'ouvre (Xavier, 2026-11-25 ; 900 ms depuis le 2026-11-12).
+  suivreEtapes(liste, liste.dataset.uuid, (offre) => setTimeout(() => window.location.replace('/offres/' + offre), 300));
 }
 
 // Nouvelle offre : parler ou importer. Sur l'accueil, deux boutons ronds au centre ; l'enregistrement
@@ -564,7 +565,7 @@ function nouvelleOffre() {
         // Arrivée au serveur : la copie reste jusqu'à l'offre prête (suivreEtapes, ou au prochain lancement).
         if (cle) abri.modifier(cle, { etat: 'envoye', uuid, vu: Date.now() });
         if (debutEnvoi > 0 && finEnvoi > debutEnvoi) signalerEnvoi(uuid, Math.max(1, Math.round(finEnvoi - debutEnvoi)));
-        arreterSuivi = suivreEtapes(liste, uuid, (offre) => setTimeout(() => { if (etatCourant === 'suivi') partir('/offres/' + offre); }, 900));
+        arreterSuivi = suivreEtapes(liste, uuid, (offre) => setTimeout(() => { if (etatCourant === 'suivi') partir('/offres/' + offre); }, 300));
         return;
       }
       const page = new DOMParser().parseFromString(xhr.responseText || '', 'text/html');
