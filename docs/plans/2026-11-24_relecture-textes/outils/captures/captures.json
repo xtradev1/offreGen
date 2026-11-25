@@ -15,16 +15,115 @@
    "Dictez votre visite de chantier. Dicta rédige l'offre pour vous.",
    "Dicter, vérifier, envoyer.",
    "Une application pour les artisans du bâtiment. Vous parlez pièce par pièce, l'offre arrive chiffrée avec vos prix.",
+   null,
    "Dicter",
    "Vérifier",
    "Envoyer",
    "Dicta écrit",
-   "3 × 10 m² = 30 m²",
-   "Peinture des murs, 2 couches",
+   null,
+   null,
+   null,
+   null,
    "Vérifier. Dicta compare chaque prix dicté à votre catalogue et vous montre l'écart. Vous confirmez ou vous corrigez.",
-   "Rejouer"
+   "Rejouer",
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "site",
+   "largeur": 1280,
+   "hauteurPage": 4981,
+   "decalage": 0,
+   "hauteurVue": 854
+  }
  },
  {
   "id": "site-produit",
@@ -36,26 +135,26 @@
    "Ce que Dicta fait pour vous",
    "Dicta calcule",
    "« Trois murs de dix mètres carrés. »",
-   "3 × 10 m² =30m²",
+   "3 × 10 m² = 30 m²",
    "Rebouchage et ponçage des murs",
    "30 m² × 9.00",
    "Vous dictez les mesures comme vous les voyez. Dicta fait le calcul et chiffre la ligne.",
    "Dicta vérifie vos prix",
    "dicté",
    "dans votre catalogue",
-   "Peinture des murs, 2 couchesPrendre 26.00",
+   "Peinture des murs, 2 couches Prendre 26.00",
    "30 m² × 28.00",
    "Prix dicté 26.00, catalogue 28.00",
    "Dicta compare chaque prix dicté à votre catalogue et vous montre l'écart. Vous confirmez ou vous corrigez.",
    "Dicta vous laisse le temps",
-   "30min",
+   "30 min",
    "Salon",
    "Cuisine",
    "Chambre",
    "Salle de bains",
    "Jusqu'à 30 minutes de dictée : le temps de faire le tour du chantier.",
    "Dicta fait simple",
-   "2clicset votre voix",
+   "2 clics et votre voix",
    "Terminer",
    "Le micro pour commencer, « Terminer » pour finir. Sans installation : Dicta s'ouvre dans le navigateur de votre téléphone.",
    "Dicta facture",
@@ -73,7 +172,14 @@
    "Envoyer une offre sans vous",
    "Rien ne part avant que vous touchiez « Envoyer »."
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "site",
+   "largeur": 1280,
+   "hauteurPage": 4981,
+   "decalage": 854,
+   "hauteurVue": 1518
+  }
  },
  {
   "id": "site-image",
@@ -100,7 +206,14 @@
    "Couleur",
    "Touchez un modèle ou une couleur : l'offre change."
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "site",
+   "largeur": 1280,
+   "hauteurPage": 4981,
+   "decalage": 2371,
+   "hauteurVue": 872
+  }
  },
  {
   "id": "site-suisse",
@@ -123,7 +236,14 @@
    "Conçue en Suisse, dans le Jura",
    "Dicta est pensée et développée à Delémont par Xavier Freléchoz, XtraDev."
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "site",
+   "largeur": 1280,
+   "hauteurPage": 4981,
+   "decalage": 3243,
+   "hauteurVue": 851
+  }
  },
  {
   "id": "site-essai",
@@ -134,7 +254,7 @@
   "textes": [
    "Premier mois sans engagement.",
    "Offre n° 1",
-   "Pour : vousObjet : essai de Dicta",
+   "Pour : vous Objet : essai de Dicta",
    "Premier mois",
    "1 mois",
    "Inscription",
@@ -154,7 +274,14 @@
    "Essai limité à 20 offres.",
    "Exemple dans le champ : Votre courriel"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "site",
+   "largeur": 1280,
+   "hauteurPage": 4981,
+   "decalage": 4093,
+   "hauteurVue": 798
+  }
  },
  {
   "id": "site-pied",
@@ -168,26 +295,40 @@
    "Protection des données",
    "Conditions"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "site",
+   "largeur": 1280,
+   "hauteurPage": 4981,
+   "decalage": 4891,
+   "hauteurVue": 91
+  }
  },
  {
   "id": "site-demande-recue",
   "section": "site",
-  "titre": "Demande d’essai : demande d’essai reçue",
+  "titre": "recue",
   "image": "site-demande-recue.jpg",
-  "url": "/?demande=recue#demande",
+  "url": "/",
   "textes": [
    "Bon pour essai",
    "Merci, c'est noté. XtraDev vous recontacte pour ouvrir votre essai."
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "site-demande-recue",
+   "largeur": 1280,
+   "hauteurPage": 4971,
+   "decalage": 4635,
+   "hauteurVue": 159
+  }
  },
  {
   "id": "site-demande-invalide",
   "section": "site",
-  "titre": "Demande d’essai : courriel non valide",
+  "titre": "invalide",
   "image": "site-demande-invalide.jpg",
-  "url": "/?demande=invalide#demande",
+  "url": "/",
   "textes": [
    "Bon pour essai",
    "Ce courriel ne semble pas valide.",
@@ -195,14 +336,21 @@
    "Votre courriel sert seulement à vous recontacter.",
    "Exemple dans le champ : Votre courriel"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "site-demande-invalide",
+   "largeur": 1280,
+   "hauteurPage": 5036,
+   "decalage": 4635,
+   "hauteurVue": 228
+  }
  },
  {
   "id": "site-demande-trop",
   "section": "site",
-  "titre": "Demande d’essai : trop de demandes",
+  "titre": "trop",
   "image": "site-demande-trop.jpg",
-  "url": "/?demande=trop#demande",
+  "url": "/",
   "textes": [
    "Bon pour essai",
    "Trop de demandes pour aujourd'hui. Réessayez demain.",
@@ -210,26 +358,40 @@
    "Votre courriel sert seulement à vous recontacter.",
    "Exemple dans le champ : Votre courriel"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "site-demande-trop",
+   "largeur": 1280,
+   "hauteurPage": 5036,
+   "decalage": 4635,
+   "hauteurVue": 228
+  }
  },
  {
   "id": "demo-entrer",
   "section": "demo",
   "titre": "Entrer dans la démo",
   "image": "demo-entrer.jpg",
-  "url": "/d/SqXJTEe5zUE4nDvU-6JLnj1Nt3PS3bQVqXfoHqYIUrc",
+  "url": "/d/Wumbq52Wkd226zGm1CVs7Vgtrhuc4id54n-6gv39qqU",
   "textes": [
    "Votre démo est prête. Un catalogue d'exemple (peintre) et deux offres vous attendent. Indiquez votre courriel, puis dictez votre première visite.",
    "Votre courriel",
    "La personne qui vous a présenté Dicta le verra, pour vous recontacter. Si vous vous abonnez, il deviendra l'adresse de votre compte. Aucun mot de passe à choisir.",
    "Commencer"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "demo-entrer",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "guide-1-micro",
   "section": "guides",
-  "titre": "Guide de la démo, étape 1 : le micro",
+  "titre": "Guide 1",
   "image": "guide-1-micro.jpg",
   "url": "/",
   "textes": [
@@ -246,10 +408,10 @@
    "À relire d'abord",
    "Rafraîchissement du séjour",
    "Prête",
-   "Famille Exemple · Offre 2 · 22.11.2026 18:10",
+   "Famille Exemple · Offre 2 · 23.11.2026 09:33",
    "CHF 3’106.80",
    "Façade de la maison",
-   "Monsieur Modèle · Offre 1 · 18.11.2026 18:10",
+   "Monsieur Modèle · Offre 1 · 19.11.2026 09:33",
    "CHF 8’496.65",
    "Clients",
    "Factures",
@@ -258,12 +420,19 @@
    "Dictez votre première visite : touchez le micro et décrivez les travaux comme à un collègue.",
    "Quitter le guide"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "guide-1-micro",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "guide-2-conseils",
   "section": "guides",
-  "titre": "Guide de la démo, étape 2 : les conseils avant de dicter",
+  "titre": "Guide 2",
   "image": "guide-2-conseils.jpg",
   "url": "/",
   "textes": [
@@ -280,10 +449,10 @@
    "À relire d'abord",
    "Rafraîchissement du séjour",
    "Prête",
-   "Famille Exemple · Offre 2 · 22.11.2026 18:10",
+   "Famille Exemple · Offre 2 · 23.11.2026 09:33",
    "CHF 3’106.80",
    "Façade de la maison",
-   "Monsieur Modèle · Offre 1 · 18.11.2026 18:10",
+   "Monsieur Modèle · Offre 1 · 19.11.2026 09:33",
    "CHF 8’496.65",
    "Avant de dicter",
    "Gardez l'écran allumé jusqu'à « Terminer ».",
@@ -298,12 +467,19 @@
    "Trois conseils avant de dicter. Touchez « Commencer la dictée ».",
    "Quitter le guide"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "guide-2-conseils",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "guide-3-terminer",
   "section": "guides",
-  "titre": "Guide de la démo, étape 3 : pendant la dictée",
+  "titre": "Guide 3",
   "image": "guide-3-terminer.jpg",
   "url": "/",
   "textes": [
@@ -320,10 +496,10 @@
    "À relire d'abord",
    "Rafraîchissement du séjour",
    "Prête",
-   "Famille Exemple · Offre 2 · 22.11.2026 18:10",
+   "Famille Exemple · Offre 2 · 23.11.2026 09:33",
    "CHF 3’106.80",
    "Façade de la maison",
-   "Monsieur Modèle · Offre 1 · 18.11.2026 18:10",
+   "Monsieur Modèle · Offre 1 · 19.11.2026 09:33",
    "CHF 8’496.65",
    "Clients",
    "Factures",
@@ -335,12 +511,19 @@
    "Décrivez les travaux, puis touchez « Terminer ».",
    "Quitter le guide"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "guide-3-terminer",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "guide-4-attente",
   "section": "guides",
-  "titre": "Guide de la démo, étape 4 : l’offre se prépare",
+  "titre": "Guide 4",
   "image": "guide-4-attente.jpg",
   "url": "/",
   "textes": [
@@ -357,10 +540,10 @@
    "À relire d'abord",
    "Rafraîchissement du séjour",
    "Prête",
-   "Famille Exemple · Offre 2 · 22.11.2026 18:10",
+   "Famille Exemple · Offre 2 · 23.11.2026 09:33",
    "CHF 3’106.80",
    "Façade de la maison",
-   "Monsieur Modèle · Offre 1 · 18.11.2026 18:10",
+   "Monsieur Modèle · Offre 1 · 19.11.2026 09:33",
    "CHF 8’496.65",
    "Clients",
    "Factures",
@@ -370,89 +553,104 @@
    "Transcription de la dictée",
    "Création de l'offre",
    "Offre prête",
-   "0.0 sur 0.0 Mo",
    "Guide · 4 sur 5",
    "Dicta rédige votre offre en quelques minutes. Restez sur cet écran, ou revenez plus tard dans « Offres » : l'offre s'y range quand elle est prête.",
    "Quitter le guide",
    "Suivant"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "guide-4-attente",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
-  "id": "demo-offres",
-  "section": "demo",
-  "titre": "Mes offres, dans la démo",
-  "image": "demo-offres.jpg",
-  "url": "/",
+  "id": "guide-5-reperes",
+  "section": "guides",
+  "titre": "Guide 5",
+  "image": "guide-5-reperes.jpg",
+  "url": "/offres/3",
   "textes": [
-   "Mes offres",
+   "Offres",
+   "Offre 3",
    "Démo · 7 jours restants",
    "Passer à l'essai",
-   "Démo Peintre (compte de démonstration)",
-   "Démo : 9 offres restantes",
-   "3 offres ce mois",
-   "Offres",
-   "Récentes",
-   "Client",
-   "Montant",
-   "À relire d'abord",
+   "Choisir le client",
+   "Représenté par",
+   "Ajouter une régie, un architecte…",
    "Aucun travail dicté",
+   "Objet de l'offre",
    "Prête",
-   "Offre 3 · 24.11.2026 18:11",
+   "Créée le 25.11.2026 09:34",
+   "Texte avant les lignes",
+   "Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un.",
+   "Sous-total HT",
    "CHF 0.00",
-   "Rafraîchissement du séjour",
-   "Famille Exemple · Offre 2 · 22.11.2026 18:10",
-   "CHF 3’106.80",
-   "Façade de la maison",
-   "Monsieur Modèle · Offre 1 · 18.11.2026 18:10",
-   "CHF 8’496.65",
+   "+ Rabais",
+   "TVA 8,1 %",
+   "Conditions",
+   "Valable 30 jours, paiement à 30 jours",
+   "Pas d'escompte",
+   "Texte après les lignes",
+   "Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.",
+   "Ligne",
+   "Générer l'offre",
    "Clients",
    "Factures",
-   "Plus"
+   "Plus",
+   "Guide · 5 sur 5",
+   "À vérifier : Dicta doute de cette ligne. Touchez-la pour confirmer ou corriger.",
+   "Prendre applique le prix que vous avez dit.",
+   "La corbeille retire une ligne ; « Annuler » la remet.",
+   "Quitter le guide",
+   "Compris",
+   "Exemple dans le champ : Facultatif"
   ],
-  "note": ""
+  "note": "La dictée de la capture était muette : l’offre est vide. Avec une vraie dictée, les pastilles 1, 2, 3 se posent sur les lignes.",
+  "apercu": {
+   "fichier": "guide-5-reperes",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
-  "id": "demo-fenetre-demain",
-  "section": "demo",
-  "titre": "La démo se termine demain",
-  "image": "demo-fenetre-demain.jpg",
-  "url": "/",
+  "id": "avant-envoi",
+  "section": "guides",
+  "titre": "Avant l’envoi",
+  "image": "avant-envoi.jpg",
+  "url": "/offres/2/apercu",
   "textes": [
-   "Mes offres",
-   "Démo · 1 jour restant",
+   "Offre",
+   "Offre 2 · PDF",
+   "Démo · 7 jours restants",
    "Passer à l'essai",
-   "Démo Peintre (compte de démonstration)",
-   "Démo : 9 offres restantes",
-   "3 offres ce mois",
-   "Offres",
-   "Récentes",
-   "Client",
-   "Montant",
-   "À relire d'abord",
-   "Aucun travail dicté",
-   "Prête",
-   "Offre 3 · 24.11.2026 18:11",
-   "CHF 0.00",
-   "Rafraîchissement du séjour",
-   "Famille Exemple · Offre 2 · 22.11.2026 18:10",
-   "CHF 3’106.80",
-   "Façade de la maison",
-   "Monsieur Modèle · Offre 1 · 18.11.2026 18:10",
-   "CHF 8’496.65",
-   "Votre démo se termine demain",
-   "Vos offres restent consultables. Pour continuer à dicter, passez à l'essai.",
-   "Continuer la démo",
-   "Clients",
-   "Factures",
-   "Plus"
+   "Pincer pour agrandir",
+   "Votre offre porte encore « Démo Peintre »",
+   "Votre client verra ce nom. Complétez votre entreprise avant d'envoyer, ou envoyez tel quel.",
+   "Compléter mon entreprise",
+   "Envoyer quand même",
+   "Modifier",
+   "Facturer",
+   "Envoyer"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "avant-envoi",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "demo-fenetre-2-jours",
   "section": "demo",
-  "titre": "La démo se termine dans 2 jours",
+  "titre": "2 jours",
   "image": "demo-fenetre-2-jours.jpg",
   "url": "/",
   "textes": [
@@ -469,13 +667,13 @@
    "À relire d'abord",
    "Aucun travail dicté",
    "Prête",
-   "Offre 3 · 24.11.2026 18:11",
+   "Offre 3 · 25.11.2026 09:34",
    "CHF 0.00",
    "Rafraîchissement du séjour",
-   "Famille Exemple · Offre 2 · 22.11.2026 18:10",
+   "Famille Exemple · Offre 2 · 23.11.2026 09:33",
    "CHF 3’106.80",
    "Façade de la maison",
-   "Monsieur Modèle · Offre 1 · 18.11.2026 18:10",
+   "Monsieur Modèle · Offre 1 · 19.11.2026 09:33",
    "CHF 8’496.65",
    "Votre démo se termine dans 2 jours",
    "Vos offres restent consultables. Pour continuer à dicter, passez à l'essai.",
@@ -484,7 +682,58 @@
    "Factures",
    "Plus"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "demo-fenetre-2-jours",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
+ },
+ {
+  "id": "demo-fenetre-demain",
+  "section": "demo",
+  "titre": "demain",
+  "image": "demo-fenetre-demain.jpg",
+  "url": "/",
+  "textes": [
+   "Mes offres",
+   "Démo · 1 jour restant",
+   "Passer à l'essai",
+   "Démo Peintre (compte de démonstration)",
+   "Démo : 9 offres restantes",
+   "3 offres ce mois",
+   "Offres",
+   "Récentes",
+   "Client",
+   "Montant",
+   "À relire d'abord",
+   "Aucun travail dicté",
+   "Prête",
+   "Offre 3 · 25.11.2026 09:34",
+   "CHF 0.00",
+   "Rafraîchissement du séjour",
+   "Famille Exemple · Offre 2 · 23.11.2026 09:33",
+   "CHF 3’106.80",
+   "Façade de la maison",
+   "Monsieur Modèle · Offre 1 · 19.11.2026 09:33",
+   "CHF 8’496.65",
+   "Votre démo se termine demain",
+   "Vos offres restent consultables. Pour continuer à dicter, passez à l'essai.",
+   "Continuer la démo",
+   "Clients",
+   "Factures",
+   "Plus"
+  ],
+  "note": "",
+  "apercu": {
+   "fichier": "demo-fenetre-demain",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "essai-passer",
@@ -505,7 +754,14 @@
    "Il devient l'adresse de votre compte. Vous choisissez votre mot de passe juste après.",
    "Commencer mon mois gratuit"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "essai-passer",
+   "largeur": 390,
+   "hauteurPage": 873,
+   "decalage": 0,
+   "hauteurVue": 873
+  }
  },
  {
   "id": "demo-terminee",
@@ -516,31 +772,45 @@
   "textes": [
    "Démo Peintre",
    "Votre démo est terminée",
-   "Vos offres restent consultables jusqu'au 24.12.2026, puis elles sont supprimées. Pour dicter de nouveau, passez à l'essai : un mois gratuit, sans carte bancaire.",
+   "Vos offres restent consultables jusqu'au 25.12.2026, puis elles sont supprimées. Pour dicter de nouveau, passez à l'essai : un mois gratuit, sans carte bancaire.",
    "Passer à l'essai",
    "Demander un appel",
    "Voir mes offres"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "demo-terminee",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "demo-perimee",
   "section": "demo",
-  "titre": "Lien de démo périmé",
+  "titre": "Lien périmé",
   "image": "demo-perimee.jpg",
   "url": "/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   "textes": [
    "Lien expiré",
    "Ce lien a expiré ou a déjà servi. Demandez-en un nouveau à la personne qui vous a présenté Dicta."
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "demo-perimee",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "essai-mot-de-passe",
   "section": "demo",
-  "titre": "Après le passage : choisir son mot de passe",
+  "titre": "Mot de passe",
   "image": "essai-mot-de-passe.jpg",
-  "url": "/mot-de-passe/UGCuhDDPshas2fo3zg9mrpHKTRoy026HZWKkOMvbddM",
+  "url": "/mot-de-passe/iPcWkzrZnstTCuBl5G_nCp4HhPOPUSLj3J8Xv31F8O8",
   "textes": [
    "Nouveau mot de passe",
    "Compte",
@@ -549,12 +819,19 @@
    "Votre mois gratuit commence. Choisissez votre mot de passe pour retrouver votre compte.",
    "Enregistrer et se connecter"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "essai-mot-de-passe",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "mise-en-route-entreprise",
   "section": "guides",
-  "titre": "Mise en route de l’essai : votre entreprise",
+  "titre": "entreprise",
   "image": "mise-en-route-entreprise.jpg",
   "url": "/bienvenue/entreprise",
   "textes": [
@@ -591,12 +868,19 @@
    "Exemple dans le champ : CHE-123.456.789",
    "Exemple dans le champ : CH93 0076 2011 6238 5295 7"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "mise-en-route-entreprise",
+   "largeur": 390,
+   "hauteurPage": 1612,
+   "decalage": 0,
+   "hauteurVue": 1612
+  }
  },
  {
   "id": "mise-en-route-tva",
   "section": "guides",
-  "titre": "Mise en route de l’essai : la tva",
+  "titre": "tva",
   "image": "mise-en-route-tva.jpg",
   "url": "/bienvenue/tva",
   "textes": [
@@ -622,12 +906,19 @@
    "Changer la TVA ou l'arrondi change aussi le total des offres déjà faites.",
    "Suivant"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "mise-en-route-tva",
+   "largeur": 390,
+   "hauteurPage": 928,
+   "decalage": 0,
+   "hauteurVue": 928
+  }
  },
  {
   "id": "mise-en-route-logo",
   "section": "guides",
-  "titre": "Mise en route de l’essai : votre logo",
+  "titre": "logo",
   "image": "mise-en-route-logo.jpg",
   "url": "/bienvenue/logo",
   "textes": [
@@ -641,12 +932,19 @@
    "Une image (PNG ou JPEG), 5 Mo au plus. Sa couleur devient celle de vos documents.",
    "Suivant"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "mise-en-route-logo",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "mise-en-route-marque",
   "section": "guides",
-  "titre": "Mise en route de l’essai : modèle et couleur",
+  "titre": "marque",
   "image": "mise-en-route-marque.jpg",
   "url": "/bienvenue/marque",
   "textes": [
@@ -667,7 +965,7 @@
    "Votre modèle",
    "Classiques",
    "Démo Peintre",
-   "Madame ExempleRue de l'Exemple 12800 Delémont",
+   "Madame Exemple Rue de l'Exemple 1 2800 Delémont",
    "Offre n° 1",
    "Rafraîchissement du séjour",
    "Date",
@@ -693,23 +991,23 @@
    "CHF 1’851.75",
    "Conditions",
    "Paiement : à 30 jours dès la fin des travaux.",
-   "Offre valable jusqu'au 24.12.2026. Prix en francs suisses, TVA comprise dans le total.",
+   "Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.",
    "L'entreprise",
-   "Démo Peintre, le 24.11.2026",
+   "Démo Peintre, le 25.11.2026",
    "Bon pour accord",
    "Lieu, date et signature du client",
    "Sobre",
    "Voir en grand",
-   "Le 24 novembre 2026",
+   "Le 25 novembre 2026",
    "Offre n° 1 : Rafraîchissement du séjour",
    "Madame, Monsieur,",
    "Nous vous remettons notre offre pour les travaux suivants.",
-   "Paiement : à 30 jours dès la fin des travaux. Offre valable jusqu'au 24.12.2026. Prix en francs suisses, TVA comprise dans le total.",
+   "Paiement : à 30 jours dès la fin des travaux. Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.",
    "Nous restons à votre disposition pour toute question et vous adressons, Madame, Monsieur, nos salutations les meilleures.",
    "Lettre",
    "Offre",
    "n° 1",
-   "24.11.2026 · valable jusqu'au 24.12.2026",
+   "25.11.2026 · valable jusqu'au 25.12.2026",
    "Atelier",
    "Couleur",
    "Bandeau",
@@ -744,12 +1042,19 @@
    "Proposé pour votre métier",
    "Suivant"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "mise-en-route-marque",
+   "largeur": 390,
+   "hauteurPage": 1913,
+   "decalage": 0,
+   "hauteurVue": 1913
+  }
  },
  {
   "id": "mise-en-route-prix",
   "section": "guides",
-  "titre": "Mise en route de l’essai : vos prix",
+  "titre": "prix",
   "image": "mise-en-route-prix.jpg",
   "url": "/vos-prix",
   "textes": [
@@ -768,91 +1073,14 @@
    "Je ne fais pas ça",
    "Exemple dans le champ : 0"
   ],
-  "note": ""
- },
- {
-  "id": "guide-5-reperes",
-  "section": "guides",
-  "titre": "Guide de la démo, étape 5 : les repères de l’offre",
-  "image": "guide-5-reperes.jpg",
-  "url": "/offres/12",
-  "textes": [
-   "Offres",
-   "Offre 3",
-   "Démo · 7 jours restants",
-   "Passer à l'essai",
-   "Choisir le client",
-   "Représenté par",
-   "Ajouter une régie, un architecte…",
-   "Aucun travail dicté",
-   "Objet de l'offre",
-   "Prête",
-   "Créée le 24.11.2026 18:16",
-   "Texte avant les lignes",
-   "Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un.",
-   "Sous-total HT",
-   "CHF 0.00",
-   "+ Rabais",
-   "TVA 8,1 %",
-   "Conditions",
-   "Valable 30 jours, paiement à 30 jours",
-   "Pas d'escompte",
-   "Texte après les lignes",
-   "Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.",
-   "Ligne",
-   "Générer l'offre",
-   "Clients",
-   "Factures",
-   "Plus",
-   "Guide · 5 sur 5",
-   "À vérifier : Dicta doute de cette ligne. Touchez-la pour confirmer ou corriger.",
-   "Prendre applique le prix que vous avez dit.",
-   "La corbeille retire une ligne ; « Annuler » la remet.",
-   "Quitter le guide",
-   "Compris",
-   "Exemple dans le champ : Facultatif"
-  ],
-  "note": "La dictée de la capture était muette : l’offre est vide. Avec une vraie dictée, les pastilles 1, 2, 3 se posent sur les lignes."
- },
- {
-  "id": "apercu",
-  "section": "guides",
-  "titre": "Aperçu du document",
-  "image": "apercu.jpg",
-  "url": "/offres/11/apercu",
-  "textes": [
-   "Offre",
-   "Offre 2 · PDF",
-   "Démo · 7 jours restants",
-   "Passer à l'essai",
-   "Pincer pour agrandir",
-   "Modifier",
-   "Facturer",
-   "Envoyer"
-  ],
-  "note": ""
- },
- {
-  "id": "avant-envoi",
-  "section": "guides",
-  "titre": "Avant l’envoi : le nom de l’entreprise",
-  "image": "avant-envoi.jpg",
-  "url": "/offres/11/apercu",
-  "textes": [
-   "Offre",
-   "Offre 2 · PDF",
-   "Démo · 7 jours restants",
-   "Passer à l'essai",
-   "Pincer pour agrandir",
-   "Votre offre porte encore « Démo Peintre »",
-   "Votre client verra ce nom. Complétez votre entreprise avant d'envoyer, ou envoyez tel quel.",
-   "Compléter mon entreprise",
-   "Envoyer quand même",
-   "Modifier",
-   "Facturer",
-   "Envoyer"
-  ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "mise-en-route-prix",
+   "largeur": 390,
+   "hauteurPage": 844,
+   "decalage": 0,
+   "hauteurVue": 844
+  }
  },
  {
   "id": "courriel-acces",
@@ -866,10 +1094,16 @@
    "Texte : Un compte est ouvert pour Peinture Morand avec votre adresse. Choisissez votre mot de passe dans les 7 jours :",
    "Bouton : Choisir mon mot de passe",
    "Texte sous le bouton : Le lien sert une seule fois. Passé ce délai, demandez-en un nouveau avec « Mot de passe oublié », sur la page de connexion.",
-   "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
-   "Signature : Dicta"
+   "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "courriel-acces",
+   "largeur": 390,
+   "hauteurPage": 700,
+   "decalage": 0,
+   "hauteurVue": 700
+  }
  },
  {
   "id": "courriel-oubli",
@@ -884,10 +1118,16 @@
    "Bouton : Choisir mon mot de passe",
    "Texte sous le bouton : Le lien sert une seule fois.",
    "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
-   "Pied : Vous n'avez rien demandé ? Ignorez ce courriel, votre mot de passe ne change pas.",
-   "Signature : Dicta"
+   "Pied : Vous n'avez rien demandé ? Ignorez ce courriel, votre mot de passe ne change pas."
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "courriel-oubli",
+   "largeur": 390,
+   "hauteurPage": 700,
+   "decalage": 0,
+   "hauteurVue": 700
+  }
  },
  {
   "id": "courriel-mot-de-passe-change",
@@ -901,10 +1141,16 @@
    "Texte : Le mot de passe de votre compte a été changé le mardi 24 novembre à 14 h 35. Ce n'était pas vous ? Choisissez-en un nouveau tout de suite :",
    "Bouton : Choisir un nouveau mot de passe",
    "Texte sous le bouton : Si c'était vous, il n'y a rien à faire. Les autres appareils connectés à votre compte ont été déconnectés.",
-   "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
-   "Signature : Dicta"
+   "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "courriel-mot-de-passe-change",
+   "largeur": 390,
+   "hauteurPage": 700,
+   "decalage": 0,
+   "hauteurVue": 700
+  }
  },
  {
   "id": "courriel-demo-retour",
@@ -920,9 +1166,16 @@
    "Texte sous le bouton : Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.",
    "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
    "Pied : Vous n'avez pas essayé Dicta ? Ignorez ce courriel.",
-   "Signature : Julie Rossel / Dicta"
+   "Signature : Julie Rossel"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "courriel-demo-retour",
+   "largeur": 390,
+   "hauteurPage": 700,
+   "decalage": 0,
+   "hauteurVue": 700
+  }
  },
  {
   "id": "courriel-rappel-2-jours",
@@ -938,9 +1191,16 @@
    "Texte sous le bouton : Pour continuer après la démo, touchez « Passer à l'essai » en haut de l'écran : les offres que vous avez dictées restent sur votre compte.",
    "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
    "Pied : Un dernier rappel partira 12 heures avant la fin. Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.",
-   "Signature : Julie Rossel / Dicta"
+   "Signature : Julie Rossel"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "courriel-rappel-2-jours",
+   "largeur": 390,
+   "hauteurPage": 700,
+   "decalage": 0,
+   "hauteurVue": 700
+  }
  },
  {
   "id": "courriel-rappel-dernier",
@@ -956,9 +1216,16 @@
    "Texte sous le bouton : Pour continuer après la démo, touchez « Passer à l'essai » en haut de l'écran : les offres que vous avez dictées restent sur votre compte.",
    "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
    "Pied : C'est le dernier rappel. Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.",
-   "Signature : Julie Rossel / Dicta"
+   "Signature : Julie Rossel"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "courriel-rappel-dernier",
+   "largeur": 390,
+   "hauteurPage": 700,
+   "decalage": 0,
+   "hauteurVue": 700
+  }
  },
  {
   "id": "courriel-offre-prete",
@@ -971,10 +1238,16 @@
    "Titre : Votre offre est prête",
    "Texte : L'offre préparée à partir de votre enregistrement est prête à relire.",
    "Bouton : Relire mon offre",
-   "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
-   "Signature : Dicta"
+   "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :"
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "courriel-offre-prete",
+   "largeur": 390,
+   "hauteurPage": 700,
+   "decalage": 0,
+   "hauteurVue": 700
+  }
  },
  {
   "id": "courriel-dictee-longue",
@@ -988,10 +1261,16 @@
    "Texte : Votre dictée du mardi 24 novembre à 14 h 35 dure plus de 15 minutes, la limite pour une offre. Elle ne vous est pas décomptée. Dictez-la à nouveau, plus courte :",
    "Bouton : Dicter à nouveau",
    "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
-   "Pied : Pour ne plus recevoir ce courriel : Réglages, puis Courriels.",
-   "Signature : Dicta"
+   "Pied : Pour ne plus recevoir ce courriel : Réglages, puis Courriels."
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "courriel-dictee-longue",
+   "largeur": 390,
+   "hauteurPage": 700,
+   "decalage": 0,
+   "hauteurVue": 700
+  }
  },
  {
   "id": "courriel-dictee-echec",
@@ -1006,9 +1285,15 @@
    "Bouton : Ouvrir mes offres",
    "Texte sous le bouton : Si l'échec revient, dictez à nouveau.",
    "Sous le texte : Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
-   "Pied : Pour ne plus recevoir ce courriel : Réglages, puis Courriels.",
-   "Signature : Dicta"
+   "Pied : Pour ne plus recevoir ce courriel : Réglages, puis Courriels."
   ],
-  "note": ""
+  "note": "",
+  "apercu": {
+   "fichier": "courriel-dictee-echec",
+   "largeur": 390,
+   "hauteurPage": 700,
+   "decalage": 0,
+   "hauteurVue": 700
+  }
  }
 ]

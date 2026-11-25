@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Votre mot de passe Dicta a été changé</title><link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/courriel-mot-de-passe-change.css"></head>
+<body class="rls-0"><div class="rl-objet">Objet&nbsp;: <b data-t="T352">Votre mot de passe Dicta a été changé</b></div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="rls-1"><tbody><tr><td align="center" class="rls-2">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="rls-3">
+<tbody><tr><td bgcolor="#23272D" class="rls-4">
+<img src="/img/dicta-icone-180.png" width="28" height="28" alt="" class="rls-5">
+<span class="rls-6">Dicta</span>
+</td></tr>
+<tr><td class="rls-7">
+<h1 data-t="T353" class="rls-8">Votre mot de passe a été changé</h1>
+<p data-t="T354" class="rls-9">Le mot de passe de votre compte a été changé le mardi 24 novembre à 14&nbsp;h&nbsp;35. Ce n'était pas vous&nbsp;? Choisissez-en un nouveau tout de suite&nbsp;:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tbody><tr><td bgcolor="#23272D" align="center" class="rls-10">
+<a href="/lien-d-exemple" data-t="T355" class="rls-11">Choisir un nouveau mot de passe</a>
+</td></tr></tbody></table>
+<div class="rls-12">&nbsp;</div>
+<p data-t="T356" class="rls-13">Si c'était vous, il n'y a rien à faire. Les autres appareils connectés à votre compte ont été déconnectés.</p>
+<p data-t="T346" class="rls-14">Le bouton ne fonctionne pas&nbsp;? Copiez ce lien dans votre navigateur&nbsp;:<br><a href="/lien-d-exemple" class="rls-15">https://dicta.ch/d/exemple</a></p>
+
+<p class="rls-16">Dicta</p>
+</td></tr>
+</tbody></table>
+</td></tr></tbody></table>
+
+</body></html>

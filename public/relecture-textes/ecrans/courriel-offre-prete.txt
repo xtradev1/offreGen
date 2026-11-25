@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Votre offre est prête</title><link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/courriel-offre-prete.css"></head>
+<body class="rls-0"><div class="rl-objet">Objet&nbsp;: <b data-t="T373">Votre offre est prête</b></div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="rls-1"><tbody><tr><td align="center" class="rls-2">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="rls-3">
+<tbody><tr><td bgcolor="#23272D" class="rls-4">
+<img src="/img/dicta-icone-180.png" width="28" height="28" alt="" class="rls-5">
+<span class="rls-6">Dicta</span>
+</td></tr>
+<tr><td class="rls-7">
+<h1 data-t="T374" class="rls-8">Votre offre est prête</h1>
+<p data-t="T375" class="rls-9">L'offre préparée à partir de votre enregistrement est prête à relire.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tbody><tr><td bgcolor="#23272D" align="center" class="rls-10">
+<a href="/lien-d-exemple" data-t="T376" class="rls-11">Relire mon offre</a>
+</td></tr></tbody></table>
+<div class="rls-12">&nbsp;</div>
+
+<p data-t="T346" class="rls-13">Le bouton ne fonctionne pas&nbsp;? Copiez ce lien dans votre navigateur&nbsp;:<br><a href="/lien-d-exemple" class="rls-14">https://dicta.ch/d/exemple</a></p>
+
+<p class="rls-15">Dicta</p>
+</td></tr>
+</tbody></table>
+</td></tr></tbody></table>
+
+</body></html>

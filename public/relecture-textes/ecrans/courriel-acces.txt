@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Votre accès à Dicta</title><link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/courriel-acces.css"></head>
+<body class="rls-0"><div class="rl-objet">Objet&nbsp;: <b data-t="T341">Votre accès à Dicta</b></div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="rls-1"><tbody><tr><td align="center" class="rls-2">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="rls-3">
+<tbody><tr><td bgcolor="#23272D" class="rls-4">
+<img src="/img/dicta-icone-180.png" width="28" height="28" alt="" class="rls-5">
+<span class="rls-6">Dicta</span>
+</td></tr>
+<tr><td class="rls-7">
+<h1 data-t="T342" class="rls-8">Votre compte Dicta est ouvert</h1>
+<p data-t="T343" class="rls-9">Un compte est ouvert pour Peinture Morand avec votre adresse. Choisissez votre mot de passe dans les 7&nbsp;jours&nbsp;:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tbody><tr><td bgcolor="#23272D" align="center" class="rls-10">
+<a href="/lien-d-exemple" data-t="T344" class="rls-11">Choisir mon mot de passe</a>
+</td></tr></tbody></table>
+<div class="rls-12">&nbsp;</div>
+<p data-t="T345" class="rls-13">Le lien sert une seule fois. Passé ce délai, demandez-en un nouveau avec «&nbsp;Mot de passe oublié&nbsp;», sur la page de connexion.</p>
+<p data-t="T346" class="rls-14">Le bouton ne fonctionne pas&nbsp;? Copiez ce lien dans votre navigateur&nbsp;:<br><a href="/lien-d-exemple" class="rls-15">https://dicta.ch/d/exemple</a></p>
+
+<p class="rls-16">Dicta</p>
+</td></tr>
+</tbody></table>
+</td></tr></tbody></table>
+
+</body></html>

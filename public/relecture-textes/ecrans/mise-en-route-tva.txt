@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr-CH" class="rls-0"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/css/mise-en-route.css?v=258334d25005">  <title>La TVA · Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  
+  
+  <link rel="stylesheet" href="/css/app.css?v=e78f7334a14b">
+    
+<link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/mise-en-route-tva.css"></head>
+<body data-compte="2">
+        <div class="app">
+    <header class="bar"><h1 data-t="T218">Bienvenue</h1><a class="vers-site mobile-seul" href="/decouvrir" aria-label="Dicta, le site"><img class="logo" src="/img/dicta-logo-sombre.svg?v=b0fbcb97f417" alt="" width="177" height="64"></a></header>
+      <link rel="stylesheet" href="/css/demo.css">
+  <div class="ruban-demo" role="note">
+    <span data-t="T219"><b>Mois gratuit</b> · 30 jours restants</span>
+  </div>
+<main class="screen gris">          <form method="post" action="/bienvenue/passer" class="passer-guide"><input type="hidden" name="_csrf" value=""><button class="lien" type="submit" data-t="T220">Passer le guide</button></form>
+    <div class="progression" aria-hidden="true"><i class="fait"></i><i class="fait"></i><i></i><i></i><i></i></div>
+    <p class="muted petit" data-t="T248">Étape 2 sur 5</p>
+    <h2 class="etape-titre" data-t="T249">La TVA</h2>
+    <p class="etape-sous" data-t="T250">Touchez votre taux. Il s'applique à chaque offre.</p>
+      <form id="reglages" class="etape-tva" method="post" action="/bienvenue/tva">
+    <input type="hidden" name="_csrf" value="">
+    <input type="hidden" name="retour" value="">
+        <div class="card">
+  <fieldset class="groupe">
+    <legend data-t="T251">TVA de l'entreprise</legend>
+    <label class="radio"><input type="radio" name="tva" value="810" checked="">
+      <span data-t="T252">8,1&nbsp;%, taux normal<small data-t="T253">La plupart des travaux et des fournitures.</small></span></label>
+    <label class="radio"><input type="radio" name="tva" value="260">
+      <span data-t="T254">2,6&nbsp;%, taux réduit<small data-t="T255">Denrées alimentaires, livres, médicaments, plantes.</small></span></label>
+    <label class="radio"><input type="radio" name="tva" value="380">
+      <span data-t="T256">3,8&nbsp;%, hébergement<small data-t="T257">Nuitées avec petit déjeuner.</small></span></label>
+    <label class="radio"><input type="radio" name="tva" value="0">
+      <span data-t="T258">Non assujetti<small data-t="T259">Moins de 100&nbsp;000 francs de chiffre d'affaires par an&nbsp;: l'offre ne porte pas de TVA.</small></span></label>
+    <span class="err" id="err-tva" data-erreur="tva" hidden=""></span>
+    <span class="muted petit" data-t="T260">Une prestation à un autre taux se règle sur sa ligne, ou sur son produit dans le catalogue.</span>
+  </fieldset>
+  <fieldset class="groupe">
+    <legend data-t="T261">Arrondi</legend>
+        <input type="hidden" name="arrondi" value="0">
+    <label class="check"><input type="checkbox" name="arrondi" value="1" checked="">
+      <span data-t="T262">Arrondir le total aux 5 centimes<small data-t="T263">L'écart s'affiche sur la ligne «&nbsp;Arrondi&nbsp;».</small></span></label>
+  </fieldset>
+  <p class="muted petit" data-t="T264">Changer la TVA ou l'arrondi change aussi le total des offres déjà faites.</p>
+</div>
+  </form>
+  </main>
+                            <div class="bas">
+        <div class="actionbar">
+          <button class="btn primary" type="submit" form="reglages" data-t="T155">Suivant</button>
+      </div>
+                </div>
+  </div>
+
+
+</body></html>

@@ -10,7 +10,8 @@ use Symfony\Component\HttpFoundation\Request;
 if (PHP_SAPI === 'cli-server') {
     $chemin = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     if (is_string($chemin) && $chemin !== '/' && is_file(__DIR__ . $chemin)) {
-        if (preg_match('/\.(css|js|png|jpe?g|svg|webp|ico|woff2?)$/i', $chemin) === 1) {
+        // La liste de public/.htaccess, à l'identique (.txt : copies des écrans de la page de relecture, 2026-11-25).
+        if (preg_match('/\.(css|js|mjs|png|jpe?g|gif|svg|webp|avif|ico|woff2?|txt|webmanifest)$/i', $chemin) === 1) {
             return false;
         }
         // Tout autre fichier de public/ (.htaccess, témoins de la sonde) est refusé, comme chez l'hébergeur.

@@ -62,28 +62,70 @@ final class TextesARelireTest extends TestCase
         if (preg_match('#<script type="application/json" id="donnees">(.*?)</script>#s', $page, $bloc) !== 1) {
             self::fail('La page n\'a pas de bloc de données.');
         }
-        /** @var array{images: string, parties: list<array{ecrans: list<array{image: string, textes: list<array{n: string, t: string}>}>}>} $donnees */
-        $donnees = json_decode(str_replace('<\/', '</', $bloc[1]), true, 32, JSON_THROW_ON_ERROR);
+        $donnees = self::donnees($bloc[1]);
         $images = [];
         $numeros = [];
         foreach ($donnees['parties'] as $partie) {
             foreach ($partie['ecrans'] as $ecran) {
                 $images[] = $donnees['images'] . $ecran['image'];
+                $images[] = $donnees['ecrans'] . $ecran['apercu']['fichier'] . '.txt';
+                $images[] = $donnees['ecrans'] . $ecran['apercu']['fichier'] . '.css';
                 foreach ($ecran['textes'] as $texte) {
                     $numeros[] = $texte['n'];
                 }
             }
         }
         self::assertGreaterThan(30, count($images));
-        foreach ([...$fichiers[1], ...$images] as $chemin) {
+        foreach ([...$fichiers[1], ...$images, $donnees['ecrans'] . 'commun.css'] as $chemin) {
             self::assertFileExists(self::RACINE . '/public' . $chemin);
         }
         self::assertSame(count($numeros), count(array_unique($numeros)), 'Chaque texte a son propre numéro.');
     }
 
+    /**
+     * Les copies figées des écrans (aperçu en direct) s'écrivent dans un cadre qui hérite de la CSP de la page : ni
+     * script, ni style écrit dans le HTML, ni ressource d'un autre site. Chaque texte numéroté y est relié au moins
+     * une fois, sinon l'aperçu ne suivrait pas sa correction.
+     */
+    public function testLesCopiesDesEcransRespectentLaCspEtPortentLesTextes(): void
+    {
+        $page = (string) file_get_contents(self::RACINE . '/relecture/index.html');
+        if (preg_match('#<script type="application/json" id="donnees">(.*?)</script>#s', $page, $bloc) !== 1) {
+            self::fail('La page n\'a pas de bloc de données.');
+        }
+        $donnees = self::donnees($bloc[1]);
+        $relies = [];
+        $copies = glob(self::RACINE . '/public/relecture-textes/ecrans/*.txt') ?: [];
+        self::assertNotEmpty($copies);
+        foreach ($copies as $copie) {
+            $html = (string) file_get_contents($copie);
+            self::assertDoesNotMatchRegularExpression('/<script\b|\sstyle=|\son[a-z]+="|<style\b/i', $html, basename($copie));
+            self::assertDoesNotMatchRegularExpression('/\s(?:src|href)="(?!\/|#)/', $html, basename($copie));
+            preg_match_all('/data-t="(T\d+)"/', $html, $m);
+            $relies = [...$relies, ...$m[1]];
+        }
+        $numeros = [];
+        foreach ($donnees['parties'] as $partie) {
+            foreach ($partie['ecrans'] as $ecran) {
+                foreach ($ecran['textes'] as $texte) {
+                    $numeros[] = $texte['n'];
+                }
+            }
+        }
+        $orphelins = array_values(array_diff($numeros, $relies));
+        self::assertLessThan(count($numeros) / 10, count($orphelins), 'Textes sans place dans l\'aperçu : ' . implode(', ', array_slice($orphelins, 0, 10)));
+    }
+
+    /** @return array{images: string, ecrans: string, parties: list<array{ecrans: list<array{image: string, apercu: array{fichier: string}, textes: list<array{n: string, t: string}>}>}>} */
+    private static function donnees(string $json): array
+    {
+        /** @var array{images: string, ecrans: string, parties: list<array{ecrans: list<array{image: string, apercu: array{fichier: string}, textes: list<array{n: string, t: string}>}>}>} */
+        return json_decode(str_replace('<\/', '</', $json), true, 32, JSON_THROW_ON_ERROR);
+    }
+
     public function testAucunTiretLong(): void
     {
-        foreach (['/relecture/index.html', '/public/relecture-textes/relecture.js', '/public/relecture-textes/relecture.css'] as $fichier) {
+        foreach (['/relecture/index.html', '/public/relecture-textes/relecture.js', '/public/relecture-textes/relecture.css', '/public/relecture-textes/ecrans/commun.css'] as $fichier) {
             self::assertDoesNotMatchRegularExpression('/\x{2014}|\x{2013}/u', (string) file_get_contents(self::RACINE . $fichier), $fichier);
         }
     }

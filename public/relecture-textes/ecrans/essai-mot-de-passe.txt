@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr-CH" class="rls-0"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/css/connexion.css?v=667a007d8c73">  <title>Nouveau mot de passe · Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  
+  
+  <link rel="stylesheet" href="/css/app.css?v=e78f7334a14b">
+    
+<link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/essai-mot-de-passe.css"></head>
+<body>
+        <div class="app app-seule">
+    <header class="bar"><h1 data-t="T212">Nouveau mot de passe</h1></header>
+    <main class="screen">    <form id="nouveau" method="post" action="/mot-de-passe/iPcWkzrZnstTCuBl5G_nCp4HhPOPUSLj3J8Xv31F8O8">
+    <input type="hidden" name="_csrf" value="">
+    <div class="champ">
+  <label for="compte_courriel" data-t="T213">Compte</label>
+  <input id="compte_courriel" type="email" autocomplete="username" value="essai-relecture@exemple.ch" readonly="">
+</div>
+    <div class="champ">
+  <label for="mot_de_passe">Nouveau mot de passe</label>
+  <span class="avec-oeil">
+    <input id="mot_de_passe" name="mot_de_passe" type="password" autocomplete="new-password" minlength="10" maxlength="128" required="" data-oeil-cible="" aria-describedby="regle-mdp">
+    <button class="oeil" type="button" data-oeil="" aria-pressed="false" aria-label="Montrer le mot de passe">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
+  </span>
+  <small id="regle-mdp" class="muted" data-t="T214">10 caractères au moins. Une phrase facile à retenir convient.</small>
+</div>
+<div class="champ">
+  <label for="confirmation" data-t="T215">Le même, une seconde fois</label>
+  <input id="confirmation" name="confirmation" type="password" autocomplete="new-password" maxlength="128" required="" data-oeil-cible="">
+</div>
+  </form>
+</main>
+        <div class="snack rls-1" role="status"><span data-t="T216">Votre mois gratuit commence. Choisissez votre mot de passe pour retrouver votre compte.</span></div>                    <div class="bas">
+        <div class="actionbar"><button class="btn primary" type="submit" form="nouveau" data-t="T217">Enregistrer et se connecter</button></div>
+                </div>
+  </div>
+
+
+</body></html>

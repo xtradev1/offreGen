@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="fr-CH" class="rls-0"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/css/mise-en-route.css?v=258334d25005"><link rel="stylesheet" href="/css/document.css?v=24aac6fc5d0a"><link rel="stylesheet" href="/css/document-ecran.css?v=752e194c9ad5"><link rel="stylesheet" href="/reglages/marque.css?v=d555470bae" data-marque-css="">  <title>Modèle et couleur · Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  
+  
+  <link rel="stylesheet" href="/css/app.css?v=e78f7334a14b">
+    
+<link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/mise-en-route-marque.css"></head>
+<body data-compte="2">
+        <div class="app">
+    <header class="bar"><h1 data-t="T218">Bienvenue</h1><a class="vers-site mobile-seul" href="/decouvrir" aria-label="Dicta, le site"><img class="logo" src="/img/dicta-logo-sombre.svg?v=b0fbcb97f417" alt="" width="177" height="64"></a></header>
+      <link rel="stylesheet" href="/css/demo.css">
+  <div class="ruban-demo" role="note">
+    <span data-t="T219"><b>Mois gratuit</b> · 30 jours restants</span>
+  </div>
+<main class="screen gris">          <form method="post" action="/bienvenue/passer" class="passer-guide"><input type="hidden" name="_csrf" value=""><button class="lien" type="submit" data-t="T220">Passer le guide</button></form>
+    <div class="progression" aria-hidden="true"><i class="fait"></i><i class="fait"></i><i class="fait"></i><i class="fait"></i><i></i></div>
+    <p class="muted petit" data-t="T270">Étape 4 sur 5</p>
+    <h2 class="etape-titre" data-t="T271">Modèle et couleur</h2>
+    <p class="etape-sous" data-t="T272">Touchez une couleur, puis un modèle. Les modèles s'affichent aussitôt dans votre couleur.</p>
+      <form id="reglages" class="etape-marque" method="post" action="/bienvenue/marque">
+    <input type="hidden" name="_csrf" value="">
+    <input type="hidden" name="retour" value="">
+        <div class="card" id="marque">
+      <fieldset class="groupe choix">
+    <legend data-t="T273">Votre couleur</legend>
+    <div class="teintes">
+              <label class="teinte" title="#1D4E89"><input type="radio" name="couleur_choix" value="#1D4E89" checked="">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#1D4E89"></circle></svg><span class="cache" data-t="T274">Couleur #1D4E89</span></label>
+              <label class="teinte" title="#246227"><input type="radio" name="couleur_choix" value="#246227">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#246227"></circle></svg><span class="cache" data-t="T275">Couleur #246227</span></label>
+              <label class="teinte" title="#973127"><input type="radio" name="couleur_choix" value="#973127">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#973127"></circle></svg><span class="cache" data-t="T276">Couleur #973127</span></label>
+              <label class="teinte" title="#754C25"><input type="radio" name="couleur_choix" value="#754C25">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#754C25"></circle></svg><span class="cache" data-t="T277">Couleur #754C25</span></label>
+              <label class="teinte" title="#0C616D"><input type="radio" name="couleur_choix" value="#0C616D">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#0C616D"></circle></svg><span class="cache" data-t="T278">Couleur #0C616D</span></label>
+              <label class="teinte" title="#3B3F46"><input type="radio" name="couleur_choix" value="#3B3F46">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#3B3F46"></circle></svg><span class="cache" data-t="T279">Couleur #3B3F46</span></label>
+            <label class="puce teinte-autre" data-t="T280"><input type="radio" name="couleur_choix" value="autre">Autre</label>
+    </div>
+    <div class="champ si-autre">
+      <label for="couleur">Votre couleur</label>
+      <input id="couleur" name="couleur" type="color" value="#1d4e89" aria-describedby="err-couleur">
+    </div>
+    <span class="err" id="err-couleur" data-erreur="couleur" hidden=""></span>
+        <div class="avis-couleur" data-avis-couleur="" data-teintes="#1D4E89,#246227,#973127,#754C25,#0C616D,#3B3F46" aria-live="polite" hidden="">
+      <p><b data-avis-titre="">Cette couleur se lit mal sur le papier blanc</b> (contraste <span data-avis-contraste=""></span>:1).<span data-avis-pale=""> Vos documents l'emploient foncée juste assez pour rester lisible.</span></p>
+      <p>Prenez une version plus foncée de la même teinte&nbsp;:</p>
+              <button class="choix-couleur" type="submit" name="couleur_prise" value="" data-niveau="bien">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#FFFFFF"></circle></svg>
+          <span><b>Bien visible</b><small><span data-hex=""></span> · contraste <span data-rapport=""></span>:1</small></span></button>
+              <button class="choix-couleur" type="submit" name="couleur_prise" value="" data-niveau="visible">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#FFFFFF"></circle></svg>
+          <span><b>Visible</b><small><span data-hex=""></span> · contraste <span data-rapport=""></span>:1</small></span></button>
+          </div>
+  </fieldset>
+  <fieldset class="groupe">
+    <legend data-t="T281">Votre modèle</legend>
+            <h3 class="famille" data-t="T282">Classiques</h3>
+    <div class="modeles">
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="sobre">
+            <span class="vignette rls-1" data-vignette="sobre"><article class="paper vignette-papier rls-2" aria-hidden="true"><div class="doc m-sobre rls-3" data-feuille="">
+    <div class="doc-in">
+    <div class="doc-haut"><table class="doc-tete"><tbody><tr><td data-t="T197"><span class="doc-nom">Démo Peintre</span></td><td class="doc-coord"><b>Démo Peintre</b></td></tr></tbody></table></div>
+    <div class="doc-filet c-fond"></div>
+    <div class="doc-adresse" data-t="T283">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div>
+    <div class="doc-titre c-texte" data-t="T084">Offre n°&nbsp;1</div>
+    <div class="doc-objet" data-t="T124">Rafraîchissement du séjour</div>
+    
+                          <table class="doc-infos"><tbody><tr><td class=""><div class="doc-lab" data-t="T284">Date</div>25.11.2026</td><td class=""><div class="doc-lab" data-t="T285">Valable jusqu'au</div>25.12.2026</td></tr></tbody></table>
+
+                
+  
+            <table class="doc-lig">
+    <thead><tr>
+            <th class="c-texte c-filet" data-t="T286">Désignation</th><th class="n c-texte c-filet" data-t="T287">Quantité</th><th class="n c-texte c-filet" data-t="T288">Prix unit.</th><th class="n c-texte c-filet" data-t="T122">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="" colspan="4" data-t="T289">Préparation</td></tr>                                                <tr>
+                                    <td class="" data-t="T290">Protection des sols et des meubles</td>
+            <td class="n" data-t="T291">1&nbsp;forfait</td>
+                        <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="" data-t="T292">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3" data-t="T293">Total préparation</td><td class="n">558.00</td></tr>                                      <tr class="doc-grp"><td class="" colspan="4" data-t="T294">Peinture</td></tr>                                                <tr>
+                                    <td class="" data-t="T295">Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="" data-t="T296">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3" data-t="T297">Total peinture</td><td class="n">1’155.00</td></tr>          </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td data-t="T165">Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td data-t="T167">TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="c-filet" data-t="T298">Total TTC</td><td class="n c-filet">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab" data-t="T109">Conditions</div><ul><li data-t="T299">Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li data-t="T300">Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab" data-t="T301">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s" data-t="T302">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab" data-t="T303">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s" data-t="T304">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span data-t="T056">Sobre</span></label>
+          <a class="voir" href="/reglages/modeles/sobre?depuis=bienvenue" data-grand="/img/modeles/grand/sobre.jpg?v=8338203005e1" data-cle="sobre" data-nom="Sobre" aria-label="Voir le modèle Sobre en grand" data-t="T305">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="lettre">
+            <span class="vignette rls-4" data-vignette="lettre"><article class="paper vignette-papier rls-5" aria-hidden="true"><div class="doc m-lettre rls-6" data-feuille="">
+    <div class="doc-in">
+    <div class="doc-haut"><table class="doc-tete"><tbody><tr><td><span class="doc-nom">Démo Peintre</span></td><td class="doc-coord"><b>Démo Peintre</b></td></tr></tbody></table></div>
+    <table class="doc-env"><tbody><tr>
+      <td><div class="doc-exp">Démo Peintre</div><div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div></td>
+      <td class="doc-lieu" data-t="T306">Le 25 novembre 2026</td>
+    </tr></tbody></table>
+    <div class="doc-concerne" data-t="T307"><span class="c-texte">Offre n°&nbsp;1</span>&nbsp;: Rafraîchissement du séjour</div>
+    
+        <div class="doc-txt" data-t="T308">Madame, Monsieur,</div>
+                            <div class="doc-txt" data-t="T309">Nous vous remettons notre offre pour les travaux suivants.</div>
+                <table class="doc-lig">
+    <thead><tr>
+            <th class="">Désignation</th><th class="n ">Quantité</th><th class="n ">Prix unit.</th><th class="n ">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="" colspan="4">Préparation</td></tr>                                                <tr>
+                                    <td class="">Protection des sols et des meubles</td>
+            <td class="n">1&nbsp;forfait</td>
+                        <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total préparation</td><td class="n">558.00</td></tr>                                      <tr class="doc-grp"><td class="" colspan="4">Peinture</td></tr>                                                <tr>
+                                    <td class="">Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total peinture</td><td class="n">1’155.00</td></tr>          </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="">Total TTC</td><td class="n ">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+    <div class="doc-fin">
+              <div class="doc-txt doc-apres" data-t="T310">Paiement&nbsp;: à 30 jours dès la fin des travaux. Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</div>
+                        <div class="doc-txt" data-t="T311">Nous restons à votre disposition pour toute question et vous adressons, Madame, Monsieur, nos salutations les meilleures.</div>
+            <table class="doc-sign"><tbody><tr>
+        <td>Démo Peintre<div class="doc-sig-nom"></div></td>
+        <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+      </tr></tbody></table>
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span data-t="T057">Lettre</span></label>
+          <a class="voir" href="/reglages/modeles/lettre?depuis=bienvenue" data-grand="/img/modeles/grand/lettre.jpg?v=93a323da448d" data-cle="lettre" data-nom="Lettre" aria-label="Voir le modèle Lettre en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="atelier">
+            <span class="vignette rls-7" data-vignette="atelier"><article class="paper vignette-papier rls-8" aria-hidden="true"><div class="doc m-atelier rls-9" data-feuille="">
+    <div class="doc-in">
+    <div class="doc-haut">
+      <div class="doc-centre"><span class="doc-nom">Démo Peintre</span></div>
+      <div class="doc-coord-ligne"></div>
+    </div>
+    <div class="doc-double c-filet"></div>
+    <table class="doc-tetiere"><tbody><tr>
+      <td><div class="doc-titre c-texte" data-t="T180">Offre</div><div class="doc-num">n°&nbsp;1</div></td>
+      <td><div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div></td>
+    </tr></tbody></table>
+    <div class="doc-objet">Rafraîchissement du séjour</div>
+    <div class="doc-meta" data-t="T312">25.11.2026 · valable jusqu'au 25.12.2026</div>
+    
+                
+  
+            <table class="doc-lig">
+    <thead><tr>
+            <th class="c-filet">Désignation</th><th class="n c-filet">Quantité</th><th class="n c-filet">Prix unit.</th><th class="n c-filet">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="c-texte" colspan="4">Préparation</td></tr>                                                <tr>
+                                    <td class="">Protection des sols et des meubles</td>
+            <td class="n">1&nbsp;forfait</td>
+                        <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total préparation</td><td class="n">558.00</td></tr>                                      <tr class="doc-grp"><td class="c-texte" colspan="4">Peinture</td></tr>                                                <tr>
+                                    <td class="">Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total peinture</td><td class="n">1’155.00</td></tr>          </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="c-filet">Total TTC</td><td class="n c-filet">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span data-t="T058">Atelier</span></label>
+          <a class="voir" href="/reglages/modeles/atelier?depuis=bienvenue" data-grand="/img/modeles/grand/atelier.jpg?v=02f695e48253" data-cle="atelier" data-nom="Atelier" aria-label="Voir le modèle Atelier en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+          </div>
+        <h3 class="famille" data-t="T068">Couleur</h3>
+    <div class="modeles">
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="bandeau">
+            <span class="vignette rls-10" data-vignette="bandeau"><article class="paper vignette-papier rls-11" aria-hidden="true"><div class="doc m-bandeau rls-12" data-feuille="">
+    <div class="doc-bande c-fond">
+    <div class="doc-carte c-filet"><span class="doc-nom">Démo Peintre</span></div>
+    <div class="doc-coord"><b>Démo Peintre</b></div>
+  </div>
+  <div class="doc-in">
+    <div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div>
+    <div class="doc-sur c-texte">Offre <span>n°&nbsp;1</span></div>
+    <div class="doc-objet">Rafraîchissement du séjour</div>
+    
+                          <table class="doc-infos"><tbody><tr><td class="c-bord-gauche"><div class="doc-lab">Date</div>25.11.2026</td><td class="c-bord-gauche"><div class="doc-lab">Valable jusqu'au</div>25.12.2026</td></tr></tbody></table>
+
+                
+  
+            <table class="doc-lig">
+    <thead><tr>
+            <th class="c-fond">Désignation</th><th class="n c-fond">Quantité</th><th class="n c-fond">Prix unit.</th><th class="n c-fond">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="c-texte" colspan="4">Préparation</td></tr>                                                <tr>
+                                    <td class="">Protection des sols et des meubles</td>
+            <td class="n">1&nbsp;forfait</td>
+                        <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total préparation</td><td class="n">558.00</td></tr>                                      <tr class="doc-grp"><td class="c-texte" colspan="4">Peinture</td></tr>                                                <tr>
+                                    <td class="">Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total peinture</td><td class="n">1’155.00</td></tr>          </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="c-fond">Total TTC</td><td class="n c-fond">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+    <table class="doc-bas c-fond"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table>
+</div>
+</article>
+</span><span data-t="T059">Bandeau</span></label>
+          <a class="voir" href="/reglages/modeles/bandeau?depuis=bienvenue" data-grand="/img/modeles/grand/bandeau.jpg?v=07a4c4ff9573" data-cle="bandeau" data-nom="Bandeau" aria-label="Voir le modèle Bandeau en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="moderne">
+            <span class="vignette rls-13" data-vignette="moderne"><article class="paper vignette-papier rls-14" aria-hidden="true"><div class="doc m-moderne rls-15" data-feuille="">
+    <div class="doc-in">
+    <div class="doc-haut"><table class="doc-tete"><tbody><tr><td><span class="doc-nom">Démo Peintre</span></td><td class="doc-coord"><b>Démo Peintre</b></td></tr></tbody></table></div>
+    <div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div>
+    <div class="doc-titre">Offre</div>
+    <div class="doc-objet c-texte">Rafraîchissement du séjour</div>
+    
+                          <table class="doc-infos"><tbody><tr><td class="c-teinte"><div class="doc-lab">N°</div>1</td><td class="c-teinte"><div class="doc-lab">Date</div>25.11.2026</td><td class="c-teinte"><div class="doc-lab">Valable jusqu'au</div>25.12.2026</td></tr></tbody></table>
+
+                
+  
+            <table class="doc-lig">
+    <thead><tr>
+            <th class="">Désignation</th><th class="n ">Quantité</th><th class="n ">Prix unit.</th><th class="n ">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="c-texte" colspan="3">Préparation</td><td class="n ">558.00</td></tr>                                                <tr>
+                                    <td class="c-teinte">Protection des sols et des meubles</td>
+            <td class="n c-teinte">1&nbsp;forfait</td>
+                        <td class="n c-teinte">180.00</td>
+            <td class="n c-teinte">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                                                        <tr class="doc-grp"><td class="c-texte" colspan="3">Peinture</td><td class="n ">1’155.00</td></tr>                                                <tr>
+                                    <td class="c-teinte">Peinture murale, deux couches</td>
+            <td class="n c-teinte">42&nbsp;m²</td>
+                        <td class="n c-teinte">18.50</td>
+            <td class="n c-teinte">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                            </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="c-teinte-forte">Total TTC</td><td class="n c-teinte-forte">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span data-t="T060">Moderne</span></label>
+          <a class="voir" href="/reglages/modeles/moderne?depuis=bienvenue" data-grand="/img/modeles/grand/moderne.jpg?v=34186d1b6f32" data-cle="moderne" data-nom="Moderne" aria-label="Voir le modèle Moderne en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="lateral">
+            <span class="vignette rls-16" data-vignette="lateral"><article class="paper vignette-papier rls-17" aria-hidden="true"><div class="doc m-lateral rls-18" data-feuille="">
+    <div class="doc-in">
+    <div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div>
+    <div class="doc-titre">Rafraîchissement du séjour</div>
+    
+                
+  
+            <table class="doc-lig">
+    <thead><tr>
+            <th class="">Désignation</th><th class="n ">Quantité</th><th class="n ">Prix unit.</th><th class="n ">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="c-texte" colspan="4">Préparation</td></tr>                                                <tr>
+                                    <td class="">Protection des sols et des meubles</td>
+            <td class="n">1&nbsp;forfait</td>
+                        <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total préparation</td><td class="n">558.00</td></tr>                                      <tr class="doc-grp"><td class="c-texte" colspan="4">Peinture</td></tr>                                                <tr>
+                                    <td class="">Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total peinture</td><td class="n">1’155.00</td></tr>          </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="c-filet">Total TTC</td><td class="n c-filet">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <div class="doc-condp"><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></div>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+    <div class="doc-colonne c-fond">
+    <div class="doc-carte"><span class="doc-nom">Démo Peintre</span></div>
+    <div class="doc-bloc"><div class="doc-lab">Offre</div><div class="doc-gros">1</div></div>
+    <div class="doc-bloc"><div class="doc-lab">Date</div>25.11.2026</div>
+    <div class="doc-bloc"><div class="doc-lab">Valable jusqu'au</div>25.12.2026</div>
+                <div class="doc-fond"><b>Démo Peintre</b></div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>&nbsp;</td><td class="n"></td></tr></tbody></table>
+</div>
+</article>
+</span><span data-t="T061">Latéral</span></label>
+          <a class="voir" href="/reglages/modeles/lateral?depuis=bienvenue" data-grand="/img/modeles/grand/lateral.jpg?v=d9e60fccb1e8" data-cle="lateral" data-nom="Latéral" aria-label="Voir le modèle Latéral en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="enseigne">
+            <span class="vignette rls-19" data-vignette="enseigne"><article class="paper vignette-papier rls-20" aria-hidden="true"><div class="doc m-enseigne rls-21" data-feuille="">
+                      <div class="doc-in">
+    <div class="doc-haut">
+      <div class="doc-enseigne c-texte t58">Démo Peintre</div>
+            <div class="doc-barre c-fond"></div>
+      <div class="doc-enseigne-c"></div>
+    </div>
+    <table class="doc-duo"><tbody><tr>
+      <td><table class="doc-ref"><tbody><tr><td data-t="T313">Offre n°</td><td><b>1</b></td></tr><tr><td>Date</td><td>25.11.2026</td></tr><tr><td>Valable jusqu'au</td><td>25.12.2026</td></tr></tbody></table></td>
+      <td><div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div></td>
+    </tr></tbody></table>
+    <div class="doc-titre">Rafraîchissement du séjour</div>
+    
+                
+  
+            <table class="doc-lig">
+    <thead><tr>
+            <th class="">Désignation</th><th class="n ">Quantité</th><th class="n ">Prix unit.</th><th class="n ">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="c-texte" colspan="4">Préparation</td></tr>                                                <tr>
+                                    <td class="">Protection des sols et des meubles</td>
+            <td class="n">1&nbsp;forfait</td>
+                        <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total préparation</td><td class="n">558.00</td></tr>                                      <tr class="doc-grp"><td class="c-texte" colspan="4">Peinture</td></tr>                                                <tr>
+                                    <td class="">Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="3">Total peinture</td><td class="n">1’155.00</td></tr>          </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="c-filet">Total TTC</td><td class="n c-filet">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span data-t="T062">Enseigne</span></label>
+          <a class="voir" href="/reglages/modeles/enseigne?depuis=bienvenue" data-grand="/img/modeles/grand/enseigne.jpg?v=c72980e79ca2" data-cle="enseigne" data-nom="Enseigne" aria-label="Voir le modèle Enseigne en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+          </div>
+        <h3 class="famille" data-t="T314">Détaillés</h3>
+    <div class="modeles">
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="technique">
+            <span class="vignette rls-22" data-vignette="technique"><article class="paper vignette-papier rls-23" aria-hidden="true"><div class="doc m-technique rls-24" data-feuille="">
+                      <div class="doc-in">
+    <div class="doc-haut"><table class="doc-tete"><tbody><tr><td><span class="doc-nom">Démo Peintre</span></td><td class="doc-coord"><b>Démo Peintre</b></td></tr></tbody></table></div>
+    <div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div>
+    <table class="doc-cart">
+      <tbody><tr><td colspan="3" class="doc-gros" data-t="T315"><b class="c-texte">OFFRE</b>&nbsp;&nbsp; Rafraîchissement du séjour</td></tr>
+      <tr><td><div class="doc-lab">N°</div>1</td><td><div class="doc-lab">Date</div>25.11.2026</td><td><div class="doc-lab">Valable jusqu'au</div>25.12.2026</td></tr>
+    </tbody></table>
+    
+                
+  
+            <table class="doc-lig">
+    <thead><tr>
+      <th class="doc-pos " data-t="T316">Pos.</th>      <th class="">Désignation</th><th class="n ">Quantité</th><th class="doc-u " data-t="T317">Un.</th><th class="n ">Prix unit.</th><th class="n ">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="c-teinte c-bord-gauche" colspan="6" data-t="T318">1&nbsp;&nbsp;Préparation</td></tr>                                                <tr>
+            <td class="doc-pos">1.1</td>                        <td class="">Protection des sols et des meubles</td>
+            <td class="n">1</td>
+            <td class="doc-u" data-t="T319">forfait</td>            <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+            <td class="doc-pos">1.2</td>                        <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42</td>
+            <td class="doc-u">m²</td>            <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="5">Total préparation</td><td class="n">558.00</td></tr>                                      <tr class="doc-grp"><td class="c-teinte c-bord-gauche" colspan="6" data-t="T320">2&nbsp;&nbsp;Peinture</td></tr>                                                <tr>
+            <td class="doc-pos">2.1</td>                        <td class="">Peinture murale, deux couches</td>
+            <td class="n">42</td>
+            <td class="doc-u">m²</td>            <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+            <td class="doc-pos">2.2</td>                        <td class="">Peinture du plafond</td>
+            <td class="n">18</td>
+            <td class="doc-u">m²</td>            <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                  <tr class="doc-st"><td colspan="5">Total peinture</td><td class="n">1’155.00</td></tr>          </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="">Total TTC</td><td class="n ">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span data-t="T063">Technique</span></label>
+          <a class="voir" href="/reglages/modeles/technique?depuis=bienvenue" data-grand="/img/modeles/grand/technique.jpg?v=9d6a0c055e63" data-cle="technique" data-nom="Technique" aria-label="Voir le modèle Technique en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="recap">
+            <span class="vignette rls-25" data-vignette="recap"><article class="paper vignette-papier rls-26" aria-hidden="true"><div class="doc m-recap rls-27" data-feuille="">
+    <div class="doc-in">
+    <div class="doc-haut"><table class="doc-tete"><tbody><tr><td><span class="doc-nom">Démo Peintre</span></td><td class="doc-coord"><b>Démo Peintre</b></td></tr></tbody></table></div>
+    <div class="doc-filet"></div>
+    <div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div>
+    <div class="doc-titre" data-t="T321"><span class="c-texte">Offre n°&nbsp;1</span> · Rafraîchissement du séjour</div>
+    <div class="doc-meta">25.11.2026 · valable jusqu'au 25.12.2026</div>
+    
+                
+  
+    <table class="doc-duo2"><tbody><tr>
+      <td class="doc-g">
+        <div class="doc-h2" data-t="T064">Récapitulatif</div>
+        <table class="doc-rec"><tbody><tr><td class="doc-let"><table class="doc-pas"><tbody><tr><td class="c-fond">A</td></tr></tbody></table></td><td>Préparation</td><td class="n">558.00</td></tr><tr><td class="doc-let"><table class="doc-pas"><tbody><tr><td class="c-fond">B</td></tr></tbody></table></td><td>Peinture</td><td class="n">1’155.00</td></tr></tbody></table>
+      </td>
+      <td><div class="doc-h2">&nbsp;</div>                    <table class="doc-bloc-tot c-teinte">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="">Total TTC</td><td class="n ">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+</td>
+    </tr></tbody></table>
+    <div class="doc-h2 doc-detail" data-t="T322">Détail des travaux</div>
+            <table class="doc-lig">
+    <thead><tr>
+            <th class="">Désignation</th><th class="n ">Quantité</th><th class="n ">Prix unit.</th><th class="n ">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="c-texte" colspan="4" data-t="T323">A&nbsp;·&nbsp;Préparation</td></tr>                                                <tr>
+                                    <td class="">Protection des sols et des meubles</td>
+            <td class="n">1&nbsp;forfait</td>
+                        <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                                                        <tr class="doc-grp"><td class="c-texte" colspan="4" data-t="T324">B&nbsp;·&nbsp;Peinture</td></tr>                                                <tr>
+                                    <td class="">Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                            </tbody>
+  </table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span>Récapitulatif</span></label>
+          <a class="voir" href="/reglages/modeles/recap?depuis=bienvenue" data-grand="/img/modeles/grand/recap.jpg?v=317088724cd6" data-cle="recap" data-nom="Récapitulatif" aria-label="Voir le modèle Récapitulatif en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="chantier">
+            <span class="vignette rls-28" data-vignette="chantier"><article class="paper vignette-papier rls-29" aria-hidden="true"><div class="doc m-chantier rls-30" data-feuille="">
+                                                                              <div class="doc-in">
+    <div class="doc-haut"><table class="doc-tete"><tbody><tr><td><span class="doc-nom">Démo Peintre</span></td><td class="doc-coord"><b>Démo Peintre</b></td></tr></tbody></table></div>
+    <div class="doc-barre c-fond"></div>
+    <table class="doc-duo"><tbody><tr>
+      <td>
+        <table class="doc-fiche c-filet">
+          <tbody><tr><th colspan="2" class="c-fond" data-t="T325">Références</th></tr>
+          <tr><td class="c-teinte">Offre n°</td><td>1</td></tr><tr><td class="c-teinte">Date</td><td>25.11.2026</td></tr><tr><td class="c-teinte">Valable jusqu'au</td><td>25.12.2026</td></tr>        </tbody></table>
+      </td>
+      <td>
+        <div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div>
+              </td>
+    </tr></tbody></table>
+    <div class="doc-titre" data-t="T326"><span class="c-texte">Offre</span> · Rafraîchissement du séjour</div>
+    
+                
+  
+            <table class="doc-lig">
+    <thead><tr>
+            <th class="">Désignation</th><th class="n ">Quantité</th><th class="n ">Prix unit.</th><th class="n ">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="c-teinte c-texte" colspan="3">Préparation</td><td class="n c-teinte">558.00</td></tr>                                                <tr>
+                                    <td class="">Protection des sols et des meubles</td>
+            <td class="n">1&nbsp;forfait</td>
+                        <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                                                        <tr class="doc-grp"><td class="c-teinte c-texte" colspan="3">Peinture</td><td class="n c-teinte">1’155.00</td></tr>                                                <tr>
+                                    <td class="">Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                            </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="">Total TTC</td><td class="n ">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span data-t="T065">Chantier</span></label>
+          <a class="voir" href="/reglages/modeles/chantier?depuis=bienvenue" data-grand="/img/modeles/grand/chantier.jpg?v=67547ca20537" data-cle="chantier" data-nom="Chantier" aria-label="Voir le modèle Chantier en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+          </div>
+        <h3 class="famille" data-t="T327">Simples</h3>
+    <div class="modeles">
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="epure">
+            <span class="vignette rls-31" data-vignette="epure"><article class="paper vignette-papier rls-32" aria-hidden="true"><div class="doc m-epure rls-33" data-feuille="">
+    <div class="doc-in">
+    <div class="doc-haut"><table class="doc-tete"><tbody><tr><td><span class="doc-nom">Démo Peintre</span></td><td class="doc-coord"><b>Démo Peintre</b></td></tr></tbody></table></div>
+    <div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div>
+    <div class="doc-trait c-fond"></div>
+    <div class="doc-titre">Offre n°&nbsp;1</div>
+    <div class="doc-objet">Rafraîchissement du séjour</div>
+    <div class="doc-meta">25.11.2026 · valable jusqu'au 25.12.2026</div>
+    
+                
+  
+            <table class="doc-lig">
+    <thead><tr>
+            <th class="">Désignation</th><th class="n ">Quantité</th><th class="n ">Prix unit.</th><th class="n ">Montant</th>
+    </tr></thead>
+    <tbody>
+                                      <tr class="doc-grp"><td class="" colspan="3">Préparation</td><td class="n ">558.00</td></tr>                                                <tr>
+                                    <td class="">Protection des sols et des meubles</td>
+            <td class="n">1&nbsp;forfait</td>
+                        <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                                                        <tr class="doc-grp"><td class="" colspan="3">Peinture</td><td class="n ">1’155.00</td></tr>                                                <tr>
+                                    <td class="">Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+                        <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                                          <tr>
+                                    <td class="">Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+                        <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                            </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="">Total TTC</td><td class="n ">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span data-t="T066">Épuré</span></label>
+          <a class="voir" href="/reglages/modeles/epure?depuis=bienvenue" data-grand="/img/modeles/grand/epure.jpg?v=6e2ec5e67e7a" data-cle="epure" data-nom="Épuré" aria-label="Voir le modèle Épuré en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+                      <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="marge" checked="">
+            <span class="vignette rls-34" data-vignette="marge"><article class="paper vignette-papier rls-35" aria-hidden="true"><div class="doc m-marge rls-36" data-feuille="">
+    <div class="doc-in">
+    <div class="doc-haut"><table class="doc-tete"><tbody><tr><td><span class="doc-nom">Démo Peintre</span></td><td class="doc-coord"><b>Démo Peintre</b></td></tr></tbody></table></div>
+    <div class="doc-filet"></div>
+    <div class="doc-adresse">Madame Exemple<br>Rue de l'Exemple 1<br>2800 Delémont</div>
+    <div class="doc-titre"><span class="c-texte">Offre n°&nbsp;1</span> · Rafraîchissement du séjour</div>
+    
+                          <table class="doc-infos"><tbody><tr><td class=""><div class="doc-lab">Date</div>25.11.2026</td><td class=""><div class="doc-lab">Valable jusqu'au</div>25.12.2026</td></tr></tbody></table>
+
+                
+  
+      <table class="doc-lig">
+    <thead><tr><th class="doc-po" data-t="T328">Poste</th><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix unit.</th><th class="n">Montant</th></tr></thead>
+    <tbody>
+                                          <tr class="doc-prem">
+            <td class="doc-po"><b class="c-texte">Préparation</b></td>
+            <td>Protection des sols et des meubles</td>
+            <td class="n">1&nbsp;forfait</td>
+            <td class="n">180.00</td>
+            <td class="n">180.00</td>
+          </tr>
+                                      <tr class=" doc-der">
+            <td class="doc-po">558.00</td>
+            <td>Ponçage et rebouchage des murs</td>
+            <td class="n">42&nbsp;m²</td>
+            <td class="n">9.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                                                            <tr class="doc-prem">
+            <td class="doc-po"><b class="c-texte">Peinture</b></td>
+            <td>Peinture murale, deux couches</td>
+            <td class="n">42&nbsp;m²</td>
+            <td class="n">18.50</td>
+            <td class="n">777.00</td>
+          </tr>
+                                      <tr class=" doc-der">
+            <td class="doc-po">1’155.00</td>
+            <td>Peinture du plafond</td>
+            <td class="n">18&nbsp;m²</td>
+            <td class="n">21.00</td>
+            <td class="n">378.00</td>
+          </tr>
+                            </tbody>
+  </table>
+
+                        <table class="doc-totaux">
+    <tbody><tr><td>Sous-total HT</td><td class="n">1’713.00</td></tr><tr class="doc-av"><td>TVA 8,1&nbsp;%</td><td class="n">138.75</td></tr>    <tr class="doc-tt"><td class="">Total TTC</td><td class="n ">CHF&nbsp;1’851.75</td></tr>
+          </tbody></table>
+
+        
+        
+    <div class="doc-fin">
+                      <table class="doc-cond"><tbody><tr><td><div class="doc-lab">Conditions</div><ul><li>Paiement&nbsp;: à 30 jours dès la fin des travaux.</li><li>Offre valable jusqu'au 25.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></td></tr></tbody></table>
+      
+      
+            <table class="doc-sign"><tbody><tr>
+      <td><div class="doc-lab">L'entreprise</div><div class="doc-sig-nom"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Démo Peintre, le 25.11.2026</div></td>
+      <td><div class="doc-lab">Bon pour accord</div><div class="doc-sig-esp"></div><div class="doc-sig-l"></div><div class="doc-sig-s">Lieu, date et signature du client</div></td>
+    </tr></tbody></table>
+  
+    </div>
+  </div>
+  <table class="doc-pied"><tbody><tr><td>Démo Peintre</td><td class="n"></td></tr></tbody></table></div>
+</article>
+</span><span data-t="T067">Marge</span><span class="badge propose" data-t="T329">Proposé pour votre métier</span></label>
+          <a class="voir" href="/reglages/modeles/marge?depuis=bienvenue" data-grand="/img/modeles/grand/marge.jpg?v=86be2664d2ae" data-cle="marge" data-nom="Marge" aria-label="Voir le modèle Marge en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>Voir en grand</a>
+        </div>
+          </div>
+      </fieldset>
+</div>
+  </form>
+          <form id="form-logo" method="post" action="/reglages/logo" enctype="multipart/form-data"><input type="hidden" name="_csrf" value=""><input type="hidden" name="retour" value="/bienvenue/marque"></form>
+    <form id="form-logo-retirer" method="post" action="/reglages/logo/retirer"><input type="hidden" name="_csrf" value=""><input type="hidden" name="retour" value="/bienvenue/marque"></form>
+  </main>
+                            <div class="bas">
+        <div class="actionbar">
+          <button class="btn primary" type="submit" form="reglages" data-t="T155">Suivant</button>
+      </div>
+                </div>
+  </div>
+
+
+<div class="agrandi" hidden="" role="dialog" aria-modal="true"><div class="agrandi-haut"><b data-titre=""></b><button type="button" class="agrandi-x" data-fermer="" aria-label="Fermer">×</button></div><div class="agrandi-image" data-fond=""><img alt=""></div><div class="agrandi-bas"><button type="button" class="btn" data-pas="-1" aria-label="Modèle précédent">‹</button><button type="button" class="btn primary" data-choisir="">Choisir ce modèle</button><button type="button" class="btn" data-pas="1" aria-label="Modèle suivant">›</button></div></div></body></html>

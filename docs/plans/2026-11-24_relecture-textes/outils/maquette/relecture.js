@@ -1,5 +1,6 @@
 // Page de relecture des textes de Dicta (chantier 2026-11-24_relecture-textes).
 // Trois colonnes par texte : l'original, la version du correcteur (toujours modifiable), les différences.
+// À gauche, l'aperçu en direct de l'écran : sa copie figée, où chaque texte suit la version du correcteur.
 // Les textes viennent du bloc de données #donnees, tels que l'application les affiche : rien ne les retouche ici.
 // Les corrections restent dans le navigateur du correcteur (localStorage) ; « Copier mes corrections » les rassemble.
 (function () {
@@ -101,7 +102,94 @@
     });
   }
 
-  function ligneTexte(t, ecran) {
+  // ---------- Aperçu en direct : la copie figée de l'écran, dans un cadre, suit les corrections ----------
+  var apercus = [];
+  var originaux = new WeakMap();
+  // Le texte d'un élément de la copie est remplacé par la version du correcteur. Les icônes et les blocs qui portent
+  // d'autres textes restent à leur place ; le reste du texte devient la nouvelle version.
+  function remplacer(cible, texte, original) {
+    if (cible.tagName === 'INPUT' || cible.tagName === 'TEXTAREA') {
+      if (!originaux.has(cible)) { originaux.set(cible, cible.getAttribute('placeholder') || ''); }
+      var ph = texte === original ? originaux.get(cible) : texte.replace(/^Exemple dans le champ\s?:\s?/, '');
+      cible.setAttribute('placeholder', ph);
+      cible.classList.toggle('rl-change', texte !== original);
+      return;
+    }
+    if (!originaux.has(cible)) { originaux.set(cible, cible.innerHTML); }
+    cible.innerHTML = originaux.get(cible);
+    // Le texte numéroté peut porter le nom de sa partie (courriels : « Titre : ») que l'écran n'affiche pas.
+    var affiche = cible.textContent.replace(/[ \t\n\r]+/g, ' ').trim();
+    var debut = original.indexOf(affiche);
+    if (affiche && debut > 0 && texte.indexOf(original.slice(0, debut)) === 0) { texte = texte.slice(debut); }
+    cible.classList.toggle('rl-change', texte !== original);
+    if (texte === original) { return; }
+    var avant = [], apres = [], vu = false;
+    Array.prototype.slice.call(cible.childNodes).forEach(function (n) {
+      var garder = n.nodeType === 1 && (n.textContent.trim() === '' || n.hasAttribute('data-t') || n.querySelector('[data-t]'));
+      if (garder) { (vu ? apres : avant).push(n); } else if (n.textContent.trim() !== '') { vu = true; }
+      cible.removeChild(n);
+    });
+    avant.forEach(function (n) { cible.appendChild(n); });
+    cible.appendChild(cible.ownerDocument.createTextNode(texte));
+    apres.forEach(function (n) { cible.appendChild(n); });
+  }
+  function majApercus(numero, texte, original) {
+    apercus.forEach(function (a) {
+      if (!a.doc) { return; }
+      a.doc.querySelectorAll('[data-t="' + numero + '"]').forEach(function (c) { remplacer(c, texte, original); });
+    });
+  }
+  // L'élément du texte en cours d'édition est entouré, et amené en vue dans l'aperçu de son écran.
+  function montrer(numero, ecranId, oui) {
+    apercus.forEach(function (a) {
+      if (!a.doc) { return; }
+      a.doc.querySelectorAll('[data-t="' + numero + '"]').forEach(function (c, k) {
+        c.classList.toggle('rl-actif', oui);
+        if (oui && k === 0 && a.ecran.id === ecranId) {
+          var r = c.getBoundingClientRect();
+          var y = (r.top - a.ecran.apercu.decalage) * a.echelle;
+          a.cadre.scrollTop = Math.max(0, y - a.cadre.clientHeight / 3);
+        }
+      });
+    });
+  }
+  function dimensionner(a) {
+    var ap = a.ecran.apercu;
+    var largeurDispo = a.cadre.clientWidth || ap.largeur;
+    a.echelle = Math.min(1, largeurDispo / ap.largeur);
+    a.boite.style.width = Math.round(ap.largeur * a.echelle) + 'px';
+    a.boite.style.height = Math.round(ap.hauteurVue * a.echelle) + 'px';
+    a.iframe.style.width = ap.largeur + 'px';
+    a.iframe.style.height = ap.hauteurPage + 'px';
+    a.iframe.style.transform = 'translateY(' + (-ap.decalage * a.echelle) + 'px) scale(' + a.echelle + ')';
+  }
+  function chargerApercu(a, repli) {
+    fetch(donnees.ecrans + a.ecran.apercu.fichier + '.txt').then(function (r) {
+      if (!r.ok) { throw new Error(String(r.status)); }
+      return r.text();
+    }).then(function (html) {
+      var d = a.iframe.contentDocument;
+      d.open();
+      d.write(html);
+      d.close();
+      a.doc = d;
+      Object.keys(etat.textes).forEach(function (numero) {
+        var c = etat.textes[numero];
+        d.querySelectorAll('[data-t="' + numero + '"]').forEach(function (x) { remplacer(x, c.apres, c.avant); });
+      });
+      dimensionner(a);
+    }).catch(function () { repli(); });
+  }
+  var observateur = 'IntersectionObserver' in window ? new IntersectionObserver(function (entrees) {
+    entrees.forEach(function (en) {
+      if (!en.isIntersecting) { return; }
+      observateur.unobserve(en.target);
+      var a = apercus.filter(function (x) { return x.cadre === en.target; })[0];
+      if (a) { a.charger(); }
+    });
+  }, { rootMargin: '1200px 0px' }) : null;
+
+  function ligneTexte(t, ecran, ecranId) {
     var li = el('li', 'texte');
     li.id = t.n;
     li.appendChild(el('span', 'num', t.n));
@@ -140,7 +228,10 @@
       li.classList.toggle('change', change);
       annuler.hidden = !change;
       dessinerDifferences(diff, t.t, champ.value);
+      majApercus(t.n, champ.value, t.t);
     }
+    champ.addEventListener('focus', function () { montrer(t.n, ecranId, true); });
+    champ.addEventListener('blur', function () { montrer(t.n, ecranId, false); });
     champ.addEventListener('input', function () { maj(); ajuster(champ); garder(); });
     annuler.addEventListener('click', function () { champ.value = t.t; maj(); ajuster(champ); garder(); champ.focus(); });
     raccourcis(champ);
@@ -166,8 +257,36 @@
     img.src = donnees.images + e.image;
     img.alt = e.titre;
     img.loading = 'lazy';
-    fig.appendChild(img);
-    fig.appendChild(el('figcaption', '', e.titre));
+    var legende = el('figcaption', '', e.titre);
+    if (donnees.ecrans && e.apercu) {
+      // L'aperçu en direct ; la capture d'origine reste à un clic, dans la visionneuse du kit.
+      var cadre = el('div', 'apercu');
+      var boite = el('div', 'apercu-boite');
+      var iframe = el('iframe');
+      iframe.title = 'Aperçu en direct : ' + e.titre;
+      iframe.tabIndex = -1;
+      iframe.setAttribute('aria-hidden', 'true');
+      boite.appendChild(iframe);
+      cadre.appendChild(boite);
+      fig.appendChild(cadre);
+      img.className = 'origine';
+      fig.appendChild(img);
+      var voir = el('button', 'voir-origine', 'Voir la capture d’origine');
+      voir.type = 'button';
+      voir.addEventListener('click', function () { img.click(); });
+      legende.textContent = 'Aperçu en direct\u00A0: ' + e.titre;
+      fig.appendChild(legende);
+      fig.appendChild(voir);
+      var a = { ecran: e, cadre: cadre, boite: boite, iframe: iframe, doc: null, echelle: 1 };
+      a.charger = function () {
+        chargerApercu(a, function () { cadre.remove(); voir.remove(); img.className = ''; legende.textContent = e.titre; });
+      };
+      apercus.push(a);
+      if (observateur) { observateur.observe(cadre); } else { a.charger(); }
+    } else {
+      fig.appendChild(img);
+      fig.appendChild(legende);
+    }
     art.appendChild(fig);
 
     var corps = el('div', 'corps');
@@ -176,7 +295,7 @@
     ['', 'Original', 'Votre version', 'Différences'].forEach(function (t) { titres.appendChild(el('span', '', t)); });
     corps.appendChild(titres);
     var ol = el('ol', 'textes');
-    e.textes.forEach(function (t) { ol.appendChild(ligneTexte(t, e.titre)); });
+    e.textes.forEach(function (t) { ol.appendChild(ligneTexte(t, e.titre, e.id)); });
     corps.appendChild(ol);
     if (e.deja) {
       corps.appendChild(el('p', 'deja', e.deja + (e.deja > 1 ? ' autres textes de cet écran sont déjà plus haut.' : ' autre texte de cet écran est déjà plus haut.')));
@@ -213,7 +332,7 @@
   if (document.fonts && document.fonts.ready) { document.fonts.ready.then(toutAjuster); }
   window.addEventListener('load', toutAjuster);
   var minuterie;
-  window.addEventListener('resize', function () { clearTimeout(minuterie); minuterie = setTimeout(toutAjuster, 150); });
+  window.addEventListener('resize', function () { clearTimeout(minuterie); minuterie = setTimeout(function () { toutAjuster(); apercus.forEach(function (a) { if (a.doc) { dimensionner(a); } }); }, 150); });
 
   var nom = document.getElementById('nom');
   nom.value = etat.nom || '';

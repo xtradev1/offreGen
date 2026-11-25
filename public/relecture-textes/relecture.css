@@ -43,15 +43,21 @@ h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.2p
 
 /* Un écran : le titre en haut ; la capture à gauche, collée pendant qu'on lit ses textes ; à droite, une ligne par
    texte en trois colonnes (original, version du correcteur, différences). */
-.ecran { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); grid-template-areas: "tete tete" "capture corps"; gap: 12px 24px; padding: 24px 0; border-top: 1px solid var(--trait); }
+.ecran { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); grid-template-areas: "tete tete" "capture corps"; gap: 12px 24px; padding: 24px 0; border-top: 1px solid var(--trait); }
 .ecran.large { grid-template-columns: minmax(0, 1fr); grid-template-areas: "tete" "capture" "corps"; }
 .ecran-tete { grid-area: tete; }
 .ecran h3 { font-size: 21px; margin: 0 0 4px; }
 .ecran .contexte { color: var(--doux); margin: 0; font-size: 15px; }
-.capture { grid-area: capture; margin: 0; align-self: start; position: sticky; top: 64px; }
+.capture { grid-area: capture; margin: 0; align-self: start; position: sticky; top: 64px; display: grid; gap: 4px; justify-items: start; }
 .ecran.large .capture { position: static; }
-.capture img { display: block; width: 100%; height: auto; border: 1px solid var(--trait); border-radius: 12px; background: var(--carte); }
+.capture > img { display: block; width: 100%; height: auto; border: 1px solid var(--trait); border-radius: 12px; background: var(--carte); }
 .capture figcaption { font-size: 13px; color: var(--doux); margin-top: 6px; }
+/* L'aperçu en direct : la copie de l'écran, réduite à la largeur de la colonne, défile dans son cadre. */
+.apercu { justify-self: stretch; width: 100%; max-width: 100%; max-height: 78vh; overflow: auto; border: 1px solid var(--trait); border-radius: 12px; background: var(--carte); overscroll-behavior: contain; }
+.apercu-boite { position: relative; overflow: hidden; margin: 0 auto; }
+.apercu iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; background: #FFFFFF; }
+.capture img.origine { display: none; }
+.voir-origine { border: 0; background: none; padding: 2px 0; text-decoration: underline; cursor: pointer; color: var(--doux); font-size: 13px; }
 .corps { grid-area: corps; min-width: 0; }
 .note { font-size: 14px; color: var(--doux); background: var(--etiquette); border-radius: 8px; padding: 8px 10px; margin: 8px 0 0; }
 
@@ -87,7 +93,7 @@ h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.2p
 /* Écran moyen : la capture au-dessus des textes. Téléphone : chaque texte en colonne, avec ses titres. */
 @media (max-width: 1100px) {
   .ecran { grid-template-columns: minmax(0, 1fr); grid-template-areas: "tete" "capture" "corps"; }
-  .capture { position: static; max-width: 300px; }
+  .capture { position: static; max-width: 340px; }
   .ecran.large .capture { max-width: none; }
 }
 @media (max-width: 760px) {

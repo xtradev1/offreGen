@@ -56,7 +56,7 @@ foreach ($liste as [$id, $titre, $c]) {
         ['Objet', $c->sujet], ['Titre', $c->titre], ['Texte', $c->texte], ['Bouton', $c->bouton],
         ...array_map(static fn (string $t): array => ['Texte sous le bouton', $t], $c->apres),
         ['Sous le texte', (new ReflectionClassConstant(Courriel::class, 'SECOURS'))->getValue()],
-        ['Pied', $c->pied], ['Signature', $c->signataire === null ? $app : $c->signataire . ' / ' . $app],
+        ['Pied', $c->pied], ['Signature', $c->signataire],
     ], static fn (array $x): bool => $x[1] !== null && $x[1] !== ''));
     $sortie[] = ['id' => $id, 'titre' => $titre, 'champs' => $champs, 'html' => $c->enHtml($app, $site)];
 }

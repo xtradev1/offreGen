@@ -81,7 +81,8 @@ def utile(t: str) -> bool:
 
 
 captures = {c['id']: c for c in json.load(open(CAPTURES / 'captures.json', encoding='utf-8'))}
-vus = set()
+numero = {}   # texte -> son numéro, au premier écran qui le montre
+marques = {}  # « capture:rang » (marque data-rl des copies figées) -> numéro du texte
 n = 0
 parties = []
 manquantes = []
@@ -93,27 +94,41 @@ for pid, titre, intro, ecrans in PARTIES:
             manquantes.append(eid)
             continue
         textes, deja = [], 0
-        for t in c['textes']:
+        for rang, t in enumerate(c['textes']):
+            if t is None:
+                continue
             t = ' '.join(t.split(' ')).strip()
             if not utile(t):
                 continue
             cle = ' '.join(t.split())
-            if cle in vus:
+            if cle in numero:
+                # Déjà numéroté plus haut : l'aperçu de cet écran suit quand même la correction.
                 deja += 1
+                marques[f'{eid}:{rang}'] = numero[cle]
                 continue
-            vus.add(cle)
             n += 1
-            textes.append({'n': f'T{n:03d}', 't': t})
+            numero[cle] = marques[f'{eid}:{rang}'] = f'T{n:03d}'
+            textes.append({'n': numero[cle], 't': t})
         sortie.append({'id': eid, 'titre': typo(etitre), 'contexte': typo(contexte), 'note': typo(c.get('note', '')),
-                       'image': c['image'], 'textes': textes, 'deja': deja, 'large': eid in LARGES})
+                       'image': c['image'], 'apercu': c.get('apercu'), 'textes': textes, 'deja': deja, 'large': eid in LARGES})
     parties.append({'id': pid, 'titre': typo(titre), 'intro': typo(intro), 'ecrans': sortie})
 if manquantes:
     sys.exit('Captures manquantes : ' + ', '.join(manquantes))
-print(f'{n} textes numérotés, {sum(len(p["ecrans"]) for p in parties)} écrans')
+print(f'{n} textes numérotés, {sum(len(p["ecrans"]) for p in parties)} écrans, {len(marques)} marques')
 
 
-def donnees(images: str) -> str:
-    return json.dumps({'images': images, 'parties': parties}, ensure_ascii=False).replace('</', '<\\/')
+def donnees(images: str, ecrans) -> str:
+    """ecrans : adresse des copies figées, ou None (maquette locale : un fichier ouvert du disque ne peut pas les lire)."""
+    return json.dumps({'images': images, 'ecrans': ecrans, 'parties': parties}, ensure_ascii=False).replace('</', '<\\/')
+
+
+def relier(html: str) -> str:
+    """Les marques de capture deviennent les numéros des textes ; une marque sans texte retenu disparaît."""
+    html = re.sub(r' data-rl="([^"]+)"', lambda m: f' data-t="{marques[m.group(1)]}"' if m.group(1) in marques else '', html)
+    # Un attribut style vide reste un style en ligne pour la CSP : chaque cadre le signalerait.
+    # Un lien blob: ou data: (enregistrement gardé dans un fichier) ne mène nulle part dans la copie.
+    html = re.sub(r' (?:href|src)="(?:blob|data):[^"]*"', '', html)
+    return html.replace(' style=""', '')
 
 
 gabarit = (ICI / 'gabarit.html').read_text(encoding='utf-8')
@@ -127,6 +142,14 @@ if pub.exists():
 (pub / 'img').mkdir(parents=True)
 for f in (CAPTURES / 'img').glob('*.jpg'):
     shutil.copy(f, pub / 'img' / f.name)
+# Les copies figées des écrans, pour l'aperçu en direct : HTML en .txt (le site ne sert pas de .html statique).
+(pub / 'ecrans').mkdir()
+for f in (CAPTURES / 'ecrans').iterdir():
+    if f.suffix == '.txt':
+        (pub / 'ecrans' / f.name).write_text(relier(f.read_text(encoding='utf-8')), encoding='utf-8', newline='\n')
+    else:
+        shutil.copy(f, pub / 'ecrans' / f.name)
+shutil.copy(ICI / 'ecrans-commun.css', pub / 'ecrans' / 'commun.css')
 (pub / 'relecture.css').write_text(css.replace('%%POLICES%%', '/fonts'), encoding='utf-8', newline='\n')
 (pub / 'relecture.js').write_text(js, encoding='utf-8', newline='\n')
 shutil.copy(KIT / 'assets/maquette-kit.css', pub / 'kit.css')
@@ -134,7 +157,7 @@ shutil.copy(KIT / 'assets/maquette-kit.js', pub / 'kit.js')
 site = (gabarit
         .replace('%%CSS%%', '<link rel="stylesheet" href="/relecture-textes/kit.css">\n<link rel="stylesheet" href="/relecture-textes/relecture.css">')
         .replace('%%JS%%', '<script src="/relecture-textes/relecture.js"></script>\n<script src="/relecture-textes/kit.js"></script>')
-        .replace('%%DONNEES%%', donnees('/relecture-textes/img/')))
+        .replace('%%DONNEES%%', donnees('/relecture-textes/img/', '/relecture-textes/ecrans/')))
 (DEPOT / 'relecture').mkdir(exist_ok=True)
 (DEPOT / 'relecture/index.html').write_text(site, encoding='utf-8', newline='\n')
 
@@ -144,7 +167,7 @@ chantier.mkdir(parents=True, exist_ok=True)
 locale = (gabarit
           .replace('%%CSS%%', '<style>\n' + css.replace('%%POLICES%%', '../../../public/fonts') + '</style>')
           .replace('%%JS%%', '<script>\n' + js + '</script>')
-          .replace('%%DONNEES%%', donnees('../../../public/relecture-textes/img/')))
+          .replace('%%DONNEES%%', donnees('../../../public/relecture-textes/img/', None)))
 cible = chantier / 'MAQUETTE-textes.html'
 cible.write_text(locale, encoding='utf-8', newline='\n')
 r = subprocess.run([sys.executable, str(KIT / 'scripts/inject_kit.py'), str(cible)], capture_output=True, text=True, encoding='utf-8')

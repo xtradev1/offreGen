@@ -11,15 +11,26 @@ Une première version (2 186 textes extraits du code, page claude.ai) a été re
 
 ## Ce qui est livré
 
-- Une page de relecture : 36 écrans capturés, 389 textes numérotés T001 à T389. Un texte qui revient sur un autre
+- Une page de relecture : 36 écrans capturés, 385 textes numérotés T001 à T385. Un texte qui revient sur un autre
   écran n'est numéroté qu'une fois.
   - Le site (9 vues), la démo et son guide (11), le passage à l'essai et la mise en route (7), les courriels (9).
   - Trois colonnes par texte (demande de Xavier du 2026-11-25) : l'original, la version du correcteur (toujours
     modifiable, préremplie), les différences mot à mot (ajouts en vert, retraits en rouge barré, ␣ espace, ⍽ espace
-    insécable ; Ctrl+Maj+Espace en pose une). La capture de l'écran reste collée à gauche. Sous chaque écran, une
+    insécable ; Ctrl+Maj+Espace en pose une).
+  - Aperçu en direct (demande de Xavier du 2026-11-25 : « il voit direct, le point il va bien, le point il va pas
+    bien ») : à gauche, la copie figée de l'écran (HTML et styles de Dicta, sans scripts) dans un cadre. Chaque frappe
+    y remplace le texte, surligné ; le texte en cours d'édition y est entouré et amené en vue. Les 385 textes y ont
+    leur place ; un texte qui revient sur plusieurs écrans suit partout. La capture d'origine reste à un clic.
+    Courriels : une ligne « Objet : … » en tête, comme dans une messagerie. Sous chaque écran, une
     remarque libre. Tout reste dans le navigateur du correcteur (localStorage) ; « Copier mes corrections »
     rassemble le tout pour un courriel, les insécables écrites « [insécable] ».
   - « Surligner les espaces insécables » montre où l'application en pose.
+- Copies figées : `public/relecture-textes/ecrans/<écran>.txt` (le site ne sert pas de `.html` statique) et `.css`
+  (les styles que les scripts de Dicta posent sur les éléments, bulles du guide comprises, convertis en règles : la
+  CSP refuse les styles écrits dans le HTML). Le canevas de l'aperçu PDF devient une image. Le cadre hérite de la CSP
+  de la page ; le test vérifie qu'aucune copie ne porte de script, de style en ligne ni de ressource d'un autre site.
+- `public/index.php` : sous `php -S`, la liste des fichiers statiques reprend celle de `public/.htaccess` (`.txt`
+  manquait, les copies répondaient 404 en local).
 - Sur le site : route `/relecture` (`TextesARelireControleur`), qui n'existe que si le `.env` porte
   `RELECTURE_TEXTES=1`. Page `relecture/index.html`, fichiers dans `public/relecture-textes/` (styles, scripts, kit
   des maquettes recopié en entier, captures). Piège constaté au premier déploiement : avec un dossier
@@ -46,13 +57,17 @@ Une première version (2 186 textes extraits du code, page claude.ai) a été re
 
 ## Régénérer après des corrections
 
-1. Copie de travail sur la tête de la branche, `.env.local` avec `DB_NOM=offregen_relecture` et
-   `APP_URL=http://localhost:8010`, serveur `PHP_CLI_SERVER_WORKERS=6 php -S 0.0.0.0:8010 -t public public/index.php`
-   (sans les processus, l'écran d'attente de la dictée bloque le serveur).
-2. `outils/captures/` : `node parcours.js`, puis `reprise.js` (étape 5 et avant l'envoi), `site.js`, `courriels.js`
-   (`MK_PLAYWRIGHT`, `MK_CHROMIUM` : mémoire du projet).
-3. `python outils/maquette/construire.py //wsl.localhost/Ubuntu/home/xavie/<copie>` : écrit la page du site, ses
-   fichiers et la maquette locale.
+1. Copie de travail sur la tête de la branche, `.env.local` avec `DB_NOM=offregen_relecture`,
+   `APP_URL=http://localhost:8010` et `RELECTURE_TEXTES=1`. Serveur :
+   `PHP_CLI_SERVER_WORKERS=6 php -S 0.0.0.0:8010 -t public public/index.php` (sans les processus, l'écran d'attente
+   de la dictée bloque le serveur).
+2. `outils/captures/reinitialiser-base.sh` en root (`wsl -d Ubuntu -u root`) : base neuve et compte administrateur.
+   Sans base neuve, le passage à l'essai refuse un courriel déjà pris.
+3. `node outils/captures/tout.js` (`MK_PLAYWRIGHT`, `MK_CHROMIUM` : mémoire du projet). `tout.js courriels` refait
+   les seuls courriels.
+4. `python outils/maquette/construire.py //wsl.localhost/Ubuntu/home/xavie/<copie>` : écrit la page du site, ses
+   fichiers, les copies des écrans et la maquette locale (sans aperçu en direct : un fichier ouvert du disque ne
+   peut pas lire les copies).
 
 ## Reste à faire
 

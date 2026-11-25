@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Votre démo Dicta se termine bientôt</title><link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/courriel-rappel-dernier.css"></head>
+<body class="rls-0"><div class="rl-objet">Objet&nbsp;: <b data-t="T369">Votre démo Dicta se termine bientôt</b></div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="rls-1"><tbody><tr><td align="center" class="rls-2">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="rls-3">
+<tbody><tr><td bgcolor="#23272D" class="rls-4">
+<img src="/img/dicta-icone-180.png" width="28" height="28" alt="" class="rls-5">
+<span class="rls-6">Dicta</span>
+</td></tr>
+<tr><td class="rls-7">
+<h1 data-t="T370" class="rls-8">Votre démo se termine samedi 28 novembre à 18&nbsp;h&nbsp;00</h1>
+<p data-t="T371" class="rls-9">Pour y revenir d'ici là&nbsp;:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tbody><tr><td bgcolor="#23272D" align="center" class="rls-10">
+<a href="/lien-d-exemple" data-t="T360" class="rls-11">Revenir dans ma démo</a>
+</td></tr></tbody></table>
+<div class="rls-12">&nbsp;</div>
+<p data-t="T367" class="rls-13">Pour continuer après la démo, touchez «&nbsp;Passer à l'essai&nbsp;» en haut de l'écran&nbsp;: les offres que vous avez dictées restent sur votre compte.</p>
+<p data-t="T346" class="rls-14">Le bouton ne fonctionne pas&nbsp;? Copiez ce lien dans votre navigateur&nbsp;:<br><a href="/lien-d-exemple" class="rls-15">https://dicta.ch/d/exemple</a></p>
+<p data-t="T372" class="rls-16">C'est le dernier rappel. Ce lien ouvre votre démo sans mot de passe&nbsp;: gardez-le pour vous.</p>
+<p class="rls-17"><b data-t="T363" class="rls-18">Julie Rossel</b><br>Dicta</p>
+</td></tr>
+</tbody></table>
+</td></tr></tbody></table>
+
+</body></html>
