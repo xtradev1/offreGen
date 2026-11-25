@@ -14,7 +14,7 @@ Sur l'iPhone, sur https://easy-offres.xtradev.ch, déployé le 2026-11-24 (le co
 | F-8 | Fiche d'une ligne, puis fiche d'un client : tape dans un champ, ferme le clavier (« OK » ou toucher à côté), puis touche « Enregistrer » une fois, sans faire défiler. Cinq fois de suite. | Le premier toucher enregistre, chaque fois. Si un « Enregistrer » ne répond pas : note l'écran, si le clavier était ouvert ou fermé, et la version d'iOS (Réglages, Général, Informations). |
 | F-9 | Ferme une fenêtre du bas (fiche d'une ligne) et touche aussitôt une autre ligne. | La ligne touchée réagit, le toucher ne se perd pas. |
 | F-10 | Dans Safari : touche une quantité, le texte de l'offre, puis un champ de la fiche d'un client. Ensuite, écarte deux doigts sur la page. | Le clavier monte sans que la page s'agrandisse, chaque case garde sa taille ; le zoom à deux doigts marche toujours. |
+| F-11 | Avec du réseau, ouvre la liste des offres et attends une minute. Mode avion. Ouvre une offre que tu n'as pas rouverte aujourd'hui, touche « C'est juste » ou change une quantité ; ouvre aussi la fiche d'une ligne. | L'offre s'affiche avec ses couleurs et le bandeau « Hors réseau » ; le geste répond sans recharger la page, et part au retour du réseau. |
 
 Points ouverts, à ton choix (détail dans `REVUE.md`) :
-- M7 : une offre gardée dans le téléphone avant un déploiement, rouverte sans réseau, s'ouvre sans JavaScript (gestes en page entière, donc perdus hors réseau). Défaut ancien du service worker, que chaque déploiement déclenche.
 - M10 : « Envoyer » touché dans les toutes premières dizaines de millisecondes de l'aperçu ne voit pas encore les changements rangés.

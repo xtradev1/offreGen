@@ -33,11 +33,46 @@ const noterCompte = async (c) => {
 const nomDesPages = (c) => (c ? PAGES + c : null);
 const cle = (url) => url.pathname + url.search;
 
+// Les fichiers qu'une page cite (feuilles de style, scripts, images ; app.js par data-app).
+const ADRESSES = /\s(?:href|src|srcset|data-app)="(\/(?:css|js|img)\/[^"\s]+)"/g;
+const cites = (texte) => [...texte.matchAll(ADRESSES)].map((m) => m[1].replace(/&amp;/g, '&'));
+
+// Les adresses citées par les pages gardées encore valables, tous comptes confondus. Une page gardée avant un
+// déploiement cite les anciennes versions des scripts : sans elles, rouverte sans réseau, elle s'ouvrait sans JavaScript
+// et chaque geste rechargeait la page, donc se perdait (M7 de la revue du 2026-11-24, Xavier le 2026-11-25 : « il faut
+// corriger pour que même sans réseau, ça fonctionne »).
+const citesParLesPages = async () => {
+  const adresses = new Set();
+  for (const nom of (await caches.keys()).filter((n) => n.startsWith(PAGES))) {
+    const cache = await caches.open(nom);
+    for (const requete of await cache.keys()) {
+      const r = await cache.match(requete);
+      if (!r || !(r.headers.get('Content-Type') || '').includes('text/html')) continue;
+      if (!(Date.now() - Date.parse(r.headers.get('X-Garde-Le') || '') <= GARDE_MS)) continue;
+      cites(await r.text()).forEach((a) => adresses.add(a));
+    }
+  }
+  return adresses;
+};
+
 self.addEventListener('install', () => self.skipWaiting());
+// Une nouvelle version du service worker reprend, des fichiers de l'ancienne, ceux que citent les pages gardées.
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
-    const noms = await caches.keys();
-    await Promise.all(noms.filter((n) => n.startsWith('offregen-fichiers-') && n !== FICHIERS).map((n) => caches.delete(n)));
+    const vieux = (await caches.keys()).filter((n) => n.startsWith('offregen-fichiers-') && n !== FICHIERS);
+    if (vieux.length) {
+      const adresses = await citesParLesPages();
+      const neuf = await caches.open(FICHIERS);
+      for (const nom of vieux) {
+        const cache = await caches.open(nom);
+        for (const requete of await cache.keys()) {
+          if (!adresses.has(cle(new URL(requete.url))) || await neuf.match(requete)) continue;
+          const r = await cache.match(requete);
+          if (r) await neuf.put(requete, r);
+        }
+      }
+      await Promise.all(vieux.map((n) => caches.delete(n)));
+    }
     await self.clients.claim();
   })());
 });
@@ -48,34 +83,68 @@ const effacerLesPages = async (sauf) => {
 };
 
 // Un fichier versionné (?v=, empreinte du contenu) ou de PDF.js (version dans son dossier) ne change jamais : gardé, servi
-// sans réseau ; l'ancienne version du même fichier part. Un fichier sans version suit le réseau et ses règles de cache
-// (.htaccess) ; la copie gardée ne sert que sans réseau (revue, B-I11 et C-I2).
+// sans réseau. Ses anciennes versions restent tant qu'une page gardée les cite (nettoyerFichiers). Un fichier sans
+// version suit le réseau et ses règles de cache (.htaccess) ; la copie gardée ne sert que sans réseau (revue, B-I11 et
+// C-I2), et elle remplace la précédente.
 const versionne = (url) => /(^|&)v=[0-9a-f]{12}(&|$)/.test(url.search.slice(1)) || url.pathname.startsWith('/js/vendor/');
 const garderFichier = async (cache, requete, reponse) => {
   if (!reponse.ok || reponse.type !== 'basic') return;
   const url = new URL(requete.url);
-  const anciens = (await cache.keys()).filter((k) => { const u = new URL(k.url); return u.pathname === url.pathname && u.search !== url.search; });
-  await Promise.all(anciens.map((k) => cache.delete(k)));
+  if (!versionne(url)) {
+    const anciens = (await cache.keys()).filter((k) => { const u = new URL(k.url); return u.pathname === url.pathname && u.search !== url.search; });
+    await Promise.all(anciens.map((k) => cache.delete(k)));
+  }
   await cache.put(requete, reponse.clone());
+};
+// Sans réseau, une version absente du téléphone (page gardée avant ce correctif, dont le service worker d'alors a effacé
+// les fichiers) : la plus récente gardée du même fichier. Une page un peu plus ancienne que ses scripts vaut mieux
+// qu'une page sans scripts, où chaque geste se perd. Le cache rend ses clés dans l'ordre où elles sont entrées.
+const plusRecente = async (cache, url) => {
+  const memes = (await cache.keys()).filter((k) => new URL(k.url).pathname === url.pathname);
+  return memes.length ? cache.match(memes[memes.length - 1]) : undefined;
 };
 const fichier = async (requete) => {
   const cache = await caches.open(FICHIERS);
-  if (versionne(new URL(requete.url))) {
+  const url = new URL(requete.url);
+  if (versionne(url)) {
     const garde = await cache.match(requete);
     if (garde) return garde;
-    const reponse = await fetch(requete);
-    await garderFichier(cache, requete, reponse);
-    return reponse;
   }
   try {
     const reponse = await fetch(requete);
     await garderFichier(cache, requete, reponse);
     return reponse;
   } catch (err) {
-    const garde = await cache.match(requete);
+    const garde = (await cache.match(requete)) || (await plusRecente(cache, url));
     if (garde) return garde;
     throw err;
   }
+};
+
+// Après un déploiement, deux versions d'un même fichier : l'ancienne part dès qu'aucune page gardée ne la cite plus (la
+// page rouverte avec du réseau se garde à nouveau, avec les nouvelles adresses ; une page de plus de 14 jours ne compte
+// plus). La plus récente reste toujours. Les pages ne sont relues que s'il y a des doubles. Un seul nettoyage à la fois.
+let nettoyage = null;
+const nettoyerFichiers = () => {
+  if (!nettoyage) {
+    nettoyage = (async () => {
+      const cache = await caches.open(FICHIERS);
+      const parChemin = new Map();
+      for (const k of await cache.keys()) {
+        const u = new URL(k.url);
+        if (!versionne(u)) continue;
+        if (!parChemin.has(u.pathname)) parChemin.set(u.pathname, []);
+        parChemin.get(u.pathname).push(k);
+      }
+      const doubles = [...parChemin.values()].filter((l) => l.length > 1);
+      if (!doubles.length) return;
+      const adresses = await citesParLesPages();
+      for (const l of doubles) {
+        for (const k of l.slice(0, -1)) if (!adresses.has(cle(new URL(k.url)))) await cache.delete(k);
+      }
+    })().finally(() => { nettoyage = null; });
+  }
+  return nettoyage;
 };
 
 // La page gardée, marquée pour l'écran : data-garde-le (date de la copie), data-garde-raison (hors réseau, ou lent).
@@ -111,8 +180,7 @@ const horsReseau = async () => {
 const garderFichiers = async (texte) => {
   const cache = await caches.open(FICHIERS);
   const deja = new Set((await cache.keys()).map((k) => cle(new URL(k.url))));
-  const adresses = [...texte.matchAll(/\s(?:href|src|srcset|data-app)="(\/(?:css|js|img)\/[^"\s]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
-  for (const adresse of [...new Set(adresses)]) {
+  for (const adresse of [...new Set(cites(texte))]) {
     if (deja.has(adresse) || await cache.match(adresse)) continue;
     try {
       await fichier(new Request(adresse));
@@ -181,7 +249,7 @@ const page = async (e) => {
       const client = await self.clients.get(e.resultingClientId || e.clientId);
       if (client) client.postMessage({ type: 'page-a-jour', adresse: cle(new URL(requete.url)) });
     }
-    if (texte) { await pause(5000); await garderFichiers(texte); }
+    if (texte) { await pause(5000); await garderFichiers(texte); await nettoyerFichiers(); }
   });
   e.waitUntil(suite.catch(() => {}));
   const attendre = pause;
@@ -265,18 +333,32 @@ self.addEventListener('message', (e) => {
   if (m.type === 'garder' && Array.isArray(m.pages)) e.waitUntil(precharger(m.pages));
 });
 
-// Une à une, sans presser le réseau ; une page déjà gardée à la même version n'est pas redemandée. Chaque page attend
-// 3 secondes sans requête de l'écran : un geste de l'artisan met le préchargement en pause (D4).
+// La plus récente version gardée de chaque fichier versionné (chemin => adresse) ; une page gardée est à jour si elle ne
+// cite aucune version plus ancienne.
+const recentes = async () => {
+  const m = new Map();
+  for (const k of await (await caches.open(FICHIERS)).keys()) { const u = new URL(k.url); if (versionne(u)) m.set(u.pathname, cle(u)); }
+  return m;
+};
+const aJour = async (garde, neuves) => cites(await garde.clone().text()).every((a) => {
+  const u = new URL(a, self.location.origin);
+  return !versionne(u) || !neuves.has(u.pathname) || neuves.get(u.pathname) === a;
+});
+
+// Une à une, sans presser le réseau ; une page déjà gardée à la même version n'est pas redemandée, sauf si elle cite des
+// fichiers d'avant un déploiement : reprise, elle cite les nouveaux et les anciens peuvent partir (M7, 2026-11-25).
+// Chaque page attend 3 secondes sans requête de l'écran : un geste de l'artisan met le préchargement en pause (D4).
 const precharger = async (pages) => {
   const c = await lireCompte();
   if (!c) return;
   const cache = await caches.open(nomDesPages(c));
+  const neuves = await recentes();
   for (const p of pages.slice(0, 80)) {
     if (!p || typeof p.adresse !== 'string') continue;
     const url = new URL(p.adresse, self.location.origin);
     if (url.origin !== self.location.origin || JAMAIS.test(url.pathname)) continue;
     const garde = await cache.match(cle(url));
-    if (garde && p.version && garde.headers.get('X-Version-Garde') === String(p.version)) continue;
+    if (garde && p.version && garde.headers.get('X-Version-Garde') === String(p.version) && await aJour(garde, neuves)) continue;
     while (Date.now() - activite < CALME_MS) await pause(500);
     try {
       const requete = new Request(cle(url), { credentials: 'same-origin', headers: { Accept: 'text/html', 'X-Version-Garde': String(p.version || '') } });
@@ -287,4 +369,5 @@ const precharger = async (pages) => {
     }
     await pause(400);
   }
+  await nettoyerFichiers();
 };
