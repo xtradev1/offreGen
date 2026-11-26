@@ -335,15 +335,16 @@ function nomPartie(nom, n) {
 // la préparation a échoué. Rend une fonction qui arrête le suivi. L'état dit où aller (suite) ; une page gardée par un
 // serveur plus ancien ne le dit pas : l'offre elle-même.
 function suivreEtapes(liste, uuid, fini, rate = () => {}) {
-  const message = liste.parentElement.querySelector('[data-etapes-message]');
-  const panne = liste.parentElement.querySelector('[data-etapes-panne]');
+  // Sans liste : une préparation mise en arrière-plan, que plus aucun écran ne montre.
+  const message = liste ? liste.parentElement.querySelector('[data-etapes-message]') : null;
+  const panne = liste ? liste.parentElement.querySelector('[data-etapes-panne]') : null;
   const dire = (t) => { if (message) message.textContent = t; };
   let arret = false;
   const tour = () => fetch('/enregistrements/' + uuid + '/etat', { credentials: 'same-origin', cache: 'no-store' })
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
     .then((e) => {
       if (arret) return;
-      marquerEtapes(liste, e.faites, e.echec);
+      if (liste) marquerEtapes(liste, e.faites, e.echec);
       if (panne) panne.hidden = !e.interrompu;
       dire(e.echec ? 'La préparation a échoué après plusieurs essais.' : e.essais > 0 ? 'Un souci passager, nouvel essai en cours…' : '');
       if (e.offre) { arret = true; abri.oublier(uuid); fini(e.suite ? e : Object.assign({}, e, { suite: '/offres/' + e.offre, a_relire: 0 })); }
@@ -405,6 +406,7 @@ function nouvelleOffre() {
   let occupe = false;
   let arreterSuivi = () => {};
   let enSuivi = false; // l'audio est au serveur, l'offre se prépare
+  let uuidSuivi = null; // l'enregistrement dont la fenêtre montre la préparation, tant qu'elle n'est ni prête ni en échec
   let duMicro = false; // le fichier en cours vient du micro : le fermer sans l'envoyer pourrait le perdre
   let copieAbri = false; // le fichier en cours est aussi gardé dans le navigateur
   const perteAcceptee = () => !duMicro || window.confirm(copieAbri
@@ -430,13 +432,10 @@ function nouvelleOffre() {
       attente.arreter();
       lacher();
       // Fermée pendant la préparation ou sur « Offre prête » : la liste des offres se met à jour sans recharger la page.
-      if (enSuivi && window.fluide && document.getElementById('preparation')) {
-        window.fluide.rafraichir(['preparation', 'liste-offres']).then(() => {
-          // La liste revenue entière : le texte tapé dans la recherche la filtre de nouveau.
-          const champ = document.querySelector('input[data-filtre="#liste-offres"]');
-          if (champ) champ.dispatchEvent(new Event('input'));
-        });
-      }
+      if (enSuivi) rafraichirListe();
+      // Fermée pendant la préparation (« Mettre en arrière-plan », retour du téléphone) : le suivi continue sans l'écran.
+      if (uuidSuivi) suivreEnFond(uuidSuivi);
+      uuidSuivi = null;
       enSuivi = false;
     },
     // Pendant l'enregistrement et l'envoi, le retour ne ferme rien ; après un échec, il demande.
@@ -448,6 +447,45 @@ function nouvelleOffre() {
       if (etatCourant === 'echec') return !perteAcceptee();
       return true;
     },
+  };
+
+  const rafraichirListe = () => {
+    if (!window.fluide || !document.getElementById('preparation')) return;
+    window.fluide.rafraichir(['preparation', 'liste-offres']).then(() => {
+      // La liste revenue entière : le texte tapé dans la recherche la filtre de nouveau.
+      const champ = document.querySelector('input[data-filtre="#liste-offres"]');
+      if (champ) champ.dispatchEvent(new Event('input'));
+    });
+  };
+  // Préparation en arrière-plan (Xavier, 2026-11-26) : tant que la page vit, l'état est encore demandé chaque seconde
+  // (le serveur sait ainsi que l'artisan est là et n'envoie pas de courriel) ; l'offre prête, ou l'échec, s'annonce par
+  // un bandeau, et la liste des offres se met à jour. Une demi-heure au plus.
+  const suivreEnFond = (uuid) => {
+    const annoncer = (texte, lien) => {
+      if (!window.fluide) return;
+      const bandeau = document.createElement('div');
+      bandeau.className = 'snack' + (lien ? '' : ' bad');
+      bandeau.setAttribute('role', lien ? 'status' : 'alert');
+      const libelle = document.createElement('span');
+      libelle.textContent = texte;
+      bandeau.append(libelle);
+      if (lien) {
+        const a = document.createElement('a');
+        a.href = lien.href;
+        a.textContent = lien.texte;
+        bandeau.append(a);
+      }
+      window.fluide.messages.poser(bandeau, lien ? 60000 : 12000);
+    };
+    const arreter = suivreEtapes(null, uuid, (e) => {
+      rafraichirListe();
+      const aRelire = e.a_relire > 0 ? ', ' + e.a_relire + (e.a_relire > 1 ? ' lignes' : ' ligne') + ' à relire' : '';
+      annoncer('Offre prête' + aRelire, { href: e.suite, texte: e.a_relire > 0 ? 'Relire' : 'Ouvrir' });
+    }, () => {
+      rafraichirListe();
+      annoncer('La préparation de la dictée a échoué. Elle est dans « Offres », où vous pouvez la relancer.', null);
+    });
+    setTimeout(arreter, 30 * 60000);
   };
 
   const montrer = (etat) => {
@@ -511,6 +549,8 @@ function nouvelleOffre() {
     const reste = el('[data-anneau-reste]');
     const quitter = el('[data-attente-quitter]');
     const phraseQuitter = quitter.textContent;
+    const arriere = el('[data-arriere-plan]');
+    const libelleArriere = arriere.textContent;
     const NB = String.fromCharCode(0xA0);
     const PART_ENVOI = 0.125;
     const PLAFOND = 0.95;
@@ -526,10 +566,12 @@ function nouvelleOffre() {
     return {
       arreter,
       // part : de 0 à 1, ce qui est parti du fichier.
-      envoi(partEnvoyee) { arreter(); quitter.hidden = true; quitter.textContent = phraseQuitter; poser(PART_ENVOI * partEnvoyee, 'envoi'); },
+      envoi(partEnvoyee) { arreter(); quitter.hidden = true; quitter.textContent = phraseQuitter; arriere.hidden = true; arriere.textContent = libelleArriere; poser(PART_ENVOI * partEnvoyee, 'envoi'); },
       preparer(dureeAudio) {
         arreter();
         quitter.hidden = false;
+        // « Mettre en arrière-plan » : dans la fenêtre seulement (la page Import n'en a pas).
+        arriere.hidden = !feuille;
         const attendu = 10000 + 0.03 * Math.max(0, dureeAudio || 0);
         const depart = performance.now();
         const tour = () => {
@@ -542,7 +584,7 @@ function nouvelleOffre() {
       },
       finir() { arreter(); poser(1, ''); },
       // La préparation a échoué : plus de promesse ; l'écran dit où est la dictée, avec son « Réessayer ».
-      rater() { arreter(); quitter.textContent = quitter.dataset.echec; quitter.hidden = false; anneau.classList.add('rate'); part.textContent = 'Échec'; reste.textContent = ''; },
+      rater() { arreter(); quitter.textContent = quitter.dataset.echec; quitter.hidden = false; arriere.textContent = arriere.dataset.echec; arriere.hidden = !feuille; anneau.classList.add('rate'); part.textContent = 'Échec'; reste.textContent = ''; },
     };
   })();
   // Une partie par fichier ; plusieurs téléchargements de suite, espacés, que le navigateur accepte mieux.
@@ -630,18 +672,19 @@ function nouvelleOffre() {
         progression.hidden = true;
         partEnvoi.textContent = '';
         marquerEtapes(liste, 1, false);
+        // La préparation continue au serveur : « Mettre en arrière-plan » ferme sans rien perdre.
         attente.preparer(dureeAudioMs);
-        // La préparation continue au serveur : la croix ferme sans rien perdre.
-        if (fermerX) fermerX.hidden = false;
         const uuid = xhr.responseURL.split('/enregistrements/')[1].split(/[/?#]/)[0];
         // Arrivée au serveur : la copie reste jusqu'à l'offre prête (suivreEtapes, ou au prochain lancement).
         if (cle) abri.modifier(cle, { etat: 'envoye', uuid, vu: Date.now() });
         if (debutEnvoi > 0 && finEnvoi > debutEnvoi) signalerEnvoi(uuid, Math.max(1, Math.round(finEnvoi - debutEnvoi)));
+        uuidSuivi = uuid;
         arreterSuivi = suivreEtapes(liste, uuid, (e) => {
+          uuidSuivi = null;
           attente.finir();
           // Offre propre : son PDF, ou le choix de son client, s'ouvre. Des lignes à relire : l'écran « Offre prête ».
           setTimeout(() => { if (etatCourant !== 'suivi') return; if (e.a_relire > 0) offrePrete(e); else partir(e.suite); }, 300);
-        }, attente.rater);
+        }, () => { uuidSuivi = null; attente.rater(); });
         return;
       }
       const page = new DOMParser().parseFromString(xhr.responseText || '', 'text/html');
@@ -652,6 +695,7 @@ function nouvelleOffre() {
     xhr.send(donnees);
   };
   el('[data-reessayer]').addEventListener('click', envoyer);
+  el('[data-arriere-plan]').addEventListener('click', () => montrer('choix'));
 
   // « Offre prête » (maquette v2, Xavier, 2026-11-26) : le nombre de lignes et celles à relire, jamais le prix.
   const offrePrete = (e) => {

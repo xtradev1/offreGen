@@ -40,7 +40,10 @@ final class AttenteDicteeTest extends TestCase
         self::assertMatchesRegularExpression('#<li class="cur">.*Envoi de l&\#039;enregistrement.*<li class="todo">.*Transcription de la dictée.*<li class="todo">.*Lignes de l&\#039;offre#s', $attente);
         self::assertStringNotContainsString('Offre prête', $attente);
         self::assertStringContainsString('data-attente-quitter', $attente);
-        self::assertStringContainsString('Vous pouvez quitter l\'application&nbsp;: l\'offre vous attendra dans «&nbsp;Offres&nbsp;».', $attente);
+        self::assertStringContainsString('Vous pouvez travailler sur autre chose ou quitter l\'application&nbsp;: l\'offre vous attendra dans «&nbsp;Offres&nbsp;».', $attente);
+        // Xavier, 2026-11-26 : « Il faut pouvoir fermer la préparation de l'offre. Un bouton avec écrit mettre en
+        // arrière-plan pour travailler sur autre chose ». Caché pendant l'envoi : app.js le montre une fois l'audio au serveur.
+        self::assertStringContainsString('<button class="btn large" type="button" data-arriere-plan data-echec="Fermer" hidden>Mettre en arrière-plan</button>', $attente);
     }
 
     public function testPreteToutesLesEtapesSontFaites(): void

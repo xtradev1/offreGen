@@ -16,15 +16,12 @@ profil: .claude/atoz-profile.md
 
 ## Prochaine action
 
-Gate prod ouvert : rien à coder tant que Xavier n'a pas répondu. À sa réponse : commiter et pousser sur une branche si
-il le demande, déployer sur le test avec son accord pour ce déploiement, puis il déroule `RECETTE.md` sur son iPhone.
-Ses retours renvoient en phase 5. Copie de travail : `~/offreGen-micro` (détachée sur `f72b063`, tout le travail est
-dans l'arbre, non commité). Serveur local : `BANC_DB=offregen_micro_vue sh preparer.sh` (scratchpad, port 8097).
+Gate prod ouvert : Xavier déroule `RECETTE.md` sur son iPhone, sur le site de test. Ses retours renvoient en phase 5.
+Copie de travail : `~/offreGen-micro` (détachée, à la tête de `origin/chantier-voix-offre`). Serveur local :
+`BANC_DB=offregen_micro_vue sh preparer.sh` (scratchpad, port 8097).
 
 ## En attente de toi
 
-- Dire si je commite et pousse ce travail sur une branche (jamais sur `main`).
-- Dire si je déploie sur le site de test (accord pour ce déploiement ; il n'y a que des données inventées ?).
 - Dérouler `RECETTE.md` sur ton iPhone et dire ce qui casse : la pause, l'onde, l'alerte de silence et le clavier ouvert par le curseur n'ont été vus que dans Chromium.
 - Trancher trois textes et un réglage : les conseils des activités « extérieur » et « prestations » (écrits par Claude), « en quelques minutes » dans les bulles du guide alors que l'anneau dit « environ 10 s », et la pièce d'une ligne repliée sous « Plus de réglages ».
 
@@ -61,6 +58,9 @@ dans l'arbre, non commité). Serveur local : `BANC_DB=offregen_micro_vue sh prep
 - 2026-11-26, phase 7 (revue) : un relecteur adversarial sur Opus, aucune surface sensible touchée. Cinq trouvailles importantes, toutes confirmées dans le code et corrigées (filtre sur une liste détachée, guide de la démo court-circuité par l'arrivée directe, offre vide menée à un PDF vide, texte avant les lignes qui disparaissait, durée fausse une seconde après « Reprendre »), plus huit retouches mineures. Une sixième trouvée en rejouant le guide : sa bulle de l'attente sortait de l'écran. Détail et verdicts : `REVUE.md`.
 - 2026-11-26, phase 8 : `RECETTE.md` écrit, onze scénarios. Gate prod ouvert.
 - 2026-11-26 : Xavier, après le rapport de fin de phase 7 : « oui commite, pousse et déploie, pas de vraies données ». Accord pour ce commit, ce push sur `chantier-voix-offre` et ce déploiement sur le test.
+- 2026-11-26 : commit `6d7d2ec` poussé sur `chantier-voix-offre`, déployé sur le test (`bash outils/deployer-test.sh`) : sonde verte, `/sante` annonce `6d7d2ec`.
+- 2026-11-26 : demande de Xavier pendant le déploiement : « Il faut pouvoir fermer la préparation de l'offre. Un bouton avec écrit mettre en arrière-plan pour travailler sur autre chose ou quelque chose dans ce style-là. » Puis : « oui déploie aussi le bouton arrière-plan ».
+- 2026-11-26 : bouton « Mettre en arrière-plan » sur l'écran de préparation, une fois l'audio au serveur (il remplace la croix). La fenêtre fermée, le suivi continue tant que la page vit ; l'offre prête s'annonce par un bandeau « Offre prête » avec « Ouvrir » (ou « Relire »), l'échec par un bandeau rouge ; la liste des offres se met à jour. Après un échec, le bouton dit « Fermer ». Playwright : bouton de 56 px en clair, sombre, 320 px, couché et PC ; fenêtre fermée, bandeau « Offre prête Ouvrir », lien de 48 px, offre ouverte.
 
 ## Décisions
 
@@ -79,6 +79,7 @@ Réponses de Xavier, mots exacts.
 | 2026-11-26 | Après la dernière ligne relue : PDF directement | Maquette v2 |
 | 2026-11-26 | « Ne pas afficher le prix » : Oui, seulement cet écran | Maquette v2 : l'écran « Offre prête » |
 | 2026-11-26 | Constats 1 à 8 du rapport des parcours : « À faire » pour chacun | `PARCOURS-artisan.html` : relecture d'une ligne sans prix, un seul compte, page de l'offre, ajout d'une ligne, recherche dans Mes offres, fiche d'une ligne, après Envoyer, Se déconnecter |
+| 2026-11-26 | « Il faut pouvoir fermer la préparation de l'offre. Un bouton avec écrit mettre en arrière-plan pour travailler sur autre chose ou quelque chose dans ce style-là. » | Demande de Xavier pendant le déploiement |
 
 Tranché par Claude :
 
@@ -97,6 +98,9 @@ Tranché par Claude :
 | 2026-11-26 | Réglages : « Se déconnecter » reste sur PC | « Plus » n'existe pas sur PC ; au téléphone, il n'est plus que dans « Plus » |
 | 2026-11-26 | Deux tests existants alignés : `RepresentantTest` (carte vide du représentant) et les tests de la consigne « Parlez, pièce par pièce. » | Le constat 3 remplace la carte vide par un lien ; la maquette validée remplace la consigne par trois conseils |
 | 2026-11-26 | Hors périmètre, à traiter ailleurs : captures de `public/relecture-textes/ecrans/` périmées ; repli vers une page 404 si l'offre est supprimée pendant l'attente | Revue, M13 et M5 |
+| 2026-11-26 | En arrière-plan, le suivi continue et annonce l'offre prête par un bandeau | Sans cela, rien ne dirait à l'artisan resté sur la page que son offre est là ; le serveur, qui le voit encore, n'envoie pas de courriel |
+| 2026-11-26 | Toute fermeture pendant la préparation (bouton ou retour du téléphone) vaut mise en arrière-plan | Un seul comportement ; la croix n'est plus montrée pendant la préparation |
+| 2026-11-26 | Phrase du bas : « Vous pouvez travailler sur autre chose ou quitter l'application : l'offre vous attendra dans « Offres ». » | Elle dit ce que fait le bouton ; texte de Claude, à relire par Xavier |
 
 ## Artefacts
 
@@ -153,4 +157,16 @@ sondes           contraste 7:1 : 0 défaut sur chaque écran ; sonde prouvée ro
                  disposition : 0 débordement, 0 texte coupé ; seul relevé, le rond qui tourne (0 à l'arrêt)
 
 non_verifie : iPhone (pause, onde, alerte de silence, clavier), lecteur d'écran, dictées de plus de 4 minutes
+```
+
+### Déploiement de 6d7d2ec sur le test (2026-11-26)
+
+```
+$ bash outils/deployer-test.sh
+LU     /sante : {"commit":"6d7d2ec746c39cf2661f3bc579d9b8389b36473e","base":"ok","migrations":"ok"}
+OK     commit déployé : 6d7d2ec746c39cf2661f3bc579d9b8389b36473e
+OK     base joignable
+OK     migrations à jour
+SONDE VERTE
+DÉPLOYÉ : 6d7d2ec746c39cf2661f3bc579d9b8389b36473e sur https://easy-offres.xtradev.ch
 ```

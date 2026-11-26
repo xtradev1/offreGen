@@ -41,7 +41,8 @@
 
   {# Dès « Terminer » ou le fichier choisi : l'attente, en plein écran sombre (maquette v2 du parcours de la dictée,
      Xavier, 2026-11-26). L'anneau se remplit : l'envoi réel d'abord, puis le temps écoulé sur le temps attendu (app.js).
-     Trois étapes nommées ; ni texte entendu ni lignes qui se dessinent. La phrase du bas ne vient qu'une fois l'envoi fait. #}
+     Trois étapes nommées ; ni texte entendu ni lignes qui se dessinent. Le bouton et la phrase du bas ne viennent qu'une
+     fois l'envoi fait. #}
   {% set etapes_depart = [] %}
   {% for libelle in constant('OffreGen\\Http\\Controleur\\EnregistrementControleur::ETAPES') %}
     {% set etapes_depart = etapes_depart|merge([{libelle: libelle, etat: loop.first ? 'cur' : 'todo'}]) %}
@@ -52,7 +53,11 @@
       <span><b data-anneau-part>0&nbsp;%</b><small data-anneau-reste></small></span>
     </div>
     {% include '_etapes.html.twig' with {etapes: etapes_depart} %}
-    <p class="attente-quitter" data-attente-quitter hidden data-echec="Fermez cette fenêtre&nbsp;: la dictée est dans «&nbsp;Offres&nbsp;», où vous pouvez la relancer.">Vous pouvez quitter l'application&nbsp;: l'offre vous attendra dans «&nbsp;Offres&nbsp;».</p>
+    {# L'audio au serveur, la préparation continue sans l'écran (Xavier, 2026-11-26 : « un bouton avec écrit mettre en
+       arrière-plan pour travailler sur autre chose »). app.js ferme la fenêtre, garde le suivi et annonce l'offre prête
+       par un bandeau. Caché pendant l'envoi, et sur la page Import, qui n'a pas de fenêtre. Après un échec : « Fermer ». #}
+    <button class="btn large" type="button" data-arriere-plan data-echec="Fermer" hidden>Mettre en arrière-plan</button>
+    <p class="attente-quitter" data-attente-quitter hidden data-echec="Fermez cette fenêtre&nbsp;: la dictée est dans «&nbsp;Offres&nbsp;», où vous pouvez la relancer.">Vous pouvez travailler sur autre chose ou quitter l'application&nbsp;: l'offre vous attendra dans «&nbsp;Offres&nbsp;».</p>
   </div>
 
   {# L'offre est prête et des lignes restent à relire (maquette v2, Xavier, 2026-11-26) : combien, sans le prix ; un

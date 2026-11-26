@@ -6,9 +6,8 @@ compte de test, sur ton iPhone. Coche au fur et à mesure.
 ## Préalables
 
 - [ ] Migrations SQL à jouer : aucune.
-- [ ] Code à commiter et à pousser : rien n'est commité. Dis-moi si je commite et pousse sur une branche (pas sur `main`).
-- [ ] Déploiement sur le test : `bash outils/deployer-test.sh`, avec ton accord pour ce déploiement, et seulement s'il
-      n'y a que des données inventées sur le test.
+- [x] Code commité et poussé sur `chantier-voix-offre`, déployé sur le test le 2026-11-26 avec ton accord (« pas de
+      vraies données »). `/sante` dit le commit en service.
 - [ ] Données de départ : un catalogue avec au moins un produit à prix, un client déjà en fiche (pour le scénario 1).
 
 ## Scénario 1 : dictée propre, client connu, arrivée sur le PDF
@@ -131,6 +130,21 @@ Gestes :
 Attendu : après le partage, « Offre N envoyée », et la barre du bas devient « Facturer », « Renvoyer », et en dessous
 « Retour aux offres » en bouton principal. Dans « Plus », en bas : « Compte : ton adresse » et un lien « Se
 déconnecter » ; plus de grand bouton. Dans les Réglages, au téléphone, plus de « Se déconnecter ».
+
+## Scénario 12 : mettre la préparation en arrière-plan
+
+Gestes :
+1. Dans « Offres », dicte une offre, « Terminer ».
+2. Dès que l'envoi est fait (première étape cochée), touche « Mettre en arrière-plan ».
+3. Reste sur « Offres » sans rien recharger.
+
+Attendu : pendant l'envoi, le bouton n'est pas là. Ensuite il est sous les étapes, avec la phrase « Vous pouvez
+travailler sur autre chose ou quitter l'application ». Touché, la fenêtre se ferme et la dictée paraît sous « En
+préparation ». Quand l'offre est prête, un bandeau « Offre prête » monte en bas, avec « Ouvrir » (ou « Relire » s'il
+reste des lignes), et l'offre entre dans la liste. Si tu changes de page entre-temps, pas de bandeau : l'offre est dans
+« Offres », et le courriel « offre prête » part comme avant.
+
+Si ça casse : `public/js/app.js`, `suivreEnFond` ; la console du navigateur.
 
 ## Ce qui n'est PAS couvert
 
