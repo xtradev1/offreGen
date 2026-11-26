@@ -61,6 +61,7 @@ Copie de travail : `~/offreGen-micro` (détachée, à la tête de `origin/chanti
 - 2026-11-26 : commit `6d7d2ec` poussé sur `chantier-voix-offre`, déployé sur le test (`bash outils/deployer-test.sh`) : sonde verte, `/sante` annonce `6d7d2ec`.
 - 2026-11-26 : demande de Xavier pendant le déploiement : « Il faut pouvoir fermer la préparation de l'offre. Un bouton avec écrit mettre en arrière-plan pour travailler sur autre chose ou quelque chose dans ce style-là. » Puis : « oui déploie aussi le bouton arrière-plan ».
 - 2026-11-26 : bouton « Mettre en arrière-plan » sur l'écran de préparation, une fois l'audio au serveur (il remplace la croix). La fenêtre fermée, le suivi continue tant que la page vit ; l'offre prête s'annonce par un bandeau « Offre prête » avec « Ouvrir » (ou « Relire »), l'échec par un bandeau rouge ; la liste des offres se met à jour. Après un échec, le bouton dit « Fermer ». Playwright : bouton de 56 px en clair, sombre, 320 px, couché et PC ; fenêtre fermée, bandeau « Offre prête Ouvrir », lien de 48 px, offre ouverte.
+- 2026-11-26 : commit `34cfb23` (bouton « Mettre en arrière-plan ») poussé et déployé sur le test avec l'accord de Xavier : sonde verte, `/sante` annonce `34cfb23`. Recette Playwright sur le test, une connexion avec la démo de Claude, depuis « Clients » (ce compte n'a pas passé l'assistant d'accueil, « Offres » y redirige) : écran d'enregistrement, pause, puis la dictée d'essai du dépôt importée (28 s, voix de synthèse) : envoi en 0,2 s, « Mettre en arrière-plan », bandeau « Offre prête, 3 lignes à relire » à 10,0 s, « Relire » ouvre `/offres/122/relire`. Non vu sur le test : la liste des offres mise à jour en arrière-plan (ce compte n'a pas d'écran « Offres ») ; vu en local.
 
 ## Décisions
 
@@ -169,4 +170,22 @@ OK     base joignable
 OK     migrations à jour
 SONDE VERTE
 DÉPLOYÉ : 6d7d2ec746c39cf2661f3bc579d9b8389b36473e sur https://easy-offres.xtradev.ch
+```
+
+### Déploiement de 34cfb23 et recette sur le test (2026-11-26)
+
+```
+$ bash outils/deployer-test.sh
+LU     /sante : {"commit":"34cfb23f2e2c7ee13d6ebf67d3dbd5349a1fc3d2","base":"ok","migrations":"ok"}
+OK     commit déployé : 34cfb23f2e2c7ee13d6ebf67d3dbd5349a1fc3d2
+SONDE VERTE
+DÉPLOYÉ : 34cfb23f2e2c7ee13d6ebf67d3dbd5349a1fc3d2 sur https://easy-offres.xtradev.ch
+
+Playwright sur https://easy-offres.xtradev.ch (Chromium, téléphone 390 x 844, faux micro, une connexion)
+enregistrement : etat « Enregistrement », onde 75 px, 21 barres levées, fenêtre sombre
+pause          : « En pause », minuteur 00:02 figé 2,5 s, bouton « Reprendre » ; dictée abandonnée, rien d'envoyé
+import         : 0.0 s anneau « 0 % envoi », bouton caché ; 0.2 s envoi fait, « 13 % environ 10 s », bouton « Mettre en arrière-plan »
+arrière-plan   : fenêtre fermée ; 10.0 s bandeau « Offre prête, 3 lignes à relire Relire » ; arrivée /offres/122/relire
+« Plus »       : « Compte : … Se déconnecter », bouton en lien
+erreurs de page : aucune
 ```
