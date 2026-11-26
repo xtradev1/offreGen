@@ -1,0 +1,33 @@
+/* Le suivi d'un membre de l'équipe (chantier onboarding, lot 7). À part : admin.css appartient au chantier de
+   l'administration. */
+.groupe-titre { margin: 8px 2px 8px; font: 700 13px var(--titre); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.badge.attente { font-style: normal; background: var(--warn-soft); color: var(--warn); }
+.chiffres-suivi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.chiffres-suivi div { display: grid; gap: 2px; align-content: start; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.chiffres-suivi span { font-size: 13px; color: var(--muted); }
+.chiffres-suivi b { font: 700 24px var(--titre); }
+
+/* La bienvenue d'un commercial et la fin de son guide (chantier onboarding, lot 8). */
+.bienvenue-equipe { display: grid; gap: 12px; padding-top: 8px; }
+.bienvenue-equipe h1 { margin: 0; font: 700 28px var(--titre); }
+.bienvenue-equipe .fort { font-size: 18px; margin: 0; }
+.points-bienvenue { display: flex; gap: 6px; }
+.points-bienvenue i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.points-bienvenue i.ici { width: 22px; border-radius: 4px; background: var(--ink); }
+.points-cles { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 16px; }
+.note-bienvenue { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 15px; }
+.principal-form { flex: 1; display: flex; }
+.principal-form .btn { flex: 1; }
+.fin-guide { box-shadow: inset 4px 0 0 var(--marque); margin-bottom: 12px; }
+.fin-guide h2 { margin: 0 0 6px; font: 700 20px var(--titre); }
+.revoir-bienvenue { min-height: 48px; display: inline-flex; align-items: center; }
+
+/* « À rappeler » (S1, chantier onboarding, E1) : en tête du suivi et du tableau de bord. */
+.a-rappeler { display: grid; gap: 10px; margin-bottom: 18px; }
+.appel { box-shadow: inset 4px 0 0 var(--marque); }
+.appel p { margin: 0 0 6px; }
+.appel-tete a { color: var(--ink); }
+.appel-gestes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.appel-gestes .btn, .appel-gestes form { flex: 1 1 140px; min-height: 48px; }
+.appel-gestes form { display: flex; margin: 0; }
+.appel-gestes form .btn { flex: 1; }

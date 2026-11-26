@@ -1,0 +1,163 @@
+{% extends 'base.html.twig' %}
+{% set onglet = cible.base starts with '/factures' ? 'factures' : 'offres' %}
+
+{# Ajouter (maquette 25, E7, « simple et sobre ») : un champ, la liste du catalogue, un toucher ajoute. Dans la feuille
+   qui monte sur l'offre, elle reste ouverte pour la ligne suivante (reste=1) et dit laquelle vient d'entrer. Quand
+   la recherche ne trouve rien, le texte tapé s'ajoute en ligne libre, prix à compléter dans l'offre. La ligne libre
+   détaillée (unité, prix, catalogue) reste repliée dessous. #}
+{% block titre %}Ajouter à {{ cible.document }} · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="{{ cible.base }}">{{ cible.retour }}</a>{% endblock %}
+{% block entete %}Ajouter à {{ cible.document }}{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% if ajoutee %}<p class="ajoutee" role="status">«&nbsp;{{ ajoutee }}&nbsp;» ajoutée</p>{% endif %}
+  {# Offre rangée par pièce (sous-chantier 28, P4) : la pièce de la ligne. Des liens et un petit formulaire : sans
+     JavaScript ; la pièce choisie part avec chaque ajout, en champ caché. #}
+  {% if pieces is not empty %}
+    {# « Pièce » ou « Zone », selon l'activité du compte (Compte\Activite). #}
+    {% set groupe = mots().groupe %}
+    <nav class="pieces-ajout" aria-label="{{ groupe|capitalize }} de la ligne">
+      <span class="lbl">{{ groupe|capitalize }}</span>
+      <div class="puces-liens">
+        {% for nom in [''] | merge(pieces) %}
+          <a class="puce-lien" href="{{ cible.base }}/ajouter?piece={{ nom|url_encode }}"{% if nom == piece_choisie %} aria-current="true"{% endif %}>{{ nom == '' ? 'Général' : nom }}</a>
+        {% endfor %}
+      </div>
+      <form class="piece-autre" method="get" action="{{ cible.base }}/ajouter">
+        <input name="piece" placeholder="Autre {{ groupe }}" aria-label="Autre {{ groupe }}" maxlength="80" autocomplete="off">
+        <button class="btn" type="submit">Choisir</button>
+      </form>
+    </nav>
+  {% endif %}
+  {# Analyse des parcours (Xavier, 2026-11-26) : la recherche passe avant « Elle va », qui sert rarement. #}
+  {% set elle_va %}
+  {# Options et variantes (O4, E3) : où va la ligne ajoutée, en un toucher ; une variante remplace la dernière ligne du
+     total de la pièce, ou celle choisie. Des liens et un petit formulaire : sans JavaScript. #}
+  {% if cible.base starts with '/offres' %}
+    {% set suite_piece = pieces is not empty ? '&piece=' ~ piece_choisie|url_encode : '' %}
+    <nav class="pieces-ajout nature-ajout" aria-label="Où va la ligne">
+      <span class="lbl">Elle va</span>
+      <div class="puces-liens">
+        {% for v, lib in {'ligne': 'Dans le total', 'option': 'Option', 'variante': 'Variante'} %}
+          <a class="puce-lien" href="{{ cible.base }}/ajouter?nature={{ v }}{{ suite_piece }}"{% if v == nature %} aria-current="true"{% endif %}>{{ lib }}</a>
+        {% endfor %}
+      </div>
+      {% if nature == 'variante' and base %}
+        <form class="piece-autre remplace-choix" method="get" action="{{ cible.base }}/ajouter">
+          <input type="hidden" name="nature" value="variante">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}
+          <label class="lbl" for="remplace-ajout">Elle remplace</label>
+          <select id="remplace-ajout" name="remplace" data-envoi-auto>
+            {% for b in bases %}<option value="{{ b.id }}"{% if b.id == base.id %} selected{% endif %}>{% if b.piece %}{{ b.piece }}, {% endif %}{{ b.designation }}</option>{% endfor %}
+          </select>
+          <button class="btn" type="submit" data-sans-js>Choisir</button>
+        </form>
+        {# V2 A (2026-11-24) : la quantité de la ligne remplacée, et son unité, changeables avant de toucher un produit ;
+           app.js la recopie dans chaque ajout, sans JavaScript « OK » recharge la page avec elle. #}
+        <form class="piece-autre quantite-choix" method="get" action="{{ cible.base }}/ajouter">
+          <input type="hidden" name="nature" value="variante"><input type="hidden" name="remplace" value="{{ base.id }}">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}{% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+          <label class="lbl" for="quantite-reprise">Quantité</label>
+          <input id="quantite-reprise" name="quantite" value="{{ reprise }}" inputmode="decimal" autocomplete="off" data-unite-reprise="{{ base.unite }}" data-defaut="{{ base.quantite_milliemes|saisie_quantite }}" aria-describedby="quantite-reprise-aide">
+          <b class="unite-reprise">{{ base.unite }}</b>
+          <button class="btn" type="submit" data-sans-js>OK</button>
+          <small id="quantite-reprise-aide" class="muted petit">reprise de la ligne remplacée, à changer si besoin</small>
+        </form>
+      {% endif %}
+    </nav>
+  {% endif %}
+  {% endset %}
+  {% if erreurs is empty %}
+    <form class="search" method="get" action="{{ cible.base }}/ajouter" role="search">
+      <div class="box">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="cherche" name="q" type="search" value="{{ q }}" placeholder="Chercher ou taper une ligne" autocomplete="off" aria-label="Chercher dans le catalogue" data-filtre="#res" data-copie="#rapide-designation" data-copie-texte="#rapide-texte" data-premier>
+      </div>
+    </form>
+    {{ elle_va }}
+    <div id="res" class="res sobre">
+      {% for p in produits %}
+        <form method="post" action="{{ cible.base }}/lignes" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
+          <input type="hidden" name="_csrf" value="{{ csrf() }}">
+          <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}{% if nature != 'ligne' %}<input type="hidden" name="nature" value="{{ nature }}">{% if base %}<input type="hidden" name="remplace" value="{{ base.id }}">{% endif %}{% endif %}
+          {% if base %}<input type="hidden" name="reprise" value="{{ reprise }}" data-quantite-reprise>{% endif %}
+          {# data-prix, data-unite : la ligne provisoire d'un ajout sans réseau (chantier sans rechargement, lot 4). En variante,
+             un produit d'une autre unité prend celle de la ligne remplacée et passe dans « Relire » (V1 A) : il le dit. #}
+          <button class="pick" type="submit" name="produit" value="{{ p.id }}" data-prix="{{ p.prix_centimes }}" data-unite="{{ p.unite }}"><b class="pn">{{ p.designation }}</b>
+            <span>{% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %} /&nbsp;{{ p.unite }}{% if base and p.unite != base.unite %}<small class="a-relire"><span data-quantite-texte>{{ reprise }}</span>&nbsp;{{ base.unite }}, à relire</small>{% endif %}</span></button>
+        </form>
+      {% endfor %}
+      {# Rien ne correspond : le texte tapé devient une ligne libre (quantité 1, forfait, prix à compléter). #}
+      <form class="pick-libre" method="post" action="{{ cible.base }}/lignes" data-aucun{% if trouves > 0 or q == '' %} hidden{% endif %}>
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}{% if nature != 'ligne' %}<input type="hidden" name="nature" value="{{ nature }}">{% if base %}<input type="hidden" name="remplace" value="{{ base.id }}">{% endif %}{% endif %}
+        <input type="hidden" id="rapide-designation" name="designation" value="{{ q }}">
+        {# Une variante prend la quantité (« reprise ») et l'unité de la ligne qu'elle remplace (O2, V3). #}
+        {% if base %}<input type="hidden" name="reprise" value="{{ reprise }}" data-quantite-reprise>{% else %}<input type="hidden" name="quantite" value="1">{% endif %}
+        <input type="hidden" name="unite" value="{{ base ? base.unite : 'forfait' }}">
+        <input type="hidden" name="prix" value="">
+        <button class="pick" type="submit"><b class="pn">Ajouter «&nbsp;<span id="rapide-texte">{{ q }}</span>&nbsp;»</b><span>ligne libre</span></button>
+      </form>
+    </div>
+  {% else %}
+    {{ elle_va }}
+    <p class="alerte bad" role="alert">La ligne n'est pas ajoutée&nbsp;: corrigez les champs signalés.</p>
+  {% endif %}
+
+  <details class="libre-detail"{% if erreurs is not empty %} open{% endif %}>
+    <summary>Ligne libre avec unité et prix</summary>
+    <p class="muted petit">Pour une offre de fournisseur ou un travail ponctuel. Elle reste dans {{ cible.ce }}&nbsp;; le catalogue ne change que si vous cochez la case.</p>
+    <form id="ajout-libre" method="post" action="{{ cible.base }}/lignes">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">{% if base %}<input type="hidden" name="reprise" value="{{ reprise }}" data-quantite-reprise>{% endif %}
+      <input type="hidden" name="reste" value="1">{% if pieces is not empty %}<input type="hidden" name="piece" value="{{ piece_choisie }}">{% endif %}{% if nature != 'ligne' %}<input type="hidden" name="nature" value="{{ nature }}">{% if base %}<input type="hidden" name="remplace" value="{{ base.id }}">{% endif %}{% endif %}
+      <div class="champ">
+        <label for="libre-designation">Désignation</label>
+        <input id="libre-designation" name="designation" value="{{ champs.designation }}" maxlength="255" required{{ f.invalide(erreurs, 'designation') }}>
+        {{ f.erreur(erreurs, 'designation') }}
+      </div>
+      <div class="duo">
+        <div class="champ">
+          <label for="libre-quantite">Quantité</label>
+          <input id="libre-quantite" name="quantite" value="{{ champs.quantite }}" inputmode="decimal" autocomplete="off"{% if base %} data-suit-reprise{% else %} required{% endif %}{{ f.invalide(erreurs, 'quantite') }}>
+          {{ f.erreur(erreurs, 'quantite') }}
+        </div>
+        <div class="champ">
+          <label for="libre-unite">Unité</label>
+          <select id="libre-unite" name="unite"{{ f.invalide(erreurs, 'unite') }}>
+            {% for u in unites %}<option{% if u == champs.unite %} selected{% endif %}>{{ u }}</option>{% endfor %}
+          </select>
+          {{ f.erreur(erreurs, 'unite') }}
+        </div>
+      </div>
+      <div class="champ">
+        <label for="libre-prix">Prix unitaire (CHF)</label>
+        <input id="libre-prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?"{{ f.invalide(erreurs, 'prix') }}>
+        {{ f.erreur(erreurs, 'prix') }}
+      </div>
+      <div class="card">
+        <label class="check"><input type="checkbox" name="garder" value="1"{% if erreurs.categorie is defined %} checked{% endif %}>
+          <span>Garder aussi dans le catalogue<small>L'IA la reconnaîtra dans les prochaines dictées.</small></span></label>
+        <div class="champ">
+          <label for="libre-categorie">Catégorie</label>
+          <select id="libre-categorie" name="categorie">
+            {% for c in categories %}<option{% if c == champs.categorie %} selected{% endif %}>{{ c }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="champ">
+          <label for="libre-nouvelle">Ou une nouvelle catégorie</label>
+          <input id="libre-nouvelle" name="nouvelle_categorie" value="{{ champs.nouvelle_categorie }}" maxlength="100"{{ f.invalide(erreurs, 'categorie') }}>
+          {{ f.erreur(erreurs, 'categorie') }}
+        </div>
+      </div>
+      <button class="btn" type="submit">Ajouter la ligne</button>
+    </form>
+  </details>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn primary grand" href="{{ cible.base }}">Terminé</a>
+  </div>
+{% endblock %}

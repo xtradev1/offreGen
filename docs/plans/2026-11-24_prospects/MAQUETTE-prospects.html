@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prospects, maquette v1</title>
+<style>
+/* Charte Dicta du 19.11 : jetons, composants, polices et logo, repris de MAQUETTE-equipe-v7.html (validée). */
+@font-face { font-family: "Archivo"; font-weight: 500 700; font-display: swap; src: url("../../../public/fonts/archivo-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("../../../public/fonts/inter-latin.woff2") format("woff2"); }
+:root {
+  --mk-ink: #23272D; --mk-bg: #F4F1EA; --mk-surface: #FFFFFF; --mk-line: #DDD8CC; --mk-accent: #23272D;
+  --fond: #F4F1EA; --carte: #FFFFFF; --encre: #23272D; --doux: #454B55; --trait: #DDD8CC; --etiquette: #EBE7DE; --bord: #7C838C;
+  --bande: #23272D; --sur-bande: #FFFFFF; --bande-doux: #B9BDC3; --acc: #23272D; --sur-acc: #FFFFFF; --mic: #C4552D; --sur-mic: #FFFFFF;
+  --ok: #13553A; --ok-fond: #E1EFE6; --att: #5A4300; --att-fond: #FFF0B3; --err: #8C1D18; --err-fond: #FBE7E4;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --err: #FF9A91; --err-fond: #3B1613; } }
+:root[data-theme="dark"] {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --err: #FF9A91; --err-fond: #3B1613; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.55 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.doc { max-width: 1180px; margin: 0 auto; padding: 16px; }
+.doc > h1, .doc > h2 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.3px; }
+.doc > h1 { font-size: 28px; line-height: 1.2; margin: 18px 0 8px; }
+.doc > h2 { font-size: 22px; line-height: 1.25; margin: 36px 0 8px; }
+.doc > p, .doc li { max-width: 820px; }
+.regle { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--ok); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+.regle b { color: var(--ok); }
+.moi { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--mic); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+.exemple { font-size: 13px; font-weight: 600; color: var(--doux); background: var(--etiquette); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+
+/* Le téléphone */
+.ecrans { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; margin: 14px 0 6px; }
+.ecrans figure { margin: 0; width: 340px; max-width: 100%; }
+.ecrans figcaption { font-size: 14px; color: var(--doux); margin-top: 6px; }
+.tel { position: relative; border: 1px solid var(--trait); border-radius: 22px; overflow: hidden; background: var(--fond); color: var(--encre); display: flex; flex-direction: column; min-height: 690px; }
+.tel h1, .tel h2, .tel h3, .tel .btn, .tel .etat, .tel label, .tel .seg span, .tel .puce { font-family: "Archivo", system-ui, sans-serif; }
+.bande { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px; background: var(--bande); color: var(--sur-bande); border-bottom: 3px solid var(--mic); }
+.bande img { display: block; height: 26px; width: auto; }
+.bande .retour { display: flex; align-items: center; gap: 4px; color: var(--sur-bande); font: 600 15px "Archivo", system-ui, sans-serif; }
+.role { font: 700 11.5px "Archivo", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--sur-bande); border: 1.5px solid var(--mic); border-radius: 999px; padding: 3px 9px; }
+.tete { padding: 20px 16px 12px; }
+.tete h1 { font-size: 25px; font-weight: 600; letter-spacing: -.4px; line-height: 1.2; margin: 0; text-wrap: balance; }
+.tete .sous { color: var(--doux); margin: 4px 0 0; font-size: 15px; }
+.corps { flex: 1; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.vue { display: flex; flex-direction: column; gap: 12px; }
+.liste { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.item { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; align-items: center; padding: 13px 14px; border-top: 1px solid var(--trait); }
+.item:first-child { border-top: 0; }
+.item b { font-weight: 600; font-size: 16px; }
+.item b .etat { margin-left: 4px; vertical-align: 1px; }
+.item .meta { color: var(--doux); font-size: 14px; }
+.item .fl { grid-row: span 2; color: var(--doux); font-size: 20px; }
+.item .geste { grid-row: span 2; }
+.groupe { font: 700 12px "Archivo", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--doux); margin: 6px 2px -4px; }
+.etat { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--etiquette); color: var(--encre); white-space: nowrap; }
+.etat.contour { background: transparent; box-shadow: inset 0 0 0 1.5px var(--bord); }
+.etat.ok { background: var(--ok-fond); color: var(--ok); }
+.etat.att { background: var(--att-fond); color: var(--att); }
+.etat.err { background: var(--err-fond); color: var(--err); }
+.seg { display: flex; padding: 3px; border-radius: 12px; background: var(--etiquette); }
+.seg span { flex: 1; text-align: center; font-size: 14px; font-weight: 600; color: var(--doux); padding: 9px 4px; border-radius: 9px; white-space: nowrap; min-height: 42px; display: grid; place-items: center; }
+.seg span.on { background: var(--carte); color: var(--encre); box-shadow: inset 0 0 0 1px var(--trait); }
+.seg[data-vues] span { cursor: pointer; }
+.seg[data-vues] span:focus-visible, .geste:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.recherche { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--carte); color: var(--doux); font-size: 15px; }
+.recherche svg { width: 20px; height: 20px; flex: none; }
+.recherche.actif { box-shadow: 0 0 0 3px var(--mic); border-color: var(--mic); color: var(--encre); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 17px; min-height: 56px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--carte); color: var(--encre); box-shadow: inset 0 0 0 1.5px var(--bord); text-align: center; }
+.btn.principal { background: var(--acc); color: var(--sur-acc); box-shadow: none; min-height: 64px; }
+.btn.large { width: 100%; }
+.btn.petit { min-height: 48px; font-size: 15px; padding: 0 14px; white-space: nowrap; font-family: "Archivo", system-ui, sans-serif; cursor: pointer; }
+.actionbar { display: flex; gap: 8px; padding: 10px 16px 14px; background: var(--carte); border-top: 1px solid var(--trait); }
+.actionbar .btn { flex: 1; }
+.nav { height: 72px; background: var(--carte); border-top: 1px solid var(--trait); display: grid; align-items: center; grid-template-columns: repeat(5, 1fr); }
+.nav a { color: var(--doux); font-size: 11.5px; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 2px; white-space: nowrap; }
+.nav a svg { width: 22px; height: 22px; }
+.nav a.on { color: var(--encre); font-weight: 600; }
+.champ { display: grid; gap: 6px; }
+.champ label { font-size: 14px; font-weight: 600; }
+.champ label small { font-weight: 400; color: var(--doux); font-size: 14px; }
+.champ .saisie { min-height: 48px; padding: 11px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--carte); font-size: 16px; }
+.champ .saisie.vide { color: var(--doux); }
+.deux { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.puce { min-height: 48px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 12px; background: var(--carte); box-shadow: inset 0 0 0 1.5px var(--bord); font-size: 14.5px; font-weight: 600; white-space: nowrap; }
+.puce.on { box-shadow: inset 0 0 0 2.5px var(--encre); }
+.note { font-size: 14px; color: var(--doux); }
+.info { font-size: 14px; border-radius: 12px; padding: 10px 12px; background: var(--etiquette); }
+.info.att { background: var(--att-fond); color: var(--att); }
+.va { font: 600 14.5px "Archivo", system-ui, sans-serif; text-decoration: underline; text-underline-offset: 3px; min-height: 48px; display: inline-flex; align-items: center; }
+.garde { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 14px; display: grid; gap: 6px; }
+.garde h3 { margin: 0; font: 600 17px "Archivo", system-ui, sans-serif; }
+.rappel { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; box-shadow: inset 4px 0 0 var(--mic); }
+.rappel .qui { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.rappel b { font: 600 16px "Archivo", system-ui, sans-serif; }
+.rappel .meta { font-size: 14px; color: var(--doux); }
+.rappel .gestes { display: flex; gap: 8px; }
+.rappel .btn { flex: 1; min-height: 48px; font-size: 15px; padding: 0 10px; white-space: nowrap; }
+.rappel .btn.principal { min-height: 48px; }
+.fil { display: grid; gap: 0; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; }
+.fil div { display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 9px 14px; border-top: 1px solid var(--trait); font-size: 14px; }
+.fil div:first-child { border-top: 0; }
+.fil time { color: var(--doux); font-variant-numeric: tabular-nums; }
+.voile { position: absolute; inset: 0; background: rgba(15, 17, 19, .58); }
+.feuille { position: absolute; left: 0; right: 0; bottom: 0; background: var(--carte); border-radius: 22px 22px 0 0; padding: 10px 16px 18px; display: grid; gap: 12px; }
+.feuille .poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--trait); justify-self: center; }
+.feuille h2 { margin: 0; font: 600 23px/1.2 "Archivo", system-ui, sans-serif; letter-spacing: -.3px; }
+.feuille p { margin: 0; color: var(--doux); }
+
+/* Ordinateur */
+.defile { overflow-x: auto; }
+.pc { display: grid; grid-template-columns: 190px minmax(0, 1fr) 310px; min-height: 600px; border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; background: var(--fond); color: var(--encre); min-width: 1146px; }
+.pc .menu { background: var(--bande); color: var(--sur-bande); padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; border-right: 3px solid var(--mic); }
+.pc .menu img { height: 26px; width: auto; margin: 0 10px 6px; align-self: flex-start; }
+.pc .menu .role { align-self: flex-start; margin: 0 10px 14px; }
+.pc .menu span.e { font-size: 15px; padding: 10px; border-radius: 9px; color: var(--bande-doux); display: flex; align-items: center; gap: 10px; }
+.pc .menu span.e svg { width: 20px; height: 20px; }
+.pc .menu span.e.on { background: rgba(255, 255, 255, .14); color: var(--sur-bande); font-weight: 600; }
+.pc .milieu { padding: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pc .milieu .ligne { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pc .milieu h1 { font: 600 25px "Archivo", system-ui, sans-serif; margin: 0 auto 0 0; }
+.pc .milieu .seg { flex: none; }
+.pc .milieu .seg span { padding: 9px 14px; }
+.pc .milieu .recherche { flex: 1; min-width: 180px; }
+.pc table { width: 100%; border-collapse: collapse; font-size: 14.5px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.pc td small { display: block; font-size: 13px; font-weight: 400; color: var(--doux); }
+.pc th, .pc td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--trait); white-space: nowrap; }
+.pc th { font: 700 12px "Archivo", system-ui, sans-serif; color: var(--doux); text-transform: uppercase; letter-spacing: .05em; }
+.pc tr.on td { background: var(--fond); }
+.pc tr.on td:first-child { box-shadow: inset 4px 0 0 var(--encre); }
+.pc .droite { background: var(--carte); border-left: 1px solid var(--trait); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.pc .droite h2 { margin: 0; font: 600 21px "Archivo", system-ui, sans-serif; }
+.pc .droite .fil { background: var(--fond); }
+.pc .btn { min-height: 48px; font-size: 15px; font-family: "Archivo", system-ui, sans-serif; }
+
+/* Décisions */
+.choix { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 12px 14px; margin: 12px 0 22px; max-width: 980px; }
+.choix .q { margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--bord); background: var(--carte); color: var(--encre); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--sur-acc); font-weight: 600; }
+.opts button:focus-visible, #copier:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.choix textarea, #texte { width: 100%; font: inherit; font-size: 15px; border: 1px solid var(--bord); border-radius: 10px; padding: 8px 10px; background: var(--carte); color: var(--encre); }
+#texte { min-height: 190px; }
+#copier { font: 600 16px "Archivo", system-ui, sans-serif; min-height: 52px; padding: 10px 20px; border-radius: 12px; border: 0; background: var(--acc); color: var(--sur-acc); cursor: pointer; }
+@media (max-width: 420px) { .ecrans figure { width: 100%; } }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<div class="doc">
+<nav id="mk-toc"></nav>
+<h1>Prospects : le catalogue des commerciaux (v1)</h1>
+<p>Aujourd'hui, un artisan n'existe dans Dicta qu'à partir de sa démo. Celui qu'un commercial a croisé au comptoir d'un grossiste vit dans un carnet ou dans une tête, et deux commerciaux peuvent démarcher le même peintre sans le savoir. Cette maquette ajoute une rubrique « Prospects » à l'administration, en amont de la démo. <span class="exemple">Noms et numéros d'exemple</span></p>
+<p>Les onglets « Les miens », « Libres » et « Tous » se touchent dans les deux premiers écrans, et « Je prends » aussi.</p>
+
+<h2 id="regle" data-toc="Réglé">Ce que tu as déjà tranché le 24.11</h2>
+<p class="regle"><b>Un catalogue, sans ordres.</b> « C'est plutôt un catalogue pour que les commerciaux puissent s'organiser entre eux. » Personne n'attribue un prospect à quelqu'un d'autre.</p>
+<p class="regle"><b>Chacun prend lui-même.</b> « Le commercial prend lui-même un prospect. » La liste globale montre les prospects déjà saisis, et ceux qui sont libres se prennent d'un toucher.</p>
+<p class="regle"><b>On voit qu'un collègue est dessus.</b> « Je mettrais que le prospect est déjà en contact avec un autre commercial. »</p>
+<p class="regle"><b>La liste informe, elle ne réserve rien.</b> « C'est juste pour dire qu'il y a déjà quelqu'un. » La commission reste réglée par le code tapé à l'inscription (C1 des règles de commission).</p>
+<p class="regle"><b>Un prospect laissé sans suite redevient libre.</b> Tu veux éviter qu'on puisse « bloquer une liste de 100 prospects ». Le délai exact est la question P3.</p>
+<p class="regle"><b>La responsable voit tout, pour commencer.</b> « Dans un premier temps, je dirais oui. Après, on peut limiter ce rôle. » Administrateur et modérateur voient donc toutes les fiches, notes comprises.</p>
+<p class="regle"><b>Rien en attendant.</b> « On peut faire rien pour l'instant » : pas de tableur provisoire.</p>
+
+<h2 id="miens" data-toc="Les miens">« Les miens » : la liste s'ouvre sur ce qu'il y a à faire</h2>
+<p>Chaque prospect porte un prochain pas et une date. Les pas dus ou en retard montent en tête, avec le numéro à toucher pour appeler. Le reste suit, rangé par date. Une démo en cours, un mois gratuit ou un client se lisent sur le compte de l'artisan : personne ne tape ces états.</p>
+<div class="ecrans">
+  <figure><div data-clone="t-liste" data-vue="miens"></div><figcaption>1. Nina Rey, commerciale : ses six prospects</figcaption></figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Commercial</span></div>
+      <div class="tete"><h1>Prospects</h1><p class="sous">Vous n'en suivez aucun pour l'instant.</p></div>
+      <div class="corps">
+        <div class="seg"><span class="on">Les miens · 0</span><span>Libres · 3</span><span>Tous · 17</span></div>
+        <div class="garde"><h3>Notez l'artisan que vous venez de voir</h3><span class="note">Son nom et sa localité suffisent. Le reste se complète plus tard.</span></div>
+        <div class="garde"><h3>Regardez les prospects libres</h3><span class="note">Trois artisans déjà notés attendent quelqu'un. Vous pouvez les prendre.</span></div>
+      </div>
+      <div class="actionbar"><span class="btn principal">Ajouter un prospect</span></div>
+      <div class="nav" data-nav="commercial" data-on="prospects"></div>
+    </div>
+    <figcaption>2. Un commercial qui arrive : l'écran dit par où commencer</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="P1"><p class="q"><b>P1</b> · « Les miens » : les pas dus en tête avec le numéro et « C'est fait », le reste par date, les états démo et client lus sur le compte</p><div class="opts"><button type="button" data-q="P1" data-v="Valider">Valider</button><button type="button" data-q="P1" data-v="Pas valider">Pas valider</button></div><textarea data-c="P1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="tous" data-toc="Le catalogue">« Tous » et « Libres » : qui est déjà sur quel artisan</h2>
+<p>« Tous » est le catalogue commun : chaque ligne dit qui suit l'artisan, ou qu'il est libre. « Libres » réunit les prospects que personne ne suit : saisis sans être pris, lâchés, ou redevenus libres faute de suite. Les démos, les essais et les clients y figurent aussi, pour éviter de démarcher un artisan déjà chez Dicta.</p>
+<div class="ecrans">
+  <figure><div data-clone="t-liste" data-vue="tous"></div><figcaption>3. « Tous » : le catalogue commun</figcaption></figure>
+  <figure><div data-clone="t-liste" data-vue="libres"></div><figcaption>4. « Libres » : à prendre d'un toucher</figcaption></figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Prospects</span><span class="role">Commercial</span></div>
+      <div class="tete"><h1>Plâtrerie Girardin</h1><p class="sous">Courrendlin · Plâtrier</p></div>
+      <div class="corps">
+        <div class="garde"><h3>Suivi par Léo Favre</h3><span class="note">Depuis le 12.11.2026. Dernière action notée le 20.11.2026.</span></div>
+        <div class="info">Sans nouvelle action de Léo Favre, ce prospect redevient libre le 27.11.2026.</div>
+        <span class="note">Le téléphone et les notes restent chez Léo Favre.</span>
+        <span class="note">Cette liste informe, elle ne réserve aucun artisan. La commission revient à celui dont le code est tapé à l'inscription.</span>
+      </div>
+      <div class="nav" data-nav="commercial" data-on="prospects"></div>
+    </div>
+    <figcaption>5. Nina ouvre le prospect d'un collègue (option A de P2)</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="P2"><p class="q"><b>P2</b> · Ce qu'un commercial voit du prospect d'un collègue. Je recommande A : assez pour s'organiser, et les notes d'un commercial indépendant restent les siennes.</p><div class="opts"><button type="button" data-q="P2" data-v="A, nom, localité, métier, qui le suit et depuis quand">A · Nom, localité, métier, qui le suit et depuis quand</button><button type="button" data-q="P2" data-v="B, tout, téléphone et notes compris">B · Tout, téléphone et notes compris</button><button type="button" data-q="P2" data-v="C, « déjà suivi », sans le nom du collègue">C · « Déjà suivi », sans le nom du collègue</button></div><textarea data-c="P2" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+<div class="choix" data-cle="P3"><p class="q"><b>P3</b> · Quand un prospect redevient libre. Tu as dit « au bout d'une semaine ». Avec A, un rendez-vous fixé dans trois semaines se perd si le commercial ne touche pas la fiche entre-temps. Je recommande B : la fiche prévient deux jours avant dans les deux cas.</p><div class="opts"><button type="button" data-q="P3" data-v="A, 7 jours sans action notée">A · 7 jours sans action notée</button><button type="button" data-q="P3" data-v="B, gardé tant qu'un prochain pas est daté à 30 jours au plus, libre 7 jours après un pas manqué">B · Gardé tant qu'un prochain pas est daté (30 jours au plus), libre 7 jours après un pas manqué</button></div><textarea data-c="P3" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="ajouter" data-toc="Ajouter">Ajouter un prospect : on cherche avant de créer</h2>
+<p>Le doublon s'évite à l'entrée. « Ajouter un prospect » ouvre un champ de recherche : ce qui ressemble dans les prospects et dans les comptes s'affiche, et la création vient ensuite. À l'enregistrement, un téléphone, un courriel ou un nom et un numéro postal déjà connus déclenchent un avertissement, et la personne tranche. Un numéro IDE déjà connu ouvre la fiche existante.</p>
+<div class="ecrans">
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Prospects</span><span class="role">Commercial</span></div>
+      <div class="tete"><h1>Ajouter un prospect</h1><p class="sous">Cherchez d'abord : il est peut-être déjà noté.</p></div>
+      <div class="corps">
+        <div class="recherche actif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.500-3.500"/></svg>roux pein</div>
+        <span class="groupe">Déjà dans Dicta</span>
+        <div class="liste">
+          <div class="item"><b>Peinture Roux Sàrl <span class="etat contour">Vous</span></b><span class="fl">›</span><span class="meta">Delémont · Peintre</span></div>
+          <div class="item"><b>Roux Peinture et Déco <span class="etat ok">Client</span></b><span class="fl">›</span><span class="meta">Bienne · amené par Léo Favre</span></div>
+        </div>
+        <span class="btn large">Créer « Roux pein »</span>
+        <span class="note">Si aucune ligne ne correspond, créez la fiche.</span>
+      </div>
+      <div class="nav" data-nav="commercial" data-on="prospects"></div>
+    </div>
+    <figcaption>6. La recherche montre les prospects et les comptes</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Prospects</span><span class="role">Commercial</span></div>
+      <div class="tete"><h1>Nouveau prospect</h1><p class="sous">Le nom et la localité suffisent.</p></div>
+      <div class="corps">
+        <div class="champ"><label>Entreprise</label><div class="saisie">Roux Rénovation</div></div>
+        <div class="champ"><label>Localité</label><div class="saisie">2800 Delémont</div></div>
+        <div class="champ"><label>Métier</label><div class="puces"><span class="puce on">Peintre</span><span class="puce">Plâtrier</span><span class="puce">Carreleur</span><span class="puce">Autre</span></div></div>
+        <div class="deux"><div class="champ"><label>Téléphone</label><div class="saisie">079 555 01 42</div></div><div class="champ"><label>Contact</label><div class="saisie">Marc Roux</div></div></div>
+        <div class="champ"><label>Rencontré</label><div class="puces"><span class="puce">Salon</span><span class="puce on">Grossiste</span><span class="puce">Recommandé</span><span class="puce">Autre</span></div></div>
+        <div class="deux"><div class="champ"><label>Prochain pas</label><div class="saisie">Rappeler</div></div><div class="champ"><label>Quand</label><div class="saisie">jeu. 26.11</div></div></div>
+        <div class="champ"><label>Numéro IDE <small>facultatif</small></label><div class="saisie vide">CHE-</div></div>
+      </div>
+      <div class="actionbar"><span class="btn principal">Enregistrer</span></div>
+    </div>
+    <figcaption>7. La fiche à remplir : sept champs, deux obligatoires</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Prospects</span><span class="role">Commercial</span></div>
+      <div class="tete"><h1>Nouveau prospect</h1><p class="sous">Le nom et la localité suffisent.</p></div>
+      <div class="corps">
+        <div class="champ"><label>Entreprise</label><div class="saisie">Roux Rénovation</div></div>
+        <div class="champ"><label>Localité</label><div class="saisie">2800 Delémont</div></div>
+      </div>
+      <div class="voile"></div>
+      <div class="feuille">
+        <span class="poignee"></span>
+        <h2>Ce numéro est déjà noté</h2>
+        <p>Le 079 555 01 42 est celui de Peinture Roux Sàrl, à Delémont, que vous suivez depuis le 17.11.</p>
+        <span class="btn principal large">Ouvrir cette fiche</span>
+        <span class="btn large">C'est une autre entreprise</span>
+      </div>
+    </div>
+    <figcaption>8. Même téléphone qu'une fiche existante : la personne tranche</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="P4"><p class="q"><b>P4</b> · Chercher avant de créer, puis l'avertissement à l'enregistrement</p><div class="opts"><button type="button" data-q="P4" data-v="Valider">Valider</button><button type="button" data-q="P4" data-v="Pas valider">Pas valider</button></div><textarea data-c="P4" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="fiche" data-toc="La fiche">La fiche d'un prospect</h2>
+<p>Un état à toucher, un prochain pas, des notes datées, et « Créer une démo », qui reprend l'entreprise, le métier et le courriel. La démo créée reste liée à la fiche : le prospect devient un compte sans ressaisie.</p>
+<div class="ecrans">
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Prospects</span><span class="role">Commercial</span></div>
+      <div class="tete"><h1>Peinture Roux Sàrl</h1><p class="sous">Delémont · Peintre · Marc Roux</p></div>
+      <div class="corps">
+        <div class="puces"><span class="puce">À contacter</span><span class="puce on">Contacté</span><span class="puce">Rendez-vous</span><span class="puce">Plus tard</span><span class="puce">Pas intéressé</span></div>
+        <div class="rappel">
+          <div class="qui"><b>Rappeler pour fixer la visite</b><span class="etat err">En retard</span></div>
+          <span class="meta">Prévu lundi 23.11</span>
+          <div class="gestes"><span class="btn">079 555 01 42</span><span class="btn principal">C'est fait</span></div>
+        </div>
+        <span class="btn principal large">Créer une démo</span>
+        <span class="groupe">Notes</span>
+        <div class="champ"><div class="saisie vide">Ajouter une note</div></div>
+        <div class="fil">
+          <div><time>23.11</time><span>Pas de réponse. Rappeler mardi matin avant 7 h.</span></div>
+          <div><time>17.11</time><span>Vu au comptoir du grossiste. Quatre à cinq offres par mois, faites sur Word le soir.</span></div>
+          <div><time>17.11</time><span>Fiche créée par vous · rencontré chez un grossiste</span></div>
+        </div>
+        <span class="va">Je lâche ce prospect</span>
+      </div>
+    </div>
+    <figcaption>9. La fiche d'un prospect que Nina suit</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="bande"><span class="retour">‹ Prospects</span><span class="role">Commercial</span></div>
+      <div class="tete"><h1>Menuiserie des Tilleuls</h1><p class="sous">Courgenay · Menuisier · Anne Chapatte</p></div>
+      <div class="corps">
+        <div class="garde"><h3>Démo en cours <span class="etat">4 jours restants</span></h3><span class="note">Ouverte le 20.11 · 3 offres dictées, la dernière le 23.11</span><span class="va">Voir le compte</span></div>
+        <span class="note">L'état se lit sur le compte de l'artisan : il change seul quand la démo devient un mois gratuit, puis un abonnement.</span>
+        <div class="rappel">
+          <div class="qui"><b>Demander son avis sur la démo</b></div>
+          <span class="meta">Prévu jeudi 26.11</span>
+          <div class="gestes"><span class="btn">078 555 01 77</span><span class="btn principal">C'est fait</span></div>
+        </div>
+        <span class="groupe">Notes</span>
+        <div class="champ"><div class="saisie vide">Ajouter une note</div></div>
+        <div class="fil">
+          <div><time>20.11</time><span>Démo créée, QR montré à l'atelier.</span></div>
+          <div><time>13.11</time><span>Recommandée par Peinture Roux Sàrl.</span></div>
+        </div>
+      </div>
+    </div>
+    <figcaption>10. Après « Créer une démo » : l'état vient du compte</figcaption>
+  </figure>
+</div>
+<div class="choix" data-cle="P5"><p class="q"><b>P5</b> · La fiche : cinq états à toucher, prochain pas, « Créer une démo », notes datées, « Je lâche ce prospect »</p><div class="opts"><button type="button" data-q="P5" data-v="Valider">Valider</button><button type="button" data-q="P5" data-v="Pas valider">Pas valider</button></div><textarea data-c="P5" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+<div class="choix" data-cle="P6"><p class="q"><b>P6</b> · Quand un prospect change de main (lâché, libéré, repris), que deviennent les notes du premier commercial ? Je recommande A : le suivant repart de ce qui a été dit à l'artisan.</p><div class="opts"><button type="button" data-q="P6" data-v="A, les notes suivent la fiche">A · Les notes suivent la fiche</button><button type="button" data-q="P6" data-v="B, les notes restent à leur auteur">B · Les notes restent à leur auteur, le suivant voit seulement les dates</button></div><textarea data-c="P6" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+<div class="choix" data-cle="P7"><p class="q"><b>P7</b> · La place dans le menu du commercial. Les écrans ci-dessus montrent A.</p><div class="opts"><button type="button" data-q="P7" data-v="A, cinq entrées : Mon suivi, Prospects, Clients, Mon espace, Plus">A · Cinq entrées : Mon suivi, Prospects, Clients, Mon espace, Plus</button><button type="button" data-q="P7" data-v="B, quatre entrées, « Mon espace » passe dans « Plus »">B · Quatre entrées, « Mon espace » passe dans « Plus »</button></div><textarea data-c="P7" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="pc" data-toc="Ordinateur">Sur ordinateur : le tableau de la responsable</h2>
+<p>Même disposition que l'écran Équipe : le tableau au milieu, la fiche à droite. L'administrateur et le modérateur lisent toutes les fiches. Ils ne peuvent ni attribuer un prospect, ni le retirer à quelqu'un. L'administrateur fusionne deux fiches d'un même artisan.</p>
+<div class="defile">
+  <div class="pc">
+    <div class="menu">
+      <img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Admin</span>
+      <span class="e" data-i="tableau">Tableau</span><span class="e on" data-i="prospects">Prospects</span><span class="e" data-i="artisans">Clients</span><span class="e" data-i="equipe">Équipe</span><span class="e" data-i="plus">Plus</span>
+    </div>
+    <div class="milieu">
+      <div class="ligne"><h1>Prospects</h1><span class="btn">Ajouter un prospect</span></div>
+      <div class="ligne"><div class="seg"><span class="on">Tous · 23</span><span>Libres · 3</span><span>En retard · 4</span></div><div class="recherche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.500-3.500"/></svg>Chercher une entreprise</div></div>
+      <table>
+        <tr><th>Entreprise</th><th>État</th><th>Suivi par</th><th>Prochain pas</th></tr>
+        <tr><td><b>Peinture Roux Sàrl</b><small>Delémont</small></td><td>Contacté</td><td>Nina Rey</td><td><span class="etat err">lun. 23.11</span></td></tr>
+        <tr class="on"><td><b>Plâtrerie Girardin</b><small>Courrendlin</small></td><td>Rendez-vous</td><td>Léo Favre</td><td>ven. 27.11</td></tr>
+        <tr><td><b>Carrelage du Mont</b><small>Porrentruy</small></td><td>Rendez-vous</td><td>Nina Rey</td><td>aujourd'hui, 14 h</td></tr>
+        <tr><td><b>Menuiserie des Tilleuls</b><small>Courgenay</small></td><td><span class="etat">Démo en cours</span></td><td>Nina Rey</td><td>jeu. 26.11</td></tr>
+        <tr><td><b>Sols Berbier</b><small>Moutier</small></td><td>À contacter</td><td><span class="etat ok">Libre</span></td><td></td></tr>
+        <tr><td><b>Façades Chapuis</b><small>Bassecourt</small></td><td>Contacté</td><td><span class="etat ok">Libre</span></td><td></td></tr>
+        <tr><td><b>Paysages du Doubs</b><small>Saint-Ursanne</small></td><td><span class="etat ok">Client</span></td><td>Léo Favre</td><td></td></tr>
+        <tr><td><b>Jardins de l'Allaine</b><small>Alle</small></td><td>Contacté</td><td>Nina Rey</td><td>jeu. 26.11</td></tr>
+      </table>
+      <span class="note">23 prospects, les 8 premiers.</span>
+    </div>
+    <div class="droite">
+      <h2>Plâtrerie Girardin</h2>
+      <span class="note">Courrendlin · Plâtrier · Paul Girardin</span><span class="btn">079 555 01 63</span>
+      <div class="garde"><h3>Suivi par Léo Favre</h3><span class="note">Depuis le 12.11. Prochain pas : visite à l'atelier, vendredi 27.11.</span></div>
+      <span class="groupe">Notes de Léo Favre</span>
+      <div class="fil">
+        <div><time>20.11</time><span>Rendez-vous pris pour le 27.11 à 7 h.</span></div>
+        <div><time>12.11</time><span>Rencontré au salon. Travaille avec un tableur, deux ouvriers.</span></div>
+      </div>
+      <span class="btn" style="margin-top:auto">Fusionner avec une autre fiche</span>
+      <span class="note">La fusion garde les notes des deux fiches et s'inscrit au journal.</span>
+    </div>
+  </div>
+</div>
+<div class="choix" data-cle="P8"><p class="q"><b>P8</b> · Sur ordinateur : le tableau, le filtre « En retard », la fiche à côté avec les notes, la fusion réservée à l'administrateur</p><div class="opts"><button type="button" data-q="P8" data-v="Valider">Valider</button><button type="button" data-q="P8" data-v="Pas valider">Pas valider</button></div><textarea data-c="P8" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="reste" data-toc="Ce qui reste">Ce que la maquette ne règle pas</h2>
+<p class="moi"><b>La production n'existe pas encore.</b> Un prospect est une vraie personne, et le site de test ne reçoit que des données inventées. Je peux coder et déployer cette rubrique sur le test avec des artisans inventés. Les vrais prospects attendront le site de production, que tu dois créer chez Infomaniak.</p>
+<p class="moi"><b>Les notes sont des données personnelles.</b> Mention dans la politique de confidentialité et durée de garde à fixer avec le lot juridique (tâche Origin 463). Proposition : une fiche « Pas intéressé » s'efface 24 mois après la dernière action.</p>
+<p class="moi"><b>Le registre vient plus tard.</b> En version 1, le numéro IDE se tape à la main, s'il est connu. La recherche dans le registre du commerce ou le registre IDE attend que l'accès soit confirmé.</p>
+<p class="moi"><b>Tâche Origin.</b> Tu n'as pas dit si je crée la tâche de ce chantier dans le projet offreGen.</p>
+<div class="choix" data-cle="P9"><p class="q"><b>P9</b> · La suite</p><div class="opts"><button type="button" data-q="P9" data-v="A, coder et déployer sur le test avec des artisans inventés">A · Coder et déployer sur le test avec des artisans inventés</button><button type="button" data-q="P9" data-v="B, attendre la production">B · Attendre la production</button></div><textarea data-c="P9" rows="2" placeholder="Commentaire (facultatif) : tâche Origin, oui ou non"></textarea></div>
+
+<h2 id="copier-texte" data-toc="Copier">Copier le texte</h2>
+<p><button id="copier" type="button">Copier le texte</button></p>
+<textarea id="texte" readonly></textarea>
+
+</div>
+
+<template id="t-liste">
+  <div class="tel">
+    <div class="bande"><img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"><span class="role">Commercial</span></div>
+    <div class="tete"><h1>Prospects</h1><p class="sous">6 suivis par vous · 1 pas en retard</p></div>
+    <div class="corps">
+      <div class="seg" data-vues><span data-vue="miens">Les miens · 6</span><span data-vue="libres">Libres · 3</span><span data-vue="tous">Tous · 23</span></div>
+      <div class="recherche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.500-3.500"/></svg>Chercher une entreprise</div>
+      <div class="vue" data-vue="miens">
+        <span class="groupe">À faire</span>
+        <div class="rappel">
+          <div class="qui"><b>Peinture Roux Sàrl</b><span class="etat err">En retard</span></div>
+          <span class="meta">Rappeler pour fixer la visite · prévu lundi 23.11</span>
+          <div class="gestes"><span class="btn">079 555 01 42</span><span class="btn principal">C'est fait</span></div>
+        </div>
+        <div class="rappel">
+          <div class="qui"><b>Carrelage du Mont</b><span class="etat">Aujourd'hui</span></div>
+          <span class="meta">Rendez-vous à l'atelier, Porrentruy · 14 h</span>
+          <div class="gestes"><span class="btn">079 555 01 58</span><span class="btn principal">C'est fait</span></div>
+        </div>
+        <span class="groupe">Ensuite</span>
+        <div class="liste">
+          <div class="item"><b>Menuiserie des Tilleuls <span class="etat">Démo</span></b><span class="fl">›</span><span class="meta">Demander son avis · jeudi 26.11</span></div>
+          <div class="item"><b>Jardins de l'Allaine</b><span class="fl">›</span><span class="meta">Envoyer la fiche d'essai · jeudi 26.11</span></div>
+          <div class="item"><b>Sanitaire Riat <span class="etat">Plus tard</span></b><span class="fl">›</span><span class="meta">Relancer · lundi 14.12</span></div>
+          <div class="item"><b>Plâtrerie du Clos <span class="etat att">Libre dans 2 jours</span></b><span class="fl">›</span><span class="meta">Aucun pas prévu depuis le 19.11</span></div>
+        </div>
+      </div>
+      <div class="vue" data-vue="libres">
+        <span class="note">Personne ne suit ces artisans.</span>
+        <div class="liste">
+          <div class="item"><b>Sols Berbier</b><button type="button" class="btn petit geste" data-prendre>Je prends</button><span class="meta">Moutier · Poseur de sols · noté par Maud Perret le 18.11</span></div>
+          <div class="item"><b>Façades Chapuis</b><button type="button" class="btn petit geste" data-prendre>Je prends</button><span class="meta">Bassecourt · Plâtrier · libre depuis le 21.11, suivi avant par Léo Favre</span></div>
+          <div class="item"><b>Maçonnerie du Vorbourg</b><button type="button" class="btn petit geste" data-prendre>Je prends</button><span class="meta">Delémont · Maçon · libre depuis le 19.11, suivi avant par vous</span></div>
+        </div>
+      </div>
+      <div class="vue" data-vue="tous">
+        <div class="liste">
+          <div class="item"><b>Carrelage du Mont <span class="etat contour">Vous</span></b><span class="fl">›</span><span class="meta">Porrentruy · Carreleur</span></div>
+          <div class="item"><b>Façades Chapuis <span class="etat ok">Libre</span></b><button type="button" class="btn petit geste" data-prendre>Je prends</button><span class="meta">Bassecourt · Plâtrier</span></div>
+          <div class="item"><b>Menuiserie des Tilleuls <span class="etat contour">Vous</span></b><span class="fl">›</span><span class="meta">Courgenay · Menuisier · démo en cours</span></div>
+          <div class="item"><b>Paysages du Doubs <span class="etat ok">Client</span></b><span class="fl">›</span><span class="meta">Saint-Ursanne · Paysagiste · amené par Léo Favre</span></div>
+          <div class="item"><b>Peinture Roux Sàrl <span class="etat contour">Vous</span></b><span class="fl">›</span><span class="meta">Delémont · Peintre</span></div>
+          <div class="item"><b>Plâtrerie Girardin</b><span class="fl">›</span><span class="meta">Courrendlin · Plâtrier · suivi par Léo Favre depuis le 12.11</span></div>
+          <div class="item"><b>Sols Berbier <span class="etat ok">Libre</span></b><button type="button" class="btn petit geste" data-prendre>Je prends</button><span class="meta">Moutier · Poseur de sols</span></div>
+        </div>
+        <span class="note">23 prospects, les 7 premiers. Rangés par nom.</span>
+      </div>
+    </div>
+    <div class="actionbar"><span class="btn principal">Ajouter un prospect</span></div>
+    <div class="nav" data-nav="commercial" data-on="prospects"></div>
+  </div>
+</template>
+
+<script>
+(function () {
+  // Les écrans de liste viennent d'un seul gabarit, ouvert sur l'onglet demandé.
+  document.querySelectorAll('[data-clone]').forEach(function (cible) {
+    var gabarit = document.getElementById(cible.getAttribute('data-clone'));
+    var noeud = gabarit.content.firstElementChild.cloneNode(true);
+    noeud.setAttribute('data-ouvre', cible.getAttribute('data-vue'));
+    cible.replaceWith(noeud);
+  });
+
+  var ICONES = {
+    tableau: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+    suivi: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    prospects: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
+    artisans: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.2-5.5 6.5-5.5s5.700 1.900 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18 14.800c1.900.7 3 2.400 3.500 5.200"/>',
+    equipe: '<circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3 2.800-4.500 6-4.500s5.400 1.500 6 4.500M14 15.600c.6-.1 1.300-.1 2-.1 3.200 0 5.400 1.500 6 4.500"/>',
+    espace: '<path d="M17 7H4l3-3M7 17h13l-3 3"/>',
+    plus: '<circle cx="5" cy="12" r="1.300"/><circle cx="12" cy="12" r="1.300"/><circle cx="19" cy="12" r="1.300"/>'
+  };
+  function icone(nom) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONES[nom] + '</svg>'; }
+  var MENUS = { commercial: [['suivi', 'Mon suivi'], ['prospects', 'Prospects'], ['artisans', 'Clients'], ['espace', 'Mon espace'], ['plus', 'Plus']] };
+  document.querySelectorAll('[data-nav]').forEach(function (nav) {
+    var actif = nav.getAttribute('data-on');
+    nav.innerHTML = MENUS[nav.getAttribute('data-nav')].map(function (e) { return '<a' + (e[0] === actif ? ' class="on"' : '') + '>' + icone(e[0]) + e[1] + '</a>'; }).join('');
+  });
+  document.querySelectorAll('.pc .menu [data-i]').forEach(function (e) { e.insertAdjacentHTML('afterbegin', icone(e.getAttribute('data-i'))); });
+
+  // Les onglets d'une liste.
+  document.querySelectorAll('.tel[data-ouvre]').forEach(function (tel) {
+    var onglets = tel.querySelectorAll('[data-vues] span'), vues = tel.querySelectorAll('.vue');
+    function ouvrir(nom) {
+      onglets.forEach(function (o) { o.classList.toggle('on', o.getAttribute('data-vue') === nom); });
+      vues.forEach(function (v) { v.hidden = v.getAttribute('data-vue') !== nom; });
+    }
+    onglets.forEach(function (o) {
+      o.setAttribute('role', 'button'); o.tabIndex = 0;
+      o.addEventListener('click', function () { ouvrir(o.getAttribute('data-vue')); });
+      o.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(o.getAttribute('data-vue')); } });
+    });
+    ouvrir(tel.getAttribute('data-ouvre'));
+  });
+
+  // « Je prends » : la ligne passe chez la personne.
+  document.querySelectorAll('[data-prendre]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var ligne = b.closest('.item'), nom = ligne.querySelector('b'), libre = nom.querySelector('.etat');
+      if (libre) { libre.remove(); }
+      nom.insertAdjacentHTML('beforeend', ' <span class="etat contour">Vous</span>');
+      b.outerHTML = '<span class="fl">›</span>';
+    });
+  });
+
+  var CLE = 'maquette-prospects-v1-2026-11-24', etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  function texte() {
+    var lignes = [];
+    document.querySelectorAll('.choix').forEach(function (c) {
+      var q = c.getAttribute('data-cle'), e = etat[q] || {};
+      if (e.v || e.c) { lignes.push('- ' + q + ' : ' + (e.v || '') + (e.c ? ' · ' + e.c : '')); }
+    });
+    document.getElementById('texte').value = lignes.length ? 'Réponses, maquette Prospects v1 (24.11) :\n' + lignes.join('\n') : '';
+  }
+  document.querySelectorAll('.opts button').forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    b.setAttribute('aria-pressed', (etat[q] && etat[q].v === b.getAttribute('data-v')) ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      etat[q] = etat[q] || {};
+      etat[q].v = b.getAttribute('data-v');
+      document.querySelectorAll('.opts button[data-q="' + q + '"]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      garder(); texte();
+    });
+  });
+  document.querySelectorAll('textarea[data-c]').forEach(function (t) {
+    var q = t.getAttribute('data-c');
+    t.value = (etat[q] && etat[q].c) || '';
+    t.addEventListener('input', function () { etat[q] = etat[q] || {}; etat[q].c = t.value; garder(); texte(); });
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    texte();
+    var t = document.getElementById('texte');
+    t.select();
+    try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand('copy'); }
+  });
+  texte();
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

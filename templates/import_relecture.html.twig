@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{# « Voici ce qu'on intègre » (maquette validée le 2026-11-20 : D3 à D7). Un seul formulaire : les cases, les prix à
+   choisir et le crayon. Rien n'entre au catalogue avant « Ajouter » ; une réponse manquante ramène la page, marquée. #}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/import-catalogue.css') }}"><script type="module" src="{{ fichier('/js/import-catalogue.js') }}"></script>{% endblock %}
+{% block titre %}Voici ce qu'on intègre · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/catalogue">Catalogue</a>{% endblock %}
+{% block entete %}Voici ce qu'on intègre{% endblock %}
+
+{% macro ligne(i, p, r, erreur, premiere, unites) %}
+  {% set coche = premiere ? (p.unite is not null) : (r.garder ?? '') == '1' %}
+  <div class="ic-ligne{% if erreur %} faux{% endif %}">
+    <label class="ic-case"><input type="checkbox" name="p[{{ i }}][garder]" value="1"{% if coche %} checked{% endif %} aria-label="Intégrer {{ p.designation }}"></label>
+    <span class="ic-nom"><b>{{ p.designation }}</b>
+      <small>{% if p.type == 'complete' %}Au catalogue sans prix, {% endif %}vu dans {{ p.vu }} offre{% if p.vu > 1 %}s{% endif %}{% if p.synonymes %}, aussi écrit {% for s in p.synonymes %}«&nbsp;{{ s }}&nbsp;»{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</small></span>
+    <span class="ic-px">{{ (r.prix is defined and r.prix != '') ? r.prix : p.prix|montant }}<small>/&nbsp;{{ r.unite ?? p.unite ?? '?' }}</small></span>
+    <details class="ic-crayon"{% if erreur or p.unite is null %} open{% endif %}>
+      <summary aria-label="Modifier {{ p.designation }}"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg></summary>
+      <div class="ic-edit">
+        {% if p.type == 'nouveau' %}
+          <label class="ic-tout">Désignation<input name="p[{{ i }}][designation]" value="{{ r.designation ?? p.designation }}" maxlength="255" autocomplete="off"></label>
+          <label>Unité<select name="p[{{ i }}][unite]">{% if p.unite is null %}<option value="">Choisir{% if p.unite_ecrite is defined %}{% endif %}</option>{% endif %}{% for u in unites %}<option{% if u == (r.unite ?? p.unite) %} selected{% endif %}>{{ u }}</option>{% endfor %}</select></label>
+        {% endif %}
+        <label>Prix, CHF<input name="p[{{ i }}][prix]" value="{{ r.prix ?? (p.prix / 100)|number_format(2, '.', '') }}" inputmode="decimal" autocomplete="off"></label>
+      </div>
+    </details>
+    {% if erreur %}<p class="ic-err">{{ erreur }}</p>{% elseif p.unite is null %}<p class="ic-err">Unité inconnue&nbsp;: choisissez-la, puis cochez la ligne.</p>{% endif %}
+  </div>
+{% endmacro %}
+
+{% block contenu %}
+  <form class="ic" id="ic-form" method="post" action="/import-catalogue/{{ import.id }}" data-relecture>
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <p class="ic-intro">Décochez ce que vous ne voulez pas dans votre catalogue. Le crayon corrige une ligne.</p>
+    <p class="ic-resume"><span>{{ import.offres }} offre{% if import.offres > 1 %}s{% endif %}, {{ import.lignes }} lignes</span>{% if a_choisir %}<span class="att" data-a-choisir>{{ a_choisir }} prix à choisir</span>{% endif %}</p>
+    {% if erreurs %}<p class="alerte bad" role="alert">Une réponse manque ou une saisie est fausse&nbsp;: voyez les lignes marquées.</p>{% endif %}
+
+    {% if par_type.choix %}
+      <section class="ic-bloc"><h2>Quel prix garder&nbsp;? <span>{{ par_type.choix|length }}</span></h2>
+        {% for i, p in par_type.choix %}
+          <fieldset class="ic-choix{% if erreurs[i] is defined %} faux{% endif %}" data-question>
+            <legend><b>{{ p.designation }}</b> <small>/&nbsp;{{ p.unite }}</small></legend>
+            <p class="ic-pourquoi">{% if p.options[0].source == 'votre catalogue' %}Votre catalogue et vos offres ne donnent pas le même prix.{% elseif p.options|length > 2 %}Vos offres donnent plusieurs prix.{% else %}Deux offres, deux prix.{% endif %}</p>
+            <div class="ic-prix">
+              {% for k, o in p.options %}
+                <label><input type="radio" name="p[{{ i }}][choix]" value="{{ k }}"{% if (reponses[i].choix ?? '') == k ~ '' %} checked{% endif %}><b>{{ o.prix|montant }}</b><small>{{ o.source }}</small></label>
+              {% endfor %}
+            </div>
+            {% if erreurs[i] is defined %}<p class="ic-err">{{ erreurs[i] }}</p>{% endif %}
+          </fieldset>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {% if par_type.complete %}
+      <section class="ic-bloc"><h2>Prix trouvés pour vos produits <span>{{ par_type.complete|length }}</span></h2>
+        {% for i, p in par_type.complete %}{{ _self.ligne(i, p, reponses[i] ?? {}, erreurs[i] ?? null, premiere, unites) }}{% endfor %}
+      </section>
+    {% endif %}
+
+    {% if par_type.nouveau %}
+      <section class="ic-bloc"><h2>Nouveaux produits <span>{{ par_type.nouveau|length }}</span></h2>
+        {% for i, p in par_type.nouveau %}{{ _self.ligne(i, p, reponses[i] ?? {}, erreurs[i] ?? null, premiere, unites) }}{% endfor %}
+      </section>
+    {% endif %}
+
+    {% if par_type.identique %}
+      <section class="ic-bloc"><h2>Déjà au catalogue, même prix <span>rien à faire</span></h2>
+        <p class="ic-texte">{% for p in par_type.identique %}{{ p.designation }}, {{ p.prix|montant }}&nbsp;/&nbsp;{{ p.unite }}{{ loop.last ? '.' : ' ; ' }}{% endfor %}</p>
+      </section>
+    {% endif %}
+
+    {% if not (par_type.choix or par_type.complete or par_type.nouveau or par_type.identique) %}
+      <p class="alerte warn">Aucune ligne avec un prix n'a été trouvée dans ces offres. Une offre scannée ou photographiée ne se lit pas.</p>
+    {% endif %}
+    <p class="ic-note">Les autres façons d'écrire un produit deviennent ses mots reconnus&nbsp;: la dictée les retrouvera. Les nouveaux produits arrivent dans la catégorie «&nbsp;Importés&nbsp;».</p>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    {% if par_type.choix or par_type.complete or par_type.nouveau or par_type.identique %}
+      <button class="btn primary" type="submit" form="ic-form" data-ajouter>Ajouter au catalogue</button>
+    {% else %}
+      <a class="btn primary" href="/import-catalogue">Choisir d'autres PDF</a>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'catalogue', pc_seul: true} %}{% endblock %}

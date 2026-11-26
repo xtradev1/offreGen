@@ -1,0 +1,15 @@
+/* Ruban d'une démo créée par l'équipe (N1, Xavier, 2026-11-19 ; « Passer à l'essai » visible en haut, 2026-11-20).
+   Chargé seulement dans une démo. Couleurs de app.css : encre sur carte, au-dessus de 7:1. Le terracotta ne porte
+   qu'une forme, le filet de gauche, comme le veut la charte. */
+.ruban-demo { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 60px; padding: 6px 16px; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: inset 4px 0 0 var(--marque); font-size: 15px; color: var(--ink); }
+.ruban-demo .btn { flex: none; min-height: 48px; font-weight: 600; border-color: var(--ink); }
+
+/* La fenêtre des deux derniers jours (templates/_fenetre_demo.html.twig, chantier onboarding, lot 2). */
+.fenetre-demo { position: fixed; inset: 0; z-index: 45; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, .4); }
+.fenetre-demo[hidden] { display: none; }
+.fenetre-demo-carte { width: 100%; max-width: 480px; background: var(--surface); color: var(--ink); border-radius: 18px 18px 0 0; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); box-shadow: 0 -6px 24px rgba(0, 0, 0, .18); }
+.fenetre-demo-carte h2 { margin: 0 0 8px; font: 700 22px var(--titre); }
+.fenetre-demo-carte p { margin: 0 0 16px; font-size: 17px; }
+.fenetre-demo-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fenetre-demo-boutons .btn { min-height: 56px; font-weight: 600; border-color: var(--ink); }
+@media (min-width: 1024px) { .fenetre-demo { align-items: center; } .fenetre-demo-carte { border-radius: 18px; } }

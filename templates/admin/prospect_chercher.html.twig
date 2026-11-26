@@ -1,0 +1,49 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Ajouter un prospect : on cherche avant de créer (P4 validé le 2026-11-24). Les fiches et les comptes qui
+   ressemblent s'affichent ; la création vient ensuite. Un compte d'un collègue ne montre que son nom, sa sorte et qui
+   l'a amené. #}
+{% set vue = 'tous' %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/suivi.css') }}"><link rel="stylesheet" href="{{ fichier('/css/prospects.css') }}">{% endblock %}
+{% block retour %}<a class="back" href="/admin/prospects">Prospects</a>{% endblock %}
+{% block sous %}<p>Cherchez d'abord&nbsp;: il est peut-être déjà noté.</p>{% endblock %}
+
+{% block contenu %}
+  <div class="carte-admin">
+    <form class="search box-seule" method="get" action="/admin/prospects/chercher" role="search">
+      <div class="box">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input name="q" type="search" value="{{ q }}" placeholder="Nom de l'entreprise" autocomplete="off" aria-label="Nom de l'entreprise" maxlength="80" required minlength="3"{% if not cherche %} autofocus{% endif %}>
+      </div>
+      <button class="btn{% if not cherche %} primary{% endif %}" type="submit">Chercher</button>
+    </form>
+    {% if cherche %}
+      {% if lignes is not empty or comptes is not empty %}
+        <h2 class="groupe-titre">Déjà dans {{ nom_application }}</h2>
+        <div class="lignes-prospects">
+          {% for l in lignes %}
+            <div class="ligne-prospect">
+              <a href="/admin/prospects/{{ l.id }}">
+                <b>{{ l.entreprise }}{% include 'admin/_prospect_badges.html.twig' %}</b>
+                <small>{% include 'admin/_prospect_sous.html.twig' %}</small>
+              </a>
+              <i class="va" aria-hidden="true">›</i>
+            </div>
+          {% endfor %}
+          {% for c in comptes %}
+            <div class="ligne-prospect">
+              <span><b>{{ c.entreprise }} <i class="badge {{ c.sorte == 'Client' ? 'ok' : 'role' }}">{{ c.sorte }}</i></b>
+                <small>Déjà chez {{ nom_application }}{% if c.apporteur %} · amené par {{ c.apporteur }}{% endif %}</small></span>
+            </div>
+          {% endfor %}
+        </div>
+        <p class="muted">Si aucune ligne ne correspond, créez la fiche.</p>
+      {% else %}
+        <p class="muted">Aucune fiche et aucun compte à ce nom.</p>
+      {% endif %}
+      <a class="btn large{% if lignes is empty and comptes is empty %} primary{% endif %}" href="/admin/prospects/nouveau?nom={{ q|url_encode }}">Créer «&nbsp;{{ q }}&nbsp;»</a>
+    {% elseif q != '' %}
+      <p class="alerte warn">Tapez au moins trois lettres.</p>
+    {% endif %}
+  </div>
+{% endblock %}

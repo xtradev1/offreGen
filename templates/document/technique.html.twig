@@ -1,0 +1,36 @@
+{% extends 'document/_base.html.twig' %}
+{% import 'document/_blocs.html.twig' as b %}
+{# Technique : un cartouche de références encadré, des positions numérotées, une colonne d'unités, des montants en
+   chasse fixe, un total encadré de foncé sur ses quatre côtés (Xavier, 2026-11-19 : « il faut que le haut soit aussi
+   foncé »). #}
+
+{% block fixes %}{{ b.pied(_context) }}{% endblock %}
+
+{% block corps %}
+  {% set cases = [['N°', doc_numero], ['Date', doc_date]] %}
+  {% if facture %}{% set cases = cases|merge([['Échéance', f.echeance|jour], ['Référence', b.ref(_context)]]) %}
+  {% else %}
+    {% set cases = cases|merge([["Valable jusqu'au", valable_jusqu_au]]) %}
+    {% if chantier and chantier.adresse %}{% set cases = cases|merge([[mots.doc_lieu, chantier.adresse]]) %}{% endif %}
+    {% if r.contactNom %}{% set cases = cases|merge([['Contact', r.contactNom]]) %}{% endif %}
+  {% endif %}
+  <div class="doc-in">
+    {{ b.tete(_context) }}
+    {{ b.adresse(_context) }}
+    <table class="doc-cart">
+      <tr><td colspan="{{ cases|length }}" class="doc-gros"><b class="c-texte">{{ doc_nom|upper }}</b>&nbsp;&nbsp; {{ doc_objet }}</td></tr>
+      <tr>{% for case in cases %}<td><div class="doc-lab">{{ case[0] }}</div>{{ case[1] }}</td>{% endfor %}</tr>
+    </table>
+    {{ b.annulee(_context) }}
+    {{ b.debut(_context) }}
+    {{ b.lignes(_context, {pos: true, unite: true, grp: 'c-teinte c-bord-gauche'}) }}
+    {{ b.totaux(_context) }}
+    {{ b.options(_context) }}
+    {{ b.texte(_context, 'apres') }}
+    <div class="doc-fin">
+      {{ b.conditions(_context) }}
+      {{ b.fin(_context) }}
+      {{ b.signatures(_context) }}
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'admin/base.html.twig' %}
+
+{# « Plus » de l'administration : le retour à l'application (E1, Xavier, 2026-11-19) et la déconnexion. #}
+{% block contenu %}
+  <nav class="plus" aria-label="Plus">
+    <a class="plus-ligne" href="/">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 7H4l3-3M7 17h13l-3 3"/></svg>
+      <span><b>Revenir à mon espace</b><small>Offres, clients, factures</small></span></a>
+    <a class="plus-ligne" href="/admin/aide-vente">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>
+      <span><b>{{ texte('k.titre') }}</b><small>{{ texte('k.sous') }}</small></span></a>
+    {# Chronomètre des dictées (sous-chantier 31, D7) : administrateur seulement, la route répond 404 aux autres rôles. #}
+    {% if role.value == 'administrateur' %}
+    <a class="plus-ligne" href="/admin/dictees">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/></svg>
+      <span><b>Dictées</b><small>Durée de chaque étape, statistiques, rapport et CSV</small></span></a>
+    {% endif %}
+  </nav>
+  <form class="carte-admin" method="post" action="/admin/plus/nom">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      {# V3 de Xavier (2026-11-24) : « écrit juste le prénom ». #}
+      <label for="nom_affiche">Votre prénom dans les courriels</label>
+      <input id="nom_affiche" name="nom" type="text" maxlength="120" autocomplete="given-name" value="{{ nom_affiche }}">
+      <small class="muted">Il signe le courriel qu'un prospect reçoit après une démo, avec {{ nom_application }} dessous. Vide&nbsp;: «&nbsp;{{ nom_compte }}&nbsp;».</small>
+    </div>
+    <button class="btn" type="submit">Enregistrer</button>
+  </form>
+  <form class="compte" method="post" action="/deconnexion">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <button class="btn large" type="submit">Se déconnecter</button>
+  </form>
+{% endblock %}

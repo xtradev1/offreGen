@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{# La confirmation d'une demande d'appel, sans délai promis (K1 de la maquette v4 de l'administration, écran 3). Le
+   texte validé disait « Elle vous appellera » : le genre du commercial n'est pas connu, la phrase ne le suppose pas. #}
+{% block titre %}C'est noté · {{ nom_application }}{% endblock %}
+{% block entete %}Demander un appel{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  <div class="card" role="status">
+    <h2>C'est noté</h2>
+    <p>{{ nom ?: nom_application }} a reçu votre demande et vous appellera au {{ telephone }}. Vous avez choisi {{ moment }}.</p>
+  </div>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><a class="btn primary" href="/">Revenir à mes offres</a></div>
+{% endblock %}

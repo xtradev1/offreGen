@@ -1,0 +1,112 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OffreGen\Http;
+
+use OffreGen\Compte\Authentification;
+use OffreGen\Compte\Role;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\SessionStorageInterface;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+
+/**
+ * Ce que le noyau contrôle avant tout contrôleur : la session, le jeton CSRF des POST, l'artisan connecté.
+ */
+final class Garde
+{
+    public const JETON = 'offregen';
+
+    /** @var \WeakMap<Request, string> la valeur masquée du jeton, une par requête */
+    private \WeakMap $jetons;
+
+    /** @param \Closure(): SessionStorageInterface $stockage */
+    public function __construct(
+        private readonly Authentification $authentification,
+        private readonly CsrfTokenManagerInterface $csrf,
+        private readonly RequestStack $pile,
+        private readonly \Closure $stockage,
+    ) {
+        $this->jetons = new \WeakMap();
+    }
+
+    public function entrer(Request $requete): void
+    {
+        if (!$requete->hasSession()) {
+            $requete->setSession(new Session(($this->stockage)()));
+        }
+        $this->pile->push($requete);
+    }
+
+    public function sortir(): void
+    {
+        $this->pile->pop();
+    }
+
+    /** La requête en cours : sa session, pour les pages qui n'en reçoivent pas (chantier onboarding, lot 8). */
+    public function requeteCourante(): ?Request
+    {
+        return $this->pile->getCurrentRequest();
+    }
+
+    /** Artisan de la requête en cours, posé par le noyau sur les routes réservées ; null ailleurs. */
+    public function artisanCourant(): ?int
+    {
+        $id = $this->pile->getCurrentRequest()?->attributes->get('_artisan');
+        return is_int($id) ? $id : null;
+    }
+
+    public function jetonValide(Request $requete): bool
+    {
+        $valeur = $requete->request->get('_csrf');
+        return is_string($valeur) && $valeur !== '' && $this->csrf->isTokenValid(new CsrfToken(self::JETON, $valeur));
+    }
+
+    /**
+     * Valeur du jeton à mettre dans chaque formulaire (fonction Twig csrf()). Masquée une fois par requête : tous les
+     * formulaires d'une page portent la même valeur, la page suivante un autre masque (la parade contre BREACH tient à
+     * chaque réponse). Masquée à chaque appel, une page de 277 formulaires pesait 36,7 Ko compressés au lieu de 9,6
+     * (chantier sans rechargement, 2026-11-23).
+     */
+    public function jeton(): string
+    {
+        $requete = $this->pile->getCurrentRequest();
+        if ($requete === null) {
+            return $this->csrf->getToken(self::JETON)->getValue();
+        }
+        return $this->jetons[$requete] ??= $this->csrf->getToken(self::JETON)->getValue();
+    }
+
+    /**
+     * Les messages laissés par la requête précédente (Flash::dire), lus une seule fois.
+     *
+     * @return array<string, list<mixed>>
+     */
+    public function messages(): array
+    {
+        $session = $this->pile->getCurrentRequest()?->getSession();
+        /** @var array<string, list<mixed>> */
+        return $session instanceof FlashBagAwareSessionInterface ? $session->getFlashBag()->all() : [];
+    }
+
+    public function artisan(Request $requete): ?int
+    {
+        return $this->authentification->artisanConnecte($requete);
+    }
+
+    public function role(int $artisanId): ?Role
+    {
+        return $this->authentification->role($artisanId);
+    }
+
+    /** Rôle de la requête en cours, posé par le noyau sur les pages d'administration ; null ailleurs. */
+    public function roleCourant(): ?Role
+    {
+        $role = $this->pile->getCurrentRequest()?->attributes->get('_role');
+        return $role instanceof Role ? $role : null;
+    }
+}

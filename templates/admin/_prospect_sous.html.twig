@@ -1,0 +1,9 @@
+{# La seconde ligne d'un prospect dans une liste. Dans « Les miens » : le prochain pas. Ailleurs : où, quoi, qui. #}
+{%- if vue == 'miens' and l.a_moi -%}
+  {%- if l.pas_texte %}{{ l.pas_texte }} · {{ l.pas_quand }}{% elseif l.compte_nom %}{{ l.localite }} · aucun pas prévu{% else %}Aucun pas prévu depuis le {{ l.action_quand }}{% endif -%}
+{%- else -%}
+  {{- l.localite }}{% if l.metier_nom %} · {{ l.metier_nom }}{% endif -%}
+  {%- if l.tenue == 1 and not l.a_moi and l.suiveur %} · suivi par {{ l.suiveur }}{% if l.suivi_quand %} depuis le {{ l.suivi_quand }}{% endif %}
+  {%- elseif l.tenue == 0 and l.libre_quand %} · libre depuis le {{ l.libre_quand }}{% if l.avant %}, suivi avant par {{ l.avant }}{% endif %}
+  {%- elseif l.tenue == 0 and l.entiere and l.createur %} · noté par {{ l.createur }} le {{ l.cree_quand }}{% endif -%}
+{%- endif -%}

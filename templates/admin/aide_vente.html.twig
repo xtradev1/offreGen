@@ -1,0 +1,33 @@
+{% extends 'admin/base.html.twig' %}
+
+{# L'aide à la vente (chantier onboarding, lot 6 ; maquette v3, O9 et O18 validés ; textes validés dans la page des
+   textes, config/textes-onboarding.json). Une rubrique ouverte à la fois au téléphone, toutes ouvertes à l'impression
+   (public/js/aide-vente.js). Pas encore ici : « Les questions à poser » (contenu jamais montré à Xavier) et « Ce qu'on
+   ne dit pas » (O31, en attente de Xavier). #}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/aide-vente.css') }}"><script src="{{ fichier('/js/aide-vente.js') }}" defer></script>{% endblock %}
+{% block retour %}<a class="back" href="/admin/plus">Plus</a>{% endblock %}
+{% block sous %}<p>{{ texte('k.sous') }}</p>{% endblock %}
+
+{% block contenu %}
+  <div class="aide-vente">
+    <details class="rubrique" open>
+      <summary>{{ texte('k.r1') }}</summary>
+      <ol class="etapes-rdv">
+        {% for i in 1..6 %}<li>{{ texte('k.r1.' ~ i, {jours: jours, offres: offres}) }}</li>{% endfor %}
+      </ol>
+    </details>
+    <details class="rubrique">
+      <summary>{{ texte('k.r3') }}</summary>
+      <dl class="objections">
+        {% for i in 1..5 %}<dt>{{ texte('k.o' ~ i ~ '.q') }}</dt><dd>{{ texte('k.o' ~ i ~ '.r') }}</dd>{% endfor %}
+      </dl>
+    </details>
+    <details class="rubrique">
+      <summary>{{ texte('k.r5') }}</summary>
+      <p class="message-demo">{{ message|nl2br }}</p>
+    </details>
+    {# g.fin.note : le guide se retrouve ici. #}
+    <a class="lien revoir-bienvenue" href="/admin/bienvenue">Revoir la bienvenue et le guide</a>
+    <button class="btn large pc-seul" type="button" data-imprimer>Imprimer</button>
+  </div>
+{% endblock %}

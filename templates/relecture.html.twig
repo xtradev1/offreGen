@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{# Relecture au pouce, une ligne à la fois (décision D5, maquette 24, 2026-11-15). Le contenu descend vers les boutons ;
+   le rappel de la dictée est permis ici (CODING_RULES, Ergonomie). Toutes les lignes à relire sont dans la page
+   (chantier sans rechargement, 2026-11-23) : « C'est juste » montre la suivante tout de suite et l'envoi suit
+   (fluide.js) ; sans JavaScript, la première seule se voit et chaque envoi recharge la page, comme avant. #}
+{% block titre %}Relecture · {{ offre.titre }} · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}Relecture{% endblock %}
+{% block ecran_classe %} relecture{% endblock %}
+{% block ecran_donnees %} data-relecture="/offres/{{ offre.id }}"{% endblock %}
+
+{# curseur : la carte visible au chargement ; son prix vide prend le curseur (constat 1 de l'analyse des parcours,
+   Xavier, 2026-11-26). Les cartes suivantes le reçoivent de fluide.js quand elles paraissent. #}
+{% macro carte(offre, l, champs, erreurs, restantes, forme, curseur) %}
+  <p class="relu-reste">Encore {{ restantes }} à relire</p>
+  <div class="relu-carte">
+    {% if l.categorie %}<p class="relu-cat">{{ l.categorie }}</p>{% endif %}
+    <h2 class="relu-nom">{{ l.designation }}</h2>
+    {% if l.entendu %}<p class="relu-entendu">Entendu&nbsp;: «&nbsp;{{ l.entendu }}&nbsp;»</p>{% endif %}
+    <form id="{{ forme }}" method="post" action="/offres/{{ offre.id }}/relire/{{ l.id }}">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <div class="relu-champs">
+        <label class="relu-champ{% if erreurs.quantite is defined %} faux{% endif %}"><span>Quantité <small>{{ l.unite }}</small></span>
+          <input name="quantite" value="{{ champs.quantite }}" inputmode="decimal" autocomplete="off" required data-relu-quantite></label>
+        <label class="relu-champ{% if erreurs.prix is defined %} faux{% endif %}"><span>Prix <small>CHF</small></span>
+          <input name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix&nbsp;?" data-relu-prix{% if curseur and champs.prix == '' %} autofocus{% endif %}></label>
+      </div>
+      {% for e in erreurs %}<p class="err" role="alert">{{ e }}</p>{% endfor %}
+      <p class="relu-montant"><span>Montant</span><b data-relu-montant>{% if l.offerte ?? false %}Offert{% elseif l.prix_centimes > 0 %}{{ (l.quantite_milliemes * l.prix_centimes / 1000)|round|chf }}{% endif %}</b></p>
+    </form>
+  </div>
+{% endmacro %}
+
+{% block contenu %}
+  {% import _self as r %}
+  <div class="relu-fin"{% if l is not null %} hidden{% endif %} data-relu-fin>
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    <h2>Toutes les lignes sont relues</h2>
+    <p class="muted">L'offre est prête à être générée.</p>
+  </div>
+  {% if l is not null %}
+    <section data-relu="{{ l.id }}" data-corriger="/offres/{{ offre.id }}/lignes/{{ l.id }}">{{ r.carte(offre, l, champs, erreurs, restantes, 'relecture', true) }}</section>
+    {% for s in suivantes %}
+      <section data-relu="{{ s.l.id }}" data-corriger="/offres/{{ offre.id }}/lignes/{{ s.l.id }}" hidden>{{ r.carte(offre, s.l, s.champs, [], restantes - loop.index, 'relecture-' ~ s.l.id, false) }}</section>
+    {% endfor %}
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"{% if l is not null %} hidden{% endif %} data-relu-fin>
+    <a class="btn grand" href="/offres/{{ offre.id }}">Revenir à l'offre</a>
+    <a class="btn primary grand" href="{{ suite }}">Générer l'offre</a>
+  </div>
+  {% if l is not null %}
+    <div class="actionbar" data-relu-gestes>
+      <a class="btn grand" href="/offres/{{ offre.id }}/lignes/{{ l.id }}" data-relu-corriger>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></svg>Corriger</a>
+      {# Sans prix, le bouton dit ce qui manque et, touché, mène au prix (fluide.js) ; sans JavaScript, il envoie et le
+         serveur répond la même chose sous le champ. #}
+      {% set manque = champs.prix == '' %}
+      <button class="btn grand{{ manque ? '' : ' ok' }}" type="submit" form="relecture" data-juste="C'est juste" data-manque="Indiquez le prix">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span data-relu-libelle>{{ manque ? 'Indiquez le prix' : "C'est juste" }}</span></button>
+    </div>
+  {% endif %}
+{% endblock %}

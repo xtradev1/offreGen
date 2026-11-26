@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr-CH" class="rls-0"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/css/mise-en-route.css?v=258334d25005">  <title>Votre logo · Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  
+  
+  <link rel="stylesheet" href="/css/app.css?v=e78f7334a14b">
+    
+<link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/mise-en-route-logo.css"></head>
+<body data-compte="2">
+        <div class="app">
+    <header class="bar"><h1 data-t="T218">Bienvenue</h1><a class="vers-site mobile-seul" href="/decouvrir" aria-label="Dicta, le site"><img class="logo" src="/img/dicta-logo-sombre.svg?v=b0fbcb97f417" alt="" width="177" height="64"></a></header>
+      <link rel="stylesheet" href="/css/demo.css">
+  <div class="ruban-demo" role="note">
+    <span data-t="T219"><b>Mois gratuit</b> · 30 jours restants</span>
+  </div>
+<main class="screen gris">          <form method="post" action="/bienvenue/passer" class="passer-guide"><input type="hidden" name="_csrf" value=""><button class="lien" type="submit" data-t="T220">Passer le guide</button></form>
+    <div class="progression" aria-hidden="true"><i class="fait"></i><i class="fait"></i><i class="fait"></i><i></i><i></i></div>
+    <p class="muted petit" data-t="T265">Étape 3 sur 5</p>
+    <h2 class="etape-titre" data-t="T266">Votre logo</h2>
+    <p class="etape-sous" data-t="T267">Il figure en tête de vos offres et de vos factures. Vous pourrez aussi l'ajouter plus tard, dans «&nbsp;Ma marque&nbsp;».</p>
+      <form id="reglages" class="etape-logo" method="post" action="/bienvenue/logo">
+    <input type="hidden" name="_csrf" value="">
+    <input type="hidden" name="retour" value="">
+        <div class="card" id="logo-etape">
+  <div class="logo-ligne">
+        <label class="btn" for="logo" data-t="T268">Ajouter mon logo</label>
+    <input class="cache" id="logo" name="logo" type="file" accept="image/png,image/jpeg" form="form-logo" data-envoi-auto="">
+      </div>
+  
+  <p class="muted petit" data-t="T269">Une image (PNG ou JPEG), 5 Mo au plus. Sa couleur devient celle de vos documents.</p>
+</div>
+  </form>
+          <form id="form-logo" method="post" action="/reglages/logo" enctype="multipart/form-data"><input type="hidden" name="_csrf" value=""><input type="hidden" name="retour" value="/bienvenue/logo"></form>
+    <form id="form-logo-retirer" method="post" action="/reglages/logo/retirer"><input type="hidden" name="_csrf" value=""><input type="hidden" name="retour" value="/bienvenue/logo"></form>
+  </main>
+                            <div class="bas">
+        <div class="actionbar">
+          <button class="btn primary" type="submit" form="reglages" data-t="T155">Suivant</button>
+      </div>
+                </div>
+  </div>
+
+
+</body></html>

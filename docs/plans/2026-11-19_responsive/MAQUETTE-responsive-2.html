@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Responsive, deuxième tour</title>
+<style>
+:root { --ink: #23272D; --muted: #4A505A; --bg: #F4F1EA; --surface: #FFFFFF; --line: #DDD8CC; --accent: #23272D; --marque: #A8441F; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; } }
+:root[data-theme="dark"] { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 4px; scroll-margin-top: 70px; }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 760px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; margin: 22px 0; }
+.mk-compare { margin: 12px 0; }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; }
+figcaption { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+.paire { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 12px 0; }
+.trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 12px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 8px 0 12px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 650; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tableau { overflow-x: auto; }
+.conseil { border-left: 4px solid var(--marque); background: var(--bg); padding: 10px 14px; border-radius: 0 10px 10px 0; margin: 12px 0; }
+.conseil b:first-child { display: block; margin-bottom: 2px; }
+.incident { border: 1px solid var(--bad); background: var(--bad-soft); color: var(--ink); border-radius: 12px; padding: 12px 14px; margin: 16px 0; }
+.incident b:first-child { color: var(--bad); }
+.regle { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.regle li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.regle li b { color: var(--ok); }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 650; }
+.opts button:focus-visible, textarea:focus-visible, .copier:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+textarea { width: 100%; min-height: 64px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 150px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+ul.serre { margin: 4px 0 10px; padding-left: 20px; }
+code { font: 13.5px ui-monospace, Consolas, monospace; background: var(--bg); border-radius: 4px; padding: 1px 4px; overflow-wrap: anywhere; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Responsive, deuxième tour : les lignes de l'offre, le micro, le grand écran</h1>
+<p class="chapeau">Site de test <code>dabc3d9</code>, 19.11.2026. Chaque capture montre le vrai site avec tous les points que tu as validés au premier tour, plus le nouveau dessin, injecté dans le navigateur. Rien n'est écrit dans <code>app.css</code>.</p>
+
+<div class="incident"><b>Une erreur de ma part pendant les captures.</b> Pour montrer qu'un champ s'élargit, j'ai tapé « 125.5 » dans une quantité de l'offre 2 du compte d'audit. L'application l'a enregistré : mon blocage des envois ne voyait pas ce type de requête. J'ai remis 42 par l'interface et vérifié après rechargement que toutes les quantités, les prix et le total (CHF 3'106.80) sont ceux du départ. Il reste une trace : l'offre affiche « Enregistrée le 19.11.2026 11:17 » au lieu de « Créée le 17.11.2026 », comme sur les captures ci-dessous. Seul ce compte d'audit est touché. Le script retire désormais l'envoi automatique des champs avant de taper.</div>
+
+<h2 id="regle" data-toc="Déjà tranché">Déjà tranché au premier tour</h2>
+<ul class="regle">
+<li><b>R1 A</b> : micro de 72 px gardé, 24 px réservés sous les boutons.</li>
+<li><b>R3, R9</b> : vue compacte des lignes jusqu'à 699 px de large, désignation de 48 px. Leur dessin change ci-dessous, à ta demande.</li>
+<li><b>R4, R5, R6, R7</b> : validés tels quels.</li>
+<li><b>R8</b> : fondu au bord des filtres.</li>
+<li><b>R2 A et R10 a B</b> : onglets en colonne à gauche (téléphone couché, petite fenêtre PC). Il reste la place du micro.</li>
+</ul>
+
+<!-- Lignes -->
+<section class="point" id="lignes">
+<h2 id="h-lignes" data-toc="Lignes">1. Les lignes de l'offre, plus légères</h2>
+<p>Ce que tu as demandé, et ce que j'ai fait :</p>
+<ul class="serre">
+<li><b>Les pavés gris disparaissent.</b> Un cadre fin, sans fond. Le cadre visible fait 34 px de haut ; la zone à toucher reste à 48 px, comme le demande <code>CODING_RULES.md</code>, et ne se voit pas.</li>
+<li><b>Chaque champ a la largeur de son contenu.</b> Quantité : 2 chiffres par défaut. Prix : 3 chiffres. Le champ s'élargit quand on tape plus long.</li>
+<li><b>Les colonnes restent alignées.</b> Toutes les lignes partagent les mêmes colonnes. Si un prix passe à 5 chiffres, la colonne Prix s'élargit pour toute l'offre, et l'en-tête « Qté Prix Total » suit.</li>
+<li><b>« forfait » reste en petit gris</b>, à côté du chiffre, sans bloc autour.</li>
+<li><b>La poubelle</b> se place au milieu de la ligne (A) ou en face de la désignation (B).</li>
+</ul>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-2-img/l390__avant.jpg" alt="Téléphone 390 px, avant : champs en pavés gris pleins, poubelle sur la rangée des chiffres"><figcaption>Avant (site actuel) : pavés gris pleins.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-2-img/l390__lignesA.jpg" alt="Téléphone 390 px, variante A : champs en cadre fin sans fond, poubelle centrée sur la hauteur de la ligne"><figcaption>Variante A : cadre fin, poubelle au milieu de la ligne.</figcaption></figure>
+</div>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-2-img/l390__avant.jpg" alt="Téléphone 390 px, avant"><figcaption>Avant.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-2-img/l390__lignesB.jpg" alt="Téléphone 390 px, variante B : poubelle en haut à droite, en face de la désignation"><figcaption>Variante B : poubelle en face de la désignation.</figcaption></figure>
+</div>
+<h3>Le champ qui s'élargit</h3>
+<figure><img src="MAQUETTE-responsive-2-img/lsaisie__lignesA.jpg" alt="Téléphone 390 px : quantité 125.5 et prix 12500 en cours de saisie ; les deux champs se sont élargis, les colonnes restent alignées sur toutes les lignes"><figcaption>Tapé sans enregistrer : « 125.5 » en quantité, « 12500 » en prix. Le champ de quantité passe de 46 à 70 px, celui du prix de 56 à 76 px, et toutes les lignes suivent.</figcaption></figure>
+<h3>Les autres tailles</h3>
+<div class="trio">
+<figure><img src="MAQUETTE-responsive-2-img/l360__lignesA.jpg" alt="Téléphone 360 px, variante A"><figcaption>Téléphone 360 px.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-2-img/l430__lignesA.jpg" alt="Téléphone 430 px, variante A"><figcaption>Grand téléphone 430 px.</figcaption></figure>
+</div>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-2-img/l1180__avant.jpg" alt="Tablette 1180 px, avant : pavés gris pleins sur une rangée"><figcaption>Tablette 1180 px, avant.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-2-img/l1180__lignesA.jpg" alt="Tablette 1180 px, après : cadres fins sur une rangée"><figcaption>Après : une rangée par ligne, cadres fins.</figcaption></figure>
+</div>
+<figure><img src="MAQUETTE-responsive-2-img/pc900__pcMilieu.jpg" alt="Fenêtre PC de 900 px avec les onglets à gauche : une rangée par ligne, cadres fins"><figcaption>Fenêtre PC de 900 px avec les onglets à gauche (R10 a B) : assez de place pour une rangée par ligne.</figcaption></figure>
+<div class="tableau"><table>
+<thead><tr><th>Mesure, téléphone 390 px</th><th>Avant</th><th>Après</th></tr></thead>
+<tbody>
+<tr><td>Fond des champs</td><td class="n">gris plein</td><td class="n">aucun, cadre de 1 px</td></tr>
+<tr><td>Cadre visible / zone à toucher</td><td class="n">48 / 48 px</td><td class="n">34 / 48 px</td></tr>
+<tr><td>Champ quantité / prix au repos</td><td class="n">44 / 60 px</td><td class="n">46 / 56 px</td></tr>
+<tr><td>Hauteur moyenne d'une ligne</td><td class="n">82 px</td><td class="n">97 px</td></tr>
+<tr><td>Champs qui chevauchent la désignation (360, 390, 430)</td><td class="n">0 à 390, 2 à 430</td><td class="n">0 partout</td></tr>
+</tbody></table></div>
+<div class="conseil"><b>Je conseille B.</b> La poubelle sur la rangée du nom se lit « cette ligne, l'effacer », et elle s'éloigne des chiffres qu'on corrige. Au milieu (A), elle flotte entre les deux rangées. Les deux se valent pour le doigt : la zone à toucher fait 48 px dans les deux cas.</div>
+<p>Deux réserves :</p>
+<ul class="serre">
+<li><b>Safari et la largeur automatique.</b> La largeur qui suit le contenu repose sur une propriété CSS récente (<code>field-sizing</code>). À ma connaissance, Safari ne l'a pas encore. J'ajoute un petit script qui règle la largeur pendant la frappe, à vérifier sur ton iPhone.</li>
+<li><b>La hauteur des lignes.</b> Une ligne gagne 15 px par rapport à aujourd'hui, à cause des 48 px de R9.</li>
+</ul>
+<div class="decision" data-q="Lignes">
+<p class="q">Ton choix pour les lignes</p>
+<div class="opts"><button type="button" data-v="A">A : poubelle au milieu</button><button type="button" data-v="B">B : poubelle en face du nom</button><button type="button" data-v="refaire">À retravailler</button></div>
+<textarea aria-label="Commentaire sur les lignes" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- Micro -->
+<section class="point" id="micro">
+<h2 id="h-micro" data-toc="Micro à gauche">2. Le micro dans la colonne de gauche</h2>
+<p>Au premier tour, le micro était en haut de la colonne, loin du pouce. Les deux places que tu as citées, sur un téléphone couché :</p>
+<div class="paire">
+<figure><img src="MAQUETTE-responsive-2-img/rail__railMilieu.jpg" alt="Téléphone couché : micro au milieu de la colonne de gauche, entre Clients et Factures"><figcaption>Milieu : entre Clients et Factures, comme dans la barre du téléphone debout. Centre du micro à 196 px du haut, sur 391.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-2-img/rail__railBas.jpg" alt="Téléphone couché : micro en bas de la colonne de gauche, les onglets en haut"><figcaption>Bas : les onglets en haut, le micro seul en bas. Centre du micro à 343 px du haut.</figcaption></figure>
+</div>
+<p>Dans les deux cas, l'offre garde 274 px de hauteur (137 aujourd'hui). La même colonne sert à la petite fenêtre PC (capture de la section 1).</p>
+<div class="conseil"><b>Je conseille le milieu.</b> L'ordre est le même que téléphone debout : Offres, Clients, micro, Factures, Plus. Le geste reste le même quand on tourne le téléphone, et un téléphone couché se tient par les côtés, à mi-hauteur. Le bas est plus loin du pouce gauche quand on tient le téléphone à deux mains.</div>
+<div class="decision" data-q="Micro">
+<p class="q">Ton choix pour la place du micro</p>
+<div class="opts"><button type="button" data-v="milieu">Au milieu</button><button type="button" data-v="bas">En bas</button></div>
+<textarea aria-label="Commentaire sur le micro" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- Grand écran -->
+<section class="point" id="volets">
+<h2 id="h-volets" data-toc="Grand écran">3. PC 1920 px : trois volets au lieu d'une bande grise</h2>
+<p>Tu demandais mieux que « laisser » ou « centrer ». La place libre sur un grand écran peut porter le document de l'offre. Aujourd'hui, « Document à côté » existe déjà, mais il remplace la liste des offres. À partir de 1800 px, les trois tiennent ensemble : la liste, l'offre et le document, qui se met à jour à chaque correction.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-responsive-2-img/volets__avant.jpg" alt="PC 1920 px, avant : menu, liste des offres, offre, puis 348 px de gris à droite"><figcaption>Avant : 348 px de gris à droite.</figcaption></figure>
+<figure><img src="MAQUETTE-responsive-2-img/volets__troisVolets.jpg" alt="PC 1920 px, après : menu, liste des offres, offre au milieu, document de l'offre à droite"><figcaption>Après : liste, offre (668 px) et document. Plus de gris.</figcaption></figure>
+</div>
+<p>Ce qu'il faudra régler en le codant :</p>
+<ul class="serre">
+<li><b>Ouvrir le document d'office à partir de 1800 px</b>, sauf si l'artisan l'a fermé (le choix est déjà retenu par le navigateur).</li>
+<li><b>Changer le libellé du bouton.</b> « Revenir à la liste » devient faux quand la liste reste visible : il deviendra « Fermer le document ».</li>
+<li><b>L'accueil ne change pas.</b> Sa liste d'offres garde sa largeur, la bande grise y reste.</li>
+</ul>
+<div class="conseil"><b>Je conseille C.</b> On utilise l'écran pour ce que l'artisan vérifie en corrigeant : le document que le client recevra. Le code existe déjà, il s'agit de laisser la liste visible et d'ouvrir le document d'office.</div>
+<div class="decision" data-q="R10b">
+<p class="q">Ton choix pour le grand écran</p>
+<div class="opts"><button type="button" data-v="C">C : trois volets dès 1800 px</button><button type="button" data-v="A">A : laisser</button><button type="button" data-v="B">B : centrer</button></div>
+<textarea aria-label="Commentaire sur le grand écran" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="limites" data-toc="Limites">Ce que cette maquette ne prouve pas</h2>
+<ul class="serre">
+<li>Rendu par Chromium seulement. Sur iPhone, il reste à vérifier la largeur qui s'adapte pendant la frappe, le zoom des champs et les libellés de 11 px de la colonne de gauche.</li>
+<li>Détails relevés, corrigés pendant le code : un champ caché dépasse de 1 px à droite dans la fenêtre PC de 900 px ; sur une rangée (tablette, PC), les cadres de quantité ne s'alignent pas entre « forfait » et « m² ».</li>
+<li>Les contrastes de la marque seront mesurés à la recette.</li>
+</ul>
+
+<h2 id="reponses" data-toc="Copier">Copier mes réponses</h2>
+<div class="recap">
+<p>Ce texte se remplit avec tes choix. Copie-le et colle-le dans la conversation.</p>
+<textarea id="recap" readonly aria-label="Récapitulatif des réponses"></textarea>
+<p><button type="button" class="copier" id="copier">Copier le texte</button><span class="copie-ok" id="copie-ok" hidden>Copié.</span></p>
+</div>
+</main>
+<script>
+(function () {
+  var CLE = 'offregen-responsive-2026-11-19-tour2';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  var blocs = document.querySelectorAll('.decision');
+  function recap() {
+    var lignes = [];
+    blocs.forEach(function (b) {
+      var q = b.getAttribute('data-q'), r = etat[q] || {};
+      var choisi = b.querySelector('.opts button[data-v="' + (r.v || '') + '"]');
+      var l = q + ' : ' + (choisi ? choisi.textContent : '(pas de réponse)');
+      if (r.c) l += '. Commentaire : ' + r.c.replace(/\s+/g, ' ').trim();
+      lignes.push(l);
+    });
+    document.getElementById('recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    etat[q] = etat[q] || {};
+    var boutons = b.querySelectorAll('.opts button');
+    var champ = b.querySelector('textarea');
+    boutons.forEach(function (bt) {
+      bt.setAttribute('aria-pressed', bt.getAttribute('data-v') === etat[q].v ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        etat[q].v = etat[q].v === bt.getAttribute('data-v') ? '' : bt.getAttribute('data-v');
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-v') === etat[q].v ? 'true' : 'false'); });
+        garder(); recap();
+      });
+    });
+    champ.value = etat[q].c || '';
+    champ.addEventListener('input', function () { etat[q].c = champ.value; garder(); recap(); });
+  });
+  recap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('recap');
+    var ok = function () { var s = document.getElementById('copie-ok'); s.hidden = false; setTimeout(function () { s.hidden = true; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); document.execCommand('copy'); ok(); }); }
+    else { t.select(); document.execCommand('copy'); ok(); }
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

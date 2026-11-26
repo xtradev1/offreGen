@@ -1,0 +1,25 @@
+{# Barre du bas de l'administration, par rôle (R3 et E1, Xavier, 2026-11-19). Elle ne montre à un rôle que des pages
+   qui lui répondent (tests/Http/DroitsEquipeTest.php). « actif » : tableau, aider, suivi, prospects, artisans, equipe ou plus.
+   Sur PC, la classe « tabs » en fait le menu de gauche, comme dans l'application. #}
+{% set icones = {
+  tableau: '<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>',
+  aider: '<path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/>',
+  suivi: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  prospects: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
+  artisans: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.3-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.6 5.2"/>',
+  equipe: '<circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c.6-3 2.8-4.5 6-4.5s5.4 1.5 6 4.5M14 15.6c.6-.1 1.3-.1 2-.1 3.2 0 5.4 1.5 6 4.5"/>',
+  espace: '<path d="M17 7H4l3-3M7 17h13l-3 3"/>',
+  plus: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>'
+} %}
+{% set entrees = {
+  administrateur: [['tableau', '/admin/tableau', 'Tableau'], ['prospects', '/admin/prospects', 'Prospects'], ['artisans', '/admin/artisans', 'Clients'], ['equipe', '/admin/equipe', 'Équipe'], ['plus', '/admin/plus', 'Plus']],
+  moderateur: [['aider', '/admin/a-aider', 'À aider'], ['prospects', '/admin/prospects', 'Prospects'], ['artisans', '/admin/artisans', 'Clients'], ['suivi', '/admin/suivi', 'Suivi'], ['plus', '/admin/plus', 'Plus']],
+  commercial: [['suivi', '/admin/suivi', 'Mon suivi'], ['prospects', '/admin/prospects', 'Prospects'], ['artisans', '/admin/artisans', 'Clients'], ['espace', '/', 'Mon espace'], ['plus', '/admin/plus', 'Plus']]
+} %}
+<nav class="tabs" aria-label="Administration">
+  <a class="marque-pc pc-seul" href="/decouvrir" aria-label="{{ nom_application }}, le site"><picture><source srcset="{{ fichier('/img/dicta-logo-sombre.svg') }}" media="(prefers-color-scheme: dark)"><img src="{{ fichier('/img/dicta-logo-clair.svg') }}" alt="" width="177" height="64"></picture></a>
+  {% for e in entrees[role.value] %}
+  <a href="{{ e[1] }}"{% if actif == e[0] %} aria-current="page"{% endif %}>
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icones[e[0]]|raw }}</svg>{{ e[2] }}{% if e[0] in ['suivi', 'tableau'] and (appels_en_attente ?? 0) > 0 %} <span class="compte-appels" aria-label="{{ appels_en_attente }} demande{{ appels_en_attente > 1 ? 's' : '' }} d'appel en attente">{{ appels_en_attente }}</span>{% endif %}</a>
+  {% endfor %}
+</nav>

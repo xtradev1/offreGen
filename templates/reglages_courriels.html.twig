@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{# Rubrique « Courriels » des réglages : « offre prête » (M2 de Xavier, 2026-11-23) et « dictée en échec » (Xavier,
+   2026-11-24) se reçoivent ou non. Ni l'un ni l'autre ne part si l'artisan attend à l'écran. #}
+{% block titre %}Courriels · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/reglages">Réglages</a>{% endblock %}
+{% block entete %}Courriels{% endblock %}
+{% set onglet = 'reglages' %}
+
+{% block contenu %}
+  <form id="courriels" method="post" action="/reglages/courriels">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <label class="check"><input type="checkbox" name="offre_prete" value="1"{% if offre_prete %} checked{% endif %}>
+      <span>Me prévenir par courriel quand une offre est prête</span></label>
+    <label class="check"><input type="checkbox" name="dictee_echec" value="1"{% if dictee_echec %} checked{% endif %}>
+      <span>Me prévenir par courriel quand une dictée n'a pas pu être traitée</span></label>
+    <p class="muted">Seulement si vous n'êtes pas sur l'écran d'attente : application fermée ou téléphone en veille. Si vous attendez à l'écran, il vous montre le résultat et aucun courriel ne part.</p>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><button class="btn primary" type="submit" form="courriels">Enregistrer</button></div>
+{% endblock %}

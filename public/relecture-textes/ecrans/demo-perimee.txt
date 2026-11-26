@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fr-CH" class="rls-0"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+    <title>Lien expiré · Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  
+  
+  <link rel="stylesheet" href="/css/app.css?v=e78f7334a14b">
+    
+<link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/demo-perimee.css"></head>
+<body>
+        <div class="app app-seule">
+    <header class="bar"><h1 data-t="T202">Lien expiré</h1></header>
+    <main class="screen">  <p data-t="T203">Ce lien a expiré ou a déjà servi. Demandez-en un nouveau à la personne qui vous a présenté Dicta.</p>
+</main>
+                            <div class="bas">
+                      </div>
+  </div>
+
+
+</body></html>

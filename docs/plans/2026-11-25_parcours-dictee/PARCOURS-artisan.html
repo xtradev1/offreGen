@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parcours de l'artisan : analyse du 26.11.2026</title>
+<style>
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("MAQUETTE-parcours-dictee-img/inter-latin.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-weight: 500 700; font-display: swap; src: url("MAQUETTE-parcours-dictee-img/archivo-latin.woff2") format("woff2"); }
+:root { --mk-ink: #23272D; --mk-bg: #F4F1EA; --mk-surface: #FFFFFF; --mk-line: #DDD8CC; --mk-accent: #9E3F1E; --p-muted: #454B55; --p-ok: #13553A; --p-ok-soft: #E1EFE6; --p-bad: #8C1D18; --p-bad-soft: #FBE7E4; --p-warn: #5A4300; --p-warn-soft: #FFF0B3; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #F0A27F; --p-muted: #B4B9C0; --p-ok: #7DD3A8; --p-ok-soft: #183126; --p-bad: #FF9A91; --p-bad-soft: #3B1613; --p-warn: #F0B860; --p-warn-soft: #3A2A10; } }
+:root[data-theme="dark"] { --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #F0A27F; --p-muted: #B4B9C0; --p-ok: #7DD3A8; --p-ok-soft: #183126; --p-bad: #FF9A91; --p-bad-soft: #3B1613; --p-warn: #F0B860; --p-warn-soft: #3A2A10; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1000px; margin: 0 auto; padding: 24px 16px 80px; }
+h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; line-height: 1.2; }
+h1 { font-size: 28px; margin: 8px 0 10px; }
+h2 { font-size: 22px; margin: 48px 0 10px; padding-top: 8px; border-top: 1px solid var(--mk-line); }
+h3 { font-size: 18px; margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+.chapeau { font-size: 17px; max-width: 760px; }
+.muted { color: var(--p-muted); }
+.petit { font-size: 14px; }
+.bloc { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 14px; padding: 16px 18px; margin: 14px 0; }
+ol.rang, ul.serre { margin: 6px 0 0; padding-left: 22px; }
+ol.rang li, ul.serre li { margin: 6px 0; }
+.etiq { display: inline-block; font: 700 12px/1 "Archivo", sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 5px 8px; border-radius: 6px; margin-right: 8px; vertical-align: 2px; }
+.etiq.defaut { background: var(--p-bad-soft); color: var(--p-bad); }
+.etiq.friction { background: var(--p-warn-soft); color: var(--p-warn); }
+.etiq.detail { background: var(--mk-line); color: var(--mk-ink); }
+.table-defile { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: var(--mk-surface); border-radius: 12px; overflow: hidden; font-size: 15px; min-width: 560px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--mk-line); }
+th { font-family: "Archivo", sans-serif; }
+td.n { font-weight: 700; white-space: nowrap; }
+td.mieux { color: var(--p-ok); font-weight: 700; white-space: nowrap; }
+.constat { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 14px; padding: 18px 18px 8px; margin: 18px 0; }
+.constat .corps { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: start; }
+.constat .texte p b { font-family: "Archivo", sans-serif; }
+.vues { display: flex; gap: 10px; }
+.vues figure { margin: 0; width: 200px; }
+.vues img { width: 200px; height: 433px; object-fit: cover; object-position: top; border-radius: 16px; border: 5px solid #111; background: #111; display: block; cursor: zoom-in; }
+.vues img.bas { object-position: bottom; }
+.vues figcaption { font-size: 12.5px; color: var(--p-muted); margin-top: 6px; text-align: center; }
+@media (max-width: 860px) { .constat .corps { grid-template-columns: 1fr; } .vues { justify-content: center; flex-wrap: wrap; } }
+@media (max-width: 460px) { .vues figure, .vues img { width: 156px; } .vues img { height: 338px; } }
+.garder { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+.garder figure { margin: 0; background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 14px; padding: 10px; }
+.garder img { width: 100%; height: 300px; object-fit: cover; object-position: top; border-radius: 8px; display: block; border: 1px solid var(--mk-line); cursor: zoom-in; }
+.garder img.bas { object-position: bottom; }
+.garder figcaption { font-size: 14px; margin-top: 8px; }
+.garder figcaption b { display: block; font-family: "Archivo", sans-serif; margin-bottom: 2px; }
+.choix { border-top: 1px dashed var(--mk-line); padding: 12px 0 8px; margin-top: 12px; }
+.choix-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.choix-btns button, .copier { font: 600 14px/1.2 "Archivo", sans-serif; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--mk-ink); background: var(--mk-surface); color: var(--mk-ink); cursor: pointer; }
+.choix-btns button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.choix-btns button:focus-visible, .copier:focus-visible, .choix textarea:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+.choix textarea { width: 100%; min-height: 52px; font: 15px/1.4 "Inter", sans-serif; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--mk-line); background: var(--mk-bg); color: var(--mk-ink); resize: vertical; }
+.recap { white-space: pre-wrap; font: 14px/1.5 ui-monospace, "Cascadia Mono", monospace; background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 14px; margin: 10px 0; overflow-wrap: anywhere; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Parcours de l'artisan : ce qui serait mieux</h1>
+<p class="chapeau">J'ai joué les gestes de l'artisan au téléphone (390 px), toucher par toucher, sur une copie de la base du banc. Chaque constat montre sa capture. Sous chacun, votre choix : à faire, plus tard, ou non.</p>
+<nav id="mk-toc"></nav>
+
+<h2 id="bref" data-toc="En bref">En bref</h2>
+<div class="bloc">
+  <p><b>Le chemin de la dictée à l'envoi est court et le restera.</b> Les défauts se trouvent autour : la relecture d'une ligne sans prix, la page de l'offre qui cache ses lignes, l'ajout d'une ligne qui perd l'artisan, la liste des offres sans recherche.</p>
+  <p>Par ordre d'effet sur l'artisan :</p>
+  <ol class="rang">
+    <li><b>Relecture d'une ligne sans prix</b> : « C'est juste » reste proposé, des messages rouges s'empilent et restent affichés jusque sur l'écran « Toutes les lignes sont relues ». Défaut.</li>
+    <li><b>Deux comptes pour la même offre</b> : « 3 à vérifier » dans la liste, « Relire 5 lignes » sur l'offre. Défaut.</li>
+    <li><b>Page de l'offre</b> : la première ligne commence à 60 % du premier écran ; 6,3 écrans pour 33 lignes.</li>
+    <li><b>Ajouter une ligne</b> : après « Terminé », la page revient en haut ; la ligne ajoutée est tout en bas, sans repère.</li>
+    <li><b>Mes offres</b> : aucune recherche, alors que Clients, Catalogue et Factures en ont une.</li>
+  </ol>
+  <p class="muted petit" style="margin-top:12px">Trois constats plus légers suivent (fiche d'une ligne, après l'envoi, « Se déconnecter »).</p>
+</div>
+
+<h2 id="touchers" data-toc="Touchers">Les parcours, en touchers</h2>
+<p class="muted petit">Comptés en jouant chaque parcours (Chromium, téléphone 390 x 844). « Après les lots validés » : la règle « offre propre, PDF » que vous avez validée le 26.11 et qui reste à coder.</p>
+<div class="table-defile"><table>
+  <thead><tr><th>Parcours</th><th>Aujourd'hui</th><th>Après les lots validés</th><th>Remarque</th></tr></thead>
+  <tbody>
+    <tr><td>Fin de dictée vers le PDF, offre propre, client connu</td><td class="n">1</td><td class="mieux">0</td><td>« Générer l'offre » disparaît.</td></tr>
+    <tr><td>Fin de dictée vers le PDF, offre propre, nouveau client</td><td class="n">3</td><td class="mieux">2</td><td>Générer, « Créer la fiche », « Enregistrer et voir le PDF ». La fiche arrive remplie d'après la dictée.</td></tr>
+    <tr><td>Fin de dictée vers le PDF, N lignes à relire</td><td class="n">N + 2</td><td class="mieux">N + 1</td><td>Relire, N fois « C'est juste », Générer.</td></tr>
+    <tr><td>Envoyer depuis le PDF</td><td class="n">1</td><td class="n">1</td><td>Puis le partage du téléphone.</td></tr>
+    <tr><td>Corriger une quantité ou un prix</td><td class="n">1 + saisie</td><td class="n">1 + saisie</td><td>Enregistré tout seul, l'en-tête le dit. Rien à changer.</td></tr>
+    <tr><td>Supprimer une ligne</td><td class="n">1</td><td class="n">1</td><td>« Annuler » reste affiché. Rien à changer.</td></tr>
+    <tr><td>Ajouter une ligne du catalogue</td><td class="n">3, puis chercher la ligne</td><td class="n">3, puis chercher la ligne</td><td>+ Ligne, le produit, Terminé. Voir le constat 4.</td></tr>
+    <tr><td>Facturer une offre envoyée</td><td class="n">2</td><td class="n">2</td><td>Facturer, « Créer la facture ». Rien à changer.</td></tr>
+    <tr><td>Retrouver une offre ancienne</td><td class="n">défiler</td><td class="n">défiler</td><td>Aucune recherche. Voir le constat 5.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="constats" data-toc="Constats">Les constats</h2>
+
+<section class="constat">
+  <div class="corps"><div class="texte">
+    <h3><span class="etiq defaut">Défaut</span>1. Relecture : la ligne sans prix</h3>
+    <p><b>Ce qui se passe.</b> Sur une ligne où le prix manque (« Prix ? »), le bouton vert « C'est juste » reste proposé. Le toucher affiche « Pas enregistré : Indiquez le prix en francs […] L'envoi a échoué. » Chaque toucher ajoute un message par-dessus le précédent : deux touchers, deux messages. Ils restent à l'écran après la correction, jusque sur « Toutes les lignes sont relues ».</p>
+    <p><b>Pourquoi c'est grave.</b> L'artisan lit un message d'échec rouge sur l'écran qui lui annonce que tout est relu. « L'envoi a échoué » parle d'un envoi alors qu'il manque un prix.</p>
+    <p><b>Proposition.</b> Sur une ligne sans prix, le curseur va dans le prix et le bouton dit « Indiquez le prix » tant que le champ est vide. Un message remplace le précédent et disparaît à la ligne suivante. Le texte s'arrête à « Indiquez le prix en francs, par exemple 28 ou 28.50 ; 0 pour l'offrir. »</p>
+    <p class="muted petit">Coût estimé : 1 h 30.</p>
+  </div><div class="vues">
+    <figure><img src="PARCOURS-artisan-img/relire-sans-prix.jpg" alt="Relecture d'une ligne sans prix : deux messages rouges empilés au-dessus des boutons Corriger et C'est juste"><figcaption>Deux touchers, deux messages.</figcaption></figure>
+    <figure><img src="PARCOURS-artisan-img/relire-fin.jpg" alt="Écran Toutes les lignes sont relues, avec les deux messages rouges d'échec encore affichés"><figcaption>Les messages restent sur l'écran de fin.</figcaption></figure>
+  </div></div>
+  <div class="choix" data-q="c1" data-titre="1. Relecture, ligne sans prix"><div class="choix-btns"><button type="button" data-v="À faire">À faire</button><button type="button" data-v="Plus tard">Plus tard</button><button type="button" data-v="Non">Non</button></div><textarea aria-label="Commentaire sur le constat 1" placeholder="Commentaire (facultatif)"></textarea></div>
+</section>
+
+<section class="constat">
+  <div class="corps"><div class="texte">
+    <h3><span class="etiq defaut">Défaut</span>2. « 3 à vérifier » ici, « Relire 5 lignes » là</h3>
+    <p><b>Ce qui se passe.</b> Pour la même offre, la liste annonce 3 et le bouton de l'offre 5. La liste compte les lignes incertaines ; la relecture y ajoute les lignes sans prix (lu dans le code : <code>AccueilControleur</code> ligne 108 et <code>RelectureControleur::aRelire</code>).</p>
+    <p><b>Proposition.</b> Un seul compte partout, celui de la relecture, et un seul mot. Je propose « 5 à relire » dans la liste, comme sur le bouton.</p>
+    <p class="muted petit">Coût estimé : 30 minutes. À poser dans le lot « arrivée » : l'écran « Offre prête » affichera ce même compte.</p>
+  </div><div class="vues">
+    <figure><img src="PARCOURS-artisan-img/accueil.jpg" alt="Liste des offres : l'offre 3 porte la pastille 3 à vérifier"><figcaption>La liste : « 3 à vérifier ».</figcaption></figure>
+    <figure><img class="bas" src="PARCOURS-artisan-img/offre-a-relire.jpg" alt="Offre 3 : le bouton principal dit Relire 5 lignes"><figcaption>L'offre : « Relire 5 lignes ».</figcaption></figure>
+  </div></div>
+  <div class="choix" data-q="c2" data-titre="2. Un seul compte des lignes à relire"><div class="choix-btns"><button type="button" data-v="À faire">À faire</button><button type="button" data-v="Plus tard">Plus tard</button><button type="button" data-v="Non">Non</button></div><textarea aria-label="Commentaire sur le constat 2" placeholder="Commentaire (facultatif), par exemple le mot à garder : à relire ou à vérifier"></textarea></div>
+</section>
+
+<section class="constat">
+  <div class="corps"><div class="texte">
+    <h3><span class="etiq friction">Friction</span>3. Page de l'offre : les lignes arrivent tard</h3>
+    <p><b>Ce qui se passe.</b> Avant la première ligne : le client, « Représenté par » (vide), l'objet, l'état, puis le champ « Texte avant les lignes » (vide). La première ligne commence à 60 % du premier écran, une ligne et demie se voit. En bas, deux barres fixes et le micro prennent encore 170 px environ. L'offre de 33 lignes fait 6,3 écrans.</p>
+    <p><b>Proposition.</b> Tant qu'ils sont vides, « Représenté par » et « Texte avant les lignes » deviennent deux liens courts sur une ligne (« + Représentant », « + Texte avant les lignes »). Remplis, ils reprennent leur place. Gain estimé sur la capture : environ 170 px, soit près de deux lignes de plus au premier écran.</p>
+    <p class="muted petit">Coût estimé : 1 h 30. Le lien « + Texte avant les lignes » figurait déjà dans la piste A de la maquette v1.</p>
+  </div><div class="vues">
+    <figure><img src="PARCOURS-artisan-img/offre-propre.jpg" alt="Page d'une offre : trois cartes et un champ vide occupent plus de la moitié de l'écran avant la première ligne"><figcaption>Une ligne et demie au premier écran.</figcaption></figure>
+  </div></div>
+  <div class="choix" data-q="c3" data-titre="3. Page de l'offre, lignes plus haut"><div class="choix-btns"><button type="button" data-v="À faire">À faire</button><button type="button" data-v="Plus tard">Plus tard</button><button type="button" data-v="Non">Non</button></div><textarea aria-label="Commentaire sur le constat 3" placeholder="Commentaire (facultatif)"></textarea></div>
+</section>
+
+<section class="constat">
+  <div class="corps"><div class="texte">
+    <h3><span class="etiq friction">Friction</span>4. Ajouter une ligne : où est-elle passée ?</h3>
+    <p><b>Ce qui se passe.</b> + Ligne, un produit, « Terminé » : trois touchers, et la fenêtre confirme « Benne de chantier ajoutée ». Puis la page revient tout en haut. La ligne ajoutée est en bas, dans sa catégorie, sans repère, avec sa quantité par défaut : il faut défiler pour la trouver et la régler.</p>
+    <p>Deux détails dans la fenêtre : le choix « Dans le total, Option, Variante » passe avant la recherche alors qu'il sert rarement, et le texte du champ est coupé (« Chercher un produit ou taper une lign »).</p>
+    <p><b>Proposition.</b> À « Terminé », la page défile jusqu'à la dernière ligne ajoutée, l'éclaire, et pose le curseur dans sa quantité. La recherche passe en premier, « Elle va » en dessous. Texte du champ : « Chercher ou taper une ligne ».</p>
+    <p class="muted petit">Coût estimé : 1 h 30.</p>
+  </div><div class="vues">
+    <figure><img src="PARCOURS-artisan-img/ajout-produit.jpg" alt="Fenêtre Ajouter à l'offre : confirmation de l'ajout, choix Dans le total Option Variante avant la recherche, texte du champ coupé"><figcaption>Le produit est ajouté.</figcaption></figure>
+    <figure><img src="PARCOURS-artisan-img/ajout-termine.jpg" alt="Après Terminé : la page de l'offre est revenue en haut, la ligne ajoutée n'est pas visible"><figcaption>Après « Terminé » : le haut de la page.</figcaption></figure>
+  </div></div>
+  <div class="choix" data-q="c4" data-titre="4. Ajouter une ligne"><div class="choix-btns"><button type="button" data-v="À faire">À faire</button><button type="button" data-v="Plus tard">Plus tard</button><button type="button" data-v="Non">Non</button></div><textarea aria-label="Commentaire sur le constat 4" placeholder="Commentaire (facultatif)"></textarea></div>
+</section>
+
+<section class="constat">
+  <div class="corps"><div class="texte">
+    <h3><span class="etiq friction">Friction</span>5. Mes offres : pas de recherche</h3>
+    <p><b>Ce qui se passe.</b> Clients (« Chercher un nom, une localité »), Catalogue et Factures ont un champ de recherche. La liste des offres n'a que quatre tris. Avec quatre offres, cela ne se voit pas ; avec cent, l'artisan qui cherche « Dupont » défile.</p>
+    <p><b>Proposition.</b> Le même champ en tête de liste : « Chercher une offre, un client ». Il filtre sur le titre, le client et le numéro.</p>
+    <p class="muted petit">Coût estimé : 2 h (serveur et écran). Peut attendre les premiers comptes à plusieurs dizaines d'offres.</p>
+  </div><div class="vues">
+    <figure><img src="PARCOURS-artisan-img/accueil.jpg" alt="Liste des offres : quatre tris, aucun champ de recherche"><figcaption>Mes offres.</figcaption></figure>
+    <figure><img src="PARCOURS-artisan-img/clients.jpg" alt="Liste des clients avec son champ de recherche en tête"><figcaption>Clients, avec sa recherche.</figcaption></figure>
+  </div></div>
+  <div class="choix" data-q="c5" data-titre="5. Recherche dans Mes offres"><div class="choix-btns"><button type="button" data-v="À faire">À faire</button><button type="button" data-v="Plus tard">Plus tard</button><button type="button" data-v="Non">Non</button></div><textarea aria-label="Commentaire sur le constat 5" placeholder="Commentaire (facultatif)"></textarea></div>
+</section>
+
+<section class="constat">
+  <div class="corps"><div class="texte">
+    <h3><span class="etiq detail">Détail</span>6. Fiche d'une ligne : tout au même niveau</h3>
+    <p><b>Ce qui se passe.</b> La fiche montre d'un bloc la désignation, la quantité, l'unité, le prix, « Facturée ou Offerte », « Dans le total, Option, Variante », « + Variante » et trois taux de TVA. Les réglages rares pèsent autant que la quantité et le prix.</p>
+    <p><b>Proposition.</b> Désignation, quantité, unité et prix d'abord. Le reste replié sous « Plus de réglages », ouvert d'office quand un de ces réglages est déjà utilisé sur la ligne.</p>
+    <p class="muted petit">Coût estimé : 1 h.</p>
+  </div><div class="vues">
+    <figure><img src="PARCOURS-artisan-img/fiche-ligne.jpg" alt="Fiche d'une ligne : sept groupes de champs sur un écran et demi"><figcaption>La fiche d'une ligne.</figcaption></figure>
+  </div></div>
+  <div class="choix" data-q="c6" data-titre="6. Fiche d'une ligne"><div class="choix-btns"><button type="button" data-v="À faire">À faire</button><button type="button" data-v="Plus tard">Plus tard</button><button type="button" data-v="Non">Non</button></div><textarea aria-label="Commentaire sur le constat 6" placeholder="Commentaire (facultatif)"></textarea></div>
+</section>
+
+<section class="constat">
+  <div class="corps"><div class="texte">
+    <h3><span class="etiq detail">Détail</span>7. Après « Envoyer » : et maintenant ?</h3>
+    <p><b>Ce qui se passe.</b> L'envoi fait, « Offre 2 envoyée » s'affiche et l'écran reste le même : « Envoyer » est toujours le bouton principal. Rien ne dit quoi faire ensuite.</p>
+    <p><b>Proposition.</b> Une fois l'offre envoyée, le bouton principal devient « Retour aux offres » ; « Renvoyer » et « Facturer » restent à côté.</p>
+    <p class="muted petit">Coût estimé : 30 minutes.</p>
+  </div><div class="vues">
+    <figure><img src="PARCOURS-artisan-img/apres-envoi.jpg" alt="PDF de l'offre après l'envoi : message Offre 2 envoyée, bouton Envoyer toujours en bouton principal"><figcaption>Après l'envoi.</figcaption></figure>
+  </div></div>
+  <div class="choix" data-q="c7" data-titre="7. Après Envoyer"><div class="choix-btns"><button type="button" data-v="À faire">À faire</button><button type="button" data-v="Plus tard">Plus tard</button><button type="button" data-v="Non">Non</button></div><textarea aria-label="Commentaire sur le constat 7" placeholder="Commentaire (facultatif)"></textarea></div>
+</section>
+
+<section class="constat">
+  <div class="corps"><div class="texte">
+    <h3><span class="etiq detail">Détail</span>8. « Se déconnecter », deux fois et en grand</h3>
+    <p><b>Ce qui se passe.</b> Dans « Plus », « Se déconnecter » est un bouton de toute la largeur juste sous les quatre entrées. Il existe aussi dans Réglages, en lien discret. Un geste rare occupe la place d'une action courante.</p>
+    <p><b>Proposition.</b> Le garder une fois, en lien discret au bas de « Plus », avec l'adresse du compte.</p>
+    <p class="muted petit">Coût estimé : 15 minutes.</p>
+  </div><div class="vues">
+    <figure><img src="PARCOURS-artisan-img/plus.jpg" alt="Écran Plus : quatre entrées puis un grand bouton Se déconnecter"><figcaption>« Plus ».</figcaption></figure>
+    <figure><img src="PARCOURS-artisan-img/reglages.jpg" alt="Écran Réglages : lien Se déconnecter sous l'adresse du compte"><figcaption>Réglages.</figcaption></figure>
+  </div></div>
+  <div class="choix" data-q="c8" data-titre="8. Se déconnecter"><div class="choix-btns"><button type="button" data-v="À faire">À faire</button><button type="button" data-v="Plus tard">Plus tard</button><button type="button" data-v="Non">Non</button></div><textarea aria-label="Commentaire sur le constat 8" placeholder="Commentaire (facultatif)"></textarea></div>
+</section>
+
+<h2 id="garder" data-toc="À garder">Ce qui marche, à garder</h2>
+<div class="garder">
+  <figure><img src="PARCOURS-artisan-img/quantite.jpg" alt="Offre après la saisie d'une quantité : total recalculé, mention Enregistrée dans l'en-tête"><figcaption><b>Corriger sur place.</b> Un toucher, la saisie, et c'est enregistré : le total suit, l'en-tête dit « Enregistrée ».</figcaption></figure>
+  <figure><img class="bas" src="PARCOURS-artisan-img/suppression.jpg" alt="Après la suppression d'une ligne : message Déplacement supprimée avec le lien Annuler"><figcaption><b>Supprimer sans peur.</b> Un toucher, et « Annuler » reste sous le pouce.</figcaption></figure>
+  <figure><img src="PARCOURS-artisan-img/client-dicte.jpg" alt="Pour qui est cette offre : le nom et l'adresse entendus dans la dictée en tête, bouton Créer la fiche"><figcaption><b>Le client dicté d'abord.</b> Le nom et l'adresse entendus sont en tête, les fiches qui ressemblent dessous.</figcaption></figure>
+  <figure><img src="PARCOURS-artisan-img/client-fiche.jpg" alt="Fiche du client remplie d'après la dictée, bouton Enregistrer et voir le PDF"><figcaption><b>La fiche déjà remplie.</b> Rue, numéro, NPA et localité viennent de la dictée ; le bouton mène au PDF.</figcaption></figure>
+  <figure><img src="PARCOURS-artisan-img/facturer.jpg" alt="Fenêtre Facturer l'offre : facture finale ou acompte, aperçu, bouton Créer la facture avec le montant"><figcaption><b>Facturer en une fenêtre.</b> Le choix, l'aperçu, le montant sur le bouton.</figcaption></figure>
+</div>
+<p class="muted petit" style="margin-top:12px">Relevé sur dix écrans : aucun bouton ni lien sous 44 px. Deux cases à cocher de 26 px sur l'offre 3 ; leur libellé agrandit sans doute la cible, je ne l'ai pas vérifié.</p>
+
+<h2 id="limites" data-toc="Limites">Ce que cette analyse ne couvre pas</h2>
+<div class="bloc"><ul class="serre">
+  <li><b>Un seul écran</b> : téléphone de 390 px dans Chromium. Ni le PC, ni la tablette, ni un vrai iPhone ; le clavier du téléphone n'apparaît pas dans ces captures.</li>
+  <li><b>Des données de banc</b> : un compte de peintre, cinq offres, 274 produits. Je n'ai observé aucune longue liste : l'effet de cent offres est une déduction.</li>
+  <li><b>Pas d'artisan</b> : ce sont mes constats d'après les écrans et le code. Les essais de Luigi et des autres trancheront mieux que moi sur l'ordre des priorités.</li>
+  <li><b>Hors champ</b> : la dictée elle-même (traitée par les deux maquettes), le premier lancement, les réglages en détail, l'import du catalogue, l'administration.</li>
+</ul></div>
+
+<h2 id="reponses" data-toc="Réponses">Vos réponses</h2>
+<p class="muted petit">Elles restent dans ce navigateur. Le bouton copie le texte à coller dans la conversation.</p>
+<div class="recap" id="recap">Aucune réponse pour l'instant.</div>
+<button type="button" class="copier" id="copier">Copier le texte</button>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var CLE = 'parcours-artisan-2026-11-26';
+  var lire = function () { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (err) { return {}; } };
+  var ecrire = function (r) { try { localStorage.setItem(CLE, JSON.stringify(r)); } catch (err) { /* stockage refusé : les réponses restent à l'écran */ } };
+  var reponses = lire();
+  var blocs = Array.prototype.slice.call(document.querySelectorAll('.choix'));
+  var recap = document.getElementById('recap');
+  var texte = function () {
+    var l = [];
+    blocs.forEach(function (c) {
+      var r = reponses[c.dataset.q] || {};
+      if (!r.v && !r.c) return;
+      l.push('- ' + c.dataset.titre + ' : ' + (r.v || 'sans choix') + (r.c ? '. Commentaire : ' + r.c.trim() : ''));
+    });
+    return l.length ? 'Analyse des parcours de l\'artisan, mes réponses :\n' + l.join('\n') : '';
+  };
+  var majRecap = function () { recap.textContent = texte() || 'Aucune réponse pour l\'instant.'; };
+  blocs.forEach(function (c) {
+    var q = c.dataset.q;
+    var r = reponses[q] || {};
+    var boutons = c.querySelectorAll('.choix-btns button');
+    var zone = c.querySelector('textarea');
+    boutons.forEach(function (b) {
+      b.setAttribute('aria-pressed', String(r.v === b.dataset.v));
+      b.addEventListener('click', function () {
+        var cur = reponses[q] || {};
+        cur.v = cur.v === b.dataset.v ? '' : b.dataset.v;
+        reponses[q] = cur;
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', String(cur.v === x.dataset.v)); });
+        ecrire(reponses); majRecap();
+      });
+    });
+    zone.value = r.c || '';
+    zone.addEventListener('input', function () { var cur = reponses[q] || {}; cur.c = zone.value; reponses[q] = cur; ecrire(reponses); majRecap(); });
+  });
+  majRecap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = texte();
+    var bouton = this;
+    if (!t) { bouton.textContent = 'Rien à copier'; setTimeout(function () { bouton.textContent = 'Copier le texte'; }, 1500); return; }
+    var fini = function () { bouton.textContent = 'Copié'; setTimeout(function () { bouton.textContent = 'Copier le texte'; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(fini, function () { window.prompt('Copiez ce texte :', t); });
+    else window.prompt('Copiez ce texte :', t);
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

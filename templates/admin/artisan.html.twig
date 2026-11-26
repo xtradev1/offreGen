@@ -1,0 +1,52 @@
+{% extends 'admin/base.html.twig' %}
+
+{# La fiche d'un artisan (D7 refaite, validée par Xavier le 2026-11-19) : la jauge des dictées, « offrir des offres »
+   d'un toucher dans la limite du rôle, le fil de ce qui s'est passé. Jamais le contenu d'une offre (R2). #}
+{% set gestes = {demo_creee: 'Démo créée', passage_essai: "Passé à l'essai", offres_ajoutees: 'Offres ajoutées', membre_cree: 'Compte créé', membre_promu: 'Rôle donné', role_change: 'Rôle changé', membre_retire: "Retiré de l'équipe", demo_entrainement: "Démo d'entraînement créée", entree_entrainement: "Entrée dans la démo d'entraînement", retour_entrainement: "Retour depuis la démo d'entraînement", demande_appel: "Demande d'appel", appel_fait: 'Rappel fait'} %}
+{% set roles = {moderateur: 'modérateur', commercial: 'commercial'} %}
+{% block retour %}<a class="back" href="/admin/artisans">Clients</a>{% endblock %}
+{% block sous %}<p>{{ compte.demo == 1 ? 'Démo' : (compte.offres_max is null ? 'Compte' : 'Essai') }}{% if compte.demo != 1 %} · {{ compte.courriel }}{% else %}{% if metier %} · {{ metier }}{% endif %}{% if compte.courriel_saisi is not null %} · {{ compte.courriel_saisi }}{% endif %}{% endif %}{% if compte.apporteur is not null %} · amené par {{ compte.apporteur }}{% endif %}{% if compte.createur is not null and compte.cree_par != compte.apporte_par %} · suivi par {{ compte.createur }}{% endif %}</p>{% endblock %}
+
+{% block contenu %}
+  {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+  <div class="jauge">
+    <div class="haut"><span class="muted">Dictées reçues</span><b>{{ compte.dictees }}{% if compte.offres_max is not null %} / {{ compte.offres_max }}{% endif %}</b></div>
+    {% if compte.offres_max is not null %}
+      <progress max="{{ compte.offres_max }}" value="{{ min(compte.dictees, compte.offres_max) }}" aria-label="Dictées reçues sur le plafond du compte"></progress>
+      {% if compte.dictees >= compte.offres_max %}<span class="badge manque">Plafond atteint</span>{% endif %}
+    {% else %}
+      <span class="muted">Ce compte n'a pas de plafond.</span>
+    {% endif %}
+  </div>
+  {% if ajouts is not empty %}
+    <form class="ajouts" method="post" action="/admin/artisans/{{ compte.id }}/offres" aria-label="Offrir des offres">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      {% for n in ajouts %}<button class="btn" type="submit" name="ajout" value="{{ n }}" aria-label="Offrir {{ n }} offres">+{{ n }}</button>{% endfor %}
+    </form>
+  {% elseif compte.offres_max is not null %}
+    <p class="muted">Vous avez offert {{ compte.offres_offertes }} offres à ce compte : c'est la limite de votre rôle.</p>
+  {% endif %}
+  {% if compte.demo == 1 and compte.demo_fin is not null %}
+    <div class="actions-demo">
+      <a class="btn" href="/admin/artisans/{{ compte.id }}/qr">Afficher le code QR</a>
+      <form method="post" action="/admin/artisans/{{ compte.id }}/message">
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <button class="btn" type="submit">Envoyer par message</button>
+      </form>
+    </div>
+  {% endif %}
+  {% if evenements is not empty %}
+    <ul class="fil">
+      {% for e in evenements %}
+        <li><time datetime="{{ e.quand }}">{{ e.quand|date_locale }}</time><span>
+          {%- if e.sorte == 'recue' %}Dictée reçue
+          {%- elseif e.sorte == 'prete' %}Offre prête
+          {%- elseif e.sorte == 'echec' %}<b class="err">Échec du traitement</b>
+          {%- else %}{{ gestes[e.detail] ?? 'Geste de l\'équipe' }}{% if e.precision is not null %}&nbsp;: {{ roles[e.precision] ?? e.precision }}{% endif %}{% if e.acteur is not null %}, par {{ e.acteur }}{% endif %}
+          {%- endif %}</span></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">Rien ne s'est encore passé sur ce compte.</p>
+  {% endif %}
+{% endblock %}

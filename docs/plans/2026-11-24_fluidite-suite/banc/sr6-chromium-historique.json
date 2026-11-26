@@ -1,0 +1,48 @@
+{
+ "moteur": "chromium",
+ "retour": "historique",
+ "offre": "1",
+ "etapes": [
+  {
+   "quoi": "offre ouverte",
+   "adresse": "/offres/1",
+   "file": [],
+   "garde": [],
+   "snacks": []
+  },
+  {
+   "quoi": "aperçu 1",
+   "adresse": "/offres/1/apercu",
+   "file": [],
+   "garde": [],
+   "snacks": []
+  },
+  {
+   "quoi": "offre revenue",
+   "adresse": "/offres/1",
+   "file": [],
+   "garde": [],
+   "snacks": []
+  },
+  {
+   "quoi": "aperçu 2",
+   "adresse": "/offres/1/apercu",
+   "file": [],
+   "garde": [],
+   "snacks": []
+  },
+  {
+   "quoi": "après « Envoyer »",
+   "adresse": "/offres/1/apercu",
+   "file": [],
+   "garde": [],
+   "snacks": [
+    "Offre 1 envoyée"
+   ]
+  }
+ ],
+ "posts": [
+  "POST /offres/1/envoyee _csrf=fb99c8f2b406bb252f35f63a6.OIoG4TBmiVu47uN8ojfvMIcZ4HcBM5inb4ElpzCUHk4.bv9e"
+ ],
+ "erreurs": []
+}

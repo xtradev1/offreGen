@@ -1,0 +1,123 @@
+[
+ {
+  "cle": "service worker aux commandes",
+  "valeur": true
+ },
+ {
+  "cle": "1. offre gardée d'avance (jamais ouverte)",
+  "valeur": "/offres/3"
+ },
+ {
+  "cle": "1. versions gardées",
+  "valeur": {
+   "/css/app.css": [
+    "5501ca9e7a51"
+   ],
+   "/js/fluide.js": [
+    "e3dfad94c95e"
+   ],
+   "/js/app.js": [
+    "7a3575f03732"
+   ]
+  }
+ },
+ {
+  "cle": "3. versions gardées après la liste",
+  "valeur": {
+   "/css/app.css": [
+    "5501ca9e7a51",
+    "fa4d9c58bf3c"
+   ],
+   "/js/fluide.js": [
+    "e3dfad94c95e",
+    "a13c6dd64d40"
+   ],
+   "/js/app.js": [
+    "7a3575f03732",
+    "9d13c3fdfa4a"
+   ]
+  }
+ },
+ {
+  "cle": "4. offre gardée d'avance, sans réseau",
+  "valeur": {
+   "garde": "hors",
+   "style": "480px",
+   "fluide": true,
+   "app": true,
+   "scripts": [
+    "fluide.js?v=e3dfad94c95e",
+    "app.js?v=7a3575f03732"
+   ],
+   "geste": "sans rechargement, étiquette partie"
+  }
+ },
+ {
+  "cle": "4. fiche de la ligne, sans réseau",
+  "valeur": {
+   "garde": "hors",
+   "style": "480px",
+   "fluide": true,
+   "app": true,
+   "scripts": [
+    "fluide.js?v=e3dfad94c95e",
+    "app.js?v=7a3575f03732"
+   ],
+   "geste": "aucune ligne à vérifier"
+  }
+ },
+ {
+  "cle": "5. anciennes versions retirées à la main",
+  "valeur": 3
+ },
+ {
+  "cle": "5. fiche de la ligne sans réseau, versions récentes",
+  "valeur": {
+   "garde": "hors",
+   "style": "480px",
+   "fluide": true,
+   "app": true,
+   "scripts": [
+    "fluide.js?v=e3dfad94c95e",
+    "app.js?v=7a3575f03732"
+   ],
+   "geste": "aucune ligne à vérifier"
+  }
+ },
+ {
+  "cle": "6. versions avant la liste",
+  "valeur": {
+   "/js/fluide.js": [
+    "a13c6dd64d40"
+   ],
+   "/css/app.css": [
+    "fa4d9c58bf3c"
+   ],
+   "/js/app.js": [
+    "9d13c3fdfa4a"
+   ]
+  }
+ },
+ {
+  "cle": "6. versions gardées après le nettoyage",
+  "valeur": {
+   "/css/app.css": [
+    "5daad3768143"
+   ],
+   "/js/fluide.js": [
+    "5330da737473"
+   ],
+   "/js/app.js": [
+    "b1ea617d90f2"
+   ]
+  }
+ },
+ {
+  "cle": "6. pages gardées",
+  "valeur": 8
+ },
+ {
+  "cle": "erreurs JavaScript",
+  "valeur": []
+ }
+]

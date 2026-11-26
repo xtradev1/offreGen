@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Mes offres · {{ nom_application }}{% endblock %}
+{% block entete %}Mes offres{% endblock %}
+{% block ecran_classe %} gris avec-rond{% endblock %}
+{% block ecran_donnees %} data-resume="compte-offres archives"{% endblock %}
+{% block entete_html %}{% if vos_prix.nombre > 0 %}<link rel="stylesheet" href="{{ fichier('/css/vos-prix.css') }}"><script src="{{ fichier('/js/vos-prix.js') }}" defer></script>{% endif %}{% endblock %}
+
+{% block contenu %}
+  {% set m = mots() %}
+  <p class="muted ent">{{ entreprise }}{% if demo %} (compte de démonstration){% endif %}</p>
+  {% set essai_compte = essai() %}{% if essai_compte %}<p class="muted ent">{{ demo ? essai_compte.reste|replace({"Compte d'essai": 'Démo'}) : essai_compte.reste }}</p>{% endif %}
+  {# Archivées et supprimées comprises ; un échec n'a pas donné d'offre et ne compte pas. #}
+  <p class="compteur">{{ du_mois }} offre{% if du_mois > 1 %}s{% endif %} ce mois</p>
+
+  {# « Vos prix » : les produits d'exemple d'un essai attendent leur prix (chantier des métiers, 2026-11-19). #}
+  <div id="vos-prix">{% if vos_prix.nombre > 0 %}
+    {% if vos_prix.reduit %}
+      <p class="vp-rappel"><span>{{ vos_prix.nombre }} produit{% if vos_prix.nombre > 1 %}s{% endif %} sans prix</span><a href="/vos-prix">Compléter</a></p>
+    {% else %}
+      <div class="vp-bandeau">
+        <b>{{ vos_prix.nombre }} {{ vos_prix.nombre > 1 ? 'produits attendent' : 'produit attend' }} votre prix</b>
+        <span>Deux minutes. Un prix par produit, et vous retirez ce que vous ne faites pas.</span>
+        <div class="vp-bandeau-gestes">
+          <a class="btn primary" href="/vos-prix">Mettre mes prix</a>
+          <form method="post" action="/vos-prix/plus-tard"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="btn" type="submit">Plus tard</button></form>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}</div>
+
+  <div id="preparation">{% if en_preparation is not empty or echecs is not empty %}
+    <div class="cat liste"><h5>En préparation</h5></div>
+    {% for e in en_preparation %}
+      <a class="ocard" href="/enregistrements/{{ e.uuid }}">
+        <span class="l1"><b>{{ m.dictee_nom }} du {{ e.recu_le|date_locale }}</b>
+          <span class="status"><span class="tourne" aria-hidden="true"></span>{{ e.statut == 'transcrit' ? 'Création de l\'offre' : 'Transcription' }}</span></span>
+        <span class="l2"><span>{{ e.nom_origine }}</span></span>
+      </a>
+    {% endfor %}
+    {% for e in echecs %}
+      <div class="ocard echec">
+        <span class="l1"><b>{{ m.dictee_nom }} du {{ e.recu_le|date_locale }}</b></span>
+        <span class="l2"><span>Échec · ne compte pas dans vos offres</span></span>
+        <span class="act">
+          <form method="post" action="/enregistrements/{{ e.uuid }}/reessayer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="prim" type="submit">Réessayer</button></form>
+          <form method="post" action="/enregistrements/{{ e.uuid }}/retirer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button type="submit">Retirer</button></form>
+        </span>
+      </div>
+    {% endfor %}
+  {% endif %}</div>
+
+  <div class="cat liste"><h5>Offres</h5><span id="compte-offres">{{ offres|length }}</span></div>
+  {# La recherche, comme dans Clients, Catalogue et Factures (analyse des parcours, Xavier, 2026-11-26) : à la frappe,
+     sur l'objet, le client et le numéro (app.js, brancherFiltre). Avec une seule offre, rien à chercher. #}
+  {% if offres|length > 1 %}
+    <form class="search" method="get" action="/" role="search">
+      <div class="box">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="oq" name="q" type="search" placeholder="Chercher une offre, un client" autocomplete="off" aria-label="Chercher une offre ou un client" data-filtre="#liste-offres">
+      </div>
+    </form>
+  {% endif %}
+  {% if offres|length > 1 %}
+    <nav class="fchips tri" aria-label="Trier les offres">
+      {% for cle, libelle in tris %}<a href="{{ cle == 'recent' ? '/' : '/?tri=' ~ cle }}"{% if cle == tri %} aria-current="true"{% endif %}><span>{{ libelle }}</span></a>{% endfor %}
+    </nav>
+  {% endif %}
+  {# Balayer une offre vers la gauche montre Archiver et Supprimer (app.js) ; au clavier, la touche
+     Tab les atteint et les fait apparaître. #}
+  <div id="liste-offres">
+  {% for o in offres %}
+    <div class="glisse" id="o{{ o.id }}" data-glisse data-rang="{{ rangs[o.id] }}" data-client="{{ o.client_nom }}" data-montant="{{ totaux[o.id] }}" data-relire="{{ a_relire[o.id] > 0 ? 1 : 0 }}" data-modifiee="{{ o.modifiee_le ?? o.cree_le }}" data-texte="{{ textes[o.id] }}">
+      <div class="actions-glisse">
+        <form method="post" action="/offres/{{ o.id }}/archiver"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="arch" type="submit" data-t="Archiver"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg><span>Archiver</span></button></form>
+        <form method="post" action="/offres/{{ o.id }}/supprimer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="supp" type="submit" data-t="Supprimer"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Supprimer</span></button></form>
+      </div>
+      <a class="ocard" href="/offres/{{ o.id }}">
+        <span class="l1"><b class="titre">{{ o.titre }}</b>
+          {% if a_relire[o.id] > 0 %}<span class="status a-verifier">{{ a_relire[o.id] }} à relire</span>{% else %}<span class="status relue">Prête</span>{% endif %}</span>
+        <span class="l2"><span>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}Offre {{ o.numero }} · {% if o.modifiee_le %}modifiée le {{ o.modifiee_le|date_locale }}{% else %}{{ o.cree_le|date_locale }}{% endif %}</span><b>{{ totaux[o.id]|chf }}</b></span>
+      </a>
+    </div>
+  {% else %}
+    {% if archives is not empty %}
+      <p class="vide">Aucune offre en cours&nbsp;: les autres sont dans les archives, en bas.</p>
+    {% else %}
+      <p class="vide">Aucune offre pour l'instant. Le micro, en bas, enregistre {{ m.dictee_objet }}&nbsp;; la flèche importe un fichier.</p>
+    {% endif %}
+  {% endfor %}
+  {% if offres is not empty %}<p class="vide" data-aucun hidden>Aucune offre ne correspond.</p>{% endif %}
+  </div>
+
+  {# Toujours là, caché sans archive : archiver la première offre le fait paraître (morceau « archives »). #}
+    <details class="archives" id="archives" data-archives{% if archives is empty %} hidden{% endif %}>
+      <summary><span>Archives</span><span>{{ archives|length }}</span></summary>
+      {% for o in archives %}
+        <div class="archive" id="a{{ o.id }}">
+          <a class="ocard" href="/offres/{{ o.id }}">
+            <span class="l1"><b>{{ o.titre }}</b></span>
+            <span class="l2"><span>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}Offre {{ o.numero }}</span><b>{{ totaux[o.id]|chf }}</b></span>
+          </a>
+          <form method="post" action="/offres/{{ o.id }}/restaurer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="lien" type="submit">Restaurer</button></form>
+        </div>
+      {% endfor %}
+    </details>
+  {% if guide_artisan() %}{% include '_guide_artisan.html.twig' with {page: 'offres'} %}{% endif %}
+  {% set demo_fenetre = demo() %}
+  {% if demo_fenetre and not demo_fenetre.terminee and demo_fenetre.avant_fin in [1, 2] and not guide_artisan() %}{% include '_fenetre_demo.html.twig' with {jours: demo_fenetre.avant_fin} %}{% endif %}
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'offres'} %}{% endblock %}

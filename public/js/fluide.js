@@ -1,0 +1,1095 @@
+// offreGen : l'application sans rechargement (chantier docs/plans/2026-11-23_sans-rechargement, D2, D3, D9).
+// Un geste part par fetch et l'écran change au toucher ; le serveur répond par les seuls morceaux de page qui ont pu
+// changer (src/Http/Morceaux.php). Les gestes partent dans l'ordre, un à la fois, chacun avec une clé unique que le
+// serveur reconnaît (X-Cle-Envoi) : un geste rejoué n'est jamais fait deux fois. Sans réseau, ils attendent et partent
+// au retour du réseau. Sans ce fichier, chaque formulaire marche comme avant : envoi, puis page entière.
+// La CSP refuse le JavaScript en ligne : tout passe par les fichiers de public/js.
+'use strict';
+
+const fluide = (() => {
+  // Le script en cours, lu pendant son exécution : il porte l'adresse d'app.js (data-app, base.html.twig).
+  const SCRIPT = document.currentScript;
+  const NB = String.fromCharCode(0xA0);
+  const PC = '(min-width: 1024px) and (hover: hover) and (pointer: fine)';
+  const ecran = () => document.querySelector('main.screen');
+  const liste = (texte) => String(texte || '').split(' ').filter(Boolean);
+  const resume = () => liste(ecran() && ecran().dataset.resume);
+  const jeton = () => { const c = document.querySelector('input[name="_csrf"]'); return c ? c.value : ''; };
+  const compte = () => document.body.dataset.compte || '';
+  const cleNeuve = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 14));
+
+  // Montants au format du serveur (Http\Formats::montant, de-CH : 1’234.50), pour les estimations au toucher.
+  const montant = (centimes) => (centimes / 100).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/'/g, '’');
+  const lireMontant = (texte) => {
+    const n = parseFloat(String(texte || '').replace(/CHF/, '').replace(/[\s'’]/g, '').replace(String.fromCharCode(0x2212), '-'));
+    return Number.isFinite(n) ? Math.round(n * 100) : null;
+  };
+  const lireNombre = (texte) => { const n = parseFloat(String(texte || '').replace(/[\s'’]/g, '').replace(',', '.')); return Number.isFinite(n) ? n : null; };
+  // Un demi s'arrondit en s'éloignant de zéro, comme Offre\Totaux.
+  const arrondir = (x, pas) => Math.sign(x) * Math.round(Math.abs(x) / pas) * pas;
+
+  class Refus extends Error {
+    constructor(genre, message, code = 0, html = '') { super(message); this.genre = genre; this.code = code; this.html = html; }
+  }
+
+  // Le message d'une page de refus : erreurs d'un champ, sinon le titre de la page d'erreur.
+  const messageDe = (html, code) => {
+    const page = new DOMParser().parseFromString(html || '', 'text/html');
+    // Les erreurs montrées par la page, pas celles qu'elle garde cachées : la fenêtre de dictée, présente sur chaque
+    // écran, porte un « L'envoi a échoué. » caché qui se collait à tous les refus (analyse des parcours, 2026-11-26).
+    const erreurs = [...page.querySelectorAll('.err, .alerte.bad')].filter((e) => !e.closest('[hidden]')).map((e) => e.textContent.trim()).filter(Boolean);
+    if (erreurs.length) return erreurs.join(' ');
+    const titre = page.querySelector('main.screen p.muted') || page.querySelector('header.bar h1');
+    return titre && titre.textContent.trim() ? titre.textContent.trim() : (code ? 'Refusé par le serveur (' + code + ')' : 'Refusé par le serveur');
+  };
+
+  // Les « Annuler » déjà touchés : celui du serveur, arrivé après, ne revient pas (revue, B-M7).
+  const annulees = new Set();
+  // Bandeaux du bas (« Annuler », messages) : plusieurs à la fois, empilés, chacun avec sa durée ; le bandeau du réseau,
+  // s'il est là, reste le plus bas.
+  const messages = {
+    empiler() {
+      const tous = [...document.querySelectorAll('.app > .snack:not(.dans-total)')];
+      const base = document.querySelector('.app > .reseau:not([hidden])') ? 1 : 0;
+      tous.forEach((el, i) => el.style.setProperty('--rang', String(base + tous.length - 1 - i)));
+    },
+    poser(el, duree) {
+      const app = document.querySelector('.app');
+      if (!app || !el) return null;
+      // Un « Annuler » pour la même adresse est déjà là (posé au toucher) : celui du serveur ne se pose pas en double.
+      const action = el.getAttribute('action');
+      if (action && annulees.has(action)) return null;
+      if (action && [...app.querySelectorAll(':scope > .snack, .bas > .snack')].some((s) => s.getAttribute('action') === action)) return null;
+      app.append(el);
+      messages.empiler();
+      setTimeout(() => { el.remove(); messages.empiler(); }, duree || (el.hasAttribute('data-disparait') ? 8000 : 4000));
+      if (typeof bandeauDansLeTotal === 'function') bandeauDansLeTotal();
+      return el;
+    },
+    dire(texte, mauvais = false) {
+      const el = document.createElement('div');
+      el.className = 'snack' + (mauvais ? ' bad' : '');
+      el.setAttribute('role', mauvais ? 'alert' : 'status');
+      const s = document.createElement('span');
+      s.textContent = texte;
+      el.append(s);
+      return messages.poser(el, mauvais ? 7000 : 4000);
+    },
+    annuler(action, texte) {
+      // Un nouveau geste sur la même ligne (supprimée, remise, supprimée encore) : son « Annuler » à lui se pose, le
+      // garde du précédent ne vaut plus (Xavier, 2026-11-24 : la seconde corbeille partait sans bandeau).
+      annulees.delete(action);
+      const f = document.createElement('form');
+      f.className = 'snack';
+      f.method = 'post';
+      f.setAttribute('action', action);
+      f.setAttribute('role', 'status');
+      f.setAttribute('data-disparait', '');
+      const j = document.createElement('input');
+      j.type = 'hidden';
+      j.name = '_csrf';
+      j.value = jeton();
+      const s = document.createElement('span');
+      s.textContent = texte;
+      const b = document.createElement('button');
+      b.type = 'submit';
+      b.textContent = 'Annuler';
+      f.append(j, s, b);
+      return messages.poser(f);
+    },
+  };
+
+  // Les saisies en cours dans un élément remplacé survivent : la valeur pas encore partie, le curseur.
+  const saisiesDe = (el) => [...el.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), textarea')]
+    .filter((c) => c.value !== c.defaultValue || c === document.activeElement)
+    .map((c) => {
+      const porteur = c.closest('[id]');
+      return { porteur: porteur ? porteur.id : '', nom: c.name, valeur: c.value, change: c.value !== c.defaultValue, focus: c === document.activeElement, debut: c.selectionStart, fin: c.selectionEnd };
+    });
+  const restaurerSaisies = (saisies) => saisies.forEach((s) => {
+    const porteur = s.porteur && document.getElementById(s.porteur);
+    const c = porteur && s.nom ? porteur.querySelector('[name="' + s.nom + '"]:not([type=hidden])') : null;
+    if (!c) return;
+    if (s.change) c.value = s.valeur;
+    if (s.focus) {
+      c.focus({ preventScroll: true });
+      try { c.setSelectionRange(s.debut, s.fin); } catch (e) { /* champ sans sélection */ }
+    }
+  });
+
+  // Les morceaux reçus remplacent les éléments de même id ; un absent part ; un nouveau se pose après son voisin
+  // (data-apres) ; les messages se posent en bas. `sauter(id)` : un geste plus récent attend ce morceau, il l'apportera.
+  // Les lignes retirées au toucher (corbeille), gardées cachées jusqu'à « Annuler » : la réponse d'un geste plus ancien,
+  // qui les montre encore, ne les fait pas revivre (revue du 2026-11-23, B-I1).
+  const cachees = new Set();
+  const recacher = (racine) => cachees.forEach((id) => {
+    const el = racine.id === id ? racine : racine.querySelector('#' + CSS.escape(id));
+    if (el && !el.hidden) { el.hidden = true; el.setAttribute('data-retiree', ''); }
+  });
+  // L'artisan tape ailleurs : un morceau qui arrive ne lui prend pas le curseur (revue, B-I10).
+  const libre = () => { const a = document.activeElement; return !a || a === document.body || !a.matches('input, textarea, select'); };
+
+  const appliquer = (html, options = {}) => {
+    const recu = new DOMParser().parseFromString('<!doctype html><body>' + html, 'text/html');
+    const poses = [];
+    [...recu.body.children].forEach((neuf) => {
+      if (neuf.matches('template[data-absent]')) {
+        const id = neuf.dataset.absent;
+        if (!(options.sauter && options.sauter(id))) { const vieux = document.getElementById(id); if (vieux) vieux.remove(); }
+        return;
+      }
+      if (neuf.matches('.snack')) { messages.poser(document.adoptNode(neuf)); return; }
+      if (neuf.matches('[data-focus-ligne]')) {
+        const champ = document.querySelector('#l' + neuf.dataset.focusLigne + ' input[name=quantite]');
+        if (champ && libre()) { champ.scrollIntoView({ block: 'center' }); champ.focus(); }
+        return;
+      }
+      if (!neuf.id || (options.sauter && options.sauter(neuf.id))) return;
+      const vieux = document.getElementById(neuf.id);
+      if (vieux && vieux.hasAttribute('data-retiree')) return;
+      const pose = document.adoptNode(neuf);
+      if (!vieux) {
+        const voisin = pose.dataset.apres && document.getElementById(pose.dataset.apres);
+        if (voisin) { voisin.after(pose); poses.push(pose); }
+        return;
+      }
+      const saisies = saisiesDe(vieux);
+      if (vieux.tagName === 'DETAILS' && vieux.open) pose.open = true;
+      vieux.replaceWith(pose);
+      recacher(pose);
+      restaurerSaisies(saisies);
+      poses.push(pose);
+    });
+    if (poses.length) document.dispatchEvent(new CustomEvent('morceaux-poses', { detail: { elements: poses } }));
+    return poses;
+  };
+
+  // État du réseau et des envois, dit par un bandeau posé au-dessus des boutons du bas, à la place du premier bandeau
+  // « Annuler » : il ne pousse pas l'écran et ne couvre pas la barre du haut (revue du 2026-11-23, C-I3). « Envoi… »
+  // ne paraît que si l'envoi dure : une file qui se vide en moins d'une seconde ne fait rien clignoter.
+  const bandeau = (() => {
+    let el = null;
+    let minuterie = null;
+    const poser = (texte, genre, lien) => {
+      clearTimeout(minuterie);
+      const app = document.querySelector('.app');
+      if (!app) return;
+      if (!el) {
+        el = document.createElement('div');
+        el.setAttribute('role', 'status');
+        app.append(el);
+      }
+      el.className = 'reseau ' + genre;
+      el.replaceChildren(document.createTextNode(texte));
+      if (lien) {
+        const a = document.createElement('a');
+        a.href = lien.href;
+        a.textContent = lien.texte;
+        el.append(' ', a);
+      }
+      el.hidden = false;
+      messages.empiler();
+    };
+    const attente = (n) => (n > 1 ? n + ' changements attendent' : n === 1 ? '1 changement attend' : 'rien n’attend');
+    // Ce qui attend, dit par son premier geste nommé, avec son offre : l'artisan ne refait pas un ajout qui attend déjà
+    // (revue, B-I7), et sait de quelle offre est le changement (recette du 2026-11-24, SR-6).
+    const lequel = () => {
+      const nomme = file.find((f) => f.item.libelle);
+      if (!nomme) return '';
+      const offre = nomme.item.offreNom ? nomme.item.offreNom.charAt(0).toLowerCase() + nomme.item.offreNom.slice(1) + ', ' : '';
+      return ' (' + offre + nomme.item.libelle + ')';
+    };
+    return {
+      horsReseau: (n) => poser('Hors réseau' + NB + ': ' + attente(n) + lequel() + (n > 1 ? ', ils partiront' : ', il partira') + ' au retour du réseau.', 'hors'),
+      session: (n) => poser('Session expirée' + NB + ': ' + attente(n) + lequel() + '.', 'session', { href: '/connexion', texte: 'Se reconnecter' }),
+      compte: (n) => poser('Ce téléphone a changé de compte' + NB + ': ' + attente(n) + ' l’autre compte.', 'session', { href: '/connexion', texte: 'Se reconnecter' }),
+      envoi: (n) => {
+        clearTimeout(minuterie);
+        minuterie = setTimeout(() => poser('Envoi de ' + (n > 1 ? n + ' changements' : '1 changement') + '…', 'envoi'), 1200);
+      },
+      page: (texte, lien) => poser(texte, 'hors', lien),
+      ok: () => { clearTimeout(minuterie); if (el) { el.hidden = true; messages.empiler(); } },
+      visible: () => !!(el && !el.hidden),
+    };
+  })();
+
+  // La file des gestes : dans l'ordre, un à la fois. `garde` range chaque geste dans le téléphone jusqu'à sa réponse
+  // (lot 4) ; sans lui, la file vit le temps de la page.
+  const file = [];
+  const demandes = new Map(); // id d'un morceau -> nombre de gestes en attente qui le demandent
+  let pompe = false;
+  let horsReseau = false;
+  let sessionPerdue = false;
+
+  // Lot 4 : chaque geste est rangé dans le téléphone (IndexedDB, par compte) jusqu'à sa réponse. Une page fermée, un
+  // téléphone éteint ou une session perdue ne le perdent pas : la page suivante le renvoie, avec sa clé. Sans stockage
+  // (navigation privée, refus du navigateur), rien ne casse : la file vit le temps de la page.
+  const garde = (() => {
+    let base = null;
+    const ouvrir = () => {
+      if (!base) {
+        base = new Promise((ok, ko) => {
+          if (!window.indexedDB) { ko(new Error('sans IndexedDB')); return; }
+          const r = indexedDB.open('offregen-fluide', 1);
+          r.onupgradeneeded = () => {
+            const s = r.result.createObjectStore('envois', { keyPath: 'cle' });
+            s.createIndex('compte', 'compte');
+          };
+          r.onsuccess = () => ok(r.result);
+          r.onerror = () => ko(r.error);
+          r.onblocked = () => ko(new Error('base bloquée'));
+        });
+        base.catch(() => { base = null; });
+      }
+      return base;
+    };
+    const faire = (mode, f) => ouvrir().then((db) => new Promise((ok, ko) => {
+      const t = db.transaction('envois', mode);
+      const demande = f(t.objectStore('envois'));
+      t.oncomplete = () => ok(demande ? demande.result : undefined);
+      t.onerror = () => ko(t.error);
+      t.onabort = () => ko(t.error);
+    }));
+    const sans = (p, defaut) => p.catch(() => defaut);
+    return {
+      ranger: (item) => sans(faire('readwrite', (s) => s.put(item)), undefined),
+      oublier: (cle) => sans(faire('readwrite', (s) => s.delete(cle)), undefined),
+      relire: (c) => sans(faire('readonly', (s) => s.index('compte').getAll(c)), []).then((l) => (l || []).sort((a, b) => a.cree - b.cree)),
+      vider: (c) => sans(faire('readwrite', (s) => {
+        const r = s.index('compte').openCursor(c);
+        r.onsuccess = () => { const cur = r.result; if (cur) { cur.delete(); cur.continue(); } };
+        return null;
+      }), undefined),
+    };
+  })();
+
+  const compter = (item, pas) => item.morceaux.forEach((id) => {
+    const n = (demandes.get(id) || 0) + pas;
+    if (n > 0) demandes.set(id, n); else demandes.delete(id);
+  });
+
+  const memeEcran = (item) => item.ici.split('?')[0] === window.location.pathname;
+  // L'offre (ou la facture) d'un geste : celle de son adresse, sinon celle de l'écran où il a été fait.
+  const BASE_OFFRE = /^\/(offres|factures)\/\d+/;
+  const baseDe = (adresse) => (BASE_OFFRE.exec(String(adresse || '').split('?')[0]) || [null])[0];
+  const offreDe = (item) => item.offre || baseDe(item.action) || baseDe(item.ici);
+  // Son nom, lu dans la barre du haut quand l'écran est l'offre elle-même (« Offre 2 ») ; ailleurs (fiche d'une ligne,
+  // aperçu), la barre dit autre chose : pas de nom (revue, M3).
+  const nomDeLOffre = (base) => {
+    const h = document.querySelector('header.bar h1');
+    if (!base || window.location.pathname !== base || !h) return '';
+    return h.textContent.split('·')[0].trim();
+  };
+  // Ce qui retient l'envoi du PDF d'une offre : ses gestes, sauf ceux qui ne changent pas le PDF (l'envoi noté, archiver,
+  // remettre ou supprimer l'offre, revue M1) ; et une fiche client modifiée hors de toute offre, qui peut être la sienne
+  // (revue, I6).
+  const SANS_PDF = /^\/(offres|factures)\/\d+\/(envoyee|archiver|restaurer|supprimer)$/;
+  const retientLePdf = (item, base) => {
+    const action = String(item.action || '').split('?')[0];
+    if (SANS_PDF.test(action)) return false;
+    const o = offreDe(item);
+    return o === base || (o === null && /^\/clients(\/|$)/.test(action));
+  };
+  /** Les gestes qui attendent encore et changeraient le PDF de cette offre (adresse de base : /offres/N ou /factures/N). */
+  const enAttentePour = (base) => file.map((f) => f.item).filter((item) => retientLePdf(item, base));
+  // La file attend le réseau (ou la session) : chaque geste en file le sait, même derrière un autre (ligne provisoire,
+  // fenêtre fermée) ; une seule fois par geste.
+  const direAttente = () => file.forEach(({ item, options }) => {
+    if (options.attente && !item.attenteDite) { item.attenteDite = true; options.attente(); }
+  });
+
+  const poster = async (item, gardee = false) => {
+    const ici = memeEcran(item);
+    // X-Compte : le serveur refuse un geste fait dans la page d'un autre compte que celui de la session (revue, D-I1).
+    const entetes = {
+      'X-Morceaux': ici ? item.morceaux.join(' ') : '',
+      'X-Cle-Envoi': item.cle,
+      'X-Morceaux-Ici': window.location.pathname + window.location.search,
+      'X-Compte': item.compte,
+    };
+    if (item.page && ici) entetes['X-Morceaux-Page'] = item.page;
+    const corps = new URLSearchParams(item.corps);
+    corps.set('_csrf', jeton());
+    let r;
+    let html;
+    // 25 secondes au plus : un envoi pendu (réseau qui ne répond plus) ne bloque pas la file ; il repartira avec sa clé,
+    // et le serveur ne le fera qu'une fois s'il l'avait reçu.
+    const arret = new AbortController();
+    const minuterie = setTimeout(() => arret.abort(), 25000);
+    try {
+      r = await fetch(item.action, { method: 'POST', body: corps, headers: entetes, credentials: 'same-origin', keepalive: !gardee, signal: arret.signal });
+      html = await r.text();
+    } catch (e) {
+      throw new Refus('reseau', 'Pas de connexion au serveur');
+    } finally {
+      clearTimeout(minuterie);
+    }
+    if (r.status === 401 && r.headers.get('X-Morceaux-Session')) throw new Refus('session', 'Session expirée');
+    if (r.status === 409 && r.headers.get('X-Morceaux-Compte')) throw new Refus('compte', 'Autre compte');
+    if (r.status === 403 && r.headers.get('X-Morceaux-Jeton')) throw new Refus('jeton', 'Formulaire expiré', 403);
+    if (r.status === 409 && /déjà en cours/.test(html)) throw new Refus('reseau', 'Envoi déjà en cours');
+    if (!r.ok) throw new Refus('refus', messageDe(html, r.status), r.status, html);
+    return { html, ici, adresse: r.headers.get('X-Morceaux-Adresse') || '', aller: r.headers.get('X-Morceaux-Aller') === '1' };
+  };
+
+  // Un jeton refusé (session renouvelée ailleurs) : la page du moment en porte un bon, si elle est du même compte.
+  const jetonNeuf = async () => {
+    let html;
+    try {
+      html = await (await fetch(window.location.pathname + window.location.search, { credentials: 'same-origin', cache: 'no-store' })).text();
+    } catch (e) {
+      throw new Refus('reseau', 'Pas de connexion au serveur');
+    }
+    const page = /<body[^>]*\sdata-compte="(\d+)"/.exec(html);
+    if (!page) throw new Refus('session', 'Session expirée');
+    if (page[1] !== compte()) throw new Refus('compte', 'Autre compte');
+    const m = /name="_csrf" value="([^"]+)"/.exec(html);
+    if (!m) throw new Refus('session', 'Session expirée');
+    document.querySelectorAll('input[name="_csrf"]').forEach((c) => { c.value = m[1]; });
+  };
+
+  // La relecture des gestes rangés par une page précédente (reprendre) : la file l'attend, 3 s au plus (revue, I2).
+  let finReprise = () => {};
+  const repris = new Promise((ok) => { finReprise = ok; });
+  // Le geste parti sort de la file par son identité : des gestes rangés ont pu passer devant pendant son envoi.
+  const sortir = (item) => { const i = file.findIndex((f) => f.item === item); if (i >= 0) file.splice(i, 1); };
+
+  const pomper = async () => {
+    if (pompe) return;
+    pompe = true;
+    try {
+      await Promise.race([repris, new Promise((ok) => setTimeout(ok, 3000))]);
+      while (file.length && !sessionPerdue) {
+        const { item, options } = file[0];
+        if (navigator.onLine === false) { horsReseau = true; bandeau.horsReseau(file.length); direAttente(); break; }
+        if (file.length > 1 || horsReseau) bandeau.envoi(file.length);
+        let reponse;
+        try {
+          try {
+            reponse = await poster(item, options.gardee);
+          } catch (e) {
+            if (e.genre !== 'jeton' || item.jetonRepris) throw e;
+            item.jetonRepris = true;
+            await jetonNeuf();
+            reponse = await poster(item, options.gardee);
+          }
+        } catch (e) {
+          if (e.genre === 'reseau') {
+            horsReseau = true;
+            bandeau.horsReseau(file.length);
+            direAttente();
+            break;
+          }
+          // Session perdue, ou geste d'un autre compte que celui de la session : la file attend, rien n'est perdu.
+          if (e.genre === 'session' || e.genre === 'compte') {
+            sessionPerdue = true;
+            if (e.genre === 'compte') bandeau.compte(file.length); else bandeau.session(file.length);
+            direAttente();
+            break;
+          }
+          sortir(item);
+          compter(item, -1);
+          await garde.oublier(item.cle);
+          // Un geste que l'écran disait « en attente » (fenêtre fermée, ligne provisoire) : son refus se dit toujours.
+          if (item.attenteDite || !options.refus) messages.dire((item.attenteDite ? 'Un changement fait sans réseau n’est pas accepté' : 'Pas enregistré') + NB + ': ' + e.message, true);
+          if (options.refus) options.refus(e);
+          // Refusé : rien n'a changé au serveur, l'aperçu n'a pas à se refaire (et son rechargement effacerait ce refus).
+          document.dispatchEvent(new CustomEvent('geste-parti', { detail: { offre: offreDe(item), action: item.action, refus: true } }));
+          // Ce que montre l'écran redevient ce que dit le serveur.
+          if (memeEcran(item)) rafraichir([...item.morceaux, ...(options.aRelire || [])]);
+          continue;
+        }
+        horsReseau = false;
+        sortir(item);
+        compter(item, -1);
+        await garde.oublier(item.cle);
+        // L'aperçu d'une offre se refait dès que ses propres gestes sont partis (apercu-pdf.js, SR-6).
+        document.dispatchEvent(new CustomEvent('geste-parti', { detail: { offre: offreDe(item), action: item.action, refus: false } }));
+        if (reponse.aller && reponse.ici && !options.gardee) {
+          // Une fenêtre suit l'action dans la fenêtre (« Facturer » après le choix du client) ; ailleurs, la page entière.
+          if (!options.aller) { window.location.assign(reponse.adresse); return; }
+          options.aller(reponse.adresse);
+          continue;
+        }
+        if (reponse.ici) appliquer(reponse.html, { sauter: (id) => demandes.has(id) });
+        else if (reponse.html) appliquer(reponse.html, { sauter: () => true });
+        if (options.apres) options.apres(reponse);
+        if (reponse.ici && /^\/(offres|factures)\/\d+/.test(window.location.pathname)) document.dispatchEvent(new Event('offre-modifiee'));
+      }
+      if (!file.length && !sessionPerdue) bandeau.ok();
+    } finally {
+      pompe = false;
+    }
+  };
+
+  // Le réseau revient, l'onglet revient au premier plan (reconnecté peut-être dans un autre onglet), ou toutes les 20
+  // secondes tant qu'un geste attend.
+  const relancer = (session = false) => {
+    if (session) sessionPerdue = false;
+    if (file.length && !pompe) { horsReseau = false; pomper(); }
+  };
+  window.addEventListener('online', () => relancer(true));
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') relancer(true); });
+  setInterval(() => { if (file.length && navigator.onLine !== false) relancer(); }, 20000);
+  window.addEventListener('offline', () => { if (file.length) bandeau.horsReseau(file.length); });
+
+  const mettreEnFile = (item, options) => {
+    file.push({ item, options });
+    compter(item, 1);
+    garde.ranger(item).catch(() => {});
+    if (navigator.onLine === false || horsReseau || sessionPerdue) {
+      if (navigator.onLine === false) horsReseau = true;
+      if (sessionPerdue) bandeau.session(file.length); else bandeau.horsReseau(file.length);
+      direAttente();
+      if (navigator.onLine === false || sessionPerdue) return;
+    }
+    pomper();
+  };
+
+  /**
+   * Un geste : l'envoi d'un formulaire, à son tour. options : morceaux (ids demandés en plus du résumé de l'écran,
+   * data-resume) ; sansResume ; page (X-Morceaux-Page) ; bouton (le bouton touché, son nom part) ; anticiper()
+   * (l'écran change au toucher) ; apres(reponse) ; refus(erreur) ; attente() (pas de réseau, le geste attend).
+   */
+  const envoyer = (form, options = {}) => {
+    const corps = new URLSearchParams(new FormData(form));
+    if (options.bouton && options.bouton.name) corps.set(options.bouton.name, options.bouton.value);
+    corps.delete('_csrf');
+    // libelle : ce que dit le bandeau quand le geste attend ; provisoire : la ligne d'un ajout, remontrée si la page
+    // gardée est rouverte sans réseau ; champ : la valeur tapée, remontrée de même (revue, B-I7).
+    const item = {
+      cle: cleNeuve(),
+      action: form.getAttribute('action'),
+      corps: corps.toString(),
+      morceaux: [...new Set([...(options.morceaux || []), ...(options.sansResume ? [] : resume())])],
+      page: options.page || null,
+      ici: window.location.pathname + window.location.search,
+      compte: compte(),
+      cree: Date.now(),
+      libelle: options.libelle || '',
+      provisoire: options.provisoire || null,
+      champ: options.champ || null,
+      ligneNom: options.ligneNom || '',
+    };
+    item.offre = baseDe(item.action) || baseDe(item.ici);
+    item.offreNom = nomDeLOffre(item.offre);
+    if (options.anticiper) options.anticiper();
+    mettreEnFile(item, options);
+    return item;
+  };
+
+  // Relire des morceaux de l'écran sans rien écrire (GET avec X-Morceaux) : après un refus, au retour du réseau.
+  const rafraichir = (ids) => {
+    const tous = [...new Set([...(ids || []), ...resume()])];
+    if (!tous.length) return Promise.resolve();
+    return fetch(window.location.pathname + window.location.search, { headers: { 'X-Morceaux': tous.join(' ') }, credentials: 'same-origin', cache: 'no-store' })
+      .then((r) => (r.ok && !r.headers.get('X-Morceaux-Aller') ? r.text() : Promise.reject(new Error(String(r.status)))))
+      .then((html) => { appliquer(html, { sauter: (id) => demandes.has(id) }); })
+      .catch(() => {});
+  };
+
+  // Ce qui a été retiré de l'écran au toucher, pour « Annuler » : par adresse de remise.
+  const retirees = new Map();
+  const retirer = (cle, noeuds) => {
+    const dernier = noeuds[noeuds.length - 1];
+    const entree = { noeuds, parent: dernier.parentNode, suivant: dernier.nextElementSibling };
+    retirees.set(cle, entree);
+    // Une ligne glissée garde son décalage (glisserLignes) : remise, elle doit revenir droite.
+    noeuds.forEach((n) => {
+      n.hidden = true;
+      n.setAttribute('data-retiree', '');
+      if (n.id) cachees.add(n.id);
+      n.classList.remove('ouverte', 'tire', 'assez');
+      n.style.removeProperty('--dx');
+    });
+    // Le minuteur ne libère que son propre retrait : la même ligne, remise puis supprimée encore, a le sien.
+    setTimeout(() => { if (retirees.get(cle) !== entree) return; entree.noeuds.forEach((n) => cachees.delete(n.id)); retirees.delete(cle); }, 120000);
+  };
+  // Remet ce qui a été retiré à sa place ; faux si la place a disparu (la liste a été remplacée entre-temps) : le serveur
+  // renverra alors la liste entière.
+  const remettre = (cle) => {
+    const r = retirees.get(cle);
+    retirees.delete(cle);
+    if (r) r.noeuds.forEach((n) => { cachees.delete(n.id); n.removeAttribute('data-retiree'); });
+    if (!r || !r.parent || !r.parent.isConnected || (r.suivant && !r.suivant.isConnected)) return false;
+    r.noeuds.forEach((n) => {
+      n.hidden = false;
+      if (!n.isConnected) r.parent.insertBefore(n, r.suivant && r.suivant.parentNode === r.parent ? r.suivant : null);
+    });
+    return true;
+  };
+
+  // Les morceaux que touche un geste sur une ligne : elle, ses variantes (rangées .var qui la suivent) et le titre de son
+  // groupe (sous-total d'une pièce ; un groupe vidé disparaît).
+  const parPiece = () => !!document.querySelector('#lignes .cat .st');
+  const idsDeLaLigne = (row) => {
+    if (!row || !row.id) return ['lignes'];
+    const ids = [row.id];
+    for (let s = row.nextElementSibling; s && s.classList.contains('var'); s = s.nextElementSibling) if (s.id) ids.push(s.id);
+    let titre = row.previousElementSibling;
+    while (titre && !titre.classList.contains('cat')) titre = titre.previousElementSibling;
+    if (titre && titre.id) ids.push(titre.id);
+    else if (titre && titre.querySelector('.st')) return ['lignes'];
+    return ids;
+  };
+  const variantesDe = (row) => {
+    const v = [];
+    for (let s = row.nextElementSibling; s && s.classList.contains('var'); s = s.nextElementSibling) v.push(s);
+    return v;
+  };
+  const nomDeLaLigne = (row) => {
+    const b = row.querySelector('button.del');
+    const m = b && /^Supprimer la ligne (.*)$/.exec(b.getAttribute('aria-label') || '');
+    return m ? m[1] : 'La ligne';
+  };
+
+  // Le montant d'une ligne et le total, estimés au toucher (D7) : la ligne, quantité fois prix ; le total, par différence
+  // avec le dernier total du serveur (juste pour un seul taux de TVA et des rabais en pour cent). Marqués « provisoire »
+  // jusqu'à la réponse du serveur, qui calcule tout (Offre\Totaux).
+  const compteDansLeTotal = (row) => {
+    if (row.classList.contains('remplacee') || row.querySelector('.tt.offert')) return false;
+    if (row.classList.contains('opt') || row.classList.contains('var')) {
+      const c = row.querySelector('input[name=retenue][type=checkbox]');
+      return !!(c && c.checked);
+    }
+    return true;
+  };
+  // Le total change de `delta` centimes au sous-total : il suit dans la même proportion (rabais, TVA), aux 5 centimes.
+  // Les deux valeurs estimées gardent la base du serveur (data-serveur) jusqu'à sa réponse.
+  const ajusterTotal = (delta) => {
+    if (!delta) return;
+    const sousTotal = document.querySelector('#totaux .r span:last-child');
+    const fixe = document.querySelector('#total-fixe b');
+    if (!sousTotal || !fixe) return;
+    if (!sousTotal.dataset.provisoire) sousTotal.dataset.provisoire = String(lireMontant(sousTotal.textContent) || 0);
+    if (!fixe.dataset.serveur) fixe.dataset.serveur = String(lireMontant(fixe.textContent) || 0);
+    const base = Number(sousTotal.dataset.provisoire);
+    const ttc = Number(fixe.dataset.serveur);
+    sousTotal.dataset.ecart = String(Number(sousTotal.dataset.ecart || 0) + delta);
+    const nouveau = base + Number(sousTotal.dataset.ecart);
+    const estime = base > 0 ? arrondir(ttc * nouveau / base, 5) : arrondir(nouveau * (1 + 0.081), 5);
+    [fixe, document.querySelector('[data-total-bouton]')].forEach((el) => {
+      if (el) { el.textContent = 'CHF' + NB + montant(Math.max(0, estime)); el.classList.add('provisoire'); }
+    });
+  };
+  const estimer = (row, montantAvant) => {
+    const tt = row.querySelector('.tt');
+    const q = lireNombre(row.querySelector('input[name=quantite]') && row.querySelector('input[name=quantite]').value);
+    const p = lireNombre(row.querySelector('input[name=prix]') && row.querySelector('input[name=prix]').value);
+    if (!tt || tt.classList.contains('offert') || q === null || p === null) return;
+    const apres = arrondir(Math.round(q * 1000) * Math.round(p * 100) / 1000, 1);
+    tt.textContent = montant(apres);
+    tt.classList.add('provisoire');
+    if (montantAvant !== null && compteDansLeTotal(row)) ajusterTotal(apres - montantAvant);
+  };
+  const montantDe = (row) => {
+    const tt = row.querySelector('.tt');
+    return tt && !tt.classList.contains('offert') ? lireMontant(tt.firstChild ? tt.firstChild.textContent : '') : null;
+  };
+
+  /**
+   * Un produit ajouté sans réseau (« + Ligne ») : une ligne provisoire au bas de l'offre, le total estimé (D7). Le
+   * serveur la remplace par la vraie au retour du réseau (morceau « lignes »). Une variante porte la quantité de sa ligne
+   * (V1 A, 2026-11-24) ; une option ou une variante reste hors du total.
+   */
+  const ligneEnAttente = (designation, unite, prixCentimes, quantiteMilliemes = 1000, horsTotal = false) => {
+    const lignes = document.getElementById('lignes');
+    if (!lignes) return;
+    const row = document.createElement('div');
+    row.className = 'row en-attente';
+    const cellule = (balise, classe, texte) => { const el = document.createElement(balise); el.className = classe; el.textContent = texte; return el; };
+    const quantite = quantiteMilliemes > 0 ? quantiteMilliemes : 1000;
+    const total = Math.round(prixCentimes * quantite / 1000);
+    const q = cellule('span', 'q fige', String(quantite / 1000) + NB);
+    q.append(cellule('span', 'u', unite || ''));
+    row.append(cellule('span', 'nm', designation), q, cellule('span', 'p fige', prixCentimes > 0 ? montant(prixCentimes) : ''),
+      cellule('div', 'tt provisoire', total > 0 ? montant(total) : ''), document.createElement('span'));
+    const note = cellule('div', 'note', '');
+    note.append(cellule('span', '', 'En attente du réseau'));
+    row.append(note);
+    lignes.append(row);
+    if (total > 0 && !horsTotal) ajusterTotal(total);
+  };
+
+  /** Quantité, prix ou choix du client d'une ligne (app.js, corrections) : l'estimation au toucher, l'envoi suit. */
+  const ligne = (champ) => {
+    const form = champ.form;
+    const row = form.closest('.row');
+    const caseACocher = champ.type === 'checkbox';
+    const avant = row ? montantDe(row) : null;
+    const quoi = caseACocher ? 'choix du client' : (champ.name === 'quantite' ? 'quantité ' : champ.name === 'prix' ? 'prix ' : champ.name + ' ') + champ.value.trim();
+    envoyer(form, {
+      libelle: quoi,
+      ligneNom: row ? nomDeLaLigne(row) : '',
+      // Retenir une variante décoche les autres de sa ligne et remplace la ligne : toute la liste revient.
+      morceaux: caseACocher ? ['lignes'] : idsDeLaLigne(row),
+      champ: !caseACocher && row ? { porteur: row.id, nom: champ.name, valeur: champ.value } : null,
+      anticiper: () => { if (!caseACocher && row) estimer(row, avant); },
+      refus: (e) => {
+        messages.dire('Non enregistré' + NB + ': ' + e.message, true);
+        if (caseACocher && champ.isConnected) { champ.checked = !champ.checked; champ.defaultChecked = champ.checked; }
+      },
+    });
+  };
+
+  // Corrections de quantité et de prix sur l'offre, choix du client d'une option ou d'une variante : chaque champ
+  // modifié part seul, par la file. Écoutées dès le chargement de ce fichier, dans l'en-tête de la page : une quantité
+  // tapée dès que l'offre paraît part comme les autres (recette du 2026-11-24, SR-1 ; elles étaient dans app.js,
+  // branchées à la fin du chargement de la page, et un Entrée tapé avant envoyait le formulaire en page entière).
+  const caseACocher = (champ) => champ.type === 'checkbox';
+  const corriger = (champ) => {
+    if (!champ.form || (caseACocher(champ) ? champ.checked === champ.defaultChecked : champ.value === champ.defaultValue)) return;
+    if (caseACocher(champ)) champ.defaultChecked = champ.checked; else champ.defaultValue = champ.value;
+    ligne(champ);
+  };
+  document.addEventListener('change', (e) => { if (e.target.matches && e.target.matches('input[data-envoi-change]')) corriger(e.target); });
+  document.addEventListener('keydown', (e) => {
+    if (!e.target.matches || !e.target.matches('input[data-envoi-change]')) return;
+    // Entrée : enregistre, puis le même champ de la ligne suivante (PC, D12) ; sur la dernière ligne, on reste.
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      corriger(e.target);
+      const memes = [...document.querySelectorAll('input[data-envoi-change][name=' + e.target.name + ']')];
+      const suivant = memes[memes.indexOf(e.target) + 1];
+      if (suivant) suivant.focus(); else e.target.select();
+    }
+    if (e.key === 'Escape') { e.target.value = e.target.defaultValue; e.target.blur(); }
+  });
+  document.addEventListener('focusin', (e) => { if (e.target.matches && e.target.matches('input[data-envoi-change]')) e.target.select(); });
+  // Filet : un champ encore modifié quand la page s'en va part quand même.
+  window.addEventListener('pagehide', () => {
+    document.querySelectorAll('input[data-envoi-change]').forEach((c) => { if (c.value !== c.defaultValue) corriger(c); });
+  });
+
+  /** Un texte avant ou après les lignes (app.js, textesOffre). */
+  const texte = (form) => envoyer(form, { sansResume: true, morceaux: ['sauvegarde', 'renvoi', 'etat-offre'] });
+
+  /**
+   * Un formulaire d'une fenêtre du bas, sur un écran à morceaux (data-resume) : il part à son tour, les morceaux de
+   * l'écran derrière se posent. Résout « pose » (fermer la fenêtre), « attente » (pas de réseau : le geste attend) ou
+   * {html, code} (refus à montrer dans la fenêtre). `page` : l'écran derrière, quand l'action mène ailleurs (« + Ligne »).
+   */
+  const fenetre = (form, bouton, page = null, ids = null, extra = {}) => new Promise((ok) => {
+    envoyer(form, {
+      ...extra,
+      bouton,
+      page,
+      morceaux: ids || liste(ecran() && ecran().dataset.fenetre),
+      apres: (r) => ok({ etat: 'pose', reponse: r }),
+      aller: (adresse) => ok({ etat: 'aller', adresse }),
+      attente: () => ok({ etat: 'attente' }),
+      refus: (e) => ok({ etat: 'refus', html: e.html, code: e.code, message: e.message }),
+    });
+  });
+
+  // Les gestes de l'écran qui partent sans rechargement : les formulaires de l'offre, du brouillon de facture, de la
+  // relecture et de la liste. Ceux d'une fenêtre du bas passent par elle (app.js, fichesEnFenetre).
+  const gestePourFormulaire = (form, bouton) => {
+    const action = form.getAttribute('action') || '';
+    const row = form.closest('#lignes .row, #options .row');
+    // « C'est juste » : l'étiquette part au toucher.
+    if (row && form.matches('.note.warn')) {
+      return () => envoyer(form, {
+        morceaux: idsDeLaLigne(row),
+        anticiper: () => { form.hidden = true; row.classList.remove('flag'); },
+        refus: (e) => { messages.dire('Non enregistré' + NB + ': ' + e.message, true); },
+      });
+    }
+    // La corbeille : la ligne part au toucher, son « Annuler » à elle (deux corbeilles, deux « Annuler »).
+    if (row && /\/lignes\/\d+\/supprimer$/.test(action)) {
+      return () => {
+        const remise = action.replace(/\/supprimer$/, '/restaurer');
+        const variantes = variantesDe(row);
+        envoyer(form, {
+          // Elle reste là, cachée, pour « Annuler » ; le titre de son groupe suit (sous-total, groupe vidé). Ses variantes
+          // passent en options, avec le même id : la liste revient entière, sinon elles paraissaient deux fois (revue, B-B1).
+          morceaux: variantes.length ? ['lignes'] : idsDeLaLigne(row).filter((id) => id !== row.id),
+          aRelire: ['lignes'],
+          anticiper: () => {
+            const m = montantDe(row);
+            if (m !== null && compteDansLeTotal(row)) ajusterTotal(-m);
+            retirer(remise, [row, ...variantes]);
+            messages.annuler(remise, '«' + NB + nomDeLaLigne(row) + NB + '» supprimée');
+          },
+          refus: (e) => { remettre(remise); messages.dire('Non supprimée' + NB + ': ' + e.message, true); },
+        });
+      };
+    }
+    // Prix dicté : « Prendre », « Mettre au catalogue ? Oui / Non ».
+    if (row && form.matches('.note.prix-dit')) {
+      return () => envoyer(form, { bouton, morceaux: idsDeLaLigne(row), anticiper: () => form.setAttribute('aria-busy', 'true') });
+    }
+    return null;
+  };
+
+  document.addEventListener('submit', (e) => {
+    const form = e.target;
+    if (e.defaultPrevented || !(form instanceof HTMLFormElement) || (form.getAttribute('method') || '').toLowerCase() !== 'post') return;
+    if (form.closest('[data-feuille-page]') || !ecran() || !(ecran().dataset.resume || ecran().dataset.relecture)) return;
+    const action = form.getAttribute('action') || '';
+    const bouton = e.submitter || null;
+
+    // « Annuler » d'une ligne ou d'une offre : remise à sa place, puis les morceaux du serveur.
+    if (form.matches('.snack') && /\/restaurer$/.test(action)) {
+      e.preventDefault();
+      const ligneId = (/\/lignes\/(\d+)\/restaurer$/.exec(action) || [])[1];
+      const r = retirees.get(action);
+      const remis = remettre(action);
+      if (remis && ligneId && r) {
+        const m = montantDe(r.noeuds[0]);
+        if (m !== null && compteDansLeTotal(r.noeuds[0])) ajusterTotal(m);
+      }
+      annulees.add(action);
+      setTimeout(() => annulees.delete(action), 60000);
+      form.remove();
+      messages.empiler();
+      // Une ligne remise : la liste entière revient (ses variantes reviennent des options, le titre de son groupe a pu partir
+      // avec elle) ; l'écran l'a déjà remise à sa place au toucher.
+      const morceaux = ligneId ? ['lignes'] : (remis ? [] : ['liste-offres']);
+      envoyer(form, { morceaux, refus: (err) => messages.dire('Non remise' + NB + ': ' + err.message, true) });
+      return;
+    }
+
+    const geste = gestePourFormulaire(form, bouton);
+    if (geste) { e.preventDefault(); geste(); return; }
+
+    // Liste des offres : archiver ou supprimer en glissant ; la carte part, « Annuler » à elle.
+    const carte = form.closest('.glisse[data-glisse]');
+    if (carte && /\/offres\/\d+\/(archiver|supprimer)$/.test(action)) {
+      e.preventDefault();
+      const remise = action.replace(/\/(archiver|supprimer)$/, '/restaurer');
+      const titre = carte.querySelector('.titre');
+      const fait = /archiver$/.test(action) ? 'archivée' : 'supprimée';
+      // La dernière carte partie : la liste revient avec son message « aucune offre » (revue, C).
+      const derniere = ![...document.querySelectorAll('#liste-offres > .glisse')].some((c) => c !== carte && !c.hidden);
+      envoyer(form, {
+        morceaux: derniere ? ['liste-offres'] : [],
+        anticiper: () => {
+          retirer(remise, [carte]);
+          messages.annuler(remise, '«' + NB + (titre ? titre.textContent.trim() : 'L’offre') + NB + '» ' + fait);
+        },
+        refus: (err) => { remettre(remise); messages.dire('Non ' + fait + NB + ': ' + err.message, true); },
+      });
+      return;
+    }
+    // Une offre archivée remise dans la liste, un échec de dictée retiré, « Plus tard » des prix.
+    const archive = form.closest('#archives .archive');
+    if (archive && /\/restaurer$/.test(action)) {
+      e.preventDefault();
+      envoyer(form, {
+        morceaux: ['liste-offres'],
+        anticiper: () => { archive.hidden = true; },
+        // La liste revient dans l'ordre du serveur : le tri choisi se refait (revue, B-M8).
+        apres: () => { const tri = document.querySelector('nav.fchips.tri a[aria-current]'); if (tri) trier(tri); },
+      });
+      return;
+    }
+    const echec = form.closest('#preparation .ocard.echec');
+    if (echec && /\/retirer$/.test(action)) {
+      e.preventDefault();
+      envoyer(form, { morceaux: ['preparation'], anticiper: () => { echec.hidden = true; } });
+      return;
+    }
+    if (form.closest('#vos-prix') && action === '/vos-prix/plus-tard') {
+      e.preventDefault();
+      envoyer(form, { morceaux: ['vos-prix'] });
+    }
+  });
+
+  // Relecture : toutes les lignes à relire sont dans la page ; « C'est juste » montre la suivante au toucher, l'envoi
+  // suit. Refusée (quantité illisible) : retour à cette ligne, avec le message du serveur.
+  const relecture = () => {
+    if (!ecran() || !ecran().dataset.relecture) return;
+    const gestes = document.querySelector('[data-relu-gestes]');
+    if (!gestes) return;
+    const bouton = gestes.querySelector('button[type=submit]');
+    const libelle = bouton.querySelector('[data-relu-libelle]');
+    const corriger = gestes.querySelector('[data-relu-corriger]');
+    const visible = () => document.querySelector('section[data-relu]:not([hidden])');
+    const prixDe = (section) => section && section.querySelector('[data-relu-prix]');
+    const sansPrix = (section) => { const p = prixDe(section); return !!p && p.value.trim() === ''; };
+    // Constat 1 de l'analyse des parcours (Xavier, 2026-11-26) : sans prix, le bouton ne dit pas « C'est juste » ; il dit
+    // ce qui manque, et le curseur est dans le prix.
+    const accorder = () => {
+      const manque = sansPrix(visible());
+      bouton.classList.toggle('ok', !manque);
+      if (libelle) libelle.textContent = manque ? bouton.dataset.manque : bouton.dataset.juste;
+    };
+    // Un seul message de refus à la fois ; il part avec sa ligne.
+    let refus = null;
+    const oublierRefus = () => { if (refus) { refus.remove(); refus = null; messages.empiler(); } };
+    const montrer = (section) => {
+      document.querySelectorAll('section[data-relu]').forEach((s) => { s.hidden = s !== section; });
+      const fini = !section;
+      document.querySelectorAll('[data-relu-fin]').forEach((el) => { el.hidden = !fini; });
+      gestes.hidden = fini;
+      if (section) {
+        bouton.setAttribute('form', section.querySelector('form').id);
+        if (corriger) corriger.href = section.dataset.corriger;
+      }
+      accorder();
+      window.scrollTo({ top: 0 });
+      if (sansPrix(section)) prixDe(section).focus({ preventScroll: true });
+    };
+    document.addEventListener('input', (e) => { if (e.target.matches && e.target.matches('[data-relu-prix]')) accorder(); });
+    accorder();
+    // Un temps de lecture après chaque ligne : un double toucher ne valide pas la suivante sans qu'on l'ait vue (revue,
+    // B-I5). Avant, le rechargement de la page jouait ce rôle.
+    let lisible = 0;
+    document.addEventListener('submit', (e) => {
+      const form = e.target;
+      const section = form.closest && form.closest('section[data-relu]');
+      if (!section || e.defaultPrevented) return;
+      e.preventDefault();
+      // Le prix manque : rien ne part, le curseur va dans le prix.
+      if (sansPrix(section)) { prixDe(section).focus(); return; }
+      if (Date.now() < lisible) return;
+      // La suivante : la première ligne pas encore validée. Après un refus, celles d'après, déjà validées, ne reviennent pas.
+      const suivante = [...document.querySelectorAll('section[data-relu]')].find((s) => s !== section && !s.dataset.reluFaite) || null;
+      envoyer(form, {
+        sansResume: true,
+        anticiper: () => {
+          section.dataset.reluFaite = '1';
+          oublierRefus();
+          montrer(suivante);
+          lisible = Date.now() + 700;
+          bouton.disabled = true;
+          setTimeout(() => { bouton.disabled = false; }, 700);
+        },
+        refus: (err) => { delete section.dataset.reluFaite; oublierRefus(); montrer(section); refus = messages.dire('Pas enregistré' + NB + ': ' + err.message, true); },
+      });
+    });
+  };
+
+  // Lot 3 : trier les offres et choisir une catégorie du catalogue dans le navigateur, sans requête (toutes les offres et
+  // tous les produits sont déjà à l'écran). L'adresse suit : rechargée, la page garde le même tri.
+  const alphabet = new Intl.Collator('fr-CH', { sensitivity: 'base' });
+  const ordres = {
+    recent: () => 0,
+    client: (a, b) => (!a.dataset.client) - (!b.dataset.client) || alphabet.compare(a.dataset.client || '', b.dataset.client || ''),
+    montant: (a, b) => Number(b.dataset.montant || 0) - Number(a.dataset.montant || 0),
+    relire: (a, b) => Number(b.dataset.relire || 0) - Number(a.dataset.relire || 0),
+  };
+  const trier = (lien) => {
+    const conteneur = document.getElementById('liste-offres');
+    const cle = new URL(lien.href, window.location.href).searchParams.get('tri') || 'recent';
+    if (!conteneur || !ordres[cle]) return false;
+    const cartes = [...conteneur.querySelectorAll(':scope > .glisse')];
+    cartes.sort((a, b) => ordres[cle](a, b) || Number(a.dataset.rang) - Number(b.dataset.rang)).forEach((c) => conteneur.append(c));
+    return true;
+  };
+  const choisirCategorie = (lien) => {
+    const produits = document.getElementById('clist');
+    const champ = document.querySelector('input[data-filtre="#clist"]');
+    if (!produits || !champ) return false;
+    const cat = new URL(lien.href, window.location.href).searchParams.get('cat') || '';
+    produits.querySelectorAll('.crow').forEach((r) => r.toggleAttribute('data-hors-cat', cat !== '' && r.dataset.cat !== cat));
+    // La recherche du catalogue repart avec la catégorie, « Nouveau produit » la propose.
+    const form = champ.form;
+    let cache = form && form.querySelector('input[name=cat]');
+    if (form && cat && !cache) { cache = document.createElement('input'); cache.type = 'hidden'; cache.name = 'cat'; form.prepend(cache); }
+    if (cache) { if (cat) cache.value = cat; else cache.remove(); }
+    const nouveau = document.querySelector('.actionbar a[href^="/catalogue/nouveau"]');
+    if (nouveau) nouveau.setAttribute('href', '/catalogue/nouveau' + (cat ? '?cat=' + encodeURIComponent(cat) : ''));
+    champ.dispatchEvent(new Event('input'));
+    return true;
+  };
+  document.addEventListener('click', (e) => {
+    const lien = e.target.closest && e.target.closest('nav.fchips.tri a[href], #categories a[href]');
+    if (!lien || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (!(lien.closest('.tri') ? trier(lien) : choisirCategorie(lien))) return;
+    e.preventDefault();
+    lien.parentNode.querySelectorAll('a').forEach((a) => { if (a === lien) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+    const u = new URL(lien.href, window.location.href);
+    const champ = document.querySelector('input[data-filtre="#clist"]');
+    if (champ && champ.value.trim()) u.searchParams.set('q', champ.value.trim()); else u.searchParams.delete('q');
+    history.replaceState(history.state, '', u.pathname + u.search);
+  });
+
+  // Lot 1 : un formulaire envoyé de façon classique ne part pas deux fois ; ses boutons se bloquent jusqu'à la page
+  // suivante. Après le choix du bouton : le nom du bouton touché part encore avec le formulaire.
+  window.addEventListener('submit', (e) => {
+    const form = e.target;
+    if (e.defaultPrevented || !(form instanceof HTMLFormElement) || (form.getAttribute('method') || '').toLowerCase() !== 'post') return;
+    if (form.dataset.envoiEnCours) { e.preventDefault(); return; }
+    form.dataset.envoiEnCours = '1';
+    setTimeout(() => form.querySelectorAll('button[type=submit], button:not([type])').forEach((b) => { b.disabled = true; b.setAttribute('aria-busy', 'true'); }), 0);
+  });
+  window.addEventListener('pageshow', () => {
+    document.querySelectorAll('form[data-envoi-en-cours]').forEach((f) => {
+      delete f.dataset.envoiEnCours;
+      f.querySelectorAll('button[aria-busy]').forEach((b) => { b.disabled = false; b.removeAttribute('aria-busy'); });
+    });
+  });
+
+  // La page s'en va : le geste en cours d'envoi finit seul (keepalive) ; ceux qui attendent derrière restent rangés dans le
+  // téléphone et repartent de la page suivante, dans l'ordre. Les envoyer tous ici les faisait partir en même temps, dans
+  // un ordre que le serveur ne garantit pas (revue du 2026-11-23, A-I2 et B-I2).
+
+  // Lot 4 : les gestes rangés par une page précédente repartent, dans l'ordre, avec leur clé. Plus vieux qu'une semaine :
+  // ils ne partent plus (le serveur oublie les clés après 30 jours, et l'offre a pu changer ailleurs), l'écran le dit.
+  // Sur l'écran où ils ont été faits, la ligne ajoutée et la valeur tapée se remontrent (revue, B-I7).
+  const SEMAINE = 7 * 86400000;
+  // Les gestes rangés passent DEVANT ceux faits sur cette page pendant son chargement (fluide.js écoute dès l'en-tête
+  // depuis SR-1) : la file attend leur relecture (pomper, `repris`). Une valeur tapée ici depuis n'est pas écrasée à
+  // l'écran par une plus ancienne (revue du 2026-11-24, I2).
+  const reprendre = async () => {
+    try {
+      const c = compte();
+      if (!c) return;
+      const gardes = await garde.relire(c);
+      const connus = new Set(file.map((f) => f.item.cle));
+      const recents = file.map((f) => f.item);
+      let perimes = 0;
+      const anciens = [];
+      gardes.filter((item) => !connus.has(item.cle)).forEach((item) => {
+        if (Date.now() - item.cree > SEMAINE) { perimes++; garde.oublier(item.cle); return; }
+        anciens.push({ item, options: { gardee: true } });
+        compter(item, 1);
+        if (!memeEcran(item)) return;
+        if (item.provisoire) ligneEnAttente(item.provisoire.designation, item.provisoire.unite, item.provisoire.prix, item.provisoire.quantite, item.provisoire.horsTotal);
+        const plusRecent = item.champ && recents.some((r) => r.champ && r.champ.porteur === item.champ.porteur && r.champ.nom === item.champ.nom);
+        const porteur = item.champ && !plusRecent && document.getElementById(item.champ.porteur);
+        const champ = porteur && porteur.querySelector('[name="' + item.champ.nom + '"]:not([type=hidden])');
+        if (champ) { champ.value = item.champ.valeur; champ.defaultValue = item.champ.valeur; }
+      });
+      file.unshift(...anciens);
+      if (perimes) messages.dire((perimes > 1 ? perimes + ' changements faits' : 'Un changement fait') + ' sans réseau il y a plus d’une semaine ne partent plus.', true);
+      if (file.length) { if (navigator.onLine === false) { horsReseau = true; bandeau.horsReseau(file.length); } else pomper(); }
+    } finally {
+      finReprise();
+    }
+  };
+
+  // Lot 4 : le service worker garde les fichiers et les pages (public/sw.js). Ce que le téléphone garde d'avance (D6) :
+  // la liste, le catalogue, les clients et les offres modifiées depuis 30 jours, quand la connexion est bonne et que
+  // l'artisan ne fait rien (D4) ; au plus une fois par heure, et seulement les offres qui ont changé.
+  const connexionBonne = () => {
+    const c = navigator.connection;
+    return navigator.onLine !== false && !(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || '')));
+  };
+  const prechargerLesPages = (sw) => {
+    const cartes = [...document.querySelectorAll('#liste-offres .glisse[data-modifiee]')];
+    if (!cartes.length && window.location.pathname !== '/') return;
+    let derniere = 0;
+    try { derniere = Number(localStorage.getItem('offregen-garde-' + compte()) || 0); } catch (e) { /* sans stockage : chaque ouverture */ }
+    if (Date.now() - derniere < 3600000 || !connexionBonne()) return;
+    const depuis = Date.now() - 30 * 86400000;
+    // La liste elle-même : la première page s'est chargée avant que le service worker la voie.
+    const pages = [{ adresse: '/', version: '' }, { adresse: '/catalogue', version: '' }, { adresse: '/clients', version: '' }]
+      .concat(cartes.filter((c) => Date.parse(c.dataset.modifiee.replace(' ', 'T') + 'Z') >= depuis)
+        .map((c) => ({ adresse: '/offres/' + c.id.slice(1), version: c.dataset.modifiee })));
+    const lancer = () => {
+      if (occupe() || document.visibilityState !== 'visible') { setTimeout(lancer, 5000); return; }
+      sw.postMessage({ type: 'garder', pages });
+      try { localStorage.setItem('offregen-garde-' + compte(), String(Date.now())); } catch (e) { /* idem */ }
+    };
+    (window.requestIdleCallback || ((f) => setTimeout(f, 3000)))(() => setTimeout(lancer, 2000), { timeout: 10000 });
+  };
+  const serviceWorker = () => {
+    if (!('serviceWorker' in navigator) || !compte()) return;
+    navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).then(() => navigator.serviceWorker.ready).then((r) => {
+      if (!r.active) return;
+      r.active.postMessage({ type: 'compte', compte: compte() });
+      prechargerLesPages(r.active);
+    }).catch(() => { /* sans service worker : l'application marche, sans copie hors réseau */ });
+  };
+
+  // Déconnexion : ce que le téléphone garde pour ce compte part (pages, gestes en attente) ; les dictées à l'abri restent
+  // (sous-chantier 27 : elles partent quand leur offre est prête). Un geste encore en attente se perdrait : on le dit.
+  const oublierTout = () => {
+    const c = compte();
+    if (c) garde.vider(c);
+    if (window.caches) caches.keys().then((noms) => noms.filter((n) => n.startsWith('offregen-pages-')).forEach((n) => caches.delete(n))).catch(() => {});
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ type: 'oublier' });
+    // Le compte qui sort : à l'écran de connexion, sa file seule part si l'effacement a été coupé (revue, B-M14).
+    try { if (c) sessionStorage.setItem('offregen-deconnexion', c); } catch (e) { /* le service worker efface aussi à l'écran de connexion */ }
+  };
+  document.addEventListener('submit', (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement) || form.getAttribute('action') !== '/deconnexion' || e.defaultPrevented) return;
+    if (file.length && !window.confirm((file.length > 1 ? file.length + ' changements attendent' : 'Un changement attend') + ' encore le réseau. Se déconnecter les perd. Se déconnecter quand même ?')) {
+      e.preventDefault();
+      return;
+    }
+    oublierTout();
+  }, true);
+
+  // Les touchers faits avant qu'app.js soit prêt (il se branche à la fin du chargement de la page : 0,1 à 0,2 s sur un
+  // réseau faible, plus s'il vient d'être déployé) sur ce qu'il ouvre en fenêtre : une ligne, « + Ligne », le client.
+  // Sans cela, le lien partait en page entière (recette du 2026-11-24, SR-1). Ils sont retenus, puis rejoués dès
+  // qu'app.js écoute (appPrete). Seul le dernier toucher compte (deux fenêtres ne s'ouvrent pas à la suite) ; il est
+  // marqué en attente à l'écran. Ctrl, Cmd ou Maj + clic passent tels quels (nouvel onglet). app.js qui plante ou ne
+  // vient pas : 5 s après la fin du chargement, le toucher repart comme un simple lien (revue du 2026-11-24, I1 et M4).
+  const ADRESSE_APP = SCRIPT && SCRIPT.dataset ? SCRIPT.dataset.app : '';
+  let appPret = !ADRESSE_APP || document.readyState !== 'loading';
+  let retenu = null;
+  const OUVRE_EN_FENETRE = 'a[data-en-feuille], a[data-en-feuille-pc], .rows .row[data-glisse-ligne]';
+  document.addEventListener('click', (e) => {
+    if (appPret || e.button !== 0 || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !e.target.closest) return;
+    const cible = e.target.closest(OUVRE_EN_FENETRE);
+    if (!cible) return;
+    // Sur une ligne : ses champs, boutons et formulaires sont à fluide.js, ils marchent déjà.
+    if (cible.matches('.row') && e.target.closest('input, button, select, textarea, label, form')) return;
+    // Une fenêtre « PC seulement » s'ouvre en page au téléphone : rien à attendre.
+    if (cible.matches('a[data-en-feuille-pc]') && !window.matchMedia(PC).matches) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (retenu) retenu.removeAttribute('aria-busy');
+    retenu = e.target.closest('a[href]') || e.target;
+    retenu.setAttribute('aria-busy', 'true');
+  }, true);
+  const rejouer = () => {
+    appPret = true;
+    const el = retenu;
+    retenu = null;
+    if (!el) return;
+    el.removeAttribute('aria-busy');
+    if (el.isConnected) el.click();
+  };
+  // app.js, demandé une fois ce fichier exécuté : il ne lui prend plus de débit. Introuvable (pas de réseau, pas
+  // gardé) : le toucher retenu repart comme un simple lien.
+  if (ADRESSE_APP && document.head) {
+    const s = document.createElement('script');
+    s.src = ADRESSE_APP;
+    s.onerror = rejouer;
+    document.head.append(s);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!appPret) setTimeout(() => { if (!appPret) rejouer(); }, 5000);
+    relecture();
+    // Les bandeaux posés par le serveur avec la page s'empilent aussi.
+    messages.empiler();
+    // L'écran de connexion après une déconnexion : ce qui restait du compte part (la navigation a pu couper l'effacement).
+    let sorti = null;
+    try { sorti = sessionStorage.getItem('offregen-deconnexion'); } catch (e) { /* sans stockage */ }
+    if (sorti && !compte()) {
+      try { sessionStorage.removeItem('offregen-deconnexion'); } catch (e) { /* idem */ }
+      garde.vider(sorti);
+    }
+    // Une page servie par le service worker : elle le dit ; ses anciens bandeaux du bas (« Annuler » d'alors) partent.
+    // Réseau lent, la page à jour est arrivée entre-temps : elle est proposée (revue, B-I8 et B-M9).
+    if (document.body.dataset.gardeLe) {
+      document.querySelectorAll('.app > .snack').forEach((s) => s.remove());
+      const le = new Date(document.body.dataset.gardeLe);
+      const quand = Number.isNaN(le.getTime()) ? '' : ' du ' + le.toLocaleDateString('fr-CH') + ' à ' + le.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
+      const lent = document.body.dataset.gardeRaison === 'lent';
+      bandeau.page((lent ? 'Réseau lent' : 'Hors réseau') + NB + ': page gardée dans le téléphone' + quand + '.');
+      const aJour = () => bandeau.page('La page à jour est arrivée.', { href: window.location.pathname + window.location.search, texte: 'La voir' });
+      window.addEventListener('online', aJour);
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.addEventListener('message', (m) => { if (m.data && m.data.type === 'page-a-jour' && m.data.adresse === window.location.pathname + window.location.search) aJour(); });
+      }
+    }
+    reprendre();
+    serviceWorker();
+  });
+
+  // Un geste attend ou part encore : le préchargement attend (D4), le banc aussi.
+  const occupe = () => pompe || file.length > 0;
+
+  return { envoyer, appliquer, rafraichir, ligne, texte, fenetre, ligneEnAttente, messages, garde, bandeau, file, occupe, retirer, remettre, enAttentePour, retientLePdf, appPrete: rejouer, NB, PC, jeton, compte, montant, lireMontant };
+})();
+// Une constante du script n'est pas une propriété de window : app.js teste window.fluide pour savoir s'il est là.
+window.fluide = fluide;

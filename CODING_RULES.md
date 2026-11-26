@@ -14,46 +14,52 @@ répétées ici.
 - Environnement d'exécution local : WSL, Ubuntu 24.04, copie de travail dans `~/offreGen`. PHP 8.5.12 (dépôt ppa:ondrej/php), Composer 2.11.1 (installeur officiel, signature vérifiée), MariaDB 10.11.14. Installé et vérifié le 2026-11-07. MariaDB se démarre par `sudo service mariadb start`.
 
 ## Organisation des fichiers
-- (à préciser : arborescence, où vont les modèles, les contrôleurs, les vues, les scripts)
-- Un fichier, une responsabilité. Pas de fonction dupliquée : chercher l'existant avant d'écrire (`grep`).
+- Arborescence (Xavier, 2026-11-07) :
+  - `public/index.php` : seul fichier PHP exécutable depuis le web ;
+  - `src/Offre/`, `src/Audio/`, `src/Catalogue/`, `src/Compte/` : règles métier, un dossier par domaine ;
+  - `src/Http/` : contrôleurs et routes ;
+  - `src/Donnees/` : seule couche qui parle à la base, elle exige l'identifiant de l'artisan ;
+  - `templates/` : pages Twig ; `migrations/`, `tests/`, `config/` ; `bin/` : commandes et scripts lancés par cron ;
+  - `var/` : audios importés, journaux, cache, hors de `public/` et ignoré par git.
+- Un fichier, une responsabilité. Pas de fonction dupliquée : chercher l'existant avant d'écrire (`grep`).
 
 ## Style
 - Encodage UTF-8 sans BOM, fins de ligne LF.
-- Nommage : (à préciser : langue des identifiants, casse)
+- Nommage (Xavier, 2026-11-07) : le métier en français (`Offre`, `Ligne`, `Acompte`, `Artisan`), le technique de Symfony garde ses noms (`Request`, `Response`). Classes `CommeCeci`, méthodes et variables `commeCeci`, tables et colonnes `comme_ceci`. PSR-12.
 - Pas de code mort, pas de commentaire qui paraphrase le code.
 - Textes visibles en français, typographie française, pas de tiret long.
 
 ## Ergonomie
-- L'application s'utilise sur un téléphone, sur un chantier : grandes zones de toucher, lisible en plein jour.
+- L'application s'utilise sur un téléphone, sur un chantier : grandes zones de toucher, lisible en plein jour.
 - Une action fréquente se fait en un clic.
-- Utilisable au pouce, d'une main : les actions principales sont dans le tiers bas de l'écran, les confirmations s'ouvrent en bas, chaque cible mesure 44 px au moins. Le haut de l'écran ne porte que des informations et des actions secondaires.
+- Utilisable au pouce, d'une main : les actions principales sont dans le tiers bas de l'écran, les confirmations s'ouvrent en bas. Tailles (Xavier, 2026-11-15, décision D10 de la maquette 24) : 64 px pour l'action principale d'un écran, 56 px pour les autres boutons, 48 px pour toute autre cible, 8 px au moins entre deux cibles. Le haut de l'écran ne porte que des informations et des actions secondaires ; le micro est au centre de la barre du bas, sur tous les écrans (D1).
 - Supprimer une ligne d'offre : un clic, puis « Annuler » reste visible quelques secondes. Choix de Xavier sur la maquette du 2026-11-06, à confirmer par les tests avec des artisans.
-- Une ligne incertaine s'affiche « À vérifier », sans pourcentage de confiance et sans rappel de la dictée (choix de Xavier, 2026-11-06).
+- Une ligne incertaine s'affiche « À vérifier », sans pourcentage de confiance (choix de Xavier, 2026-11-06). Le rappel de la dictée (« Entendu : … ») se montre seulement en relecture d'une ligne et sur une ligne hors catalogue : écrans D5 et D6 de la maquette 24, validés par Xavier le 2026-11-15 ; la liste des lignes reste sans rappel.
 - Le document envoyé au client ne montre ni la marge, ni le fournisseur d'une ligne libre, ni le motif ou le pourcentage d'une majoration : la ligne garde son nom, à son nouveau prix (Xavier, 2026-11-06).
 - Une confirmation est toujours demandée pour ce qui ne se rattrape pas : envoyer une offre au client, supprimer une offre entière.
 - L'audio arrive de deux façons : un fichier enregistré avec l'application du téléphone puis importé (prioritaire), ou un enregistrement dans l'application. Le traitement est asynchrone : l'artisan est prévenu quand l'offre est prête.
 - Toute correction vocale a son équivalent à l'écran, qui ne coûte aucun appel au modèle.
 
 ## Données et sécurité
-- `docs/SECURITE.md` est opposable : à lire avant toute tâche touchant aux accès, aux données, aux dépendances ou au déploiement.
+- `docs/SECURITE.md` est opposable : à lire avant toute tâche touchant aux accès, aux données, aux dépendances ou au déploiement.
 - Aucun secret dans le code. Fichiers `*.local.*` et `.env` ignorés par git.
 - Toute entrée utilisateur est validée côté serveur. Requêtes préparées.
 - **Droits refusés par défaut :** une route sans droit déclaré répond 403, et un test parcourt toutes les routes.
 - **Accès aux données en un seul endroit :** cette couche exige l'identifiant du client, et un contrôle automatique rejette tout SQL écrit ailleurs.
 - **Isolation testée :** le client A tente d'atteindre chaque donnée du client B, route par route, fichiers et exports compris.
-- Sessions et CSRF : (à préciser au moment d'écrire la connexion).
+- CSRF : jeton sur chaque formulaire et chaque requête qui écrit, dès le squelette (`symfony/security-csrf`). Connexion par courriel et mot de passe dès le squelette (Xavier, 2026-11-07). Réglages de session (cookie, durée, régénération) fixés avec la connexion.
 
 ## Tests et preuve
 - Un changement de logique s'accompagne d'un test qui échoue avant et passe après.
-- « Ça marche » = commande exécutée, sortie collée. Pas de claim sans evidence.
+- « Ça marche » = commande exécutée, sortie collée. Pas de claim sans evidence.
 - Recette d'interface à la souris (Playwright), pas par appel direct à l'API.
 
 ## Migrations et déploiement
-- `docs/DEPLOIEMENT.md` est opposable : parcours, migrations additives, contrôles et retour arrière.
+- `docs/DEPLOIEMENT.md` est opposable : parcours, migrations additives, contrôles et retour arrière.
 - Migrations : `vendor/bin/doctrine-migrations migrations:migrate`, vérification par `migrations:up-to-date`. Commandes à prouver à la première installation.
-- Un `ADD COLUMN IF NOT EXISTS` n'élargit pas une colonne existante ; élargir = `MODIFY`.
+- Un `ADD COLUMN IF NOT EXISTS` n'élargit pas une colonne existante ; élargir = `MODIFY`.
 
 ## Documentation vivante
-- `PROJECT_ROADMAP.md` : décisions et prochains pas. Mis à jour par `/roadmap-sync` après tout travail significatif.
-- `docs/plans/<date>_<slug>/` : plans et ETAT.md des chantiers. Journaux de mémoire dans `docs/plans/_memoire-archivee/`.
-- Mémoire de session : voir la section « Mémoire » du CLAUDE.md global.
+- `PROJECT_ROADMAP.md` : décisions et prochains pas. Mis à jour par `/roadmap-sync` après tout travail significatif.
+- `docs/plans/<date>_<slug>/` : plans et ETAT.md des chantiers. Journaux de mémoire dans `docs/plans/_memoire-archivee/`.
+- Mémoire de session : voir la section « Mémoire » du CLAUDE.md global.

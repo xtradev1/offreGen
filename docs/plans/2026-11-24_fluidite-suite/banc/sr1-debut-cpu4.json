@@ -1,0 +1,92 @@
+[
+ {
+  "profil": "4g",
+  "geste": "juste",
+  "quand": "debut",
+  "offre_visible_ms": 858,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524313140.6
+  },
+  "ecran_change_ms": 84,
+  "confirme_ms": 226,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "juste",
+  "quand": "apres10s",
+  "offre_visible_ms": 911,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524315191.6
+  },
+  "ecran_change_ms": 81,
+  "confirme_ms": 229,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "corbeille",
+  "quand": "debut",
+  "offre_visible_ms": 876,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524327204.3
+  },
+  "ecran_change_ms": 185,
+  "confirme_ms": 314,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "corbeille",
+  "quand": "apres10s",
+  "offre_visible_ms": 859,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524329363.5
+  },
+  "ecran_change_ms": 187,
+  "confirme_ms": 308,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "quantite",
+  "quand": "debut",
+  "offre_visible_ms": 890,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524341442.7
+  },
+  "ecran_change_ms": 200,
+  "confirme_ms": 349,
+  "recharge": false,
+  "erreurs": []
+ },
+ {
+  "profil": "4g",
+  "geste": "quantite",
+  "quand": "apres10s",
+  "offre_visible_ms": 932,
+  "au_toucher": {
+   "fluide": true,
+   "etat": "complete",
+   "origine": 1795524343595.6
+  },
+  "ecran_change_ms": 153,
+  "confirme_ms": 285,
+  "recharge": false,
+  "erreurs": []
+ }
+]

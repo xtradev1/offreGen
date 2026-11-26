@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sans rechargement : chaque geste mesuré</title>
+<style>
+:root { --ink: #23272D; --muted: #4A505A; --bg: #F4F1EA; --surface: #FFFFFF; --line: #DDD8CC; --accent: #23272D; --marque: #A8441F; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; } }
+:root[data-theme="dark"] { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 27px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 6px; scroll-margin-top: 70px; }
+h3 { font-size: 17px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 780px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; margin: 22px 0; }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; }
+figcaption { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+.paire { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 12px 0; }
+.trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 12px 0; }
+.mk-compare figure img, .paire figure img, .trio figure img { max-width: 360px; }
+.chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 14px 0; }
+.chiffre { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.chiffre .gros { font-size: 26px; font-weight: 750; line-height: 1.15; font-variant-numeric: tabular-nums; display: block; }
+.chiffre .gros .ok { color: var(--ok); }
+.chiffre small { display: block; color: var(--muted); font-size: 14px; margin-top: 4px; }
+.conseil { border-left: 4px solid var(--marque); background: var(--bg); padding: 10px 14px; border-radius: 0 10px 10px 0; margin: 12px 0; }
+.conseil b:first-child { display: block; margin-bottom: 2px; }
+.alerte { border: 1px solid var(--bad); background: var(--bad-soft); border-radius: 12px; padding: 12px 14px; margin: 14px 0; }
+.alerte b:first-child { color: var(--bad); }
+ul.serre { margin: 4px 0 10px; padding-left: 20px; }
+ul.serre li { margin: 3px 0; }
+code { font: 13.5px ui-monospace, Consolas, monospace; background: var(--bg); border-radius: 4px; padding: 1px 4px; overflow-wrap: anywhere; }
+.muted { color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 8px 0 12px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 650; background: var(--bg); position: sticky; top: 52px; }
+td small { display: block; color: var(--muted); font-size: 13px; }
+td.n b { font-variant-numeric: tabular-nums; }
+td.n .ok, b.ok { color: var(--ok); }
+.fleche { color: var(--muted); margin: 0 4px; }
+.pastille { display: inline-block; font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 1px 8px; margin-right: 4px; }
+.p-oui { background: var(--ok-soft); color: var(--ok); }
+.p-non { background: var(--warn-soft); color: var(--warn); }
+.simple td, .simple th { font-size: 14.5px; }
+.simple th { position: static; }
+@media (max-width: 760px) {
+  table.gestes thead { display: none; }
+  table.gestes tr[hidden] { display: none; }
+  table.gestes tr { display: block; border: 1px solid var(--line); border-radius: 10px; margin: 0 0 10px; padding: 6px 8px; background: var(--surface); }
+  table.gestes td { display: block; border: 0; padding: 4px 0; }
+  table.gestes td::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+}
+.mk-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.mk-filters button { font: inherit; font-size: 14.5px; min-height: 44px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.mk-filters button[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.demo { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 12px 0; }
+.demo .reglages-demo { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.demo .reglages-demo button { font: inherit; font-size: 15px; min-height: 44px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.demo .reglages-demo button[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.demo label.case { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 15px; }
+.telephones { display: grid; grid-template-columns: repeat(2, minmax(0, 300px)); gap: 18px; justify-content: center; }
+.tel { background: #111; border-radius: 28px; padding: 10px; position: relative; }
+.tel figcaption { color: #fff; text-align: center; font-weight: 650; font-size: 15px; margin: 0 0 6px; }
+.tel .ecran { position: relative; border-radius: 18px; overflow: hidden; background: #fff; aspect-ratio: 390 / 844; }
+.tel .ecran img { width: 100%; height: 100%; object-fit: cover; object-position: top; border: 0; border-radius: 0; }
+.tel .chrono { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: rgba(0,0,0,.78); color: #fff; font-weight: 700; font-variant-numeric: tabular-nums; border-radius: 999px; padding: 3px 12px; font-size: 15px; }
+.tel .chrono[hidden] { display: none; }
+.tel .etat { color: #ddd; font-size: 13.5px; text-align: center; margin: 6px 0 0; min-height: 40px; }
+.demo .lancer { display: block; margin: 14px auto 0; font: inherit; font-weight: 700; min-height: 52px; padding: 10px 22px; border-radius: 12px; border: 0; background: var(--marque); color: #fff; cursor: pointer; }
+@media (max-width: 560px) { .telephones { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .tel { padding: 6px; border-radius: 18px; } .tel .etat { font-size: 12px; } }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.decision .aide { font-size: 14px; color: var(--muted); }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 650; }
+.opts button:focus-visible, textarea:focus-visible, .copier:focus-visible, .lancer:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+textarea { width: 100%; min-height: 60px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 170px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+.approches { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 12px 0; }
+.approche { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); }
+.approche h3 { margin-top: 0; }
+.approche.conseillee { border: 2px solid var(--marque); }
+.plus-moins { margin: 6px 0; padding-left: 0; list-style: none; }
+.plus-moins li { padding-left: 22px; position: relative; margin: 4px 0; font-size: 15px; }
+.plus-moins li.plus::before { content: "+"; position: absolute; left: 4px; color: var(--ok); font-weight: 800; }
+.plus-moins li.moins::before { content: "−"; position: absolute; left: 4px; color: var(--bad); font-weight: 800; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Une application qui ne recharge plus : chaque geste mesuré</h1>
+<p class="chapeau">Chantier « sans rechargement », relevé du 23 novembre 2026. 61 gestes passés en revue, 47 chronométrés au clic sur quatre réseaux, plus la dictée de bout en bout (banc Playwright, copie de travail du 23.11, données inventées). Les choix t'attendent sous chaque écran ; « Copier mes réponses », en bas, les rassemble.</p>
+
+<h2 id="bref" data-toc="Bref">En bref</h2>
+<div class="chiffres">
+<div class="chiffre"><span class="gros">33 <span class="muted">gestes sur 61</span></span><small>rechargent la page, ou font revenir la page entière, alors qu'une ligne, une carte ou un total change. 14 gestes gardent un rechargement utile, 2 le gardent parce qu'ils sont rares, 12 sont déjà bien.</small></div>
+<div class="chiffre"><span class="gros">2,7 s <span class="fleche">→</span> <span class="ok">572 ms</span></span><small>« C'est juste » sur un réseau de chantier : la page rechargée s'affiche après 2,7 s et finit de charger après 4,9 s (9 requêtes, 162 Ko) ; le même envoi sans rechargement : 572 ms, 1 requête, 0,5 Ko. En changeant l'écran au toucher, l'artisan n'attend plus du tout.</small></div>
+<div class="chiffre"><span class="gros">162 Ko <span class="fleche">→</span> <span class="ok">24 Ko</span></span><small>pour ouvrir une offre : le serveur de test ne dit pas combien de temps garder la feuille de style, le script et les polices, et son ETag empêche la réponse « rien n'a changé ». Corrigé : affichée après 664 ms au lieu de 2,2 s sur le réseau de chantier.</small></div>
+<div class="chiffre"><span class="gros">5,4 s <span class="fleche">→</span> <span class="ok">564 ms</span></span><small>pour ajouter un produit (ouvrir « + Ligne », toucher le produit, « Terminé ») sur un réseau de chantier : 11 requêtes et 236 Ko aujourd'hui ; avec le catalogue gardé dans le téléphone, un seul envoi.</small></div>
+</div>
+<div class="alerte"><b>Sans réseau, aujourd'hui.</b> Un toucher sur « C'est juste » affiche la page d'erreur de Chrome : l'artisan perd son offre de l'écran. Une quantité tapée affiche « Non enregistré : pas de connexion » ; le réseau revenu, elle n'est pas renvoyée tant que l'artisan reste sur l'offre.</div>
+<div class="alerte"><b>Deux défauts d'aujourd'hui, trouvés en route.</b> Sur un réseau lent, deux corbeilles touchées à 0,7 s d'écart retirent les deux lignes, mais la page qui arrive n'offre qu'un « Annuler » : la première ligne ne peut plus être remise. Sans session (expirée, ou cookie perdu), une quantité tapée n'est pas enregistrée et l'écran reste sur « Enregistrement… » sans jamais le dire. Le lot 2 les règle ; s'il tarde, mieux vaut les corriger à part avant.</div>
+<div class="conseil"><b>Ce que je conseille.</b> Garder les pages du serveur, et faire changer sur place tout ce qui ne change qu'un morceau d'écran : le serveur renvoie le morceau (la ligne, les totaux), l'écran change dès le toucher, l'envoi suit. Dans cet ordre : le socle (cache des fichiers, un jeton par page, double toucher), l'offre, la fenêtre « + Ligne » avec le catalogue gardé dans le téléphone, puis le hors réseau. Le PDF à part.</div>
+
+<h2 id="demo" data-toc="Démo">Le même toucher, deux téléphones</h2>
+<section class="point">
+<p>« C'est juste » sur la ligne 5 d'une offre de 33 lignes. À gauche, l'application d'aujourd'hui ; à droite, la proposition. Les durées sont celles mesurées par le banc sur le réseau choisi ; « cache gardé » rejoue le cas où le navigateur garde la feuille de style et le script (lot 1).</p>
+<div class="demo" id="demo-bloc">
+<div class="reglages-demo" role="group" aria-label="Réseau de la démo">
+<button type="button" data-reseau="fibre">Fibre</button><button type="button" data-reseau="4g">4G</button><button type="button" data-reseau="chantier" aria-pressed="true">Chantier (3G faible)</button>
+<label class="case"><input type="checkbox" id="demo-cache"> Cache gardé (lot 1)</label>
+</div>
+<div class="telephones">
+<figure class="tel"><figcaption>Aujourd'hui</figcaption><div class="ecran"><img id="demo-g" src="MAQUETTE-sans-rechargement-img/demo-avant.jpg" alt="Offre, la ligne 5 à vérifier au milieu de l'écran" data-no-zoom><span class="chrono" id="demo-chrono-g" hidden></span></div><p class="etat" id="demo-etat-g">Prête.</p></figure>
+<figure class="tel"><figcaption>Proposé</figcaption><div class="ecran"><img id="demo-d" src="MAQUETTE-sans-rechargement-img/demo-avant.jpg" alt="La même offre" data-no-zoom><span class="chrono" id="demo-chrono-d" hidden></span></div><p class="etat" id="demo-etat-d">Prête.</p></figure>
+</div>
+<button type="button" class="lancer" id="demo-lancer">Toucher « C'est juste » sur les deux</button>
+</div>
+<p class="muted">Après le rechargement, la page saute : le navigateur la ramène sur la ligne touchée (ancre <code>#l14</code>), en haut de l'écran. Sans rechargement, seule la ligne change.</p>
+</section>
+
+<h2>Comment j'ai mesuré</h2>
+<section class="point">
+<ul class="serre">
+<li><b>Où.</b> Ma copie de travail dans WSL (<code>~/offreGen-fluidite</code>, tête de <code>chantier-voix-offre</code> du 23.11), sa propre base (<code>offregen_fluidite_vue</code>), remise à zéro avant chaque mesure. Aucune donnée réelle : un compte de démo Peintre, 274 produits, 42 clients, une offre de 33 lignes (4 à vérifier, 2 sans prix, 2 prix dictés, une option, une variante, une ligne libre).</li>
+<li><b>Comme sur le test.</b> Un routeur imite l'Apache du site de test, relevé par curl le 23.11 : pages et fichiers compressés, aucune durée de cache, ETag suffixé « -gzip ». Contrôle : la feuille de style pèse 20 607 octets des deux côtés.</li>
+<li><b>Réseaux.</b> Simulés par Chromium, une latence ajoutée à chaque requête : fibre 25 ms (l'aller-retour mesuré vers le test), 4G 100 ms à 9 et 3 Mbit/s, chantier 500 ms à 400 et 200 kbit/s. Une vraie 3G perd aussi des paquets : les chiffres du chantier sont optimistes.</li>
+<li><b>Deux caches.</b> « Périmé » : chaque page redemande feuille de style, script et polices, ce que fait le test quand le navigateur ne sait plus s'ils sont frais. « Gardé » : rien n'est redemandé. Le vrai cas est entre les deux, selon l'âge du dernier déploiement.</li>
+<li><b>Le chemin sans rechargement</b> est mesuré en envoyant la même requête par fetch, sans suivre la redirection : le serveur fait le même travail. Il manque la réponse utile (la ligne et les totaux, 1 à 2 Ko compressés, estimés).</li>
+<li><b>Pas mesuré.</b> Un vrai téléphone (processeur plus lent : le rechargement y coûte plus, l'envoi seul presque pareil), Safari, la perte de paquets. Les gestes de l'équipe (administration) ont été lus sans être chronométrés.</li>
+</ul>
+</section>
+
+<h2 id="gestes" data-toc="Gestes">Tous les gestes</h2>
+<section class="point">
+<p>Durées médianes, du toucher à l'écran à jour, cache périmé. En vert : le même envoi sans rechargement. « req. » : requêtes au serveur.</p>
+<div class="mk-filters" data-target="#liste-gestes">
+<button type="button" data-v="all" aria-pressed="true">Tous (61)</button>
+<button type="button" data-v="inutile" aria-pressed="false">Rechargement inutile (25)</button>
+<button type="button" data-v="lourd" aria-pressed="false">Sans rechargement, mais trop lourd (8)</button>
+<button type="button" data-v="utile" aria-pressed="false">Rechargement utile (14)</button>
+<button type="button" data-v="peu" aria-pressed="false">Gardé, geste rare (2)</button>
+<button type="button" data-v="bien" aria-pressed="false">Déjà bien (12)</button>
+</div>
+<table class="gestes">
+<thead><tr><th>Geste</th><th>Aujourd'hui</th><th>Rechargement utile ?</th><th>4G</th><th>Chantier</th><th>Proposé</th></tr></thead>
+<tbody id="liste-gestes">
+<tr data-v="utile">
+<td data-label="Geste"><b>Se connecter</b><small>Connexion</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Nouvelle session, nouveau jeton : partir d'une page propre est plus sûr.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Mot de passe oublié, choisir un mot de passe</b><small>Connexion</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Parcours de sécurité, une fois.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Entrer dans la démo, passer à l'essai, revenir à mon espace</b><small>Démo</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Le compte ou la session change.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Étape suivante, passer le guide</b><small>Assistant de bienvenue</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Une fois par compte, chaque étape est un autre écran.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder ; profite du cache des fichiers.<small>Lot 1, socle</small></td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Se déconnecter</b><small>Plus, Réglages</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Session détruite. Avec le hors ligne, la déconnexion doit aussi vider ce que le téléphone garde.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder, et vider le cache du téléphone.<small>Lot 4, hors réseau</small></td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Changer son mot de passe</b><small>Réglages</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Les autres appareils sont déconnectés.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Ouvrir une offre</b><small>Mes offres</small></td>
+<td data-label="Aujourd'hui">Changement d'écran</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Autre écran.</td>
+<td data-label="4G" class="n"><b>465 ms</b><small>8&nbsp;req., 162 Ko, tout chargé 550 ms</small></td>
+<td data-label="Chantier" class="n"><b>2,2 s</b><small>8&nbsp;req., 162 Ko, tout chargé 4,3 s</small></td>
+<td data-label="Proposé">Garder la page ; fichiers en cache, offre gardée dans le téléphone pour l'ouvrir sans réseau.<small>Lot 1, socle</small></td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Revenir à la liste (retour)</b><small>Mes offres</small></td>
+<td data-label="Aujourd'hui">Changement d'écran</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Autre écran. La liste se recharge exprès au retour (app.js, pageshow) pour être à jour.</td>
+<td data-label="4G" class="n"><b>52 ms</b><small>8&nbsp;req., 0,8 Ko, tout chargé 34 ms</small></td>
+<td data-label="Chantier" class="n"><b>60 ms</b><small>8&nbsp;req., 0,8 Ko, tout chargé 35 ms</small></td>
+<td data-label="Proposé">Garder ; liste gardée dans le téléphone hors réseau.<small>Lot 4, hors réseau</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Trier (récent, client, montant…)</b><small>Mes offres</small></td>
+<td data-label="Aujourd'hui">Changement d'écran</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Toutes les offres sont déjà à l'écran : trier se fait dans le navigateur.</td>
+<td data-label="4G" class="n"><b>398 ms</b><small>8&nbsp;req., 142 Ko, tout chargé 585 ms</small></td>
+<td data-label="Chantier" class="n"><b>2,1 s</b><small>8&nbsp;req., 142 Ko, tout chargé 4,3 s</small></td>
+<td data-label="Proposé">Tri dans le navigateur, sans requête.<small>Lot 3, ajouter et catalogue</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Archiver (glisser)</b><small>Mes offres</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Seule la carte quitte la liste ; la liste revient en haut après le rechargement.</td>
+<td data-label="4G" class="n"><b>509 ms</b><small>9&nbsp;req., 143 Ko, tout chargé 693 ms</small><span class="fleche">→</span><b class="ok">136 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,7 s</b><small>9&nbsp;req., 143 Ko, tout chargé 4,9 s</small><span class="fleche">→</span><b class="ok">594 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">La carte part sur place, « Annuler » quelques secondes.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Supprimer (glisser)</b><small>Mes offres</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Idem ; la suppression reste annulable.</td>
+<td data-label="4G" class="n"><b>506 ms</b><small>9&nbsp;req., 143 Ko, tout chargé 672 ms</small><span class="fleche">→</span><b class="ok">129 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,7 s</b><small>9&nbsp;req., 143 Ko, tout chargé 4,9 s</small><span class="fleche">→</span><b class="ok">562 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">La carte part sur place, « Annuler ».<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Restaurer une offre archivée</b><small>Mes offres</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> La carte change de section.</td>
+<td data-label="4G" class="n"><b>571 ms</b><small>9&nbsp;req., 143 Ko, tout chargé 759 ms</small><span class="fleche">→</span><b class="ok">130 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,7 s</b><small>9&nbsp;req., 143 Ko, tout chargé 5,0 s</small><span class="fleche">→</span><b class="ok">565 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>« Plus tard » (vos prix), « Réessayer », « Retirer » (dictée en échec)</b><small>Mes offres</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Un bandeau ou une carte change.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Onglets : Offres, Clients, Factures, Plus</b><small>Barre du bas</small></td>
+<td data-label="Aujourd'hui">Changement d'écran</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Autre écran.</td>
+<td data-label="4G" class="n"><b>411 ms</b><small>8&nbsp;req., 142 Ko, tout chargé 559 ms</small></td>
+<td data-label="Chantier" class="n"><b>2,1 s</b><small>8&nbsp;req., 142 Ko, tout chargé 4,3 s</small></td>
+<td data-label="Proposé">Garder ; fichiers en cache, écrans gardés pour le hors ligne.<small>Lot 1, socle</small></td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Parler : micro, « Terminer », envoi, préparation</b><small>Partout</small></td>
+<td data-label="Aujourd'hui">Envoi en arrière-plan</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà sans rechargement : la dictée part avec sa progression, les étapes avancent seules, la dictée reste à l'abri dans le téléphone.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder. L'offre prête ouvre une page : utile.</td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Importer un fichier audio</b><small>Plus</small></td>
+<td data-label="Aujourd'hui">Envoi en arrière-plan</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Même chemin que la dictée.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="lourd">
+<td data-label="Geste"><b>Corriger une quantité ou un prix</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Sans rechargement, mais l'offre entière revient</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà sans rechargement, mais la réponse est l'offre entière (deux requêtes, la page d'offre à chaque chiffre). Hors réseau : « Non enregistré », sans nouvel essai.</td>
+<td data-label="4G" class="n"><b>320 ms</b><small>2&nbsp;req., 25 Ko</small><span class="fleche">→</span><b class="ok">128 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>1,6 s</b><small>2&nbsp;req., 25 Ko</small><span class="fleche">→</span><b class="ok">576 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Réponse réduite à la ligne et aux totaux ; file d'envoi hors réseau.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>« C'est juste »</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Seule l'étiquette « À vérifier » disparaît.</td>
+<td data-label="4G" class="n"><b>536 ms</b><small>9&nbsp;req., 162 Ko, tout chargé 714 ms</small><span class="fleche">→</span><b class="ok">138 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,7 s</b><small>9&nbsp;req., 162 Ko, tout chargé 4,9 s</small><span class="fleche">→</span><b class="ok">572 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">L'étiquette part au toucher, l'envoi suit.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Retirer une ligne (corbeille ou glisser)</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Une ligne part. Après le rechargement, l'offre revient en haut (redirection sans ancre) : l'artisan perd sa place.</td>
+<td data-label="4G" class="n"><b>618 ms</b><small>9&nbsp;req., 162 Ko, tout chargé 789 ms</small><span class="fleche">→</span><b class="ok">140 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,8 s</b><small>9&nbsp;req., 162 Ko, tout chargé 5,0 s</small><span class="fleche">→</span><b class="ok">590 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">La ligne part sur place, « Annuler » reste.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>« Annuler » une ligne retirée</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> La ligne revient à sa place.</td>
+<td data-label="4G" class="n"><b>530 ms</b><small>9&nbsp;req., 162 Ko, tout chargé 721 ms</small><span class="fleche">→</span><b class="ok">142 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,7 s</b><small>9&nbsp;req., 162 Ko, tout chargé 4,9 s</small><span class="fleche">→</span><b class="ok">586 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Prix dicté : « Prendre », « Mettre au catalogue ? Oui / Non »</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Un prix et une note changent.</td>
+<td data-label="4G" class="n"><b>557 ms</b><small>9&nbsp;req., 162 Ko, tout chargé 747 ms</small><span class="fleche">→</span><b class="ok">139 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,6 s</b><small>9&nbsp;req., 162 Ko, tout chargé 4,8 s</small><span class="fleche">→</span><b class="ok">573 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="lourd">
+<td data-label="Geste"><b>Cocher « Retenue par le client » (option, variante)</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Sans rechargement, mais l'offre entière revient</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà sans rechargement, réponse = offre entière.</td>
+<td data-label="4G" class="n"><b>331 ms</b><small>2&nbsp;req., 25 Ko</small><span class="fleche">→</span><b class="ok">136 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>1,6 s</b><small>2&nbsp;req., 25 Ko</small><span class="fleche">→</span><b class="ok">579 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Réponse réduite.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="lourd">
+<td data-label="Geste"><b>Textes avant et après les lignes</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Sans rechargement, mais l'offre entière revient</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà sans rechargement, réponse = offre entière.</td>
+<td data-label="4G" class="n"><b>308 ms</b><small>2&nbsp;req., 25 Ko</small><span class="fleche">→</span><b class="ok">138 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>1,7 s</b><small>2&nbsp;req., 25 Ko</small><span class="fleche">→</span><b class="ok">590 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Réponse réduite.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Toucher une ligne pour l'ouvrir (téléphone)</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Changement d'écran</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Au PC la ligne s'ouvre déjà dans une fenêtre ; au téléphone c'est une page.</td>
+<td data-label="4G" class="n"><b>407 ms</b><small>8&nbsp;req., 142 Ko, tout chargé 571 ms</small></td>
+<td data-label="Chantier" class="n"><b>2,1 s</b><small>8&nbsp;req., 142 Ko, tout chargé 4,3 s</small></td>
+<td data-label="Proposé">Fenêtre du bas au téléphone aussi.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>« Enregistrer », « Supprimer la ligne »</b><small>Ligne</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Retour à l'offre rechargée.</td>
+<td data-label="4G" class="n"><b>554 ms</b><small>9&nbsp;req., 162 Ko, tout chargé 686 ms</small><span class="fleche">→</span><b class="ok">132 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,7 s</b><small>9&nbsp;req., 162 Ko, tout chargé 4,9 s</small><span class="fleche">→</span><b class="ok">600 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">La fenêtre se ferme, la ligne change sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>« Relire N lignes »</b><small>Relecture</small></td>
+<td data-label="Aujourd'hui">Changement d'écran</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Autre écran (une ligne à la fois).</td>
+<td data-label="4G" class="n"><b>399 ms</b><small>8&nbsp;req., 141 Ko, tout chargé 586 ms</small></td>
+<td data-label="Chantier" class="n"><b>2,1 s</b><small>8&nbsp;req., 141 Ko, tout chargé 4,3 s</small></td>
+<td data-label="Proposé">Garder ; les lignes à relire arrivent toutes ensemble.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>« C'est juste », ligne suivante</b><small>Relecture</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> La ligne suivante est connue d'avance.</td>
+<td data-label="4G" class="n"><b>526 ms</b><small>9&nbsp;req., 141 Ko, tout chargé 679 ms</small><span class="fleche">→</span><b class="ok">141 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,7 s</b><small>9&nbsp;req., 141 Ko, tout chargé 4,9 s</small><span class="fleche">→</span><b class="ok">566 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Ligne suivante tout de suite, l'envoi suit.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="lourd">
+<td data-label="Geste"><b>« + Ligne » : ouvrir l'ajout</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Tout le catalogue est retéléchargé à chaque ouverture (274 produits, 277 jetons CSRF aléatoires).</td>
+<td data-label="4G" class="n"><b>232 ms</b><small>1&nbsp;req., 36 Ko</small></td>
+<td data-label="Chantier" class="n"><b>1,3 s</b><small>1&nbsp;req., 36 Ko</small></td>
+<td data-label="Proposé">Catalogue gardé dans le téléphone : la fenêtre s'ouvre sans requête.<small>Lot 3, ajouter et catalogue</small></td>
+</tr>
+<tr data-v="lourd">
+<td data-label="Geste"><b>Toucher un produit</b><small>Ajouter</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Chaque produit ajouté retélécharge tout le catalogue.</td>
+<td data-label="4G" class="n"><b>358 ms</b><small>2&nbsp;req., 37 Ko</small><span class="fleche">→</span><b class="ok">142 ms</b><small>1&nbsp;req., 0,6 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,0 s</b><small>2&nbsp;req., 37 Ko</small><span class="fleche">→</span><b class="ok">564 ms</b><small>1&nbsp;req., 0,6 Ko</small></td>
+<td data-label="Proposé">Un envoi léger ; la liste reste.<small>Lot 3, ajouter et catalogue</small></td>
+</tr>
+<tr data-v="lourd">
+<td data-label="Geste"><b>Ajouter une ligne libre</b><small>Ajouter</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Idem.</td>
+<td data-label="4G" class="n"><b>346 ms</b><small>2&nbsp;req., 37 Ko</small><span class="fleche">→</span><b class="ok">131 ms</b><small>1&nbsp;req., 0,6 Ko</small></td>
+<td data-label="Chantier" class="n"><b>1,9 s</b><small>2&nbsp;req., 37 Ko</small><span class="fleche">→</span><b class="ok">605 ms</b><small>1&nbsp;req., 0,6 Ko</small></td>
+<td data-label="Proposé">Un envoi léger.<small>Lot 3, ajouter et catalogue</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>« Terminé »</b><small>Ajouter</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> L'offre est rechargée pour montrer les lignes ajoutées.</td>
+<td data-label="4G" class="n"><b>363 ms</b><small>8&nbsp;req., 162 Ko, tout chargé 543 ms</small></td>
+<td data-label="Chantier" class="n"><b>2,1 s</b><small>8&nbsp;req., 162 Ko, tout chargé 4,3 s</small></td>
+<td data-label="Proposé">Les lignes sont déjà à leur place : la fenêtre se ferme.<small>Lot 3, ajouter et catalogue</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Client de l'offre : choisir</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Seule la carte du client change.</td>
+<td data-label="4G" class="n"><b>795 ms</b><small>11&nbsp;req., 211 Ko, tout chargé 968 ms</small><span class="fleche">→</span><b class="ok">137 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>4,2 s</b><small>11&nbsp;req., 211 Ko, tout chargé 6,4 s</small><span class="fleche">→</span><b class="ok">569 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">La carte change sur place ; liste des clients gardée dans le téléphone.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>« Représenté par »</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Une carte change.</td>
+<td data-label="4G" class="n"><b>766 ms</b><small>11&nbsp;req., 211 Ko, tout chargé 959 ms</small><span class="fleche">→</span><b class="ok">144 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>4,2 s</b><small>11&nbsp;req., 211 Ko, tout chargé 6,4 s</small><span class="fleche">→</span><b class="ok">591 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Objet de l'offre</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Au téléphone : une page, puis l'offre rechargée.</td>
+<td data-label="4G" class="n"><b>590 ms</b><small>9&nbsp;req., 162 Ko, tout chargé 726 ms</small><span class="fleche">→</span><b class="ok">132 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>2,7 s</b><small>9&nbsp;req., 162 Ko, tout chargé 4,9 s</small><span class="fleche">→</span><b class="ok">572 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Fenêtre, puis sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>« + Rabais », modifier, retirer</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Les totaux changent.</td>
+<td data-label="4G" class="n"><b>771 ms</b><small>11&nbsp;req., 211 Ko, tout chargé 926 ms</small><span class="fleche">→</span><b class="ok">124 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>4,2 s</b><small>11&nbsp;req., 211 Ko, tout chargé 6,4 s</small><span class="fleche">→</span><b class="ok">608 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Totaux recalculés par le serveur, remplacés sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Conditions de l'offre</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Une carte change.</td>
+<td data-label="4G" class="n"><b>760 ms</b><small>11&nbsp;req., 211 Ko, tout chargé 947 ms</small><span class="fleche">→</span><b class="ok">140 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>4,2 s</b><small>11&nbsp;req., 211 Ko, tout chargé 6,4 s</small><span class="fleche">→</span><b class="ok">597 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Renommer une pièce</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Un titre change.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Fenêtre, puis sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Ligne hors catalogue : rattacher ou « Créer et ranger »</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> La fenêtre retélécharge tout le catalogue, puis l'offre se recharge.</td>
+<td data-label="4G" class="n"><b>787 ms</b><small>11&nbsp;req., 211 Ko, tout chargé 962 ms</small><span class="fleche">→</span><b class="ok">129 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>4,2 s</b><small>11&nbsp;req., 211 Ko, tout chargé 6,4 s</small><span class="fleche">→</span><b class="ok">587 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Catalogue du téléphone, ligne changée sur place.<small>Lot 3, ajouter et catalogue</small></td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>« Générer l'offre » : le PDF</b><small>Offre</small></td>
+<td data-label="Aujourd'hui">Changement d'écran</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Autre écran ; le PDF se fabrique au serveur à chaque ouverture.</td>
+<td data-label="4G" class="n"><b>1,6 s</b><small>12&nbsp;req., 647 Ko</small></td>
+<td data-label="Chantier" class="n"><b>16,4 s</b><small>12&nbsp;req., 647 Ko</small></td>
+<td data-label="Proposé">Garder la page ; PDF gardé tant que l'offre ne change pas.<small>Lot 5, PDF et envoi</small></td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>« Envoyer » (partage du téléphone)</b><small>Aperçu</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Le PDF déjà affiché est refabriqué et retéléchargé avant le partage ; puis la page se recharge pour noter l'envoi. Sur réseau lent, le partage risque de perdre le geste de l'artisan (hypothèse à vérifier sur iPhone).</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Partager le PDF déjà affiché ; noter l'envoi sans rechargement.<small>Lot 5, PDF et envoi</small></td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>« Facturer » : fenêtre et aperçu</b><small>Offre envoyée</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà une fenêtre ; l'aperçu se met à jour sans rechargement.</td>
+<td data-label="4G" class="n"><b>182 ms</b><small>7&nbsp;req., 75 Ko</small></td>
+<td data-label="Chantier" class="n"><b>687 ms</b><small>7&nbsp;req., 75 Ko</small></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>« Créer la facture »</b><small>Facturer</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Document définitif, numéro donné par le serveur : la réponse du serveur est indispensable avant d'afficher la facture.</td>
+<td data-label="4G" class="n"><b>711 ms</b><small>14&nbsp;req., 652 Ko, tout chargé 971 ms</small></td>
+<td data-label="Chantier" class="n"><b>3,8 s</b><small>14&nbsp;req., 666 Ko, tout chargé 8,3 s</small></td>
+<td data-label="Proposé">Garder la confirmation du serveur, jamais d'affichage anticipé ; profite du cache des fichiers.<small>Lot 1, socle</small></td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Document à côté</b><small>Offre (PC)</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà sans rechargement.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Lignes : quantité, prix, corbeille, ajouter</b><small>Facture (brouillon)</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Même contrôleur que les lignes de l'offre.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Même traitement que l'offre.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Émettre, annuler une facture</b><small>Facture</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Acte définitif : confirmation du serveur indispensable.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>En-tête, supprimer le brouillon, « envoyée »</b><small>Facture</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Une carte ou un état change.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Sur place.<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Filtrer en tapant</b><small>Catalogue</small></td>
+<td data-label="Aujourd'hui">Dans le navigateur, sans réseau</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà dans le navigateur, aucune requête.</td>
+<td data-label="4G" class="n"><b>81 ms</b><small>0&nbsp;req., 0,0 Ko</small></td>
+<td data-label="Chantier" class="n"><b>88 ms</b><small>0&nbsp;req., 0,0 Ko</small></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Choisir une catégorie</b><small>Catalogue</small></td>
+<td data-label="Aujourd'hui">Changement d'écran</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Les 274 produits sont déjà à l'écran : la catégorie se filtre comme la frappe.</td>
+<td data-label="4G" class="n"><b>384 ms</b><small>11&nbsp;req., 157 Ko, tout chargé 539 ms</small></td>
+<td data-label="Chantier" class="n"><b>2,3 s</b><small>11&nbsp;req., 157 Ko, tout chargé 4,5 s</small></td>
+<td data-label="Proposé">Filtre dans le navigateur, sans requête.<small>Lot 3, ajouter et catalogue</small></td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Ouvrir la fiche d'un produit</b><small>Catalogue</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà une fenêtre, page légère.</td>
+<td data-label="4G" class="n"><b>176 ms</b><small>1&nbsp;req., 3,8 Ko</small></td>
+<td data-label="Chantier" class="n"><b>637 ms</b><small>1&nbsp;req., 3,8 Ko</small></td>
+<td data-label="Proposé">Garder ; lisible sans réseau avec le catalogue du téléphone (lots 3 et 4).</td>
+</tr>
+<tr data-v="lourd">
+<td data-label="Geste"><b>Enregistrer, créer, supprimer un produit</b><small>Catalogue</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Après l'envoi, tout le catalogue est retéléchargé pour rafraîchir une ligne.</td>
+<td data-label="4G" class="n"><b>399 ms</b><small>3&nbsp;req., 22 Ko</small><span class="fleche">→</span><b class="ok">134 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>1,2 s</b><small>3&nbsp;req., 22 Ko</small><span class="fleche">→</span><b class="ok">550 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Seule la ligne du produit revient ; le catalogue du téléphone suit.<small>Lot 3, ajouter et catalogue</small></td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Vos prix, un produit à la fois</b><small>Catalogue</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà sans rechargement (vos-prix.js).</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Importer d'anciennes offres (PDF)</b><small>Catalogue</small></td>
+<td data-label="Aujourd'hui">Sans rechargement, réponse légère</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà sans rechargement.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Filtrer en tapant</b><small>Clients</small></td>
+<td data-label="Aujourd'hui">Dans le navigateur, sans réseau</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà dans le navigateur.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Ouvrir une fiche</b><small>Clients</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà une fenêtre.</td>
+<td data-label="4G" class="n"><b>174 ms</b><small>1&nbsp;req., 4,0 Ko</small></td>
+<td data-label="Chantier" class="n"><b>651 ms</b><small>1&nbsp;req., 3,9 Ko</small></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Modifier un champ (enregistré seul)</b><small>Fiche client</small></td>
+<td data-label="Aujourd'hui">Sans rechargement, réponse légère</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà sans rechargement, réponse légère (attente de 0,9 s après la frappe, voulue).</td>
+<td data-label="4G" class="n"><b>1,0 s</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>1,5 s</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Garder ; file d'envoi sans réseau (lot 4).</td>
+</tr>
+<tr data-v="lourd">
+<td data-label="Geste"><b>Nouveau client, supprimer un client</b><small>Clients</small></td>
+<td data-label="Aujourd'hui">Fenêtre chargée par fetch</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Toute la liste est retéléchargée.</td>
+<td data-label="4G" class="n"><b>381 ms</b><small>3&nbsp;req., 10 Ko</small><span class="fleche">→</span><b class="ok">140 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>1,3 s</b><small>3&nbsp;req., 10 Ko</small><span class="fleche">→</span><b class="ok">564 ms</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Seule la carte du client revient.<small>Lot 3, ajouter et catalogue</small></td>
+</tr>
+<tr data-v="utile">
+<td data-label="Geste"><b>Ouvrir une rubrique</b><small>Réglages</small></td>
+<td data-label="Aujourd'hui">Changement d'écran</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-oui">Oui</span> Autre écran.</td>
+<td data-label="4G" class="n"><b>416 ms</b><small>8&nbsp;req., 142 Ko, tout chargé 566 ms</small></td>
+<td data-label="Chantier" class="n"><b>2,1 s</b><small>8&nbsp;req., 142 Ko, tout chargé 4,3 s</small></td>
+<td data-label="Proposé">Garder ; profite du cache des fichiers.<small>Lot 1, socle</small></td>
+</tr>
+<tr data-v="bien">
+<td data-label="Geste"><b>Modifier un réglage (enregistré seul)</b><small>Réglages</small></td>
+<td data-label="Aujourd'hui">Sans rechargement, réponse légère</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Déjà sans rechargement.</td>
+<td data-label="4G" class="n"><b>1,1 s</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Chantier" class="n"><b>1,6 s</b><small>1&nbsp;req., 0,5 Ko</small></td>
+<td data-label="Proposé">Garder.</td>
+</tr>
+<tr data-v="inutile">
+<td data-label="Geste"><b>Envoyer ou retirer le logo</b><small>Réglages</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Seul l'aperçu du logo change.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Sur place (rare : priorité basse).<small>Lot 2, offre</small></td>
+</tr>
+<tr data-v="peu">
+<td data-label="Geste"><b>Artisans, démos, équipe, suivi (tous les envois)</b><small>Administration</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Écrans de l'équipe, au PC, sur une bonne connexion, rarement.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder ; profite du cache des fichiers.<small>Lot 1, socle</small></td>
+</tr>
+<tr data-v="peu">
+<td data-label="Geste"><b>« Bon pour essai » (page d'accueil publique)</b><small>Site</small></td>
+<td data-label="Aujourd'hui">Page rechargée</td>
+<td data-label="Rechargement utile ?"><span class="pastille p-non">Non</span> Un message remplace le formulaire.</td>
+<td data-label="4G" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Chantier" class="n"><span class="muted">non mesuré</span></td>
+<td data-label="Proposé">Garder (une fois par visiteur).</td>
+</tr>
+</tbody>
+</table>
+</section>
+
+<h2 id="socle" data-toc="Socle">Le socle : cache des fichiers, un jeton par page, double toucher</h2>
+<section class="point">
+<p>Trois corrections sans toucher aux écrans, qui servent à tous les gestes, y compris ceux qui gardent leur page :</p>
+<ul class="serre">
+<li><b>Cache des fichiers.</b> Dire au navigateur de garder un an la feuille de style, le script, les polices et les images, et changer leur adresse à chaque déploiement (<code>app.css?v=…</code>) ; corriger l'ETag « -gzip ». Mesuré : ouvrir une offre passe de 162 Ko à 24 Ko, 465 ms à 323 ms en 4G, 2,2 s à 664 ms sur le chantier.</li>
+<li><b>Un jeton par page.</b> Les 274 produits de « + Ligne » portent chacun un jeton de 124 caractères tirés au hasard : 36,7 Ko compressés au lieu de 9,6 Ko. Un seul formulaire pour la liste suffit, sans JavaScript aussi.</li>
+<li><b>Double toucher.</b> Sur un réseau lent, l'écran ne bouge pas pendant plusieurs secondes et le bouton reste actif : l'artisan retouche.</li>
+</ul>
+<div class="decision" data-q="D1 Socle">
+<p class="q">D1. Le socle (cache des fichiers, un jeton par page, double toucher)</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire : D1 Socle" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="offre" data-toc="Offre">L'offre sans rechargement</h2>
+<section class="point">
+<p>Sur l'offre, presque chaque geste recharge la page pour changer une ligne, une carte ou un total (17 gestes du tableau, lot 2). Proposé : l'écran change au toucher, l'envoi part derrière, le serveur renvoie la ligne et les totaux qu'il a recalculés (TVA, rabais, arrondi restent calculés au serveur, comme aujourd'hui). Un échec remet l'écran comme avant et le dit.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-sans-rechargement-img/demo-apres-rechargement.jpg" alt="Après « C'est juste » aujourd'hui : la page rechargée, la ligne en haut de l'écran" loading="lazy"><figcaption>Aujourd'hui : page rechargée, 2,7 s sur le réseau de chantier, la page saute.</figcaption></figure>
+<figure><img src="MAQUETTE-sans-rechargement-img/apres-juste.jpg" alt="Proposé : la ligne validée sur place, un message discret" loading="lazy"><figcaption>Proposé : la ligne change au toucher, « Enregistrée à l'instant » quand le serveur a répondu.</figcaption></figure>
+</div>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-sans-rechargement-img/demo-corbeille-apres-rechargement.jpg" alt="Après la corbeille aujourd'hui : la page rechargée revient en haut de l'offre" loading="lazy"><figcaption>Aujourd'hui, la corbeille : la redirection n'a pas d'ancre, l'offre revient tout en haut. L'artisan qui retirait la ligne 28 doit redescendre.</figcaption></figure>
+<figure><img src="MAQUETTE-sans-rechargement-img/apres-corbeille.jpg" alt="Proposé : la ligne retirée sur place, Annuler en bas" loading="lazy"><figcaption>Proposé : la ligne part, l'écran reste où il était, « Annuler » comme aujourd'hui.</figcaption></figure>
+</div>
+<div class="decision" data-q="D2 Gestes de l'offre">
+<p class="q">D2. Quand l'artisan touche « C'est juste », la corbeille, un prix dicté, une option…</p>
+<div class="opts"><button type="button" data-v="A">A. L'écran change tout de suite, l'envoi suit (conseillé)</button><button type="button" data-v="B">B. Un petit sablier jusqu'à la réponse du serveur</button><button type="button" data-v="C">C. Garder le rechargement</button></div>
+<p class="aide">A : immédiat sur tous les réseaux, l'écran se corrige si le serveur refuse (rare). B : 138 ms en 4G, 572 ms sur le chantier, sans rien recharger. C : 536 ms en 4G, 2,7 s sur le chantier.</p><textarea aria-label="Commentaire : D2 Gestes de l'offre" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="decision" data-q="D3 Ce qui garde la réponse du serveur">
+<p class="q">D3. « Créer la facture », « Émettre », se connecter et se déconnecter attendent la réponse du serveur avant d'afficher la suite (numéro de facture, session).</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire : D3 Ce qui garde la réponse du serveur" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="ajouter" data-toc="Ajouter">« + Ligne » et le catalogue dans le téléphone</h2>
+<section class="point">
+<p>Aujourd'hui, la fenêtre « + Ligne » télécharge tout le catalogue à chaque ouverture : 36 Ko pour 274 produits, dont environ 27 Ko de jetons de sécurité (un jeton aléatoire par produit, que la compression ne réduit pas ; un seul suffirait, la fenêtre pèserait 9,6 Ko). Chaque produit touché retélécharge tout le catalogue, et « Terminé » recharge l'offre.</p>
+<div class="mk-compare">
+<figure><img src="MAQUETTE-sans-rechargement-img/avant-ajout.jpg" alt="La fenêtre Ajouter aujourd'hui" loading="lazy"><figcaption>Aujourd'hui : 1,3 s pour l'ouvrir sur le réseau de chantier, 2,0 s par produit, 2,1 s pour « Terminé ».</figcaption></figure>
+<figure><img src="MAQUETTE-sans-rechargement-img/apres-ajout.jpg" alt="Proposé : la fenêtre ouverte depuis le catalogue du téléphone" loading="lazy"><figcaption>Proposé : la fenêtre s'ouvre sans requête, chaque produit part en un envoi (564 ms sur le chantier), « Terminé » ferme seulement.</figcaption></figure>
+</div>
+<p>Le catalogue part dans le téléphone quand la connexion est bonne (à l'ouverture de l'application, puis à chaque changement), 3,6 Ko compressés pour les 274 produits (30 Ko bruts, mesuré sur un export JSON de la base), 0,8 Ko pour les 42 clients : moins qu'une seule ouverture de la fenêtre aujourd'hui. Il sert aussi à « Pas dans votre catalogue », au rattachement et à la fiche produit.</p>
+<div class="paire">
+<figure><img src="MAQUETTE-sans-rechargement-img/apres-ajout-hors-ligne.jpg" alt="Proposé : la fenêtre Ajouter sans réseau" loading="lazy"><figcaption>Sans réseau, avec le lot 4 : la fenêtre s'ouvre quand même, le produit ajouté attend dans le téléphone et le dit.</figcaption></figure>
+</div>
+<div class="decision" data-q="D4 Catalogue dans le téléphone">
+<p class="q">D4. Quand le téléphone reçoit-il le catalogue ?</p>
+<div class="opts"><button type="button" data-v="A">A. À l'ouverture de l'application, puis à chaque changement (conseillé)</button><button type="button" data-v="B">B. À la première ouverture de « + Ligne »</button><button type="button" data-v="C">C. Jamais : la fenêtre se télécharge à chaque fois, allégée</button></div>
+<textarea aria-label="Commentaire : D4 Catalogue dans le téléphone" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="reseau" data-toc="Réseau">Sans réseau, ou presque</h2>
+<section class="point">
+<h3>Aujourd'hui</h3>
+<p>Sur un réseau lent, rien ne dit que le toucher a été pris : seuls les formulaires à identifiant changent de bouton pendant l'envoi (<code>envoisDeFormulaires</code> dans <code>app.js</code>), et « C'est juste », la corbeille, l'archivage n'en ont pas. L'écran reste figé jusqu'à la page suivante, 2,7 s plus tard sur le chantier. On retouche.</p>
+<div class="trio">
+<figure><img src="MAQUETTE-sans-rechargement-img/hors-ligne-juste.jpg" alt="Sans réseau : la page d'erreur de Chrome" loading="lazy"><figcaption>Sans réseau, « C'est juste » : la page d'erreur du navigateur remplace l'offre.</figcaption></figure>
+<figure><img src="MAQUETTE-sans-rechargement-img/hors-ligne-quantite.jpg" alt="Sans réseau : une quantité tapée, message Non enregistré" loading="lazy"><figcaption>Sans réseau, une quantité : « Non enregistré : pas de connexion ».</figcaption></figure>
+<figure><img src="MAQUETTE-sans-rechargement-img/hors-ligne-ajout.jpg" alt="Sans réseau : « + Ligne »" loading="lazy"><figcaption>Sans réseau, « + Ligne » : la fenêtre échoue et le navigateur part sur la page d'erreur.</figcaption></figure>
+</div>
+<div class="trio">
+<figure><img src="MAQUETTE-sans-rechargement-img/hors-ligne-ouvrir.jpg" alt="Sans réseau : ouvrir une offre" loading="lazy"><figcaption>Sans réseau, ouvrir une offre depuis la liste : page d'erreur.</figcaption></figure>
+<figure><img src="MAQUETTE-sans-rechargement-img/lent-deux-corbeilles.jpg" alt="Réseau de chantier : deux touchers sur la corbeille" loading="lazy"><figcaption>Réseau de chantier, deux corbeilles touchées à 0,7 s d'écart : la page qui arrive (constat ci-dessous).</figcaption></figure>
+<figure><img src="MAQUETTE-sans-rechargement-img/session-expiree-quantite.jpg" alt="Session perdue : 33 tapé, le total reste celui de 24" loading="lazy"><figcaption>Session perdue, « 33 » tapé : le chiffre reste affiché, le total de la ligne reste celui de 24, l'indicateur en haut de l'offre reste sur « Enregistrement… ». Rien n'est enregistré, rien ne le dit.</figcaption></figure>
+</div>
+<ul class="serre"><li><b>Quantité tapée sans réseau (24 m² passés à 27).</b> L'écran dit « Non enregistré : pas de connexion ». En base : 24&nbsp;m² avant ; 24&nbsp;m² huit secondes après le retour du réseau ; 27&nbsp;m² une fois l'offre quittée. Le chiffre ne repart pas seul : il ne part que si l'artisan quitte l'offre avec du réseau.</li><li><b>Deux corbeilles touchées à 0,7 s d'écart, réseau de chantier.</b> Le serveur accepte les deux envois (2 réponses 303), les lignes 36,37 sont retirées en base. La page qui arrive n'affiche qu'un bandeau : « Lasure, balcon » supprimée · Annuler (une corbeille seule affiche bien le sien : « Heure de régie » supprimée · Annuler). <b>Les deux lignes partent, un seul « Annuler » : la première ne peut plus être remise.</b></li><li><b>« Archiver » retouché 0,6 s plus tard, réseau de chantier.</b> Un seul archivage (offre archivée en base) ; le second toucher ne trouve plus le bouton, la carte s'est refermée. La liste revient avec « Rafraîchissement du séjour » archivée · Annuler. Rien à signaler.</li><li><b>Session perdue, une quantité tapée (24 m² passés à 33).</b> L'indicateur reste sur « Enregistrement… » pour de bon ; en base : 24&nbsp;m² avant, 24&nbsp;m² après. Rien n'est enregistré, rien ne le dit.</li></ul>
+<h3>Proposé</h3>
+<div class="trio">
+<figure><img src="MAQUETTE-sans-rechargement-img/apres-hors-ligne.jpg" alt="Proposé sans réseau : bandeau, lignes en attente, total provisoire" loading="lazy"><figcaption>Sans réseau : un bandeau le dit, les lignes changées portent « en attente d'envoi », le total est provisoire.</figcaption></figure>
+<figure><img src="MAQUETTE-sans-rechargement-img/apres-retour-reseau.jpg" alt="Proposé : le réseau revient, les changements partent" loading="lazy"><figcaption>Le réseau revient : la file part seule, un message le dit.</figcaption></figure>
+<figure><img src="MAQUETTE-sans-rechargement-img/apres-liste-hors-ligne.jpg" alt="Proposé : la liste des offres sans réseau" loading="lazy"><figcaption>Les offres ouvertes ces 30 derniers jours restent lisibles et modifiables.</figcaption></figure>
+</div>
+<p>Comment : un « service worker » (un petit script que le navigateur garde) sert la feuille de style, le script et les pages déjà vues quand le réseau manque ; chaque geste fait hors réseau part dans une file d'attente rangée dans le téléphone, avec une clé unique pour que le serveur ne l'applique jamais deux fois (même principe que la dictée à l'abri d'aujourd'hui).</p>
+<div class="decision" data-q="D5 Hors réseau">
+<p class="q">D5. Que peut faire l'artisan sans réseau ?</p>
+<div class="opts"><button type="button" data-v="A">A. Tout ce qui touche une offre déjà ouverte : les changements attendent dans le téléphone (conseillé)</button><button type="button" data-v="B">B. Lire seulement : offres et catalogue lisibles, modifications bloquées avec un message</button><button type="button" data-v="C">C. Rien de plus qu'un message clair à la place de la page d'erreur</button></div>
+<textarea aria-label="Commentaire : D5 Hors réseau" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="decision" data-q="D6 Ce que le téléphone garde">
+<p class="q">D6. Ce que le téléphone garde, effacé à la déconnexion</p>
+<div class="opts"><button type="button" data-v="A">A. Catalogue, clients et offres des 30 derniers jours (conseillé)</button><button type="button" data-v="B">B. Catalogue seul</button><button type="button" data-v="C">C. Rien</button></div>
+<p class="aide">Données de clients de l'artisan (noms, adresses) : à écrire dans la politique de confidentialité, comme la dictée gardée dans le téléphone.</p><textarea aria-label="Commentaire : D6 Ce que le téléphone garde" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="decision" data-q="D7 Total sans réseau">
+<p class="q">D7. Le total, sans réseau</p>
+<div class="opts"><button type="button" data-v="A">A. Total provisoire calculé dans le téléphone, recalculé par le serveur au retour du réseau</button><button type="button" data-v="B">B. « Total à recalculer », sans montant</button></div>
+<p class="aide">A : le téléphone fait la somme des lignes ; rabais, TVA et arrondi restent au serveur. B : aucun risque de montant faux à l'écran.</p><textarea aria-label="Commentaire : D7 Total sans réseau" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2>Le PDF et « Envoyer »</h2>
+<section class="point">
+<p>« Générer l'offre » ouvre une page, télécharge PDF.js (515 Ko compressés, bibliothèque et worker) quand le cache est périmé, et fait refabriquer le PDF au serveur (0,3 s pour 6 lignes, 0,6 s pour 33) : 990 ms en local, 1,6 s en 4G, 16,4 s sur le chantier, jusqu'au PDF dessiné. Avec PDF.js gardé dans le navigateur (lot 1) : 666 ms en 4G, 2,0 s sur le chantier. « Envoyer » redemande ce même PDF au serveur avant d'ouvrir le partage du téléphone, puis recharge la page pour noter l'envoi.</p>
+<ul class="serre">
+<li>Partager le PDF déjà affiché : aucune requête de plus.</li>
+<li>Noter « envoyée » sans recharger la page.</li>
+<li>Garder le PDF au serveur tant que l'offre ne change pas.</li>
+<li><b>Hypothèse, non vérifiée :</b> sur iPhone, Safari n'accepte d'ouvrir le partage que peu après le toucher ; si le PDF met plus longtemps à arriver, le partage peut être refusé sans rien dire. À essayer sur ton iPhone en 3G.</li>
+</ul>
+<div class="decision" data-q="D8 PDF et envoi">
+<p class="q">D8. PDF partagé tel qu'affiché, « envoyée » sans rechargement, PDF gardé tant que l'offre ne change pas</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire : D8 PDF et envoi" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2>Parler : déjà sans rechargement</h2>
+<section class="point">
+<p>La dictée est le seul long chemin qui ne recharge rien : l'enregistrement part avec sa progression, reste à l'abri dans le téléphone jusqu'à l'offre prête, et les étapes avancent seules (une question au serveur chaque seconde). Mesuré avec une dictée de peintre de 28 s et la vraie transcription :</p>
+<table class="simple"><thead><tr><th>Réseau</th><th>Envoi de la dictée</th><th>Offre prête</th><th>Offre affichée</th><th>Questions « où en est-on ? »</th></tr></thead><tbody>
+<tr><td>Fibre</td><td class="n">303 ms</td><td class="n">56,3 s</td><td class="n">56,3 s</td><td class="n">53 (31 Ko)</td></tr><tr><td>Chantier</td><td class="n">4,6 s</td><td class="n">24,8 s</td><td class="n">24,8 s</td><td class="n">10 (5,8 Ko)</td></tr>
+</tbody></table>
+<div class="paire">
+<figure><img src="MAQUETTE-sans-rechargement-img/dictee-chantier-suivi.jpg" alt="La fenêtre de préparation pendant l'envoi de la dictée" loading="lazy"><figcaption>Réseau de chantier : la fenêtre de préparation pendant l'envoi, avec sa progression. Rien ne se recharge.</figcaption></figure>
+</div>
+<p>Rien à changer pour la fluidité. L'offre prête ouvre une page entière : c'est un autre écran, le rechargement y est utile. Le temps d'attente vient de la file de transcription d'Infomaniak (56 s puis 25 s pour la même dictée, à quelques minutes d'écart).</p>
+</section>
+
+<h2>Trois façons de faire</h2>
+<section class="point">
+<div class="approches">
+<div class="approche conseillee"><h3>A. Morceaux de page, script maison (conseillé)</h3>
+<p>Le serveur garde ses pages. Pour un envoi fait par le script, il répond par les morceaux qui changent (la ligne, les totaux, la carte) au lieu d'une redirection ; <code>app.js</code> les remplace.</p>
+<ul class="plus-moins"><li class="plus">Aucune dépendance nouvelle, conforme à <code>CODING_RULES.md</code>.</li><li class="plus">Les calculs restent au serveur : TVA, rabais, arrondi, options ne sont pas écrits deux fois.</li><li class="plus">Sans JavaScript, les formulaires marchent comme aujourd'hui.</li><li class="plus">Geste par geste : chaque lot se livre et se teste seul.</li><li class="moins">Chaque contrôleur apprend une seconde réponse ; environ 300 lignes de script à écrire.</li></ul></div>
+<div class="approche"><h3>B. Une bibliothèque (htmx)</h3>
+<p>Même principe, porté par une bibliothèque : des attributs dans les gabarits disent quel morceau remplacer.</p>
+<ul class="plus-moins"><li class="plus">Moins de script à écrire pour les échanges.</li><li class="moins">Une dépendance qui donne la forme des écrans : <code>CODING_RULES.md</code> l'écarte.</li><li class="moins">Réglages à faire pour la politique de sécurité (pas de code évalué, pas de style en ligne).</li><li class="moins">Rien pour le hors réseau : la file d'attente reste à écrire.</li></ul></div>
+<div class="approche"><h3>C. Application JavaScript complète</h3>
+<p>Le serveur ne rend plus que des données ; le téléphone dessine tous les écrans.</p>
+<ul class="plus-moins"><li class="plus">La plus fluide, le hors réseau devient naturel.</li><li class="moins">Totaux, TVA, rabais, options réécrits dans le navigateur : deux calculs qui peuvent diverger du PDF.</li><li class="moins">Tous les écrans à refaire : des semaines, et un cadre applicatif que tu as écarté.</li></ul></div>
+</div>
+<div class="decision" data-q="D9 Approche">
+<p class="q">D9. Quelle approche ?</p>
+<div class="opts"><button type="button" data-v="A">A. Morceaux de page, script maison (conseillé)</button><button type="button" data-v="B">B. Bibliothèque htmx</button><button type="button" data-v="C">C. Application JavaScript complète</button></div>
+<textarea aria-label="Commentaire : D9 Approche" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2>Lots, ordre et estimation</h2>
+<section class="point">
+<table class="simple"><thead><tr><th>Lot</th><th>Contenu</th><th>Estimation</th></tr></thead><tbody>
+<tr><td>1. Socle</td><td>Cache des fichiers et adresses versionnées, ETag corrigé, un jeton par page, double toucher.</td><td class="n">3 h</td></tr>
+<tr><td>2. L'offre</td><td>Les 24 gestes de l'offre, de la relecture, de la liste et du brouillon de facture changent sur place ; la ligne s'ouvre en fenêtre au téléphone ; réponses réduites pour quantité et prix.</td><td class="n">12 h</td></tr>
+<tr><td>3. Ajouter et catalogue</td><td>Catalogue et clients dans le téléphone, « + Ligne » sans requête, catalogue et clients sans retéléchargement de la liste, tri et catégories dans le navigateur.</td><td class="n">8 h</td></tr>
+<tr><td>4. Hors réseau</td><td>Service worker, file d'envoi avec clé unique, bandeau, total provisoire, effacement à la déconnexion, essais de coupure.</td><td class="n">16 h</td></tr>
+<tr><td>5. PDF et envoi</td><td>PDF partagé tel qu'affiché, « envoyée » sans rechargement, PDF gardé tant que l'offre ne change pas.</td><td class="n">3 h</td></tr>
+<tr><td>Revue et recette</td><td>Sur le site de test, réseau lent et coupé, iPhone et Android.</td><td class="n">5 h</td></tr>
+</tbody></table>
+<p>Total : 47 h, estimation de Claude. La tâche Origin 504 en prévoyait 16, pour la relecture et la création d'un produit seulement.</p>
+<div class="decision" data-q="D10 Ordre">
+<p class="q">D10. Ordre des lots : 1, 2, 3, 4, 5</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="autre">Autre ordre (dans le commentaire)</button></div>
+<textarea aria-label="Commentaire : D10 Ordre" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2>Risques et limites</h2>
+<section class="point">
+<ul class="serre">
+<li><b>iPhone.</b> Safari peut effacer ce qu'un site a rangé dans le téléphone après 7 jours sans visite (application non installée sur l'écran d'accueil). Ce que le téléphone garde peut disparaître : la file d'envoi part dès que possible et le dit si elle attend.</li>
+<li><b>Deux appareils.</b> Une ligne changée hors réseau sur le téléphone et au PC entre-temps : le dernier envoi gagne, l'écran le signale.</li>
+<li><b>Session expirée hors réseau.</b> La file attend la reconnexion, puis repart avec un jeton neuf.</li>
+<li><b>Données dans le téléphone.</b> Noms et adresses des clients de l'artisan : effacés à la déconnexion, rangés par compte (comme la dictée à l'abri), à écrire dans la politique de confidentialité.</li>
+<li><b>Mesures.</b> Réseaux simulés sans perte de paquets, processeur de PC : un vrai téléphone sur un vrai chantier sera plus lent, surtout pour les rechargements.</li>
+</ul>
+</section>
+
+<h2 id="reponses" data-toc="Réponses">Copier mes réponses</h2>
+<div class="recap">
+<p>Ce texte se remplit avec tes choix. Copie-le et colle-le dans la conversation.</p>
+<textarea id="recap" readonly aria-label="Récapitulatif des réponses"></textarea>
+<p><button type="button" class="copier" id="copier">Copier le texte</button><span class="copie-ok" id="copie-ok" hidden>Copié.</span></p>
+</div>
+</main>
+
+<script>
+(function () {
+  var CLE = 'offregen-sans-rechargement-2026-11-23';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  var blocs = document.querySelectorAll('.decision');
+  function recap() {
+    var lignes = [];
+    blocs.forEach(function (b) {
+      var q = b.getAttribute('data-q'), r = etat[q] || {};
+      var choisi = b.querySelector('.opts button[data-v="' + (r.v || '') + '"]');
+      var l = q + ' : ' + (choisi ? choisi.textContent : '(pas de réponse)');
+      if (r.c) l += '. Commentaire : ' + r.c.replace(/\s+/g, ' ').trim();
+      lignes.push(l);
+    });
+    document.getElementById('recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    etat[q] = etat[q] || {};
+    var boutons = b.querySelectorAll('.opts button');
+    var champ = b.querySelector('textarea');
+    boutons.forEach(function (bt) {
+      bt.setAttribute('aria-pressed', bt.getAttribute('data-v') === etat[q].v ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        etat[q].v = etat[q].v === bt.getAttribute('data-v') ? '' : bt.getAttribute('data-v');
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-v') === etat[q].v ? 'true' : 'false'); });
+        garder(); recap();
+      });
+    });
+    if (champ) {
+      champ.value = etat[q].c || '';
+      champ.addEventListener('input', function () { etat[q].c = champ.value; garder(); recap(); });
+    }
+  });
+  recap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('recap');
+    var ok = function () { var s = document.getElementById('copie-ok'); s.hidden = false; setTimeout(function () { s.hidden = true; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); document.execCommand('copy'); ok(); }); }
+    else { t.select(); document.execCommand('copy'); ok(); }
+  });
+
+  // Démo des deux téléphones : durées mesurées par le banc (offre-juste), en millisecondes.
+  var DUREES = {"fibre":[306,242,57],"4g":[536,390,138],"chantier":[2680,1220,572]};
+  var IMG = 'MAQUETTE-sans-rechargement-img/';
+  var reseau = 'chantier';
+  var minuteries = [];
+  var g = document.getElementById('demo-g'), d = document.getElementById('demo-d');
+  var cg = document.getElementById('demo-chrono-g'), cd = document.getElementById('demo-chrono-d');
+  var eg = document.getElementById('demo-etat-g'), ed = document.getElementById('demo-etat-d');
+  var cache = document.getElementById('demo-cache');
+  function secondes(ms) { return (ms / 1000).toFixed(1).replace('.', ',') + '\u00a0s'; }
+  function remettre() {
+    minuteries.forEach(clearTimeout); minuteries.forEach(clearInterval); minuteries = [];
+    g.src = IMG + 'demo-avant.jpg'; d.src = IMG + 'demo-avant.jpg';
+    cg.hidden = true; cd.hidden = true; eg.textContent = 'Prête.'; ed.textContent = 'Prête.';
+  }
+  document.querySelectorAll('[data-reseau]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      reseau = b.getAttribute('data-reseau');
+      document.querySelectorAll('[data-reseau]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      remettre();
+    });
+  });
+  cache.addEventListener('change', remettre);
+  document.getElementById('demo-lancer').addEventListener('click', function () {
+    remettre();
+    var m = DUREES[reseau] || [];
+    var avant = (cache.checked ? m[1] : m[0]) || 0, envoi = m[2] || 0, debut = Date.now();
+    cg.hidden = false; cg.textContent = '0,0\u00a0s';
+    eg.textContent = 'Touché. La page se recharge…';
+    var tic = setInterval(function () { cg.textContent = secondes(Math.min(Date.now() - debut, avant)); }, 50);
+    minuteries.push(tic);
+    minuteries.push(setTimeout(function () {
+      clearInterval(tic); cg.textContent = secondes(avant); g.src = IMG + 'demo-apres-rechargement.jpg';
+      eg.textContent = 'Page rechargée après ' + secondes(avant) + ', elle a sauté.';
+    }, avant));
+    d.src = IMG + 'apres-juste.jpg';
+    cd.hidden = false; cd.textContent = '0,0\u00a0s';
+    ed.textContent = 'Ligne validée au toucher. Envoi en cours…';
+    minuteries.push(setTimeout(function () { cd.textContent = secondes(envoi); ed.textContent = 'Serveur d\u2019accord après ' + secondes(envoi) + '. L\u2019artisan n\u2019a rien attendu.'; }, envoi));
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+/* L'aide à la vente (chantier onboarding, lot 6). À part : admin.css appartient au chantier de l'administration. */
+.aide-vente { display: grid; gap: 10px; }
+.aide-vente .rubrique { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.aide-vente summary { min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 16px; font: 600 18px var(--titre); cursor: pointer; list-style: none; }
+.aide-vente summary::-webkit-details-marker { display: none; }
+.aide-vente summary::after { content: "+"; font-size: 24px; font-weight: 400; }
+.aide-vente details[open] > summary::after { content: "\2212"; }
+.aide-vente summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 14px; }
+.aide-vente details > :not(summary) { margin: 0 16px 16px; }
+.etapes-rdv { padding-left: 22px; display: grid; gap: 10px; font-size: 16px; }
+.objections { display: grid; gap: 4px; }
+.objections dt { font-weight: 700; margin-top: 10px; font-size: 16px; }
+.objections dt:first-child { margin-top: 0; }
+.objections dd { margin: 0; font-size: 16px; color: var(--ink); }
+.message-demo { padding: 12px 14px; border-radius: 10px; background: var(--chip); font-size: 15px; }
+@media print {
+  .tabs, .bar, .bas, [data-imprimer] { display: none !important; }
+  .aide-vente summary::after { content: none; }
+  .aide-vente .rubrique { border: 0; break-inside: avoid; }
+}
+
+.revoir-bienvenue { min-height: 48px; display: inline-flex; align-items: center; }

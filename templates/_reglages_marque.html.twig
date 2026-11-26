@@ -1,0 +1,64 @@
+{% import '_reglages_macros.html.twig' as f %}
+{# Ma marque, en trois touchers : le logo (envoyé à part, formulaire form-logo, sa couleur est proposée
+   d'office), la couleur, le modèle. La CSP refuse les styles en ligne : pastilles dessinées en SVG. #}
+<div class="card" id="marque">
+  {# Mise en route : le logo a son étape à lui (_reglages_logo.html.twig) ; ici, la couleur puis le modèle. #}
+  {% if not assistant %}
+  <fieldset class="groupe">
+    <legend>1. Logo</legend>
+    <div class="logo-ligne">
+      {% if marque.logo %}<img class="logo-apercu" src="/reglages/logo?v={{ marque.logo }}" alt="Votre logo">{% else %}<span class="muted petit">Aucun logo</span>{% endif %}
+      <label class="btn" for="logo">{{ marque.logo ? 'Changer' : 'Choisir le logo' }}</label>
+      <input class="cache" id="logo" name="logo" type="file" accept="image/png,image/jpeg" form="form-logo" data-envoi-auto>
+      {% if marque.logo %}<button class="lien" type="submit" form="form-logo-retirer">Retirer</button>{% endif %}
+    </div>
+    <noscript><button class="btn" type="submit" form="form-logo">Envoyer le logo choisi</button></noscript>
+    <p class="muted petit">PNG ou JPEG, 5&nbsp;Mo au plus. Sa couleur devient celle de vos documents.</p>
+  </fieldset>
+  {% endif %}
+  <fieldset class="groupe choix">
+    <legend>{{ assistant ? texte('e.couleur') : '2. Couleur' }}</legend>
+    <div class="teintes">
+      {% for t in teintes %}
+        <label class="teinte" title="{{ t == marque.couleurDuLogo ? 'Couleur du logo' : t }}"><input type="radio" name="couleur_choix" value="{{ t }}"{% if champs.couleur_choix == t %} checked{% endif %}>
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="{{ t }}"/></svg><span class="cache">{{ t == marque.couleurDuLogo ? 'Couleur du logo' : 'Couleur ' ~ t }}</span></label>
+      {% endfor %}
+      <label class="puce teinte-autre"><input type="radio" name="couleur_choix" value="autre"{% if champs.couleur_choix == 'autre' %} checked{% endif %}>Autre</label>
+    </div>
+    <div class="champ si-autre">
+      <label for="couleur">Votre couleur</label>
+      <input id="couleur" name="couleur" type="color" value="{{ champs.couleur|default('#1D4E89')|lower }}"{{ f.invalide(erreurs, 'couleur') }}>
+    </div>
+    {{ f.erreur(erreurs, 'couleur') }}
+    {# 2b (maquette du 5e tour du chantier responsive, validée par Xavier le 2026-11-20) : une couleur tapée, ou celle du
+       logo, sous 7:1 sur le papier blanc. Deux versions plus foncées de la même teinte, d'un toucher ; sans JavaScript,
+       le bouton envoie le formulaire. app.js (avisCouleur) le tient à jour pendant le choix. #}
+    <div class="avis-couleur" data-avis-couleur data-teintes="{{ proposees|join(',') }}" aria-live="polite"{% if not avis %} hidden{% endif %}>
+      <p><b data-avis-titre>{{ avis and avis.contraste >= 4.5 ? 'Cette couleur manque de contraste sur le papier blanc' : 'Cette couleur se lit mal sur le papier blanc' }}</b> (contraste <span data-avis-contraste>{{ avis.rapport ?? '' }}</span>:1).<span data-avis-pale{% if avis and avis.contraste >= 4.5 %} hidden{% endif %}> Vos documents l'emploient foncée juste assez pour rester lisible.</span></p>
+      <p>Prenez une version plus foncée de la même teinte&nbsp;:</p>
+      {% for niveau, nom in {bien: 'Bien visible', visible: 'Visible'} %}
+        <button class="choix-couleur" type="submit" name="couleur_prise" value="{{ avis[niveau] ?? '' }}" data-niveau="{{ niveau }}">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="{{ avis[niveau] ?? '#FFFFFF' }}"/></svg>
+          <span><b>{{ nom }}</b><small><span data-hex>{{ avis[niveau] ?? '' }}</span> · contraste <span data-rapport>{{ avis[niveau ~ '_rapport'] ?? '' }}</span>:1</small></span></button>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <fieldset class="groupe">
+    <legend>{{ assistant ? texte('e.modele') : '3. Modèle' }}</legend>
+    {# Douze modèles en quatre familles (Xavier, 2026-11-19) ; celui du métier du compte est marqué. #}
+    {% for famille in familles %}
+    <h3 class="famille">{{ famille.nom }}</h3>
+    <div class="modeles">
+      {% for cle in famille.modeles %}
+        {% set nom = modeles[cle] %}
+        <div class="modele-case">
+          <label class="modele"><input type="radio" name="modele" value="{{ cle }}"{% if champs.modele == cle %} checked{% endif %}>
+            {% if vignettes[cle] is defined %}<span class="vignette" data-vignette="{{ cle }}">{{ vignettes[cle]|raw }}</span>{% else %}<img src="{{ fichier('/img/modeles/' ~ cle ~ '.jpg') }}" alt="" width="180" height="255">{% endif %}<span>{{ nom }}</span>{% if cle == propose %}<span class="badge propose">Proposé pour votre métier</span>{% endif %}</label>
+          <a class="voir" href="/reglages/modeles/{{ cle }}{% if assistant %}?depuis=bienvenue{% endif %}" data-grand="{{ fichier('/img/modeles/grand/' ~ cle ~ '.jpg') }}" data-cle="{{ cle }}" data-nom="{{ nom }}" aria-label="Voir le modèle {{ nom }} en grand">
+            <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Voir en grand</a>
+        </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </fieldset>
+</div>

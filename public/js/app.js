@@ -1,0 +1,2972 @@
+// offreGen : aides d'interface. Les pages marchent sans ce fichier, sauf l'enregistrement dans le
+// navigateur, qui en a besoin. La CSP refuse le JavaScript en ligne : tout passe par ce fichier.
+'use strict';
+
+// Même règle que Catalogue\Recherche::normaliser côté serveur : minuscules, sans accents.
+const normaliser = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/\p{Mn}+/gu, '').replace(/\s+/g, ' ').trim();
+
+// Corrections de quantité et de prix sur l'offre : dans fluide.js depuis le 2026-11-24 (SR-1), branchées dès l'en-tête
+// de la page. Ici, les boutons prévus pour qui n'a pas JavaScript (choix du client) se cachent.
+function corrections() {
+  const choixSansJs = () => document.querySelectorAll('form[data-choix] [data-sans-js]').forEach((b) => { b.hidden = true; });
+  choixSansJs();
+  // Les morceaux posés par fluide.js ramènent les boutons prévus pour qui n'a pas JavaScript.
+  document.addEventListener('morceaux-poses', choixSansJs);
+}
+
+function envoisDeFormulaires() {
+  // Pendant l'envoi d'un formulaire, le bouton le dit et ne part pas deux fois.
+  document.querySelectorAll('form[id]').forEach((form) => {
+    form.addEventListener('submit', () => {
+      document.querySelectorAll('button[data-attente]').forEach((b) => {
+        if (b.form === form) { b.disabled = true; b.setAttribute('aria-busy', 'true'); b.textContent = b.dataset.attente; }
+      });
+    });
+  });
+}
+
+// Filtre à la frappe d'une liste rendue en entier par le serveur (catalogue, ajout à l'offre).
+function filtres() {
+  document.querySelectorAll('input[data-filtre]').forEach(brancherFiltre);
+}
+
+function brancherFiltre(champ) {
+  if (champ.dataset.branche) return;
+  champ.dataset.branche = '1';
+  if (!document.querySelector(champ.dataset.filtre)) return;
+  const appliquer = () => {
+    // La liste se relit à chaque frappe : revenue en morceau (fluide.js), l'ancienne n'est plus à l'écran, et le filtre
+    // tournait sur elle (revue du 2026-11-26, I1).
+    const liste = document.querySelector(champ.dataset.filtre);
+    if (!liste) return;
+    const mots = normaliser(champ.value).split(' ').filter(Boolean);
+    let trouves = 0;
+    let groupe = null;
+    let dansGroupe = 0;
+    const fermer = () => {
+      if (groupe) {
+        groupe.hidden = dansGroupe === 0;
+        const compte = groupe.querySelector('[data-compte]');
+        if (compte) compte.textContent = String(dansGroupe);
+      }
+    };
+    [...liste.children].forEach((el) => {
+      if (el.hasAttribute('data-groupe')) { fermer(); groupe = el; dansGroupe = 0; return; }
+      if (!el.hasAttribute('data-texte')) return;
+      // Un produit d'une autre catégorie que celle choisie reste caché, quoi qu'on tape.
+      const garde = !el.hasAttribute('data-hors-cat') && mots.every((m) => el.dataset.texte.includes(m));
+      el.hidden = !garde;
+      if (garde) { trouves++; dansGroupe++; }
+    });
+    fermer();
+    const aucun = liste.querySelector('[data-aucun]');
+    if (aucun) aucun.hidden = trouves > 0;
+    const creer = liste.querySelector('[data-creer]');
+    if (creer) creer.href = (creer.dataset.creer || '/catalogue/nouveau?q=') + encodeURIComponent(champ.value.trim());
+    const copie = champ.dataset.copie && document.querySelector(champ.dataset.copie);
+    if (copie && trouves === 0) copie.value = champ.value.trim();
+    // Le texte tapé, repris dans « Ajouter « … » » (Ajouter, E7) ; rien de tapé : la proposition se cache.
+    const texte = champ.dataset.copieTexte && document.querySelector(champ.dataset.copieTexte);
+    if (texte) texte.textContent = champ.value.trim();
+    if (aucun && champ.value.trim() === '') aucun.hidden = true;
+  };
+  champ.addEventListener('input', appliquer);
+  // La liste est déjà filtrée : Entrée ne recharge pas la page.
+  if (champ.form) champ.form.addEventListener('submit', (e) => { e.preventDefault(); appliquer(); });
+}
+
+// 7a (2026-11-20) : au PC, le bandeau « Annuler » d'une ligne prend la place de la ligne du total, sous les lignes, le
+// temps de l'annuler ; centré sur la fenêtre, il couvrait le document à côté. Parti, le total revient (app.css, :has).
+function bandeauDansLeTotal() {
+  if (!window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches) return;
+  const total = document.querySelector('.bas > .totalbar');
+  const s = document.querySelector('.app > .snack[data-disparait]');
+  if (!total || !s) return;
+  s.classList.add('dans-total');
+  total.before(s);
+}
+
+function bandeaux() {
+  document.querySelectorAll('.snack').forEach((s) => {
+    // « Annuler » reste quelques secondes (CODING_RULES), les autres messages moins longtemps.
+    setTimeout(() => s.remove(), s.hasAttribute('data-disparait') ? 8000 : 4000);
+  });
+  bandeauDansLeTotal();
+  // Ligne ajoutée depuis le catalogue : sa quantité s'ouvre aussitôt. Après « load » : Chrome
+  // retire le focus en allant à l'ancre #l… de l'adresse (constaté le 2026-11-12).
+  const focus = document.querySelector('[data-focus-ligne]');
+  const champ = focus && document.querySelector('#l' + focus.dataset.focusLigne + ' input[name=quantite]');
+  if (champ) {
+    const ouvrir = () => setTimeout(() => { champ.scrollIntoView({ block: 'center' }); champ.focus(); }, 0);
+    if (document.readyState === 'complete') ouvrir(); else window.addEventListener('load', ouvrir, { once: true });
+  }
+}
+
+// Calques : fenêtres du bas (enregistrement, fiche produit). Ils montent à l'ouverture, redescendent à la
+// fermeture. Le retour du téléphone ferme le calque du dessus au lieu de quitter la page.
+const DUREE_ANIMATION = 330;
+const minuteries = new WeakMap();
+const apparaitre = (el) => {
+  clearTimeout(minuteries.get(el));
+  el.hidden = false;
+  void el.offsetWidth; // l'état de départ est posé avant la transition
+  el.classList.add('ouvert');
+};
+const disparaitre = (el) => {
+  el.classList.remove('ouvert');
+  clearTimeout(minuteries.get(el));
+  minuteries.set(el, setTimeout(() => { el.hidden = true; }, DUREE_ANIMATION));
+};
+
+// Une fenêtre fermée rend le focus au bouton qui l'a ouverte (clavier, lecteur d'écran). Safari dessine l'anneau de
+// focus sur tout focus posé par script, même après un toucher : un cadre orange restait autour du produit touché
+// (Xavier, 2026-11-24, reproduit sous WebKit). Après un toucher ou un clic, l'élément garde le focus sans l'anneau ;
+// la première touche du clavier le rend.
+let dernierGeste = 'clavier';
+document.addEventListener('pointerdown', () => { dernierGeste = 'pointeur'; }, true);
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  dernierGeste = 'clavier';
+  document.querySelectorAll('[data-sans-anneau]').forEach((el) => el.removeAttribute('data-sans-anneau'));
+}, true);
+function rendreFocus(el) {
+  if (!el || !el.isConnected) return;
+  if (dernierGeste === 'pointeur') {
+    el.setAttribute('data-sans-anneau', '');
+    el.addEventListener('blur', () => el.removeAttribute('data-sans-anneau'), { once: true });
+  }
+  el.focus({ preventScroll: true });
+}
+
+const calques = (() => {
+  const pile = [];
+  const ouvert = () => pile[pile.length - 1] || null;
+  const marquer = () => document.body.classList.toggle('calque-ouvert', pile.length > 0);
+  window.addEventListener('popstate', () => {
+    const haut = ouvert();
+    if (!haut) return;
+    if (haut.retenir && haut.retenir()) { history.pushState({ calque: true }, ''); return; }
+    pile.pop();
+    marquer();
+    haut.cacher();
+  });
+  return {
+    ouvert,
+    ouvrir(c) {
+      if (pile.includes(c)) return;
+      // Un message resté à l'écran recouvrirait la fenêtre qui monte.
+      document.querySelectorAll('.app > .snack').forEach((s) => s.remove());
+      pile.push(c);
+      marquer();
+      history.pushState({ calque: true }, '');
+      c.montrer();
+    },
+    // La fermeture passe par l'historique : popstate cache le calque, comme pour le bouton retour.
+    fermer(c) { if (ouvert() === c) history.back(); },
+  };
+})();
+
+// Étapes du traitement (envoi, transcription, création de l'offre, offre prête) : fait, en cours, en
+// échec ou à venir, selon le nombre d'étapes faites.
+function marquerEtapes(liste, faites, echec) {
+  [...liste.children].forEach((li, i) => {
+    li.className = i < faites ? 'done' : i === faites ? (echec ? 'bad' : 'cur') : 'todo';
+  });
+}
+
+// Dictées à l'abri (sous-chantier 27, Xavier, 2026-11-17) : chaque tranche d'une seconde est rangée dans le
+// navigateur pendant l'enregistrement, et la dictée y reste jusqu'à ce que son offre soit prête. Une coupure de
+// réseau, une fenêtre fermée ou un téléphone éteint ne la perdent plus. Chaque dictée porte le compte qui l'a
+// faite : un autre compte, sur le même appareil, ne la voit pas. Sans stockage (navigation privée, refus du
+// navigateur, stockage qui ne répond pas), rien ne casse et rien n'attend : l'enregistrement part comme avant.
+// États : « enregistrement » (en cours ou coupé), « a_envoyer » (terminé, pas arrivé), « envoye » (au serveur).
+// « fin » : l'heure de la dernière tranche (durée réelle) ; « vu » : le dernier signe de vie de l'onglet qui la tient.
+const abri = (() => {
+  let base = null;
+  const avecDelai = (p, ms) => Promise.race([p, new Promise((_, ko) => setTimeout(() => ko(new Error('délai dépassé')), ms))]);
+  const ouvrir = () => {
+    if (!base) {
+      base = avecDelai(new Promise((ok, ko) => {
+        if (!window.indexedDB) { ko(new Error('sans stockage')); return; }
+        const r = indexedDB.open('offregen-abri', 1);
+        r.onupgradeneeded = () => {
+          const db = r.result;
+          db.createObjectStore('dictees', { keyPath: 'id' }).createIndex('uuid', 'uuid');
+          db.createObjectStore('morceaux', { keyPath: ['id', 'n'] });
+        };
+        r.onsuccess = () => {
+          const db = r.result;
+          // Une version plus récente ouverte dans un autre onglet, ou une connexion perdue (Safari en arrière-plan) :
+          // la suivante rouvre la base.
+          db.onversionchange = () => { db.close(); base = null; };
+          db.onclose = () => { base = null; };
+          ok(db);
+        };
+        r.onerror = () => ko(r.error);
+        r.onblocked = () => ko(new Error('ouverture bloquée'));
+      }), 4000);
+      base.catch(() => { base = null; });
+    }
+    return base;
+  };
+  const resultat = (r) => new Promise((ok, ko) => { r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
+  const fin = (t) => new Promise((ok, ko) => { t.oncomplete = () => ok(); t.onerror = () => ko(t.error); t.onabort = () => ko(t.error); });
+  // Une panne du stockage ne remonte jamais : la dictée continue, seule la copie manque.
+  const sans = (p, defaut) => p.catch(() => defaut);
+  const tranches = (id) => IDBKeyRange.bound([id, 0], [id, Infinity]);
+
+  // seulementSi : les états d'où la modification est permise (une dictée arrivée ne redevient pas « à envoyer »).
+  const modifier = (id, champs, seulementSi) => sans(ouvrir().then((db) => {
+    const t = db.transaction('dictees', 'readwrite');
+    const s = t.objectStore('dictees');
+    const g = s.get(id);
+    g.onsuccess = () => { if (g.result && (!seulementSi || seulementSi.includes(g.result.etat))) s.put(Object.assign(g.result, champs)); };
+    return fin(t);
+  }), null);
+  const supprimer = (id) => sans(ouvrir().then((db) => {
+    const t = db.transaction(['dictees', 'morceaux'], 'readwrite');
+    t.objectStore('dictees').delete(id);
+    t.objectStore('morceaux').delete(tranches(id));
+    return fin(t);
+  }), null);
+
+  return {
+    // id : la clé de la dictée, aussi envoyée au serveur. Rend true si la copie est commencée.
+    commencer: (id, compte, type) => sans(ouvrir().then((db) => {
+      const t = db.transaction('dictees', 'readwrite');
+      const maintenant = Date.now();
+      t.objectStore('dictees').put({ id, compte, type, debut: maintenant, fin: maintenant, vu: maintenant, etat: 'enregistrement', nom: '', uuid: '', tranches: 0 });
+      return fin(t).then(() => true);
+    }), false),
+    ajouter: (id, n, blob) => sans(ouvrir().then((db) => {
+      const t = db.transaction(['dictees', 'morceaux'], 'readwrite');
+      t.objectStore('morceaux').put({ id, n, blob });
+      const s = t.objectStore('dictees');
+      const g = s.get(id);
+      g.onsuccess = () => {
+        if (!g.result) return;
+        g.result.tranches = Math.max(g.result.tranches, n + 1);
+        g.result.fin = Date.now();
+        g.result.vu = g.result.fin;
+        s.put(g.result);
+      };
+      return fin(t);
+    }), null),
+    modifier,
+    supprimer,
+    // Recette AB-1 (Xavier, 2026-11-24) : une dictée coupée repart à la suite. Les tranches de la suite prennent les
+    // numéros suivants ; « parties » note où chaque partie commence (deux enregistreurs ne se recollent pas en un seul
+    // fichier lisible) ; « avant » garde la durée des parties d'avant, « partie » l'heure où la dernière a commencé.
+    continuer: (d) => sans(ouvrir().then((db) => {
+      const t = db.transaction('dictees', 'readwrite');
+      const maintenant = Date.now();
+      t.objectStore('dictees').put(Object.assign({}, d, {
+        // Une suite coupée avant sa première tranche n'a rien ajouté : pas de nouvelle partie vide (revue du 2026-11-24).
+        etat: 'enregistrement', parties: (d.parties || [0]).includes(d.tranches) ? d.parties || [0] : (d.parties || [0]).concat(d.tranches),
+        avant: dureeMs(d), partie: maintenant, fin: maintenant, vu: maintenant, pause: 0,
+      }));
+      return fin(t).then(() => true);
+    }), false),
+    // Le verrou d'une dictée, tenu par l'onglet qui l'enregistre ou l'envoie. Le navigateur le lâche quand l'onglet
+    // meurt (Safari fermé de force) : à la réouverture, la dictée se propose tout de suite. Rend de quoi le lâcher.
+    tenir: (id) => {
+      if (!navigator.locks) return () => {};
+      let lacher = () => {};
+      const tenu = new Promise((ok) => { lacher = ok; });
+      navigator.locks.request(VERROU + id, () => tenu).catch(() => {});
+      return lacher;
+    },
+    // (id) => vrai si un onglet vivant tient la dictée ; null quand le navigateur n'a pas de verrous (Safari avant 15.4).
+    tenues: () => (navigator.locks
+      ? navigator.locks.query().then((q) => { const noms = new Set((q.held || []).map((l) => l.name)); return (id) => noms.has(VERROU + id); }).catch(() => null)
+      : Promise.resolve(null)),
+    // L'offre de cet enregistrement est prête : la copie du téléphone n'a plus de raison d'être.
+    oublier: (uuid) => sans(ouvrir()
+      .then((db) => resultat(db.transaction('dictees').objectStore('dictees').index('uuid').getAll(uuid)))
+      .then((liste) => Promise.all(liste.map((d) => supprimer(d.id)))), null),
+    lister: (compte) => sans(ouvrir()
+      .then((db) => resultat(db.transaction('dictees').objectStore('dictees').getAll()))
+      .then((liste) => liste.filter((d) => d.compte === compte)), []),
+    // Tranches sans dictée (écrites après une suppression) : effacées.
+    menage: () => sans(ouvrir().then((db) => {
+      const t = db.transaction(['dictees', 'morceaux'], 'readwrite');
+      const ids = t.objectStore('dictees').getAllKeys();
+      const cles = t.objectStore('morceaux').getAllKeys();
+      cles.onsuccess = () => {
+        const vivantes = new Set(ids.result);
+        cles.result.forEach((k) => { if (!vivantes.has(k[0])) t.objectStore('morceaux').delete(k); });
+      };
+      return fin(t);
+    }), null),
+    // Les fichiers de la dictée, un par partie, tranches dans l'ordre. Rejette si le stockage ne répond pas.
+    fichiers: (d) => avecDelai(ouvrir()
+      .then((db) => resultat(db.transaction('morceaux').objectStore('morceaux').getAll(tranches(d.id))))
+      .then((liste) => {
+        liste.sort((a, b) => a.n - b.n);
+        const debuts = d.parties || [0];
+        const nom = d.nom || nomDictee(d.type, new Date(d.debut));
+        const fichiers = debuts.map((de, i) => liste.filter((m) => m.n >= de && (i + 1 === debuts.length || m.n < debuts[i + 1])))
+          .filter((morceaux) => morceaux.length > 0)
+          .map((morceaux, i) => new File(morceaux.map((m) => m.blob), i === 0 ? nom : nomPartie(nom, i + 1), { type: d.type }));
+        if (fichiers.length === 0) throw new Error('aucune tranche');
+        return fichiers;
+      }), 8000),
+  };
+})();
+const VERROU = 'offregen-abri-';
+
+// La durée dictée : les parties d'avant, plus la dernière jusqu'à sa dernière tranche, sans ses pauses.
+function dureeMs(d) {
+  return (d.avant || 0) + (d.fin || d.debut) - (d.partie || d.debut) - (d.pause || 0);
+}
+
+function nomDictee(type, d) {
+  const extension = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
+  const p = (n) => String(n).padStart(2, '0');
+  return 'enregistrement-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' + p(d.getHours()) + 'h' + p(d.getMinutes()) + '.' + extension;
+}
+
+// enregistrement-2026-11-24-10h05.m4a, partie 2 : enregistrement-2026-11-24-10h05-partie-2.m4a
+function nomPartie(nom, n) {
+  return nom.replace(/(\.[a-z0-9]+)?$/, '-partie-' + n + '$1');
+}
+
+// Demande l'état chaque seconde et fait avancer les étapes ; appelle fini(etat) quand l'offre est prête, rate() quand
+// la préparation a échoué. Rend une fonction qui arrête le suivi. L'état dit où aller (suite) ; une page gardée par un
+// serveur plus ancien ne le dit pas : l'offre elle-même.
+function suivreEtapes(liste, uuid, fini, rate = () => {}) {
+  // Sans liste : une préparation mise en arrière-plan, que plus aucun écran ne montre.
+  const message = liste ? liste.parentElement.querySelector('[data-etapes-message]') : null;
+  const panne = liste ? liste.parentElement.querySelector('[data-etapes-panne]') : null;
+  const dire = (t) => { if (message) message.textContent = t; };
+  let arret = false;
+  const tour = () => fetch('/enregistrements/' + uuid + '/etat', { credentials: 'same-origin', cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+    .then((e) => {
+      if (arret) return;
+      if (liste) marquerEtapes(liste, e.faites, e.echec);
+      if (panne) panne.hidden = !e.interrompu;
+      dire(e.echec ? 'La préparation a échoué après plusieurs essais.' : e.essais > 0 ? 'Un souci passager, nouvel essai en cours…' : '');
+      if (e.offre) { arret = true; abri.oublier(uuid); fini(e.suite ? e : Object.assign({}, e, { suite: '/offres/' + e.offre, a_relire: 0 })); }
+      if (e.echec) { arret = true; rate(); }
+    })
+    .catch(() => dire('Connexion perdue, nouvel essai…'))
+    .finally(() => { if (!arret) setTimeout(tour, 1000); });
+  tour();
+  return () => { arret = true; };
+}
+
+// Page de préparation : les étapes avancent seules, et l'offre s'ouvre quand elle est prête.
+function preparation() {
+  const liste = document.querySelector('main [data-etapes][data-uuid]');
+  if (!liste) return;
+  // 300 ms : l'étape cochée se voit, puis l'offre s'ouvre (Xavier, 2026-11-25 ; 900 ms depuis le 2026-11-12).
+  // Des lignes à relire : la page, rechargée, le dit et propose la relecture ; sinon le PDF, ou le choix du client.
+  suivreEtapes(liste, liste.dataset.uuid, (e) => setTimeout(() => { if (e.a_relire > 0) window.location.reload(); else window.location.replace(e.suite); }, 300));
+}
+
+// Nouvelle offre : parler ou importer. Sur l'accueil, deux boutons ronds au centre ; l'enregistrement
+// et l'envoi montent dans une fenêtre du bas. Sur /import, tout est dans la page.
+// Le micro n'est permis que sur https ou sur localhost. Les deux chemins partent par POST /import.
+function nouvelleOffre() {
+  const zone = document.querySelector('[data-nouvelle]');
+  if (!zone) return;
+  const el = (s) => zone.querySelector(s);
+  const form = el('#import');
+  const entree = el('[data-envoi-fichier]');
+  const feuille = el('[data-feuille]');
+  const fermerX = el('[data-fermer]');
+  // Le micro est au centre de la barre (décision D1, 2026-11-15) et l'import aussi dans « Plus » : hors de la zone.
+  const importers = [...document.querySelectorAll('[data-importer]')];
+  const micros = [...document.querySelectorAll('[data-enregistrer]')];
+  const avis = el('[data-sans-micro]');
+  const possible = window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder;
+  // Page /import : le bouton Parler n'apparaît que si le micro est possible. Le micro de la barre reste : sans
+  // micro, il ouvre la feuille qui propose l'import.
+  micros.forEach((m) => { if (!m.classList.contains('micro-central')) m.hidden = !possible; });
+  if (!feuille) avis.hidden = !!possible;
+  // Compte d'essai au bout de ses offres (Xavier, 2026-11-17) : prévenir avant de parler, une dictée refusée à l'envoi
+  // serait perdue. Ni micro ni import ; le serveur refuse de toute façon (429).
+  const epuise = zone.dataset.epuise || '';
+  if (epuise && !feuille) {
+    avis.textContent = epuise;
+    avis.hidden = false;
+    zone.querySelectorAll('.choix2').forEach((c) => { c.hidden = true; });
+  }
+  const bloquer = (e) => {
+    if (!epuise) return false;
+    if (e) e.preventDefault();
+    avis.textContent = epuise;
+    zone.querySelectorAll('[data-etat="refus"] [data-importer]').forEach((b) => { b.hidden = true; });
+    if (feuille) montrer('refus'); else avis.hidden = false;
+    return true;
+  };
+
+  let etatCourant = 'choix';
+  let occupe = false;
+  let arreterSuivi = () => {};
+  let enSuivi = false; // l'audio est au serveur, l'offre se prépare
+  let uuidSuivi = null; // l'enregistrement dont la fenêtre montre la préparation, tant qu'elle n'est ni prête ni en échec
+  let duMicro = false; // le fichier en cours vient du micro : le fermer sans l'envoyer pourrait le perdre
+  let copieAbri = false; // le fichier en cours est aussi gardé dans le navigateur
+  const perteAcceptee = () => !duMicro || window.confirm(copieAbri
+    ? 'Fermer sans envoyer ? La dictée reste sur ce téléphone et sera proposée à la prochaine ouverture.'
+    : 'Fermer sans envoyer ? L’enregistrement est perdu s’il n’est pas gardé dans un fichier.');
+  window.addEventListener('beforeunload', (e) => { if (occupe) e.preventDefault(); });
+  // Retour sur une page gardée en mémoire par le navigateur : la liste a changé depuis.
+  window.addEventListener('pageshow', (e) => { if (e.persisted) window.location.reload(); });
+
+  // Une dictée proposée puis écartée (croix, geste retour) ne revient pas avant la prochaine ouverture de l'onglet.
+  let repriseCourante = null;
+  const plusTard = (d) => { try { if (d) sessionStorage.setItem('offregen-plus-tard-' + d.id, '1'); } catch (e) { /* sans stockage de session : elle reviendra */ } };
+  const remiseAPlusTard = (d) => { try { return sessionStorage.getItem('offregen-plus-tard-' + d.id) !== null; } catch (e) { return false; } };
+
+  const fenetre = feuille && {
+    montrer: () => apparaitre(feuille),
+    cacher: () => {
+      if (etatCourant === 'reprise') plusTard(repriseCourante);
+      disparaitre(feuille);
+      etatCourant = 'choix';
+      occupe = false;
+      arreterSuivi();
+      attente.arreter();
+      lacher();
+      // Fermée pendant la préparation ou sur « Offre prête » : la liste des offres se met à jour sans recharger la page.
+      if (enSuivi) rafraichirListe();
+      // Fermée pendant la préparation (« Mettre en arrière-plan », retour du téléphone) : le suivi continue sans l'écran.
+      if (uuidSuivi) suivreEnFond(uuidSuivi);
+      uuidSuivi = null;
+      enSuivi = false;
+    },
+    // Pendant l'enregistrement et l'envoi, le retour ne ferme rien ; après un échec, il demande.
+    retenir: () => {
+      // Le micro s'ouvre encore : le retour annule, rien n'est enregistré.
+      if (annulerOuverture()) return false;
+      // Après l'envoi, le traitement continue au serveur : la fenêtre peut se fermer.
+      if (['choix', 'suivi', 'prete', 'court', 'long', 'refus', 'reprise'].includes(etatCourant)) return false;
+      if (etatCourant === 'echec') return !perteAcceptee();
+      return true;
+    },
+  };
+
+  const rafraichirListe = () => {
+    if (!window.fluide || !document.getElementById('preparation')) return;
+    window.fluide.rafraichir(['preparation', 'liste-offres']).then(() => {
+      // La liste revenue entière : le texte tapé dans la recherche la filtre de nouveau.
+      const champ = document.querySelector('input[data-filtre="#liste-offres"]');
+      if (champ) champ.dispatchEvent(new Event('input'));
+    });
+  };
+  // Préparation en arrière-plan (Xavier, 2026-11-26) : tant que la page vit, l'état est encore demandé chaque seconde
+  // (le serveur sait ainsi que l'artisan est là et n'envoie pas de courriel) ; l'offre prête, ou l'échec, s'annonce par
+  // un bandeau, et la liste des offres se met à jour. Une demi-heure au plus.
+  const suivreEnFond = (uuid) => {
+    const annoncer = (texte, lien) => {
+      if (!window.fluide) return;
+      const bandeau = document.createElement('div');
+      bandeau.className = 'snack' + (lien ? '' : ' bad');
+      bandeau.setAttribute('role', lien ? 'status' : 'alert');
+      const libelle = document.createElement('span');
+      libelle.textContent = texte;
+      bandeau.append(libelle);
+      if (lien) {
+        const a = document.createElement('a');
+        a.href = lien.href;
+        a.textContent = lien.texte;
+        bandeau.append(a);
+      }
+      window.fluide.messages.poser(bandeau, lien ? 60000 : 12000);
+    };
+    const arreter = suivreEtapes(null, uuid, (e) => {
+      rafraichirListe();
+      const aRelire = e.a_relire > 0 ? ', ' + e.a_relire + (e.a_relire > 1 ? ' lignes' : ' ligne') + ' à relire' : '';
+      annoncer('Offre prête' + aRelire, { href: e.suite, texte: e.a_relire > 0 ? 'Relire' : 'Ouvrir' });
+    }, () => {
+      rafraichirListe();
+      annoncer('La préparation de la dictée a échoué. Elle est dans « Offres », où vous pouvez la relancer.', null);
+    });
+    setTimeout(arreter, 30 * 60000);
+  };
+
+  const montrer = (etat) => {
+    // Continuer ou envoyer la dictée proposée n'est pas l'écarter : coupée de nouveau, elle doit revenir à l'ouverture.
+    // Le micro refusé non plus (revue du 2026-11-24) : l'artisan n'a rien écarté.
+    if (etatCourant === 'reprise' && !['reprise', 'enregistrement', 'envoi', 'refus'].includes(etat)) plusTard(repriseCourante);
+    etatCourant = etat;
+    zone.querySelectorAll('[data-etat]').forEach((s) => { s.hidden = s.dataset.etat !== etat; });
+    if (fermerX) fermerX.hidden = !['echec', 'court', 'long', 'refus', 'reprise', 'prete'].includes(etat);
+    if (etat !== 'envoi') attente.arreter();
+    if (!fenetre) return;
+    // L'enregistrement et l'attente : plein écran sombre (piste B de la maquette, Xavier, 2026-11-26).
+    feuille.classList.toggle('sombre', etat === 'enregistrement' || etat === 'envoi');
+    feuille.classList.toggle('plein', etat === 'prete');
+    if (etat === 'choix') { lacher(); calques.fermer(fenetre); return; }
+    if (calques.ouvert() !== fenetre) calques.ouvrir(fenetre);
+  };
+
+  // Importer : avec JavaScript, le choix du fichier s'ouvre sur place ; sans, le lien mène à /import.
+  importers.forEach((i) => i.addEventListener('click', (e) => { if (bloquer(e)) return; e.preventDefault(); entree.click(); }));
+  // Onde au toucher des boutons ronds.
+  zone.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('.pastille');
+    if (!b) return;
+    b.classList.remove('touche');
+    void b.offsetWidth;
+    b.classList.add('touche');
+  });
+  zone.addEventListener('animationend', (e) => { if (e.animationName === 'onde') e.target.classList.remove('touche'); });
+  if (fermerX) fermerX.addEventListener('click', () => {
+    // Pendant la préparation, l'audio est au serveur ; prête, l'offre est dans la liste : fermer ne perd rien.
+    if (['reprise', 'suivi', 'prete'].includes(etatCourant)) { montrer('choix'); return; }
+    if (perteAcceptee()) montrer('choix');
+  });
+
+  // Quitter pour la page de préparation. Une entrée d'historique ajoutée par un calque est remplacée :
+  // le retour ramène à la liste, pas à une fenêtre fermée.
+  const partir = (url) => {
+    occupe = false;
+    if (calques.ouvert()) window.location.replace(url); else window.location.assign(url);
+  };
+
+  // Les fichiers à envoyer : un seul, sauf pour une dictée continuée (le début, puis chaque suite).
+  let fichiers = [];
+  // La clé de la dictée du fichier en cours : envoyée au serveur, qui reconnaît un second envoi de la même dictée
+  // (réponse du premier perdue en route), et nom de sa copie à l'abri. null pour un fichier importé.
+  let cleCourante = null;
+  // Le verrou de la dictée que cet onglet a en main (abri.tenir) : un autre onglet ne la propose pas.
+  let lacherVerrou = () => {};
+  const tenir = (cle) => { lacherVerrou(); lacherVerrou = cle ? abri.tenir(cle) : () => {}; };
+  const lacher = () => { lacherVerrou(); lacherVerrou = () => {}; };
+  const echec = (texte) => { el('[data-echec-texte]').textContent = texte; montrer('echec'); };
+  const liste = el('[data-etapes]');
+  // L'anneau de l'attente (maquette v2 du parcours de la dictée, Xavier, 2026-11-26). L'envoi réel en remplit le premier
+  // huitième ; ensuite le temps écoulé sur le temps attendu, jusqu'à 95 % : l'offre prête le ferme. Temps attendu : 10 s
+  // plus 3 % de la durée dictée (11 dictées du site de test le 2026-11-26 : de 4 à 25 s, médiane 8 s). Dépassé, l'anneau
+  // ne promet plus de durée.
+  const attente = (() => {
+    const anneau = el('[data-anneau]');
+    const part = el('[data-anneau-part]');
+    const reste = el('[data-anneau-reste]');
+    const quitter = el('[data-attente-quitter]');
+    const phraseQuitter = quitter.textContent;
+    const arriere = el('[data-arriere-plan]');
+    const libelleArriere = arriere.textContent;
+    const NB = String.fromCharCode(0xA0);
+    const PART_ENVOI = 0.125;
+    const PLAFOND = 0.95;
+    let minuterie = null;
+    const poser = (p, texte) => {
+      anneau.style.setProperty('--p', p.toFixed(3));
+      anneau.setAttribute('aria-valuenow', String(Math.round(p * 100)));
+      anneau.classList.remove('rate');
+      part.textContent = Math.round(p * 100) + NB + '%';
+      reste.textContent = texte;
+    };
+    const arreter = () => { clearInterval(minuterie); minuterie = null; };
+    return {
+      arreter,
+      // part : de 0 à 1, ce qui est parti du fichier.
+      envoi(partEnvoyee) { arreter(); quitter.hidden = true; quitter.textContent = phraseQuitter; arriere.hidden = true; arriere.textContent = libelleArriere; poser(PART_ENVOI * partEnvoyee, 'envoi'); },
+      preparer(dureeAudio) {
+        arreter();
+        quitter.hidden = false;
+        // « Mettre en arrière-plan » : dans la fenêtre seulement (la page Import n'en a pas).
+        arriere.hidden = !feuille;
+        const attendu = 10000 + 0.03 * Math.max(0, dureeAudio || 0);
+        const depart = performance.now();
+        const tour = () => {
+          const q = (performance.now() - depart) / attendu;
+          const secondes = Math.max(5, Math.round((attendu * (1 - q)) / 5000) * 5);
+          poser(PART_ENVOI + (PLAFOND - PART_ENVOI) * Math.min(1, q), q < 1 ? 'environ ' + secondes + NB + 's' : 'encore un instant');
+        };
+        tour();
+        minuterie = setInterval(tour, 250);
+      },
+      finir() { arreter(); poser(1, ''); },
+      // La préparation a échoué : plus de promesse ; l'écran dit où est la dictée, avec son « Réessayer ».
+      rater() { arreter(); quitter.textContent = quitter.dataset.echec; quitter.hidden = false; arriere.textContent = arriere.dataset.echec; arriere.hidden = !feuille; anneau.classList.add('rate'); part.textContent = 'Échec'; reste.textContent = ''; },
+    };
+  })();
+  // Une partie par fichier ; plusieurs téléchargements de suite, espacés, que le navigateur accepte mieux.
+  const telecharger = (liste) => liste.forEach((f, i) => setTimeout(() => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(f);
+    a.download = f.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  }, i * 400));
+  const garder = el('[data-garder]');
+  const lienGarder = (liste) => {
+    if (garder.href.startsWith('blob:')) URL.revokeObjectURL(garder.href);
+    if (liste.length === 1) {
+      garder.href = URL.createObjectURL(liste[0]);
+      garder.download = liste[0].name;
+    } else {
+      garder.href = '#';
+      garder.removeAttribute('download');
+    }
+    garder.hidden = false;
+  };
+  garder.addEventListener('click', (e) => { if (fichiers.length > 1) { e.preventDefault(); telecharger(fichiers); } });
+  // Chronomètre des dictées (sous-chantier 31) : la durée de la dictée vue par le téléphone ; 0 si elle est inconnue.
+  let dureeAudioMs = 0;
+  // Après l'envoi, la durée de l'envoi du fichier part par un petit message (D6 de Xavier, 2026-11-24). Seule la durée
+  // compte : le serveur n'utilise jamais l'horloge du téléphone.
+  const signalerEnvoi = (uuid, ms) => {
+    const f = new FormData();
+    f.append('_csrf', form.querySelector('input[name=_csrf]').value);
+    f.append('envoi_ms', String(ms));
+    const adresse = '/enregistrements/' + uuid + '/envoi';
+    if (navigator.sendBeacon && navigator.sendBeacon(adresse, f)) return;
+    fetch(adresse, { method: 'POST', body: f, credentials: 'same-origin', keepalive: true }).catch(() => {});
+  };
+  const envoyer = () => {
+    if (!fichiers.length) return;
+    montrer('envoi');
+    occupe = true;
+    marquerEtapes(liste, 0, false);
+    const progression = el('[data-progression]');
+    const partEnvoi = el('[data-progression-part]');
+    progression.value = 0;
+    progression.hidden = false;
+    partEnvoi.textContent = '0' + String.fromCharCode(0xA0) + '%';
+    attente.envoi(0);
+    const cle = cleCourante;
+    const donnees = new FormData();
+    donnees.append('_csrf', form.querySelector('input[name=_csrf]').value);
+    // Une dictée continuée part sous une clé qui compte ses parties : si son début était arrivé sans que le téléphone
+    // le sache, la clé seule renverrait à l'enregistrement du début, et la suite serait perdue.
+    if (cle) donnees.append('cle', fichiers.length > 1 ? cle + 'p' + fichiers.length : cle);
+    donnees.append('audio', fichiers[0], fichiers[0].name);
+    fichiers.slice(1).forEach((f) => donnees.append('suite[]', f, f.name));
+    donnees.append('origine', duMicro ? 'micro' : 'fichier');
+    if (dureeAudioMs > 0) donnees.append('duree_ms', String(Math.round(dureeAudioMs)));
+    const xhr = new XMLHttpRequest();
+    let signe = 0;
+    let debutEnvoi = 0;
+    let finEnvoi = 0;
+    xhr.open('POST', '/import');
+    xhr.upload.addEventListener('loadstart', () => { debutEnvoi = performance.now(); });
+    xhr.upload.addEventListener('load', () => { finEnvoi = performance.now(); });
+    xhr.upload.addEventListener('progress', (e) => {
+      // Signe de vie : un autre onglet ne propose pas une dictée en cours d'envoi.
+      if (cle && Date.now() - signe > 5000) { signe = Date.now(); abri.modifier(cle, { vu: signe }); }
+      if (!e.lengthComputable) return;
+      progression.value = Math.round((e.loaded / e.total) * 100);
+      partEnvoi.textContent = progression.value + String.fromCharCode(0xA0) + '%';
+      attente.envoi(e.loaded / e.total);
+    });
+    // Le verrou ne couvre que l'envoi lui-même (revue du 2026-11-24) : un onglet resté sur un échec, puis suspendu par
+    // le téléphone, ne doit pas cacher la dictée aux autres onglets.
+    tenir(cle);
+    xhr.addEventListener('loadend', lacher);
+    xhr.addEventListener('load', () => {
+      // Le serveur répond par une redirection vers la page de préparation, que XHR suit. L'envoi est
+      // fait : l'audio est au serveur, la fenêtre peut se fermer. Les étapes suivantes avancent ici.
+      if (xhr.status === 200 && xhr.responseURL.includes('/enregistrements/')) {
+        occupe = false;
+        etatCourant = 'suivi';
+        enSuivi = true;
+        progression.hidden = true;
+        partEnvoi.textContent = '';
+        marquerEtapes(liste, 1, false);
+        // La préparation continue au serveur : « Mettre en arrière-plan » ferme sans rien perdre.
+        attente.preparer(dureeAudioMs);
+        const uuid = xhr.responseURL.split('/enregistrements/')[1].split(/[/?#]/)[0];
+        // Arrivée au serveur : la copie reste jusqu'à l'offre prête (suivreEtapes, ou au prochain lancement).
+        if (cle) abri.modifier(cle, { etat: 'envoye', uuid, vu: Date.now() });
+        if (debutEnvoi > 0 && finEnvoi > debutEnvoi) signalerEnvoi(uuid, Math.max(1, Math.round(finEnvoi - debutEnvoi)));
+        uuidSuivi = uuid;
+        arreterSuivi = suivreEtapes(liste, uuid, (e) => {
+          uuidSuivi = null;
+          attente.finir();
+          // Offre propre : son PDF, ou le choix de son client, s'ouvre. Des lignes à relire : l'écran « Offre prête ».
+          setTimeout(() => { if (etatCourant !== 'suivi') return; if (e.a_relire > 0) offrePrete(e); else partir(e.suite); }, 300);
+        }, () => { uuidSuivi = null; attente.rater(); });
+        return;
+      }
+      const page = new DOMParser().parseFromString(xhr.responseText || '', 'text/html');
+      const message = page.querySelector('.alerte') || page.querySelector('h1');
+      echec((message ? message.textContent.trim() : 'Le serveur a refusé l’envoi') + ' (code ' + xhr.status + ').');
+    });
+    xhr.addEventListener('error', () => echec('Pas de connexion au serveur. Vérifiez le réseau, puis réessayez.'));
+    xhr.send(donnees);
+  };
+  el('[data-reessayer]').addEventListener('click', envoyer);
+  el('[data-arriere-plan]').addEventListener('click', () => montrer('choix'));
+
+  // « Offre prête » (maquette v2, Xavier, 2026-11-26) : le nombre de lignes et celles à relire, jamais le prix.
+  const offrePrete = (e) => {
+    el('[data-prete-client]').textContent = e.client || '';
+    el('[data-prete-objet]').textContent = e.titre || '';
+    el('[data-prete-lignes]').textContent = String(e.lignes);
+    el('[data-prete-lignes-mot]').textContent = e.lignes > 1 ? 'lignes' : 'ligne';
+    el('[data-prete-relire]').textContent = String(e.a_relire);
+    const suite = el('[data-prete-suite]');
+    suite.textContent = e.a_relire > 1 ? 'Relire les ' + e.a_relire + ' lignes' : 'Relire la ligne';
+    suite.setAttribute('href', e.suite);
+    el('[data-prete-offre]').setAttribute('href', '/offres/' + e.offre);
+    montrer('prete');
+    // Le titre prend le focus : un lecteur d'écran l'annonce, le clavier repart de là.
+    el('[data-prete-titre]').focus({ preventScroll: true });
+  };
+  // La fenêtre a ajouté une entrée à l'historique : partir() la remplace, le retour ramène à la liste.
+  zone.querySelectorAll('[data-prete-suite], [data-prete-offre]').forEach((lien) => lien.addEventListener('click', (e) => {
+    e.preventDefault();
+    partir(lien.getAttribute('href'));
+  }));
+
+  // Importer : le fichier choisi part aussitôt, avec la progression.
+  // La durée d'un fichier, lue par le navigateur avant l'envoi (Xavier, 2026-11-24 : un fichier trop long « doit être
+  // bloqué avant »). Le serveur du site ne peut pas lancer ffprobe : sans ce contrôle, le fichier partait et n'était
+  // refusé qu'au traitement. null quand le navigateur ne sait pas lire le format : le serveur tranchera.
+  const dureeDuFichier = (f) => new Promise((resolve) => {
+    const lecteur = document.createElement('audio');
+    const url = URL.createObjectURL(f);
+    const fin = (s) => { URL.revokeObjectURL(url); resolve(s); };
+    lecteur.preload = 'metadata';
+    lecteur.addEventListener('loadedmetadata', () => fin(Number.isFinite(lecteur.duration) ? lecteur.duration : null), { once: true });
+    lecteur.addEventListener('error', () => fin(null), { once: true });
+    setTimeout(() => fin(null), 4000);
+    lecteur.src = url;
+  });
+  entree.addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (bloquer()) { entree.value = ''; return; }
+    // La tolérance du serveur (DureeAudio::TOLERANCE_SECONDES) : un fichier à la limite passe des deux côtés.
+    const secondes = await dureeDuFichier(f);
+    if (secondes !== null && secondes > DUREE_MAX_S + 5) {
+      entree.value = '';
+      montrer('long');
+      return;
+    }
+    fichiers = [f];
+    dureeAudioMs = secondes ? Math.round(secondes * 1000) : 0;
+    duMicro = false;
+    copieAbri = false;
+    cleCourante = null;
+    lacher();
+    el('[data-garder]').hidden = true;
+    envoyer();
+  });
+  el('[data-autre-fichier]').addEventListener('click', () => { montrer('choix'); entree.click(); });
+
+  // Parler.
+  let flux = null;
+  let enregistreur = null; // porte .cle, .copie (promesse : copie commencée) et .arret (« terminer », « abandon »)
+  let morceaux = [];
+  const compte = document.body.dataset.compte || '';
+  let minuteur = null;
+  let veille = null;
+  let debut = 0;
+  let finMs = 0; // heure où l'enregistreur s'est arrêté
+  // Pause (Xavier, 2026-11-26) : l'enregistreur s'arrête, le micro reste ouvert. « debut » avance de la durée de chaque
+  // pause : le minuteur, le minimum de 5 secondes, la limite des 30 minutes et la durée envoyée comptent la dictée seule.
+  let enPause = false;
+  let pauseDepuis = 0;
+  let pauseCumul = 0; // pauses de la partie en cours, gardées avec la copie (abri, champ « pause »)
+  // Règle de Xavier (2026-11-12) : moins de 5 secondes, l'enregistrement n'est pas envoyé.
+  const DUREE_MIN_MS = 5000;
+  // Règle de Xavier (2026-11-17) : 30 minutes au plus. Prévenu 5 minutes avant, l'enregistrement s'arrête et part seul.
+  const DUREE_MAX_S = Number(zone.dataset.dureeMax) || 1800;
+  const PREAVIS_S = Math.min(300, Math.floor(DUREE_MAX_S / 6));
+  const libererMicro = () => {
+    clearInterval(minuteur);
+    ecoute.arreter();
+    if (flux) flux.getTracks().forEach((t) => t.stop());
+    flux = null;
+    if (veille) veille.release().catch(() => {});
+    veille = null;
+  };
+  const TYPES = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/webm'];
+  const refus = (texte) => {
+    if (texte) avis.textContent = texte;
+    if (feuille) montrer('refus'); else avis.hidden = false;
+  };
+  const nouvelleCle = () => Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+
+  // « Terminer » : la dictée part depuis la mémoire, sans attendre le stockage du navigateur. Une suite part avec les
+  // parties d'avant, relues à l'abri avant de rouvrir le micro (rec.suite.fichiers).
+  const finir = (rec) => {
+    if (!rec.suite && (finMs || Date.now()) - debut < DUREE_MIN_MS) {
+      occupe = false;
+      duMicro = false;
+      rec.copie.then((ok) => ok && abri.supprimer(rec.cle));
+      montrer('court');
+      return;
+    }
+    const type = rec.mimeType || 'audio/webm';
+    const avant = rec.suite ? rec.suite.fichiers : [];
+    const nom = avant.length ? avant[0].name : nomDictee(type, new Date(debut));
+    // Une suite arrêtée avant sa première tranche n'ajoute rien : le début part seul.
+    fichiers = avant.concat(rec.suite && morceaux.length === 0 ? [] : [new File(morceaux, avant.length ? nomPartie(nom, avant.length + 1) : nom, { type })]);
+    cleCourante = rec.cle;
+    lienGarder(fichiers);
+    rec.copie.then((ok) => ok && abri.modifier(rec.cle, { etat: 'a_envoyer', nom }, ['enregistrement']));
+    dureeAudioMs = (finMs || Date.now()) - debut;
+    envoyer();
+  };
+
+  // L'état de la permission juste avant la demande : « prompt » veut dire que Safari va poser la question.
+  // null quand le navigateur ne le dit pas (Safari avant 16).
+  const etatMicro = () => {
+    if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve(null);
+    return navigator.permissions.query({ name: 'microphone' }).then((p) => p.state, () => null);
+  };
+  // iPhone et iPad (un iPad se dit Mac, mais tactile) ; Chrome et Firefox sur iOS n'ont pas les réglages de Safari.
+  const SAFARI_IOS = (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+    && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+  // -2 : le premier texte (« aA ») était faux sur Safari 26 ; qui l'a vu revoit le bon une fois.
+  const ASTUCE_MICRO = 'offregen-astuce-micro-2';
+  // Une fois par appareil, et seulement si Safari vient de demander : réglé sur « Autoriser », il ne demande plus et la ligne ne vient pas.
+  const astuceMicro = (avant) => {
+    const ligne = el('[data-astuce-micro]');
+    if (!ligne) return;
+    ligne.hidden = true;
+    if (!SAFARI_IOS || avant === 'granted' || etatCourant !== 'enregistrement') return;
+    try {
+      if (window.localStorage.getItem(ASTUCE_MICRO)) return;
+      window.localStorage.setItem(ASTUCE_MICRO, '1');
+    } catch (err) { return; /* stockage refusé : la ligne reviendrait à chaque dictée */ }
+    const ecran = navigator.standalone === true; // propre à iOS : l'icône de l'écran d'accueil
+    // Safari 26 a remplacé le bouton « aA » ; « Version/ » donne la version de Safari (celle d'iOS est figée dans l'agent).
+    const version = Number((/Version\/(\d+)/.exec(navigator.userAgent) || [])[1] || 0);
+    if (ecran) ligne.textContent = ligne.dataset.ecran;
+    else if (version && version < 26) ligne.textContent = ligne.dataset.ancien;
+    ligne.hidden = false;
+  };
+
+  // Le toucher du micro répond tout de suite (Xavier, 2026-11-25) : la fenêtre monte pendant que le navigateur ouvre le
+  // micro. Avant, rien ne bougeait jusqu'à son ouverture, puis la fenêtre montait (330 ms de plus). L'écran dit que le
+  // micro s'ouvre et ne montre ni « Parlez » ni « Terminer » : rien n'est enregistré avant que le micro réponde.
+  // ouverture : le rang de la demande de micro en cours, 0 sans demande. Une demande annulée (lien du bas, retour du
+  // téléphone) laisse le micro s'ouvrir dans le vide : demarrer le referme à son arrivée.
+  let demandes = 0;
+  let ouverture = 0;
+  const blocMicro = el('[data-etat="enregistrement"]');
+  const etatMicroEcran = el('[data-etat-micro]');
+  const affichage = el('[data-minuteur]');
+  const abandon = el('[data-abandonner]');
+  const deux = (n) => String(n).padStart(2, '0');
+  const horloge = (s) => {
+    const h = Math.floor(s / 3600);
+    return (h ? h + ':' : '') + deux(Math.floor(s / 60) % 60) + ':' + deux(s % 60);
+  };
+  const abandonTexte = abandon.querySelector('b');
+  const boutonPause = el('[data-pause]');
+  const pauseTexte = boutonPause.querySelector('b');
+
+  // La carte sous l'onde : un conseil qui tourne. Passent devant lui, dans l'ordre : l'arrêt inattendu, le préavis de
+  // fin, puis l'alerte de silence (Xavier, 2026-11-26 : « Alerte après 5 s de silence : Oui »).
+  const consigne = el('[data-consigne]');
+  const titreCarte = el('[data-conseil-titre]');
+  const annonce = el('[data-annonce]');
+  const CONSEILS = JSON.parse(consigne.dataset.conseils || '[]');
+  const CONSEIL_S = 8;
+  const carte = { arret: false, preavis: '', silence: false, secondes: 0 };
+  const afficherCarte = () => {
+    const urgent = carte.arret ? ['Enregistrement arrêté', 'L’enregistrement s’est arrêté (appel ou autre application). « Terminer » envoie ce qui est enregistré.']
+      : carte.preavis ? ['Limite de durée', carte.preavis]
+        : carte.silence && !enPause ? [titreCarte.dataset.silence, consigne.dataset.silence] : null;
+    const n = CONSEILS.length ? Math.floor(carte.secondes / CONSEIL_S) % CONSEILS.length : 0;
+    const [titre, texte] = urgent || ['Conseil ' + (n + 1) + ' sur ' + CONSEILS.length, CONSEILS[n] || ''];
+    blocMicro.classList.toggle('urgent', !!urgent);
+    // Un lecteur d'écran annonce une alerte, pas chaque conseil qui tourne : la zone d'annonce ne reçoit qu'elle.
+    const dit = urgent ? urgent[0] + '. ' + urgent[1] : '';
+    if (annonce.textContent !== dit) annonce.textContent = dit;
+    if (titreCarte.textContent !== titre) titreCarte.textContent = titre;
+    if (consigne.textContent !== texte) consigne.textContent = texte;
+  };
+
+  // Le niveau du micro, pour l'onde et l'alerte de silence. Le contexte audio naît dans le toucher (Safari le laisse
+  // sinon suspendu). S'il ne tourne pas, il n'y a ni onde ni alerte : jamais d'alerte sur un micro qu'on n'écoute pas.
+  const ContexteAudio = window.AudioContext || window.webkitAudioContext;
+  const barres = [...zone.querySelectorAll('[data-onde] i')];
+  const SILENCE_MS = 5000;
+  const SEUIL_VOIX = 0.02; // moyenne quadratique du signal, de 0 à 1 ; une voix à portée de bras dépasse 0,05
+  const ecoute = (() => {
+    let contexte = null;
+    let source = null;
+    let analyseur = null;
+    let donnees = null;
+    let boucle = null;
+    let niveaux = [];
+    let voixLe = 0;
+    const dessiner = () => barres.forEach((b, i) => {
+      const v = niveaux[niveaux.length - barres.length + i] || 0;
+      b.style.height = 'max(4px, ' + Math.round(v * 100) + '%)';
+    });
+    const mesurer = () => {
+      if (!analyseur || contexte.state !== 'running') return null;
+      analyseur.getByteTimeDomainData(donnees);
+      let somme = 0;
+      for (let i = 0; i < donnees.length; i++) { const v = (donnees[i] - 128) / 128; somme += v * v; }
+      return Math.sqrt(somme / donnees.length);
+    };
+    const tour = () => {
+      if (enPause) return;
+      const v = mesurer();
+      if (v === null) return;
+      // La racine étale les voix faibles : 0,02 monte au quart de la hauteur, 0,25 la remplit.
+      niveaux.push(Math.min(1, Math.sqrt(v * 4)));
+      if (niveaux.length > barres.length) niveaux.shift();
+      dessiner();
+      if (v >= SEUIL_VOIX) voixLe = Date.now();
+      const silence = Date.now() - voixLe > SILENCE_MS;
+      if (silence !== carte.silence) { carte.silence = silence; afficherCarte(); }
+    };
+    const fermer = () => {
+      clearInterval(boucle);
+      boucle = null;
+      if (source) { try { source.disconnect(); } catch (e) { /* déjà débranchée */ } }
+      if (contexte) contexte.close().catch(() => {});
+      contexte = null;
+      source = null;
+      analyseur = null;
+    };
+    return {
+      // Dans le toucher, avant toute attente.
+      preparer() {
+        fermer();
+        try { contexte = ContexteAudio ? new ContexteAudio() : null; } catch (e) { contexte = null; }
+      },
+      brancher(fluxMicro) {
+        niveaux = [];
+        dessiner();
+        voixLe = Date.now();
+        carte.silence = false;
+        if (!contexte) return;
+        try {
+          source = contexte.createMediaStreamSource(fluxMicro);
+          analyseur = contexte.createAnalyser();
+          analyseur.fftSize = 1024;
+          donnees = new Uint8Array(analyseur.fftSize);
+          source.connect(analyseur);
+        } catch (e) { analyseur = null; return; }
+        if (contexte.state === 'suspended') contexte.resume().catch(() => {});
+        boucle = setInterval(tour, 90);
+      },
+      // Après une pause : le silence de la pause ne compte pas.
+      repartir() { voixLe = Date.now(); },
+      arreter: fermer,
+    };
+  })();
+
+  const montrerPause = (oui) => {
+    blocMicro.classList.toggle('pause', oui);
+    pauseTexte.textContent = oui ? boutonPause.dataset.reprendre : boutonPause.dataset.pauseTexte;
+    if (!ouverture) etatMicroEcran.textContent = oui ? etatMicroEcran.dataset.enPause : etatMicroEcran.dataset.enCours;
+    afficherCarte();
+  };
+  // La pause finie (« Reprendre », ou l'arrêt pendant la pause) : sa durée sort de la dictée.
+  const solderPause = () => {
+    if (!enPause) return;
+    const maintenant = Date.now();
+    const duree = maintenant - pauseDepuis;
+    debut += duree;
+    pauseCumul += duree;
+    enPause = false;
+    montrerPause(false);
+    // La copie du téléphone reçoit la pause et l'heure ensemble : sa durée (dureeMs) reste juste, que la tranche suivante
+    // arrive ou non (revue du 2026-11-26, I5 : pendant la seconde d'après, elle devenait négative et la dictée, jugée
+    // trop courte, était effacée à la réouverture).
+    const rec = enregistreur;
+    const total = pauseCumul;
+    if (rec) rec.copie.then((ok) => ok && abri.modifier(rec.cle, { pause: total, fin: maintenant }));
+  };
+  boutonPause.addEventListener('click', () => {
+    const rec = enregistreur;
+    if (!rec || rec.arret || ouverture || rec.state === 'inactive') return;
+    if (!enPause) {
+      // La tranche en cours part à l'abri avant la pause : coupée pendant la pause, la dictée garde tout ce qui est dit,
+      // et sa durée s'arrête ici.
+      rec.requestData();
+      rec.pause();
+      enPause = true;
+      pauseDepuis = Date.now();
+      montrerPause(true);
+      return;
+    }
+    rec.resume();
+    solderPause();
+    ecoute.repartir();
+  });
+
+  const attendreMicro = (rang, d) => {
+    ouverture = rang;
+    blocMicro.classList.add('ouverture');
+    etatMicroEcran.textContent = etatMicroEcran.dataset.ouverture;
+    abandonTexte.textContent = abandon.dataset.annuler;
+    affichage.textContent = horloge(d ? Math.floor(dureeMs(d) / 1000) : 0);
+    enPause = false;
+    montrerPause(false);
+    Object.assign(carte, { arret: false, preavis: '', silence: false, secondes: 0 });
+    afficherCarte();
+    montrer('enregistrement');
+  };
+  const finAttente = () => {
+    ouverture = 0;
+    blocMicro.classList.remove('ouverture');
+    etatMicroEcran.textContent = etatMicroEcran.dataset.enCours;
+    abandonTexte.textContent = abandon.dataset.abandonnerTexte;
+  };
+  const annulerOuverture = () => {
+    if (!ouverture) return false;
+    finAttente();
+    ecoute.arreter();
+    return true;
+  };
+
+  // suite : { dictee, fichiers } pour continuer une dictée coupée ; rien pour une nouvelle.
+  const demarrer = async (suite = null) => {
+    if (bloquer()) return;
+    if (!possible) { refus(); return; }
+    if (ouverture || (enregistreur && enregistreur.state !== 'inactive')) return;
+    const d = suite ? suite.dictee : null;
+    const demande = etatMicro();
+    const maDemande = ++demandes;
+    // Le micro se demande avant tout affichage : monter la fenêtre ne retarde pas son ouverture (11 ms mesurées sur un
+    // processeur ralenti quatre fois quand la fenêtre passait devant).
+    const micro = navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+    ecoute.preparer();
+    attendreMicro(maDemande, d);
+    let pris = null;
+    try {
+      pris = await micro;
+    } catch (e) {
+      if (ouverture !== maDemande) return;
+      finAttente();
+      ecoute.arreter();
+      // Page /import, sans fenêtre : Parler et Importer reviennent, avec le message.
+      if (!feuille) montrer('choix');
+      refus('Le micro est refusé ou absent. Autorisez-le pour ce site dans les réglages du navigateur, ou enregistrez avec le téléphone puis « Importer ».');
+      return;
+    }
+    // Annulée pendant que le micro s'ouvrait : il se referme, rien n'est enregistré. Seul le micro de cette demande
+    // se ferme : une demande plus récente a peut-être déjà le sien.
+    const fermerPris = () => {
+      pris.getTracks().forEach((t) => t.stop());
+      if (flux === pris) flux = null;
+    };
+    if (ouverture !== maDemande) { fermerPris(); return; }
+    flux = pris;
+    if (suite) {
+      // La dictée proposée revient à l'écran avec la raison : la suite n'a pas commencé.
+      const retour = (dire) => {
+        finAttente();
+        libererMicro();
+        montrer('reprise');
+        dire();
+      };
+      // Un autre onglet a pris la même dictée pendant que le micro s'ouvrait : il la garde.
+      const tenue = await abri.tenues();
+      if (ouverture !== maDemande) { fermerPris(); return; }
+      if (tenue && tenue(d.id)) { retour(autreOnglet); return; }
+      try {
+        suite.fichiers = await suite.lecture;
+      } catch (e) {
+        if (ouverture === maDemande) retour(relectureImpossible); else fermerPris();
+        return;
+      }
+      if (ouverture !== maDemande) { fermerPris(); return; }
+    }
+    // Une suite garde le format du début : les parties d'une dictée sont rangées sous un seul type.
+    const type = (d && MediaRecorder.isTypeSupported(d.type) ? d.type : null) || TYPES.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+    let rec = null;
+    try {
+      rec = new MediaRecorder(flux, type ? { mimeType: type, audioBitsPerSecond: 32000 } : {});
+    } catch (e) {
+      // Le navigateur ne sait pas enregistrer ce micro : le micro et le contexte audio se referment, l'import reste.
+      finAttente();
+      libererMicro();
+      if (!feuille) montrer('choix');
+      refus('L’enregistrement ne démarre pas dans ce navigateur. Enregistrez avec le téléphone, puis « Importer ».');
+      return;
+    }
+    enregistreur = rec;
+    morceaux = [];
+    // Chaque tranche part aussi à l'abri, dans l'ordre : coupé n'importe quand, le début de la dictée reste.
+    rec.cle = d ? d.id : nouvelleCle();
+    rec.suite = suite;
+    rec.arret = null;
+    rec.copie = !compte ? Promise.resolve(false) : d ? abri.continuer(d) : abri.commencer(rec.cle, compte, type || rec.mimeType || 'audio/webm');
+    copieAbri = false;
+    rec.copie.then((ok) => { if (enregistreur === rec) copieAbri = ok; });
+    tenir(rec.cle);
+    let rang = d ? d.tranches : 0;
+    rec.addEventListener('dataavailable', (e) => {
+      if (!e.data || e.data.size === 0) return;
+      morceaux.push(e.data);
+      const n = rang++;
+      rec.copie.then((ok) => ok && abri.ajouter(rec.cle, n, e.data));
+    });
+    rec.addEventListener('stop', () => {
+      // Arrêté pendant une pause : la pause ne compte pas dans la durée.
+      solderPause();
+      finMs = Date.now();
+      libererMicro();
+      lacher();
+      if (rec.arret === 'terminer') finir(rec);
+      else if (rec.arret === 'abandon') abandonnerCopie(rec);
+      // Arrêt sans « Terminer » (appel entrant, autre application sur le micro) : ce qui est enregistré reste.
+      else { carte.arret = true; afficherCarte(); }
+    });
+    rec.start(1000);
+    finAttente();
+    pauseCumul = 0;
+    boutonPause.hidden = typeof rec.pause !== 'function' || typeof rec.requestData !== 'function';
+    ecoute.brancher(flux);
+    occupe = true;
+    duMicro = true;
+    // Une suite repart de la durée déjà dictée : le minuteur et la limite des 30 minutes valent pour la dictée entière.
+    debut = Date.now() - (d ? dureeMs(d) : 0);
+    finMs = 0;
+    // Les conseils repartent du premier à chaque enregistrement, même pour une suite.
+    const depart = Math.floor((Date.now() - debut) / 1000);
+    // Un premier tour tout de suite : une suite s'affiche à sa durée déjà dictée, pas à 00:00.
+    const tour = () => {
+      // En pause, le temps de la dictée ne passe pas.
+      if (enPause) return;
+      const s = Math.floor((Date.now() - debut) / 1000);
+      affichage.textContent = horloge(s);
+      if (s >= DUREE_MAX_S) {
+        clearInterval(minuteur);
+        el('[data-terminer]').click();
+        return;
+      }
+      carte.secondes = s - depart;
+      carte.preavis = s >= DUREE_MAX_S - PREAVIS_S ? 'Encore ' + Math.ceil((DUREE_MAX_S - s) / 60) + ' min, puis l’enregistrement s’arrête et part.' : '';
+      afficherCarte();
+    };
+    tour();
+    minuteur = setInterval(tour, 500);
+    if (navigator.wakeLock) navigator.wakeLock.request('screen').then((v) => { veille = v; }).catch(() => {});
+    montrer('enregistrement');
+    demande.then(astuceMicro);
+  };
+  micros.forEach((m) => m.addEventListener('click', () => demarrer()));
+
+  // Un seul « Terminer » compte (deux touchers, ou un toucher pendant l'arrêt automatique des 30 minutes).
+  el('[data-terminer]').addEventListener('click', () => {
+    const rec = enregistreur;
+    if (!rec || rec.arret) return;
+    rec.arret = 'terminer';
+    if (rec.state === 'inactive') finir(rec); else rec.stop();
+  });
+
+  // Trop court : on recommence tout de suite, le micro se rouvre.
+  el('[data-recommencer]').addEventListener('click', () => demarrer());
+
+  // Recette AB-1 bis (Xavier, 2026-11-24) : une dictée continuée redevient une dictée en cours comme une autre.
+  // L'abandonner l'efface entière, début compris, et la fenêtre ne la repropose pas.
+  // Une suite efface son début même si sa propre copie n'a pas pu commencer : le début, lui, est à l'abri.
+  const abandonnerCopie = (rec) => rec.copie.then((ok) => (ok || rec.suite) && abri.supprimer(rec.cle));
+  el('[data-abandonner]').addEventListener('click', () => {
+    // Le micro s'ouvre encore : rien n'est enregistré, rien à confirmer.
+    if (annulerOuverture()) {
+      montrer('choix');
+      return;
+    }
+    const rec = enregistreur;
+    if (!window.confirm(rec && rec.suite
+      ? 'Abandonner la dictée ? Elle ne sera pas gardée, début compris.'
+      : 'Abandonner l’enregistrement ? Il ne sera pas gardé.')) return;
+    occupe = false;
+    duMicro = false;
+    if (rec && !rec.arret) {
+      rec.arret = 'abandon';
+      // Supprimée après la dernière tranche, qui arrive avec l'arrêt.
+      if (rec.state !== 'inactive') rec.stop(); else abandonnerCopie(rec);
+    }
+    libererMicro();
+    montrer('choix');
+  });
+
+  // Reprise (R1 B, Xavier, 2026-11-18) : à l'ouverture, une dictée restée sur ce téléphone sans être arrivée au
+  // serveur est proposée dans la fenêtre du bas. Une dictée arrivée est oubliée dès que son offre est prête.
+  // Recette AB-1 (Xavier, 2026-11-24) : proposée dès la réouverture, et continuable à la suite.
+  const ilYA = (jours) => Date.now() - jours * 86400000;
+  const VIE_MS = 20000;
+  const PARTIES_MAX = 5;
+  const decrire = (d) => {
+    const quand = new Date(d.debut);
+    const p = (n) => String(n).padStart(2, '0');
+    const s = Math.round(dureeMs(d) / 1000);
+    const duree = s < 60 ? s + ' s' : Math.round(s / 60) + ' min';
+    const dictee = 'La dictée du ' + quand.toLocaleDateString('fr-CH', { day: 'numeric', month: 'long' }) + ' à ' + quand.getHours() + ' h ' + p(quand.getMinutes())
+      + ' (' + duree + ')';
+    return d.etat === 'enregistrement'
+      ? dictee + ' s’est arrêtée avant « Terminer » : elle est gardée sur ce téléphone.'
+      : dictee + ' est restée sur ce téléphone : elle n’est pas arrivée au serveur.';
+  };
+  // Seule une dictée coupée avant « Terminer » se continue : une dictée terminée a pu arriver au serveur sans que le
+  // téléphone le sache, sa suite ferait une seconde offre (revue du 2026-11-24). La suite garde le format du début, et
+  // la dictée entière tient dans les 30 minutes.
+  const peutContinuer = (d) => d.etat === 'enregistrement' && !!possible && !epuise && (d.parties || [0]).length < PARTIES_MAX
+    && dureeMs(d) < (DUREE_MAX_S - 10) * 1000 && (!d.type || MediaRecorder.isTypeSupported(d.type));
+  const proposer = (d) => {
+    if (etatCourant !== 'choix') return;
+    repriseCourante = d;
+    const suite = peutContinuer(d);
+    const envoi = el('[data-reprise-envoyer]');
+    el('[data-reprise-continuer]').hidden = !suite;
+    // Compte d'essai au bout de ses offres : la dictée ne peut pas partir, elle peut être gardée.
+    envoi.hidden = !!epuise;
+    envoi.classList.toggle('primary', !suite);
+    el('[data-reprise-texte]').textContent = decrire(d) + (epuise ? ' ' + epuise + ' Gardez-la dans un fichier.'
+      : suite ? ' Continuez-la, ou envoyez-la telle quelle pour en faire une offre.' : ' Envoyez-la maintenant pour en faire une offre.');
+    montrer('reprise');
+  };
+  const reprendre = async () => {
+    // Sans la fenêtre du bas (page /import), rien n'est proposé : la page garde Parler et Importer.
+    if (!compte || !fenetre) return;
+    const [dictees, tenue] = await Promise.all([abri.lister(compte), abri.tenues()]);
+    abri.menage();
+    dictees.forEach((d) => {
+      if (d.etat !== 'envoye') return;
+      // Arrivée au serveur : oubliée quand l'offre est prête, ou quand le serveur ne la connaît plus (retirée).
+      if (d.debut < ilYA(30)) { abri.supprimer(d.id); return; }
+      fetch('/enregistrements/' + d.uuid + '/etat', { credentials: 'same-origin', cache: 'no-store' })
+        .then((r) => (r.status === 404 ? { offre: true } : r.ok ? r.json() : null))
+        .then((e) => { if (e && e.offre) abri.supprimer(d.id); })
+        .catch(() => {});
+    });
+    // Une dictée qu'un onglet vivant tient (il l'enregistre ou l'envoie) n'est pas proposée ici : son verrou le dit.
+    // Sans verrous dans ce navigateur, le signe de vie en tient lieu : moins de 20 s, elle est peut-être tenue, et la
+    // page refait le tour à l'échéance au lieu d'attendre le chargement suivant.
+    const enMain = dictees.filter((d) => d.etat !== 'envoye');
+    const recente = (d) => Date.now() - (d.vu || d.debut) <= VIE_MS;
+    const libres = enMain.filter((d) => (tenue ? !tenue(d.id) : !recente(d)));
+    if (!tenue) {
+      const attentes = enMain.filter(recente).map((d) => VIE_MS - (Date.now() - (d.vu || d.debut)));
+      if (attentes.length) setTimeout(reprendre, Math.max(0, Math.min(...attentes)) + 500);
+    }
+    // Coupée avant 5 secondes : le serveur la refuserait. Une dictée terminée a déjà passé cette règle.
+    const tropCourte = (d) => d.etat === 'enregistrement' && dureeMs(d) < DUREE_MIN_MS;
+    libres.filter(tropCourte).forEach((d) => abri.supprimer(d.id));
+    const d = libres.filter((x) => !tropCourte(x) && !remiseAPlusTard(x)).sort((a, b) => a.debut - b.debut)[0];
+    if (d) proposer(d);
+  };
+  const relectureImpossible = () => {
+    el('[data-reprise-texte]').textContent += ' Elle n’a pas pu être relue sur ce téléphone.';
+  };
+  const autreOnglet = () => {
+    el('[data-reprise-texte]').textContent += ' Elle est reprise dans un autre onglet.';
+  };
+  let relecture = false; // un seul envoi, même pour deux touchers
+  el('[data-reprise-envoyer]').addEventListener('click', async () => {
+    const d = repriseCourante;
+    if (!d || relecture || bloquer()) return;
+    relecture = true;
+    try {
+      // Deux onglets qui proposent la même dictée : celui qui l'a prise la garde.
+      const tenue = await abri.tenues();
+      if (tenue && tenue(d.id)) {
+        autreOnglet();
+        return;
+      }
+      fichiers = await abri.fichiers(d);
+    } catch (e) {
+      relectureImpossible();
+      return;
+    } finally {
+      relecture = false;
+    }
+    duMicro = true;
+    copieAbri = true;
+    cleCourante = d.id;
+    lienGarder(fichiers);
+    dureeAudioMs = dureeMs(d);
+    envoyer();
+  });
+  // Le micro se demande tout de suite, dans le geste (Safari) ; le début se relit pendant ce temps (demarrer l'attend).
+  el('[data-reprise-continuer]').addEventListener('click', () => {
+    const d = repriseCourante;
+    if (!d || relecture || bloquer()) return;
+    relecture = true;
+    demarrer({ dictee: d, lecture: abri.fichiers(d), fichiers: [] }).finally(() => { relecture = false; });
+  });
+  el('[data-reprise-garder]').addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (!repriseCourante) return;
+    try {
+      telecharger(await abri.fichiers(repriseCourante));
+    } catch (erreur) {
+      relectureImpossible();
+    }
+  });
+  el('[data-reprise-supprimer]').addEventListener('click', async () => {
+    if (!repriseCourante || !window.confirm('Supprimer cette dictée ? Elle ne pourra plus être envoyée.')) return;
+    await abri.supprimer(repriseCourante.id);
+    repriseCourante = null;
+    montrer('choix');
+  });
+  reprendre();
+}
+
+// Catalogue : la fiche d'un produit (nouveau, modification, suppression) monte dans une fenêtre du bas,
+// par-dessus la liste. app.js y charge la page du lien ; sans JavaScript, le lien ouvre la page seule.
+// Après l'enregistrement, la liste se met à jour sur place et la ligne touchée s'éclaire.
+function fichesEnFenetre() {
+  const fond = document.querySelector('[data-feuille-page]');
+  if (!fond) return;
+  const boite = fond.querySelector('.feuille');
+  const titre = fond.querySelector('[data-feuille-titre]');
+  const corps = fond.querySelector('[data-feuille-corps]');
+  const pied = fond.querySelector('[data-feuille-pied]');
+  const ici = window.location.pathname;
+  // Ce que la fermeture recharge, la ligne qui s'éclaire, le champ qui refiltre (défaut : le catalogue).
+  const aRafraichir = (fond.dataset.rafraichir || '#clist,.fchips').split(',');
+  const lignes = fond.dataset.lignes || '#clist .crow';
+  const prefixe = fond.dataset.prefixe || 'p';
+  const recherche = fond.dataset.recherche || '#cq';
+  let declencheur = null;
+  let enregistreSeul = null;
+  // Une fenêtre qui a changé l'offre (lignes ajoutées, ligne ou objet corrigés) la recharge en se fermant
+  // (data-recharger) : les champs des lignes se rebranchent avec la page.
+  let aChange = false;
+  // Écran à morceaux (fluide.js, chantier sans rechargement) : la fenêtre envoie par la file et l'écran derrière reçoit
+  // ses morceaux ; rien ne se recharge à la fermeture.
+  const surMorceaux = () => !!(window.fluide && document.querySelector('main.screen[data-resume]'));
+  // Lignes ajoutées depuis « + Ligne » : elles s'éclairent quand la fenêtre se ferme.
+  let ajoutees = [];
+  const eclairer = (ids) => {
+    const rangees = ids.map((id) => document.getElementById('l' + id)).filter(Boolean);
+    rangees.forEach((r) => { r.classList.remove('eclair'); void r.offsetWidth; r.classList.add('eclair'); });
+    if (rangees.length) rangees[rangees.length - 1].scrollIntoView({ block: 'center' });
+  };
+  // La quantité de la dernière ligne ajoutée : c'est là que l'artisan continue (analyse des parcours, 2026-11-26).
+  const quantiteAjoutee = () => {
+    const rangee = ajoutees.length ? document.getElementById('l' + ajoutees[ajoutees.length - 1]) : null;
+    return rangee ? rangee.querySelector('input[name=quantite]') : null;
+  };
+  const calque = {
+    montrer: () => apparaitre(fond),
+    cacher: () => {
+      if (aChange && fond.dataset.recharger && !surMorceaux()) {
+        window.location.reload();
+        return;
+      }
+      disparaitre(fond);
+      prechargerAjout();
+      if (ajoutees.length) {
+        // La dernière ligne ajoutée vient au milieu de l'écran, éclairée, le curseur dans sa quantité. Après la fenêtre :
+        // le retour de l'historique remet d'abord la page où elle était (en haut), et le défilement fait ici se perdait.
+        const ids = ajoutees;
+        ajoutees = [];
+        setTimeout(() => {
+          eclairer(ids);
+          const rangee = document.getElementById('l' + ids[ids.length - 1]);
+          const champ = rangee && rangee.querySelector('input[name=quantite]');
+          if (champ) { champ.focus({ preventScroll: true }); champ.select(); } else rendreFocus(declencheur);
+        }, DUREE_ANIMATION);
+      } else {
+        rendreFocus(declencheur);
+      }
+      // Une fiche enregistrée au fil de la saisie : la liste derrière se met à jour.
+      if (enregistreSeul !== null) {
+        const id = enregistreSeul;
+        enregistreSeul = null;
+        // Lot 3 : la ligne de la fiche seule (ou la liste si sa place change), au lieu de toute la page.
+        if (listeEnMorceaux()) {
+          const avant = new Set([...document.querySelectorAll(lignes)].map((r) => r.id));
+          fluide.rafraichir(idsListe(id || null)).then(() => apresListe(avant, id || null));
+        } else {
+          rafraichir('', new Set(), id);
+        }
+      }
+    },
+  };
+  fond.addEventListener('enregistre', (e) => {
+    const m = (e.target.getAttribute('action') || '').match(/\/(\d+)$/);
+    enregistreSeul = m ? m[1] : '';
+  });
+  // « Terminé », la croix : le curseur va dans la quantité de la ligne ajoutée dès le toucher (un iPhone n'ouvre le
+  // clavier que dans le geste) ; la fenêtre fermée, la ligne vient à l'écran.
+  const fermer = () => {
+    const champ = quantiteAjoutee();
+    if (champ) champ.focus({ preventScroll: true });
+    calques.fermer(calque);
+  };
+
+  const afficher = (html) => {
+    const page = new DOMParser().parseFromString(html, 'text/html');
+    const contenu = page.querySelector('main.screen');
+    if (!contenu) return false;
+    const h1 = page.querySelector('header.bar h1');
+    titre.textContent = h1 ? h1.textContent.trim() : '';
+    // Les feuilles de style de la page chargée (le document de la facture, la couleur de l'artisan).
+    importerStyles(page);
+    corps.replaceChildren(...contenu.childNodes);
+    const barre = page.querySelector('.bas .actionbar');
+    pied.replaceChildren(...(barre ? [barre] : []));
+    corps.scrollTop = 0;
+    // Facturer s'ouvre en deux volets sur PC (maquette 25, E8) : la feuille s'élargit.
+    boite.classList.toggle('large', !!corps.querySelector('[data-feuille-large]'));
+    corps.querySelectorAll('fieldset[data-adresse]').forEach(brancherAdresse);
+    corps.querySelectorAll('form[data-auto]').forEach(brancherAuto);
+    corps.querySelectorAll('input[data-filtre]').forEach(brancherFiltre);
+    corps.querySelectorAll('form[data-facturer]').forEach(brancherFacturer);
+    const dejaOuverte = calques.ouvert() === calque;
+    if (!dejaOuverte) calques.ouvrir(calque);
+    // Nouveau produit : la désignation s'ouvre au clavier. Champ refusé : il reçoit le focus.
+    const cible = corps.querySelector('[aria-invalid="true"]') || corps.querySelector('[data-premier]') || boite;
+    setTimeout(() => cible.focus({ preventScroll: true }), dejaOuverte ? 0 : DUREE_ANIMATION);
+    return true;
+  };
+
+  // Lot 3 du chantier sans rechargement (D4 : en arrière-plan, l'artisan d'abord) : la fenêtre « + Ligne » se prépare
+  // quand le navigateur est libre, jamais pendant un geste, et s'ouvre ensuite sans requête. Refaite après chaque usage.
+  const prechargees = new Map();
+  const cleDe = (url) => new URL(url, window.location.href).href;
+  // Un seul préchargement à la fois : sans réseau, chaque fermeture de fenêtre en ajoutait un (revue, B-M13).
+  let precharge = false;
+  function prechargerAjout() {
+    const lien = document.querySelector('a.btn.ajout[data-en-feuille]');
+    if (precharge || !lien || !surMorceaux() || (navigator.connection && navigator.connection.saveData)) return;
+    precharge = true;
+    const essayer = () => {
+      if (fluide.file.length || document.visibilityState !== 'visible' || calques.ouvert() === calque) { setTimeout(essayer, 3000); return; }
+      fetch(lien.href, { credentials: 'same-origin', priority: 'low', headers: { Accept: 'text/html' } })
+        .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+        .then((html) => { prechargees.set(cleDe(lien.href), html); })
+        .catch(() => { /* pas de réseau : la fenêtre se chargera à l'ouverture */ })
+        .finally(() => { precharge = false; });
+    };
+    (window.requestIdleCallback || ((f) => setTimeout(f, 1500)))(() => setTimeout(essayer, 600), { timeout: 6000 });
+  }
+  if (document.readyState === 'complete') prechargerAjout(); else window.addEventListener('load', prechargerAjout, { once: true });
+
+  const charger = (url) => {
+    const prete = prechargees.get(cleDe(url));
+    if (prete !== undefined) {
+      prechargees.delete(cleDe(url));
+      if (afficher(prete)) return Promise.resolve();
+    }
+    // Accept : le service worker garde la fenêtre comme une page (lot 4), elle s'ouvre ensuite sans réseau.
+    return fetch(url, { credentials: 'same-origin', headers: { Accept: 'text/html' } })
+      .then((r) => {
+        // 503 du service worker : pas de réseau, et la fenêtre n'a pas été gardée dans le téléphone.
+        if (r.status === 503 && navigator.serviceWorker && navigator.serviceWorker.controller) throw new TypeError('hors réseau');
+        return r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status));
+      })
+      .then((html) => { if (!afficher(html)) throw new Error('page sans contenu'); })
+      .catch((erreur) => {
+        // Sans réseau, l'artisan reste sur son écran (la page à part l'en sortirait) ; sinon, la page de la fenêtre.
+        if (erreur instanceof TypeError && window.fluide) {
+          fluide.messages.dire('Hors réseau' + fluide.NB + ': cette fenêtre n’est pas gardée dans le téléphone.', true);
+          return;
+        }
+        window.location.assign(url);
+      });
+  };
+
+  // Ce que dit la fenêtre « + Ligne » au toucher d'un produit : la ligne entre dans l'offre derrière, la fenêtre reste.
+  const annoncerAjout = (form, touche) => {
+    const nom = (form.querySelector('input[name=designation]') && form.querySelector('input[name=designation]').value.trim())
+      || (touche && touche.querySelector('.pn') ? touche.querySelector('.pn').textContent.trim() : '');
+    let note = corps.querySelector('p.ajoutee');
+    if (!note) {
+      note = document.createElement('p');
+      note.className = 'ajoutee';
+      note.setAttribute('role', 'status');
+      corps.prepend(note);
+    }
+    note.textContent = '«' + fluide.NB + nom + fluide.NB + '» ajoutée';
+    const champ = corps.querySelector('input[data-filtre]');
+    if (champ) { champ.value = ''; champ.dispatchEvent(new Event('input')); }
+  };
+
+  const avisDansLaFenetre = (texte) => {
+    const avis = document.createElement('p');
+    avis.className = 'alerte bad';
+    avis.setAttribute('role', 'alert');
+    avis.textContent = texte;
+    corps.prepend(avis);
+  };
+
+  // Catalogue, clients : une fiche enregistrée fait revenir sa seule ligne (lot 3) ; la liste entière si la ligne change
+  // de place (nouvelle, autre désignation ou catégorie ; un client, rangé par son nom) ou si elle part.
+  const listeEnMorceaux = () => !!(window.fluide && document.querySelector('main.screen[data-fenetre]') && !surMorceaux());
+  let placeChangee = false;
+  fond.addEventListener('change', (e) => { if (e.target.name && /^(designation|categorie|nouvelle_categorie)$/.test(e.target.name)) placeChangee = true; });
+  const idsListe = (modifie) => {
+    const ids = modifie && !placeChangee && prefixe === 'p' ? [prefixe + modifie] : (document.querySelector('main.screen').dataset.fenetre || '').split(' ').filter(Boolean);
+    placeChangee = false;
+    return ids;
+  };
+  const apresListe = (avant, modifie) => {
+    const champ = document.querySelector(recherche);
+    if (champ) champ.dispatchEvent(new Event('input'));
+    const ligne = modifie ? document.getElementById(prefixe + modifie) : [...document.querySelectorAll(lignes)].find((r) => !avant.has(r.id));
+    if (ligne && !ligne.hidden) {
+      declencheur = ligne;
+      ligne.classList.remove('eclair');
+      void ligne.offsetWidth;
+      ligne.classList.add('eclair');
+      ligne.scrollIntoView({ block: 'center' });
+    }
+  };
+
+  // Un formulaire de la fenêtre, par la file de fluide.js. Offre et facture : les morceaux de l'écran derrière (la
+  // fenêtre « + Ligne » reste ouverte et dit ce qui est entré). Catalogue et clients : la ligne de la fiche, ou la liste.
+  const envoyerEnMorceaux = (form, touche) => {
+    const ajout = !!form.querySelector('input[name="reste"][value="1"]');
+    const liste = !surMorceaux();
+    const avant = new Set([...document.querySelectorAll(lignes)].map((r) => r.id));
+    const modifie = (form.getAttribute('action').match(new RegExp('^' + ici + '/(\\d+)$')) || [])[1] || null;
+    const boutons = ajout ? [] : [...fond.querySelectorAll('button[type=submit]')];
+    const libelle = touche ? touche.textContent : '';
+    boutons.forEach((b) => { b.disabled = true; });
+    if (touche && !ajout) {
+      touche.setAttribute('aria-busy', 'true');
+      if (touche.dataset.attente) touche.textContent = touche.dataset.attente;
+    }
+    const rendre = () => {
+      boutons.forEach((b) => { b.disabled = false; });
+      if (touche && !ajout) {
+        touche.removeAttribute('aria-busy');
+        if (touche.dataset.attente) touche.textContent = libelle;
+      }
+    };
+    // Ce qu'un ajout montrerait sans réseau : sa ligne provisoire et son nom dans le bandeau (fluide.js, reprendre).
+    const champ = (nom) => (form.querySelector('[name="' + nom + '"]') ? form.querySelector('[name="' + nom + '"]').value.trim() : '');
+    const produit = !!(touche && touche.name === 'produit');
+    const nomAjout = produit && touche.querySelector('.pn') ? touche.querySelector('.pn').textContent.trim() : champ('designation');
+    const prixAjout = produit ? Number(touche.dataset.prix || 0) : Math.round((parseFloat(champ('prix').replace(',', '.')) || 0) * 100);
+    // Une variante : la quantité et l'unité de la ligne remplacée (V1 A, V2 A), celles que le serveur posera.
+    const repriseSource = form.querySelector('[data-quantite-reprise]') ? document.getElementById('quantite-reprise') : null;
+    const uniteAjout = repriseSource ? repriseSource.dataset.uniteReprise : (produit ? touche.dataset.unite : champ('unite'));
+    const quantiteTapee = Math.round((parseFloat((produit ? '' : champ('quantite')).replace(',', '.')) || 0) * 1000);
+    const quantiteReprise = Math.round((parseFloat(champ('reprise').replace(',', '.')) || 0) * 1000);
+    const quantiteAjout = repriseSource ? ((produit ? 0 : quantiteTapee) || quantiteReprise || 1000) : (quantiteTapee || 1000);
+    const horsTotal = !!form.querySelector('input[name="nature"][value="option"], input[name="nature"][value="variante"]');
+    const extra = ajout ? { libelle: '«' + fluide.NB + nomAjout + fluide.NB + '» ajoutée', provisoire: { designation: nomAjout, unite: uniteAjout, prix: prixAjout, quantite: quantiteAjout, horsTotal } } : {};
+    if (ajout) annoncerAjout(form, touche);
+    fluide.fenetre(form, touche, ajout ? ici : null, liste ? idsListe(modifie) : null, extra).then((r) => {
+      rendre();
+      if (r.etat === 'pose') {
+        const adresse = r.reponse.adresse || '';
+        if (ajout) {
+          const id = (/[?&]ajoutee=(\d+)/.exec(adresse) || [])[1];
+          if (id) ajoutees.push(id);
+          return;
+        }
+        fermer();
+        if (liste) { apresListe(avant, modifie); return; }
+        const ligne = (/#l(\d+)$/.exec(adresse) || [])[1];
+        if (ligne) setTimeout(() => eclairer([ligne]), DUREE_ANIMATION);
+        return;
+      }
+      // L'action mène à une autre page de fenêtre (une case du choix du client dans « Facturer ») : elle s'y charge, comme
+      // avant le chantier ; l'écran derrière relit ses morceaux (l'option retenue change l'offre).
+      if (r.etat === 'aller') {
+        charger(r.adresse);
+        if (!liste) fluide.rafraichir((document.querySelector('main.screen').dataset.fenetre || '').split(' ').filter(Boolean));
+        return;
+      }
+      // Pas de réseau : le geste attend dans la file, le bandeau le dit ; la fenêtre d'un ajout reste ouverte, la ligne
+      // paraît en attente dans l'offre derrière, avec le total estimé (lot 4, D7).
+      if (r.etat === 'attente') {
+        if (!ajout) { fermer(); return; }
+        fluide.ligneEnAttente(nomAjout, uniteAjout, prixAjout, quantiteAjout, horsTotal);
+        return;
+      }
+      // Champ refusé (422) : le formulaire revient dans la fenêtre, avec ses messages ; un autre refus s'y dit.
+      if (r.html && afficher(r.html)) return;
+      avisDansLaFenetre('Pas enregistré' + fluide.NB + ': ' + (r.message || 'refusé par le serveur') + '.');
+    });
+  };
+
+  // La liste à jour, avec la recherche et la catégorie de l'adresse ; le message vient de l'envoi.
+  const rafraichir = (reponse, avant, modifie) => {
+    const message = new DOMParser().parseFromString(reponse, 'text/html');
+    return fetch(window.location.pathname + window.location.search, { credentials: 'same-origin' })
+      .then((r) => r.text())
+      .then((html) => {
+        const page = new DOMParser().parseFromString(html, 'text/html');
+        aRafraichir.forEach((s) => {
+          const neuf = page.querySelector(s);
+          const vieux = document.querySelector(s);
+          if (neuf && vieux) vieux.replaceChildren(...neuf.childNodes);
+        });
+        const champ = document.querySelector(recherche);
+        const neufChamp = page.querySelector(recherche);
+        if (champ && neufChamp) { champ.placeholder = neufChamp.placeholder; champ.dispatchEvent(new Event('input')); }
+        // Un nouveau message remplace le précédent : deux bandeaux au même endroit se chevauchent.
+        const messages = message.querySelectorAll('.snack');
+        if (messages.length) document.querySelectorAll('.app > .snack').forEach((s) => s.remove());
+        messages.forEach((s) => { document.querySelector('.app').append(s); setTimeout(() => s.remove(), 4000); });
+        const ligne = modifie ? document.getElementById(prefixe + modifie) : [...document.querySelectorAll(lignes)].find((r) => !avant.has(r.id));
+        if (ligne && !ligne.hidden) {
+          declencheur = ligne;
+          ligne.classList.remove('eclair');
+          void ligne.offsetWidth;
+          ligne.classList.add('eclair');
+          ligne.scrollIntoView({ block: 'center' });
+        }
+      });
+  };
+
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    if (fond.contains(a)) {
+      // Un lien qui mène ailleurs (une offre depuis la fiche d'un client) quitte la page.
+      if (a.hasAttribute('data-sortir')) return;
+      // Dans la fiche : un lien vers la liste ferme la fenêtre, un autre (Supprimer, Garder) s'y charge.
+      e.preventDefault();
+      const u = new URL(a.href, window.location.href);
+      if (u.pathname === ici) fermer(); else charger(u.href);
+      return;
+    }
+    // data-en-feuille-pc : une fenêtre au milieu sur PC seulement (la ligne, l'objet, E8) ; au téléphone, la page.
+    if (a.hasAttribute('data-en-feuille') || (a.hasAttribute('data-en-feuille-pc') && window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches)) {
+      e.preventDefault();
+      declencheur = a;
+      charger(a.href);
+    }
+  });
+  fond.addEventListener('click', (e) => { if (e.target === fond || e.target.closest('[data-fermer]')) fermer(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && calques.ouvert() === calque) fermer(); });
+
+  fond.addEventListener('submit', (e) => {
+    // Déjà pris en main (enregistrement automatique d'une fiche) : rien à envoyer en plus.
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    const form = e.target;
+    // Un choix en GET dans la fenêtre (autre pièce, ligne remplacée) s'y charge ; il partait en POST (405).
+    if ((form.getAttribute('method') || 'get').toLowerCase() !== 'post') {
+      const u = new URL(form.getAttribute('action') || window.location.href, window.location.href);
+      u.search = new URLSearchParams(new FormData(form)).toString();
+      charger(u.href);
+      return;
+    }
+    // data-sortir : un acte qui mène ailleurs une fois fait (« Créer la facture », le client puis l'aperçu) n'entre pas
+    // dans la file : sans réseau, rien n'est fait et la fenêtre le dit ; la facture n'est jamais créée plus tard en
+    // silence, ni deux fois (revue du 2026-11-23, C-B2).
+    if ((surMorceaux() || listeEnMorceaux()) && !form.hasAttribute('data-sortir')) { envoyerEnMorceaux(form, e.submitter || null); return; }
+    const boutons = fond.querySelectorAll('button[type=submit]');
+    const touche = e.submitter || boutons[0] || null;
+    const libelle = touche ? touche.textContent : '';
+    boutons.forEach((b) => { b.disabled = true; });
+    if (touche) {
+      touche.setAttribute('aria-busy', 'true');
+      if (touche.dataset.attente) touche.textContent = touche.dataset.attente;
+    }
+    const avant = new Set([...document.querySelectorAll(lignes)].map((r) => r.id));
+    const modifie = (form.getAttribute('action').match(new RegExp('^' + ici + '/(\\d+)$')) || [])[1] || null;
+    // Le bouton touché compte (« Corriger des lignes » contre « Créer la facture ») : FormData seul l'oublie.
+    const donnees = new FormData(form);
+    if (e.submitter && e.submitter.name) donnees.set(e.submitter.name, e.submitter.value);
+    fetch(form.action, { method: 'POST', body: donnees, credentials: 'same-origin' })
+      .then((r) => r.text().then((html) => {
+        if (r.ok && r.redirected) aChange = true;
+        if (r.ok && r.redirected && new URL(r.url).pathname === ici) {
+          fermer();
+          return rafraichir(html, avant, modifie);
+        }
+        // Une fiche qui mène ailleurs une fois envoyée (la facture créée, son PDF) : on y va.
+        if (r.ok && r.redirected && form.hasAttribute('data-sortir')) {
+          window.location.assign(r.url);
+          return null;
+        }
+        // Champ refusé (422) ou page de confirmation : elle remplace la fiche.
+        if (!afficher(html)) throw new Error('réponse sans contenu');
+        return null;
+      }))
+      .catch(() => {
+        const avis = document.createElement('p');
+        avis.className = 'alerte bad';
+        avis.setAttribute('role', 'alert');
+        avis.textContent = 'Pas de connexion au serveur : rien n’est enregistré. Réessayez.';
+        corps.prepend(avis);
+      })
+      .finally(() => {
+        boutons.forEach((b) => { b.disabled = false; });
+        if (touche) {
+          touche.removeAttribute('aria-busy');
+          if (touche.dataset.attente) touche.textContent = libelle;
+        }
+      });
+  });
+}
+
+// Liste des offres : balayer une offre vers la gauche montre Archiver et Supprimer (choix de Xavier du
+// 2026-11-12). Un glissé n'ouvre pas l'offre, un défilement vertical reste un défilement, une seule
+// offre ouverte à la fois. Au clavier, Tab atteint les deux boutons (CSS :focus-within).
+function balayage() {
+  if (!document.querySelector('[data-glisse]')) return;
+  const LARGEUR = 176;
+  // Écouté sur le document (chantier sans rechargement) : une liste remplacée par un morceau de page garde le geste.
+  const fermerTout = (sauf) => document.querySelectorAll('[data-glisse].ouverte').forEach((c) => { if (c !== sauf) c.classList.remove('ouverte'); });
+  let c = null;
+  let face = null;
+  let x0 = null;
+  let y0 = 0;
+  let dx = 0;
+  let glisse = false;
+  document.addEventListener('pointerdown', (e) => {
+    const f = e.target.closest && e.target.closest('[data-glisse] > .ocard');
+    if (!f) { if (!e.target.closest || !e.target.closest('[data-glisse]')) fermerTout(null); return; }
+    if (e.button !== 0) return;
+    face = f;
+    c = f.parentNode;
+    x0 = e.clientX;
+    y0 = e.clientY;
+    dx = 0;
+    glisse = false;
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (x0 === null || !face) return;
+    const mx = e.clientX - x0;
+    if (!glisse) {
+      if (Math.abs(mx) < 8) return;
+      if (Math.abs(e.clientY - y0) > Math.abs(mx)) { x0 = null; return; }
+      glisse = true;
+      c.classList.add('tire');
+      face.setPointerCapture(e.pointerId);
+      face.style.transition = 'none';
+      fermerTout(c);
+    }
+    const depart = c.classList.contains('ouverte') ? -LARGEUR : 0;
+    dx = Math.min(0, Math.max(-LARGEUR - 24, depart + mx));
+    face.style.transform = 'translateX(' + dx + 'px)';
+  });
+  const fin = () => {
+    if (x0 === null || !face) return;
+    x0 = null;
+    face.style.transition = '';
+    face.style.transform = '';
+    c.classList.remove('tire');
+    if (glisse) c.classList.toggle('ouverte', dx < -LARGEUR / 2);
+  };
+  document.addEventListener('pointerup', fin);
+  document.addEventListener('pointercancel', fin);
+  // La fin d'un glissé envoie un clic : il ne fait rien (constaté le 2026-11-12, il refermait l'offre
+  // qu'on venait d'ouvrir). Une offre déjà ouverte se referme au toucher au lieu de s'ouvrir.
+  document.addEventListener('click', (e) => {
+    const f = e.target.closest && e.target.closest('[data-glisse] > .ocard');
+    if (!f) return;
+    if (glisse) {
+      e.preventDefault();
+      glisse = false;
+      return;
+    }
+    if (f.parentNode.classList.contains('ouverte')) {
+      e.preventDefault();
+      f.parentNode.classList.remove('ouverte');
+    }
+  });
+  document.addEventListener('dragstart', (e) => { if (e.target.closest && e.target.closest('[data-glisse] > .ocard')) e.preventDefault(); });
+}
+
+// Réglages : la phrase « Paiement » de l'offre suit les choix avant l'enregistrement.
+function choixDesReglages() {
+  const bloc = document.querySelector('[data-paiement]');
+  const sortie = bloc && bloc.querySelector('[data-phrase]');
+  if (!sortie) return;
+  const form = bloc.closest('form');
+  const coche = (nom) => { const c = form.querySelector('input[name="' + nom + '"]:checked'); return c ? c.value : ''; };
+  const tape = (nom) => (form.elements[nom] ? form.elements[nom].value.trim() : '');
+  // Même règle que Reglages::conditionsPaiement(), qui reste celle du document. « la fin des travaux » et « en cours
+  // de travaux » viennent du serveur, dans les mots de l'activité du compte (attributs du paragraphe de la phrase).
+  const mots = sortie.parentElement.dataset;
+  const fin = mots.fin || 'la fin des travaux';
+  const cours = mots.cours || 'en cours de travaux';
+  const phrase = () => {
+    if (coche('paiement_type') === 'acomptes') {
+      const choix = coche('paiement_acomptes_choix');
+      const t = ((choix === 'autre' ? tape('paiement_acomptes') : choix).match(/\d+/g) || []).map(Number);
+      const n = t.length;
+      const juste = n >= 2 && n <= 4 && t.every((x) => x >= 1 && x <= 99) && t.reduce((s, x) => s + x, 0) === 100;
+      if (!juste) return 'acomptes à compléter, ils doivent faire 100 %';
+      return t.map((p, i) => p + ' % ' + (i === 0 ? 'à la commande' : i === n - 1 ? 'à ' + fin : cours)).join(', ') + '.';
+    }
+    const choix = coche('paiement_jours_choix');
+    const j = choix === 'autre' ? tape('paiement_jours') : choix;
+    if (!/^\d{1,3}$/.test(j) || +j < 1 || +j > 120) return 'délai à compléter, de 1 à 120 jours';
+    return coche('paiement_type') === 'net' ? 'Net à ' + +j + ' jours dès réception de la facture.' : 'À ' + +j + ' jours dès ' + fin + '.';
+  };
+  form.addEventListener('input', () => { sortie.textContent = phrase(); });
+  form.addEventListener('change', (e) => {
+    sortie.textContent = phrase();
+    // « Autre » touché : le champ qui vient d'apparaître reçoit le clavier.
+    if (e.target.type === 'radio' && e.target.value === 'autre') {
+      const champ = e.target.closest('.choix').querySelector('.si-autre input');
+      if (champ) champ.focus();
+    }
+  });
+}
+
+// Un fichier choisi part tout de suite (logo des réglages) : un toucher de moins.
+function envoisAutomatiques() {
+  document.querySelectorAll('input[type=file][data-envoi-auto]').forEach((champ) => {
+    champ.addEventListener('change', () => { if (champ.files && champ.files.length && champ.form) champ.form.submit(); });
+  });
+}
+
+// Réglages et fiche client : chaque changement s'enregistre seul (choix de Xavier du 2026-11-12). Le bouton
+// Enregistrer reste pour qui n'a pas JavaScript, et revient si un envoi automatique échoue.
+function enregistrementsAutomatiques() {
+  document.querySelectorAll('form[data-auto]').forEach(brancherAuto);
+}
+
+function brancherAuto(form) {
+  if (form.dataset.branche) return;
+  form.dataset.branche = '1';
+  const etat = form.querySelector('[data-auto-etat]');
+  const boutons = document.querySelectorAll('[data-sans-auto]');
+  let secours = false;
+  const montrerBoutons = (voir) => {
+    secours = voir;
+    boutons.forEach((b) => {
+      b.hidden = !voir;
+      const barre = b.closest('.actionbar');
+      if (barre) barre.hidden = !voir;
+    });
+  };
+  montrerBoutons(false);
+  const dire = (texte, classe) => {
+    if (!etat) return;
+    etat.textContent = texte;
+    etat.className = 'auto-etat' + (classe ? ' ' + classe : '');
+  };
+
+  // Les champs attendus (badge « à compléter ») : le badge suit la saisie une fois enregistrée.
+  const attendus = [];
+  form.querySelectorAll('.champ').forEach((ch) => {
+    const badge = ch.querySelector('label .badge.manque');
+    const champ = ch.querySelector('input.manque, textarea.manque');
+    if (badge && champ) attendus.push({ badge, champ });
+  });
+  const rafraichirBadges = () => {
+    attendus.forEach(({ badge, champ }) => {
+      const rempli = champ.value.trim() !== '';
+      badge.hidden = rempli;
+      champ.classList.toggle('manque', !rempli);
+    });
+    // L'adresse : son badge tombe quand elle est enregistrée avec son NPA.
+    form.querySelectorAll('fieldset[data-adresse]').forEach((g) => {
+      const badge = g.querySelector('[data-adresse-badge]');
+      const npa = g.querySelector('[data-a="npa"]');
+      if (badge && npa) badge.hidden = npa.value.trim() !== '';
+    });
+  };
+
+  const afficherErreurs = (erreurs) => {
+    form.querySelectorAll('[data-erreur]').forEach((s) => {
+      const nom = s.dataset.erreur;
+      const message = erreurs[nom] || '';
+      s.textContent = message;
+      s.hidden = message === '';
+      form.querySelectorAll('[aria-describedby="err-' + nom + '"]').forEach((c) => {
+        if (message) c.setAttribute('aria-invalid', 'true'); else c.removeAttribute('aria-invalid');
+      });
+    });
+  };
+
+  let minuterie = null;
+  let enCours = false;
+  let encore = false;
+  const corps = () => new FormData(form);
+  const envoyer = async () => {
+    clearTimeout(minuterie);
+    minuterie = null;
+    if (enCours) { encore = true; return; }
+    enCours = true;
+    dire('Enregistrement…');
+    try {
+      const r = await fetch(form.action, { method: 'POST', body: corps(), headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+      const json = (r.headers.get('Content-Type') || '').indexOf('json') >= 0 ? await r.json() : null;
+      if (r.ok && json && json.ok) {
+        afficherErreurs({});
+        rafraichirBadges();
+        dire('Enregistré', 'ok');
+        // La fenêtre qui monte rafraîchit la liste derrière elle à sa fermeture.
+        form.dispatchEvent(new CustomEvent('enregistre', { bubbles: true }));
+      } else if (r.status === 422 && json) {
+        afficherErreurs(json.erreurs || {});
+        dire('Pas enregistré : corrigez le champ signalé.', 'bad');
+      } else {
+        throw new Error('réponse ' + r.status);
+      }
+    } catch (e) {
+      // Session expirée, réseau coupé : on rend la main au bouton, qui recharge la page.
+      // Au PC, on clique (7c, 2026-11-19).
+      const pc = window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
+      dire(pc ? 'Pas enregistré. Cliquez sur Enregistrer.' : 'Pas enregistré. Touchez Enregistrer.', 'bad');
+      montrerBoutons(true);
+    } finally {
+      enCours = false;
+      if (encore) { encore = false; envoyer(); }
+    }
+  };
+  const attendre = () => { clearTimeout(minuterie); minuterie = setTimeout(envoyer, 900); };
+  const tape = (c) => c.matches('textarea, input:not([type]), input[type=text], input[type=tel], input[type=email], input[type=number]');
+
+  // L'adresse part entière : ses champs attendent qu'on la quitte (ou qu'on choisisse une suggestion), sinon la rue
+  // seule serait refusée faute de NPA à chaque pause de la frappe.
+  let adresseEnAttente = false;
+  const dansAdresse = (c) => c.closest && c.closest('fieldset[data-adresse]');
+  form.querySelectorAll('fieldset[data-adresse]').forEach((g) => {
+    const partir = () => { if (adresseEnAttente) { adresseEnAttente = false; envoyer(); } };
+    g.addEventListener('focusout', (e) => { if (!g.contains(e.relatedTarget)) partir(); });
+    g.addEventListener('adresse-choisie', () => { adresseEnAttente = true; partir(); });
+  });
+
+  form.addEventListener('input', (e) => {
+    if (e.target.form !== form || !tape(e.target)) return;
+    if (dansAdresse(e.target)) { adresseEnAttente = true; return; }
+    attendre();
+  });
+  form.addEventListener('change', (e) => {
+    const c = e.target;
+    if (c.form !== form) return; // le champ du logo appartient à son propre formulaire
+    if (dansAdresse(c)) { adresseEnAttente = true; return; }
+    // « Autre » touché alors que son champ est vide : on attend la saisie, rien à enregistrer encore.
+    if (c.type === 'radio' && c.value === 'autre') {
+      const champ = c.closest('.choix') && c.closest('.choix').querySelector('.si-autre input');
+      if (champ && champ.value.trim() === '') return;
+    }
+    envoyer();
+  });
+  form.addEventListener('submit', (e) => { if (!secours) { e.preventDefault(); envoyer(); } });
+  // Une saisie en attente part quand on quitte l'écran (retour au sommaire, autre onglet).
+  window.addEventListener('pagehide', () => {
+    if (minuterie === null && !adresseEnAttente) return;
+    clearTimeout(minuterie);
+    minuterie = null;
+    adresseEnAttente = false;
+    fetch(form.action, { method: 'POST', body: corps(), headers: { Accept: 'application/json' }, credentials: 'same-origin', keepalive: true });
+  });
+}
+
+// Adresse en champs séparés (sous-chantier 18, choix de Xavier du 2026-11-13 : « Tu tapes ton adresse et puis ça
+// te dit oui, tu es ici ou pas »). Pendant la frappe de la rue, les adresses du registre officiel (swisstopo, par
+// notre serveur) ; le NPA remplit la localité (répertoire copié chez nous) ; en quittant l'adresse, trouvée ou pas.
+// Sans JavaScript ou sans registre, les champs se tapent et le serveur contrôle le NPA quand même.
+function adresses() {
+  document.querySelectorAll('fieldset[data-adresse]').forEach(brancherAdresse);
+}
+
+function brancherAdresse(groupe) {
+  if (groupe.dataset.adresseBranchee) return;
+  groupe.dataset.adresseBranchee = '1';
+  const c = {};
+  ['rue', 'numero', 'npa', 'localite', 'pays'].forEach((k) => { c[k] = groupe.querySelector('[data-a="' + k + '"]'); });
+  const liste = groupe.querySelector('[data-adresse-suggestions]');
+  const etat = groupe.querySelector('[data-adresse-etat]');
+  if (!c.rue || !c.npa || !c.localite || !c.pays || !liste || !etat) return;
+  const dire = (texte, classe) => { etat.textContent = texte; etat.className = 'adresse-etat' + (classe ? ' ' + classe : ''); };
+  const suisse = () => c.pays.value === 'CH' || c.pays.value === 'LI';
+  const lire = (url) => fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const TROUVEE = 'Adresse trouvée au registre officiel des bâtiments.';
+
+  const fermer = () => { liste.hidden = true; liste.textContent = ''; };
+  const choisir = (s) => {
+    c.rue.value = s.rue; c.numero.value = s.numero; c.npa.value = s.npa; c.localite.value = s.localite; c.pays.value = 'CH';
+    fermer();
+    dire(TROUVEE, 'ok');
+    c.numero.focus();
+    groupe.dispatchEvent(new CustomEvent('adresse-choisie', { bubbles: true }));
+  };
+
+  let minuterie = null;
+  let demandee = '';
+  // « Bundesplatz 3 » tapé dans la rue : le numéro va dans son champ (même règle que SaisieAdresse côté serveur).
+  const NUMERO_AU_BOUT = /^(.*\S)\s+(\d+\s?[a-zA-Z]?(?:[/.-]\d+[a-zA-Z]?)?)$/;
+  const separerNumero = () => {
+    const m = c.rue.value.trim().match(NUMERO_AU_BOUT);
+    if (m && c.numero) { c.rue.value = m[1]; c.numero.value = m[2].replace(/\s/g, ''); }
+  };
+  c.rue.addEventListener('change', separerNumero);
+
+  const proposer = async () => {
+    // Le texte tapé seul, plus le numéro s'il n'est pas déjà dans la rue : l'ancien NPA ne restreint pas la recherche.
+    const rue = c.rue.value.trim();
+    const q = (NUMERO_AU_BOUT.test(rue) ? rue : rue + ' ' + c.numero.value).trim().replace(/\s+/g, ' ');
+    if (!suisse() || c.rue.value.trim().length < 3) { fermer(); return; }
+    if (q === demandee) return;
+    demandee = q;
+    const r = await lire('/adresses/suggestions?q=' + encodeURIComponent(q));
+    if (q !== demandee) return; // une frappe plus récente a sa propre réponse
+    fermer();
+    // Réponse arrivée après qu'on a quitté l'adresse : la liste ne s'ouvre plus par-dessus le reste.
+    if (!groupe.contains(document.activeElement)) return;
+    if (!r || !r.suggestions || r.suggestions.length === 0) return;
+    r.suggestions.forEach((s) => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = s.texte;
+      // Le clic ne retire pas le curseur du champ : l'adresse ne part pas à moitié.
+      b.addEventListener('mousedown', (e) => e.preventDefault());
+      b.addEventListener('click', () => choisir(s));
+      li.appendChild(b);
+      liste.appendChild(li);
+    });
+    liste.hidden = false;
+  };
+  const plusTard = () => { dire(''); clearTimeout(minuterie); minuterie = setTimeout(proposer, 350); };
+  c.rue.addEventListener('input', plusTard);
+  c.numero.addEventListener('input', plusTard);
+  groupe.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !liste.hidden) { e.preventDefault(); fermer(); } });
+
+  c.npa.addEventListener('input', async () => {
+    dire('');
+    const npa = c.npa.value.trim();
+    if (!suisse() || !/^\d{4}$/.test(npa)) return;
+    const r = await lire('/adresses/localites?npa=' + npa);
+    if (!r || c.npa.value.trim() !== npa) return;
+    if (r.localites.length === 0) { dire("Ce NPA n'existe pas au répertoire officiel des localités.", 'warn'); return; }
+    const tapee = c.localite.value.trim();
+    if (r.seule && (tapee === '' || r.localites.indexOf(tapee) < 0)) c.localite.value = r.seule;
+    else if (!r.seule && tapee === '') dire('Localités de ce NPA : ' + r.localites.join(', ') + '.');
+  });
+
+  const verifier = async () => {
+    fermer();
+    if (!suisse() || !c.rue.value.trim() || !/^\d{4}$/.test(c.npa.value.trim()) || etat.classList.contains('ok')) return;
+    const p = new URLSearchParams({ rue: c.rue.value, numero: c.numero.value, npa: c.npa.value, localite: c.localite.value });
+    const r = await lire('/adresses/verification?' + p.toString());
+    if (!r || r.trouvee === null) return;
+    if (r.trouvee) dire(TROUVEE, 'ok');
+    else dire("Adresse introuvable au registre officiel : vérifiez la rue et le numéro. Elle s'enregistre quand même.", 'warn');
+  };
+  groupe.addEventListener('focusout', (e) => { if (!groupe.contains(e.relatedTarget)) verifier(); });
+  groupe.addEventListener('input', () => { if (etat.classList.contains('ok')) dire(''); });
+}
+
+// « Ma marque » (2a, 2026-11-19) : les vignettes, vrais documents, à la largeur de leur case ; au toucher d'une pastille
+// (ou d'une couleur tapée), leur couleur suit aussitôt, par la feuille d'aperçu (?apercu=, rien n'est écrit).
+function vignettesVivantes() {
+  const cases = document.querySelectorAll('[data-vignette]');
+  if (!cases.length) return;
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver((entrees) => entrees.forEach((x) => { if (x.target.clientWidth) x.target.style.setProperty('--echelle', String(x.target.clientWidth / 820)); }));
+    cases.forEach((c) => ro.observe(c));
+  }
+  const feuille = document.querySelector('link[data-marque-css]');
+  const form = document.querySelector('form#reglages');
+  if (!feuille || !form) return;
+  const couleur = () => {
+    const choix = form.querySelector('input[name="couleur_choix"]:checked');
+    if (!choix) return null;
+    const v = choix.value === 'autre' ? (form.querySelector('#couleur') || {}).value : choix.value;
+    return /^#[0-9a-fA-F]{6}$/.test(v || '') ? v : null;
+  };
+  const suivre = () => {
+    const c = couleur();
+    if (c) feuille.href = '/reglages/marque.css?apercu=' + encodeURIComponent(c.toUpperCase());
+  };
+  form.addEventListener('change', (e) => { if (e.target.matches('[name="couleur_choix"], #couleur')) suivre(); });
+  form.addEventListener('input', (e) => { if (e.target.matches('#couleur')) suivre(); });
+}
+
+// 2b (Xavier, 2026-11-20 : « j'ai tenté de mettre du blanc […] j'ai pas de message ») : une couleur tapée, ou celle du
+// logo, sous 7:1 sur le blanc ; l'encadré propose deux versions plus foncées de la même teinte. Même calcul que
+// Marque::propositions (PHP). Un toucher en prend une : le champ couleur change, l'enregistrement automatique suit.
+function avisCouleur() {
+  const avis = document.querySelector('[data-avis-couleur]');
+  const form = avis && avis.closest('form');
+  if (!avis || !form) return;
+  const proposees = (avis.dataset.teintes || '').split(',');
+  const rvb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const lin = (c) => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); };
+  const contraste = (h) => { const [r, v, b] = rvb(h).map(lin); return 1.05 / (0.2126 * r + 0.7152 * v + 0.0722 * b + 0.05); };
+  const hex = (t) => '#' + t.map((c) => c.toString(16).padStart(2, '0')).join('').toUpperCase();
+  const foncer = (h, seuil) => {
+    let t = rvb(h);
+    for (let i = 0; i < 40 && contraste(hex(t)) < seuil; i++) t = t.map((c) => Math.round(c * 0.92));
+    return hex(t);
+  };
+  const rapport = (c) => String(Math.floor(c * 10) / 10).replace('.', ',');
+  const couleur = () => {
+    const choix = form.querySelector('input[name="couleur_choix"]:checked');
+    if (!choix) return null;
+    const v = choix.value === 'autre' ? (form.querySelector('#couleur') || {}).value : choix.value;
+    return /^#[0-9a-fA-F]{6}$/.test(v || '') ? v.toUpperCase() : null;
+  };
+  const maj = () => {
+    const c = couleur();
+    const k = c && !proposees.includes(c) ? contraste(c) : 21;
+    avis.hidden = k >= 7;
+    if (avis.hidden) return;
+    avis.querySelector('[data-avis-titre]').textContent = k >= 4.5 ? 'Cette couleur manque de contraste sur le papier blanc' : 'Cette couleur se lit mal sur le papier blanc';
+    avis.querySelector('[data-avis-contraste]').textContent = rapport(k);
+    avis.querySelector('[data-avis-pale]').hidden = k >= 4.5;
+    avis.querySelectorAll('[data-niveau]').forEach((b) => {
+      const h = foncer(c, b.dataset.niveau === 'bien' ? 7 : 4.5);
+      b.value = h;
+      b.querySelector('circle').setAttribute('fill', h);
+      b.querySelector('[data-hex]').textContent = h;
+      b.querySelector('[data-rapport]').textContent = rapport(contraste(h));
+      b.setAttribute('aria-pressed', String(h === c));
+    });
+  };
+  form.addEventListener('change', (e) => { if (e.target.matches('[name="couleur_choix"], #couleur')) maj(); });
+  form.addEventListener('input', (e) => { if (e.target.matches('#couleur')) maj(); });
+  avis.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-niveau]');
+    const autre = form.querySelector('input[name="couleur_choix"][value="autre"]');
+    const champ = form.querySelector('#couleur');
+    if (!b || !autre || !champ) return;
+    e.preventDefault();
+    autre.checked = true;
+    champ.value = b.value.toLowerCase();
+    champ.dispatchEvent(new Event('input', { bubbles: true }));
+    champ.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  maj();
+}
+
+// Phrases de Lettre (2026-11-20, L6) : un toucher sur une tournure la met dans son champ ; l'enregistrement automatique
+// suit (événement input, comme une frappe). La tournure égale au champ est marquée.
+function tournuresLettre() {
+  const boutons = [...document.querySelectorAll('[data-tournure]')];
+  if (!boutons.length) return;
+  const marquer = (champ) => boutons.filter((b) => b.dataset.pour === champ.id)
+    .forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tournure === champ.value.trim())));
+  boutons.forEach((b) => {
+    const champ = document.getElementById(b.dataset.pour);
+    if (!champ) return;
+    b.addEventListener('click', () => {
+      champ.value = b.dataset.tournure;
+      champ.dispatchEvent(new Event('input', { bubbles: true }));
+      champ.focus();
+    });
+  });
+  new Set(boutons.map((b) => b.dataset.pour)).forEach((id) => {
+    const champ = document.getElementById(id);
+    if (!champ) return;
+    champ.addEventListener('input', () => marquer(champ));
+    marquer(champ);
+  });
+}
+
+// Les phrases tirées de l'offre, dans « Phrases du document » (M1 A, 2026-11-23) : une pastille se pose là où le curseur était
+// dans sa phrase, au bout si l'on n'y a jamais touché ; « Reprendre celle de l'application » remet la phrase d'origine.
+// L'enregistrement automatique suit (événement input), le serveur refuse une pastille inconnue ou retirée.
+function pastillesPhrases() {
+  const champs = [...document.querySelectorAll('textarea[data-origine]')];
+  if (!champs.length) return;
+  const touches = new WeakSet();
+  const etat = (champ) => {
+    const s = champ.closest('details')?.querySelector('[data-etat-phrase]');
+    if (s) s.textContent = champ.value.trim() === '' || champ.value.trim() === champ.dataset.origine ? 'Celle de l\'application' : 'Réécrite';
+  };
+  champs.forEach((champ) => {
+    champ.addEventListener('focus', () => touches.add(champ));
+    champ.addEventListener('input', () => etat(champ));
+  });
+  const changer = (champ, valeur, curseur) => {
+    champ.value = valeur;
+    champ.dispatchEvent(new Event('input', { bubbles: true }));
+    champ.focus();
+    champ.setSelectionRange(curseur, curseur);
+  };
+  document.querySelectorAll('[data-pastille]').forEach((b) => {
+    const champ = document.getElementById(b.dataset.pour);
+    if (!champ) return;
+    b.addEventListener('click', () => {
+      const debut = touches.has(champ) ? champ.selectionStart : champ.value.length;
+      const fin = touches.has(champ) ? champ.selectionEnd : champ.value.length;
+      const avant = champ.value.slice(0, debut);
+      // Collée à un mot, la pastille en reçoit une espace.
+      const texte = (/[\p{L}\p{N}]$/u.test(avant) ? ' ' : '') + b.dataset.pastille;
+      changer(champ, avant + texte + champ.value.slice(fin), debut + texte.length);
+    });
+  });
+  document.querySelectorAll('[data-remettre]').forEach((b) => {
+    const champ = document.getElementById(b.dataset.remettre);
+    if (champ) b.addEventListener('click', () => changer(champ, champ.dataset.origine, champ.dataset.origine.length));
+  });
+}
+
+// Feuille A4 des documents (modèles du bâtiment, 2026-11-20) : chaque modèle est dessiné sur 794 px, comme dans le PDF,
+// et se réduit à la largeur de son papier (--feuille, lue par document-ecran.css). La réduction ne change pas la place
+// que la feuille occupe : une marge basse négative la lui rend. Les papiers qui arrivent plus tard (document à côté,
+// aperçu d'une facture) sont suivis de la même façon.
+function papiers() {
+  if (!window.ResizeObserver || !window.MutationObserver) return;
+  const ajuster = (papier) => {
+    const feuille = papier.querySelector(':scope > [data-feuille]');
+    if (!feuille || !papier.clientWidth) return;
+    const echelle = papier.clientWidth / 794;
+    papier.style.setProperty('--feuille', String(echelle));
+    feuille.style.marginBottom = Math.round(feuille.offsetHeight * (echelle - 1)) + 'px';
+  };
+  const tailles = new ResizeObserver((entrees) => entrees.forEach((x) => ajuster(x.target)));
+  const suivre = (racine) => {
+    if (racine.matches && racine.matches('.paper')) tailles.observe(racine);
+    racine.querySelectorAll('.paper').forEach((p) => tailles.observe(p));
+  };
+  suivre(document);
+  new MutationObserver((changements) => changements.forEach((c) => c.addedNodes.forEach((n) => { if (n.nodeType === 1) suivre(n); })))
+    .observe(document.body, { childList: true, subtree: true });
+}
+
+// « Voir en grand » sur un modèle (Xavier, 2026-11-15) : l'image s'agrandit dans la page, sans en ouvrir
+// une autre. Flèches pour passer d'un modèle à l'autre, « Choisir ce modèle » coche et ferme (un toucher de
+// moins). Sans JavaScript, le lien mène à la page d'aperçu.
+function modelesEnGrand() {
+  const liens = [...document.querySelectorAll('a.voir[data-grand]')];
+  if (!liens.length) return;
+  const vue = document.createElement('div');
+  vue.className = 'agrandi';
+  vue.hidden = true;
+  vue.setAttribute('role', 'dialog');
+  vue.setAttribute('aria-modal', 'true');
+  vue.innerHTML = '<div class="agrandi-haut"><b data-titre></b><button type="button" class="agrandi-x" data-fermer aria-label="Fermer">×</button></div>'
+    + '<div class="agrandi-image" data-fond><img alt=""></div>'
+    + '<div class="agrandi-bas"><button type="button" class="btn" data-pas="-1" aria-label="Modèle précédent">‹</button>'
+    + '<button type="button" class="btn primary" data-choisir>Choisir ce modèle</button>'
+    + '<button type="button" class="btn" data-pas="1" aria-label="Modèle suivant">›</button></div>';
+  document.body.appendChild(vue);
+  const img = vue.querySelector('img');
+  const fond = vue.querySelector('[data-fond]');
+  let rang = 0;
+  const montrer = (i) => {
+    rang = (i + liens.length) % liens.length;
+    const l = liens[rang];
+    // 2a : le vrai document du modèle, dans la couleur touchée ; l'image figée seulement sans vignette.
+    const doc = document.querySelector('[data-vignette="' + l.dataset.cle + '"] > .paper');
+    fond.querySelectorAll('.paper').forEach((p) => p.remove());
+    img.hidden = Boolean(doc);
+    if (doc) {
+      const copie = doc.cloneNode(true);
+      fond.append(copie);
+      requestAnimationFrame(() => {
+        const e = Math.min(1, (fond.clientWidth - 24) / 820);
+        copie.style.transform = 'scale(' + e + ')';
+        copie.style.marginBottom = Math.round(copie.offsetHeight * (e - 1)) + 'px';
+      });
+    }
+    img.src = l.dataset.grand;
+    img.alt = 'Modèle ' + l.dataset.nom + ', en grand';
+    vue.querySelector('[data-titre]').textContent = 'Modèle ' + l.dataset.nom;
+    const radio = document.querySelector('input[name="modele"][value="' + l.dataset.cle + '"]');
+    vue.querySelector('[data-choisir]').textContent = radio && radio.checked ? 'Modèle choisi' : 'Choisir ce modèle';
+  };
+  const calque = {
+    montrer() { vue.hidden = false; document.body.classList.add('agrandi-ouvert'); vue.querySelector('[data-choisir]').focus(); },
+    cacher() { vue.hidden = true; document.body.classList.remove('agrandi-ouvert'); rendreFocus(liens[rang]); },
+  };
+  const fermer = () => calques.fermer(calque);
+  liens.forEach((l, i) => l.addEventListener('click', (e) => { e.preventDefault(); montrer(i); calques.ouvrir(calque); }));
+  vue.addEventListener('click', (e) => {
+    if (e.target.closest('[data-fermer]') || e.target.matches('[data-fond]')) { fermer(); return; }
+    const pas = e.target.closest('[data-pas]');
+    if (pas) { montrer(rang + Number(pas.dataset.pas)); return; }
+    if (e.target.closest('[data-choisir]')) {
+      const radio = document.querySelector('input[name="modele"][value="' + liens[rang].dataset.cle + '"]');
+      if (radio && !radio.checked) { radio.checked = true; radio.dispatchEvent(new Event('change', { bubbles: true })); }
+      fermer();
+    }
+  });
+  // Au doigt (Xavier, 2026-11-20) : glisser vers la gauche montre le modèle suivant, vers la droite le précédent. Un
+  // geste surtout vertical fait défiler la page ; deux doigts, ou une page agrandie, laissent le navigateur zoomer.
+  let depart = null;
+  vue.addEventListener('touchstart', (e) => {
+    const zoom = window.visualViewport ? window.visualViewport.scale : 1;
+    depart = e.touches.length === 1 && zoom <= 1.05 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }, { passive: true });
+  vue.addEventListener('touchmove', (e) => { if (e.touches.length > 1) depart = null; }, { passive: true });
+  vue.addEventListener('touchend', (e) => {
+    if (!depart || e.target.closest('.agrandi-bas, .agrandi-haut')) { depart = null; return; }
+    const t = e.changedTouches[0];
+    const dx = t.clientX - depart.x;
+    const dy = t.clientY - depart.y;
+    depart = null;
+    if (Math.abs(dx) >= 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) montrer(rang + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+  document.addEventListener('keydown', (e) => {
+    if (calques.ouvert() !== calque) return;
+    if (e.key === 'Escape') fermer();
+    else if (e.key === 'ArrowLeft') montrer(rang - 1);
+    else if (e.key === 'ArrowRight') montrer(rang + 1);
+  });
+}
+
+// Lignes d'une offre ou d'un brouillon de facture : glisser vers la gauche retire la ligne (décision D4 B,
+// 2026-11-15), par le même envoi que la corbeille, donc avec le même « Annuler ». Un défilement vertical reste
+// un défilement ; un glissé qui part d'un champ ou d'un bouton ne fait rien.
+// Écouté sur le document (chantier sans rechargement, 2026-11-23) : une ligne remplacée par un morceau de page garde son
+// glissé ; écouté ligne par ligne, il se perdait dès la première correction. requestSubmit : la corbeille passe par
+// fluide.js comme un toucher (la ligne part sur place, « Annuler » à elle).
+function glisserLignes() {
+  const SEUIL = 110;
+  let row = null;
+  let x0 = null;
+  let y0 = 0;
+  let dx = 0;
+  let glisse = false;
+  const suppr = (r) => r.querySelector('form[action$="/supprimer"]');
+  document.addEventListener('pointerdown', (e) => {
+    // Un glissé fini sans clic ne doit pas avaler le clic suivant, même sur un bouton (revue, B-M12).
+    glisse = false;
+    const r = e.target.closest && e.target.closest('[data-glisse-ligne]');
+    if (!r || e.button !== 0 || e.target.closest('input, button, select, textarea') || !suppr(r)) { x0 = null; return; }
+    row = r;
+    x0 = e.clientX;
+    y0 = e.clientY;
+    dx = 0;
+    glisse = false;
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (x0 === null || !row) return;
+    const mx = e.clientX - x0;
+    if (!glisse) {
+      if (Math.abs(mx) < 10) return;
+      if (Math.abs(e.clientY - y0) > Math.abs(mx) || mx > 0) { x0 = null; return; }
+      glisse = true;
+      row.classList.add('tire');
+      row.setPointerCapture(e.pointerId);
+    }
+    dx = Math.min(0, mx);
+    row.style.setProperty('--dx', dx + 'px');
+    row.classList.toggle('assez', dx <= -SEUIL);
+  });
+  const fin = () => {
+    if (x0 === null || !row) return;
+    x0 = null;
+    if (glisse && dx <= -SEUIL) { suppr(row).requestSubmit(); return; }
+    row.classList.remove('tire', 'assez');
+    row.style.removeProperty('--dx');
+  };
+  document.addEventListener('pointerup', fin);
+  document.addEventListener('pointercancel', fin);
+  // Le nom de la ligne est un lien : sans cela, le navigateur le glisse lui-même et interrompt le geste.
+  document.addEventListener('dragstart', (e) => { if (e.target.closest && e.target.closest('[data-glisse-ligne]')) e.preventDefault(); });
+  // La fin d'un glissé envoie un clic : il n'ouvre pas la ligne.
+  document.addEventListener('click', (e) => {
+    if (glisse && e.target.closest && e.target.closest('[data-glisse-ligne]')) { e.preventDefault(); e.stopPropagation(); glisse = false; }
+  }, true);
+}
+
+// Toucher une ligne l'ouvre, où qu'on la touche (Xavier, 2026-11-22), sauf ses champs, ses boutons, ses liens et ses
+// notes. Un défilement ne produit pas de clic, et glisserLignes arrête celui qui finit un glissé. Écouté sur le
+// document : les lignes remplacées après un enregistrement (envoyer) le gardent.
+function ouvrirLaLigne() {
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0) return;
+    const row = e.target.closest('.rows.une .row[data-glisse-ligne]');
+    if (!row || e.target.closest('input, button, select, textarea, label, a, form.q, form.p, .note')) return;
+    const nom = row.querySelector('a.nm');
+    if (nom) nom.click();
+  });
+}
+
+// Fenêtre de la ligne : un 0 tapé coche « Offerte » (D2, 2026-11-21), comme le serveur le fera à l'enregistrement.
+function zeroOffreLaLigne() {
+  document.addEventListener('input', (e) => {
+    const prix = e.target.closest('#ligne input[name="prix"]');
+    if (!prix) return;
+    const offerte = prix.form.querySelector('input[name="offerte"][value="offerte"]');
+    if (offerte && /^0+([.,]0*)?$/.test(prix.value.trim())) offerte.checked = true;
+  });
+}
+
+// Relecture (D5) : le montant suit la quantité et le prix pendant la frappe. Le serveur refait le calcul.
+// Chaque ligne de la relecture est dans la page (chantier sans rechargement) : écouté sur le document, par formulaire.
+function montantRelu() {
+  const nombre = (v) => parseFloat(String(v).replace(/[\s'’]/g, '').replace(',', '.'));
+  document.addEventListener('input', (e) => {
+    const champ = e.target.closest && e.target.closest('[data-relu-quantite], [data-relu-prix]');
+    if (!champ || !champ.form) return;
+    const q = champ.form.querySelector('[data-relu-quantite]');
+    const p = champ.form.querySelector('[data-relu-prix]');
+    const sortie = champ.form.querySelector('[data-relu-montant]');
+    if (!q || !p || !sortie) return;
+    const centimes = Math.round(nombre(q.value) * nombre(p.value) * 100);
+    // Jamais de « ? » (Xavier, 2026-11-21) : un 0 tapé offre la ligne (D2), un prix vide laisse la case vide.
+    sortie.textContent = Number.isFinite(centimes) && centimes > 0
+      ? 'CHF ' + (centimes / 100).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/'/g, '’')
+      : (nombre(p.value) === 0 ? 'Offert' : '');
+  });
+}
+
+// Textes avant et après les lignes (D5 A, 2026-11-21) : envoyés seuls quand le champ change, comme une quantité.
+// Sans JavaScript, leur bouton les envoie.
+function textesOffre() {
+  const formulaires = document.querySelectorAll('form[data-texte-offre]');
+  if (!formulaires.length) return;
+  const etat = () => document.querySelector('[data-sauvegarde]');
+  formulaires.forEach((form) => {
+    form.querySelectorAll('[data-sans-js]').forEach((b) => { b.hidden = true; });
+    const champ = form.querySelector('textarea');
+    // Par la file de fluide.js (chantier sans rechargement) : l'état d'enregistrement et le bandeau de renvoi reviennent
+    // en morceaux ; sans réseau, le texte attend et part au retour du réseau.
+    const envoyer = () => {
+      if (champ.value === champ.defaultValue) return;
+      champ.defaultValue = champ.value;
+      if (etat()) etat().textContent = 'Enregistrement…';
+      fluide.texte(form);
+    };
+    champ.addEventListener('change', envoyer);
+    window.addEventListener('pagehide', envoyer);
+  });
+}
+
+// Les feuilles de style d'une page chargée à côté (document de facture, couleur de l'artisan) : ajoutées une fois.
+function importerStyles(page) {
+  page.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+    const href = l.getAttribute('href');
+    if (![...document.querySelectorAll('link[rel="stylesheet"]')].some((x) => x.getAttribute('href') === href)) {
+      const lien = document.createElement('link');
+      lien.rel = 'stylesheet';
+      lien.href = href;
+      document.head.append(lien);
+    }
+  });
+}
+
+// Facturer (maquette 25, E1 à E4) : chaque choix recharge l'aperçu de la facture (rien n'est écrit) et le montant du
+// bouton ; Entrée dans un champ recalcule au lieu de créer (une facture créée est définitive) ; toucher la miniature
+// l'ouvre en grand, avec « Créer la facture » en bas. Dans la feuille par-dessus l'offre, ou sur la page seule.
+function brancherFacturer(form) {
+  if (form.dataset.branche) return;
+  form.dataset.branche = '1';
+  const mini = form.querySelector('[data-apercu-mini]');
+  const ouvrir = form.querySelector('[data-apercu-ouvrir]');
+  const bouton = () => document.querySelector('[data-bouton-creer]');
+  const blocs = { acompte: form.querySelector('[data-si-acompte]'), finale: form.querySelector('[data-si-finale]'), chf: form.querySelector('[data-si-chf]') };
+  const valeur = (nom) => {
+    const champ = form.querySelector(`input[type="radio"][name="${nom}"]:checked`) || form.querySelector(`[name="${nom}"]:not([type="radio"])`);
+    return champ ? champ.value : '';
+  };
+  const montrer = () => {
+    const genre = valeur('genre');
+    if (blocs.acompte) blocs.acompte.hidden = genre !== 'acompte';
+    if (blocs.finale) blocs.finale.hidden = genre !== 'finale';
+    if (blocs.chf) blocs.chf.hidden = valeur('pourcent') !== 'chf';
+  };
+  let numero = 0;
+  const recharger = () => {
+    const ce = ++numero;
+    // « CHF » choisi, rien de tapé encore : une consigne plutôt qu'une erreur.
+    if (valeur('genre') === 'acompte' && valeur('pourcent') === 'chf' && valeur('montant').trim() === '') {
+      const consigne = document.createElement('p');
+      consigne.className = 'alerte info';
+      consigne.textContent = 'Tapez le montant que le client paiera, TVA comprise.';
+      mini.replaceChildren(consigne);
+      const b = bouton();
+      if (b) b.textContent = 'Créer la facture';
+      return;
+    }
+    const params = new URLSearchParams();
+    ['genre', 'pourcent', 'montant', 'numero', 'date', 'echeance', 'libelle'].forEach((n) => params.set(n, valeur(n)));
+    fetch(form.dataset.apercu + '?' + params, { credentials: 'same-origin' })
+      .then((r) => r.text())
+      .then((html) => {
+        if (ce !== numero) return; // une réponse plus récente est attendue
+        const page = new DOMParser().parseFromString(html, 'text/html');
+        const doc = page.querySelector('.apercu-facture');
+        const refus = page.querySelector('[data-apercu-erreur]');
+        const b = bouton();
+        if (doc) {
+          mini.replaceChildren(document.importNode(doc, true));
+          if (b) b.textContent = doc.dataset.bouton;
+        } else if (refus) {
+          mini.replaceChildren(document.importNode(refus, true));
+          if (b) b.textContent = 'Créer la facture';
+        }
+      })
+      .catch(() => { /* sans réseau, l'aperçu reste le dernier ; la création dira l'erreur */ });
+  };
+  let minuterie = null;
+  const plusTard = () => { clearTimeout(minuterie); minuterie = setTimeout(recharger, 300); };
+  form.addEventListener('change', (e) => {
+    montrer();
+    if (e.target.matches('input[name="pourcent"][value="chf"]')) {
+      const champ = form.querySelector('#montant');
+      if (champ) champ.focus();
+    }
+    // L'échéance proposée suit le genre (acompte à 30 jours, finale selon les conditions), tant que l'artisan ne l'a
+    // pas changée lui-même (revue du 25).
+    const echeance = form.querySelector('#echeance');
+    if (e.target.matches('input[name="genre"]') && echeance) {
+      const genre = valeur('genre');
+      const autre = genre === 'acompte' ? 'finale' : 'acompte';
+      if (echeance.value === echeance.dataset[autre] && echeance.dataset[genre]) echeance.value = echeance.dataset[genre];
+    }
+    recharger();
+  });
+  form.addEventListener('input', (e) => { if (e.target.matches('#montant, #numero, #libelle')) plusTard(); });
+  // Libellé d'acompte (D11 A, 2026-11-21) : une puce le remplit.
+  form.addEventListener('click', (e) => {
+    const puce = e.target.closest('[data-libelle-puce]');
+    const champ = form.querySelector('#libelle');
+    if (!puce || !champ) return;
+    champ.value = puce.dataset.libellePuce;
+    recharger();
+  });
+  form.addEventListener('keydown', (e) => {
+    // Entrée, même sur un bouton radio, recalcule : elle ne crée rien et n'envoie pas « Corriger des lignes », premier
+    // bouton du formulaire (revue du 25).
+    if (e.key === 'Enter' && e.target.matches('input')) {
+      e.preventDefault();
+      recharger();
+    }
+  });
+
+  // La facture en grand, par-dessus tout, avec « Retour » et « Créer la facture ».
+  const enGrand = () => {
+    const doc = mini.querySelector('.apercu-facture');
+    if (!doc) return;
+    const fond = document.createElement('div');
+    fond.className = 'apercu-grand';
+    fond.setAttribute('role', 'dialog');
+    fond.setAttribute('aria-modal', 'true');
+    fond.setAttribute('aria-label', 'Aperçu de la facture');
+    fond.tabIndex = -1;
+    const barre = document.createElement('div');
+    barre.className = 'apercu-grand-barre';
+    const retour = document.createElement('button');
+    retour.type = 'button';
+    retour.className = 'btn';
+    retour.textContent = 'Retour';
+    const note = document.createElement('span');
+    note.className = 'muted petit';
+    note.textContent = 'Aperçu : rien n’est encore créé';
+    barre.append(retour, note);
+    const corps = document.createElement('div');
+    corps.className = 'apercu-grand-corps';
+    corps.append(doc.cloneNode(true));
+    const pied = document.createElement('div');
+    pied.className = 'apercu-grand-pied';
+    const creer = document.createElement('button');
+    creer.type = 'submit';
+    creer.setAttribute('form', form.id);
+    creer.name = 'suite';
+    creer.value = 'creer';
+    creer.className = 'btn primary grand';
+    const b = bouton();
+    creer.textContent = b ? b.textContent : 'Créer la facture';
+    pied.append(creer);
+    fond.append(barre, corps, pied);
+    const echap = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      fermer();
+    };
+    const fermer = () => {
+      fond.remove();
+      document.removeEventListener('keydown', echap, true);
+      rendreFocus(ouvrir);
+    };
+    retour.addEventListener('click', fermer);
+    creer.addEventListener('click', () => setTimeout(() => { fond.remove(); document.removeEventListener('keydown', echap, true); }, 0));
+    document.addEventListener('keydown', echap, true);
+    document.body.append(fond);
+    fond.focus();
+  };
+  if (ouvrir) {
+    ouvrir.addEventListener('click', enGrand);
+    ouvrir.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enGrand(); } });
+  }
+
+  // PC (point 8 du 2026-11-19) : la facture, posée sur 820 px, se réduit à la largeur de sa colonne ; « Agrandir la
+  // facture » lui donne la place des réglages. Le choix se garde d'une facture à l'autre.
+  if (ouvrir && window.ResizeObserver) {
+    new ResizeObserver(() => {
+      if (ouvrir.clientWidth) ouvrir.style.setProperty('--echelle', String(Math.min(1, ouvrir.clientWidth / 820)));
+    }).observe(ouvrir);
+  }
+  const grille = form.querySelector('.facturer');
+  const large = form.querySelector('[data-facture-large]');
+  if (grille && large) {
+    const regler = (oui) => {
+      grille.classList.toggle('large', oui);
+      large.setAttribute('aria-pressed', oui ? 'true' : 'false');
+      large.querySelector('span').textContent = oui ? 'Réduire la facture' : 'Agrandir la facture';
+    };
+    let garde = null;
+    try { garde = window.localStorage.getItem('offregen-facture-large'); } catch (err) { /* stockage refusé */ }
+    regler(garde === '1');
+    large.addEventListener('click', () => {
+      const oui = !grille.classList.contains('large');
+      regler(oui);
+      try { window.localStorage.setItem('offregen-facture-large', oui ? '1' : '0'); } catch (err) { /* le choix ne se garde pas */ }
+    });
+  }
+  montrer();
+}
+
+function feuillesFacturer() {
+  document.querySelectorAll('form[data-facturer]').forEach(brancherFacturer);
+}
+
+// Ajouter sur PC (maquette 25, E7) : la ligne de recherche au bas du tableau. Les produits se proposent pendant la
+// frappe ; Entrée ajoute le premier (ou celui choisi aux flèches) ; un texte sans produit devient une ligne libre.
+// La page revient sur la ligne ajoutée, curseur dans sa quantité (clavierPc). Échap vide le champ.
+function ajoutPc() {
+  document.querySelectorAll('form[data-ajout-pc]').forEach((form) => {
+    const champ = form.querySelector('input[name="q"]');
+    const liste = form.querySelector('[role="listbox"]');
+    const produits = [...liste.querySelectorAll('li[data-id]')];
+    const libre = liste.querySelector('li[data-libre]');
+    const libreTexte = libre.querySelector('[data-libre-texte]');
+    let actif = -1;
+    const visibles = () => [...liste.querySelectorAll('li:not([hidden])')];
+    const marquer = (i) => {
+      const v = visibles();
+      actif = v.length ? (i + v.length) % v.length : -1;
+      v.forEach((li, j) => li.setAttribute('aria-selected', String(j === actif)));
+    };
+    const filtrer = () => {
+      const texte = champ.value.trim();
+      const mots = normaliser(texte).split(' ').filter(Boolean);
+      let n = 0;
+      produits.forEach((li) => {
+        const garde = mots.length > 0 && n < 6 && mots.every((m) => li.dataset.texte.includes(m));
+        li.hidden = !garde;
+        if (garde) n++;
+      });
+      libre.hidden = texte === '';
+      libreTexte.textContent = '« ' + texte + ' »';
+      liste.hidden = texte === '';
+      champ.setAttribute('aria-expanded', String(!liste.hidden));
+      marquer(0);
+    };
+    const envoyer = (li) => {
+      const texte = champ.value.trim();
+      if (!texte) return;
+      const poste = document.createElement('form');
+      poste.method = 'post';
+      poste.action = form.dataset.poste;
+      poste.hidden = true;
+      const champs = { _csrf: form.dataset.csrf };
+      if (li && li.dataset.id) champs.produit = li.dataset.id;
+      else Object.assign(champs, { designation: texte, quantite: '1', unite: 'forfait', prix: '' });
+      Object.entries(champs).forEach(([nom, valeur]) => {
+        const entree = document.createElement('input');
+        entree.type = 'hidden';
+        entree.name = nom;
+        entree.value = valeur;
+        poste.append(entree);
+      });
+      // Chantier sans rechargement : la ligne entre sur place (morceau « lignes »), le curseur dans sa quantité.
+      if (window.fluide) {
+        champ.value = '';
+        filtrer();
+        fluide.envoyer(poste, {
+          morceaux: ['lignes'],
+          apres: (r) => {
+            const id = (/#l(\d+)$/.exec(r.adresse || '') || [])[1];
+            const quantite = id && document.querySelector('#l' + id + ' input[name=quantite]');
+            // L'artisan tape déjà le produit suivant : le curseur reste dans la ligne d'ajout (revue, B-I10).
+            if (quantite && !(document.activeElement === champ && champ.value.trim() !== '')) { quantite.scrollIntoView({ block: 'center' }); quantite.focus(); }
+          },
+        });
+        return;
+      }
+      document.body.append(poste);
+      poste.submit();
+    };
+    champ.addEventListener('input', filtrer);
+    champ.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); marquer(actif + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); marquer(actif - 1); }
+      else if (e.key === 'Enter') { e.preventDefault(); envoyer(visibles()[actif] || null); }
+      else if (e.key === 'Escape') { champ.value = ''; filtrer(); }
+    });
+    // mousedown plutôt que click : le champ ne perd pas la main avant le choix.
+    liste.addEventListener('mousedown', (e) => {
+      const li = e.target.closest('li');
+      if (li) { e.preventDefault(); envoyer(li); }
+    });
+    champ.addEventListener('blur', () => setTimeout(() => { liste.hidden = true; champ.setAttribute('aria-expanded', 'false'); }, 150));
+    champ.addEventListener('focus', () => { if (champ.value.trim()) filtrer(); });
+  });
+}
+
+// La hauteur du bas de l'écran (boutons, phrase, onglets) : les bandeaux se posent au-dessus (--bas, app.css). Constaté
+// le 2026-11-15 : à hauteur fixe, le bandeau recouvrait « Créer la facture » quand une phrase suit le bouton.
+function hauteurDuBas() {
+  const bas = document.querySelector('.app > .bas');
+  if (!bas) return;
+  const poser = () => document.documentElement.style.setProperty('--bas', Math.round(bas.getBoundingClientRect().height) + 'px');
+  poser();
+  if ('ResizeObserver' in window) new ResizeObserver(poser).observe(bas);
+}
+
+// iPhone et iPad : Safari agrandit la page à l'entrée dans un champ dont le texte fait moins de 16 px, et la laisse
+// agrandie (Xavier, 2026-11-25 : « il faut que la case, ça reste la même taille »). Relevé au banc le 2026-11-25
+// (banc/zoom-champs.js) : tous les champs du téléphone font 16 px, sauf le texte de l'offre (15 px, corrigé) ; Xavier
+// voit le zoom à chaque case touchée, cause non trouvée au banc. maximum-scale=1 coupe ce zoom quelle qu'en
+// soit la cause ; sur iPhone et iPad, le zoom à deux doigts reste permis (Safari ignore cette limite pour les doigts
+// depuis iOS 10). Sur Android, et dans Chrome ou Firefox sur iPhone, la même limite empêcherait de zoomer : elle ne
+// se pose que dans Safari sur iOS.
+function sansZoomAuToucher() {
+  const ua = navigator.userAgent;
+  const ios = (/iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!ios || !meta || /maximum-scale/.test(meta.content)) return;
+  meta.content += ', maximum-scale=1';
+}
+
+// iPhone, clavier refermé (Xavier, 2026-11-24 : « Enregistrer » sans effet jusqu'à ce qu'on fasse défiler la page).
+// Safari sous iOS 26 laisse les zones de toucher décalées après la fermeture du clavier, le bas de l'écran surtout,
+// où sont les boutons qu'on touche juste après une saisie (forums développeurs d'Apple, fil 800125, FB19889436 ;
+// encore signalé dans la bêta d'iOS 27). Un défilement les remet en place : on le fait à la place de l'artisan, un
+// pixel et retour, dès que le clavier est redescendu. Le clavier se lit à la hauteur visible : plus basse de 120 px
+// que la plus grande vue à cette largeur. Zoom des doigts : rien. Sans visualViewport : rien.
+function apresLeClavier() {
+  const vue = window.visualViewport;
+  if (!vue) return;
+  let largeur = vue.width;
+  let pleine = vue.height;
+  let clavier = false;
+  let minuterie = 0;
+  const recaler = () => {
+    const el = document.scrollingElement || document.documentElement;
+    const y = Math.min(window.scrollY, Math.max(0, el.scrollHeight - window.innerHeight));
+    window.scrollTo(window.scrollX, y > 0 ? y - 1 : y + 1);
+    requestAnimationFrame(() => window.scrollTo(window.scrollX, y));
+  };
+  vue.addEventListener('resize', () => {
+    if (vue.scale > 1.01) return;
+    if (Math.abs(vue.width - largeur) > 1) { largeur = vue.width; pleine = vue.height; clavier = false; return; }
+    pleine = Math.max(pleine, vue.height);
+    if (vue.height < pleine - 120) { clavier = true; return; }
+    if (!clavier) return;
+    clavier = false;
+    clearTimeout(minuterie);
+    minuterie = setTimeout(recaler, 60);
+  });
+}
+
+// Un message qui commente la recherche de départ disparaît dès qu'on en tape une autre.
+function messagesDeRecherche() {
+  const messages = document.querySelectorAll('[data-cache-si-recherche]');
+  if (!messages.length) return;
+  document.querySelectorAll('[data-filtre]').forEach((champ) => champ.addEventListener('input', () => messages.forEach((m) => { m.hidden = true; }), { once: true }));
+}
+
+// Clavier du PC (D12, D13, 2026-11-15). D : dicter une offre, hors d'un champ de saisie. Sur une ligne de l'offre :
+// J dit « c'est juste » (aussi depuis la quantité ou le prix, où la lettre n'a pas de sens), Suppr la retire hors d'un
+// champ (avec « Annuler », comme la corbeille). Aucune touche ne joue avec Ctrl, Alt ou Cmd, ni fenêtre ouverte.
+function clavierPc() {
+  const saisie = (el) => el.matches('input, textarea, select, [contenteditable="true"]');
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || document.body.classList.contains('calque-ouvert')) return;
+    const cible = e.target instanceof Element ? e.target : document.body;
+    const touche = e.key.toLowerCase();
+    if (touche === 'd' && !saisie(cible)) {
+      const micro = document.querySelector('.micro-central[data-enregistrer]');
+      if (micro) { e.preventDefault(); micro.click(); }
+      return;
+    }
+    const ligne = cible.closest('.row');
+    if (!ligne) return;
+    if (touche === 'j' && (!saisie(cible) || cible.matches('input[data-envoi-change]'))) {
+      const juste = ligne.querySelector('form.note.warn');
+      e.preventDefault();
+      if (juste) juste.requestSubmit();
+      return;
+    }
+    if (e.key === 'Delete' && !saisie(cible)) {
+      const retirer = ligne.querySelector('form[action$="/supprimer"]');
+      if (retirer) { e.preventDefault(); retirer.requestSubmit(); }
+    }
+  });
+  // Retour sur l'offre après « c'est juste » ou une correction (#l12) : sur PC, le curseur revient dans la ligne.
+  const ancre = /^#l(\d+)$/.exec(window.location.hash);
+  if (ancre && window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches) {
+    const champ = document.querySelector('#l' + ancre[1] + ' input[data-envoi-change]');
+    // Après les autres branchements (le focus sélectionne alors le contenu du champ, comme au clic).
+    if (champ) setTimeout(() => champ.focus(), 0);
+  }
+}
+
+// « Document à côté » (PC, D13) : le document de l'offre remplace la colonne des offres et se recharge après chaque
+// correction. Le choix est gardé dans ce navigateur. Dès 1800 px (R10 b C, 2026-11-19), la liste reste et le document
+// s'ouvre d'office, sauf si l'artisan l'a fermé. Le document vient de /offres/{id}/document, avec ses feuilles
+// de style (document.css et la couleur de l'artisan).
+function documentACote() {
+  const bouton = document.querySelector('[data-doc-cote]');
+  if (!bouton) return;
+  bouton.hidden = false;
+  let colonne = null;
+  let numero = 0;
+  const charger = () => {
+    const ce = ++numero;
+    fetch(bouton.dataset.docCote, { credentials: 'same-origin' })
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+      .then((html) => {
+        if (ce !== numero || !colonne) return; // une réponse plus récente est attendue
+        const page = new DOMParser().parseFromString(html, 'text/html');
+        importerStyles(page);
+        // Un brouillon de facture : sa feuille dans son cadre « apercu-facture ».
+        const papier = page.querySelector('.apercu-facture') || page.querySelector('article.paper');
+        if (papier) colonne.replaceChildren(document.importNode(papier, true));
+      })
+      .catch(() => { if (ce === numero && colonne) colonne.textContent = 'Le document ne s’affiche pas : rechargez la page.'; });
+  };
+  // Le brouillon d'une facture (maquette 25, E8) montre son document d'office, sans toucher au choix gardé pour l'offre.
+  const toujours = bouton.hasAttribute('data-doc-cote-toujours');
+  const troisVolets = window.matchMedia('(min-width: 1800px) and (hover: hover) and (pointer: fine)');
+  const montrer = (oui, garder = true) => {
+    document.body.classList.toggle('doc-a-cote', oui);
+    bouton.setAttribute('aria-pressed', String(oui));
+    const fermer = toujours ? 'Cacher le document' : (troisVolets.matches ? 'Fermer le document' : 'Revenir à la liste');
+    bouton.textContent = oui ? fermer : 'Document à côté';
+    if (oui && !colonne) {
+      colonne = document.createElement('aside');
+      colonne.className = 'colonne-doc';
+      colonne.setAttribute('aria-label', 'Document de l’offre');
+      document.body.append(colonne);
+    }
+    if (colonne) colonne.hidden = !oui;
+    if (oui) charger();
+    if (toujours || !garder) return;
+    try { window.localStorage.setItem('offregen-doc-a-cote', oui ? '1' : '0'); } catch (err) { /* stockage refusé : le choix ne se garde pas */ }
+  };
+  bouton.addEventListener('click', () => montrer(!document.body.classList.contains('doc-a-cote')));
+  document.addEventListener('offre-modifiee', () => { if (document.body.classList.contains('doc-a-cote')) charger(); });
+  let garde = null;
+  try { garde = window.localStorage.getItem('offregen-doc-a-cote'); } catch (err) { /* idem */ }
+  // Le document à côté demande 1280 px (app.css) ; plus étroit, le choix reste gardé pour un plus grand écran.
+  if ((garde === '1' || toujours) && window.matchMedia('(min-width: 1280px) and (hover: hover) and (pointer: fine)').matches) montrer(true);
+  else if (garde !== '0' && troisVolets.matches) montrer(true, false);
+}
+
+// Champs de quantité et de prix à la largeur de leur contenu (Xavier, 2026-11-19). app.css le fait par field-sizing ;
+// un navigateur qui ne le connaît pas (Safari) reçoit la même largeur en ch, recalculée à la frappe et quand les lignes
+// sont remplacées après un enregistrement. Minimum : 2 chiffres pour la quantité, 3 pour le prix.
+function largeurDesSaisies() {
+  if (window.CSS && CSS.supports('field-sizing', 'content')) return;
+  const ajuster = (c) => { c.style.width = 'calc(' + Math.max(c.name === 'prix' ? 3 : 2, (c.value || c.placeholder || '').length) + 'ch + 26px)'; };
+  const tous = () => document.querySelectorAll('input.saisie').forEach(ajuster);
+  tous();
+  document.addEventListener('input', (e) => { if (e.target.matches && e.target.matches('input.saisie')) ajuster(e.target); });
+  const ecran = document.querySelector('.screen');
+  if (ecran) new MutationObserver(tous).observe(ecran, { childList: true, subtree: true });
+}
+
+// L'œil d'un mot de passe : montre ou masque tous les champs de mot de passe du même formulaire (P3 B).
+function oeilMotDePasse() {
+  document.querySelectorAll('button[data-oeil]').forEach((bouton) => {
+    bouton.addEventListener('click', () => {
+      const montrer = bouton.getAttribute('aria-pressed') !== 'true';
+      bouton.setAttribute('aria-pressed', montrer ? 'true' : 'false');
+      bouton.setAttribute('aria-label', montrer ? 'Masquer le mot de passe' : 'Montrer le mot de passe');
+      (bouton.form || document).querySelectorAll('input[data-oeil-cible]').forEach((c) => { c.type = montrer ? 'text' : 'password'; });
+    });
+  });
+}
+
+// Un envoi refusé des réglages ou de l'assistant revient en haut de la page : le premier champ en erreur est souvent
+// sous la barre des boutons (9g, 2026-11-19). On l'amène au milieu de l'écran, curseur dedans.
+function premiereErreur() {
+  const champ = document.querySelector('form#reglages [aria-invalid="true"]');
+  if (!champ) return;
+  champ.scrollIntoView({ block: 'center' });
+  champ.focus({ preventScroll: true });
+}
+
+// Options et variantes (O4, E3, 2026-11-22) : « Elle remplace » paraît quand « Variante » est choisie ; dans la feuille
+// d'ajout, la ligne remplacée se choisit d'un toucher. Écouteurs sur le document : les feuilles arrivent plus tard.
+function optionsEtVariantes() {
+  document.addEventListener('change', (e) => {
+    const nature = e.target.closest('[data-nature] input[name="nature"]');
+    if (nature && nature.form) {
+      const champ = nature.form.querySelector('[data-remplace]');
+      if (champ) champ.hidden = nature.value !== 'variante';
+    }
+    const liste = e.target.closest('select[data-envoi-auto]');
+    if (liste && liste.form) liste.form.requestSubmit();
+  });
+  // La quantité d'une variante (V2 A, 2026-11-24) : tapée une fois, elle part avec chaque produit touché ensuite et avec
+  // la ligne tapée ; la ligne libre détaillée la suit tant que l'artisan n'y a pas mis la sienne.
+  let reprise = null;
+  document.addEventListener('focusin', (e) => { if (e.target.id === 'quantite-reprise') reprise = e.target.value; });
+  document.addEventListener('input', (e) => {
+    if (e.target.id !== 'quantite-reprise') return;
+    // Illisible ou nulle, le serveur prend celle de la ligne remplacée : l'écran dit la même chose.
+    const tapee = e.target.value.trim();
+    const nombre = parseFloat(tapee.replace(/['’\s]/g, '').replace(',', '.'));
+    const valeur = nombre > 0 ? tapee : (e.target.dataset.defaut || '');
+    document.querySelectorAll('[data-quantite-reprise]').forEach((c) => { c.value = valeur; });
+    document.querySelectorAll('[data-quantite-texte]').forEach((t) => { t.textContent = valeur; });
+    const libre = document.querySelector('[data-suit-reprise]');
+    if (libre && (reprise === null || libre.value.trim() === reprise.trim())) libre.value = valeur;
+    reprise = valeur;
+  });
+}
+
+// Fiche d'une ligne (recette du 2026-11-24, MP-A14) : « Autre pièce » tapée décoche les puces, vidée elle rend la puce
+// de départ ; une puce touchée vide « Autre pièce ». Le serveur fait déjà gagner « Autre pièce » : ici, l'écran dit la
+// même chose que ce qui partira (revue, M5).
+function piecesDeLaLigne() {
+  document.addEventListener('input', (e) => {
+    const autre = e.target.closest && e.target.closest('[data-pieces] input[name="piece_autre"]');
+    if (!autre) return;
+    const tapee = autre.value.trim() !== '';
+    autre.closest('[data-pieces]').querySelectorAll('input[name="piece"]').forEach((r) => { r.checked = !tapee && r.defaultChecked; });
+  });
+  document.addEventListener('change', (e) => {
+    const puce = e.target.closest && e.target.closest('[data-pieces] input[name="piece"]');
+    if (!puce) return;
+    const autre = puce.closest('[data-pieces]').querySelector('input[name="piece_autre"]');
+    if (autre) autre.value = '';
+  });
+}
+
+// app.js arrive après fluide.js, qui le demande (base.html.twig, SR-1 du 2026-11-24) : avant ou après la fin du
+// chargement de la page. Une fois branché, fluide.js rejoue les touchers qu'il a retenus en l'attendant.
+// Un branchement qui plante ne laisse pas les touchers retenus par fluide.js en suspens (revue du 2026-11-24, I1).
+const demarrer = () => {
+  try {
+    brancher();
+  } finally {
+    if (window.fluide && window.fluide.appPrete) window.fluide.appPrete();
+  }
+};
+const brancher = () => {
+  sansZoomAuToucher();
+  optionsEtVariantes();
+  piecesDeLaLigne();
+  oeilMotDePasse();
+  premiereErreur();
+  clavierPc();
+  documentACote();
+  messagesDeRecherche();
+  feuillesFacturer();
+  hauteurDuBas();
+  apresLeClavier();
+  ajoutPc();
+  vignettesVivantes();
+  avisCouleur();
+  tournuresLettre();
+  pastillesPhrases();
+  papiers();
+  modelesEnGrand();
+  glisserLignes();
+  ouvrirLaLigne();
+  zeroOffreLaLigne();
+  montantRelu();
+  textesOffre();
+  adresses();
+  enregistrementsAutomatiques();
+  envoisAutomatiques();
+  choixDesReglages();
+  corrections();
+  largeurDesSaisies();
+  envoisDeFormulaires();
+  filtres();
+  bandeaux();
+  nouvelleOffre();
+  preparation();
+  balayage();
+  fichesEnFenetre();
+};
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer); else demarrer();

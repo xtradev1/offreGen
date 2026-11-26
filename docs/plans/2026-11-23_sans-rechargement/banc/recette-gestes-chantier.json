@@ -1,0 +1,181 @@
+[
+ {
+  "geste": "offre-juste",
+  "profil": "chantier",
+  "au_toucher_ms": 55,
+  "confirme_ms": 675,
+  "requetes": 1,
+  "octets": 2216,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/14/juste 2216"
+  ]
+ },
+ {
+  "geste": "offre-corbeille",
+  "profil": "chantier",
+  "au_toucher_ms": 57,
+  "confirme_ms": 670,
+  "requetes": 1,
+  "octets": 2174,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/37/supprimer 2174"
+  ]
+ },
+ {
+  "geste": "offre-annuler",
+  "profil": "chantier",
+  "au_toucher_ms": 50,
+  "confirme_ms": 706,
+  "requetes": 1,
+  "octets": 4642,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/37/restaurer 4642"
+  ]
+ },
+ {
+  "geste": "offre-deux-corbeilles",
+  "profil": "chantier",
+  "au_toucher_ms": 455,
+  "confirme_ms": 1345,
+  "requetes": 2,
+  "octets": 4349,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/39/supprimer 2167",
+   "POST /offres/3/lignes/65/supprimer 2182"
+  ]
+ },
+ {
+  "geste": "offre-quantite",
+  "profil": "chantier",
+  "au_toucher_ms": 20,
+  "confirme_ms": 649,
+  "requetes": 1,
+  "octets": 2187,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/14 2187"
+  ]
+ },
+ {
+  "geste": "ligne-enregistrer",
+  "profil": "chantier",
+  "au_toucher_ms": 695,
+  "confirme_ms": 699,
+  "requetes": 1,
+  "octets": 4681,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/16 4681"
+  ]
+ },
+ {
+  "geste": "ajout-ouvrir",
+  "profil": "chantier",
+  "au_toucher_ms": 55,
+  "confirme_ms": 57,
+  "requetes": 0,
+  "octets": 0,
+  "recharge": false,
+  "erreurs": [],
+  "detail": []
+ },
+ {
+  "geste": "ajout-produit-1",
+  "profil": "chantier",
+  "au_toucher_ms": 752,
+  "confirme_ms": 754,
+  "requetes": 1,
+  "octets": 4806,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes 4806"
+  ]
+ },
+ {
+  "geste": "ajout-produit-2",
+  "profil": "chantier",
+  "au_toucher_ms": 717,
+  "confirme_ms": 720,
+  "requetes": 1,
+  "octets": 4961,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes 4961"
+  ]
+ },
+ {
+  "geste": "ajout-produit-3",
+  "profil": "chantier",
+  "au_toucher_ms": 715,
+  "confirme_ms": 719,
+  "requetes": 1,
+  "octets": 5060,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes 5060"
+  ]
+ },
+ {
+  "geste": "ajout-termine",
+  "profil": "chantier",
+  "au_toucher_ms": 49,
+  "confirme_ms": 50,
+  "requetes": 0,
+  "octets": 0,
+  "recharge": false,
+  "erreurs": [],
+  "detail": []
+ },
+ {
+  "geste": "relire-juste",
+  "profil": "chantier",
+  "au_toucher_ms": 62,
+  "confirme_ms": 588,
+  "requetes": 1,
+  "octets": 579,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/relire/19 579"
+  ]
+ },
+ {
+  "geste": "liste-archiver",
+  "profil": "chantier",
+  "au_toucher_ms": 35,
+  "confirme_ms": 641,
+  "requetes": 1,
+  "octets": 1152,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/archiver 1152"
+  ]
+ },
+ {
+  "geste": "liste-annuler",
+  "profil": "chantier",
+  "au_toucher_ms": 41,
+  "confirme_ms": 617,
+  "requetes": 1,
+  "octets": 976,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/restaurer 976"
+  ]
+ }
+]

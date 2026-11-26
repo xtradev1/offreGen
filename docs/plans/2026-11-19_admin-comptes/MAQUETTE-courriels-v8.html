@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design des courriels, v8</title>
+<style>
+/* Charte Dicta du 19.11 (docs/identite/CHARTE.html, dicta-tokens.css) : jetons, composants, polices et logo. */
+@font-face { font-family: "Archivo"; font-weight: 500 700; font-display: swap; src: url("../../../public/fonts/archivo-latin.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("../../../public/fonts/inter-latin.woff2") format("woff2"); }
+:root {
+  --mk-ink: #23272D; --mk-bg: #F4F1EA; --mk-surface: #FFFFFF; --mk-line: #DDD8CC; --mk-accent: #23272D;
+  --fond: #F4F1EA; --carte: #FFFFFF; --encre: #23272D; --doux: #454B55; --trait: #DDD8CC; --etiquette: #EBE7DE; --bord: #7C838C;
+  --bande: #23272D; --sur-bande: #FFFFFF; --bande-doux: #B9BDC3; --acc: #23272D; --sur-acc: #FFFFFF; --mic: #C4552D; --sur-mic: #FFFFFF;
+  --ok: #13553A; --ok-fond: #E1EFE6; --att: #5A4300; --att-fond: #FFF0B3; --att-ligne: #FFFAE5; --err: #8C1D18; --err-fond: #FBE7E4;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --att-ligne: #221D14; --err: #FF9A91; --err-fond: #3B1613; } }
+:root[data-theme="dark"] {
+  --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #ECEAE6;
+  --fond: #15171A; --carte: #1E2125; --encre: #ECEAE6; --doux: #B4B9C0; --trait: #33373D; --etiquette: #26292E; --bord: #868C94;
+  --bande: #0F1113; --bande-doux: #AAAFB6; --acc: #ECEAE6; --sur-acc: #15171A;
+  --ok: #7DD3A8; --ok-fond: #183126; --att: #F0B860; --att-fond: #3A2A10; --att-ligne: #221D14; --err: #FF9A91; --err-fond: #3B1613; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.55 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.doc { max-width: 1180px; margin: 0 auto; padding: 16px; }
+.doc > h1, .doc > h2 { font-family: "Archivo", system-ui, sans-serif; letter-spacing: -.3px; }
+.doc > h1 { font-size: 28px; line-height: 1.2; margin: 18px 0 8px; }
+.doc > h2 { font-size: 22px; line-height: 1.25; margin: 36px 0 8px; }
+.doc > p, .doc li { max-width: 820px; }
+.regle { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--ok); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+.regle b { color: var(--ok); }
+.moi { background: var(--carte); border: 1px solid var(--trait); border-left: 5px solid var(--mic); border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 820px; }
+.exemple { font-size: 13px; font-weight: 600; color: var(--doux); background: var(--etiquette); border-radius: 999px; padding: 2px 10px; }
+
+/* Le téléphone, selon la charte (partie 8) */
+.ecrans { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; margin: 14px 0 6px; }
+.ecrans figure { margin: 0; width: 340px; max-width: 100%; }
+.ecrans figcaption { font-size: 14px; color: var(--doux); margin-top: 6px; }
+.tel { position: relative; border: 1px solid var(--trait); border-radius: 22px; overflow: hidden; background: var(--fond); color: var(--encre); display: flex; flex-direction: column; min-height: 690px; }
+.tel h1, .tel h2, .tel h3, .tel .btn, .tel .etat, .tel label, .tel .metier, .tel .seg span { font-family: "Archivo", system-ui, sans-serif; }
+.bande { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px; background: var(--bande); color: var(--sur-bande); border-bottom: 3px solid var(--mic); }
+.bande img { display: block; height: 26px; width: auto; }
+.bande .retour { display: flex; align-items: center; gap: 4px; color: var(--sur-bande); font: 600 15px "Archivo", system-ui, sans-serif; }
+.role { font: 700 11.5px "Archivo", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--sur-bande); border: 1.5px solid var(--mic); border-radius: 999px; padding: 3px 9px; }
+.tete { padding: 20px 16px 12px; }
+.tete h1 { font-size: 25px; font-weight: 600; letter-spacing: -.4px; line-height: 1.2; margin: 0; }
+.tete .sous { color: var(--doux); margin: 4px 0 0; font-size: 15px; }
+.corps { flex: 1; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.liste { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.item { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; align-items: center; padding: 13px 14px; border-top: 1px solid var(--trait); }
+.item:first-child { border-top: 0; }
+.item b { font-weight: 600; font-size: 16px; }
+.item .meta { color: var(--doux); font-size: 14px; }
+.item .fl { grid-row: span 2; color: var(--doux); font-size: 20px; }
+.groupe { font: 700 12px "Archivo", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--doux); margin: 6px 2px -4px; }
+.etat { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--etiquette); color: var(--encre); white-space: nowrap; }
+.etat svg { width: 15px; height: 15px; }
+.etat.contour { background: transparent; box-shadow: inset 0 0 0 1.5px var(--bord); }
+.etat.ok { background: var(--ok-fond); color: var(--ok); }
+.etat.att { background: var(--att-fond); color: var(--att); }
+.etat.err { background: var(--err-fond); color: var(--err); }
+.seg { display: flex; padding: 3px; border-radius: 12px; background: var(--etiquette); }
+.seg span { flex: 1; text-align: center; font-size: 14px; font-weight: 600; color: var(--doux); padding: 9px 4px; border-radius: 9px; white-space: nowrap; }
+.seg span.on { background: var(--carte); color: var(--encre); box-shadow: inset 0 0 0 1px var(--trait); }
+.recherche { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--carte); color: var(--doux); font-size: 15px; }
+.recherche svg { width: 20px; height: 20px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 17px; min-height: 56px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--carte); color: var(--encre); box-shadow: inset 0 0 0 1.5px var(--encre); text-align: center; }
+.btn svg { width: 20px; height: 20px; }
+.btn.principal { background: var(--acc); color: var(--sur-acc); box-shadow: none; min-height: 64px; }
+.btn.danger { color: var(--err); box-shadow: inset 0 0 0 1.5px var(--err); }
+.btn.large { width: 100%; }
+.actionbar { display: flex; gap: 8px; padding: 10px 16px 14px; background: var(--carte); border-top: 1px solid var(--trait); }
+.actionbar .btn { flex: 1; }
+/* La barre du bas : icônes et mots, le rond terracotta au centre (ici : « Nouvelle démo »). */
+.nav { height: 72px; background: var(--carte); border-top: 1px solid var(--trait); display: grid; align-items: center; }
+.nav.cinq { grid-template-columns: repeat(5, 1fr); }
+.nav.trois { grid-template-columns: repeat(3, 1fr); }
+.nav a { color: var(--doux); font-size: 12px; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.nav a svg { width: 23px; height: 23px; }
+.nav a.on { color: var(--encre); font-weight: 600; }
+.nav .rond { justify-self: center; width: 64px; height: 64px; margin-top: -30px; border-radius: 50%; background: var(--mic); color: var(--sur-mic); display: grid; place-items: center; border: 5px solid var(--carte); }
+.nav .rond svg { width: 28px; height: 28px; }
+.champ { display: grid; gap: 6px; }
+.champ label { font-size: 14px; font-weight: 600; }
+.champ .saisie { min-height: 48px; padding: 11px 12px; border: 1px solid var(--bord); border-radius: 12px; background: var(--carte); font-size: 16px; }
+.champ .saisie.actif { box-shadow: 0 0 0 3px var(--mic); border-color: var(--mic); }
+.metiers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.metier { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 10px 12px; border: 1px solid var(--trait); border-radius: 14px; background: var(--carte); font-size: 16px; font-weight: 600; }
+.metier svg { width: 26px; height: 26px; flex: none; }
+.metier.on { box-shadow: inset 0 0 0 2px var(--encre); border-color: var(--encre); }
+.metier small { display: block; font: 500 12px "Inter", system-ui, sans-serif; color: var(--doux); }
+.compteur { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 10px 12px; }
+.compteur b { font: 600 16px "Archivo", system-ui, sans-serif; }
+.compteur .pas { display: flex; align-items: center; gap: 6px; }
+.compteur .pas span { min-width: 40px; text-align: center; font: 700 22px "Archivo", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.compteur .pas i { font-style: normal; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--encre); font-size: 22px; background: var(--carte); }
+.note { font-size: 14px; color: var(--doux); }
+.info { font-size: 14px; border-radius: 12px; padding: 10px 12px; background: var(--etiquette); }
+.info.att { background: var(--att-fond); color: var(--att); }
+/* Démo prête */
+.pret { align-items: center; text-align: center; padding-top: 24px; }
+.coche { width: 52px; height: 52px; border-radius: 50%; background: var(--ok-fond); color: var(--ok); display: grid; place-items: center; }
+.coche svg { width: 28px; height: 28px; }
+.qr-cadre { background: #FFFFFF; border: 1px solid var(--trait); border-radius: 18px; padding: 14px; }
+svg.qr { display: block; width: 200px; height: 200px; }
+.minuterie { font-size: 15px; color: var(--doux); }
+.minuterie b { color: var(--encre); font-variant-numeric: tabular-nums; }
+/* Fiche : la jauge dit tout d'un coup d'œil */
+.fiche-tete { display: flex; align-items: center; gap: 12px; }
+.pastille { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font: 700 17px "Archivo", system-ui, sans-serif; background: var(--etiquette); flex: none; }
+.jauge { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; }
+.jauge .haut { display: flex; justify-content: space-between; align-items: baseline; }
+.jauge .haut b { font: 700 24px "Archivo", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.jauge .barre { height: 10px; border-radius: 5px; background: var(--etiquette); overflow: hidden; }
+.jauge .barre i { display: block; height: 100%; background: var(--encre); border-radius: 5px; }
+.jauge .barre.pleine i { background: var(--att); }
+.ajouts { display: flex; gap: 8px; }
+.ajouts span { flex: 1; text-align: center; min-height: 48px; display: grid; place-items: center; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--encre); font: 600 16px "Archivo", system-ui, sans-serif; background: var(--carte); }
+.lignes-action .item { min-height: 56px; }
+.lignes-action .item b { display: flex; align-items: center; gap: 10px; }
+.lignes-action svg { width: 22px; height: 22px; }
+.fil { display: grid; gap: 0; }
+.fil div { display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 9px 14px; border-top: 1px solid var(--trait); font-size: 14px; }
+.fil div:first-child { border-top: 0; }
+.fil time { color: var(--doux); font-variant-numeric: tabular-nums; }
+.fil .err { color: var(--err); font-weight: 600; }
+.logo-ex { font: 700 18px "Archivo", system-ui, sans-serif; }
+/* Rôles */
+.droits { width: 100%; max-width: 980px; border-collapse: collapse; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; font-size: 15px; }
+.droits th, .droits td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--trait); vertical-align: top; }
+.droits th { font: 700 12.5px "Archivo", system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; color: var(--doux); }
+.droits td.o { color: var(--ok); font-weight: 600; }
+.droits td.n { color: var(--doux); }
+.defile { overflow-x: auto; }
+/* PC */
+.pc { display: grid; grid-template-columns: 210px minmax(0, 1fr) 340px; min-height: 560px; border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; background: var(--fond); color: var(--encre); min-width: 1000px; }
+.pc .menu { background: var(--bande); color: var(--sur-bande); padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; border-right: 3px solid var(--mic); }
+.pc .menu img { height: 26px; width: auto; margin: 0 10px 6px; align-self: flex-start; }
+.pc .menu .role { align-self: flex-start; margin: 0 10px 14px; }
+.pc .menu span { font-size: 15px; padding: 10px; border-radius: 9px; color: var(--bande-doux); display: flex; align-items: center; gap: 10px; }
+.pc .menu span svg { width: 20px; height: 20px; }
+.pc .menu span.on { background: rgba(255, 255, 255, .14); color: var(--sur-bande); font-weight: 600; }
+.pc .menu .fin { margin-top: auto; font-size: 14px; }
+.pc .milieu { padding: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pc .milieu .ligne { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pc .milieu h1 { font: 600 25px "Archivo", system-ui, sans-serif; margin: 0 auto 0 0; }
+.pc .milieu .recherche { flex: 1; min-width: 180px; }
+.pc table { width: 100%; border-collapse: collapse; font-size: 14.5px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; overflow: hidden; }
+.pc th, .pc td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--trait); white-space: nowrap; }
+.pc th { font: 700 12px "Archivo", system-ui, sans-serif; color: var(--doux); text-transform: uppercase; letter-spacing: .05em; }
+.pc td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.pc tr.on td { background: var(--fond); }
+.pc tr.on td:first-child { box-shadow: inset 4px 0 0 var(--encre); }
+.pc .droite { background: var(--carte); border-left: 1px solid var(--trait); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.pc .droite h2 { margin: 0; font: 600 21px "Archivo", system-ui, sans-serif; }
+.pc .btn { min-height: 52px; font-size: 16px; }
+.pc .btn.principal { min-height: 56px; }
+
+/* Décisions */
+.choix { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 12px 14px; margin: 12px 0 22px; max-width: 980px; }
+.choix .q { margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--bord); background: var(--carte); color: var(--encre); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--sur-acc); font-weight: 600; }
+.opts button:focus-visible, #copier:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.choix textarea, #texte { width: 100%; font: inherit; font-size: 15px; border: 1px solid var(--bord); border-radius: 10px; padding: 8px 10px; background: var(--carte); color: var(--encre); }
+#texte { min-height: 170px; }
+#copier { font: 600 16px "Archivo", system-ui, sans-serif; min-height: 52px; padding: 10px 20px; border-radius: 12px; border: 0; background: var(--acc); color: var(--sur-acc); cursor: pointer; }
+@media (max-width: 420px) { .ecrans figure { width: 100%; } }
+
+/* v3 */
+.bandeau-fin { display: grid; gap: 8px; background: var(--carte); border: 1px solid var(--trait); border-left: 4px solid var(--mic); border-radius: 14px; padding: 12px 14px; }
+.bandeau-fin span:not(.btn) { color: var(--doux); font-size: 14px; }
+.carte-msg { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; font-size: 15px; line-height: 1.5; }
+.carte-msg p { margin: 0 0 8px; }
+.carte-msg p:last-child { margin: 0; }
+.carte-msg .url { color: var(--doux); word-break: break-all; }
+.formule { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; }
+.formule div { display: grid; }
+.formule b { font: 600 17px "Archivo", system-ui, sans-serif; }
+.formule.on { box-shadow: inset 0 0 0 2px var(--encre); border-color: var(--encre); }
+.formule .prix { font: 700 18px "Archivo", system-ui, sans-serif; white-space: nowrap; }
+.formule .prix small { font: 500 12px "Inter", system-ui, sans-serif; color: var(--doux); margin-left: 3px; }
+.chiffres3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.chiffres3 div { background: var(--carte); border: 1px solid var(--trait); border-radius: 12px; padding: 9px 10px; }
+.chiffres3 span { display: block; font-size: 12px; color: var(--doux); }
+.chiffres3 b { font: 700 20px "Archivo", system-ui, sans-serif; }
+.nav a { white-space: nowrap; }
+.jauge .haut b { white-space: nowrap; }
+.item .montant { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+
+/* v4 */
+[hidden] { display: none !important; }
+.va { font: 600 14.5px "Archivo", system-ui, sans-serif; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.ruban { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 6px 16px; background: var(--carte); border-bottom: 1px solid var(--trait); font-size: 14px; }
+.ruban b { font-family: "Archivo", system-ui, sans-serif; }
+.voile { position: absolute; inset: 0; background: rgba(15, 17, 19, .58); }
+.feuille { position: absolute; left: 0; right: 0; bottom: 0; background: var(--carte); border-radius: 22px 22px 0 0; padding: 10px 16px 18px; display: grid; gap: 12px; }
+.feuille .poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--trait); justify-self: center; }
+.feuille .fermer { position: absolute; top: 6px; right: 6px; width: 48px; height: 48px; display: grid; place-items: center; color: var(--doux); font-size: 24px; }
+.feuille h2 { margin: 0; font: 600 23px/1.2 "Archivo", system-ui, sans-serif; letter-spacing: -.3px; }
+.feuille p { margin: 0; color: var(--doux); }
+img.icone { width: 52px; height: 52px; border-radius: 12px; display: block; }
+.hero { display: grid; gap: 8px; justify-items: start; }
+.hero img { width: 52px; height: 52px; border-radius: 12px; }
+.hero .grand { font: 700 44px/1 "Archivo", system-ui, sans-serif; letter-spacing: -1.2px; }
+.hero .grand small { display: block; font: 600 22px/1.3 "Archivo", system-ui, sans-serif; letter-spacing: -.3px; margin-top: 4px; }
+.promesse { display: flex; gap: 8px; }
+.promesse div { flex: 1; background: var(--etiquette); border-radius: 12px; padding: 10px 12px; }
+.promesse b { display: block; font: 700 19px "Archivo", system-ui, sans-serif; }
+.promesse span { font-size: 13px; color: var(--doux); }
+.garde { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.garde h3 { margin: 0; font: 600 18px "Archivo", system-ui, sans-serif; }
+.garde ul, .points { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.garde li, .points li { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.garde li svg, .points li svg { width: 20px; height: 20px; color: var(--ok); flex: none; }
+.garde .retire { font-size: 14px; color: var(--doux); border-top: 1px solid var(--trait); padding-top: 10px; }
+.choix-moment { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.choix-moment span { min-height: 48px; display: grid; place-items: center; text-align: center; border-radius: 12px; background: var(--carte); box-shadow: inset 0 0 0 1.5px var(--bord); font: 600 14px/1.2 "Archivo", system-ui, sans-serif; padding: 4px; }
+.choix-moment span.on { box-shadow: inset 0 0 0 2.5px var(--encre); }
+.plan { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 16px; display: grid; gap: 10px; }
+.plan .nom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.plan .nom b { font: 700 24px "Archivo", system-ui, sans-serif; letter-spacing: -.4px; }
+.plan .pour { font-size: 15px; }
+.plan .points li { font: 600 15px "Archivo", system-ui, sans-serif; }
+.plan .detail, .plan .apres { font-size: 13.5px; color: var(--doux); }
+.plan .prix { font: 700 32px/1.1 "Archivo", system-ui, sans-serif; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
+.plan .prix { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
+.plan .prix small { font: 500 14px "Inter", system-ui, sans-serif; color: var(--doux); letter-spacing: 0; white-space: nowrap; }
+.plan[data-plan] { cursor: pointer; }
+.plan[data-plan]:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.plan[aria-checked="true"] { box-shadow: inset 0 0 0 2.5px var(--encre); border-color: var(--encre); }
+.plan .radio { width: 26px; height: 26px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--bord); flex: none; }
+.plan[aria-checked="true"] .radio { background: var(--encre); box-shadow: inset 0 0 0 6px var(--encre), inset 0 0 0 13px var(--carte); }
+.btn.inactif { background: var(--trait); color: var(--doux); box-shadow: none; }
+.feuille h2, .tete h1, .pret h1 { text-wrap: balance; }
+[data-bascule] span { cursor: pointer; }
+[data-bascule] span:focus-visible { outline: 3px solid var(--mic); outline-offset: 2px; }
+.rappel { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; }
+.rappel .qui { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.rappel b { font: 600 16px "Archivo", system-ui, sans-serif; }
+.rappel .meta { font-size: 14px; color: var(--doux); }
+.rappel .gestes { display: flex; gap: 8px; }
+.rappel .btn { flex: 1; min-height: 48px; font-size: 15px; padding: 0 10px; white-space: nowrap; }
+.nav a { position: relative; }
+.pastille-n { position: absolute; top: -5px; left: 50%; margin-left: 8px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--encre); color: var(--carte); font: 700 11px/18px "Archivo", system-ui, sans-serif; text-align: center; }
+.courriel { background: var(--carte); border: 1px solid var(--trait); border-radius: 14px; padding: 14px 16px; font-size: 15px; color: var(--encre); }
+.courriel .entetes { color: var(--doux); font-size: 13.5px; border-bottom: 1px solid var(--trait); padding-bottom: 8px; margin: 0 0 10px; }
+.courriel p { margin: 0 0 8px; max-width: none; }
+.metiers.neuf { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.metiers.neuf .metier { flex-direction: column; justify-content: center; text-align: center; gap: 6px; min-height: 84px; padding: 8px 4px; font-size: 14px; line-height: 1.2; }
+.pret .va { margin-top: 2px; }
+
+/* v5 */
+.etat.reco { background: var(--acc); color: var(--sur-acc); justify-self: start; }
+.fil b { font-family: "Archivo", system-ui, sans-serif; }
+.fil time { font-size: 13px; }
+.fil div { grid-template-columns: 64px 1fr; }
+
+/* v6 */
+.plan .prix s { font-weight: 500; font-size: 18px; color: var(--doux); letter-spacing: 0; }
+.plan .prix .etat { align-self: center; }
+.plan .seg { margin: 2px 0; }
+
+/* v7 */
+.nav svg { width: 22px; height: 22px; }
+.garde h3 { margin: 0; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.garde h3 svg { width: 22px; height: 22px; }
+.item b .etat { margin-left: 6px; vertical-align: 1px; }
+.compteur .pas { display: flex; align-items: center; gap: 12px; }
+.compteur .pas b { font: 600 18px "Archivo", system-ui, sans-serif; min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; }
+.pc .milieu .ligne .btn { flex: none; }
+.pc .menu .role { padding: 3px 9px; font-size: 11.5px; color: var(--sur-bande); }
+.pc th:nth-child(n+3) { text-align: right; }
+.pc td:first-child { white-space: normal; }
+.pc td:first-child .etat { margin-top: 3px; }
+.ecrans > figure > img { display: block; width: 100%; height: auto; border: 1px solid var(--trait); border-radius: 14px; }
+
+/* v8 : une messagerie de téléphone. Les couleurs d'un courriel sont fixes : elles ne suivent pas le thème de la page.
+   Rapports mesurés : encre #1F2328 sur blanc 15,9:1 ; gris #4B5058 sur blanc 8,1:1 ; blanc sur anthracite #23272D 15:1 ;
+   en sombre, #E8E6E1 sur #23272D 12,3:1 et #B9BDC3 sur #23272D 8,0:1. */
+.boite { width: 100%; border: 1px solid var(--trait); border-radius: 18px; overflow: hidden; background: #FFFFFF; color: #1F2328; font: 15px/1.5 "Inter", system-ui, sans-serif; }
+.boite .entetes { padding: 12px 14px; border-bottom: 1px solid #E3E0D8; font-size: 13px; color: #4B5058; background: #FAFAF8; overflow-wrap: anywhere; }
+.boite .entetes b { display: block; color: #1F2328; font-size: 15px; }
+.msg p { margin: 0 0 12px; }
+.msg h3 { font: 600 20px/1.25 "Archivo", system-ui, sans-serif; margin: 0 0 10px; color: #23272D; }
+.msg.brut { padding: 16px 14px; white-space: pre-line; font-size: 14.5px; }
+.msg.a { padding: 18px 16px 8px; }
+.msg.b { background: #F3EFE6; padding: 16px 10px; }
+.msg.b .carte { background: #FFFFFF; border-radius: 12px; border-top: 4px solid #C4552D; padding: 20px 16px 8px; }
+.msg.c .bandeau { background: #23272D; padding: 14px 16px; border-bottom: 4px solid #C4552D; }
+.msg.c .bandeau img { display: block; height: 30px; width: auto; }
+.msg.c .corps-c { padding: 20px 16px 8px; }
+.c-marque { display: flex; align-items: center; gap: 8px; font: 700 19px "Archivo", system-ui, sans-serif; color: #23272D; }
+.c-marque img { height: 28px; width: auto; }
+.c-bouton { display: block; text-align: center; background: #23272D; color: #FFFFFF; font: 600 16px "Archivo", system-ui, sans-serif; border-radius: 12px; padding: 15px 14px; margin: 16px 0 14px; }
+.c-lienfort { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.c-url { font-size: 13px; color: #4B5058; overflow-wrap: anywhere; }
+.c-secours { font-size: 13px; color: #4B5058; }
+.c-pied { font-size: 13px; color: #4B5058; padding-top: 12px; border-top: 1px solid #E3E0D8; }
+.c-pied.sans-trait { border-top: 0; padding-top: 0; }
+.c-pied b { color: #1F2328; }
+.boite.sombre { background: #16181C; color: #E8E6E1; border-color: #3A3F46; }
+.boite.sombre .entetes { background: #1C1F24; color: #B9BDC3; border-color: #3A3F46; }
+.boite.sombre .entetes b { color: #FFFFFF; }
+.sombre .msg.b { background: #16181C; }
+.sombre .msg.b .carte { background: #23272D; }
+.sombre .msg h3, .sombre .c-marque { color: #FFFFFF; }
+.sombre .c-bouton { background: #EDEBE6; color: #23272D; }
+.sombre .c-pied, .sombre .c-url, .sombre .c-secours { color: #B9BDC3; border-color: #3A3F46; }
+.droits code { font-size: 14px; }
+.defile .droits { min-width: 560px; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<div class="doc">
+<nav id="mk-toc"></nav>
+<h1>Le design des courriels (v8)</h1>
+<p>Ta demande du 23.11. Aujourd'hui, les courriels de Dicta partent en texte brut, sans logo ni bouton. Quatre arrivent chez un artisan : revenir dans sa démo, accès à son compte, mot de passe oublié, offre prête. Voici trois directions, puis les quatre courriels dans celle que je recommande. <span class="exemple">Noms et dates d'exemple</span></p>
+
+<h2 id="avant" data-toc="Aujourd'hui">Aujourd'hui : du texte brut</h2>
+<div class="ecrans">
+  <figure>
+    <div class="boite">
+      <div class="entetes"><b>Votre démo Dicta</b>Dicta &lt;notifications@dicta.ch&gt;<br>à info@peinture-morand.ch</div>
+      <div class="msg brut">Bonjour,
+
+Votre démo Dicta reste ouverte jusqu'au 27.11.2026. Pour y revenir, sur votre téléphone ou sur un ordinateur, ouvrez ce lien :
+<span class="c-url">https://dicta.ch/d/kD165X6hE6pEv90QB4qJR1n7cZZRhXZeG2mkglLtRxw</span>
+
+Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.
+
+Vous n'avez pas essayé Dicta ? Ignorez ce courriel.
+
+Dicta</div>
+    </div>
+    <figcaption>Le courriel « Votre démo », tel qu'il part aujourd'hui</figcaption>
+  </figure>
+</div>
+<p class="moi"><b>Ce qui ne va pas.</b> Rien ne dit que ça vient de Dicta avant de lire. Le lien fait 60 caractères de charabia au milieu du texte, et c'est lui qu'il faut toucher. Sur un téléphone, il se coupe sur deux lignes.</p>
+
+<h2 id="directions" data-toc="Trois directions">Trois directions, sur le même courriel</h2>
+<p>Le même courriel « Votre démo », vu dans une messagerie de téléphone. Dans les trois cas, le lien reste écrit en clair sous le bouton, pour les messageries qui n'affichent pas les boutons.</p>
+<div class="ecrans">
+  <figure>
+    <div class="boite">
+      <div class="entetes"><b>Votre démo Dicta</b>Dicta &lt;notifications@dicta.ch&gt;</div>
+      <div class="msg a">
+        <p class="c-marque">Dicta</p>
+        <p>Bonjour,</p>
+        <p>Votre démo reste ouverte jusqu'au 27.11.2026. Pour y revenir, sur votre téléphone ou sur un ordinateur :</p>
+        <p><span class="c-lienfort">Revenir dans ma démo</span><br><span class="c-url">https://dicta.ch/d/kD165X6hE6pEv90QB4qJR1n7cZZRhXZeG2mkglLtRxw</span></p>
+        <p>Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.</p>
+        <p class="c-pied">Vous n'avez pas essayé Dicta ? Ignorez ce courriel.</p>
+      </div>
+    </div>
+    <figcaption>A · Lettre : du texte soigné, aucun décor</figcaption>
+  </figure>
+  <figure>
+    <div class="boite">
+      <div class="entetes"><b>Votre démo Dicta</b>Dicta &lt;notifications@dicta.ch&gt;</div>
+      <div class="msg b"><div class="carte">
+        <p class="c-marque"><img data-no-zoom src="../../identite/logo/dicta-icone.svg" alt="">Dicta</p>
+        <h3>Votre démo reste ouverte jusqu'au 27.11.2026</h3>
+        <p>Pour y revenir, sur votre téléphone ou sur un ordinateur :</p>
+        <span class="c-bouton">Revenir dans ma démo</span>
+        <p>Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.</p>
+        <p class="c-secours">Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :<br><span class="c-url">https://dicta.ch/d/kD165X6hE6pEv90QB4qJR1n7cZZRhXZeG2mkglLtRxw</span></p>
+        <p class="c-pied">Vous n'avez pas essayé Dicta ? Ignorez ce courriel.</p>
+      </div></div>
+    </div>
+    <figcaption>B · Carte : un filet terracotta, un titre, un bouton anthracite</figcaption>
+  </figure>
+  <figure>
+    <div class="boite">
+      <div class="entetes"><b>Votre démo Dicta</b>Dicta &lt;notifications@dicta.ch&gt;</div>
+      <div class="msg c">
+        <div class="bandeau"><img data-no-zoom src="../../identite/logo/dicta-logo-sombre.svg" alt="Dicta"></div>
+        <div class="corps-c">
+          <h3>Votre démo reste ouverte jusqu'au 27.11.2026</h3>
+          <p>Pour y revenir, sur votre téléphone ou sur un ordinateur :</p>
+          <span class="c-bouton">Revenir dans ma démo</span>
+          <p>Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.</p>
+          <p class="c-secours">Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :<br><span class="c-url">https://dicta.ch/d/kD165X6hE6pEv90QB4qJR1n7cZZRhXZeG2mkglLtRxw</span></p>
+          <p class="c-pied">Vous n'avez pas essayé Dicta ? Ignorez ce courriel.</p>
+        </div>
+      </div>
+    </div>
+    <figcaption>C · Bandeau : l'en-tête anthracite de l'application</figcaption>
+  </figure>
+</div>
+<p class="moi"><b>Mon avis : B.</b> A arrive partout mais ne ressemble à rien. C reprend l'application, mais son bandeau dépend d'une image : beaucoup de messageries bloquent les images, et le bandeau reste alors un rectangle noir vide. B tient sans image (le nom est écrit) et se lit en mode sombre.</p>
+<div class="choix" data-cle="M1"><p class="q"><b>M1</b> · La direction des courriels</p><div class="opts"><button type="button" data-q="M1" data-v="B, la carte">B · La carte (recommandé)</button><button type="button" data-q="M1" data-v="A, la lettre">A · La lettre</button><button type="button" data-q="M1" data-v="C, le bandeau">C · Le bandeau</button></div><textarea data-c="M1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="robuste" data-toc="Sans image, en sombre">B quand les images sont bloquées, et en mode sombre</h2>
+<div class="ecrans">
+  <figure>
+    <div class="boite">
+      <div class="entetes"><b>Votre démo Dicta</b>Dicta &lt;notifications@dicta.ch&gt;</div>
+      <div class="msg b"><div class="carte">
+        <p class="c-marque">Dicta</p>
+        <h3>Votre démo reste ouverte jusqu'au 27.11.2026</h3>
+        <p>Pour y revenir, sur votre téléphone ou sur un ordinateur :</p>
+        <span class="c-bouton">Revenir dans ma démo</span>
+        <p>Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.</p>
+        <p class="c-pied">Vous n'avez pas essayé Dicta ? Ignorez ce courriel.</p>
+      </div></div>
+    </div>
+    <figcaption>Images bloquées : le nom reste, rien ne manque</figcaption>
+  </figure>
+  <figure>
+    <div class="boite sombre">
+      <div class="entetes"><b>Votre démo Dicta</b>Dicta &lt;notifications@dicta.ch&gt;</div>
+      <div class="msg b"><div class="carte">
+        <p class="c-marque"><img data-no-zoom src="../../identite/logo/dicta-icone.svg" alt="">Dicta</p>
+        <h3>Votre démo reste ouverte jusqu'au 27.11.2026</h3>
+        <p>Pour y revenir, sur votre téléphone ou sur un ordinateur :</p>
+        <span class="c-bouton">Revenir dans ma démo</span>
+        <p>Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.</p>
+        <p class="c-pied">Vous n'avez pas essayé Dicta ? Ignorez ce courriel.</p>
+      </div></div>
+    </div>
+    <figcaption>Mode sombre du téléphone : le bouton s'inverse, le texte reste lisible</figcaption>
+  </figure>
+</div>
+<p>Limite à connaître : chaque messagerie a sa façon de passer en sombre. Ces deux écrans montrent l'intention. Je ne peux le vérifier qu'en envoyant de vrais courriels, donc après le branchement de l'envoi.</p>
+
+<h2 id="quatre" data-toc="Les quatre">Les quatre courriels, dans la direction B</h2>
+<p>Les phrases sont celles des courriels d'aujourd'hui. Seuls le titre, le bouton et la ligne de secours sont nouveaux.</p>
+<div class="ecrans">
+  <figure>
+    <div class="boite">
+      <div class="entetes"><b>Votre démo Dicta</b>Dicta &lt;notifications@dicta.ch&gt;</div>
+      <div class="msg b"><div class="carte">
+        <p class="c-marque"><img data-no-zoom src="../../identite/logo/dicta-icone.svg" alt="">Dicta</p>
+        <h3>Votre démo reste ouverte jusqu'au 27.11.2026</h3>
+        <p>Pour y revenir, sur votre téléphone ou sur un ordinateur :</p>
+        <span class="c-bouton">Revenir dans ma démo</span>
+        <p>Ce lien ouvre votre démo sans mot de passe : gardez-le pour vous.</p>
+        <p class="c-pied">Vous n'avez pas essayé Dicta ? Ignorez ce courriel.</p>
+      </div></div>
+    </div>
+    <figcaption>1. Revenir dans sa démo</figcaption>
+  </figure>
+  <figure>
+    <div class="boite">
+      <div class="entetes"><b>Votre accès à Dicta</b>Dicta &lt;notifications@dicta.ch&gt;</div>
+      <div class="msg b"><div class="carte">
+        <p class="c-marque"><img data-no-zoom src="../../identite/logo/dicta-icone.svg" alt="">Dicta</p>
+        <h3>Votre compte Dicta est ouvert</h3>
+        <p>Un compte est ouvert pour Peinture Morand avec votre adresse. Choisissez votre mot de passe dans les 7 jours :</p>
+        <span class="c-bouton">Choisir mon mot de passe</span>
+        <p>Le lien sert une seule fois. Passé ce délai, demandez-en un nouveau avec « Mot de passe oublié », sur la page de connexion.</p>
+      </div></div>
+    </div>
+    <figcaption>2. Accès d'un nouveau compte, ou après le passage à l'essai</figcaption>
+  </figure>
+  <figure>
+    <div class="boite">
+      <div class="entetes"><b>Choisir un nouveau mot de passe pour Dicta</b>Dicta &lt;notifications@dicta.ch&gt;</div>
+      <div class="msg b"><div class="carte">
+        <p class="c-marque"><img data-no-zoom src="../../identite/logo/dicta-icone.svg" alt="">Dicta</p>
+        <h3>Nouveau mot de passe</h3>
+        <p>Pour choisir un nouveau mot de passe, ouvrez ce lien dans l'heure :</p>
+        <span class="c-bouton">Choisir mon mot de passe</span>
+        <p>Le lien sert une seule fois.</p>
+        <p class="c-pied">Vous n'avez rien demandé ? Ignorez ce courriel, votre mot de passe ne change pas.</p>
+      </div></div>
+    </div>
+    <figcaption>3. Mot de passe oublié</figcaption>
+  </figure>
+  <figure>
+    <div class="boite">
+      <div class="entetes"><b>Votre offre est prête</b>Dicta &lt;notifications@dicta.ch&gt;</div>
+      <div class="msg b"><div class="carte">
+        <p class="c-marque"><img data-no-zoom src="../../identite/logo/dicta-icone.svg" alt="">Dicta</p>
+        <h3>Votre offre est prête</h3>
+        <p>L'offre préparée à partir de votre enregistrement est prête à relire.</p>
+        <span class="c-bouton">Relire mon offre</span>
+      </div></div>
+    </div>
+    <figcaption>4. Offre prête, après une dictée</figcaption>
+  </figure>
+</div>
+<p>Sous chaque bouton, la même ligne de secours, que je n'ai pas répétée ici pour garder les écrans courts : « Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur : », suivie du lien.</p>
+<div class="choix" data-cle="M2"><p class="q"><b>M2</b> · Les quatre courriels : titres, boutons, ordre des phrases</p><div class="opts"><button type="button" data-q="M2" data-v="Valider">Valider</button><button type="button" data-q="M2" data-v="Pas valider">Pas valider</button></div><textarea data-c="M2" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="signature" data-toc="Signature">Qui signe</h2>
+<p>Aujourd'hui, tous les courriels finissent par « Dicta ». Pour le courriel de la démo, l'artisan vient de parler à quelqu'un : son nom rassure plus qu'une marque.</p>
+<div class="ecrans">
+  <figure style="width:300px"><div class="boite"><div class="msg b"><div class="carte"><p class="c-pied sans-trait">Dicta</p></div></div></div><figcaption>A · La marque seule (aujourd'hui)</figcaption></figure>
+  <figure style="width:300px"><div class="boite"><div class="msg b"><div class="carte"><p class="c-pied sans-trait"><b>Xavier Frelechoz</b><br>Dicta · 079 000 00 00</p></div></div></div><figcaption>B · Toi, sur tous les courriels</figcaption></figure>
+  <figure style="width:300px"><div class="boite"><div class="msg b"><div class="carte"><p class="c-pied sans-trait"><b>Nina Rey</b>, qui vous a présenté Dicta<br>079 000 00 00</p></div></div></div><figcaption>C · Le commercial sur le courriel de la démo, la marque ailleurs</figcaption></figure>
+</div>
+<div class="choix" data-cle="M3"><p class="q"><b>M3</b> · La signature. C demande d'enregistrer le nom et le téléphone de chaque membre de l'équipe : aujourd'hui le site ne connaît que son courriel.</p><div class="opts"><button type="button" data-q="M3" data-v="C, le commercial sur la démo">C · Le commercial sur la démo (recommandé)</button><button type="button" data-q="M3" data-v="A, la marque seule">A · La marque seule</button><button type="button" data-q="M3" data-v="B, Xavier partout">B · Toi partout</button></div><textarea data-c="M3" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="fin" data-toc="Fin de la démo">La fin de la démo : date, ou date et heure</h2>
+<p>La démo s'arrête sept jours après sa création, à la même heure. « Jusqu'au 27.11.2026 » laisse croire qu'il a toute la journée du 27.</p>
+<div class="choix" data-cle="M4"><p class="q"><b>M4</b> · Dans le courriel de la démo</p><div class="opts"><button type="button" data-q="M4" data-v="B, date et heure">B · « jusqu'au vendredi 27 novembre à 14 h 19 » (recommandé)</button><button type="button" data-q="M4" data-v="A, date seule">A · « jusqu'au 27.11.2026 »</button><button type="button" data-q="M4" data-v="C, fin de journée">C · La démo dure jusqu'à minuit le dernier jour, et le courriel dit « jusqu'au 27.11.2026 »</button></div><textarea data-c="M4" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+
+<h2 id="branchement" data-toc="L'envoi">Ce qu'il me faut pour brancher l'envoi</h2>
+<p class="regle"><b>Le code est prêt :</b> l'application sait envoyer par une boîte d'envoi, et le site de test refuse de démarrer si ses courriels ne sont pas tous redirigés vers une seule adresse.</p>
+<div class="defile"><table class="droits">
+  <tr><th>Il me faut</th><th>Qui</th><th>Pourquoi</th></tr>
+  <tr><td>Une boîte d'envoi, par exemple <code>notifications@dicta.ch</code></td><td>Toi, dans le Manager Infomaniak</td><td>C'est elle qui envoie. Je n'ai pas accès au Manager.</td></tr>
+  <tr><td>Son serveur d'envoi, son nom d'utilisateur et son mot de passe, écrits dans le fichier de réglages du site de test</td><td>Toi, ou moi par SSH si tu poses le mot de passe dans un fichier du serveur</td><td>Le mot de passe ne passe ni par ce chat ni par le dépôt.</td></tr>
+  <tr><td>L'adresse qui reçoit tout sur le site de test</td><td>Toi</td><td>Sur le test, aucun courriel ne part chez un vrai artisan : tout arrive chez toi, avec le vrai destinataire dans l'objet.</td></tr>
+  <tr><td>L'adresse de réponse (support)</td><td>Toi</td><td>Un artisan qui répond au courriel doit arriver quelque part.</td></tr>
+  <tr><td>Le nom de domaine d'envoi réglé pour ne pas finir en indésirable (SPF, DKIM)</td><td>Infomaniak le fait si le domaine est chez eux</td><td>Je le contrôle après le premier envoi.</td></tr>
+</table></div>
+
+<h2 id="copier-texte" data-toc="Copier">Copier le texte</h2>
+<p><button id="copier" type="button">Copier le texte</button></p>
+<textarea id="texte" readonly></textarea>
+
+</div>
+<script>
+(function () {
+  // QR d'exemple : trois repères d'angle et un semis fixe. Le vrai sera fait par endroid/qr-code.
+  var n = 29, graine = 7, cases = '';
+  function hasard() { graine = (graine * 9301 + 49297) % 233280; return graine / 233280; }
+  function repere(x, y) { return '<path d="M' + x + ' ' + y + 'h7v7h-7zM' + (x + 1) + ' ' + (y + 1) + 'v5h5v-5z" fill-rule="evenodd"/><rect x="' + (x + 2) + '" y="' + (y + 2) + '" width="3" height="3"/>'; }
+  for (var y = 0; y < n; y++) { for (var x = 0; x < n; x++) {
+    var coin = (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9);
+    if (!coin && hasard() > 0.52) { cases += '<rect x="' + x + '" y="' + y + '" width="1" height="1"/>'; }
+  } }
+  document.querySelectorAll('svg.qr').forEach(function (s) { s.innerHTML = '<g fill="#1B1E22">' + repere(0, 0) + repere(n - 7, 0) + repere(0, n - 7) + cases + '</g>'; });
+
+  var CLE = 'maquette-courriels-v8-2026-11-23', etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  function texte() {
+    var lignes = [];
+    document.querySelectorAll('.choix').forEach(function (c) {
+      var q = c.getAttribute('data-cle'), e = etat[q] || {};
+      if (e.v || e.c) { lignes.push('- ' + q + ' : ' + (e.v || '') + (e.c ? ' · ' + e.c : '')); }
+    });
+    document.getElementById('texte').value = lignes.length ? 'Réponses, maquette des courriels v8 (23.11) :\n' + lignes.join('\n') : '';
+  }
+  document.querySelectorAll('.opts button').forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    b.setAttribute('aria-pressed', (etat[q] && etat[q].v === b.getAttribute('data-v')) ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      etat[q] = etat[q] || {};
+      etat[q].v = b.getAttribute('data-v');
+      document.querySelectorAll('.opts button[data-q="' + q + '"]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      garder(); texte();
+    });
+  });
+  document.querySelectorAll('textarea[data-c]').forEach(function (t) {
+    var q = t.getAttribute('data-c');
+    t.value = (etat[q] && etat[q].c) || '';
+    t.addEventListener('input', function () { etat[q] = etat[q] || {}; etat[q].c = t.value; garder(); texte(); });
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    texte();
+    var t = document.getElementById('texte');
+    t.select();
+    try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand('copy'); }
+  });
+  texte();
+})();
+
+(function () {
+  var seg = document.querySelector('[data-bascule]');
+  if (!seg) { return; }
+  seg.querySelectorAll('span').forEach(function (s) {
+    s.setAttribute('role', 'button'); s.tabIndex = 0;
+    function choisir() {
+      seg.querySelectorAll('span').forEach(function (x) { x.classList.toggle('on', x === s); });
+      var mode = s.getAttribute('data-mode');
+      document.querySelectorAll('[data-mois]').forEach(function (e) { e.hidden = mode !== 'mois'; });
+      document.querySelectorAll('[data-an]').forEach(function (e) { e.hidden = mode !== 'an'; });
+    }
+    s.addEventListener('click', choisir);
+    s.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choisir(); } });
+  });
+})();
+
+(function () {
+  var cartes = document.querySelectorAll('.plan[data-plan]'), bouton = document.getElementById('choisir-formule');
+  if (!bouton) { return; }
+  cartes.forEach(function (c) {
+    function choisir() {
+      cartes.forEach(function (x) { x.setAttribute('aria-checked', x === c ? 'true' : 'false'); });
+      bouton.textContent = 'Continuer avec ' + c.getAttribute('data-plan');
+      bouton.className = 'btn principal';
+    }
+    c.addEventListener('click', choisir);
+    c.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choisir(); } });
+  });
+})();
+
+(function () {
+  var cartes = document.querySelectorAll('[data-mode-paiement]'), bouton = document.getElementById('payer');
+  if (!bouton) { return; }
+  cartes.forEach(function (c) {
+    function choisir() {
+      cartes.forEach(function (x) { x.setAttribute('aria-checked', x === c ? 'true' : 'false'); });
+      bouton.textContent = c.getAttribute('data-bouton');
+    }
+    c.style.cursor = 'pointer';
+    c.addEventListener('click', choisir);
+    c.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choisir(); } });
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

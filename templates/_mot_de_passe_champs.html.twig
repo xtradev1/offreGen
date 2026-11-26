@@ -1,0 +1,15 @@
+{# Nouveau mot de passe : deux champs masqués et l'œil qui les montre (P3 B, Xavier, 2026-11-18). #}
+<div class="champ">
+  <label for="mot_de_passe">Nouveau mot de passe</label>
+  <span class="avec-oeil">
+    <input id="mot_de_passe" name="mot_de_passe" type="password" autocomplete="new-password" minlength="{{ longueur_min }}" maxlength="128" required data-oeil-cible aria-describedby="regle-mdp"{% if erreur %} aria-invalid="true"{% endif %}>
+    <button class="oeil" type="button" data-oeil aria-pressed="false" aria-label="Montrer le mot de passe">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+  </span>
+  <small id="regle-mdp" class="muted">{{ longueur_min }} caractères au moins. Une phrase facile à retenir convient.</small>
+</div>
+<div class="champ">
+  <label for="confirmation">Le même, une seconde fois</label>
+  <input id="confirmation" name="confirmation" type="password" autocomplete="new-password" maxlength="128" required data-oeil-cible{% if erreur %} aria-invalid="true"{% endif %}>
+</div>

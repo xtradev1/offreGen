@@ -1,0 +1,126 @@
+{
+ "moteur": "webkit",
+ "ou": "plus",
+ "offre": "1",
+ "etapes": [
+  {
+   "quoi": "offre, avec réseau",
+   "adresse": "/offres/1",
+   "en_ligne": true,
+   "file": [],
+   "garde": [],
+   "bandeaux": []
+  },
+  {
+   "quoi": "SR-5 quantité hors réseau",
+   "adresse": "/offres/1",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/1/lignes/1",
+     "corps": "quantite=9",
+     "gardee": false
+    }
+   ],
+   "garde": [
+    "/offres/1/lignes/1"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend, il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "SR-5 Plus",
+   "adresse": "/plus",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/1/lignes/1",
+     "corps": "quantite=9",
+     "gardee": true
+    }
+   ],
+   "garde": [
+    "/offres/1/lignes/1"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend, il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "SR-5 déconnexion annulée",
+   "adresse": "/plus",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/1/lignes/1",
+     "corps": "quantite=9",
+     "gardee": true
+    }
+   ],
+   "garde": [
+    "/offres/1/lignes/1"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend, il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "réseau revenu sur Plus",
+   "adresse": "/plus",
+   "en_ligne": true,
+   "file": [],
+   "garde": [],
+   "bandeaux": []
+  },
+  {
+   "quoi": "SR-6 offre",
+   "adresse": "/offres/1",
+   "en_ligne": true,
+   "file": [],
+   "garde": [],
+   "bandeaux": []
+  },
+  {
+   "quoi": "SR-6 aperçu 1",
+   "adresse": "/offres/1/apercu",
+   "en_ligne": true,
+   "file": [],
+   "garde": [],
+   "bandeaux": []
+  },
+  {
+   "quoi": "SR-6 offre revenue",
+   "adresse": "/offres/1",
+   "en_ligne": true,
+   "file": [],
+   "garde": [],
+   "bandeaux": []
+  },
+  {
+   "quoi": "SR-6 aperçu 2",
+   "adresse": "/offres/1/apercu",
+   "en_ligne": true,
+   "file": [],
+   "garde": [],
+   "bandeaux": []
+  },
+  {
+   "quoi": "SR-6 après « Envoyer »",
+   "adresse": "/offres/1/apercu",
+   "en_ligne": true,
+   "file": [],
+   "garde": [],
+   "bandeaux": [
+    "Offre 1 envoyée"
+   ]
+  }
+ ],
+ "posts": [
+  "/offres/1/lignes/1",
+  "  -> 200",
+  "/offres/1/envoyee",
+  "  -> 200"
+ ],
+ "dialogue": "Un changement attend encore le réseau. Se déconnecter les perd. Se déconnecter quand même ?"
+}

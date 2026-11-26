@@ -1,0 +1,34 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Démo prête : le code QR à faire scanner (D1 de Xavier, 2026-11-19). Chaque affichage émet un lien neuf, bon une
+   heure et une seule fois. Le SVG est écrit dans la page : la politique de sécurité refuse une image en data:. #}
+{% block retour %}<a class="back" href="/admin/artisans/{{ compte.id }}">{{ compte.entreprise }}</a>{% endblock %}
+{% block sous %}<p>Démo{% if metier %} · {{ metier }}{% endif %}</p>{% endblock %}
+
+{% block contenu %}
+  <div class="carte-admin">
+    <div class="qr">{{ qr|raw }}</div>
+    <p>Faites scanner ce code avec l'appareil photo du téléphone. Il est valable 1&nbsp;heure et sert une seule fois.</p>
+    <form method="post" action="/admin/artisans/{{ compte.id }}/message">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <button class="btn large" type="submit">Envoyer par message</button>
+    </form>
+    {% if entrainement ?? false %}
+      {# Sa démo d'entraînement (chantier onboarding, lot 8) : ouverte d'un toucher, par un POST avec jeton ; son courriel y
+         est déjà. La page d'entrée du prospect n'apprendrait rien. #}
+      <form method="post" action="{{ lien_chemin }}">
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <button class="btn large" type="submit" data-ouvrir-entrainement>Ouvrir la démo sur cet appareil</button>
+      </form>
+      <p class="muted">Sur cet appareil, la démo remplace votre espace. Le bouton «&nbsp;Revenir à mon espace&nbsp;» reste valable deux heures&nbsp;; ensuite, reconnectez-vous.</p>
+    {% else %}
+      <p class="muted"><a class="lien" href="{{ lien }}">Ouvrir la démo sur cet appareil</a>&nbsp;: vous y serez connecté à la place de l'administration.</p>
+    {% endif %}
+    <a class="btn primary pc-seul" href="/admin/artisans/{{ compte.id }}">Terminé</a>
+  </div>
+  {% if guide %}{% include 'admin/_guide_equipe.html.twig' with {page: 'prete'} %}{% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar mobile-seul"><a class="btn primary" href="/admin/artisans/{{ compte.id }}">Terminé</a></div>
+{% endblock %}

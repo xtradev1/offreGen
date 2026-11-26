@@ -1,0 +1,204 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OffreGen\Donnees;
+
+use OffreGen\Adresse\Adresse;
+use OffreGen\Compte\Marque;
+use OffreGen\Compte\PhrasesLettre;
+use OffreGen\Compte\Reglages;
+
+/**
+ * Les réglages du compte connecté, et de lui seul : la portée désigne la ligne de la table artisan.
+ */
+final class DepotReglages
+{
+    public function __construct(private readonly Base $base, private readonly Portee $portee)
+    {
+    }
+
+    public function lire(): Reglages
+    {
+        $l = $this->base->un(
+            'SELECT entreprise, adresse_rue, adresse_numero, adresse_npa, adresse_localite, adresse_pays, telephone, courriel_contact,
+                    ide, iban, tva_pour_dix_mille, arrondi_cinq_centimes, validite_jours, paiement_type, paiement_jours, paiement_acomptes, contact_nom,
+                    lettre_appel, lettre_offre_debut, lettre_offre_fin, lettre_facture_debut, lettre_facture_fin, lettre_partout, phrases_document,
+                    escompte_pour_dix_mille, escompte_jours
+             FROM artisan WHERE id = :a',
+            ['a' => $this->portee->artisanId],
+        ) ?? throw new \RuntimeException('Compte introuvable.');
+        /** @var array{entreprise: string, adresse_rue: string|null, adresse_numero: string|null, adresse_npa: string|null, adresse_localite: string|null, adresse_pays: string|null, telephone: string|null, courriel_contact: string|null, ide: string|null, iban: string|null, tva_pour_dix_mille: int, arrondi_cinq_centimes: int, validite_jours: int, paiement_type: string, paiement_jours: int, paiement_acomptes: string|null, contact_nom: string|null, lettre_appel: string|null, lettre_offre_debut: string|null, lettre_offre_fin: string|null, lettre_facture_debut: string|null, lettre_facture_fin: string|null, lettre_partout: int, phrases_document: string|null, escompte_pour_dix_mille: int, escompte_jours: int} $l */
+        $acomptes = $l['paiement_type'] === 'acomptes' ? (Reglages::acomptes($l['paiement_acomptes'] ?? '') ?? []) : [];
+        // Des acomptes illisibles en base ne cassent pas l'écran : retour au paiement à N jours.
+        $type = $l['paiement_type'] === 'acomptes' && $acomptes === [] ? 'jours' : $l['paiement_type'];
+        return new Reglages(
+            $l['entreprise'], $l['tva_pour_dix_mille'], $l['arrondi_cinq_centimes'] === 1,
+            Adresse::depuisBase($l, 'adresse_'), $l['telephone'] ?? '', $l['courriel_contact'] ?? '', $l['ide'] ?? '',
+            $l['validite_jours'], $type, $l['paiement_jours'], $acomptes, $l['iban'] ?? '', $l['contact_nom'] ?? '',
+            new PhrasesLettre($l['lettre_appel'] === 'client', $l['lettre_offre_debut'] ?? '', $l['lettre_offre_fin'] ?? '',
+                $l['lettre_facture_debut'] ?? '', $l['lettre_facture_fin'] ?? '',
+                PhrasesLettre::reecritesDepuisJson($l['phrases_document']), $l['lettre_partout'] === 1),
+            // Un escompte sans délai (ou l'inverse) ne vaut rien : pas d'escompte.
+            $l['escompte_jours'] > 0 ? $l['escompte_pour_dix_mille'] : 0, $l['escompte_pour_dix_mille'] > 0 ? $l['escompte_jours'] : 0,
+        );
+    }
+
+    /**
+     * L'adresse d'avant les champs séparés, que la migration 10 n'a pas su découper : l'écran la montre pour
+     * qu'elle soit reportée dans les champs. Vide dès que l'adresse en champs existe.
+     */
+    public function adresseAReprendre(): string
+    {
+        $v = $this->base->valeur('SELECT adresse FROM artisan WHERE id = :a AND adresse_npa IS NULL', ['a' => $this->portee->artisanId]);
+        return is_string($v) ? $v : '';
+    }
+
+    /** Vrai si l'assistant du premier lancement a été fait ou passé. */
+    public function assistantFait(): bool
+    {
+        return $this->base->valeur('SELECT reglages_faits_le FROM artisan WHERE id = :a', ['a' => $this->portee->artisanId]) !== null;
+    }
+
+    public function marquerAssistantFait(\DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire('UPDATE artisan SET reglages_faits_le = :q WHERE id = :a', ['q' => Dates::versBase($quand), 'a' => $this->portee->artisanId]);
+    }
+
+    /**
+     * L'assistant s'ouvrira de nouveau (remise à zéro d'un compte de démonstration). L'IBAN tapé par un visiteur
+     * s'efface : le suivant ne doit pas voir son compte bancaire.
+     */
+    public function assistantARefaire(): void
+    {
+        $this->base->ecrire('UPDATE artisan SET reglages_faits_le = NULL, iban = NULL WHERE id = :a', ['a' => $this->portee->artisanId]);
+    }
+
+    /**
+     * L'assistant s'ouvrira de nouveau, IBAN gardé : le passage d'une démo à l'essai (chantier onboarding, lot 4).
+     * L'IBAN a été tapé par le prospect lui-même, dans sa propre démo.
+     */
+    public function rouvrirAssistant(): void
+    {
+        $this->base->ecrire('UPDATE artisan SET reglages_faits_le = NULL WHERE id = :a', ['a' => $this->portee->artisanId]);
+    }
+
+    /**
+     * Le guide à anneau se montre (chantier onboarding, lot 3) : pas encore fini ni quitté, et le compte est une démo
+     * de l'équipe ou un essai. Jamais à un membre de l'équipe : il a sa propre bienvenue.
+     */
+    public function guideAMontrer(): bool
+    {
+        return $this->guidePossible() && $this->base->valeur('SELECT 1 FROM artisan WHERE id = :a AND guide_artisan_le IS NULL', ['a' => $this->portee->artisanId]) !== false;
+    }
+
+    /** Le compte a un guide : une démo de l'équipe ou un essai, jamais un membre de l'équipe (« Revoir le guide »). */
+    public function guidePossible(): bool
+    {
+        return $this->base->valeur(
+            'SELECT 1 FROM artisan WHERE id = :a AND role IS NULL AND administrateur = 0
+                AND ((demo = 1 AND demo_fin IS NOT NULL) OR (demo = 0 AND offres_max IS NOT NULL))',
+            ['a' => $this->portee->artisanId],
+        ) !== false;
+    }
+
+    /** « Compris » ou « Quitter le guide » : le guide ne se montre plus. La première date reste. */
+    public function guideFini(\DateTimeImmutable $quand): void
+    {
+        $this->base->ecrire('UPDATE artisan SET guide_artisan_le = COALESCE(guide_artisan_le, :q) WHERE id = :a', ['q' => Dates::versBase($quand), 'a' => $this->portee->artisanId]);
+    }
+
+    /** « Revoir le guide », dans « Plus ». */
+    public function revoirGuide(): void
+    {
+        $this->base->ecrire('UPDATE artisan SET guide_artisan_le = NULL WHERE id = :a', ['a' => $this->portee->artisanId]);
+    }
+
+    public function lireMarque(): Marque
+    {
+        /** @var array{modele: string, couleur: string|null, logo_fichier: string|null, couleur_logo: string|null}|null $l */
+        $l = $this->base->un('SELECT modele, couleur, logo_fichier, couleur_logo FROM artisan WHERE id = :a', ['a' => $this->portee->artisanId]);
+        if ($l === null) {
+            throw new \RuntimeException('Compte introuvable.');
+        }
+        return new Marque(Marque::modeleValide($l['modele']), $l['couleur'], $l['logo_fichier'], $l['couleur_logo']);
+    }
+
+    public function enregistrerMarque(string $modele, ?string $couleur): void
+    {
+        $this->base->ecrire(
+            'UPDATE artisan SET modele = :m, couleur = :c WHERE id = :a',
+            ['m' => Marque::modeleValide($modele), 'c' => $couleur, 'a' => $this->portee->artisanId],
+        );
+    }
+
+    /** Nouveau logo (ou aucun) ; sa couleur devient celle des documents, modifiable ensuite. */
+    public function changerLogo(?string $fichier, ?string $couleurDuLogo): void
+    {
+        $this->base->ecrire(
+            'UPDATE artisan SET logo_fichier = :f, couleur_logo = :cl, couleur = COALESCE(:c, couleur) WHERE id = :a',
+            ['f' => $fichier, 'cl' => $couleurDuLogo, 'c' => $couleurDuLogo, 'a' => $this->portee->artisanId],
+        );
+    }
+
+    public function enregistrer(Reglages $r): void
+    {
+        $vide = static fn (string $s): ?string => $s === '' ? null : $s;
+        // `adresse` garde le texte de l'adresse (l'ancienne version de l'application le lit). Sans adresse en champs, ni
+        // avant ni maintenant, le texte d'avant les champs séparés reste, à reporter.
+        $texte = $r->adresse->estVide() && $this->base->valeur('SELECT adresse_npa FROM artisan WHERE id = :a', ['a' => $this->portee->artisanId]) === null
+            ? $this->adresseAReprendre()
+            : $r->adresse->lignes();
+        $this->base->ecrire(
+            'UPDATE artisan SET entreprise = :e, adresse = :texte,
+                    adresse_rue = :arue, adresse_numero = :anumero, adresse_npa = :anpa, adresse_localite = :alocalite, adresse_pays = :apays,
+                    telephone = :te, courriel_contact = :co, ide = :ide, iban = :ib, contact_nom = :cn,
+                    tva_pour_dix_mille = :t, arrondi_cinq_centimes = :r, validite_jours = :v,
+                    paiement_type = :pt, paiement_jours = :pj, paiement_acomptes = :pa,
+                    lettre_appel = :la, lettre_offre_debut = :lod, lettre_offre_fin = :lof, lettre_facture_debut = :lfd, lettre_facture_fin = :lff,
+                    lettre_partout = :lp, phrases_document = :pd,
+                    escompte_pour_dix_mille = :ep, escompte_jours = :ej
+             WHERE id = :a',
+            self::colonnesAdresse($r->adresse) + ['texte' => $vide($texte), 'e' => $r->entreprise, 'te' => $vide($r->telephone), 'co' => $vide($r->courrielContact),
+             'ide' => $vide($r->ide), 'ib' => $vide($r->iban), 'cn' => $vide($r->contactNom), 't' => $r->tvaPourDixMille, 'r' => $r->arrondiCinqCentimes ? 1 : 0,
+             'v' => $r->validiteJours, 'pt' => $r->paiementType, 'pj' => $r->paiementJours,
+             'pa' => $r->paiementAcomptes === [] ? null : implode(',', $r->paiementAcomptes),
+             'la' => $r->lettre->appelSelonClient ? 'client' : null, 'lod' => $vide($r->lettre->offreDebut), 'lof' => $vide($r->lettre->offreFin),
+             'lfd' => $vide($r->lettre->factureDebut), 'lff' => $vide($r->lettre->factureFin),
+             'lp' => $r->lettre->partout ? 1 : 0, 'pd' => $r->lettre->reecritesJson(),
+             'ep' => $r->escomptePourDixMille, 'ej' => $r->escompteJours, 'a' => $this->portee->artisanId],
+        );
+    }
+
+    /** Vrai si l'artisan veut le courriel « offre prête » (réglage du 2026-11-23, vrai par défaut). */
+    public function courrielOffrePrete(): bool
+    {
+        return (int) $this->base->valeur('SELECT courriel_offre_prete FROM artisan WHERE id = :a', ['a' => $this->portee->artisanId]) === 1;
+    }
+
+    public function changerCourrielOffrePrete(bool $oui): void
+    {
+        $this->base->ecrire('UPDATE artisan SET courriel_offre_prete = :v WHERE id = :a', ['v' => $oui ? 1 : 0, 'a' => $this->portee->artisanId]);
+    }
+
+    /** Vrai si l'artisan veut le courriel « dictée en échec » (réglage du 2026-11-24, vrai par défaut). */
+    public function courrielDicteeEchec(): bool
+    {
+        return (int) $this->base->valeur('SELECT courriel_dictee_echec FROM artisan WHERE id = :a', ['a' => $this->portee->artisanId]) === 1;
+    }
+
+    public function changerCourrielDicteeEchec(bool $oui): void
+    {
+        $this->base->ecrire('UPDATE artisan SET courriel_dictee_echec = :v WHERE id = :a', ['v' => $oui ? 1 : 0, 'a' => $this->portee->artisanId]);
+    }
+
+    /** @return array<string, string|null> arue, anumero, anpa, alocalite, apays */
+    private static function colonnesAdresse(Adresse $a): array
+    {
+        $parametres = [];
+        foreach ($a->versBase('') as $cle => $valeur) {
+            $parametres['a' . $cle] = $valeur;
+        }
+        return $parametres;
+    }
+}

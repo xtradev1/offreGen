@@ -1,0 +1,32 @@
+{% extends 'document/_base.html.twig' %}
+{% import 'document/_blocs.html.twig' as b %}
+{# Atelier : tout en empattements, le logo centré, un double filet, « Offre » en grande italique à gauche de l'adresse. #}
+
+{% block fixes %}{{ b.pied(_context) }}{% endblock %}
+
+{% block corps %}
+  <div class="doc-in">
+    <div class="doc-haut">
+      <div class="doc-centre">{{ b.logo(_context) }}</div>
+      <div class="doc-coord-ligne">{% for l in coord %}{{ l }}{% if not loop.last or r.telephone or r.courrielContact %} · {% endif %}{% endfor %}{{ r.telephone }}{% if r.telephone and r.courrielContact %} · {% endif %}{{ r.courrielContact }}</div>
+    </div>
+    <div class="doc-double c-filet"></div>
+    <table class="doc-tetiere"><tr>
+      <td><div class="doc-titre c-texte">{{ doc_nom }}</div><div class="doc-num">n°&nbsp;{{ doc_numero }}</div></td>
+      <td>{{ b.adresse(_context) }}</td>
+    </tr></table>
+    <div class="doc-objet">{{ doc_objet }}</div>
+    <div class="doc-meta">{{ b.meta(_context, {lieu: true}) }}</div>
+    {{ b.annulee(_context) }}
+    {{ b.debut(_context) }}
+    {{ b.lignes(_context, {th: 'c-filet', grp: 'c-texte'}) }}
+    {{ b.totaux(_context, {tt: 'c-filet'}) }}
+    {{ b.options(_context) }}
+    {{ b.texte(_context, 'apres') }}
+    <div class="doc-fin">
+      {{ b.conditions(_context) }}
+      {{ b.fin(_context) }}
+      {{ b.signatures(_context) }}
+    </div>
+  </div>
+{% endblock %}

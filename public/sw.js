@@ -1,0 +1,373 @@
+// offreGen : le service worker (chantier docs/plans/2026-11-23_sans-rechargement, lot 4, D5, D6). Il garde dans le
+// téléphone les fichiers de l'application, les pages déjà vues ou préchargées et le dernier PDF de chaque offre, pour
+// qu'une offre ouverte reste lisible et modifiable sans réseau. Les envois (POST) ne passent pas par lui : la file de
+// fluide.js les garde. Jamais gardés : la connexion, l'administration, l'état d'une dictée, les morceaux de page.
+// Tout ce qui est gardé l'est pour un compte, 14 jours au plus (la durée d'une session) : un autre compte, une entrée de
+// session (connexion, lien de démo, mot de passe) ou la déconnexion l'efface.
+'use strict';
+
+const VERSION = '2026-11-23-2';
+const FICHIERS = 'offregen-fichiers-' + VERSION;
+const PAGES = 'offregen-pages-';
+const ETAT = 'offregen-etat';
+const ATTENTE_MS = 6000;
+const GARDE_MS = 14 * 86400000;
+// Pages jamais gardées ; entrées de session, qui effacent ce qui était gardé (revue du 2026-11-23, B-I9 et D-I2).
+const JAMAIS = /^\/(connexion|deconnexion|mot-de-passe|admin|d|sante|essai|decouvrir|passer-a-l-essai|fin-de-demo|bienvenue|retour-espace|import)(\/|$)|\/etat$|\/reglages\/logo$/;
+const ENTREES = /^\/(connexion|d|mot-de-passe|retour-espace|passer-a-l-essai|essai)(\/|$)/;
+const PDF = /^\/(offres|factures)\/\d+\/pdf$/;
+
+// Le compte des pages gardées, rangé aussi dans le cache : un service worker relancé le retrouve avant le message de la page.
+let compte = null;
+const lireCompte = async () => {
+  if (compte) return compte;
+  const r = await (await caches.open(ETAT)).match('/compte');
+  compte = r ? (await r.text()) || null : null;
+  return compte;
+};
+const noterCompte = async (c) => {
+  compte = c;
+  const cache = await caches.open(ETAT);
+  if (c) await cache.put('/compte', new Response(c)); else await cache.delete('/compte');
+};
+const nomDesPages = (c) => (c ? PAGES + c : null);
+const cle = (url) => url.pathname + url.search;
+
+// Les fichiers qu'une page cite (feuilles de style, scripts, images ; app.js par data-app).
+const ADRESSES = /\s(?:href|src|srcset|data-app)="(\/(?:css|js|img)\/[^"\s]+)"/g;
+const cites = (texte) => [...texte.matchAll(ADRESSES)].map((m) => m[1].replace(/&amp;/g, '&'));
+
+// Les adresses citées par les pages gardées encore valables, tous comptes confondus. Une page gardée avant un
+// déploiement cite les anciennes versions des scripts : sans elles, rouverte sans réseau, elle s'ouvrait sans JavaScript
+// et chaque geste rechargeait la page, donc se perdait (M7 de la revue du 2026-11-24, Xavier le 2026-11-25 : « il faut
+// corriger pour que même sans réseau, ça fonctionne »).
+const citesParLesPages = async () => {
+  const adresses = new Set();
+  for (const nom of (await caches.keys()).filter((n) => n.startsWith(PAGES))) {
+    const cache = await caches.open(nom);
+    for (const requete of await cache.keys()) {
+      const r = await cache.match(requete);
+      if (!r || !(r.headers.get('Content-Type') || '').includes('text/html')) continue;
+      if (!(Date.now() - Date.parse(r.headers.get('X-Garde-Le') || '') <= GARDE_MS)) continue;
+      cites(await r.text()).forEach((a) => adresses.add(a));
+    }
+  }
+  return adresses;
+};
+
+self.addEventListener('install', () => self.skipWaiting());
+// Une nouvelle version du service worker reprend, des fichiers de l'ancienne, ceux que citent les pages gardées.
+self.addEventListener('activate', (e) => {
+  e.waitUntil((async () => {
+    const vieux = (await caches.keys()).filter((n) => n.startsWith('offregen-fichiers-') && n !== FICHIERS);
+    if (vieux.length) {
+      const adresses = await citesParLesPages();
+      const neuf = await caches.open(FICHIERS);
+      for (const nom of vieux) {
+        const cache = await caches.open(nom);
+        for (const requete of await cache.keys()) {
+          if (!adresses.has(cle(new URL(requete.url))) || await neuf.match(requete)) continue;
+          const r = await cache.match(requete);
+          if (r) await neuf.put(requete, r);
+        }
+      }
+      await Promise.all(vieux.map((n) => caches.delete(n)));
+    }
+    await self.clients.claim();
+  })());
+});
+
+const effacerLesPages = async (sauf) => {
+  const noms = await caches.keys();
+  await Promise.all(noms.filter((n) => n.startsWith(PAGES) && n !== sauf).map((n) => caches.delete(n)));
+};
+
+// Un fichier versionné (?v=, empreinte du contenu) ou de PDF.js (version dans son dossier) ne change jamais : gardé, servi
+// sans réseau. Ses anciennes versions restent tant qu'une page gardée les cite (nettoyerFichiers). Un fichier sans
+// version suit le réseau et ses règles de cache (.htaccess) ; la copie gardée ne sert que sans réseau (revue, B-I11 et
+// C-I2), et elle remplace la précédente.
+const versionne = (url) => /(^|&)v=[0-9a-f]{12}(&|$)/.test(url.search.slice(1)) || url.pathname.startsWith('/js/vendor/');
+const garderFichier = async (cache, requete, reponse) => {
+  if (!reponse.ok || reponse.type !== 'basic') return;
+  const url = new URL(requete.url);
+  if (!versionne(url)) {
+    const anciens = (await cache.keys()).filter((k) => { const u = new URL(k.url); return u.pathname === url.pathname && u.search !== url.search; });
+    await Promise.all(anciens.map((k) => cache.delete(k)));
+  }
+  await cache.put(requete, reponse.clone());
+};
+// Sans réseau, une version absente du téléphone (page gardée avant ce correctif, dont le service worker d'alors a effacé
+// les fichiers) : la plus récente gardée du même fichier. Une page un peu plus ancienne que ses scripts vaut mieux
+// qu'une page sans scripts, où chaque geste se perd. Le cache rend ses clés dans l'ordre où elles sont entrées.
+const plusRecente = async (cache, url) => {
+  const memes = (await cache.keys()).filter((k) => new URL(k.url).pathname === url.pathname);
+  return memes.length ? cache.match(memes[memes.length - 1]) : undefined;
+};
+const fichier = async (requete) => {
+  const cache = await caches.open(FICHIERS);
+  const url = new URL(requete.url);
+  if (versionne(url)) {
+    const garde = await cache.match(requete);
+    if (garde) return garde;
+  }
+  try {
+    const reponse = await fetch(requete);
+    await garderFichier(cache, requete, reponse);
+    return reponse;
+  } catch (err) {
+    const garde = (await cache.match(requete)) || (await plusRecente(cache, url));
+    if (garde) return garde;
+    throw err;
+  }
+};
+
+// Après un déploiement, deux versions d'un même fichier : l'ancienne part dès qu'aucune page gardée ne la cite plus (la
+// page rouverte avec du réseau se garde à nouveau, avec les nouvelles adresses ; une page de plus de 14 jours ne compte
+// plus). La plus récente reste toujours. Les pages ne sont relues que s'il y a des doubles. Un seul nettoyage à la fois.
+let nettoyage = null;
+const nettoyerFichiers = () => {
+  if (!nettoyage) {
+    nettoyage = (async () => {
+      const cache = await caches.open(FICHIERS);
+      const parChemin = new Map();
+      for (const k of await cache.keys()) {
+        const u = new URL(k.url);
+        if (!versionne(u)) continue;
+        if (!parChemin.has(u.pathname)) parChemin.set(u.pathname, []);
+        parChemin.get(u.pathname).push(k);
+      }
+      const doubles = [...parChemin.values()].filter((l) => l.length > 1);
+      if (!doubles.length) return;
+      const adresses = await citesParLesPages();
+      for (const l of doubles) {
+        for (const k of l.slice(0, -1)) if (!adresses.has(cle(new URL(k.url)))) await cache.delete(k);
+      }
+    })().finally(() => { nettoyage = null; });
+  }
+  return nettoyage;
+};
+
+// La page gardée, marquée pour l'écran : data-garde-le (date de la copie), data-garde-raison (hors réseau, ou lent).
+const marquer = async (reponse, raison) => {
+  const texte = await reponse.text();
+  const le = reponse.headers.get('X-Garde-Le') || '';
+  const entetes = new Headers(reponse.headers);
+  entetes.delete('Content-Length');
+  return new Response(texte.replace('<body', '<body data-garde-le="' + le + '" data-garde-raison="' + raison + '"'), { status: 200, headers: entetes });
+};
+
+const horsReseau = async () => {
+  const cache = await caches.open(FICHIERS);
+  const feuille = (await cache.keys()).map((k) => new URL(k.url)).find((u) => u.pathname === '/css/app.css');
+  const lien = feuille ? '<link rel="stylesheet" href="' + cle(feuille) + '">' : '';
+  const corps = '<!doctype html><html lang="fr-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+    + lien + '<title>Hors réseau</title></head><body><div class="app app-seule"><main class="screen"><h1>Hors réseau</h1>'
+    + '<p>Cette page n’a pas été gardée dans le téléphone. Les offres ouvertes ou préparées le sont&nbsp;: revenez à la liste.</p>'
+    + '<p><a class="btn primary" href="/">Mes offres</a></p></main></div></body></html>';
+  return new Response(corps, { status: 503, headers: {
+    'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',
+    'Content-Security-Policy': "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'",
+    'X-Frame-Options': 'SAMEORIGIN', 'X-Content-Type-Options': 'nosniff',
+  } });
+};
+
+// Les fichiers qu'une page cite (feuilles de style, scripts, images) : gardés avec elle, sinon la page rouverte sans réseau
+// s'afficherait sans style ni script (ceux chargés avant le service worker, ou ceux d'une page préchargée, manquent).
+// Toujours après coup, jamais avant de rendre la page, et seulement ceux qui manquent encore. app.js est cité par
+// data-app : fluide.js le demande lui-même (base.html.twig, SR-1 du 2026-11-24). Pas les polices que citent
+// les feuilles : document.css en cite pour douze modèles, 900 Ko lus en arrière-plan à l'ouverture de « Facturer » (banc
+// du 2026-11-23) ; celles dont une page a besoin passent ici quand le navigateur les demande.
+const garderFichiers = async (texte) => {
+  const cache = await caches.open(FICHIERS);
+  const deja = new Set((await cache.keys()).map((k) => cle(new URL(k.url))));
+  for (const adresse of [...new Set(cites(texte))]) {
+    if (deja.has(adresse) || await cache.match(adresse)) continue;
+    try {
+      await fichier(new Request(adresse));
+      deja.add(adresse);
+    } catch (err) {
+      return; // plus de réseau : la prochaine page gardée reprendra
+    }
+  }
+};
+
+// Garder une page reçue : seulement une vraie page de l'artisan (200, HTML, même adresse, pas l'écran de connexion). Rend
+// le texte de la page gardée (ses fichiers sont gardés à part, garderFichiers), sinon null.
+const garder = async (requete, reponse) => {
+  const type = reponse.headers.get('Content-Type') || '';
+  if (!reponse.ok || reponse.redirected || reponse.type !== 'basic') return null;
+  const url = new URL(requete.url);
+  const entetes = new Headers(reponse.headers);
+  entetes.set('X-Garde-Le', new Date().toISOString());
+  // La couleur de l'artisan (/reglages/marque.css?v=…) : gardée avec les pages de son compte, sous sa vraie adresse.
+  if (url.pathname === '/reglages/marque.css' && type.includes('text/css')) {
+    const c = await lireCompte();
+    if (c) await (await caches.open(nomDesPages(c))).put(cle(url), new Response(await reponse.text(), { status: 200, headers: entetes }));
+    return null;
+  }
+  if (!type.includes('text/html')) return null;
+  const texte = await reponse.text();
+  const m = /<body[^>]*\sdata-compte="(\d+)"/.exec(texte);
+  if (!m) return null;
+  if (m[1] !== (await lireCompte())) { await noterCompte(m[1]); await effacerLesPages(nomDesPages(m[1])); }
+  const version = requete.headers.get('X-Version-Garde');
+  if (version) entetes.set('X-Version-Garde', version);
+  await (await caches.open(nomDesPages(m[1]))).put(cle(url), new Response(texte, { status: 200, headers: entetes }));
+  return texte;
+};
+
+// La copie d'une adresse, pour le seul compte noté, et pas plus vieille que la durée d'une session.
+const chercherGardee = async (requete) => {
+  const c = await lireCompte();
+  if (!c) return null;
+  const cache = await caches.open(nomDesPages(c));
+  const url = cle(new URL(requete.url));
+  const r = await cache.match(url);
+  if (!r) return null;
+  const le = Date.parse(r.headers.get('X-Garde-Le') || '');
+  if (!Number.isFinite(le) || Date.now() - le > GARDE_MS) { await cache.delete(url); return null; }
+  return r;
+};
+
+// Une page : le réseau d'abord ; sans réponse en 6 secondes ou sans réseau, la copie gardée (le réseau continue, met la
+// copie à jour et le dit à la page) ; ni réseau ni copie : l'écran « hors réseau ». La page part dès que ses en-têtes
+// arrivent ; la copie se fait à côté, et les fichiers qu'elle cite sont cherchés 5 secondes plus tard s'ils manquent
+// encore (le navigateur les demande entre-temps, ils passent par fichier()). Les attendre avant de rendre la page coûtait
+// un aller-retour par fichier neuf : 2,6 s pour ouvrir le catalogue sur un réseau de chantier (banc du 2026-11-23).
+const pause = (ms) => new Promise((ok) => setTimeout(() => ok(null), ms));
+const page = async (e) => {
+  const requete = e.request;
+  const html = new URL(requete.url).pathname !== '/reglages/marque.css';
+  let servieGardee = false;
+  const reseau = fetch(requete);
+  const suite = reseau.then(async (reponse) => {
+    const copie = reponse.clone();
+    if (new URL(reponse.url).pathname === '/connexion') { await effacerLesPages(null); await noterCompte(null); return; }
+    const texte = await garder(requete, copie).catch(() => null);
+    // Réseau lent : la page a reçu la copie ; la page à jour est là, on le lui dit.
+    if (servieGardee && html && reponse.ok) {
+      const client = await self.clients.get(e.resultingClientId || e.clientId);
+      if (client) client.postMessage({ type: 'page-a-jour', adresse: cle(new URL(requete.url)) });
+    }
+    if (texte) { await pause(5000); await garderFichiers(texte); await nettoyerFichiers(); }
+  });
+  e.waitUntil(suite.catch(() => {}));
+  const attendre = pause;
+  let raison = 'lent';
+  try {
+    const premiere = await Promise.race([reseau, attendre(ATTENTE_MS)]);
+    if (premiere) return premiere;
+  } catch (err) {
+    raison = 'hors';
+  }
+  const gardee = await chercherGardee(requete);
+  if (gardee) { servieGardee = true; return html ? marquer(gardee, raison) : gardee; }
+  // Ni réponse ni copie : le réseau a encore un moment, puis l'écran le dit. Une feuille de style qui attend sans fin
+  // bloquerait les scripts de la page : elle reçoit vite une réponse vide.
+  if (html) {
+    try {
+      const tard = await Promise.race([reseau, attendre(15000)]);
+      if (tard) return tard;
+    } catch (err) { /* idem */ }
+  }
+  return html ? horsReseau() : new Response('', { status: 503, headers: { 'Content-Type': 'text/css' } });
+};
+
+// Le PDF d'une offre ou d'une facture (lot 5) : le dernier reçu est gardé avec son ETag et revalidé ; inchangé, le
+// serveur répond 304 et rien ne se retélécharge ; sans réseau, le dernier PDF vu s'ouvre encore (fluide.js dit, sur
+// l'aperçu, que les changements en attente n'y sont pas).
+const pdf = async (requete) => {
+  const c = await lireCompte();
+  const cache = c ? await caches.open(nomDesPages(c)) : null;
+  const url = new URL(requete.url).pathname;
+  let garde = cache ? await cache.match(url) : null;
+  if (garde && !(Date.now() - Date.parse(garde.headers.get('X-Garde-Le') || '') <= GARDE_MS)) { await cache.delete(url); garde = null; }
+  const entetes = new Headers(requete.headers);
+  if (garde && garde.headers.get('ETag')) entetes.set('If-None-Match', garde.headers.get('ETag'));
+  let reponse;
+  try {
+    reponse = await fetch(requete.url, { headers: entetes, credentials: 'same-origin', cache: 'no-store' });
+  } catch (err) {
+    if (garde) return garde;
+    throw err;
+  }
+  if (reponse.status === 304 && garde) return garde;
+  if (reponse.ok && cache && (reponse.headers.get('Content-Type') || '').includes('application/pdf')) {
+    const garder = new Headers(reponse.headers);
+    garder.set('X-Garde-Le', new Date().toISOString());
+    await cache.put(url, new Response(await reponse.clone().blob(), { status: 200, headers: garder }));
+  }
+  return reponse;
+};
+
+// Le dernier signe de vie de l'artisan : toute requête d'une page (geste, page, fenêtre, fichier). Le préchargement passe
+// après lui (D4 : « les actions que le client fait sont prioritaires ») ; ses propres requêtes ne passent pas par ici.
+let activite = 0;
+const CALME_MS = 3000;
+
+self.addEventListener('fetch', (e) => {
+  const requete = e.request;
+  activite = Date.now();
+  if (requete.method !== 'GET') return;
+  const url = new URL(requete.url);
+  if (url.origin !== self.location.origin || requete.headers.has('X-Morceaux')) return;
+  // Une entrée de session (connexion, lien de démo, mot de passe, retour à son espace) : ce qui était gardé part.
+  if (requete.mode === 'navigate' && ENTREES.test(url.pathname)) { e.waitUntil(effacerLesPages(null).then(() => noterCompte(null))); return; }
+  if (/^\/(css|js|fonts|img)\//.test(url.pathname)) { e.respondWith(fichier(requete)); return; }
+  if (PDF.test(url.pathname)) { e.respondWith(pdf(requete)); return; }
+  if (JAMAIS.test(url.pathname)) return;
+  const html = requete.mode === 'navigate' || (requete.headers.get('Accept') || '').includes('text/html') || requete.headers.has('X-Version-Garde');
+  if (html || url.pathname === '/reglages/marque.css') e.respondWith(page(e));
+});
+
+// La page dit son compte et ce qu'il faut garder d'avance (D6 : liste, catalogue, clients, offres des 30 derniers
+// jours) ; la déconnexion efface tout.
+self.addEventListener('message', (e) => {
+  const m = e.data || {};
+  if (m.type === 'compte' && m.compte) {
+    e.waitUntil((async () => {
+      if ((await lireCompte()) !== String(m.compte)) { await noterCompte(String(m.compte)); await effacerLesPages(nomDesPages(String(m.compte))); }
+    })());
+  }
+  if (m.type === 'oublier') e.waitUntil(effacerLesPages(null).then(() => noterCompte(null)));
+  if (m.type === 'garder' && Array.isArray(m.pages)) e.waitUntil(precharger(m.pages));
+});
+
+// La plus récente version gardée de chaque fichier versionné (chemin => adresse) ; une page gardée est à jour si elle ne
+// cite aucune version plus ancienne.
+const recentes = async () => {
+  const m = new Map();
+  for (const k of await (await caches.open(FICHIERS)).keys()) { const u = new URL(k.url); if (versionne(u)) m.set(u.pathname, cle(u)); }
+  return m;
+};
+const aJour = async (garde, neuves) => cites(await garde.clone().text()).every((a) => {
+  const u = new URL(a, self.location.origin);
+  return !versionne(u) || !neuves.has(u.pathname) || neuves.get(u.pathname) === a;
+});
+
+// Une à une, sans presser le réseau ; une page déjà gardée à la même version n'est pas redemandée, sauf si elle cite des
+// fichiers d'avant un déploiement : reprise, elle cite les nouveaux et les anciens peuvent partir (M7, 2026-11-25).
+// Chaque page attend 3 secondes sans requête de l'écran : un geste de l'artisan met le préchargement en pause (D4).
+const precharger = async (pages) => {
+  const c = await lireCompte();
+  if (!c) return;
+  const cache = await caches.open(nomDesPages(c));
+  const neuves = await recentes();
+  for (const p of pages.slice(0, 80)) {
+    if (!p || typeof p.adresse !== 'string') continue;
+    const url = new URL(p.adresse, self.location.origin);
+    if (url.origin !== self.location.origin || JAMAIS.test(url.pathname)) continue;
+    const garde = await cache.match(cle(url));
+    if (garde && p.version && garde.headers.get('X-Version-Garde') === String(p.version) && await aJour(garde, neuves)) continue;
+    while (Date.now() - activite < CALME_MS) await pause(500);
+    try {
+      const requete = new Request(cle(url), { credentials: 'same-origin', headers: { Accept: 'text/html', 'X-Version-Garde': String(p.version || '') } });
+      const texte = await garder(requete, await fetch(requete));
+      if (texte) await garderFichiers(texte);
+    } catch (err) {
+      return; // plus de réseau : la suite attendra la prochaine ouverture
+    }
+    await pause(400);
+  }
+  await nettoyerFichiers();
+};

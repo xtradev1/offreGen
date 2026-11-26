@@ -1,0 +1,60 @@
+[
+ {
+  "cle": "vue de départ",
+  "valeur": {
+   "width": 390,
+   "height": 664
+  }
+ },
+ {
+  "cle": "hauteur de la page",
+  "valeur": 5393
+ },
+ {
+  "cle": "clavier : 844 puis 450 puis 844",
+  "valeur": {
+   "avant": 400,
+   "apres": 400,
+   "defilements": [
+    399,
+    400
+   ]
+  }
+ },
+ {
+  "cle": "témoin, barre de Safari : 844 puis 760 puis 844",
+  "valeur": {
+   "avant": 400,
+   "apres": 400,
+   "defilements": []
+  }
+ },
+ {
+  "cle": "témoin, rotation : 844 puis 390 de large",
+  "valeur": {
+   "avant": 400,
+   "apres": 400,
+   "defilements": []
+  }
+ },
+ {
+  "cle": "fermeture, 60 ms après",
+  "valeur": {
+   "fondEncoreLa": true,
+   "ouvert": false,
+   "touche": "textarea"
+  }
+ },
+ {
+  "cle": "témoin (règle annulée), 60 ms après",
+  "valeur": {
+   "fondEncoreLa": true,
+   "ouvert": false,
+   "touche": "le fond"
+  }
+ },
+ {
+  "cle": "erreurs JavaScript",
+  "valeur": []
+ }
+]

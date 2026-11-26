@@ -1,0 +1,182 @@
+[
+ {
+  "geste": "offre-juste",
+  "profil": "local",
+  "au_toucher_ms": 47,
+  "confirme_ms": 117,
+  "requetes": 2,
+  "octets": 2243,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/14/juste 2243",
+   "GET /offres/3/ajouter 0"
+  ]
+ },
+ {
+  "geste": "offre-corbeille",
+  "profil": "local",
+  "au_toucher_ms": 40,
+  "confirme_ms": 107,
+  "requetes": 1,
+  "octets": 2196,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/37/supprimer 2196"
+  ]
+ },
+ {
+  "geste": "offre-annuler",
+  "profil": "local",
+  "au_toucher_ms": 45,
+  "confirme_ms": 118,
+  "requetes": 1,
+  "octets": 4672,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/37/restaurer 4672"
+  ]
+ },
+ {
+  "geste": "offre-deux-corbeilles",
+  "profil": "local",
+  "au_toucher_ms": 449,
+  "confirme_ms": 508,
+  "requetes": 2,
+  "octets": 4387,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/39/supprimer 2183",
+   "POST /offres/3/lignes/65/supprimer 2204"
+  ]
+ },
+ {
+  "geste": "offre-quantite",
+  "profil": "local",
+  "au_toucher_ms": 18,
+  "confirme_ms": 78,
+  "requetes": 1,
+  "octets": 2221,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/14 2221"
+  ]
+ },
+ {
+  "geste": "ligne-enregistrer",
+  "profil": "local",
+  "au_toucher_ms": 104,
+  "confirme_ms": 106,
+  "requetes": 1,
+  "octets": 4737,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes/16 4737"
+  ]
+ },
+ {
+  "geste": "ajout-ouvrir",
+  "profil": "local",
+  "au_toucher_ms": 39,
+  "confirme_ms": 40,
+  "requetes": 0,
+  "octets": 0,
+  "recharge": false,
+  "erreurs": [],
+  "detail": []
+ },
+ {
+  "geste": "ajout-produit-1",
+  "profil": "local",
+  "au_toucher_ms": 120,
+  "confirme_ms": 121,
+  "requetes": 1,
+  "octets": 4904,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes 4904"
+  ]
+ },
+ {
+  "geste": "ajout-produit-2",
+  "profil": "local",
+  "au_toucher_ms": 108,
+  "confirme_ms": 110,
+  "requetes": 1,
+  "octets": 5042,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes 5042"
+  ]
+ },
+ {
+  "geste": "ajout-produit-3",
+  "profil": "local",
+  "au_toucher_ms": 120,
+  "confirme_ms": 122,
+  "requetes": 1,
+  "octets": 5030,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/lignes 5030"
+  ]
+ },
+ {
+  "geste": "ajout-termine",
+  "profil": "local",
+  "au_toucher_ms": 38,
+  "confirme_ms": 39,
+  "requetes": 0,
+  "octets": 0,
+  "recharge": false,
+  "erreurs": [],
+  "detail": []
+ },
+ {
+  "geste": "relire-juste",
+  "profil": "local",
+  "au_toucher_ms": 56,
+  "confirme_ms": 83,
+  "requetes": 1,
+  "octets": 603,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/relire/19 603"
+  ]
+ },
+ {
+  "geste": "liste-archiver",
+  "profil": "local",
+  "au_toucher_ms": 38,
+  "confirme_ms": 77,
+  "requetes": 1,
+  "octets": 1177,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/archiver 1177"
+  ]
+ },
+ {
+  "geste": "liste-annuler",
+  "profil": "local",
+  "au_toucher_ms": 44,
+  "confirme_ms": 86,
+  "requetes": 1,
+  "octets": 1014,
+  "recharge": false,
+  "erreurs": [],
+  "detail": [
+   "POST /offres/3/restaurer 1014"
+  ]
+ }
+]

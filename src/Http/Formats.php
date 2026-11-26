@@ -1,0 +1,152 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OffreGen\Http;
+
+use OffreGen\Compte\Iban;
+use OffreGen\Offre\Offerte;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
+
+/**
+ * Affichage des montants, quantités et dates, au format de la maquette (de-CH : 1’234.50).
+ * Ne calcule rien : les totaux viennent de Totaux.
+ */
+final class Formats extends AbstractExtension
+{
+    private const NB = "\u{00A0}";
+
+    public function getFilters(): array
+    {
+        return [
+            new TwigFilter('chf', [self::class, 'chf']),
+            new TwigFilter('montant', [self::class, 'montant']),
+            new TwigFilter('quantite', [self::class, 'quantite']),
+            new TwigFilter('date_locale', [self::class, 'date']),
+            new TwigFilter('jour', [self::class, 'jour']),
+            new TwigFilter('taux', [self::class, 'taux']),
+            new TwigFilter('saisie_quantite', [self::class, 'saisieQuantite']),
+            new TwigFilter('saisie_prix', [self::class, 'saisiePrix']),
+            new TwigFilter('saisie_prix_ligne', [self::class, 'saisiePrixLigne']),
+            new TwigFilter('iban', [Iban::class, 'lisible']),
+            new TwigFilter('date_longue', [self::class, 'dateLongue']),
+            new TwigFilter('phrase', [self::class, 'phrase'], ['is_safe' => ['html']]),
+            new TwigFilter('duree_ms', [self::class, 'dureeMs']),
+            new TwigFilter('heure_ms', [self::class, 'heureMs']),
+        ];
+    }
+
+    /** Chronomètre des dictées : 40 donne « 40 ms », 3800 « 3,8 s », 788000 « 13 min 08 s » ; null : « - ». */
+    public static function dureeMs(?int $ms): string
+    {
+        if ($ms === null) {
+            return '-';
+        }
+        if ($ms < 1000) {
+            return $ms . self::NB . 'ms';
+        }
+        if ($ms < 60000) {
+            return str_replace('.', ',', (string) (round($ms / 100) / 10)) . self::NB . 's';
+        }
+        $s = (int) round($ms / 1000);
+        return intdiv($s, 60) . self::NB . 'min' . self::NB . sprintf('%02d', $s % 60) . self::NB . 's';
+    }
+
+    /** Heure de Zurich au dixième de seconde, d'une date UTC à la milliseconde : « 12:05:39,2 ». */
+    public static function heureMs(string $utc): string
+    {
+        $d = (new \DateTimeImmutable($utc, new \DateTimeZone('UTC')))->setTimezone(new \DateTimeZone('Europe/Zurich'));
+        return $d->format('H:i:s') . ',' . intdiv((int) $d->format('v'), 100);
+    }
+
+    /**
+     * Une phrase du document (Compte\PhrasesLettre::ecrire), échappée, ses espaces insécables écrits « &nbsp; » comme le
+     * reste des gabarits. Dans le texte d'un élément seulement, jamais dans un attribut : l'apostrophe reste telle quelle.
+     */
+    public static function phrase(?string $texte): string
+    {
+        return str_replace(self::NB, '&nbsp;', htmlspecialchars($texte ?? '', ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+    }
+
+    public static function chf(int $centimes): string
+    {
+        return 'CHF' . self::NB . self::montant($centimes);
+    }
+
+    /** Montant sans devise, pour les colonnes de prix : « 1’234.50 ». */
+    public static function montant(int $centimes): string
+    {
+        $f = new \NumberFormatter('de_CH', \NumberFormatter::DECIMAL);
+        $f->setAttribute(\NumberFormatter::MIN_FRACTION_DIGITS, 2);
+        $f->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, 2);
+        return (string) $f->format($centimes / 100);
+    }
+
+    public static function quantite(int $milliemes): string
+    {
+        $f = new \NumberFormatter('de_CH', \NumberFormatter::DECIMAL);
+        $f->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, 3);
+        return (string) $f->format($milliemes / 1000);
+    }
+
+    /** Date UTC de la base, jour seulement, à l'heure de Zurich : « 07.11.2026 ». */
+    public static function jour(string $utc): string
+    {
+        return (new \DateTimeImmutable($utc, new \DateTimeZone('UTC')))->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y');
+    }
+
+    /**
+     * Le jour en toutes lettres, pour une lettre : « 12 novembre 2026 », « 1er décembre 2026 ». Une date de la base (UTC)
+     * est lue à l'heure de Zurich.
+     */
+    public static function dateLongue(string|\DateTimeInterface $date): string
+    {
+        $jour = is_string($date) ? new \DateTimeImmutable($date, new \DateTimeZone('UTC')) : $date;
+        $f = new \IntlDateFormatter('fr_CH', \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, 'Europe/Zurich', null, 'd MMMM y');
+        $texte = (string) $f->format($jour);
+        return str_starts_with($texte, '1 ') ? '1er' . substr($texte, 1) : $texte;
+    }
+
+    /** Taux en dix-millièmes : 810 donne « 8,1 % ». */
+    public static function taux(int $pourDixMille): string
+    {
+        $f = new \NumberFormatter('fr_CH', \NumberFormatter::DECIMAL);
+        $f->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, 2);
+        return $f->format($pourDixMille / 100) . self::NB . '%';
+    }
+
+    /** Valeur d'un champ de quantité : « 12.5 », sans séparateur de milliers, relue par Offre\Saisie. */
+    public static function saisieQuantite(int $milliemes): string
+    {
+        $texte = sprintf('%d.%03d', intdiv($milliemes, 1000), abs($milliemes % 1000));
+        return rtrim(rtrim($texte, '0'), '.');
+    }
+
+    /** Valeur d'un champ de prix : « 28 », « 28.50 », vide pour un prix manquant. */
+    /**
+     * Le prix d'une ligne dans son champ : vide s'il manque, « 0 » pour une ligne offerte à 0 (D2, 2026-11-21) ; un
+     * champ vide se lirait « Prix manquant ».
+     *
+     * @param array{prix_centimes: int, offerte?: int|bool} $ligne
+     */
+    public static function saisiePrixLigne(array $ligne): string
+    {
+        return Offerte::est($ligne) && $ligne['prix_centimes'] === 0 ? '0' : self::saisiePrix($ligne['prix_centimes']);
+    }
+
+    public static function saisiePrix(int $centimes): string
+    {
+        if ($centimes === 0) {
+            return '';
+        }
+        return $centimes % 100 === 0 ? (string) intdiv($centimes, 100) : sprintf('%d.%02d', intdiv($centimes, 100), abs($centimes % 100));
+    }
+
+    /** Date UTC de la base, affichée à l'heure de Zurich : « 07.11.2026 14:05 ». */
+    public static function date(string $utc): string
+    {
+        $d = new \DateTimeImmutable($utc, new \DateTimeZone('UTC'));
+        return $d->setTimezone(new \DateTimeZone('Europe/Zurich'))->format('d.m.Y H:i');
+    }
+}

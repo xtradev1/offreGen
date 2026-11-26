@@ -1,0 +1,12 @@
+{# Ajouter sur PC (maquette 25, E7, « simple et sobre ») : une ligne de recherche au bas du tableau. On tape, les
+   produits du catalogue se proposent ; Entrée ajoute le premier (ou celui choisi aux flèches), un texte sans produit
+   devient une ligne libre ; la page revient avec le curseur dans la quantité de la ligne ajoutée (app.js, ajoutPc).
+   Sans JavaScript, Entrée ouvre la page Ajouter avec la recherche. « base » : /offres/ID ou /factures/ID. #}
+<form class="ajout-pc pc-seul" method="get" action="{{ base }}/ajouter" role="search" data-ajout-pc data-poste="{{ base }}/lignes" data-csrf="{{ csrf() }}">
+  <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  <input name="q" type="search" placeholder="Ajouter une ligne : tapez un produit, puis Entrée" autocomplete="off" aria-label="Ajouter une ligne" aria-autocomplete="list" aria-controls="ajout-pc-liste" aria-expanded="false">
+  <ul id="ajout-pc-liste" class="ajout-pc-liste" role="listbox" hidden>
+    {% for p in catalogue %}<li role="option" data-id="{{ p.id }}" data-texte="{{ p.texte }}" hidden><span>{{ p.designation }}</span><small>{% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}{{ p.prix_centimes|montant }}{% endif %} /&nbsp;{{ p.unite }}</small></li>{% endfor %}
+    <li role="option" data-libre hidden><span data-libre-texte></span><small>ligne libre</small></li>
+  </ul>
+</form>

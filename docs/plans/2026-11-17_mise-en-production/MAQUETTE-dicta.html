@@ -1,0 +1,895 @@
+<!doctype html><html lang="fr-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"><title>Dicta, palettes et logos</title><style>
+:root{--mk-ink:#1c2430;--mk-bg:#f4f5f7;--mk-surface:#fff;--mk-line:#d8dce3;--mk-accent:#1D3557}
+[data-theme="dark"]{--mk-ink:#e8ebf0;--mk-bg:#12161c;--mk-surface:#1b2129;--mk-line:#323a45;--mk-accent:#9DBDE6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--mk-ink:#e8ebf0;--mk-bg:#12161c;--mk-surface:#1b2129;--mk-line:#323a45;--mk-accent:#9DBDE6}}
+body{margin:0;background:var(--mk-bg);color:var(--mk-ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+.page{max-width:1640px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:8px 0} h2{font-size:22px;margin:40px 0 6px} h3{font-size:17px;margin:22px 0 6px}
+.texte{max-width:900px}
+.tableau{overflow-x:auto;max-width:1100px}
+table{border-collapse:collapse;font-size:14.5px;min-width:640px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--mk-line);vertical-align:top}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.ech{display:inline-block;padding:1px 8px;border-radius:5px;font-weight:600;border:1px solid rgba(0,0,0,.18)}
+.non{color:#B3261E;font-weight:700}[data-theme="dark"] .non{color:#FF9A91}
+.oui{color:#13553A;font-weight:700}[data-theme="dark"] .oui{color:#7DD3A8}
+.duos{display:flex;flex-wrap:wrap;gap:8px 44px}
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,360px));gap:6px 14px;max-width:100%}
+.duo h3{grid-column:1/-1}
+.duo figure{margin:0;min-width:0}
+.etq{font-size:13px;font-weight:700;letter-spacing:.3px;margin:0 0 4px}
+iframe.tel{width:360px;max-width:100%;border:1px solid var(--mk-line);border-radius:26px;background:#fff;display:block}
+@media (max-width:800px){.duo{grid-template-columns:minmax(0,360px)}}
+.bandes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;max-width:1100px}
+.pal{border:1px solid var(--mk-line);border-radius:12px;padding:12px;background:var(--fond);color:var(--encre);font-family:var(--f-corps),system-ui,sans-serif;min-width:0}
+.pal .etq{color:var(--encre)}
+.etats{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.etat{display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:600;padding:3px 10px 3px 7px;border-radius:6px;font-family:var(--f-titre),system-ui,sans-serif}
+.etat svg{width:16px;height:16px}
+.ok{background:var(--ok-doux);color:var(--ok)}.av{background:var(--av-doux);color:var(--av)}.err{background:var(--err-doux);color:var(--err)}
+.bouton{display:inline-flex;align-items:center;gap:8px;font:600 16px var(--f-titre),system-ui,sans-serif;min-height:44px;padding:0 18px;border-radius:10px;background:var(--acc);color:var(--sur-acc);box-shadow:inset 0 0 0 1.5px var(--acc-bord)}
+.nuancier{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.nuancier span{display:flex;flex-direction:column;justify-content:flex-end;width:92px;height:64px;border-radius:8px;padding:6px;font:12px/1.25 system-ui,sans-serif;border:1px solid rgba(0,0,0,.15)}
+.mesures{font-size:13px;margin:10px 0 0;color:var(--doux)}
+.logo{border-top:1px solid var(--mk-line);margin-top:26px;padding-top:4px}
+.logo .defaut{max-width:900px}
+.logo .bandes{max-width:1380px}
+.rendus{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-end}
+.rendus figure{margin:0}
+.rendus figcaption{font:12px system-ui,sans-serif;color:var(--doux);margin-top:4px}
+.m{display:block}
+.mot{font-family:var(--f-titre),system-ui,sans-serif;font-weight:700;letter-spacing:-.4px;line-height:1}
+.mot .i{position:relative;display:inline-block}
+.mot .i b{position:absolute;display:block;left:calc(50% - .11em);top:var(--pt);width:.22em;height:.22em;border-radius:50%;background:var(--acc)}
+.r-ico{width:88px;height:88px;border-radius:20px;background:var(--bande);color:#fff;display:grid;place-items:center}
+.r-ico .m{width:62px;height:62px}
+.r-ico.lettre{font:700 60px/1 var(--f-titre),system-ui,sans-serif;position:relative}
+.r-ico.lettre i{position:absolute;right:13px;top:13px;width:15px;height:15px;border-radius:50%;background:var(--acc)}
+.r-ico.lettre u{position:absolute;left:18px;right:18px;bottom:13px;height:7px;border-radius:2px;background:var(--acc)}
+.r-ico.lettre.haut{padding-bottom:10px}
+.r-clair,.r-sombre,.r-mono{display:flex;align-items:center;gap:10px;border-radius:10px;height:88px;padding:0 20px}
+.r-clair{background:var(--carte);color:var(--encre);border:1px solid var(--trait)}
+.r-clair .tuile{width:40px;height:40px;border-radius:9px;background:var(--bande);color:#fff;display:grid;place-items:center;flex:none}
+.r-clair .tuile .m{width:29px;height:29px}
+.r-clair .mot{font-size:30px}
+.r-clair .mot.couleur{color:var(--bande);font-size:34px}
+.r-sombre{background:var(--bande);color:var(--sur-bande)}
+.r-sombre .m{width:34px;height:34px}
+.r-sombre .mot{font-size:30px}
+.r-mono{background:#fff;color:#111;border:1px solid var(--trait);--acc:currentColor;gap:6px;padding:0 14px}
+.r-mono .m{width:20px;height:20px}
+.r-mono .mot{font-size:17px;letter-spacing:-.2px}
+.plaque{display:inline-block;background:var(--bande);color:#fff;padding:7px 15px 6px;border-radius:4px;border-bottom:6px solid var(--acc)}
+.plaque .mot{font-size:28px}
+.r-sombre .plaque{background:var(--acc);color:var(--sur-acc);border-bottom:0;padding:8px 15px}
+.r-mono .plaque{background:#111;color:#fff;border-bottom:0;padding:4px 9px;border-radius:3px}
+.choix{background:var(--mk-surface);border:1px solid var(--mk-line);border-radius:12px;padding:12px;margin:12px 0;max-width:860px}
+.choix .q{margin:0 0 8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.opts button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--mk-line);background:var(--mk-bg);color:var(--mk-ink);cursor:pointer}
+.opts button[aria-pressed="true"]{background:var(--mk-accent);border-color:var(--mk-accent);color:#fff}
+[data-theme="dark"] .opts button[aria-pressed="true"]{color:#0E1A2B}
+.choix textarea{width:100%;box-sizing:border-box;font:inherit;border:1px solid var(--mk-line);border-radius:10px;padding:8px;background:var(--mk-bg);color:var(--mk-ink)}
+#copier{font:inherit;min-height:48px;padding:10px 16px;border-radius:12px;border:0;background:var(--mk-accent);color:#fff;cursor:pointer}
+[data-theme="dark"] #copier{color:#0E1A2B}
+#texte{width:100%;box-sizing:border-box;min-height:140px;margin-top:8px;font:13px/1.4 ui-monospace,monospace}
+</style><style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head><body><div class="page"><h1>Dicta : deux palettes côte à côte, cinq logos</h1><p class="texte">À gauche de chaque paire, <b>A</b> : la charte reçue ce 18 novembre (bleu encre et orange), corrigée pour que tout se lise. À droite, <b>B</b> : anthracite et jaune, l'accent que tu préférais ce matin. Mêmes écrans, mêmes textes. Chaque texte atteint 7:1, chaque forme utile 3:1 : le script qui écrit cette page refuse de l'écrire sinon.</p><nav id="mk-toc"></nav><h2 id="corrections">1. Ce qui change dans la charte</h2><div class="tableau"><table><thead><tr><th>Élément</th><th>Charte reçue</th><th>Rapport</th><th>Version A</th><th>Rapport</th><th>Comment</th></tr></thead><tbody><tr><td>Texte secondaire sur sable</td><td><span class="ech" style="color:#6b7280;background:#f4f1ea">Exemple</span></td><td class="n non">4.29:1</td><td><span class="ech" style="color:#454B55;background:#F4F1EA">Exemple</span></td><td class="n oui">7.79:1</td><td>gris foncé</td></tr><tr><td>Libellé du bouton</td><td><span class="ech" style="color:#ffffff;background:#e76f51">Exemple</span></td><td class="n non">3.09:1</td><td><span class="ech" style="color:#14181D;background:#FF8419">Exemple</span></td><td class="n oui">7.27:1</td><td>texte foncé sur un orange plus vif, cerné d'un filet</td></tr><tr><td>Étiquette « succès »</td><td><span class="ech" style="color:#2a9d8f;background:#ffffff">Exemple</span></td><td class="n non">3.32:1</td><td><span class="ech" style="color:#13553A;background:#E1EFE6">Exemple</span></td><td class="n oui">7.41:1</td><td>texte foncé sur fond teinté, avec une icône</td></tr><tr><td>Étiquette « attention »</td><td><span class="ech" style="color:#e9a03b;background:#ffffff">Exemple</span></td><td class="n non">2.20:1</td><td><span class="ech" style="color:#5A4300;background:#FFF0B3">Exemple</span></td><td class="n oui">8.21:1</td><td>texte foncé sur jaune pâle, avec une icône</td></tr><tr><td>Message d'erreur</td><td><span class="ech" style="color:#c0392b;background:#ffffff">Exemple</span></td><td class="n non">5.44:1</td><td><span class="ech" style="color:#8C1D18;background:#FBE7E4">Exemple</span></td><td class="n oui">7.66:1</td><td>texte foncé sur fond teinté, avec une icône</td></tr></tbody></table></div><p class="texte">Les teintes s'écartent aussi. Dans la charte, l'orange du bouton (12°) et le rouge d'erreur (6°) se touchaient. En A, l'orange passe à 28°, le rouge reste à 3° et l'alerte « à vérifier » devient un jaune pâle. Chaque état porte en plus une icône et un mot. Polices : Archivo et Inter ; Barlow et Georgia sont retirées.</p><p class="texte">Le prix à payer : l'orange corail de la charte devient un orange de chantier, plus vif, et son libellé passe du blanc au noir. Un orange qui porte du texte blanc à 7:1 serait brun.</p><h2 id="ecrans">2. Les écrans, A et B</h2><div class="duos"><div class="duo"><h3>Connexion, avec un message d'erreur</h3><figure><p class="etq">A · Bleu et orange</p><iframe class="tel" title="Connexion, avec un message d'erreur, Bleu et orange" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap&quot;&gt;&lt;style&gt;*{box-sizing:border-box}html,body{margin:0;height:100%}:root{--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:&quot;Archivo&quot;;--f-corps:&quot;Inter&quot;}
+body{font-family:var(--f-corps),system-ui,sans-serif;background:var(--fond);color:var(--encre);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,.marque,.btn,.piece,.champ label,.etat{font-family:var(--f-titre),system-ui,sans-serif}
+.ecran{min-height:100%;display:flex;flex-direction:column}
+.bande{background:var(--bande);color:var(--sur-bande);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.marque{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.marque .m{width:26px;height:26px;flex:none}
+.bande small{color:var(--bande-doux);font-size:14px;text-align:right}
+.retour{display:inline-flex;align-items:center;gap:4px;color:var(--sur-bande);font-weight:500}.retour svg{width:20px;height:20px}
+.tete{padding:20px 16px 14px}
+h1{font-size:25px;font-weight:600;letter-spacing:-.4px;line-height:1.2;margin:0}
+.sous{color:var(--doux);margin:4px 0 0;font-size:15px}
+.page{flex:1;padding:0 16px 150px}
+.liste{background:var(--carte);border:1px solid var(--trait);border-radius:10px;overflow:hidden}
+.item{padding:13px 14px;border-top:1px solid var(--trait);display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:baseline}
+.item:first-child,.ligne:first-child{border-top:0}
+.item b{font-weight:600;font-size:16px}
+.montant{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.montant small{font-weight:500;color:var(--doux);font-size:12px;margin-right:3px}
+.meta{color:var(--doux);font-size:14px}
+.etat{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;padding:2px 9px 2px 6px;border-radius:6px;justify-self:end}
+.etat svg{width:15px;height:15px}
+.ok{background:var(--ok-doux);color:var(--ok)}.av{background:var(--av-doux);color:var(--av)}.err{background:var(--err-doux);color:var(--err)}
+.total{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline}
+.total span{color:var(--doux);font-size:14px}.total .montant{font-size:22px;color:var(--encre)}
+.piece{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 7px;font-size:13px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--doux)}
+.piece .montant{color:var(--encre);letter-spacing:0;font-size:14px}
+.ligne{padding:12px 14px;border-top:1px solid var(--trait)}
+.ligne .q{display:flex;gap:10px;color:var(--doux);font-size:14px;font-variant-numeric:tabular-nums;margin-top:3px}
+.ligne .q b{margin-left:auto;color:var(--encre);font-weight:600}
+.ligne.a-verifier{background:var(--av-fond);box-shadow:inset 4px 0 0 var(--av)}
+.remarque{display:flex;gap:6px;align-items:center;color:var(--av);font-size:13.5px;font-weight:600;margin-top:7px}.remarque svg{width:16px;height:16px;flex:none}
+.actions{position:fixed;left:0;right:0;bottom:72px;padding:10px 16px;background:var(--fond);border-top:1px solid var(--trait);display:flex;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-size:17px;font-weight:600;min-height:52px;border-radius:10px;border:0;background:var(--acc);color:var(--sur-acc);box-shadow:inset 0 0 0 1.5px var(--acc-bord)}
+.btn svg{width:20px;height:20px}
+.btn.second{background:var(--carte);color:var(--encre);box-shadow:inset 0 0 0 1.5px var(--encre)}
+.bas{position:fixed;left:0;right:0;bottom:0;height:72px;background:var(--carte);border-top:1px solid var(--trait);display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.bas a{color:var(--doux);font-size:12px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bas a svg{width:23px;height:23px}
+.bas a.on{color:var(--encre);font-weight:600}.bas a.on svg{color:var(--lien)}
+.micro{justify-self:center;width:60px;height:60px;border-radius:50%;background:var(--acc);color:var(--sur-acc);display:grid;place-items:center;margin-top:-24px;box-shadow:inset 0 0 0 1.5px var(--acc-bord),0 0 0 4px var(--carte)}
+.micro svg{width:28px;height:28px}
+.accueil{background:var(--bande);color:var(--sur-bande);padding:26px 16px 44px}
+.accueil .marque{font-size:26px}.accueil .marque .m{width:34px;height:34px}
+.accueil p{color:var(--bande-doux);margin:14px 0 0;font-size:16px}
+.form{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:18px 16px 16px;margin:-24px 16px 0}
+.champ{margin:0 0 16px}.champ label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.champ input{width:100%;font:inherit;font-size:17px;height:52px;padding:0 14px;border:1px solid var(--bord);border-radius:8px;background:var(--carte);color:var(--encre)}
+.mdp{position:relative}.mdp input{padding-right:52px}
+.mdp button{position:absolute;right:4px;top:4px;width:44px;height:44px;border:0;background:none;color:var(--doux);display:grid;place-items:center}.mdp button svg{width:22px;height:22px}
+.lien{color:var(--lien);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.alerte{display:flex;gap:8px;align-items:flex-start;background:var(--err-doux);color:var(--err);font-weight:600;font-size:14.5px;border-radius:8px;padding:10px 12px;margin:0 0 16px}.alerte svg{width:19px;height:19px;flex:none;margin-top:1px}
+.pied{text-align:center;color:var(--doux);font-size:13.5px;margin:18px 16px}
+.enreg{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--doux);font-weight:600;margin-top:34px}
+.enreg i{width:10px;height:10px;border-radius:50%;background:var(--encre);animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{opacity:.25}}
+.chrono{font-size:58px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-1px;margin:6px 0 0}
+.onde{display:flex;gap:4px;align-items:center;justify-content:center;height:110px;margin:18px 0 8px}
+.onde i{width:5px;border-radius:3px;background:var(--lien);animation:o 1.2s ease-in-out infinite}
+@keyframes o{0%,100%{height:12px}50%{height:84px}}
+.conseil{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;color:var(--doux);font-size:15px}
+.conseil b{color:var(--encre)}
+.pile{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;ecran&quot;&gt;&lt;div class=&quot;accueil&quot;&gt;&lt;span class=&quot;marque&quot;&gt;&lt;svg class=&quot;m&quot; viewBox=&quot;0 0 64 64&quot; aria-hidden=&quot;true&quot;&gt;&lt;g transform=&quot;translate(2 0)&quot;&gt;&lt;rect x=&quot;10&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;rect x=&quot;21&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M43 15.91A22 22 0 0 1 43 48.09Z&quot; fill=&quot;var(--acc)&quot;/&gt;&lt;/g&gt;&lt;/svg&gt;&lt;span&gt;Dicta&lt;/span&gt;&lt;/span&gt;&lt;p&gt;Dicter la visite, recevoir l&#x27;offre.&lt;/p&gt;&lt;/div&gt;
+&lt;div class=&quot;form&quot;&gt;&lt;div class=&quot;alerte&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;9&quot;/&gt;&lt;path d=&quot;M12 7.5v5.5M12 16.4v.1&quot;/&gt;&lt;/svg&gt;Courriel ou mot de passe incorrect.&lt;/div&gt;&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Courriel&lt;/label&gt;&lt;input value=&quot;luigi@exemple.ch&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Mot de passe&lt;/label&gt;&lt;div class=&quot;mdp&quot;&gt;&lt;input type=&quot;password&quot; value=&quot;motdepasse&quot;&gt;&lt;button type=&quot;button&quot; aria-label=&quot;Afficher le mot de passe&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p style=&quot;margin:0 0 18px&quot;&gt;&lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Mot de passe oublié&lt;/a&gt;&lt;/p&gt;&lt;button class=&quot;btn&quot;&gt;Se connecter&lt;/button&gt;&lt;/div&gt;
+&lt;p class=&quot;pied&quot;&gt;Données hébergées en Suisse&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe></figure><figure><p class="etq">B · Anthracite et jaune</p><iframe class="tel" title="Connexion, avec un message d'erreur, Anthracite et jaune" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap&quot;&gt;&lt;style&gt;*{box-sizing:border-box}html,body{margin:0;height:100%}:root{--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:&quot;IBM Plex Sans&quot;;--f-corps:&quot;IBM Plex Sans&quot;}
+body{font-family:var(--f-corps),system-ui,sans-serif;background:var(--fond);color:var(--encre);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,.marque,.btn,.piece,.champ label,.etat{font-family:var(--f-titre),system-ui,sans-serif}
+.ecran{min-height:100%;display:flex;flex-direction:column}
+.bande{background:var(--bande);color:var(--sur-bande);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.marque{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.marque .m{width:26px;height:26px;flex:none}
+.bande small{color:var(--bande-doux);font-size:14px;text-align:right}
+.retour{display:inline-flex;align-items:center;gap:4px;color:var(--sur-bande);font-weight:500}.retour svg{width:20px;height:20px}
+.tete{padding:20px 16px 14px}
+h1{font-size:25px;font-weight:600;letter-spacing:-.4px;line-height:1.2;margin:0}
+.sous{color:var(--doux);margin:4px 0 0;font-size:15px}
+.page{flex:1;padding:0 16px 150px}
+.liste{background:var(--carte);border:1px solid var(--trait);border-radius:10px;overflow:hidden}
+.item{padding:13px 14px;border-top:1px solid var(--trait);display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:baseline}
+.item:first-child,.ligne:first-child{border-top:0}
+.item b{font-weight:600;font-size:16px}
+.montant{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.montant small{font-weight:500;color:var(--doux);font-size:12px;margin-right:3px}
+.meta{color:var(--doux);font-size:14px}
+.etat{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;padding:2px 9px 2px 6px;border-radius:6px;justify-self:end}
+.etat svg{width:15px;height:15px}
+.ok{background:var(--ok-doux);color:var(--ok)}.av{background:var(--av-doux);color:var(--av)}.err{background:var(--err-doux);color:var(--err)}
+.total{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline}
+.total span{color:var(--doux);font-size:14px}.total .montant{font-size:22px;color:var(--encre)}
+.piece{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 7px;font-size:13px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--doux)}
+.piece .montant{color:var(--encre);letter-spacing:0;font-size:14px}
+.ligne{padding:12px 14px;border-top:1px solid var(--trait)}
+.ligne .q{display:flex;gap:10px;color:var(--doux);font-size:14px;font-variant-numeric:tabular-nums;margin-top:3px}
+.ligne .q b{margin-left:auto;color:var(--encre);font-weight:600}
+.ligne.a-verifier{background:var(--av-fond);box-shadow:inset 4px 0 0 var(--av)}
+.remarque{display:flex;gap:6px;align-items:center;color:var(--av);font-size:13.5px;font-weight:600;margin-top:7px}.remarque svg{width:16px;height:16px;flex:none}
+.actions{position:fixed;left:0;right:0;bottom:72px;padding:10px 16px;background:var(--fond);border-top:1px solid var(--trait);display:flex;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-size:17px;font-weight:600;min-height:52px;border-radius:10px;border:0;background:var(--acc);color:var(--sur-acc);box-shadow:inset 0 0 0 1.5px var(--acc-bord)}
+.btn svg{width:20px;height:20px}
+.btn.second{background:var(--carte);color:var(--encre);box-shadow:inset 0 0 0 1.5px var(--encre)}
+.bas{position:fixed;left:0;right:0;bottom:0;height:72px;background:var(--carte);border-top:1px solid var(--trait);display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.bas a{color:var(--doux);font-size:12px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bas a svg{width:23px;height:23px}
+.bas a.on{color:var(--encre);font-weight:600}.bas a.on svg{color:var(--lien)}
+.micro{justify-self:center;width:60px;height:60px;border-radius:50%;background:var(--acc);color:var(--sur-acc);display:grid;place-items:center;margin-top:-24px;box-shadow:inset 0 0 0 1.5px var(--acc-bord),0 0 0 4px var(--carte)}
+.micro svg{width:28px;height:28px}
+.accueil{background:var(--bande);color:var(--sur-bande);padding:26px 16px 44px}
+.accueil .marque{font-size:26px}.accueil .marque .m{width:34px;height:34px}
+.accueil p{color:var(--bande-doux);margin:14px 0 0;font-size:16px}
+.form{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:18px 16px 16px;margin:-24px 16px 0}
+.champ{margin:0 0 16px}.champ label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.champ input{width:100%;font:inherit;font-size:17px;height:52px;padding:0 14px;border:1px solid var(--bord);border-radius:8px;background:var(--carte);color:var(--encre)}
+.mdp{position:relative}.mdp input{padding-right:52px}
+.mdp button{position:absolute;right:4px;top:4px;width:44px;height:44px;border:0;background:none;color:var(--doux);display:grid;place-items:center}.mdp button svg{width:22px;height:22px}
+.lien{color:var(--lien);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.alerte{display:flex;gap:8px;align-items:flex-start;background:var(--err-doux);color:var(--err);font-weight:600;font-size:14.5px;border-radius:8px;padding:10px 12px;margin:0 0 16px}.alerte svg{width:19px;height:19px;flex:none;margin-top:1px}
+.pied{text-align:center;color:var(--doux);font-size:13.5px;margin:18px 16px}
+.enreg{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--doux);font-weight:600;margin-top:34px}
+.enreg i{width:10px;height:10px;border-radius:50%;background:var(--encre);animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{opacity:.25}}
+.chrono{font-size:58px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-1px;margin:6px 0 0}
+.onde{display:flex;gap:4px;align-items:center;justify-content:center;height:110px;margin:18px 0 8px}
+.onde i{width:5px;border-radius:3px;background:var(--lien);animation:o 1.2s ease-in-out infinite}
+@keyframes o{0%,100%{height:12px}50%{height:84px}}
+.conseil{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;color:var(--doux);font-size:15px}
+.conseil b{color:var(--encre)}
+.pile{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;ecran&quot;&gt;&lt;div class=&quot;accueil&quot;&gt;&lt;span class=&quot;marque&quot;&gt;&lt;svg class=&quot;m&quot; viewBox=&quot;0 0 64 64&quot; aria-hidden=&quot;true&quot;&gt;&lt;g transform=&quot;translate(2 0)&quot;&gt;&lt;rect x=&quot;10&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;rect x=&quot;21&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M43 15.91A22 22 0 0 1 43 48.09Z&quot; fill=&quot;var(--acc)&quot;/&gt;&lt;/g&gt;&lt;/svg&gt;&lt;span&gt;Dicta&lt;/span&gt;&lt;/span&gt;&lt;p&gt;Dicter la visite, recevoir l&#x27;offre.&lt;/p&gt;&lt;/div&gt;
+&lt;div class=&quot;form&quot;&gt;&lt;div class=&quot;alerte&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;9&quot;/&gt;&lt;path d=&quot;M12 7.5v5.5M12 16.4v.1&quot;/&gt;&lt;/svg&gt;Courriel ou mot de passe incorrect.&lt;/div&gt;&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Courriel&lt;/label&gt;&lt;input value=&quot;luigi@exemple.ch&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Mot de passe&lt;/label&gt;&lt;div class=&quot;mdp&quot;&gt;&lt;input type=&quot;password&quot; value=&quot;motdepasse&quot;&gt;&lt;button type=&quot;button&quot; aria-label=&quot;Afficher le mot de passe&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;3&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p style=&quot;margin:0 0 18px&quot;&gt;&lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Mot de passe oublié&lt;/a&gt;&lt;/p&gt;&lt;button class=&quot;btn&quot;&gt;Se connecter&lt;/button&gt;&lt;/div&gt;
+&lt;p class=&quot;pied&quot;&gt;Données hébergées en Suisse&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe></figure></div><div class="duo"><h3>Les offres</h3><figure><p class="etq">A · Bleu et orange</p><iframe class="tel" title="Les offres, Bleu et orange" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap&quot;&gt;&lt;style&gt;*{box-sizing:border-box}html,body{margin:0;height:100%}:root{--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:&quot;Archivo&quot;;--f-corps:&quot;Inter&quot;}
+body{font-family:var(--f-corps),system-ui,sans-serif;background:var(--fond);color:var(--encre);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,.marque,.btn,.piece,.champ label,.etat{font-family:var(--f-titre),system-ui,sans-serif}
+.ecran{min-height:100%;display:flex;flex-direction:column}
+.bande{background:var(--bande);color:var(--sur-bande);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.marque{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.marque .m{width:26px;height:26px;flex:none}
+.bande small{color:var(--bande-doux);font-size:14px;text-align:right}
+.retour{display:inline-flex;align-items:center;gap:4px;color:var(--sur-bande);font-weight:500}.retour svg{width:20px;height:20px}
+.tete{padding:20px 16px 14px}
+h1{font-size:25px;font-weight:600;letter-spacing:-.4px;line-height:1.2;margin:0}
+.sous{color:var(--doux);margin:4px 0 0;font-size:15px}
+.page{flex:1;padding:0 16px 150px}
+.liste{background:var(--carte);border:1px solid var(--trait);border-radius:10px;overflow:hidden}
+.item{padding:13px 14px;border-top:1px solid var(--trait);display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:baseline}
+.item:first-child,.ligne:first-child{border-top:0}
+.item b{font-weight:600;font-size:16px}
+.montant{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.montant small{font-weight:500;color:var(--doux);font-size:12px;margin-right:3px}
+.meta{color:var(--doux);font-size:14px}
+.etat{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;padding:2px 9px 2px 6px;border-radius:6px;justify-self:end}
+.etat svg{width:15px;height:15px}
+.ok{background:var(--ok-doux);color:var(--ok)}.av{background:var(--av-doux);color:var(--av)}.err{background:var(--err-doux);color:var(--err)}
+.total{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline}
+.total span{color:var(--doux);font-size:14px}.total .montant{font-size:22px;color:var(--encre)}
+.piece{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 7px;font-size:13px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--doux)}
+.piece .montant{color:var(--encre);letter-spacing:0;font-size:14px}
+.ligne{padding:12px 14px;border-top:1px solid var(--trait)}
+.ligne .q{display:flex;gap:10px;color:var(--doux);font-size:14px;font-variant-numeric:tabular-nums;margin-top:3px}
+.ligne .q b{margin-left:auto;color:var(--encre);font-weight:600}
+.ligne.a-verifier{background:var(--av-fond);box-shadow:inset 4px 0 0 var(--av)}
+.remarque{display:flex;gap:6px;align-items:center;color:var(--av);font-size:13.5px;font-weight:600;margin-top:7px}.remarque svg{width:16px;height:16px;flex:none}
+.actions{position:fixed;left:0;right:0;bottom:72px;padding:10px 16px;background:var(--fond);border-top:1px solid var(--trait);display:flex;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-size:17px;font-weight:600;min-height:52px;border-radius:10px;border:0;background:var(--acc);color:var(--sur-acc);box-shadow:inset 0 0 0 1.5px var(--acc-bord)}
+.btn svg{width:20px;height:20px}
+.btn.second{background:var(--carte);color:var(--encre);box-shadow:inset 0 0 0 1.5px var(--encre)}
+.bas{position:fixed;left:0;right:0;bottom:0;height:72px;background:var(--carte);border-top:1px solid var(--trait);display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.bas a{color:var(--doux);font-size:12px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bas a svg{width:23px;height:23px}
+.bas a.on{color:var(--encre);font-weight:600}.bas a.on svg{color:var(--lien)}
+.micro{justify-self:center;width:60px;height:60px;border-radius:50%;background:var(--acc);color:var(--sur-acc);display:grid;place-items:center;margin-top:-24px;box-shadow:inset 0 0 0 1.5px var(--acc-bord),0 0 0 4px var(--carte)}
+.micro svg{width:28px;height:28px}
+.accueil{background:var(--bande);color:var(--sur-bande);padding:26px 16px 44px}
+.accueil .marque{font-size:26px}.accueil .marque .m{width:34px;height:34px}
+.accueil p{color:var(--bande-doux);margin:14px 0 0;font-size:16px}
+.form{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:18px 16px 16px;margin:-24px 16px 0}
+.champ{margin:0 0 16px}.champ label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.champ input{width:100%;font:inherit;font-size:17px;height:52px;padding:0 14px;border:1px solid var(--bord);border-radius:8px;background:var(--carte);color:var(--encre)}
+.mdp{position:relative}.mdp input{padding-right:52px}
+.mdp button{position:absolute;right:4px;top:4px;width:44px;height:44px;border:0;background:none;color:var(--doux);display:grid;place-items:center}.mdp button svg{width:22px;height:22px}
+.lien{color:var(--lien);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.alerte{display:flex;gap:8px;align-items:flex-start;background:var(--err-doux);color:var(--err);font-weight:600;font-size:14.5px;border-radius:8px;padding:10px 12px;margin:0 0 16px}.alerte svg{width:19px;height:19px;flex:none;margin-top:1px}
+.pied{text-align:center;color:var(--doux);font-size:13.5px;margin:18px 16px}
+.enreg{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--doux);font-weight:600;margin-top:34px}
+.enreg i{width:10px;height:10px;border-radius:50%;background:var(--encre);animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{opacity:.25}}
+.chrono{font-size:58px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-1px;margin:6px 0 0}
+.onde{display:flex;gap:4px;align-items:center;justify-content:center;height:110px;margin:18px 0 8px}
+.onde i{width:5px;border-radius:3px;background:var(--lien);animation:o 1.2s ease-in-out infinite}
+@keyframes o{0%,100%{height:12px}50%{height:84px}}
+.conseil{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;color:var(--doux);font-size:15px}
+.conseil b{color:var(--encre)}
+.pile{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;ecran&quot;&gt;&lt;div class=&quot;bande&quot;&gt;&lt;span class=&quot;marque&quot;&gt;&lt;svg class=&quot;m&quot; viewBox=&quot;0 0 64 64&quot; aria-hidden=&quot;true&quot;&gt;&lt;g transform=&quot;translate(2 0)&quot;&gt;&lt;rect x=&quot;10&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;rect x=&quot;21&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M43 15.91A22 22 0 0 1 43 48.09Z&quot; fill=&quot;var(--acc)&quot;/&gt;&lt;/g&gt;&lt;/svg&gt;&lt;span&gt;Dicta&lt;/span&gt;&lt;/span&gt;&lt;small&gt;Peinture Luigi&lt;/small&gt;&lt;/div&gt;
+&lt;div class=&quot;tete&quot;&gt;&lt;h1&gt;Offres&lt;/h1&gt;&lt;p class=&quot;sous&quot;&gt;3 ce mois · 1 à vérifier&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;page&quot;&gt;&lt;div class=&quot;liste&quot;&gt;
+&lt;div class=&quot;item&quot;&gt;&lt;b&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;span class=&quot;montant&quot;&gt;&lt;small&gt;CHF&lt;/small&gt;3’377.05&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;Madame Exemple · n°&amp;nbsp;3&lt;/span&gt;&lt;span class=&quot;etat ok&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M5 12.5l4.5 4.5L19 7.5&quot;/&gt;&lt;/svg&gt;Prête&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;item&quot;&gt;&lt;b&gt;Façade de la maison&lt;/b&gt;&lt;span class=&quot;montant&quot;&gt;&lt;small&gt;CHF&lt;/small&gt;8’107.50&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;Monsieur Modèle · n°&amp;nbsp;2&lt;/span&gt;&lt;span class=&quot;etat av&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 4l9 16H3z&quot;/&gt;&lt;path d=&quot;M12 10v4M12 17.2v.1&quot;/&gt;&lt;/svg&gt;2 à vérifier&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;item&quot;&gt;&lt;b&gt;Cage d&#x27;escalier&lt;/b&gt;&lt;span class=&quot;montant&quot;&gt;&lt;small&gt;CHF&lt;/small&gt;2’140.00&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;Famille Test · n°&amp;nbsp;1&lt;/span&gt;&lt;span class=&quot;etat ok&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M5 12.5l4.5 4.5L19 7.5&quot;/&gt;&lt;/svg&gt;Prête&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;nav class=&quot;bas&quot;&gt;&lt;a class=&quot;on&quot; href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l4 4v14H7z&quot;/&gt;&lt;path d=&quot;M14 3v4h4M10 12h5M10 16h5&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;8&quot; r=&quot;4&quot;/&gt;&lt;path d=&quot;M4 21c1-4 4-6 8-6s7 2 8 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;&lt;span class=&quot;micro&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;&lt;/nav&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe></figure><figure><p class="etq">B · Anthracite et jaune</p><iframe class="tel" title="Les offres, Anthracite et jaune" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap&quot;&gt;&lt;style&gt;*{box-sizing:border-box}html,body{margin:0;height:100%}:root{--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:&quot;IBM Plex Sans&quot;;--f-corps:&quot;IBM Plex Sans&quot;}
+body{font-family:var(--f-corps),system-ui,sans-serif;background:var(--fond);color:var(--encre);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,.marque,.btn,.piece,.champ label,.etat{font-family:var(--f-titre),system-ui,sans-serif}
+.ecran{min-height:100%;display:flex;flex-direction:column}
+.bande{background:var(--bande);color:var(--sur-bande);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.marque{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.marque .m{width:26px;height:26px;flex:none}
+.bande small{color:var(--bande-doux);font-size:14px;text-align:right}
+.retour{display:inline-flex;align-items:center;gap:4px;color:var(--sur-bande);font-weight:500}.retour svg{width:20px;height:20px}
+.tete{padding:20px 16px 14px}
+h1{font-size:25px;font-weight:600;letter-spacing:-.4px;line-height:1.2;margin:0}
+.sous{color:var(--doux);margin:4px 0 0;font-size:15px}
+.page{flex:1;padding:0 16px 150px}
+.liste{background:var(--carte);border:1px solid var(--trait);border-radius:10px;overflow:hidden}
+.item{padding:13px 14px;border-top:1px solid var(--trait);display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:baseline}
+.item:first-child,.ligne:first-child{border-top:0}
+.item b{font-weight:600;font-size:16px}
+.montant{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.montant small{font-weight:500;color:var(--doux);font-size:12px;margin-right:3px}
+.meta{color:var(--doux);font-size:14px}
+.etat{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;padding:2px 9px 2px 6px;border-radius:6px;justify-self:end}
+.etat svg{width:15px;height:15px}
+.ok{background:var(--ok-doux);color:var(--ok)}.av{background:var(--av-doux);color:var(--av)}.err{background:var(--err-doux);color:var(--err)}
+.total{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline}
+.total span{color:var(--doux);font-size:14px}.total .montant{font-size:22px;color:var(--encre)}
+.piece{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 7px;font-size:13px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--doux)}
+.piece .montant{color:var(--encre);letter-spacing:0;font-size:14px}
+.ligne{padding:12px 14px;border-top:1px solid var(--trait)}
+.ligne .q{display:flex;gap:10px;color:var(--doux);font-size:14px;font-variant-numeric:tabular-nums;margin-top:3px}
+.ligne .q b{margin-left:auto;color:var(--encre);font-weight:600}
+.ligne.a-verifier{background:var(--av-fond);box-shadow:inset 4px 0 0 var(--av)}
+.remarque{display:flex;gap:6px;align-items:center;color:var(--av);font-size:13.5px;font-weight:600;margin-top:7px}.remarque svg{width:16px;height:16px;flex:none}
+.actions{position:fixed;left:0;right:0;bottom:72px;padding:10px 16px;background:var(--fond);border-top:1px solid var(--trait);display:flex;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-size:17px;font-weight:600;min-height:52px;border-radius:10px;border:0;background:var(--acc);color:var(--sur-acc);box-shadow:inset 0 0 0 1.5px var(--acc-bord)}
+.btn svg{width:20px;height:20px}
+.btn.second{background:var(--carte);color:var(--encre);box-shadow:inset 0 0 0 1.5px var(--encre)}
+.bas{position:fixed;left:0;right:0;bottom:0;height:72px;background:var(--carte);border-top:1px solid var(--trait);display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.bas a{color:var(--doux);font-size:12px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bas a svg{width:23px;height:23px}
+.bas a.on{color:var(--encre);font-weight:600}.bas a.on svg{color:var(--lien)}
+.micro{justify-self:center;width:60px;height:60px;border-radius:50%;background:var(--acc);color:var(--sur-acc);display:grid;place-items:center;margin-top:-24px;box-shadow:inset 0 0 0 1.5px var(--acc-bord),0 0 0 4px var(--carte)}
+.micro svg{width:28px;height:28px}
+.accueil{background:var(--bande);color:var(--sur-bande);padding:26px 16px 44px}
+.accueil .marque{font-size:26px}.accueil .marque .m{width:34px;height:34px}
+.accueil p{color:var(--bande-doux);margin:14px 0 0;font-size:16px}
+.form{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:18px 16px 16px;margin:-24px 16px 0}
+.champ{margin:0 0 16px}.champ label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.champ input{width:100%;font:inherit;font-size:17px;height:52px;padding:0 14px;border:1px solid var(--bord);border-radius:8px;background:var(--carte);color:var(--encre)}
+.mdp{position:relative}.mdp input{padding-right:52px}
+.mdp button{position:absolute;right:4px;top:4px;width:44px;height:44px;border:0;background:none;color:var(--doux);display:grid;place-items:center}.mdp button svg{width:22px;height:22px}
+.lien{color:var(--lien);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.alerte{display:flex;gap:8px;align-items:flex-start;background:var(--err-doux);color:var(--err);font-weight:600;font-size:14.5px;border-radius:8px;padding:10px 12px;margin:0 0 16px}.alerte svg{width:19px;height:19px;flex:none;margin-top:1px}
+.pied{text-align:center;color:var(--doux);font-size:13.5px;margin:18px 16px}
+.enreg{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--doux);font-weight:600;margin-top:34px}
+.enreg i{width:10px;height:10px;border-radius:50%;background:var(--encre);animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{opacity:.25}}
+.chrono{font-size:58px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-1px;margin:6px 0 0}
+.onde{display:flex;gap:4px;align-items:center;justify-content:center;height:110px;margin:18px 0 8px}
+.onde i{width:5px;border-radius:3px;background:var(--lien);animation:o 1.2s ease-in-out infinite}
+@keyframes o{0%,100%{height:12px}50%{height:84px}}
+.conseil{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;color:var(--doux);font-size:15px}
+.conseil b{color:var(--encre)}
+.pile{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;ecran&quot;&gt;&lt;div class=&quot;bande&quot;&gt;&lt;span class=&quot;marque&quot;&gt;&lt;svg class=&quot;m&quot; viewBox=&quot;0 0 64 64&quot; aria-hidden=&quot;true&quot;&gt;&lt;g transform=&quot;translate(2 0)&quot;&gt;&lt;rect x=&quot;10&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;rect x=&quot;21&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M43 15.91A22 22 0 0 1 43 48.09Z&quot; fill=&quot;var(--acc)&quot;/&gt;&lt;/g&gt;&lt;/svg&gt;&lt;span&gt;Dicta&lt;/span&gt;&lt;/span&gt;&lt;small&gt;Peinture Luigi&lt;/small&gt;&lt;/div&gt;
+&lt;div class=&quot;tete&quot;&gt;&lt;h1&gt;Offres&lt;/h1&gt;&lt;p class=&quot;sous&quot;&gt;3 ce mois · 1 à vérifier&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;page&quot;&gt;&lt;div class=&quot;liste&quot;&gt;
+&lt;div class=&quot;item&quot;&gt;&lt;b&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;span class=&quot;montant&quot;&gt;&lt;small&gt;CHF&lt;/small&gt;3’377.05&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;Madame Exemple · n°&amp;nbsp;3&lt;/span&gt;&lt;span class=&quot;etat ok&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M5 12.5l4.5 4.5L19 7.5&quot;/&gt;&lt;/svg&gt;Prête&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;item&quot;&gt;&lt;b&gt;Façade de la maison&lt;/b&gt;&lt;span class=&quot;montant&quot;&gt;&lt;small&gt;CHF&lt;/small&gt;8’107.50&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;Monsieur Modèle · n°&amp;nbsp;2&lt;/span&gt;&lt;span class=&quot;etat av&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 4l9 16H3z&quot;/&gt;&lt;path d=&quot;M12 10v4M12 17.2v.1&quot;/&gt;&lt;/svg&gt;2 à vérifier&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;item&quot;&gt;&lt;b&gt;Cage d&#x27;escalier&lt;/b&gt;&lt;span class=&quot;montant&quot;&gt;&lt;small&gt;CHF&lt;/small&gt;2’140.00&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;Famille Test · n°&amp;nbsp;1&lt;/span&gt;&lt;span class=&quot;etat ok&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M5 12.5l4.5 4.5L19 7.5&quot;/&gt;&lt;/svg&gt;Prête&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;nav class=&quot;bas&quot;&gt;&lt;a class=&quot;on&quot; href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l4 4v14H7z&quot;/&gt;&lt;path d=&quot;M14 3v4h4M10 12h5M10 16h5&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;8&quot; r=&quot;4&quot;/&gt;&lt;path d=&quot;M4 21c1-4 4-6 8-6s7 2 8 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;&lt;span class=&quot;micro&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;&lt;/nav&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe></figure></div><div class="duo"><h3>Une offre, rangée par pièce</h3><figure><p class="etq">A · Bleu et orange</p><iframe class="tel" title="Une offre, rangée par pièce, Bleu et orange" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap&quot;&gt;&lt;style&gt;*{box-sizing:border-box}html,body{margin:0;height:100%}:root{--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:&quot;Archivo&quot;;--f-corps:&quot;Inter&quot;}
+body{font-family:var(--f-corps),system-ui,sans-serif;background:var(--fond);color:var(--encre);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,.marque,.btn,.piece,.champ label,.etat{font-family:var(--f-titre),system-ui,sans-serif}
+.ecran{min-height:100%;display:flex;flex-direction:column}
+.bande{background:var(--bande);color:var(--sur-bande);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.marque{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.marque .m{width:26px;height:26px;flex:none}
+.bande small{color:var(--bande-doux);font-size:14px;text-align:right}
+.retour{display:inline-flex;align-items:center;gap:4px;color:var(--sur-bande);font-weight:500}.retour svg{width:20px;height:20px}
+.tete{padding:20px 16px 14px}
+h1{font-size:25px;font-weight:600;letter-spacing:-.4px;line-height:1.2;margin:0}
+.sous{color:var(--doux);margin:4px 0 0;font-size:15px}
+.page{flex:1;padding:0 16px 150px}
+.liste{background:var(--carte);border:1px solid var(--trait);border-radius:10px;overflow:hidden}
+.item{padding:13px 14px;border-top:1px solid var(--trait);display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:baseline}
+.item:first-child,.ligne:first-child{border-top:0}
+.item b{font-weight:600;font-size:16px}
+.montant{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.montant small{font-weight:500;color:var(--doux);font-size:12px;margin-right:3px}
+.meta{color:var(--doux);font-size:14px}
+.etat{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;padding:2px 9px 2px 6px;border-radius:6px;justify-self:end}
+.etat svg{width:15px;height:15px}
+.ok{background:var(--ok-doux);color:var(--ok)}.av{background:var(--av-doux);color:var(--av)}.err{background:var(--err-doux);color:var(--err)}
+.total{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline}
+.total span{color:var(--doux);font-size:14px}.total .montant{font-size:22px;color:var(--encre)}
+.piece{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 7px;font-size:13px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--doux)}
+.piece .montant{color:var(--encre);letter-spacing:0;font-size:14px}
+.ligne{padding:12px 14px;border-top:1px solid var(--trait)}
+.ligne .q{display:flex;gap:10px;color:var(--doux);font-size:14px;font-variant-numeric:tabular-nums;margin-top:3px}
+.ligne .q b{margin-left:auto;color:var(--encre);font-weight:600}
+.ligne.a-verifier{background:var(--av-fond);box-shadow:inset 4px 0 0 var(--av)}
+.remarque{display:flex;gap:6px;align-items:center;color:var(--av);font-size:13.5px;font-weight:600;margin-top:7px}.remarque svg{width:16px;height:16px;flex:none}
+.actions{position:fixed;left:0;right:0;bottom:72px;padding:10px 16px;background:var(--fond);border-top:1px solid var(--trait);display:flex;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-size:17px;font-weight:600;min-height:52px;border-radius:10px;border:0;background:var(--acc);color:var(--sur-acc);box-shadow:inset 0 0 0 1.5px var(--acc-bord)}
+.btn svg{width:20px;height:20px}
+.btn.second{background:var(--carte);color:var(--encre);box-shadow:inset 0 0 0 1.5px var(--encre)}
+.bas{position:fixed;left:0;right:0;bottom:0;height:72px;background:var(--carte);border-top:1px solid var(--trait);display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.bas a{color:var(--doux);font-size:12px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bas a svg{width:23px;height:23px}
+.bas a.on{color:var(--encre);font-weight:600}.bas a.on svg{color:var(--lien)}
+.micro{justify-self:center;width:60px;height:60px;border-radius:50%;background:var(--acc);color:var(--sur-acc);display:grid;place-items:center;margin-top:-24px;box-shadow:inset 0 0 0 1.5px var(--acc-bord),0 0 0 4px var(--carte)}
+.micro svg{width:28px;height:28px}
+.accueil{background:var(--bande);color:var(--sur-bande);padding:26px 16px 44px}
+.accueil .marque{font-size:26px}.accueil .marque .m{width:34px;height:34px}
+.accueil p{color:var(--bande-doux);margin:14px 0 0;font-size:16px}
+.form{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:18px 16px 16px;margin:-24px 16px 0}
+.champ{margin:0 0 16px}.champ label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.champ input{width:100%;font:inherit;font-size:17px;height:52px;padding:0 14px;border:1px solid var(--bord);border-radius:8px;background:var(--carte);color:var(--encre)}
+.mdp{position:relative}.mdp input{padding-right:52px}
+.mdp button{position:absolute;right:4px;top:4px;width:44px;height:44px;border:0;background:none;color:var(--doux);display:grid;place-items:center}.mdp button svg{width:22px;height:22px}
+.lien{color:var(--lien);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.alerte{display:flex;gap:8px;align-items:flex-start;background:var(--err-doux);color:var(--err);font-weight:600;font-size:14.5px;border-radius:8px;padding:10px 12px;margin:0 0 16px}.alerte svg{width:19px;height:19px;flex:none;margin-top:1px}
+.pied{text-align:center;color:var(--doux);font-size:13.5px;margin:18px 16px}
+.enreg{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--doux);font-weight:600;margin-top:34px}
+.enreg i{width:10px;height:10px;border-radius:50%;background:var(--encre);animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{opacity:.25}}
+.chrono{font-size:58px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-1px;margin:6px 0 0}
+.onde{display:flex;gap:4px;align-items:center;justify-content:center;height:110px;margin:18px 0 8px}
+.onde i{width:5px;border-radius:3px;background:var(--lien);animation:o 1.2s ease-in-out infinite}
+@keyframes o{0%,100%{height:12px}50%{height:84px}}
+.conseil{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;color:var(--doux);font-size:15px}
+.conseil b{color:var(--encre)}
+.pile{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;ecran&quot;&gt;&lt;div class=&quot;bande&quot;&gt;&lt;span class=&quot;retour&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M15 5l-7 7 7 7&quot;/&gt;&lt;/svg&gt;Offres&lt;/span&gt;&lt;small&gt;n°&amp;nbsp;3&lt;/small&gt;&lt;/div&gt;
+&lt;div class=&quot;tete&quot;&gt;&lt;h1&gt;Appartement Exemple&lt;/h1&gt;&lt;p class=&quot;sous&quot;&gt;Madame Exemple · Route du Test 18, Neuchâtel&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;page&quot;&gt;
+&lt;div class=&quot;total&quot;&gt;&lt;span&gt;Total TTC&lt;/span&gt;&lt;span class=&quot;montant&quot;&gt;&lt;small&gt;CHF&lt;/small&gt;3’377.05&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;piece&quot;&gt;&lt;span&gt;Général&lt;/span&gt;&lt;span class=&quot;montant&quot;&gt;180.00&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;liste&quot;&gt;
+&lt;div class=&quot;ligne&quot;&gt;Protection des sols et des meubles&lt;div class=&quot;q&quot;&gt;&lt;span&gt;1 forfait&lt;/span&gt;&lt;b&gt;180.00&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;piece&quot;&gt;&lt;span&gt;Salon&lt;/span&gt;&lt;span class=&quot;montant&quot;&gt;1’846.00&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;liste&quot;&gt;
+&lt;div class=&quot;ligne&quot;&gt;Rebouchage et ponçage des murs&lt;div class=&quot;q&quot;&gt;&lt;span&gt;38 m² × 9.00&lt;/span&gt;&lt;b&gt;342.00&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;ligne a-verifier&quot;&gt;Peinture des murs, 2 couches&lt;div class=&quot;q&quot;&gt;&lt;span&gt;38 m² × 28.00&lt;/span&gt;&lt;b&gt;1’064.00&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;remarque&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 4l9 16H3z&quot;/&gt;&lt;path d=&quot;M12 10v4M12 17.2v.1&quot;/&gt;&lt;/svg&gt;Prix dicté 26.00, catalogue 28.00&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;ligne&quot;&gt;Peinture du plafond&lt;div class=&quot;q&quot;&gt;&lt;span&gt;20 m² × 22.00&lt;/span&gt;&lt;b&gt;440.00&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;div class=&quot;actions&quot;&gt;&lt;button class=&quot;btn second&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;Dicter la suite&lt;/button&gt;&lt;button class=&quot;btn&quot;&gt;Envoyer&lt;/button&gt;&lt;/div&gt;&lt;nav class=&quot;bas&quot;&gt;&lt;a class=&quot;on&quot; href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l4 4v14H7z&quot;/&gt;&lt;path d=&quot;M14 3v4h4M10 12h5M10 16h5&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;8&quot; r=&quot;4&quot;/&gt;&lt;path d=&quot;M4 21c1-4 4-6 8-6s7 2 8 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;&lt;span class=&quot;micro&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;&lt;/nav&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe></figure><figure><p class="etq">B · Anthracite et jaune</p><iframe class="tel" title="Une offre, rangée par pièce, Anthracite et jaune" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap&quot;&gt;&lt;style&gt;*{box-sizing:border-box}html,body{margin:0;height:100%}:root{--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:&quot;IBM Plex Sans&quot;;--f-corps:&quot;IBM Plex Sans&quot;}
+body{font-family:var(--f-corps),system-ui,sans-serif;background:var(--fond);color:var(--encre);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,.marque,.btn,.piece,.champ label,.etat{font-family:var(--f-titre),system-ui,sans-serif}
+.ecran{min-height:100%;display:flex;flex-direction:column}
+.bande{background:var(--bande);color:var(--sur-bande);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.marque{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.marque .m{width:26px;height:26px;flex:none}
+.bande small{color:var(--bande-doux);font-size:14px;text-align:right}
+.retour{display:inline-flex;align-items:center;gap:4px;color:var(--sur-bande);font-weight:500}.retour svg{width:20px;height:20px}
+.tete{padding:20px 16px 14px}
+h1{font-size:25px;font-weight:600;letter-spacing:-.4px;line-height:1.2;margin:0}
+.sous{color:var(--doux);margin:4px 0 0;font-size:15px}
+.page{flex:1;padding:0 16px 150px}
+.liste{background:var(--carte);border:1px solid var(--trait);border-radius:10px;overflow:hidden}
+.item{padding:13px 14px;border-top:1px solid var(--trait);display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:baseline}
+.item:first-child,.ligne:first-child{border-top:0}
+.item b{font-weight:600;font-size:16px}
+.montant{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.montant small{font-weight:500;color:var(--doux);font-size:12px;margin-right:3px}
+.meta{color:var(--doux);font-size:14px}
+.etat{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;padding:2px 9px 2px 6px;border-radius:6px;justify-self:end}
+.etat svg{width:15px;height:15px}
+.ok{background:var(--ok-doux);color:var(--ok)}.av{background:var(--av-doux);color:var(--av)}.err{background:var(--err-doux);color:var(--err)}
+.total{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline}
+.total span{color:var(--doux);font-size:14px}.total .montant{font-size:22px;color:var(--encre)}
+.piece{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 7px;font-size:13px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--doux)}
+.piece .montant{color:var(--encre);letter-spacing:0;font-size:14px}
+.ligne{padding:12px 14px;border-top:1px solid var(--trait)}
+.ligne .q{display:flex;gap:10px;color:var(--doux);font-size:14px;font-variant-numeric:tabular-nums;margin-top:3px}
+.ligne .q b{margin-left:auto;color:var(--encre);font-weight:600}
+.ligne.a-verifier{background:var(--av-fond);box-shadow:inset 4px 0 0 var(--av)}
+.remarque{display:flex;gap:6px;align-items:center;color:var(--av);font-size:13.5px;font-weight:600;margin-top:7px}.remarque svg{width:16px;height:16px;flex:none}
+.actions{position:fixed;left:0;right:0;bottom:72px;padding:10px 16px;background:var(--fond);border-top:1px solid var(--trait);display:flex;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-size:17px;font-weight:600;min-height:52px;border-radius:10px;border:0;background:var(--acc);color:var(--sur-acc);box-shadow:inset 0 0 0 1.5px var(--acc-bord)}
+.btn svg{width:20px;height:20px}
+.btn.second{background:var(--carte);color:var(--encre);box-shadow:inset 0 0 0 1.5px var(--encre)}
+.bas{position:fixed;left:0;right:0;bottom:0;height:72px;background:var(--carte);border-top:1px solid var(--trait);display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.bas a{color:var(--doux);font-size:12px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bas a svg{width:23px;height:23px}
+.bas a.on{color:var(--encre);font-weight:600}.bas a.on svg{color:var(--lien)}
+.micro{justify-self:center;width:60px;height:60px;border-radius:50%;background:var(--acc);color:var(--sur-acc);display:grid;place-items:center;margin-top:-24px;box-shadow:inset 0 0 0 1.5px var(--acc-bord),0 0 0 4px var(--carte)}
+.micro svg{width:28px;height:28px}
+.accueil{background:var(--bande);color:var(--sur-bande);padding:26px 16px 44px}
+.accueil .marque{font-size:26px}.accueil .marque .m{width:34px;height:34px}
+.accueil p{color:var(--bande-doux);margin:14px 0 0;font-size:16px}
+.form{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:18px 16px 16px;margin:-24px 16px 0}
+.champ{margin:0 0 16px}.champ label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.champ input{width:100%;font:inherit;font-size:17px;height:52px;padding:0 14px;border:1px solid var(--bord);border-radius:8px;background:var(--carte);color:var(--encre)}
+.mdp{position:relative}.mdp input{padding-right:52px}
+.mdp button{position:absolute;right:4px;top:4px;width:44px;height:44px;border:0;background:none;color:var(--doux);display:grid;place-items:center}.mdp button svg{width:22px;height:22px}
+.lien{color:var(--lien);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.alerte{display:flex;gap:8px;align-items:flex-start;background:var(--err-doux);color:var(--err);font-weight:600;font-size:14.5px;border-radius:8px;padding:10px 12px;margin:0 0 16px}.alerte svg{width:19px;height:19px;flex:none;margin-top:1px}
+.pied{text-align:center;color:var(--doux);font-size:13.5px;margin:18px 16px}
+.enreg{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--doux);font-weight:600;margin-top:34px}
+.enreg i{width:10px;height:10px;border-radius:50%;background:var(--encre);animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{opacity:.25}}
+.chrono{font-size:58px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-1px;margin:6px 0 0}
+.onde{display:flex;gap:4px;align-items:center;justify-content:center;height:110px;margin:18px 0 8px}
+.onde i{width:5px;border-radius:3px;background:var(--lien);animation:o 1.2s ease-in-out infinite}
+@keyframes o{0%,100%{height:12px}50%{height:84px}}
+.conseil{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;color:var(--doux);font-size:15px}
+.conseil b{color:var(--encre)}
+.pile{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;ecran&quot;&gt;&lt;div class=&quot;bande&quot;&gt;&lt;span class=&quot;retour&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M15 5l-7 7 7 7&quot;/&gt;&lt;/svg&gt;Offres&lt;/span&gt;&lt;small&gt;n°&amp;nbsp;3&lt;/small&gt;&lt;/div&gt;
+&lt;div class=&quot;tete&quot;&gt;&lt;h1&gt;Appartement Exemple&lt;/h1&gt;&lt;p class=&quot;sous&quot;&gt;Madame Exemple · Route du Test 18, Neuchâtel&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;page&quot;&gt;
+&lt;div class=&quot;total&quot;&gt;&lt;span&gt;Total TTC&lt;/span&gt;&lt;span class=&quot;montant&quot;&gt;&lt;small&gt;CHF&lt;/small&gt;3’377.05&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;piece&quot;&gt;&lt;span&gt;Général&lt;/span&gt;&lt;span class=&quot;montant&quot;&gt;180.00&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;liste&quot;&gt;
+&lt;div class=&quot;ligne&quot;&gt;Protection des sols et des meubles&lt;div class=&quot;q&quot;&gt;&lt;span&gt;1 forfait&lt;/span&gt;&lt;b&gt;180.00&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;piece&quot;&gt;&lt;span&gt;Salon&lt;/span&gt;&lt;span class=&quot;montant&quot;&gt;1’846.00&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;liste&quot;&gt;
+&lt;div class=&quot;ligne&quot;&gt;Rebouchage et ponçage des murs&lt;div class=&quot;q&quot;&gt;&lt;span&gt;38 m² × 9.00&lt;/span&gt;&lt;b&gt;342.00&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;ligne a-verifier&quot;&gt;Peinture des murs, 2 couches&lt;div class=&quot;q&quot;&gt;&lt;span&gt;38 m² × 28.00&lt;/span&gt;&lt;b&gt;1’064.00&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;remarque&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 4l9 16H3z&quot;/&gt;&lt;path d=&quot;M12 10v4M12 17.2v.1&quot;/&gt;&lt;/svg&gt;Prix dicté 26.00, catalogue 28.00&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;ligne&quot;&gt;Peinture du plafond&lt;div class=&quot;q&quot;&gt;&lt;span&gt;20 m² × 22.00&lt;/span&gt;&lt;b&gt;440.00&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;div class=&quot;actions&quot;&gt;&lt;button class=&quot;btn second&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;Dicter la suite&lt;/button&gt;&lt;button class=&quot;btn&quot;&gt;Envoyer&lt;/button&gt;&lt;/div&gt;&lt;nav class=&quot;bas&quot;&gt;&lt;a class=&quot;on&quot; href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l4 4v14H7z&quot;/&gt;&lt;path d=&quot;M14 3v4h4M10 12h5M10 16h5&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;8&quot; r=&quot;4&quot;/&gt;&lt;path d=&quot;M4 21c1-4 4-6 8-6s7 2 8 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;&lt;span class=&quot;micro&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;1.3&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;&lt;/nav&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe></figure></div><div class="duo"><h3>Pendant la dictée</h3><figure><p class="etq">A · Bleu et orange</p><iframe class="tel" title="Pendant la dictée, Bleu et orange" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap&quot;&gt;&lt;style&gt;*{box-sizing:border-box}html,body{margin:0;height:100%}:root{--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:&quot;Archivo&quot;;--f-corps:&quot;Inter&quot;}
+body{font-family:var(--f-corps),system-ui,sans-serif;background:var(--fond);color:var(--encre);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,.marque,.btn,.piece,.champ label,.etat{font-family:var(--f-titre),system-ui,sans-serif}
+.ecran{min-height:100%;display:flex;flex-direction:column}
+.bande{background:var(--bande);color:var(--sur-bande);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.marque{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.marque .m{width:26px;height:26px;flex:none}
+.bande small{color:var(--bande-doux);font-size:14px;text-align:right}
+.retour{display:inline-flex;align-items:center;gap:4px;color:var(--sur-bande);font-weight:500}.retour svg{width:20px;height:20px}
+.tete{padding:20px 16px 14px}
+h1{font-size:25px;font-weight:600;letter-spacing:-.4px;line-height:1.2;margin:0}
+.sous{color:var(--doux);margin:4px 0 0;font-size:15px}
+.page{flex:1;padding:0 16px 150px}
+.liste{background:var(--carte);border:1px solid var(--trait);border-radius:10px;overflow:hidden}
+.item{padding:13px 14px;border-top:1px solid var(--trait);display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:baseline}
+.item:first-child,.ligne:first-child{border-top:0}
+.item b{font-weight:600;font-size:16px}
+.montant{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.montant small{font-weight:500;color:var(--doux);font-size:12px;margin-right:3px}
+.meta{color:var(--doux);font-size:14px}
+.etat{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;padding:2px 9px 2px 6px;border-radius:6px;justify-self:end}
+.etat svg{width:15px;height:15px}
+.ok{background:var(--ok-doux);color:var(--ok)}.av{background:var(--av-doux);color:var(--av)}.err{background:var(--err-doux);color:var(--err)}
+.total{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline}
+.total span{color:var(--doux);font-size:14px}.total .montant{font-size:22px;color:var(--encre)}
+.piece{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 7px;font-size:13px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--doux)}
+.piece .montant{color:var(--encre);letter-spacing:0;font-size:14px}
+.ligne{padding:12px 14px;border-top:1px solid var(--trait)}
+.ligne .q{display:flex;gap:10px;color:var(--doux);font-size:14px;font-variant-numeric:tabular-nums;margin-top:3px}
+.ligne .q b{margin-left:auto;color:var(--encre);font-weight:600}
+.ligne.a-verifier{background:var(--av-fond);box-shadow:inset 4px 0 0 var(--av)}
+.remarque{display:flex;gap:6px;align-items:center;color:var(--av);font-size:13.5px;font-weight:600;margin-top:7px}.remarque svg{width:16px;height:16px;flex:none}
+.actions{position:fixed;left:0;right:0;bottom:72px;padding:10px 16px;background:var(--fond);border-top:1px solid var(--trait);display:flex;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-size:17px;font-weight:600;min-height:52px;border-radius:10px;border:0;background:var(--acc);color:var(--sur-acc);box-shadow:inset 0 0 0 1.5px var(--acc-bord)}
+.btn svg{width:20px;height:20px}
+.btn.second{background:var(--carte);color:var(--encre);box-shadow:inset 0 0 0 1.5px var(--encre)}
+.bas{position:fixed;left:0;right:0;bottom:0;height:72px;background:var(--carte);border-top:1px solid var(--trait);display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.bas a{color:var(--doux);font-size:12px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bas a svg{width:23px;height:23px}
+.bas a.on{color:var(--encre);font-weight:600}.bas a.on svg{color:var(--lien)}
+.micro{justify-self:center;width:60px;height:60px;border-radius:50%;background:var(--acc);color:var(--sur-acc);display:grid;place-items:center;margin-top:-24px;box-shadow:inset 0 0 0 1.5px var(--acc-bord),0 0 0 4px var(--carte)}
+.micro svg{width:28px;height:28px}
+.accueil{background:var(--bande);color:var(--sur-bande);padding:26px 16px 44px}
+.accueil .marque{font-size:26px}.accueil .marque .m{width:34px;height:34px}
+.accueil p{color:var(--bande-doux);margin:14px 0 0;font-size:16px}
+.form{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:18px 16px 16px;margin:-24px 16px 0}
+.champ{margin:0 0 16px}.champ label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.champ input{width:100%;font:inherit;font-size:17px;height:52px;padding:0 14px;border:1px solid var(--bord);border-radius:8px;background:var(--carte);color:var(--encre)}
+.mdp{position:relative}.mdp input{padding-right:52px}
+.mdp button{position:absolute;right:4px;top:4px;width:44px;height:44px;border:0;background:none;color:var(--doux);display:grid;place-items:center}.mdp button svg{width:22px;height:22px}
+.lien{color:var(--lien);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.alerte{display:flex;gap:8px;align-items:flex-start;background:var(--err-doux);color:var(--err);font-weight:600;font-size:14.5px;border-radius:8px;padding:10px 12px;margin:0 0 16px}.alerte svg{width:19px;height:19px;flex:none;margin-top:1px}
+.pied{text-align:center;color:var(--doux);font-size:13.5px;margin:18px 16px}
+.enreg{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--doux);font-weight:600;margin-top:34px}
+.enreg i{width:10px;height:10px;border-radius:50%;background:var(--encre);animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{opacity:.25}}
+.chrono{font-size:58px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-1px;margin:6px 0 0}
+.onde{display:flex;gap:4px;align-items:center;justify-content:center;height:110px;margin:18px 0 8px}
+.onde i{width:5px;border-radius:3px;background:var(--lien);animation:o 1.2s ease-in-out infinite}
+@keyframes o{0%,100%{height:12px}50%{height:84px}}
+.conseil{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;color:var(--doux);font-size:15px}
+.conseil b{color:var(--encre)}
+.pile{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;ecran&quot;&gt;&lt;div class=&quot;bande&quot;&gt;&lt;span class=&quot;marque&quot;&gt;&lt;svg class=&quot;m&quot; viewBox=&quot;0 0 64 64&quot; aria-hidden=&quot;true&quot;&gt;&lt;g transform=&quot;translate(2 0)&quot;&gt;&lt;rect x=&quot;10&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;rect x=&quot;21&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M43 15.91A22 22 0 0 1 43 48.09Z&quot; fill=&quot;var(--acc)&quot;/&gt;&lt;/g&gt;&lt;/svg&gt;&lt;span&gt;Dicta&lt;/span&gt;&lt;/span&gt;&lt;small&gt;Nouvelle offre&lt;/small&gt;&lt;/div&gt;&lt;div class=&quot;page&quot;&gt;
+&lt;div class=&quot;enreg&quot;&gt;&lt;i&gt;&lt;/i&gt;Enregistrement&lt;/div&gt;&lt;div class=&quot;chrono&quot;&gt;04:12&lt;/div&gt;&lt;div class=&quot;onde&quot;&gt;&lt;i style=&quot;animation-delay:-0.00s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.16s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.31s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.47s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.63s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.79s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.94s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-1.10s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.06s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.21s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.37s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.53s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.68s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.84s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-1.00s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-1.16s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.11s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.27s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.43s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.58s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.74s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.90s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-1.05s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.01s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.17s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.32s&quot;&gt;&lt;/i&gt;&lt;/div&gt;
+&lt;div class=&quot;conseil&quot;&gt;&lt;b&gt;Pièce par pièce.&lt;/b&gt; Le nom de la pièce, les mesures, puis les travaux.&lt;/div&gt;
+&lt;div class=&quot;pile&quot;&gt;&lt;button class=&quot;btn&quot;&gt;Terminer et créer l&#x27;offre&lt;/button&gt;&lt;button class=&quot;btn second&quot;&gt;Pause&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe></figure><figure><p class="etq">B · Anthracite et jaune</p><iframe class="tel" title="Pendant la dictée, Anthracite et jaune" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap&quot;&gt;&lt;style&gt;*{box-sizing:border-box}html,body{margin:0;height:100%}:root{--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:&quot;IBM Plex Sans&quot;;--f-corps:&quot;IBM Plex Sans&quot;}
+body{font-family:var(--f-corps),system-ui,sans-serif;background:var(--fond);color:var(--encre);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,.marque,.btn,.piece,.champ label,.etat{font-family:var(--f-titre),system-ui,sans-serif}
+.ecran{min-height:100%;display:flex;flex-direction:column}
+.bande{background:var(--bande);color:var(--sur-bande);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.marque{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.marque .m{width:26px;height:26px;flex:none}
+.bande small{color:var(--bande-doux);font-size:14px;text-align:right}
+.retour{display:inline-flex;align-items:center;gap:4px;color:var(--sur-bande);font-weight:500}.retour svg{width:20px;height:20px}
+.tete{padding:20px 16px 14px}
+h1{font-size:25px;font-weight:600;letter-spacing:-.4px;line-height:1.2;margin:0}
+.sous{color:var(--doux);margin:4px 0 0;font-size:15px}
+.page{flex:1;padding:0 16px 150px}
+.liste{background:var(--carte);border:1px solid var(--trait);border-radius:10px;overflow:hidden}
+.item{padding:13px 14px;border-top:1px solid var(--trait);display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:baseline}
+.item:first-child,.ligne:first-child{border-top:0}
+.item b{font-weight:600;font-size:16px}
+.montant{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.montant small{font-weight:500;color:var(--doux);font-size:12px;margin-right:3px}
+.meta{color:var(--doux);font-size:14px}
+.etat{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;padding:2px 9px 2px 6px;border-radius:6px;justify-self:end}
+.etat svg{width:15px;height:15px}
+.ok{background:var(--ok-doux);color:var(--ok)}.av{background:var(--av-doux);color:var(--av)}.err{background:var(--err-doux);color:var(--err)}
+.total{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline}
+.total span{color:var(--doux);font-size:14px}.total .montant{font-size:22px;color:var(--encre)}
+.piece{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 7px;font-size:13px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--doux)}
+.piece .montant{color:var(--encre);letter-spacing:0;font-size:14px}
+.ligne{padding:12px 14px;border-top:1px solid var(--trait)}
+.ligne .q{display:flex;gap:10px;color:var(--doux);font-size:14px;font-variant-numeric:tabular-nums;margin-top:3px}
+.ligne .q b{margin-left:auto;color:var(--encre);font-weight:600}
+.ligne.a-verifier{background:var(--av-fond);box-shadow:inset 4px 0 0 var(--av)}
+.remarque{display:flex;gap:6px;align-items:center;color:var(--av);font-size:13.5px;font-weight:600;margin-top:7px}.remarque svg{width:16px;height:16px;flex:none}
+.actions{position:fixed;left:0;right:0;bottom:72px;padding:10px 16px;background:var(--fond);border-top:1px solid var(--trait);display:flex;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-size:17px;font-weight:600;min-height:52px;border-radius:10px;border:0;background:var(--acc);color:var(--sur-acc);box-shadow:inset 0 0 0 1.5px var(--acc-bord)}
+.btn svg{width:20px;height:20px}
+.btn.second{background:var(--carte);color:var(--encre);box-shadow:inset 0 0 0 1.5px var(--encre)}
+.bas{position:fixed;left:0;right:0;bottom:0;height:72px;background:var(--carte);border-top:1px solid var(--trait);display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.bas a{color:var(--doux);font-size:12px;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bas a svg{width:23px;height:23px}
+.bas a.on{color:var(--encre);font-weight:600}.bas a.on svg{color:var(--lien)}
+.micro{justify-self:center;width:60px;height:60px;border-radius:50%;background:var(--acc);color:var(--sur-acc);display:grid;place-items:center;margin-top:-24px;box-shadow:inset 0 0 0 1.5px var(--acc-bord),0 0 0 4px var(--carte)}
+.micro svg{width:28px;height:28px}
+.accueil{background:var(--bande);color:var(--sur-bande);padding:26px 16px 44px}
+.accueil .marque{font-size:26px}.accueil .marque .m{width:34px;height:34px}
+.accueil p{color:var(--bande-doux);margin:14px 0 0;font-size:16px}
+.form{background:var(--carte);border:1px solid var(--trait);border-radius:12px;padding:18px 16px 16px;margin:-24px 16px 0}
+.champ{margin:0 0 16px}.champ label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px}
+.champ input{width:100%;font:inherit;font-size:17px;height:52px;padding:0 14px;border:1px solid var(--bord);border-radius:8px;background:var(--carte);color:var(--encre)}
+.mdp{position:relative}.mdp input{padding-right:52px}
+.mdp button{position:absolute;right:4px;top:4px;width:44px;height:44px;border:0;background:none;color:var(--doux);display:grid;place-items:center}.mdp button svg{width:22px;height:22px}
+.lien{color:var(--lien);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.alerte{display:flex;gap:8px;align-items:flex-start;background:var(--err-doux);color:var(--err);font-weight:600;font-size:14.5px;border-radius:8px;padding:10px 12px;margin:0 0 16px}.alerte svg{width:19px;height:19px;flex:none;margin-top:1px}
+.pied{text-align:center;color:var(--doux);font-size:13.5px;margin:18px 16px}
+.enreg{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--doux);font-weight:600;margin-top:34px}
+.enreg i{width:10px;height:10px;border-radius:50%;background:var(--encre);animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{opacity:.25}}
+.chrono{font-size:58px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-1px;margin:6px 0 0}
+.onde{display:flex;gap:4px;align-items:center;justify-content:center;height:110px;margin:18px 0 8px}
+.onde i{width:5px;border-radius:3px;background:var(--lien);animation:o 1.2s ease-in-out infinite}
+@keyframes o{0%,100%{height:12px}50%{height:84px}}
+.conseil{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:12px 14px;color:var(--doux);font-size:15px}
+.conseil b{color:var(--encre)}
+.pile{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;ecran&quot;&gt;&lt;div class=&quot;bande&quot;&gt;&lt;span class=&quot;marque&quot;&gt;&lt;svg class=&quot;m&quot; viewBox=&quot;0 0 64 64&quot; aria-hidden=&quot;true&quot;&gt;&lt;g transform=&quot;translate(2 0)&quot;&gt;&lt;rect x=&quot;10&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;rect x=&quot;21&quot; y=&quot;10&quot; width=&quot;8&quot; height=&quot;44&quot; rx=&quot;1.5&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z&quot; fill=&quot;currentColor&quot;/&gt;&lt;path d=&quot;M43 15.91A22 22 0 0 1 43 48.09Z&quot; fill=&quot;var(--acc)&quot;/&gt;&lt;/g&gt;&lt;/svg&gt;&lt;span&gt;Dicta&lt;/span&gt;&lt;/span&gt;&lt;small&gt;Nouvelle offre&lt;/small&gt;&lt;/div&gt;&lt;div class=&quot;page&quot;&gt;
+&lt;div class=&quot;enreg&quot;&gt;&lt;i&gt;&lt;/i&gt;Enregistrement&lt;/div&gt;&lt;div class=&quot;chrono&quot;&gt;04:12&lt;/div&gt;&lt;div class=&quot;onde&quot;&gt;&lt;i style=&quot;animation-delay:-0.00s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.16s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.31s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.47s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.63s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.79s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.94s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-1.10s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.06s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.21s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.37s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.53s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.68s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.84s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-1.00s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-1.16s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.11s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.27s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.43s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.58s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.74s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.90s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-1.05s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.01s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.17s&quot;&gt;&lt;/i&gt;&lt;i style=&quot;animation-delay:-0.32s&quot;&gt;&lt;/i&gt;&lt;/div&gt;
+&lt;div class=&quot;conseil&quot;&gt;&lt;b&gt;Pièce par pièce.&lt;/b&gt; Le nom de la pièce, les mesures, puis les travaux.&lt;/div&gt;
+&lt;div class=&quot;pile&quot;&gt;&lt;button class=&quot;btn&quot;&gt;Terminer et créer l&#x27;offre&lt;/button&gt;&lt;button class=&quot;btn second&quot;&gt;Pause&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe></figure></div></div><h3>Les états à côté du bouton, et les mesures</h3><div class="bandes"><div class="pal" style="--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:'Archivo';--f-corps:'Inter';--pt:-.03em"><p class="etq">A · Bleu et orange (la charte Dicta, corrigée)</p><div class="etats"><span class="bouton">Envoyer</span><span class="etat ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Prête</span><span class="etat av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.1"/></svg>2 à vérifier</span><span class="etat err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.4v.1"/></svg>Erreur</span></div><div class="nuancier"><span style="background:#1D3557;color:#fff"><b>En-tête</b>#1D3557</span><span style="background:#FF8419;color:#141414"><b>Bouton</b>#FF8419</span><span style="background:#F4F1EA;color:#141414"><b>Fond</b>#F4F1EA</span><span style="background:#FFFFFF;color:#141414"><b>Carte</b>#FFFFFF</span><span style="background:#222831;color:#fff"><b>Encre</b>#222831</span><span style="background:#454B55;color:#fff"><b>Secondaire</b>#454B55</span></div><p class="mesures">Archivo pour les titres et les boutons, Inter pour le texte et les chiffres. Mesuré : Texte sur fond 13.1 · Texte sur carte 14.8 · Texte secondaire sur fond 7.8 · Texte secondaire sur carte 8.8 · Texte secondaire sur ligne à vérifier 8.4 · Libellé du bouton 7.3 · Pictogramme du micro 7.3 · En-tête 12.4 · En-tête, texte secondaire 8.2 · Lien sur carte 12.4 · Lien sur fond 11.0 · Prête 7.4 · À vérifier, étiquette 8.2 · À vérifier, remarque 9.0 · Erreur 7.7 · Contour du bouton sur fond (forme) 3.6 · Contour du bouton sur carte (forme) 4.1 · Bord des champs (forme) 3.8 · Accent sur en-tête (forme) 5.0</p></div><div class="pal" style="--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:'IBM Plex Sans';--f-corps:'IBM Plex Sans';--pt:.015em"><p class="etq">B · Anthracite et jaune (l'accent C de la maquette sobre)</p><div class="etats"><span class="bouton">Envoyer</span><span class="etat ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Prête</span><span class="etat av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.1"/></svg>2 à vérifier</span><span class="etat err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.4v.1"/></svg>Erreur</span></div><div class="nuancier"><span style="background:#23272D;color:#fff"><b>En-tête</b>#23272D</span><span style="background:#F2B300;color:#141414"><b>Bouton</b>#F2B300</span><span style="background:#EFEDE8;color:#141414"><b>Fond</b>#EFEDE8</span><span style="background:#FFFFFF;color:#141414"><b>Carte</b>#FFFFFF</span><span style="background:#1F2328;color:#fff"><b>Encre</b>#1F2328</span><span style="background:#464C55;color:#fff"><b>Secondaire</b>#464C55</span></div><p class="mesures">IBM Plex Sans partout. Mesuré : Texte sur fond 13.5 · Texte sur carte 15.8 · Texte secondaire sur fond 7.4 · Texte secondaire sur carte 8.7 · Texte secondaire sur ligne à vérifier 8.3 · Libellé du bouton 8.4 · Pictogramme du micro 8.4 · En-tête 13.4 · En-tête, texte secondaire 8.0 · Lien sur carte 15.8 · Lien sur fond 13.5 · Prête 7.4 · À vérifier, étiquette 7.7 · À vérifier, remarque 8.5 · Erreur 7.7 · Contour du bouton sur fond (forme) 3.8 · Contour du bouton sur carte (forme) 4.4 · Bord des champs (forme) 3.8 · Accent sur en-tête (forme) 8.0</p></div></div><div class="choix" data-cle="P1"><p class="q"><b>P1</b> · La palette</p><div class="opts"><button type="button" data-q="P1" data-v="A · Bleu et orange" aria-pressed="false">A · Bleu et orange</button><button type="button" data-q="P1" data-v="B · Anthracite et jaune" aria-pressed="false">B · Anthracite et jaune</button><button type="button" data-q="P1" data-v="Aucune des deux" aria-pressed="false">Aucune des deux</button></div><textarea data-c="P1" rows="2" placeholder="Commentaire (facultatif)" aria-label="Commentaire P1"></textarea></div><div class="choix" data-cle="M1"><p class="q"><b>M1</b> · Le mot en français. Les écrans disent « offre », la charte dit « devis ».</p><div class="opts"><button type="button" data-q="M1" data-v="Offre" aria-pressed="false">Offre</button><button type="button" data-q="M1" data-v="Devis" aria-pressed="false">Devis</button></div><textarea data-c="M1" rows="2" placeholder="Commentaire (facultatif)" aria-label="Commentaire M1"></textarea></div><h2 id="logos">3. Cinq logos</h2><p class="texte">Chaque logo est montré dans les deux palettes et dans ses quatre emplois. Un logo qui ne tient ni en une couleur ni en petit est à écarter. Les écrans plus haut portent le logo 1, en attendant ton choix. Le nom est écrit ici avec la police de la palette ; le logo retenu sera ensuite tracé en vecteur, sans dépendre d'une police.</p><section class="logo"><h3>Logo 1 · Le D en barres</h3><p class="texte">Un D plein, tranché en quatre barres comme un niveau sonore. La voix devient la lettre. La dernière tranche porte l'accent.</p><p class="defaut"><b>Défaut</b> : le D se lit d'abord, la voix ensuite : il faut le slogan à côté pour que l'idée passe.</p><div class="bandes"><div class="pal" style="--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:'Archivo';--f-corps:'Inter';--pt:-.03em"><p class="etq">A · Bleu et orange</p><div class="rendus"><figure><div class="r-ico"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(2 0)"><rect x="10" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><rect x="21" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><path d="M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z" fill="currentColor"/><path d="M43 15.91A22 22 0 0 1 43 48.09Z" fill="var(--acc)"/></g></svg></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="tuile"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(2 0)"><rect x="10" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><rect x="21" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><path d="M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z" fill="currentColor"/><path d="M43 15.91A22 22 0 0 1 43 48.09Z" fill="var(--acc)"/></g></svg></span><span class="mot">Dicta</span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(2 0)"><rect x="10" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><rect x="21" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><path d="M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z" fill="currentColor"/><path d="M43 15.91A22 22 0 0 1 43 48.09Z" fill="var(--acc)"/></g></svg><span class="mot">Dicta</span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(2 0)"><rect x="10" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><rect x="21" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><path d="M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z" fill="currentColor"/><path d="M43 15.91A22 22 0 0 1 43 48.09Z" fill="var(--acc)"/></g></svg><span class="mot">Dicta</span></div><figcaption>Une couleur, petit</figcaption></figure></div></div><div class="pal" style="--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:'IBM Plex Sans';--f-corps:'IBM Plex Sans';--pt:.015em"><p class="etq">B · Anthracite et jaune</p><div class="rendus"><figure><div class="r-ico"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(2 0)"><rect x="10" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><rect x="21" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><path d="M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z" fill="currentColor"/><path d="M43 15.91A22 22 0 0 1 43 48.09Z" fill="var(--acc)"/></g></svg></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="tuile"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(2 0)"><rect x="10" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><rect x="21" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><path d="M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z" fill="currentColor"/><path d="M43 15.91A22 22 0 0 1 43 48.09Z" fill="var(--acc)"/></g></svg></span><span class="mot">Dicta</span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(2 0)"><rect x="10" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><rect x="21" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><path d="M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z" fill="currentColor"/><path d="M43 15.91A22 22 0 0 1 43 48.09Z" fill="var(--acc)"/></g></svg><span class="mot">Dicta</span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(2 0)"><rect x="10" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><rect x="21" y="10" width="8" height="44" rx="1.5" fill="currentColor"/><path d="M32 10.37A22 22 0 0 1 40 13.56V50.44A22 22 0 0 1 32 53.63Z" fill="currentColor"/><path d="M43 15.91A22 22 0 0 1 43 48.09Z" fill="var(--acc)"/></g></svg><span class="mot">Dicta</span></div><figcaption>Une couleur, petit</figcaption></figure></div></div></div><div class="choix" data-cle="L1"><p class="q"><b>L1</b> · Logo 1, Le D en barres</p><div class="opts"><button type="button" data-q="L1" data-v="Garder" aria-pressed="false">Garder</button><button type="button" data-q="L1" data-v="Écarter" aria-pressed="false">Écarter</button></div><textarea data-c="L1" rows="2" placeholder="Commentaire (facultatif)" aria-label="Commentaire L1"></textarea></div></section><section class="logo"><h3>Logo 2 · Le point du i</h3><p class="texte">Le nom seul, en gras. Le point du i prend la couleur d'accent, comme le voyant d'un enregistrement. Rien d'autre à dessiner, donc rien à mal reproduire.</p><p class="defaut"><b>Défaut</b> : aucun symbole à part : l'icône du téléphone se réduit à un D et un point. En jaune sur fond clair, le point se voit peu.</p><div class="bandes"><div class="pal" style="--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:'Archivo';--f-corps:'Inter';--pt:-.03em"><p class="etq">A · Bleu et orange</p><div class="rendus"><figure><div class="r-ico lettre">D<i></i></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="mot couleur">D<span class="i">ı<b></b></span>cta</span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><span class="mot">D<span class="i">ı<b></b></span>cta</span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><span class="mot">D<span class="i">ı<b></b></span>cta</span></div><figcaption>Une couleur, petit</figcaption></figure></div></div><div class="pal" style="--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:'IBM Plex Sans';--f-corps:'IBM Plex Sans';--pt:.015em"><p class="etq">B · Anthracite et jaune</p><div class="rendus"><figure><div class="r-ico lettre">D<i></i></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="mot couleur">D<span class="i">ı<b></b></span>cta</span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><span class="mot">D<span class="i">ı<b></b></span>cta</span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><span class="mot">D<span class="i">ı<b></b></span>cta</span></div><figcaption>Une couleur, petit</figcaption></figure></div></div></div><div class="choix" data-cle="L2"><p class="q"><b>L2</b> · Logo 2, Le point du i</p><div class="opts"><button type="button" data-q="L2" data-v="Garder" aria-pressed="false">Garder</button><button type="button" data-q="L2" data-v="Écarter" aria-pressed="false">Écarter</button></div><textarea data-c="L2" rows="2" placeholder="Commentaire (facultatif)" aria-label="Commentaire L2"></textarea></div></section><section class="logo"><h3>Logo 3 · La plaque</h3><p class="texte">Le nom en blanc dans un rectangle plein, souligné d'un filet d'accent : la plaque d'une machine, à la manière des marques d'outillage (Hilti).</p><p class="defaut"><b>Défaut</b> : le plus sobre des cinq, donc le moins parlant : rien n'évoque la voix.</p><div class="bandes"><div class="pal" style="--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:'Archivo';--f-corps:'Inter';--pt:-.03em"><p class="etq">A · Bleu et orange</p><div class="rendus"><figure><div class="r-ico lettre haut">D<u></u></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="plaque"><span class="mot">Dicta</span></span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><span class="plaque"><span class="mot">Dicta</span></span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><span class="plaque"><span class="mot">Dicta</span></span></div><figcaption>Une couleur, petit</figcaption></figure></div></div><div class="pal" style="--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:'IBM Plex Sans';--f-corps:'IBM Plex Sans';--pt:.015em"><p class="etq">B · Anthracite et jaune</p><div class="rendus"><figure><div class="r-ico lettre haut">D<u></u></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="plaque"><span class="mot">Dicta</span></span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><span class="plaque"><span class="mot">Dicta</span></span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><span class="plaque"><span class="mot">Dicta</span></span></div><figcaption>Une couleur, petit</figcaption></figure></div></div></div><div class="choix" data-cle="L3"><p class="q"><b>L3</b> · Logo 3, La plaque</p><div class="opts"><button type="button" data-q="L3" data-v="Garder" aria-pressed="false">Garder</button><button type="button" data-q="L3" data-v="Écarter" aria-pressed="false">Écarter</button></div><textarea data-c="L3" rows="2" placeholder="Commentaire (facultatif)" aria-label="Commentaire L3"></textarea></div></section><section class="logo"><h3>Logo 4 · La ligne dictée</h3><p class="texte">Une onde de voix, puis deux lignes d'offre de longueur inégale. C'est la marque de la maquette sobre, précisée : la première ligne est dite, les suivantes sont écrites.</p><p class="defaut"><b>Défaut</b> : trois traits fins, qui se brouillent sous 20 px.</p><div class="bandes"><div class="pal" style="--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:'Archivo';--f-corps:'Inter';--pt:-.03em"><p class="etq">A · Bleu et orange</p><div class="rendus"><figure><div class="r-ico"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M11 21q5-10 10 0t10 0 10 0 10 0" fill="none" stroke="var(--acc)" stroke-width="5.5" stroke-linecap="round"/><rect x="11" y="31" width="42" height="5.5" rx="2.75" fill="currentColor"/><rect x="11" y="43" width="27" height="5.5" rx="2.75" fill="currentColor"/></svg></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="tuile"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M11 21q5-10 10 0t10 0 10 0 10 0" fill="none" stroke="var(--acc)" stroke-width="5.5" stroke-linecap="round"/><rect x="11" y="31" width="42" height="5.5" rx="2.75" fill="currentColor"/><rect x="11" y="43" width="27" height="5.5" rx="2.75" fill="currentColor"/></svg></span><span class="mot">Dicta</span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M11 21q5-10 10 0t10 0 10 0 10 0" fill="none" stroke="var(--acc)" stroke-width="5.5" stroke-linecap="round"/><rect x="11" y="31" width="42" height="5.5" rx="2.75" fill="currentColor"/><rect x="11" y="43" width="27" height="5.5" rx="2.75" fill="currentColor"/></svg><span class="mot">Dicta</span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M11 21q5-10 10 0t10 0 10 0 10 0" fill="none" stroke="var(--acc)" stroke-width="5.5" stroke-linecap="round"/><rect x="11" y="31" width="42" height="5.5" rx="2.75" fill="currentColor"/><rect x="11" y="43" width="27" height="5.5" rx="2.75" fill="currentColor"/></svg><span class="mot">Dicta</span></div><figcaption>Une couleur, petit</figcaption></figure></div></div><div class="pal" style="--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:'IBM Plex Sans';--f-corps:'IBM Plex Sans';--pt:.015em"><p class="etq">B · Anthracite et jaune</p><div class="rendus"><figure><div class="r-ico"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M11 21q5-10 10 0t10 0 10 0 10 0" fill="none" stroke="var(--acc)" stroke-width="5.5" stroke-linecap="round"/><rect x="11" y="31" width="42" height="5.5" rx="2.75" fill="currentColor"/><rect x="11" y="43" width="27" height="5.5" rx="2.75" fill="currentColor"/></svg></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="tuile"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M11 21q5-10 10 0t10 0 10 0 10 0" fill="none" stroke="var(--acc)" stroke-width="5.5" stroke-linecap="round"/><rect x="11" y="31" width="42" height="5.5" rx="2.75" fill="currentColor"/><rect x="11" y="43" width="27" height="5.5" rx="2.75" fill="currentColor"/></svg></span><span class="mot">Dicta</span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M11 21q5-10 10 0t10 0 10 0 10 0" fill="none" stroke="var(--acc)" stroke-width="5.5" stroke-linecap="round"/><rect x="11" y="31" width="42" height="5.5" rx="2.75" fill="currentColor"/><rect x="11" y="43" width="27" height="5.5" rx="2.75" fill="currentColor"/></svg><span class="mot">Dicta</span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M11 21q5-10 10 0t10 0 10 0 10 0" fill="none" stroke="var(--acc)" stroke-width="5.5" stroke-linecap="round"/><rect x="11" y="31" width="42" height="5.5" rx="2.75" fill="currentColor"/><rect x="11" y="43" width="27" height="5.5" rx="2.75" fill="currentColor"/></svg><span class="mot">Dicta</span></div><figcaption>Une couleur, petit</figcaption></figure></div></div></div><div class="choix" data-cle="L4"><p class="q"><b>L4</b> · Logo 4, La ligne dictée</p><div class="opts"><button type="button" data-q="L4" data-v="Garder" aria-pressed="false">Garder</button><button type="button" data-q="L4" data-v="Écarter" aria-pressed="false">Écarter</button></div><textarea data-c="L4" rows="2" placeholder="Commentaire (facultatif)" aria-label="Commentaire L4"></textarea></div></section><section class="logo"><h3>Logo 5 · Les guillemets</h3><p class="texte">Le guillemet français ouvre une parole rapportée : « dicta », les choses dites. Typographique, lisible en une couleur, juste en français comme en allemand de Suisse.</p><p class="defaut"><b>Défaut</b> : le double chevron ressemble au bouton de retour rapide d'un lecteur.</p><div class="bandes"><div class="pal" style="--fond:#F4F1EA;--carte:#FFFFFF;--encre:#222831;--doux:#454B55;--trait:#DDD8CC;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#5A4300;--av-doux:#FFF0B3;--av-fond:#FFFAE5;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#1D3557;--sur-bande:#FFFFFF;--bande-doux:#C9D4E3;--acc:#FF8419;--sur-acc:#14181D;--acc-bord:#C2640C;--lien:#1D3557;--f-titre:'Archivo';--f-corps:'Inter';--pt:-.03em"><p class="etq">A · Bleu et orange</p><div class="rendus"><figure><div class="r-ico"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M30 15L14 32l16 17" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M51 15L35 32l16 17" fill="none" stroke="var(--acc)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="tuile"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M30 15L14 32l16 17" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M51 15L35 32l16 17" fill="none" stroke="var(--acc)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="mot">Dicta</span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M30 15L14 32l16 17" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M51 15L35 32l16 17" fill="none" stroke="var(--acc)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="mot">Dicta</span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M30 15L14 32l16 17" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M51 15L35 32l16 17" fill="none" stroke="var(--acc)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="mot">Dicta</span></div><figcaption>Une couleur, petit</figcaption></figure></div></div><div class="pal" style="--fond:#EFEDE8;--carte:#FFFFFF;--encre:#1F2328;--doux:#464C55;--trait:#DAD6CD;--bord:#7C838C;--ok:#13553A;--ok-doux:#E1EFE6;--av:#713D00;--av-doux:#FBEDD6;--av-fond:#FFF9EE;--err:#8C1D18;--err-doux:#FBE7E4;--bande:#23272D;--sur-bande:#F4F2EE;--bande-doux:#B9BDC3;--acc:#F2B300;--sur-acc:#1F2328;--acc-bord:#9A7200;--lien:#1F2328;--f-titre:'IBM Plex Sans';--f-corps:'IBM Plex Sans';--pt:.015em"><p class="etq">B · Anthracite et jaune</p><div class="rendus"><figure><div class="r-ico"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M30 15L14 32l16 17" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M51 15L35 32l16 17" fill="none" stroke="var(--acc)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><figcaption>Icône du téléphone</figcaption></figure><figure><div class="r-clair"><span class="tuile"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M30 15L14 32l16 17" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M51 15L35 32l16 17" fill="none" stroke="var(--acc)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="mot">Dicta</span></div><figcaption>Sur fond clair, offre en PDF</figcaption></figure><figure><div class="r-sombre"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M30 15L14 32l16 17" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M51 15L35 32l16 17" fill="none" stroke="var(--acc)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="mot">Dicta</span></div><figcaption>Dans l'en-tête</figcaption></figure><figure><div class="r-mono"><svg class="m" viewBox="0 0 64 64" aria-hidden="true"><path d="M30 15L14 32l16 17" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M51 15L35 32l16 17" fill="none" stroke="var(--acc)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="mot">Dicta</span></div><figcaption>Une couleur, petit</figcaption></figure></div></div></div><div class="choix" data-cle="L5"><p class="q"><b>L5</b> · Logo 5, Les guillemets</p><div class="opts"><button type="button" data-q="L5" data-v="Garder" aria-pressed="false">Garder</button><button type="button" data-q="L5" data-v="Écarter" aria-pressed="false">Écarter</button></div><textarea data-c="L5" rows="2" placeholder="Commentaire (facultatif)" aria-label="Commentaire L5"></textarea></div></section><p class="texte">Les polices viennent de Google Fonts pour cette maquette seulement. Dans l'application, elles seront hébergées par le site lui-même.</p><h2 id="copier-texte">Copier le texte</h2><p><button id="copier" type="button">Copier le texte</button></p><textarea id="texte" readonly aria-label="Réponses à copier"></textarea></div><script>
+(function(){
+  var CLE='maquette-dicta-2026-11-18', etat={};
+  try{etat=JSON.parse(localStorage.getItem(CLE)||'{}')}catch(e){etat={}}
+  function garder(){try{localStorage.setItem(CLE,JSON.stringify(etat))}catch(e){}}
+  document.querySelectorAll('.opts button').forEach(function(b){
+    var q=b.dataset.q; if(etat[q]&&etat[q].v===b.dataset.v){b.setAttribute('aria-pressed','true')}
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.opts button[data-q="'+q+'"]').forEach(function(x){x.setAttribute('aria-pressed','false')});
+      b.setAttribute('aria-pressed','true'); etat[q]=etat[q]||{}; etat[q].v=b.dataset.v; garder();
+    });
+  });
+  document.querySelectorAll('textarea[data-c]').forEach(function(t){
+    var q=t.dataset.c; if(etat[q]&&etat[q].c){t.value=etat[q].c}
+    t.addEventListener('input',function(){etat[q]=etat[q]||{}; etat[q].c=t.value; garder();});
+  });
+  document.getElementById('copier').addEventListener('click',function(){
+    var lignes=['Maquette Dicta, palettes et logos'];
+    document.querySelectorAll('.choix').forEach(function(c){
+      var k=c.dataset.cle, e=etat[k]||{}; lignes.push(k+' : '+(e.v||'(sans réponse)')+(e.c?' · '+e.c:''));
+    });
+    var txt=lignes.join('\n'), zone=document.getElementById('texte'); zone.value=txt; zone.select();
+    try{navigator.clipboard.writeText(txt)}catch(e){}
+  });
+})();
+</script><script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body></html>

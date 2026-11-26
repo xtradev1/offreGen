@@ -1,0 +1,8 @@
+/* Copies figées des écrans de Dicta, dans l'aperçu en direct de la page de relecture. Rien ne s'y clique : un lien
+   mènerait le cadre vers l'application. Le texte modifié par le correcteur est surligné, celui qu'il édite entouré. */
+html { pointer-events: none !important; scrollbar-width: none; }
+html::-webkit-scrollbar { display: none; }
+[data-t] { transition: background-color .2s ease; }
+.rl-change { background-color: #FFE58A !important; color: #23272D !important; border-radius: 3px; }
+.rl-actif { outline: 3px solid #B24A25 !important; outline-offset: 3px; border-radius: 3px; }
+@media (prefers-reduced-motion: reduce) { [data-t] { transition: none; } }

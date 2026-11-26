@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Responsive, 5e tour</title>
+<style>
+:root { --ink: #23272D; --muted: #4A505A; --bg: #F4F1EA; --surface: #FFFFFF; --line: #DDD8CC; --accent: #23272D; --marque: #A8441F; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --bad-soft: #FBE7E4;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; } }
+:root[data-theme="dark"] { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 4px; scroll-margin-top: 70px; }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 760px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; margin: 22px 0; }
+.mk-compare { margin: 12px 0; }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; }
+figcaption { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+.paire { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 12px 0; }
+.trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 12px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 8px 0 12px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 650; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tableau { overflow-x: auto; }
+.conseil { border-left: 4px solid var(--marque); background: var(--bg); padding: 10px 14px; border-radius: 0 10px 10px 0; margin: 12px 0; }
+.conseil b:first-child { display: block; margin-bottom: 2px; }
+.incident { border: 1px solid var(--bad); background: var(--bad-soft); color: var(--ink); border-radius: 12px; padding: 12px 14px; margin: 16px 0; }
+.incident b:first-child { color: var(--bad); }
+.regle { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.regle li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.regle li b { color: var(--ok); }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.decision .q { font-weight: 650; margin: 0 0 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 650; }
+.opts button:focus-visible, textarea:focus-visible, .copier:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+textarea { width: 100%; min-height: 64px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 150px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+ul.serre { margin: 4px 0 10px; padding-left: 20px; }
+code { font: 13.5px ui-monospace, Consolas, monospace; background: var(--bg); border-radius: 4px; padding: 1px 4px; overflow-wrap: anywhere; }
+.cout { color: var(--muted); font-size: 14.5px; }
+.decision .q { font-weight: 600; }
+.quatuor { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin: 12px 0; }
+.teintes-mq { display: grid; gap: 6px; margin: 10px 0 14px; }
+.tm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.tm .pt { width: 28px; height: 28px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--muted); flex: none; }
+.tm .fl { color: var(--muted); }
+.tm .cote { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Responsive, 5e tour : les points à mieux dessiner</h1>
+<p class="chapeau">Tu as validé 1 C, 2a, 4b et 7c : je les code pendant que tu réponds ici. Cette page reprend les cinq points où tu as écrit « fais mieux », plus ta question sur le prix des radiateurs. Chaque image est le vrai site local, la proposition posée dans la page : rien de cette page n'est encore codé.</p>
+
+<!-- 2b -->
+<section class="point" id="p2b">
+<h2 id="h-p2b" data-toc="2b Couleur tapée">2b. Couleur tapée : l'application prévient et propose</h2>
+<p><b>Ta consigne.</b> « L'app l'informe que le contraste peut être faible et lui propose une couleur bien visible (7:1), visible (4,5:1). »</p>
+<div class="paire">
+<figure><img src="MAQUETTE-tour5-img/p2b-avis.jpg" alt="Ma marque, couleur Autre en orange : un encadré dit que la couleur se lit mal et propose Bien visible, contraste 7:1, et Visible, contraste 4,7:1"><figcaption>Exemple : un orange tapé à la main (#F39C12, 2,2:1). Deux versions plus foncées de la même teinte, d'un toucher.</figcaption></figure>
+<div>
+<p><b>Quand l'encadré paraît</b> : dès qu'une couleur tapée, ou celle du logo, est sous 7:1. Les six couleurs proposées sont déjà à 7:1 et ne le déclenchent jamais.</p>
+<ul class="regle">
+<li><b>Sous 4,5:1</b> (l'orange) : les deux propositions sont plus foncées que la couleur tapée.</li>
+<li><b>Entre 4,5 et 7:1</b> (le pétrole #0F7C8C, 4,9:1) : « Visible » est la couleur tapée elle-même, « Bien visible » la fonce à 7:1 (#0C616D).</li>
+<li><b>Si l'artisan ne choisit rien</b> : sa couleur reste, et le document la fonce juste assez pour 4,5:1, comme aujourd'hui.</li>
+</ul>
+</div>
+</div>
+<div class="decision" data-q="2b Couleur tapée">
+<p class="q">Ton choix</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire sur la couleur tapée" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- 3 -->
+<section class="point" id="p3">
+<h2 id="h-p3" data-toc="3 Bouton plus">3. Le bouton « + Ligne », avec le total dans « Générer »</h2>
+<p><b>Ta remarque.</b> « Le plus dans le bouton doit être mieux. » Le total passe dans le bouton principal (ton choix A) ; trois dessins pour l'ajout :</p>
+<div class="trio">
+<figure><img src="MAQUETTE-tour5-img/p3-plus__avant.jpg" alt="Bouton plus Ligne actuel : petit plus fin à côté du mot"><figcaption>Actuel : signe fin à côté du mot, 96 px.</figcaption></figure>
+<figure><img src="MAQUETTE-tour5-img/p3-plus__empile.jpg" alt="Variante empilée : grand plus au-dessus du mot Ligne"><figcaption>Empilé : grand « + » au-dessus du mot, 76 px. Libère 20 px pour « Générer ».</figcaption></figure>
+<figure><img src="MAQUETTE-tour5-img/p3-plus__rond.jpg" alt="Variante rond : un plus blanc dans un rond noir, à côté du mot Ligne"><figcaption>Rond : « + » blanc dans un rond plein, 110 px. Le plus visible des trois.</figcaption></figure>
+</div>
+<div class="conseil"><b>Je conseille l'empilé.</b> Le signe se voit de loin, le bouton principal garde sa largeur, et le rond plein ferait deux boutons noirs côte à côte.</div>
+<div class="decision" data-q="3 Bouton plus">
+<p class="q">Ton choix</p>
+<div class="opts"><button type="button" data-v="actuel">Actuel</button><button type="button" data-v="empile">Empilé</button><button type="button" data-v="rond">Rond</button></div>
+<textarea aria-label="Commentaire sur le bouton plus" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- 4a -->
+<section class="point" id="p4a">
+<h2 id="h-p4a" data-toc="4a Ligne libre">4a. Ligne libre : une bande qui dit l'état et l'action</h2>
+<p><b>Ta remarque.</b> « Fais mieux, ça doit être bien en UI/UX. » La pastille mélangeait l'étiquette et le bouton. Ici, une bande de 56 px sous la ligne, toute la largeur touchable : ce qui se passe (« Pas dans votre catalogue »), ce qu'on y gagne (« Ajoutez-le pour la prochaine dictée »), et la flèche qui ouvre la fiche validée en 4b.</p>
+<div class="paire">
+<figure><img src="MAQUETTE-tour5-img/p4a__A.jpg" alt="Sous la ligne libre, une bande jaune pâle : icône de livre, Pas dans votre catalogue, Ajoutez-le pour la prochaine dictée, flèche"><figcaption>A : bande jaune pâle, la couleur des lignes à vérifier.</figcaption></figure>
+<figure><img src="MAQUETTE-tour5-img/p4a__B.jpg" alt="La même bande, fond blanc et bord gris, l'icône seule en jaune"><figcaption>B : bande blanche à bord gris, seule l'icône en jaune.</figcaption></figure>
+</div>
+<div class="conseil"><b>Je conseille B.</b> Une ligne libre n'est pas une erreur : la bande se repère sans crier, et le jaune plein reste réservé à ce qui bloque l'offre.</div>
+<div class="decision" data-q="4a Ligne libre">
+<p class="q">Ton choix</p>
+<div class="opts"><button type="button" data-v="A">A : bande jaune</button><button type="button" data-v="B">B : bande blanche</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire sur la ligne libre" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- 4b prix -->
+<section class="point" id="p4b">
+<h2 id="h-p4b" data-toc="4b Prix des radiateurs">4b. Ta question : des radiateurs plus chers sans toucher au catalogue</h2>
+<p><b>Réponse, vérifiée dans le code.</b> Oui, c'est déjà possible : un prix tapé sur une ligne de l'offre ne change que cette ligne (la requête n'écrit que dans la table des lignes). Le catalogue garde son prix.</p>
+<p><b>Le piège est ailleurs.</b> « Rattacher à un produit » remplace aujourd'hui le nom, l'unité <em>et le prix</em> de la ligne par ceux du catalogue : tes 45.00 le forfait deviendraient 9.00 le m², sans prévenir.</p>
+<div class="paire">
+<figure><img src="MAQUETTE-tour5-img/p4b-prix.jpg" alt="Ligne rattachée : prix 9 du catalogue, et une note Prix de la ligne 45.00, catalogue 9.00 avec un bouton Garder 45.00"><figcaption>Proposition : après le rattachement, la ligne prend le prix du catalogue et une note propose « Garder 45.00 ». C'est la note du prix dicté, qui existe déjà : elle demande ensuite s'il faut aussi mettre ce prix au catalogue.</figcaption></figure>
+<div>
+<p class="cout">L'unité aussi change (forfait devient m²) alors que la quantité reste 3 : la fiche « Déjà au catalogue » le dira avant le toucher, quand les deux unités diffèrent.</p>
+</div>
+</div>
+<div class="decision" data-q="4b Prix gardé au rattachement">
+<p class="q">Ton choix</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire sur le prix gardé" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- 5 -->
+<section class="point" id="p5">
+<h2 id="h-p5" data-toc="5 Icônes au PC">5. Archiver et supprimer : les icônes dans la carte</h2>
+<p><b>Ta remarque.</b> Au 4e tour, la place des icônes restait vide sur les cartes qu'on ne survole pas. Ici, la carte prend toute la largeur ; au survol, le montant glisse vers la gauche et les icônes paraissent dans la carte, après un filet.</p>
+<div class="trio">
+<figure><img src="MAQUETTE-tour5-img/p5__tour4.jpg" alt="Version du 4e tour : une colonne vide à droite de chaque carte"><figcaption>4e tour : une colonne vide à droite de toutes les cartes.</figcaption></figure>
+<figure><img src="MAQUETTE-tour5-img/p5__repos.jpg" alt="Au repos : les cartes prennent toute la largeur"><figcaption>Au repos : aucune place perdue.</figcaption></figure>
+<figure><img src="MAQUETTE-tour5-img/p5__survol.jpg" alt="Au survol : les icônes archiver et corbeille dans la carte, bulle Archiver"><figcaption>Au survol : icônes dans la carte, nom en bulle.</figcaption></figure>
+</div>
+<div class="decision" data-q="5 Icônes dans la carte">
+<p class="q">Ton choix</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire sur les icônes" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<!-- 7a -->
+<section class="point" id="p7a">
+<h2 id="h-p7a" data-toc="7a Bandeau">7a. Le bandeau à la place du total, aux mesures de la barre</h2>
+<p><b>Ta remarque.</b> « Super mal intégré, pas les bons espaces. » Le bloc noir est retiré. Le bandeau reprend la ligne du total telle quelle : même hauteur (51 px), même marge, même fond. Le message est à la place de « Total TTC », « Annuler » à la place du montant, son bord droit aligné sur celui de « Générer l'offre » (764 px, mesuré).</p>
+<div class="paire">
+<figure><img src="MAQUETTE-tour5-img/p7a__tour4.jpg" alt="Version du 4e tour : un bloc noir avec un bouton encadré, posé sur la barre"><figcaption>4e tour : bloc noir rapporté.</figcaption></figure>
+<figure><img src="MAQUETTE-tour5-img/p7a__mieux.jpg" alt="Nouvelle version : corbeille, le nom de la ligne supprimée, et Annuler souligné à droite, sur la ligne du total"><figcaption>Proposition : dans la ligne du total, 8 secondes, puis le total revient.</figcaption></figure>
+</div>
+<div class="decision" data-q="7a Bandeau intégré">
+<p class="q">Ton choix</p>
+<div class="opts"><button type="button" data-v="valider">Valider</button><button type="button" data-v="refuser">Pas valider</button></div>
+<textarea aria-label="Commentaire sur le bandeau" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="reponses" data-toc="Copier">Copier mes réponses</h2>
+<div class="recap">
+<p>Ce texte se remplit avec tes choix. Copie-le et colle-le dans la conversation.</p>
+<textarea id="recap" readonly aria-label="Récapitulatif des réponses"></textarea>
+<p><button type="button" class="copier" id="copier">Copier le texte</button><span class="copie-ok" id="copie-ok" hidden>Copié.</span></p>
+</div>
+</main>
+
+<script>
+(function () {
+  var CLE = 'offregen-responsive-2026-11-19-tour5';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  var blocs = document.querySelectorAll('.decision');
+  function recap() {
+    var lignes = [];
+    blocs.forEach(function (b) {
+      var q = b.getAttribute('data-q'), r = etat[q] || {};
+      var choisi = b.querySelector('.opts button[data-v="' + (r.v || '') + '"]');
+      var l = q + ' : ' + (choisi ? choisi.textContent : '(pas de réponse)');
+      if (r.c) l += '. Commentaire : ' + r.c.replace(/\s+/g, ' ').trim();
+      lignes.push(l);
+    });
+    document.getElementById('recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    etat[q] = etat[q] || {};
+    var boutons = b.querySelectorAll('.opts button');
+    var champ = b.querySelector('textarea');
+    boutons.forEach(function (bt) {
+      bt.setAttribute('aria-pressed', bt.getAttribute('data-v') === etat[q].v ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        etat[q].v = etat[q].v === bt.getAttribute('data-v') ? '' : bt.getAttribute('data-v');
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-v') === etat[q].v ? 'true' : 'false'); });
+        garder(); recap();
+      });
+    });
+    if (champ) {
+      champ.value = etat[q].c || '';
+      champ.addEventListener('input', function () { etat[q].c = champ.value; garder(); recap(); });
+    }
+  });
+  recap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('recap');
+    var ok = function () { var s = document.getElementById('copie-ok'); s.hidden = false; setTimeout(function () { s.hidden = true; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); document.execCommand('copy'); ok(); }); }
+    else { t.select(); document.execCommand('copy'); ok(); }
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

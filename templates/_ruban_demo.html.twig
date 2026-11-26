@@ -1,0 +1,25 @@
+{# Le ruban d'une démo créée par l'équipe (N1, Xavier, 2026-11-19 ; « Passer à l'essai » visible en haut, 2026-11-20).
+   Sur tous les écrans de l'application, sauf celui du passage. Une démonstration partagée n'en a pas : demo() rend
+   null. La feuille de style est à part : app.css est modifiée par d'autres chantiers. #}
+{% set demo_compte = demo() %}
+{% if demo_compte and not (sans_ruban ?? false) %}
+  <link rel="stylesheet" href="{{ fichier('/css/demo.css') }}">
+  <div class="ruban-demo" role="note">
+    <span><b>Démo</b> · {% if demo_compte.terminee %}terminée{% elseif demo_compte.avant_fin > 1 %}{{ demo_compte.avant_fin }} jours restants{% elseif demo_compte.avant_fin == 1 %}1 jour restant{% else %}dernier jour{% endif %}</span>
+    {# La démo d'entraînement d'un membre, ouverte par lui (chantier onboarding, lot 8, O12 B) : le retour direct. #}
+    {% if retour_equipe() %}
+      <form method="post" action="/retour-espace"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="btn" type="submit" data-retour-espace>Revenir à mon espace</button></form>
+    {% else %}
+      <a class="btn" href="/passer-a-l-essai">Passer à l'essai</a>
+    {% endif %}
+  </div>
+{% endif %}
+{# Le ruban du mois gratuit (maquette v5 de l'administration ; chantier onboarding, E1). « Ma formule » viendra avec
+   la page des formules (lot B de l'administration). #}
+{% set mois_compte = demo_compte ? null : mois_gratuit() %}
+{% if mois_compte and not (sans_ruban ?? false) %}
+  <link rel="stylesheet" href="/css/demo.css">
+  <div class="ruban-demo" role="note">
+    <span><b>Mois gratuit</b> · {% if mois_compte.termine %}terminé{% elseif mois_compte.avant_fin > 1 %}{{ mois_compte.avant_fin }} jours restants{% elseif mois_compte.avant_fin == 1 %}se termine demain{% else %}dernier jour{% endif %}</span>
+  </div>
+{% endif %}

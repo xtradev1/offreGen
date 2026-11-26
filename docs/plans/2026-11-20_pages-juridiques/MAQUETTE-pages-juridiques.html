@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pages juridiques de Dicta, maquette</title>
+<style>
+:root{--ink:#23272D;--bg:#F4F1EA;--surface:#FFFFFF;--line:#DDD8CC;--doux:#4C525C;--terra:#B54C27;--ok:#1F6B3A;--ok-l:#E3F2E8;--av:#5A4300;--av-l:#FFF5CC;--sel:#23272D;--sel-ink:#FFFFFF;
+--mk-ink:var(--ink);--mk-bg:var(--bg);--mk-surface:var(--surface);--mk-line:var(--line);--mk-accent:var(--terra)}
+[data-theme="dark"]{--ink:#ECE8E0;--bg:#17191D;--surface:#22252B;--line:#3A3E46;--doux:#B9BDC3;--terra:#F08A62;--ok:#8FD9A8;--ok-l:#1C3326;--av:#FFE08A;--av-l:#3A3115;--sel:#ECE8E0;--sel-ink:#17191D}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#ECE8E0;--bg:#17191D;--surface:#22252B;--line:#3A3E46;--doux:#B9BDC3;--terra:#F08A62;--ok:#8FD9A8;--ok-l:#1C3326;--av:#FFE08A;--av-l:#3A3115;--sel:#ECE8E0;--sel-ink:#17191D}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1040px;margin:0 auto;padding:0 16px 80px}
+header.tete{padding:28px 0 8px}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0 0 10px}
+h2{font-size:clamp(22px,3vw,28px);margin:48px 0 12px;padding-top:8px;border-top:2px solid var(--line);scroll-margin-top:110px}
+@media (max-width:760px){h2{scroll-margin-top:180px}}
+h3{font-size:18.5px;margin:26px 0 8px}
+p{margin:0 0 12px}
+.chapo{font-size:18px;color:var(--doux);max-width:60ch}
+.carte{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 18px 14px;margin:14px 0}
+.grille{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:18px;align-items:start}
+.grille3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+figure{margin:0}
+figcaption{font-size:14px;color:var(--doux);margin-top:6px}
+figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+.extrait img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;margin:0 0 6px;background:#fff}
+.extrait{margin:6px 0 12px}
+.regle{background:var(--ok-l);border-left:4px solid var(--ok);border-radius:8px;padding:10px 14px;margin:10px 0}
+.alerte{background:var(--av-l);border-left:4px solid var(--av);border-radius:8px;padding:10px 14px;margin:10px 0}
+.q{border-top:1px dashed var(--line);padding-top:12px;margin-top:12px}
+.qt{font-weight:600;margin-bottom:8px}
+.qt b{display:inline-block;min-width:2.6em;color:var(--terra)}
+.choix{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px}
+.choix button{font:inherit;font-size:15.5px;text-align:left;min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--ink);background:var(--surface);color:var(--ink);cursor:pointer;max-width:100%}
+.choix button[aria-pressed="true"]{background:var(--sel);color:var(--sel-ink)}
+.choix button b{margin-right:6px}
+textarea{width:100%;min-height:44px;font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical}
+table{width:100%;border-collapse:collapse;font-size:15.5px}
+td,th{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+.tel{width:100%;max-width:260px;margin:0 auto;border:8px solid #23272D;border-radius:28px;background:#F4F1EA;color:#23272D;padding:0 0 16px;overflow:hidden;font-size:13.5px}
+.tel .barre{background:#23272D;color:#fff;font-weight:700;padding:10px 14px}
+.tel .champ{margin:10px 14px 0}
+.tel .champ i{display:block;height:34px;border:1px solid #B9B3A5;border-radius:8px;background:#fff;margin-top:4px}
+.tel .case{display:flex;gap:8px;align-items:flex-start;margin:14px 14px 0;line-height:1.35}
+.tel .case span{flex:none;width:20px;height:20px;border:2px solid #23272D;border-radius:4px;background:#fff;margin-top:1px}
+.tel .bouton{margin:14px 14px 0;background:#23272D;color:#fff;border-radius:10px;text-align:center;padding:11px 6px;font-weight:700}
+.tel .petit{margin:8px 14px 0;font-size:12px;color:#454B55;line-height:1.35}
+.tel u{color:#23272D}
+.deux{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#copie{position:sticky;bottom:12px;display:flex;flex-direction:row-reverse;gap:10px;align-items:center;justify-content:flex-end;margin-top:30px;padding-right:72px}
+#copie button{font:inherit;font-weight:700;min-height:48px;padding:0 20px;border-radius:12px;border:0;background:var(--terra);color:#fff;cursor:pointer}
+#copie span{font-size:14px;color:var(--doux)}
+@media (max-width:760px){.grille,.grille3,.deux{grid-template-columns:minmax(0,1fr)}h2{margin-top:36px}}
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<header class="tete">
+<h1>Pages juridiques de Dicta</h1>
+<p class="chapo">Mentions légales, protection des données et conditions d'utilisation : ce qui est écrit, ce qui est vérifié, et les décisions qu'il vous reste à prendre. Vos réponses se posent sous chaque question ; le bouton en bas de page les copie pour la conversation.</p>
+</header>
+<nav id="mk-toc"></nav>
+
+<h2 id="pages" data-toc="Les pages">Les trois pages</h2>
+<p>Elles s'ouvrent depuis le pied de page de l'accueil, aux adresses <code>/mentions-legales</code>, <code>/protection-des-donnees</code> et <code>/conditions</code>. Même bandeau, mêmes polices et mêmes couleurs que l'accueil. Les passages surlignés en jaune sont les trous qui attendent vos réponses ; le bandeau « Projet de texte » disparaîtra avec eux.</p>
+<div class="grille">
+<figure><img src="MAQUETTE-pages-juridiques-img/pc_donnees_entier.jpg" alt="Page Protection des données, entière, sur ordinateur"><figcaption>Protection des données, page entière sur ordinateur.</figcaption></figure>
+<figure><img src="MAQUETTE-pages-juridiques-img/tel_donnees.jpg" alt="Page Protection des données, premier écran au téléphone"><figcaption>Au téléphone, premier écran.</figcaption></figure>
+</div>
+<div class="grille">
+<figure><img src="MAQUETTE-pages-juridiques-img/pc_conditions_entier.jpg" alt="Page Conditions d'utilisation, entière, sur ordinateur"><figcaption>Conditions d'utilisation, page entière, avec l'annexe sur les données de vos clients (art. 9 LPD) à la fin.</figcaption></figure>
+<figure><img src="MAQUETTE-pages-juridiques-img/tel_conditions.jpg" alt="Page Conditions d'utilisation, premier écran au téléphone"><figcaption>Au téléphone, premier écran.</figcaption></figure>
+</div>
+<div class="grille">
+<figure><img src="MAQUETTE-pages-juridiques-img/pc_mentions_entier.jpg" alt="Page Mentions légales, entière, sur ordinateur"><figcaption>Mentions légales, page entière sur ordinateur.</figcaption></figure>
+<figure><img src="MAQUETTE-pages-juridiques-img/tel_pied.jpg" alt="Bas de page au téléphone, pied de page avec les trois liens"><figcaption>Pied de page au téléphone : la page lue est en blanc, chaque lien mesure 44 px de haut.</figcaption></figure>
+</div>
+<div class="carte">
+<div class="q" data-cle="P1"><p class="qt"><b>P1</b> La mise en page des trois pages</p>
+<div class="choix"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="identite" data-toc="Identité">1. Qui édite Dicta</h2>
+<p>La loi demande, à tout site qui vend en ligne, le nom, l'adresse et un courriel de contact (art. 3 LCD). Rien de cela n'est dans le dépôt ; l'adresse vient de vos contrats de 2026.</p>
+<div class="extrait"><img src="MAQUETTE-pages-juridiques-img/trou_mentions_0.jpg" alt="Mentions légales : forme juridique à compléter"><img src="MAQUETTE-pages-juridiques-img/trou_mentions_1.jpg" alt="Mentions légales : IDE, TVA et courriel à compléter"></div>
+<div class="carte">
+<div class="q" data-cle="D1a"><p class="qt"><b>D1a</b> Forme juridique de XtraDev</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>Entreprise individuelle inscrite au registre du commerce</button><button type="button" data-v="B"><b>B</b>Entreprise individuelle non inscrite</button></div>
+<textarea placeholder="Numéro IDE (CHE-…), ou autre forme"></textarea></div>
+<div class="q" data-cle="D1b"><p class="qt"><b>D1b</b> TVA</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>Non assujetti à la TVA</button><button type="button" data-v="B"><b>B</b>Assujetti (numéro en commentaire)</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+<div class="q" data-cle="D1c"><p class="qt"><b>D1c</b> Courriel de contact, affiché dans les trois pages</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>info@xtradev.ch</button><button type="button" data-v="B"><b>B</b>xavier.frelechoz@xtradev.ch</button><button type="button" data-v="C"><b>C</b>une adresse sur dicta.ch, à créer</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+<div class="q" data-cle="D1d"><p class="qt"><b>D1d</b> Publier l'adresse « Rue de la Fenaison 37, 2800 Delémont »</p>
+<div class="choix"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider (autre adresse en commentaire)</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="audio" data-toc="Audio">2. L'audio des dictées et la phrase de l'accueil</h2>
+<p>La page de protection des données annonce l'effacement de l'audio 30 jours après l'offre. Le code de cette suppression existe, mais il est éteint (<code>PURGE_AUDIO</code> vaut 0 sur le test, décision Q1 du 18 novembre). Le texte transcrit est gardé sans limite.</p>
+<div class="extrait"><img src="MAQUETTE-pages-juridiques-img/trou_donnees_4.jpg" alt="Protection des données : audio effacé 30 jours après l'offre, suppression encore éteinte"></div>
+<div class="alerte">La page d'accueil dit : « Vos dictées ne sont ni conservées ni utilisées pour entraîner ses modèles. » C'est vrai chez Infomaniak, faux chez vous : Dicta garde l'audio (aujourd'hui sans limite) et le texte. Les deux pages se contredisent.</div>
+<div class="carte">
+<div class="q" data-cle="D2"><p class="qt"><b>D2</b> Ce que deviennent l'audio et le texte</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>Suppression allumée en production, audio effacé 30 jours après l'offre. Accueil corrigé : « L'IA ne s'entraîne pas sur vos dictées. L'audio est effacé 30 jours après l'offre. »</button><button type="button" data-v="B"><b>B</b>Audio gardé sans limite : la page de protection des données le dit, l'accueil retire « ni conservées »</button></div>
+<textarea placeholder="Commentaire, ou autre durée"></textarea></div>
+</div>
+
+<h2 id="durees" data-toc="Durées">3. Combien de temps on garde quoi</h2>
+<p>Une politique de protection des données doit donner une durée pour chaque donnée. Aujourd'hui, rien n'est effacé automatiquement, sauf la copie de l'audio dans le téléphone. Une offre supprimée reste en base, seulement marquée supprimée. Mes propositions :</p>
+<div class="extrait"><img src="MAQUETTE-pages-juridiques-img/trou_donnees_3.jpg" alt="Protection des données : durée de garde du journal des connexions à décider"><img src="MAQUETTE-pages-juridiques-img/trou_donnees_5.jpg" alt="Protection des données : durée après suppression d'une offre ou fermeture du compte à décider"></div>
+<div class="carte">
+<div class="q" data-cle="D3a"><p class="qt"><b>D3a</b> Journal des connexions (courriel saisi, adresse IP, date) : effacé après 12 mois</p>
+<div class="choix"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div>
+<textarea placeholder="Autre durée"></textarea></div>
+<div class="q" data-cle="D3b"><p class="qt"><b>D3b</b> Courriel d'une demande d'essai : effacé de votre boîte 6 mois après la demande, si aucun compte n'est ouvert</p>
+<div class="choix"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div>
+<textarea placeholder="Autre durée"></textarea></div>
+<div class="q" data-cle="D3c"><p class="qt"><b>D3c</b> Offre supprimée par l'artisan : récupérable 30 jours, puis effacée pour de bon</p>
+<div class="choix"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div>
+<textarea placeholder="Commentaire (aujourd'hui elle reste en base et compte dans les offres du mois)"></textarea></div>
+<div class="q" data-cle="D3d"><p class="qt"><b>D3d</b> Compte fermé ou essai terminé sans abonnement : téléchargement possible 30 jours, puis toutes les données effacées</p>
+<div class="choix"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div>
+<textarea placeholder="Autre durée"></textarea></div>
+<p class="alerte">Chaque durée validée demande une suppression automatique à coder et à tester, comme celle de l'audio. Le journal du serveur web d'Infomaniak (adresse IP, page, heure) a sa propre durée, à lire dans le Manager : je ne l'ai pas vérifiée.</p>
+</div>
+
+<h2 id="abonnement" data-toc="Abonnement">4. Essai, prix et résiliation</h2>
+<p>Les propositions reprennent <code>docs/strategie/acquisition.md</code> : 49 CHF, tarif fondateur à 39 CHF pour les 20 premiers, annuel à 12 mois pour le prix de 10. Rien n'y est décidé.</p>
+<div class="extrait"><img src="MAQUETTE-pages-juridiques-img/trou_conditions_1.jpg" alt="Conditions : essai à décider"><img src="MAQUETTE-pages-juridiques-img/trou_conditions_2.jpg" alt="Conditions : prix et paiement à décider"><img src="MAQUETTE-pages-juridiques-img/trou_conditions_4.jpg" alt="Conditions : durée et résiliation à décider"></div>
+<div class="carte">
+<div class="q" data-cle="D4a"><p class="qt"><b>D4a</b> Essai</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>Premier mois sans engagement, 20 offres au plus</button><button type="button" data-v="B"><b>B</b>Autre (commentaire)</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+<div class="q" data-cle="D4b"><p class="qt"><b>D4b</b> Prix</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>49 CHF par mois ; 39 CHF pour les 20 premiers artisans</button><button type="button" data-v="B"><b>B</b>Autre (commentaire)</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+<div class="q" data-cle="D4c"><p class="qt"><b>D4c</b> Facturation</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>QR-facture, annuelle (12 mois pour 10) ou trimestrielle, payable à 30 jours ; compte suspendu après un rappel resté sans effet</button><button type="button" data-v="B"><b>B</b>Mensuelle par carte (prestataire de paiement à choisir)</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+<div class="q" data-cle="D4d"><p class="qt"><b>D4d</b> Résiliation</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>Par courriel, pour la fin de la période payée, sans préavis, reconduction sinon</button><button type="button" data-v="B"><b>B</b>Un mois de préavis avant la fin de la période</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+<div class="q" data-cle="D4e"><p class="qt"><b>D4e</b> Hausse de prix annoncée 60 jours avant, avec droit de résilier</p>
+<div class="choix"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+<p class="regle">Les avis lus chez vos concurrents (Obat, bexio) reprochent surtout des hausses de prix sans prévenir et des prélèvements non remboursés. Un préavis clair répond à ce reproche.</p>
+</div>
+
+<h2 id="responsabilite" data-toc="Responsabilité">5. Plafond de responsabilité</h2>
+<p>En droit suisse, la faute grave et l'intention ne se limitent pas (art. 100 CO). Pour le reste, le contrat peut fixer un plafond. Un plafond se règle sur ce que couvre votre assurance responsabilité civile professionnelle, que je ne connais pas.</p>
+<div class="extrait"><img src="MAQUETTE-pages-juridiques-img/trou_conditions_6.jpg" alt="Conditions : plafond de responsabilité à décider"></div>
+<div class="carte">
+<div class="q" data-cle="D5"><p class="qt"><b>D5</b> Plafond</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>Ce que l'artisan a payé sur les 12 derniers mois</button><button type="button" data-v="B"><b>B</b>Un montant fixe (commentaire)</button><button type="button" data-v="C"><b>C</b>J'envoie d'abord la police d'assurance</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="corpus" data-toc="Vraies dictées">6. Utiliser de vraies dictées pour améliorer Dicta</h2>
+<p>Le sous-chantier 29 veut un corpus de vraies dictées pour atteindre 95 % de lignes justes. Les dictées appartiennent aux données des clients de l'artisan : l'annexe des conditions interdit tout autre usage que fournir le service. Les réutiliser demande un accord exprès, donné à part.</p>
+<div class="extrait"><img src="MAQUETTE-pages-juridiques-img/trou_conditions_8.jpg" alt="Conditions : réutilisation des dictées à trancher"></div>
+<div class="carte">
+<div class="q" data-cle="D6"><p class="qt"><b>D6</b> Réutiliser des dictées réelles</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>Non : le corpus se fait avec les dictées que des artisans me donnent à part, avec un accord écrit</button><button type="button" data-v="B"><b>B</b>Oui, avec une case dans les réglages, décochée par défaut et retirable à tout moment</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="courriels" data-toc="Courriels">7. Serveur d'envoi des courriels</h2>
+<p>Le code envoie par SMTP au serveur désigné dans le <code>.env</code> (<code>MAILER_DSN</code>), que le site de test n'a pas encore. Si ce serveur est hors de Suisse, la phrase « Aucune donnée n'est communiquée à l'étranger » tombe, et cinq endroits des pages changent.</p>
+<div class="extrait"><img src="MAQUETTE-pages-juridiques-img/trou_donnees_6.jpg" alt="Protection des données : serveur d'envoi des courriels à compléter"></div>
+<div class="carte">
+<div class="q" data-cle="D7"><p class="qt"><b>D7</b> Serveur d'envoi</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>Le service de courriel d'Infomaniak (boîte notifications@ sur le domaine de production)</button><button type="button" data-v="B"><b>B</b>Autre (commentaire)</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="acceptation" data-toc="Acceptation">8. Comment l'artisan accepte les conditions</h2>
+<p>Les conditions disent « En activant votre compte, vous acceptez ces conditions ». Aujourd'hui, l'écran du premier accès ne les montre pas : personne ne les accepte. C'est là aussi que l'artisan s'engage à demander l'accord des personnes qu'il enregistre (art. 179<sup>ter</sup> CP), puisque le rappel à l'écran a été retiré.</p>
+<div class="deux">
+<figure><div class="tel"><div class="barre">Nouveau mot de passe</div><div class="champ">Nouveau mot de passe<i></i></div><div class="champ">Le même, une seconde fois<i></i></div><div class="case"><span></span><div>J'accepte les <u>conditions d'utilisation</u> et j'ai lu la page <u>Protection des données</u>.</div></div><div class="bouton">Enregistrer et se connecter</div></div><figcaption><b>A</b> Une case à cocher, obligatoire. Preuve nette : la date d'acceptation est enregistrée avec le compte.</figcaption></figure>
+<figure><div class="tel"><div class="barre">Nouveau mot de passe</div><div class="champ">Nouveau mot de passe<i></i></div><div class="champ">Le même, une seconde fois<i></i></div><div class="bouton">Enregistrer et se connecter</div><p class="petit">En continuant, vous acceptez les <u>conditions d'utilisation</u> et confirmez avoir lu la page <u>Protection des données</u>.</p></div><figcaption><b>B</b> Une phrase sous le bouton. Un geste de moins, preuve plus faible.</figcaption></figure>
+</div>
+<div class="carte">
+<div class="q" data-cle="D8"><p class="qt"><b>D8</b> Acceptation des conditions</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>Case à cocher</button><button type="button" data-v="B"><b>B</b>Phrase sous le bouton</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+<div class="q" data-cle="D9"><p class="qt"><b>D9</b> Accord des personnes enregistrées (art. 179<sup>ter</sup> CP)</p>
+<div class="choix"><button type="button" data-v="A"><b>A</b>La clause des conditions suffit (état actuel)</button><button type="button" data-v="B"><b>B</b>En plus, une ligne sous le micro, à la première dictée seulement</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="preavis" data-toc="Préavis">9. Préavis</h2>
+<p>Trois annonces par courriel, 30 jours à l'avance : retrait d'une fonction essentielle, modification des conditions, modification importante de la page de protection des données.</p>
+<div class="extrait"><img src="MAQUETTE-pages-juridiques-img/trou_conditions_7.jpg" alt="Conditions : modification annoncée 30 jours avant"></div>
+<div class="carte">
+<div class="q" data-cle="D10"><p class="qt"><b>D10</b> 30 jours partout</p>
+<div class="choix"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div>
+<textarea placeholder="Autre délai"></textarea></div>
+</div>
+
+<h2 id="accueil" data-toc="Accueil">10. Deux défauts vus sur la page d'accueil</h2>
+<p>La page d'accueil appartient à une autre session, en cours. Je n'y ai changé que les trois liens du pied de page. Mesuré au navigateur (Chromium, 390 px), pas sur un vrai iPhone :</p>
+<ul>
+<li>Pendant l'entrée animée du tampon suisse, la page fait 458 px de large pendant environ 0,8 seconde : un glissement du pouce à ce moment fait défiler la page de côté. Correction proposée : couper le débordement autour du tampon.</li>
+<li>Les liens du pied de page font 23 px de haut, sous les 44 px de la règle du pouce. Corrigé sur les pages juridiques, pas sur l'accueil.</li>
+</ul>
+<div class="carte">
+<div class="q" data-cle="D11"><p class="qt"><b>D11</b> Transmettre ces deux corrections à la session de l'accueil</p>
+<div class="choix"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="Pas valider">Pas valider</button></div>
+<textarea placeholder="Commentaire"></textarea></div>
+</div>
+
+<h2 id="fait" data-toc="Déjà fait">Déjà fait et vérifié</h2>
+<div class="regle">
+<p><b>Fond vérifié dans le code :</b> cookie de session « offregen » de 14 jours, seul cookie ; mots de passe en empreinte Argon2id ; blocage après 5 échecs en 15 minutes ; liens d'accès d'une heure et de 7 jours ; adresses envoyées à swisstopo par le serveur, sans nom ni IP ; audio gardé dans le navigateur jusqu'à l'offre prête.</p>
+<p><b>Infomaniak, lu à la source :</b> conditions de l'API LLM, révision du 7 octobre 2025, art. 6 : données gardées le temps du traitement, jamais utilisées pour entraîner ses modèles, métadonnées de facturation conservées.</p>
+<p><b>Relecture XtraDev :</b> « Prêt » au troisième tour, hors passages surlignés. Une fois remplis, ils repassent chez le relecteur.</p>
+<p><b>Tests :</b> 929 tests verts, PHPStan sans erreur, aucun tiret long ; captures à 390 et 1280 px sans débordement, contrastes de 7,95 à 15:1.</p>
+<p><b>Non fait :</b> rien n'est commité ni déployé. Le code est dans <code>~/offreGen-juridique</code>.</p>
+</div>
+
+<div id="copie"><span id="etat-copie"></span><button type="button" id="copier">Copier le texte</button></div>
+</main>
+<script>
+(function () {
+  var CLE = 'mk-pages-juridiques';
+  var memo = {};
+  try { memo = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { memo = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(memo)); } catch (e) { /* stockage refusé */ } }
+  document.querySelectorAll('.q').forEach(function (q) {
+    var cle = q.dataset.cle, r = memo[cle] || {}, zone = q.querySelector('textarea');
+    q.querySelectorAll('.choix button').forEach(function (b) {
+      b.setAttribute('aria-pressed', r.v === b.dataset.v ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        var deja = b.getAttribute('aria-pressed') === 'true';
+        q.querySelectorAll('.choix button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+        memo[cle] = memo[cle] || {};
+        memo[cle].v = deja ? '' : b.dataset.v;
+        if (!deja) b.setAttribute('aria-pressed', 'true');
+        garder();
+      });
+    });
+    if (zone) { zone.value = r.c || ''; zone.addEventListener('input', function () { memo[cle] = memo[cle] || {}; memo[cle].c = zone.value; garder(); }); }
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    var lignes = [];
+    document.querySelectorAll('.q').forEach(function (q) {
+      var r = memo[q.dataset.cle] || {};
+      if (!r.v && !r.c) return;
+      lignes.push(q.dataset.cle + ' : ' + (r.v || 'sans choix') + (r.c ? ' · ' + r.c.trim() : ''));
+    });
+    var texte = lignes.length ? 'Pages juridiques, réponses :\n' + lignes.join('\n') : 'Aucune réponse.';
+    var etat = document.getElementById('etat-copie');
+    navigator.clipboard.writeText(texte).then(function () { etat.textContent = lignes.length + ' réponse(s) copiée(s).'; }, function () { etat.textContent = 'Copie refusée par le navigateur.'; });
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+{% set onglet = 'factures' %}
+
+{# Annuler une facture émise : elle reste, barrée, son numéro n'est jamais repris. « Annuler et refaire » crée
+   aussitôt un brouillon copié, qui prendra son numéro à la création (sous-chantier 18, E5 du 25). Les deux façons
+   d'annuler en rouge, en bas ; garder, c'est le retour en haut (décision 6a du 2026-11-19).
+   Un acompte déduit par une finale émise ne s'annule pas avant elle : la page le dit, avec les deux sorties utiles,
+   au lieu de l'erreur 409 nue (décision 6b du 2026-11-19). Variables : f, montants, finale (ou absent). #}
+{% set bloquee = finale ?? null %}
+{% block titre %}{{ bloquee ? 'Annulation impossible' : 'Annuler la facture' }} · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/factures/{{ f.id }}/apercu">Facture</a>{% endblock %}
+{% block entete %}{{ bloquee ? 'Annulation impossible' : 'Annuler la facture' }}{% endblock %}
+
+{% block contenu %}
+  {% if bloquee %}
+    <p class="alerte warn">L'acompte {{ f.numero }} est déduit par la facture finale {{ bloquee.numero }}.</p>
+  {% endif %}
+  <section class="card resume-facture" aria-label="La facture">
+    <p class="rf-titre">{{ f.genre == 'acompte' ? 'Acompte' : 'Facture' }} {{ f.numero }}</p>
+    <p class="pf-montant">{{ montants.a_payer|chf }}</p>
+    <dl>
+      <dt>Client</dt><dd>{{ f.client_nom }}</dd>
+      <dt>Datée du</dt><dd>{{ f.date_facture|jour }}</dd>
+      <dt>Offre</dt><dd>n°&nbsp;{{ f.offre_numero }}, {{ f.titre }}</dd>
+    </dl>
+  </section>
+  {% if bloquee %}
+    <ol class="etapes-annulation">
+      <li>Ouvrez la facture finale {{ bloquee.numero }} et annulez&#8209;la.</li>
+      <li>Revenez sur l'acompte {{ f.numero }} : il s'annule alors normalement.</li>
+    </ol>
+  {% else %}
+    <ul class="suites-annulation">
+      <li>Elle reste dans vos factures, barrée, avec son PDF.</li>
+      <li>Son numéro {{ f.numero }} n'est jamais repris.</li>
+      <li>« Annuler et refaire » ouvre aussitôt une copie en brouillon, à corriger.</li>
+      <li>Prévenez votre client qu'elle est remplacée ou annulée.</li>
+    </ul>
+    <form id="annulation" method="post" action="/factures/{{ f.id }}/annuler">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    </form>
+    <form id="refaire" method="post" action="/factures/{{ f.id }}/annuler">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      <input type="hidden" name="refaire" value="1">
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  {% if bloquee %}
+    <div class="actionbar empile">
+      <a class="btn primary grand" href="/factures/{{ bloquee.id }}/apercu">Voir la facture finale</a>
+      <a class="btn" href="/factures/{{ f.id }}/apercu">Retour à l'acompte</a>
+    </div>
+  {% else %}
+    <div class="actionbar empile">
+      <button class="btn danger grand" type="submit" form="refaire">Annuler et refaire la facture</button>
+      <button class="btn danger-texte" type="submit" form="annulation">Annuler seulement</button>
+    </div>
+  {% endif %}
+{% endblock %}

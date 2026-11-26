@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{# Renommer une pièce de l'offre (sous-chantier 28, P5) : toutes ses lignes suivent. Le mot est « pièce » ou « zone »,
+   selon l'activité du compte (Compte\Activite). #}
+{% block titre %}{{ mots().groupe|capitalize }} {{ ancienne }} · Offre {{ offre.numero }} · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/offres/{{ offre.id }}">Offre</a>{% endblock %}
+{% block entete %}Renommer la {{ mots().groupe }}{% endblock %}
+
+{% block contenu %}
+  {% set groupe = mots().groupe %}
+  {% if erreur %}<p class="alerte bad" role="alert">La {{ groupe }} n'est pas renommée&nbsp;: corrigez le nom.</p>{% endif %}
+  <form id="piece" method="post" action="/offres/{{ offre.id }}/pieces">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <input type="hidden" name="ancienne" value="{{ ancienne }}">
+    <div class="champ">
+      <label for="nouvelle">Nom de la {{ groupe }}</label>
+      <input id="nouvelle" name="nouvelle" value="{{ nouvelle }}" maxlength="{{ longueur }}" required autocomplete="off"{% if erreur %} aria-invalid="true" aria-describedby="err-nouvelle"{% endif %}>
+      {% if erreur %}<span class="err" id="err-nouvelle">{{ erreur }}</span>{% endif %}
+    </div>
+  </form>
+  <p class="muted petit">Toutes les lignes de «&nbsp;{{ ancienne }}&nbsp;» suivent. Le nom d'une autre {{ groupe }} de l'offre les y réunit.</p>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="/offres/{{ offre.id }}">Annuler</a>
+    <button class="btn primary" type="submit" form="piece">Renommer</button>
+  </div>
+{% endblock %}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fr-CH" class="rls-0"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+    <title>Votre démo · Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  
+  
+  <link rel="stylesheet" href="/css/app.css?v=e78f7334a14b">
+    
+<link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/demo-entrer.css"></head>
+<body>
+        <div class="app app-seule">
+    <header class="bar"><h1><a href="/decouvrir" class="vers-site" aria-label="Dicta, le site"><img class="logo" src="/img/dicta-logo-sombre.svg?v=b0fbcb97f417" alt="" width="177" height="64"></a></h1></header>
+    <main class="screen">  <p data-t="T110"><b>Votre démo est prête.</b> Un catalogue d'exemple (peintre) et deux offres vous attendent. Indiquez votre courriel, puis dictez votre première visite.</p>
+    <form id="demo" method="post" action="/d/Wumbq52Wkd226zGm1CVs7Vgtrhuc4id54n-6gv39qqU">
+    <input type="hidden" name="_csrf" value="">
+    <div class="champ">
+      <label for="courriel" data-t="T098">Votre courriel</label>
+      <input id="courriel" name="courriel" type="email" inputmode="email" autocomplete="email" maxlength="190" value="" required="">
+      <small class="muted" data-t="T111">La personne qui vous a présenté Dicta le verra, pour vous recontacter. Si vous vous abonnez, il deviendra l'adresse de votre compte. Aucun mot de passe à choisir.</small>
+    </div>
+  </form>
+</main>
+                            <div class="bas">
+        <div class="actionbar"><button class="btn primary" type="submit" form="demo" data-t="T112">Commencer</button></div>
+                </div>
+  </div>
+
+
+</body></html>

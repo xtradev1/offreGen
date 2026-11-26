@@ -1,0 +1,102 @@
+{# La liste des prospects (maquette du 2026-11-24, P1 et P8 validés par Xavier). Trois onglets, « Les miens », « Libres »,
+   « Tous » ; « En retard » pour qui lit tout. Une fiche réduite (celle d'un collègue, P2 = A) n'arrive ici qu'avec son
+   nom, sa localité, son métier et qui la suit : Compte\Prospects::vue ne laisse rien sortir d'autre. #}
+{% set onglets = {miens: 'Les miens', libres: 'Libres', tous: 'Tous'} %}
+{% if tout_voir %}{% set onglets = onglets|merge({retard: 'En retard'}) %}{% endif %}
+<section class="prospects-liste" aria-label="Prospects">
+  <div class="admin-tete avec-action">
+    <div>
+      {% if p is defined %}<h2>Prospects</h2>{% else %}<h1>Prospects</h1>{% endif %}
+      <p>{% if nombres.miens == 0 %}Vous n'en suivez aucun pour l'instant.{% else %}{{ nombres.miens }} suivi{{ nombres.miens > 1 ? 's' : '' }} par vous{% endif %}</p>
+    </div>
+    <a class="btn pc-seul{% if p is not defined %} primary{% endif %}" href="/admin/prospects/chercher">Ajouter un prospect</a>
+  </div>
+  <nav class="onglets" aria-label="Liste affichée">
+    {% for cle, nom in onglets %}
+      <a href="/admin/prospects?vue={{ cle }}"{% if vue == cle %} aria-current="true"{% endif %}>{{ nom }}&nbsp;· {{ nombres[cle] }}</a>
+    {% endfor %}
+  </nav>
+  <form class="search box-seule" method="get" action="/admin/prospects" role="search">
+    <input type="hidden" name="vue" value="{{ vue }}">
+    <div class="box">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input name="q" type="search" value="{{ q }}" placeholder="Chercher une entreprise" autocomplete="off" aria-label="Chercher un prospect" maxlength="80">
+    </div>
+  </form>
+
+  {% if lignes is empty %}
+    {% if q != '' %}
+      <p class="muted">Aucun prospect pour cette recherche.</p>
+    {% elseif vue == 'miens' %}
+      <div class="card"><h2 class="carte-titre">Notez l'artisan que vous venez de voir</h2><p class="muted">Son nom et sa localité suffisent. Le reste se complète plus tard.</p></div>
+      {% if nombres.libres > 0 %}
+        <div class="card"><h2 class="carte-titre">Regardez les prospects libres</h2><p class="muted">{{ nombres.libres }} artisan{{ nombres.libres > 1 ? 's' : '' }} déjà noté{{ nombres.libres > 1 ? 's' : '' }} attend{{ nombres.libres > 1 ? 'ent' : '' }} quelqu'un. <a class="lien-texte" href="/admin/prospects?vue=libres">Voir les prospects libres</a></p></div>
+      {% endif %}
+    {% elseif vue == 'libres' %}
+      <p class="muted">Aucun prospect libre&nbsp;: chacun est suivi par quelqu'un.</p>
+    {% elseif vue == 'retard' %}
+      <p class="muted">Aucun pas en retard.</p>
+    {% else %}
+      <p class="muted">Aucun prospect pour l'instant.</p>
+    {% endif %}
+  {% else %}
+    {# Téléphone : les pas dus en cartes, puis les lignes. #}
+    <div class="mobile-seul">
+      {% if a_faire is not empty %}
+        <h2 class="groupe-titre">À faire</h2>
+        <div class="a-rappeler">
+          {% for l in a_faire %}
+            <div class="card pas-carte">
+              <p class="pas-tete"><a href="/admin/prospects/{{ l.id }}"><b>{{ l.entreprise }}</b></a>{% if l.retard %} <i class="badge retard">En retard</i>{% else %} <i class="badge role">Aujourd'hui</i>{% endif %}</p>
+              <p class="muted">{{ l.pas_texte }} · prévu {{ l.pas_quand }}</p>
+              <div class="appel-gestes">
+                {% if l.telephone %}<a class="btn" href="tel:{{ l.tel }}">{{ l.telephone }}</a>{% endif %}
+                <form method="post" action="/admin/prospects/{{ l.id }}/pas-fait">
+                  <input type="hidden" name="_csrf" value="{{ csrf() }}">
+                  <button class="btn primary" type="submit">C'est fait</button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <h2 class="groupe-titre">Ensuite</h2>
+      {% elseif vue == 'libres' %}
+        <p class="muted">Personne ne suit ces artisans.</p>
+      {% endif %}
+      <div class="lignes-prospects">
+        {% for l in lignes %}
+          {% if not (vue == 'miens' and (l.retard or l.pas_aujourdhui)) %}
+            <div class="ligne-prospect">
+              <a href="/admin/prospects/{{ l.id }}">
+                <b>{{ l.entreprise }}{% include 'admin/_prospect_badges.html.twig' %}</b>
+                <small>{% include 'admin/_prospect_sous.html.twig' %}</small>
+              </a>
+              {% if l.tenue == 0 %}
+                <form method="post" action="/admin/prospects/{{ l.id }}/prendre">
+                  <input type="hidden" name="_csrf" value="{{ csrf() }}">
+                  <button class="btn" type="submit" aria-label="Je prends {{ l.entreprise }}">Je prends</button>
+                </form>
+              {% else %}<i class="va" aria-hidden="true">›</i>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Ordinateur : le tableau, la fiche choisie à côté (P8). #}
+    <table class="table-admin pc-seul">
+      <thead><tr><th scope="col">Entreprise</th><th scope="col">État</th><th scope="col">Suivi par</th><th scope="col">Prochain pas</th></tr></thead>
+      <tbody>
+        {% for l in lignes %}
+          <tr{% if p is defined and p.id == l.id %} aria-current="true"{% endif %}>
+            <th scope="row"><a href="/admin/prospects/{{ l.id }}">{{ l.entreprise }}</a><small>{{ l.localite }}{% if l.metier_nom %} · {{ l.metier_nom }}{% endif %}</small></th>
+            <td>{% if l.compte_nom %}<i class="badge {{ l.compte == 'client' ? 'ok' : 'role' }}">{{ l.compte_nom }}</i>{% elseif l.entiere %}{{ l.etat_nom }}{% endif %}</td>
+            <td>{% if l.tenue == 0 %}<i class="badge ok">Libre</i>{% elseif l.a_moi %}<i class="badge contour">Vous</i>{% else %}{{ l.suiveur }}{% endif %}</td>
+            <td>{% if l.entiere and l.pas_quand %}{% if l.retard %}<i class="badge retard">{{ l.pas_quand }}</i>{% else %}{{ l.pas_quand }}{% endif %}{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if lignes|length >= 200 %}<p class="muted">Les 200 premiers. Précisez la recherche pour voir les autres.</p>{% endif %}
+  {% endif %}
+</section>

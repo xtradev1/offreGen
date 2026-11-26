@@ -1,0 +1,64 @@
+/* Le guide à anneau (public/js/guide.js). L'anneau laisse passer les touchers : l'artisan touche la vraie cible. */
+.guide-anneau {
+  position: fixed; z-index: 1000; pointer-events: none; border-radius: 14px;
+  box-shadow: 0 0 0 4px #C4552D, 0 0 0 9999px rgba(15, 17, 19, .55);
+}
+.guide-anneau.sans-voile { box-shadow: 0 0 0 4px #C4552D; }
+.guide-anneau.rond { border-radius: 50%; }
+.guide-anneau::after {
+  content: ""; position: absolute; inset: -4px; border-radius: inherit; border: 4px solid #C4552D;
+  animation: guide-pulse 1.4s ease-out infinite;
+}
+@keyframes guide-pulse { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.25); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .guide-anneau::after { animation: none; opacity: 0; } }
+
+.guide-bulle {
+  position: fixed; z-index: 1001; left: 16px; right: 16px; max-width: 420px; margin: 0 auto;
+  display: grid; gap: 8px; padding: 14px 16px 10px; border-radius: 16px;
+  background: #FFFFFF; color: #23272D; box-shadow: 0 8px 28px rgba(0, 0, 0, .28);
+  font-size: 17px; line-height: 1.4;
+}
+.guide-bulle.centre { top: 40%; }
+.guide-pas { font: 700 12px "Archivo", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #C4552D; }
+.guide-texte b { font-weight: 700; }
+.guide-texte p { margin: 0 0 6px; }
+.guide-bas { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.guide-quitter {
+  min-height: 48px; padding: 0 4px; border: 0; background: none; color: inherit; cursor: pointer;
+  font: 600 15px "Archivo", system-ui, sans-serif; text-decoration: underline; text-underline-offset: 3px;
+}
+.guide-suite {
+  min-height: 56px; padding: 0 22px; border: 0; border-radius: 12px; cursor: pointer;
+  background: #23272D; color: #FFFFFF; font: 600 17px "Archivo", system-ui, sans-serif;
+}
+.guide-quitter:focus-visible, .guide-suite:focus-visible { outline: 3px solid #C4552D; outline-offset: 2px; }
+.guide-bulle.en-bas { bottom: 16px; }
+.guide-reperes { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px; counter-reset: repere; }
+.guide-reperes li { counter-increment: repere; display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: start; }
+.guide-reperes li::before { content: counter(repere); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #C4552D; color: #FFFFFF; font: 700 15px "Archivo", system-ui, sans-serif; }
+.guide-pastille { position: fixed; z-index: 999; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #C4552D; color: #FFFFFF; font: 700 15px "Archivo", system-ui, sans-serif; box-shadow: 0 0 0 3px #FFFFFF; pointer-events: none; }
+
+/* Les conseils avant la première dictée guidée (maquette v4, O14 et O21 : en pleine lumière, l'accord du client au-dessus du bouton). */
+.guide-conseils { position: fixed; inset: 0; z-index: 990; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, .4); }
+.guide-conseils[hidden] { display: none; }
+.guide-conseils-feuille { width: 100%; max-width: 480px; background: #FFFFFF; color: #23272D; border-radius: 18px 18px 0 0; padding: 20px 16px calc(16px + env(safe-area-inset-bottom)); display: grid; gap: 12px; }
+.guide-conseils-feuille h2 { margin: 0; font: 700 22px "Archivo", system-ui, sans-serif; }
+.guide-conseils-liste { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 10px; counter-reset: conseil; font-size: 17px; }
+.guide-conseils-liste li { counter-increment: conseil; display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: start; }
+.guide-conseils-liste li::before { content: counter(conseil); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #EBE7DE; font: 700 16px "Archivo", system-ui, sans-serif; }
+.guide-accord { margin: 0; padding: 10px 12px; border-radius: 10px; background: #EBE7DE; font-size: 15px; }
+.guide-commencer { min-height: 64px; border: 0; border-radius: 12px; background: #23272D; color: #FFFFFF; font: 600 18px "Archivo", system-ui, sans-serif; cursor: pointer; }
+.guide-commencer:focus-visible { outline: 3px solid #C4552D; outline-offset: 2px; }
+@media (min-width: 1024px) { .guide-conseils { align-items: center; } .guide-conseils-feuille { border-radius: 18px; } }
+@media (prefers-color-scheme: dark) {
+  .guide-bulle { background: #2B3037; color: #F4F1EA; }
+  .guide-suite { background: #F4F1EA; color: #23272D; }
+  .guide-conseils-feuille { background: #2B3037; color: #F4F1EA; }
+  .guide-accord, .guide-conseils-liste li::before { background: #3B4048; }
+  .guide-commencer { background: #F4F1EA; color: #23272D; }
+}
+
+/* « Revoir le guide », un bouton à l'allure d'une ligne de « Plus » (templates/plus.html.twig). */
+.plus-form { display: contents; }
+.plus-form .plus-ligne { width: 100%; font: inherit; text-align: left; cursor: pointer; }
+.plus-form .plus-ligne b { font-weight: 700; }

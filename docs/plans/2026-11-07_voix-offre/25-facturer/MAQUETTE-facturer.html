@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facturer en trois touchers · offreGen</title>
+<style>
+:root { --ink:#1B1F24; --muted:#69717C; --line:#E4E7EB; --surface:#FFFFFF; --bg:#F3F4F6; --chip:#EFF1F4;
+  --accent:#2457C5; --accent-soft:#E8EEFB; --ok:#1E7F4F; --ok-soft:#E6F4EC; --warn:#9A5B00; --warn-soft:#FDF3E1; --bad:#B42318; --bad-soft:#FCE9E7;
+  --mk-ink:var(--ink); --mk-bg:var(--bg); --mk-surface:var(--surface); --mk-line:var(--line); --mk-accent:var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink:#E7EAEE; --muted:#9BA3AE; --line:#30363D; --surface:#1C2026; --bg:#121519; --chip:#272C33; --accent:#8AACF2; --accent-soft:#1F2C47; --ok:#5CC796; --ok-soft:#17301F; --warn:#E9B44C; --warn-soft:#362A12; } }
+:root[data-theme="dark"] { --ink:#E7EAEE; --muted:#9BA3AE; --line:#30363D; --surface:#1C2026; --bg:#121519; --chip:#272C33; --accent:#8AACF2; --accent-soft:#1F2C47; --ok:#5CC796; --ok-soft:#17301F; --warn:#E9B44C; --warn-soft:#362A12; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1240px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 26px; margin: 18px 0 6px; }
+h2 { font-size: 21px; margin: 40px 0 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-size: 17px; margin: 22px 0 8px; }
+p, li { max-width: 78ch; }
+.chapeau { color: var(--muted); }
+.deux { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+.trois { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; align-items: start; }
+figure { margin: 0; } figure img { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+figcaption { font-size: 14px; color: var(--muted); margin-top: 6px; }
+.tel-img { max-width: 300px; }
+table.chiffres { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--surface); border-radius: 12px; overflow: hidden; }
+.chiffres th, .chiffres td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.chiffres th { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.chiffres td.n { text-align: center; font-weight: 700; white-space: nowrap; }
+@media (max-width: 600px) { .chiffres { font-size: 13px; } .chiffres th, .chiffres td { padding: 6px; } .chiffres td.n { white-space: normal; } .chiffres td, .chiffres th { overflow-wrap: anywhere; } }
+.mieux { color: var(--ok); }
+.regle { border-left: 4px solid var(--accent); padding: 8px 14px; background: var(--accent-soft); border-radius: 0 10px 10px 0; }
+.regle ol { margin: 4px 0; padding-left: 22px; }
+.regle-ok { font-size: 15px; color: var(--ok); font-weight: 600; }
+.decision { background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 14px 0 6px; }
+.decision .q { font-weight: 650; margin-bottom: 8px; }
+.decision .boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+.decision button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.decision button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.decision textarea { width: 100%; margin-top: 8px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); min-height: 44px; }
+.recap textarea { width: 100%; min-height: 180px; font: 14px/1.4 ui-monospace, monospace; }
+.btn-copier { font: inherit; min-height: 48px; padding: 8px 16px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
+.scenarios { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.scenarios button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.scenarios button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 600; }
+.proto-zone { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+.compteur { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; min-width: 240px; flex: 1; }
+.compteur .gros { font-size: 40px; font-weight: 750; line-height: 1.1; }
+.compteur ol { padding-left: 20px; font-size: 14px; color: var(--muted); max-height: 300px; overflow: auto; }
+.compteur .but { font-size: 14px; color: var(--muted); }
+
+/* ---------- Les deux prototypes : couleurs de l'application, fixes (l'application n'a pas de thème sombre) ---------- */
+.app-p { color: #1B1F24; font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.app-p * { box-sizing: border-box; }
+.app-p button { font: inherit; color: inherit; }
+.app-p .b { font-size: 16px; font-weight: 600; min-height: 56px; padding: 6px 14px; border-radius: 14px; border: 1px solid #E4E7EB; background: #fff; cursor: pointer; flex: 1; }
+.app-p .b.p { background: #2457C5; border-color: #2457C5; color: #fff; }
+.app-p .b.x { color: #B42318; }
+.app-p .b.carre { flex: 0 0 56px; font-size: 24px; font-weight: 400; }
+.app-p .r { display: flex; gap: 8px; }
+.app-p .muted { color: #69717C; }
+.app-p .petit { font-size: 13px; }
+.app-p .c { background: #fff; border: 1px solid #E4E7EB; border-radius: 14px; padding: 10px 14px; margin-bottom: 8px; min-height: 56px; display: flex; align-items: center; gap: 10px; }
+.app-p button.c { width: 100%; text-align: left; cursor: pointer; }
+.app-p .c .d { flex: 1; min-width: 0; } .app-p .c .d b { display: block; } .app-p .c .d span { font-size: 13px; color: #69717C; }
+.app-p .c.orange { background: #FDF3E1; border-color: #E7C27C; }
+.app-p .etiq { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: #EFF1F4; color: #1B1F24; }
+.app-p .etiq.ok { background: #E6F4EC; color: #1E7F4F; } .app-p .etiq.warn { background: #FDF3E1; color: #9A5B00; } .app-p .etiq.bleu { background: #E8EEFB; color: #2457C5; }
+.app-p .seg { display: flex; background: #EFF1F4; border-radius: 14px; padding: 4px; gap: 4px; }
+.app-p .seg button { flex: 1; min-height: 48px; border: 0; border-radius: 11px; background: transparent; cursor: pointer; font-weight: 600; font-size: 14px; line-height: 1.2; }
+.app-p .seg button small { display: block; font-weight: 400; color: #69717C; font-size: 12px; }
+.app-p .seg button[aria-pressed="true"] { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.app-p .puces { display: flex; gap: 6px; }
+.app-p .puces button { flex: 1; min-height: 48px; padding: 0 4px; white-space: nowrap; border-radius: 12px; border: 1px solid #E4E7EB; background: #fff; cursor: pointer; font-weight: 600; }
+.app-p .puces button[aria-pressed="true"] { background: #E8EEFB; border-color: #2457C5; color: #2457C5; }
+.app-p .montant { font-size: 30px; font-weight: 750; letter-spacing: -.01em; }
+.app-p .champ-chf { display: flex; align-items: center; gap: 6px; border: 2px solid #2457C5; border-radius: 12px; padding: 4px 10px; background: #fff; }
+.app-p .champ-chf input { border: 0; font: inherit; font-size: 26px; font-weight: 700; width: 100%; outline: none; background: transparent; }
+.app-p .resume { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid #E4E7EB; font-size: 14px; }
+.app-p .lien { color: #2457C5; background: none; border: 0; padding: 0 4px; min-height: 44px; cursor: pointer; font-weight: 600; }
+.app-p .details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-bottom: 8px; }
+.app-p .details label { font-size: 12px; color: #69717C; border: 1px solid #E4E7EB; border-radius: 10px; padding: 4px 8px; }
+.app-p .details input { display: block; border: 0; font: inherit; font-size: 15px; color: #1B1F24; width: 100%; padding: 0; background: transparent; }
+.app-p .toast { position: absolute; left: 12px; right: 12px; bottom: 96px; background: #1B1F24; color: #fff; border-radius: 12px; padding: 12px 14px; font-size: 15px; z-index: 30; display: flex; justify-content: space-between; gap: 10px; }
+.app-p .toast u { color: #8AACF2; text-decoration: none; font-weight: 600; }
+.app-p .voile { position: absolute; inset: 0; background: rgba(15,20,30,.45); z-index: 10; }
+
+/* La facture dessinée (même modèle que le PDF de la démo), à l'échelle de son cadre par zoom */
+.papier { width: 480px; min-height: 660px; background: #fff; color: #1B1F24; font: 10.5px/1.35 system-ui, sans-serif; padding: 22px 26px; position: relative; box-shadow: 0 4px 14px rgba(0,0,0,.25); overflow: hidden; }
+.papier .ph { background: #2E7D32; color: #fff; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; text-align: right; font-size: 9.5px; }
+.papier .ph i { width: 54px; height: 38px; background: linear-gradient(135deg,#c9b8a0,#7b6a58); border: 3px solid #fff; display: block; }
+.papier .pa { margin: 16px 0 14px 55%; font-size: 10.5px; }
+.papier .pt { color: #2E7D32; font-weight: 800; font-size: 15px; letter-spacing: .03em; }
+.papier .pm { color: #555; margin-bottom: 8px; }
+.papier table { width: 100%; border-collapse: collapse; }
+.papier th { background: #2E7D32; color: #fff; text-align: right; font-size: 8.5px; padding: 4px; } .papier th:first-child { text-align: left; }
+.papier td { padding: 3px 4px; border-bottom: 1px solid #ddd; text-align: right; } .papier td:first-child { text-align: left; }
+.papier td.s { font-weight: 700; border: 0; padding-top: 8px; }
+.papier td.mod { background: #FFF6D5; }
+.papier .ptot { width: 55%; margin: 8px 0 0 auto; }
+.papier .ptot div { display: flex; justify-content: space-between; padding: 2px 4px; }
+.papier .ptot .g { background: #2E7D32; color: #fff; font-weight: 800; font-size: 12px; padding: 5px 6px; margin-top: 2px; }
+.papier .pcond { margin-top: 12px; font-size: 9.5px; }
+.papier .qr { margin-top: 14px; border-top: 1px dashed #333; display: flex; gap: 12px; padding-top: 8px; font-size: 8.5px; }
+.papier .qr i { width: 70px; height: 70px; display: block; background: repeating-conic-gradient(#111 0 25%, #fff 0 50%) 0 0 / 10px 10px; border: 4px solid #fff; outline: 1px solid #111; }
+.papier .fili { position: absolute; left: -20px; right: -20px; top: 42%; transform: rotate(-28deg); text-align: center; font-size: 64px; font-weight: 800; color: rgba(36,87,197,.13); letter-spacing: .1em; pointer-events: none; }
+
+/* Téléphone */
+.tel { width: 100%; max-width: 360px; height: 740px; border: 10px solid #111; border-radius: 36px; overflow: hidden; position: relative; background: #F3F4F6; box-shadow: 0 10px 30px rgba(0,0,0,.25); flex: 0 0 auto; }
+.tel .ecr { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.tel .bar { min-height: 52px; display: flex; align-items: center; gap: 8px; padding: 4px 12px; background: #fff; border-bottom: 1px solid #E4E7EB; font-weight: 650; }
+.tel .ret { color: #2457C5; font-weight: 500; min-width: 48px; min-height: 48px; display: flex; align-items: center; cursor: pointer; background: none; border: 0; padding: 0; }
+.tel .corps { flex: 1; overflow: auto; padding: 10px 12px; }
+.tel .corps.sombre { background: #5f6670; padding: 12px 8px; }
+.tel .corps.sombre .papier { zoom: .68; margin: 0 auto; }
+.tel .bas { background: #fff; border-top: 1px solid #E4E7EB; padding: 10px 12px 12px; }
+.tel .tot { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; } .tel .tot b { font-size: 20px; }
+.tel .pas { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #69717C; margin: 10px 2px 6px; }
+.tel .ligne { display: flex; justify-content: space-between; gap: 8px; padding: 8px 2px; border-bottom: 1px solid #E4E7EB; font-size: 14px; }
+.tel .ligne span { color: #69717C; font-size: 13px; display: block; }
+.tel .ligne.edit { display: grid; grid-template-columns: 1fr 60px 76px; align-items: center; }
+.tel .toast { bottom: 150px; }
+.tel .feuille .toast { position: static; margin: 0 0 8px; padding: 8px 12px; }
+.tel .ligne input { width: 54px; min-height: 40px; border: 1px solid #E4E7EB; border-radius: 8px; text-align: right; font: inherit; padding: 0 6px; background: #EFF1F4; }
+.tel .feuille { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 20px 20px 0 0; padding: 8px 14px 14px; z-index: 20; max-height: 94%; display: flex; flex-direction: column; }
+.tel .feuille::before { content: ""; width: 40px; height: 5px; border-radius: 3px; background: #D0D4DA; margin: 0 auto 8px; flex: 0 0 auto; }
+.tel .feuille .fc { overflow: auto; flex: 1; }
+.tel .feuille h4 { margin: 0 0 8px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+.tel .vign { display: flex; gap: 10px; align-items: center; margin: 10px 0; cursor: pointer; background: #F3F4F6; border-radius: 12px; padding: 8px; border: 0; width: 100%; text-align: left; }
+.tel .vign .cadre { width: 96px; height: 120px; overflow: hidden; flex: 0 0 auto; border-radius: 4px; }
+.tel .vign .papier { zoom: .2; box-shadow: none; }
+.tel .partage { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; font-size: 12px; margin: 10px 0; }
+.tel .partage button { border: 0; background: none; cursor: pointer; min-height: 72px; }
+.tel .partage i { display: block; width: 48px; height: 48px; margin: 0 auto 4px; border-radius: 12px; font-style: normal; color: #fff; font-size: 20px; line-height: 48px; font-weight: 700; }
+.tel .cherche { display: flex; align-items: center; gap: 8px; background: #EFF1F4; border-radius: 12px; padding: 0 12px; min-height: 48px; margin-bottom: 8px; }
+.tel .cherche input { border: 0; background: transparent; font: inherit; flex: 1; outline: none; min-height: 44px; }
+.tel .prod { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; min-height: 52px; border: 0; border-bottom: 1px solid #E4E7EB; background: none; text-align: left; cursor: pointer; padding: 4px 2px; }
+.tel .prod small { display: block; color: #69717C; font-size: 12px; }
+.tel .prod em { font-style: normal; color: #2457C5; font-size: 22px; width: 40px; text-align: center; }
+
+/* PC */
+.pc-cadre { width: 100%; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
+.pc { width: 1200px; height: 740px; transform-origin: 0 0; position: absolute; left: 0; top: 0; background: #F3F4F6; display: flex; }
+.pc .menu { width: 210px; background: #fff; border-right: 1px solid #E4E7EB; padding: 16px 12px; flex: 0 0 auto; }
+.pc .menu b.marque { display: block; font-size: 17px; margin: 0 8px 14px; }
+.pc .menu span { display: flex; align-items: center; min-height: 42px; padding: 0 12px; border-radius: 10px; color: #1B1F24; }
+.pc .menu span.on { background: #E8EEFB; color: #2457C5; font-weight: 600; }
+.pc .menu .dicter { margin-top: 14px; background: #2457C5; color: #fff; justify-content: center; font-weight: 600; min-height: 48px; }
+.pc .zone { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+.pc .haut { background: #fff; border-bottom: 1px solid #E4E7EB; min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 24px; font-weight: 650; font-size: 17px; }
+.pc .haut .ret { color: #2457C5; font-weight: 500; background: none; border: 0; cursor: pointer; font-size: 15px; padding: 0; }
+.pc .contenu { flex: 1; overflow: auto; padding: 18px 24px; }
+.pc .pied { background: #fff; border-top: 1px solid #E4E7EB; padding: 12px 24px; display: flex; align-items: center; gap: 10px; }
+.pc .pied .b { flex: 0 0 auto; min-width: 150px; min-height: 48px; }
+.pc .pied .tt { margin-right: auto; font-size: 15px; color: #69717C; } .pc .pied .tt b { color: #1B1F24; font-size: 22px; margin-left: 10px; }
+.pc .entete { display: flex; gap: 10px; margin-bottom: 12px; } .pc .entete .c { flex: 1; margin: 0; cursor: pointer; }
+.pc table.lignes { width: 100%; border-collapse: collapse; background: #fff; font-size: 14px; }
+.pc .lignes th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #69717C; text-align: right; padding: 8px 10px; border-bottom: 1px solid #E4E7EB; }
+.pc .lignes th:first-child { text-align: left; }
+.pc .lignes td { padding: 6px 10px; border-bottom: 1px solid #E4E7EB; text-align: right; } .pc .lignes td:first-child { text-align: left; }
+.pc .lignes td.s { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #69717C; text-align: left; padding-top: 12px; }
+.pc .lignes input { width: 70px; min-height: 34px; border: 1px solid transparent; border-radius: 6px; background: #EFF1F4; text-align: right; font: inherit; padding: 0 6px; }
+.pc .lignes tr.neuve td { background: #F1F6FF; }
+.pc .ajout-pc td { padding: 8px 10px; position: relative; }
+.pc .ajout-pc input { width: 100%; text-align: left; min-height: 42px; background: #fff; border: 2px dashed #B9C6E4; border-radius: 10px; padding: 0 12px; font-size: 14px; }
+.pc .ajout-pc input:focus { border-style: solid; border-color: #2457C5; outline: none; }
+.pc .sugg { position: absolute; left: 10px; right: 10px; bottom: 54px; background: #fff; border: 1px solid #E4E7EB; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.15); z-index: 5; text-align: left; }
+.pc .sugg button { display: flex; justify-content: space-between; width: 100%; border: 0; background: none; padding: 8px 12px; min-height: 40px; cursor: pointer; text-align: left; font-size: 14px; }
+.pc .sugg button.sel, .pc .sugg button:hover { background: #E8EEFB; }
+.pc .sugg small { color: #69717C; }
+.pc .dialogue { position: absolute; z-index: 20; background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; overflow: hidden; }
+.pc .dialogue .dh { padding: 14px 20px; font-weight: 700; font-size: 18px; border-bottom: 1px solid #E4E7EB; display: flex; justify-content: space-between; align-items: center; }
+.pc .dialogue .dh small { font-weight: 400; color: #69717C; font-size: 13px; }
+.pc .dialogue .dp { padding: 12px 20px; border-top: 1px solid #E4E7EB; display: flex; gap: 10px; align-items: center; }
+.pc .dialogue .dp .b { flex: 0 0 auto; min-width: 140px; min-height: 48px; }
+.pc .deuxvol { flex: 1; display: flex; min-height: 0; }
+.pc .deuxvol .gauche { width: 400px; padding: 16px 20px; overflow: auto; border-right: 1px solid #E4E7EB; }
+.pc .deuxvol .droite { flex: 1; background: #5f6670; overflow: auto; padding: 16px; display: flex; justify-content: center; }
+.pc .deuxvol .droite .papier { zoom: .98; }
+.pc .lecture { flex: 1; display: flex; min-height: 0; }
+.pc .lecture .doc { flex: 1; background: #5f6670; overflow: auto; padding: 18px; display: flex; justify-content: center; }
+.pc .lecture .doc .papier { zoom: 1.12; }
+.pc .lecture .panneau { width: 300px; background: #fff; border-left: 1px solid #E4E7EB; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.pc .lecture .panneau .b { flex: 0 0 auto; }
+.pc .lecture .panneau dl { margin: 0; font-size: 14px; } .pc .lecture .panneau dt { color: #69717C; font-size: 12px; margin-top: 8px; } .pc .lecture .panneau dd { margin: 0; font-weight: 600; }
+.pc .kbd { font: 12px ui-monospace, monospace; border: 1px solid #C9CED6; border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: #fff; }
+.pc .toast { left: auto; right: 24px; width: 380px; top: 66px; bottom: auto; }
+.pc .partage-pc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 16px 20px; text-align: center; font-size: 13px; }
+.pc .partage-pc button { border: 1px solid #E4E7EB; border-radius: 12px; background: #fff; min-height: 84px; cursor: pointer; }
+.pc .partage-pc i { display: block; width: 40px; height: 40px; margin: 0 auto 6px; border-radius: 10px; font-style: normal; color: #fff; font-weight: 700; line-height: 40px; }
+.pc .cherche { display: flex; align-items: center; background: #EFF1F4; border-radius: 10px; padding: 0 12px; min-height: 44px; margin: 8px 0; }
+.pc .cherche input { border: 0; background: transparent; font: inherit; flex: 1; outline: none; min-height: 40px; }
+.note-pc { font-size: 14px; color: var(--muted); }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Facturer en trois touchers</h1>
+<p class="chapeau">Sous-chantier 25 · 15.11.2026 · tes retours après l'essai sur le téléphone : facturer doit être fluide, la facture se voit en PDF, et les écrans secondaires doivent exister pour de vrai sur PC. Les écrans « avant » sont des captures de l'application actuelle (démo locale, 390 et 1440 px). Les deux prototypes sont cliquables. Ta réponse se pose sous chaque proposition ; « Copier le texte », en fin de page, les rassemble.</p>
+
+<h2 id="constat" data-toc="Constat">Ce que j'ai trouvé en refaisant ton parcours</h2>
+<p>Refait le 15.11 sur la démo locale : offre, « Générer l'offre », « Facturer », acompte, « Vérifier avant d'émettre », puis émettre.</p>
+<ul>
+  <li><b>« Vérifier avant d'émettre » crée la facture.</b> Le bouton promet un contrôle et enregistre un brouillon déjà numéroté (2026-001). Tu avais raison de ne pas comprendre : le nom ment.</li>
+  <li><b>Les trois « Émettre ».</b> Depuis le brouillon : « Voir la facture » ouvre la version HTML, « Émettre et PDF » ouvre une page de confirmation, son « Émettre et PDF » fige la facture, puis te ramène sur la version HTML. Le PDF ne s'ouvre qu'avec un quatrième bouton, dans un autre onglet, sans « Envoyer ».</li>
+  <li><b>« Émettre » est un mot de comptable.</b> Il veut dire : la facture devient définitive, numérotée, et ne se modifie plus. Le mot ne le dit pas.</li>
+  <li><b>Le chemin rapide existe, à l'aveugle.</b> « Émettre et envoyer » fait déjà le travail en 3 touchers, mais l'écran ne montre pas la facture : pour la voir, il faut passer par « Vérifier », qui la crée.</li>
+  <li><b>La recherche de client existe sur l'offre, cachée.</b> Toucher la carte du client ouvre « Client de l'offre », avec la recherche. Rien ne l'indique, et l'offre se génère avec un client jamais confirmé : c'est la facture qui bloque, au pire moment.</li>
+  <li><b>Sur PC, huit écrans gardent la colonne du téléphone, sans menu</b> : Nouvelle facture, la facture, sa version HTML, la confirmation, Ajouter à l'offre, la ligne, l'objet, le nouveau client.</li>
+</ul>
+<div class="mk-compare"><figure><img src="MAQUETTE-facturer-img/avant-13-facturer-390.jpg" alt="Nouvelle facture actuelle au téléphone"><figcaption>« Nouvelle facture » : six champs, deux boutons, et aucune image de la facture.</figcaption></figure><figure><img src="MAQUETTE-facturer-img/avant-17-facture-emettre-390.jpg" alt="Page de confirmation de l'émission"><figcaption>La page de confirmation : le deuxième « Émettre et PDF ».</figcaption></figure></div>
+<div class="deux" style="margin-top:14px">
+  <figure><img src="MAQUETTE-facturer-img/avant-13-facturer-1440.jpg" alt="Nouvelle facture sur PC : colonne du téléphone sans menu"><figcaption>PC : « Nouvelle facture » dans la colonne du téléphone, sans le menu.</figcaption></figure>
+  <figure><img src="MAQUETTE-facturer-img/avant-16-facture-document-1440.jpg" alt="Facture en HTML sur PC"><figcaption>PC : la facture en HTML, la barre d'actions posée sur le bulletin de versement.</figcaption></figure>
+  <figure><img src="MAQUETTE-facturer-img/avant-07-ajouter-1440.jpg" alt="Ajouter à l'offre sur PC"><figcaption>PC : « Ajouter à l'offre », une longue page de téléphone.</figcaption></figure>
+</div>
+
+<h3>Touchers mesurés et proposés</h3>
+<table class="chiffres">
+  <tr><th>Tâche</th><th>Aujourd'hui</th><th>Proposé</th><th>Ce qui change</th></tr>
+  <tr><td>Facturer un acompte en voyant la facture, puis l'envoyer</td><td class="n">6 + 2 hors de l'app</td><td class="n mieux">3</td><td>« Facturer », « Créer la facture », « Envoyer ». La facture se voit dans la feuille, avant de la créer.</td></tr>
+  <tr><td>Changer l'acompte (un montant précis)</td><td class="n">brouillon + ligne à corriger</td><td class="n mieux">1 + la saisie</td><td>« CHF » à côté des pourcentages : on tape le montant.</td></tr>
+  <tr><td>Facture finale avec des travaux en plus</td><td class="n">7 + corrections + 2 hors de l'app</td><td class="n mieux">5 + corrections</td><td>« Corriger des lignes », les corrections, « Créer la facture », « Envoyer ».</td></tr>
+  <tr><td>Revoir une facture déjà faite</td><td class="n">2 (HTML) + 1 (PDF, autre onglet)</td><td class="n mieux">1 (PDF)</td><td>Une facture s'ouvre toujours en PDF, avec « Envoyer ».</td></tr>
+</table>
+
+<h2 id="regles" data-toc="Règles">Les règles proposées</h2>
+<div class="regle"><ol>
+  <li><b>Rien n'est créé tant qu'on n'a pas touché « Créer la facture ».</b> Vérifier, c'est regarder l'aperçu, dans la même feuille.</li>
+  <li><b>Une facture se voit toujours en PDF</b>, celui que reçoit le client. La version HTML disparaît.</li>
+  <li><b>Un brouillon sert à une seule chose : corriger des lignes</b> (facture finale, travaux en plus). Il ne prend son numéro qu'à la création : abandonné, il ne laisse pas de trou dans la numérotation.</li>
+  <li><b>Le client se confirme avant de générer l'offre</b>, plus jamais au moment de facturer.</li>
+  <li><b>Sur PC, chaque écran garde le menu et se sert de la largeur</b> : réglages à gauche, facture à droite ; les petites fenêtres s'ouvrent au milieu, par-dessus l'écran courant.</li>
+</ol></div>
+<p class="regle-ok">Réglé par ta réponse du 15.11 : une tablette reçoit la vue du téléphone. La version PC ne s'affichera qu'avec une souris ou un pavé tactile (en plus de la largeur), un iPad en paysage garde donc les écrans au pouce.</p>
+<p class="regle-ok">Noté pour plus tard, à ta demande : rendre la version PC plus belle. Le produit reste pensé d'abord pour le téléphone.</p>
+
+<h2 id="essai-tel" data-toc="Téléphone">Essayer au téléphone</h2>
+<p>Choisis un cas, puis touche comme avec le pouce. Le compteur compte tes touchers.</p>
+<div class="scenarios" data-scenarios="tel">
+  <button type="button" data-sc="1" aria-pressed="true">1 · Facturer l'acompte d'une offre envoyée</button>
+  <button type="button" data-sc="2">2 · Offre dictée, client à confirmer</button>
+  <button type="button" data-sc="3">3 · Facture finale avec travaux en plus</button>
+</div>
+<div class="proto-zone">
+  <div class="tel app-p" id="tel"></div>
+  <div class="compteur"><div>Touchers</div><div class="gros" data-compte="tel">0</div><p class="but" data-but="tel"></p><ol data-journal="tel"></ol></div>
+</div>
+
+<h3>Ce qui se passe dans la feuille « Facturer »</h3>
+<ul>
+  <li>L'acompte suivant est déjà choisi (1 sur 3, 30 % selon tes conditions). 20, 30, 40, 50 % en un toucher ; « CHF » pour taper un montant précis, TVA comprise (ce que le client paie).</li>
+  <li>La facture est dessinée en petit : la toucher l'ouvre en grand, marquée « Aperçu ». C'est le contrôle, et rien n'est créé.</li>
+  <li>Numéro, date et échéance tiennent sur une ligne, proposés d'après tes réglages ; « Modifier » les ouvre.</li>
+  <li>« Créer la facture » : elle devient définitive et numérotée, son PDF s'ouvre avec « Envoyer » en bas. La phrase sous le bouton remplace la page de confirmation.</li>
+  <li>Facture finale : les acomptes déjà facturés sont déduits. « Corriger des lignes » ouvre le brouillon (quantités réelles, travaux en plus), avec l'aperçu et « Créer la facture » en bas.</li>
+</ul>
+
+<div class="decision" data-id="E1"><div class="q">E1 · Facturer dans une feuille avec l'aperçu ; « Vérifier avant d'émettre » disparaît, rien n'est créé avant « Créer la facture »</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="E2"><div class="q">E2 · Le mot du bouton qui rend la facture définitive</div><div class="boutons"><button>A · Créer la facture</button><button>B · Valider la facture</button><button>C · Garder « Émettre »</button></div><textarea placeholder="Commentaire, ou un autre mot"></textarea></div>
+<div class="decision" data-id="E3"><div class="q">E3 · Pas de page de confirmation : la phrase sous le bouton suffit (une erreur se répare en annulant la facture, comme aujourd'hui)</div><div class="boutons"><button>A · Sans confirmation, 3 touchers</button><button>B · Une question « Sûr ? », 4 touchers</button></div><textarea placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="E4"><div class="q">E4 · Acompte : 20 / 30 / 40 / 50 % ou un montant en CHF, TVA comprise</div><div class="boutons"><button>Valider</button><button>Le montant tapé hors TVA</button></div><textarea placeholder="Commentaire"></textarea></div>
+<div class="decision" data-id="E5"><div class="q">E5 · Une facture s'ouvre toujours en PDF ; un brouillon seulement pour corriger des lignes, numéroté à la création</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h3>Le client confirmé avant l'offre (cas 2)</h3>
+<p>Le nom entendu dans la dictée apparaît en orange sur l'offre, « à confirmer ». « Générer l'offre » ouvre d'abord « Pour qui est cette offre ? » : créer la fiche du nom entendu, prendre une fiche qui ressemble, ou chercher. Le PDF suit, sans autre toucher. La carte du client garde la recherche, avec une loupe qui la montre.</p>
+<div class="decision" data-id="E6"><div class="q">E6 · Client à confirmer en orange, et confirmé au moment de « Générer l'offre »</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h3>Ajouter à l'offre</h3>
+<p>Au téléphone, « + » ouvre une feuille : la recherche a déjà le curseur, les produits les plus utilisés viennent en tête, un toucher ajoute la ligne <b>et la feuille reste ouverte</b> pour en ajouter d'autres, avec « Annuler » sur la dernière. « Ligne libre » apparaît dès que la recherche ne trouve rien : la désignation est déjà tapée. Sur PC, l'ajout se fait dans le tableau même (prototype PC, dernière ligne).</p>
+<div class="decision" data-id="E7"><div class="q">E7 · Ajouter : feuille qui reste ouverte au téléphone, ligne de recherche au bas du tableau sur PC</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h2 id="essai-pc" data-toc="PC">Essayer sur PC</h2>
+<p class="note-pc">Prototype à la taille d'un écran de 1200 px, réduit si ta fenêtre est plus étroite. Au clavier : tape dans la dernière ligne du tableau, <b>Entrée</b> ajoute le premier produit proposé, <b>Échap</b> ferme une fenêtre.</p>
+<div class="scenarios" data-scenarios="pc">
+  <button type="button" data-sc="1" aria-pressed="true">1 · Facturer l'acompte d'une offre envoyée</button>
+  <button type="button" data-sc="2">2 · Offre dictée, client à confirmer</button>
+  <button type="button" data-sc="3">3 · Facture finale avec travaux en plus</button>
+</div>
+<div class="pc-cadre" id="pc-cadre"><div class="pc app-p" id="pc"></div></div>
+<div class="compteur" style="margin-top:12px"><span>Clics </span><b class="gros" data-compte="pc" style="font-size:28px">0</b> <span class="but" data-but="pc"></span><ol data-journal="pc"></ol></div>
+<ul>
+  <li><b>Facturer</b> s'ouvre au milieu de l'écran : les réglages à gauche, la facture à droite, qui suit chaque changement de pourcentage ou de montant.</li>
+  <li><b>La facture</b> : le PDF en grand, à droite un panneau avec le montant, l'échéance, le client et les actions : « Envoyer », « Télécharger », « Annuler la facture ».</li>
+  <li><b>Le brouillon</b> (facture finale) : le tableau éditable à gauche, la facture à droite, comme « Document à côté » sur l'offre.</li>
+  <li><b>Envoyer sur PC</b> ouvre le partage de Windows (Outlook, Courrier, Teams…) avec le PDF joint ; un navigateur sans partage télécharge le PDF.</li>
+  <li><b>Les autres petits écrans</b> (la ligne, l'objet, le client, le nouveau client, un produit, une rubrique des réglages) s'ouvrent en fenêtre au milieu, par-dessus l'écran courant, menu visible derrière.</li>
+</ul>
+<div class="decision" data-id="E8"><div class="q">E8 · Sur PC : menu partout, Facturer en deux volets, facture en PDF avec son panneau, petites fenêtres au milieu</div><div class="boutons"><button>Valider</button><button>Pas valider</button></div><textarea placeholder="Commentaire"></textarea></div>
+
+<h2 id="hors" data-toc="Hors maquette">Hors maquette</h2>
+<ul>
+  <li>Le lot 9 du sous-chantier 24 (revue et recette) passe après ce sous-chantier : la recette de la facturation porterait sur des écrans qui vont changer.</li>
+  <li>Facture sans offre : abandonnée, à ta demande. Une facture part toujours d'une offre.</li>
+  <li>Toujours en attente de toi : l'essai de ta voix au téléphone, un QR scanné par ta banque, la durée de conservation (23), le travail sur GitHub (02).</li>
+</ul>
+
+<h2 id="recap" data-toc="Copier">Copier tes réponses</h2>
+<div class="recap"><textarea readonly data-recap></textarea><p><button class="btn-copier" type="button" data-copier>Copier le texte</button></p></div>
+</main>
+
+<script>
+(() => {
+  // ---------- Réponses ----------
+  const CLE = 'offregen-maquette-25';
+  let rep = {};
+  try { rep = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { rep = {}; }
+  const decisions = [...document.querySelectorAll('.decision')];
+  function recap() {
+    const lignes = decisions.map((d) => {
+      const r = rep[d.dataset.id] || {};
+      return `${d.querySelector('.q').textContent} : ${r.choix || '(pas de réponse)'}${r.note ? ' · ' + r.note : ''}`;
+    });
+    document.querySelector('[data-recap]').value = 'Maquette 25, facturer en trois touchers\n' + lignes.join('\n');
+  }
+  const garder = () => { try { localStorage.setItem(CLE, JSON.stringify(rep)); } catch (e) {} recap(); };
+  decisions.forEach((d) => {
+    const r = rep[d.dataset.id] || {};
+    d.querySelectorAll('button').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.textContent === r.choix));
+      b.addEventListener('click', () => {
+        rep[d.dataset.id] = { ...(rep[d.dataset.id] || {}), choix: b.textContent };
+        d.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        garder();
+      });
+    });
+    const t = d.querySelector('textarea');
+    t.value = r.note || '';
+    t.addEventListener('input', () => { rep[d.dataset.id] = { ...(rep[d.dataset.id] || {}), note: t.value }; garder(); });
+  });
+  document.querySelector('[data-copier]').addEventListener('click', async () => {
+    const t = document.querySelector('[data-recap]');
+    try { await navigator.clipboard.writeText(t.value); } catch (e) { t.select(); document.execCommand('copy'); }
+  });
+  recap();
+
+  // ---------- Données de la démo (inventées) ----------
+  const OFFRE = [
+    { s: 'Préparation', n: 'Protection des sols et des meubles', q: 1, u: 'forfait', p: 180 },
+    { s: 'Préparation', n: 'Rebouchage et ponçage des murs', q: 42, u: 'm²', p: 9 },
+    { s: 'Peinture intérieure', n: 'Peinture des murs, 2 couches', q: 42, u: 'm²', p: 28 },
+    { s: 'Peinture intérieure', n: 'Peinture des plafonds, 2 couches', q: 24, u: 'm²', p: 32 },
+    { s: 'Peinture intérieure', n: 'Laquage des plinthes', q: 26, u: 'm', p: 12 },
+    { s: 'Divers', n: 'Déplacement', q: 1, u: 'forfait', p: 60 },
+  ];
+  const CATALOGUE = [
+    { s: 'Divers', n: 'Heure de régie', u: 'h', p: 80, f: 9 }, { s: 'Divers', n: 'Déplacement', u: 'forfait', p: 60, f: 8 },
+    { s: 'Peinture intérieure', n: 'Peinture des murs, 2 couches', u: 'm²', p: 28, f: 7 }, { s: 'Préparation', n: 'Couche d\'impression', u: 'm²', p: 5, f: 6 },
+    { s: 'Peinture intérieure', n: 'Laquage de porte, 2 faces', u: 'pce', p: 160, f: 4 }, { s: 'Peinture intérieure', n: 'Peinture des plafonds, 2 couches', u: 'm²', p: 32, f: 5 },
+    { s: 'Peinture intérieure', n: 'Peinture anti-moisissure', u: 'm²', p: 0, f: 1 }, { s: 'Peinture extérieure', n: 'Peinture de façade, 2 couches', u: 'm²', p: 45, f: 2 },
+    { s: 'Peinture extérieure', n: 'Échafaudage, montage et location', u: 'm²', p: 20, f: 2 }, { s: 'Préparation', n: 'Rebouchage et ponçage des murs', u: 'm²', p: 9, f: 3 },
+    { s: 'Peinture intérieure', n: 'Laquage des plinthes', u: 'm', p: 12, f: 3 }, { s: 'Préparation', n: 'Protection des sols et des meubles', u: 'forfait', p: 180, f: 3 },
+  ].sort((a, b) => b.f - a.f);
+  const r2 = (x) => Math.round(x * 100) / 100;
+  const r5 = (x) => Math.round(x * 20) / 20;
+  const chf = (x) => { const [e, d] = Math.abs(x).toFixed(2).split('.'); return (x < 0 ? '−' : '') + e.replace(/\B(?=(\d{3})+(?!\d))/g, "'") + '.' + d; };
+  const sans = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function totaux(lignes) {
+    const ht = r2(lignes.reduce((a, l) => a + r2(l.q * l.p), 0));
+    const tva = r2(ht * 0.081), brut = r2(ht + tva), ttc = r5(brut);
+    return { ht, tva, arrondi: r2(ttc - brut), ttc };
+  }
+  const HT_OFFRE = totaux(OFFRE).ht;
+
+  function nouvelEtat(sc) {
+    const e = { sc, ecran: 'offre', feuille: null, dialogue: null, clientOk: sc !== 2, envoyee: sc !== 2, genre: 'acompte', unite: 'pct', pct: 30, montant: '',
+      details: false, factures: [], courante: null, lignesOffre: OFFRE.map((l) => ({ ...l })), brouillon: null, ajoutees: [], cible: 'offre', recherche: '', toast: null, apres: null, sel: 0, focus: null };
+    if (sc === 3) {
+      const t = projet(e);
+      e.factures.push({ ...t, num: '2026-001', envoyee: true });
+      e.genre = 'finale';
+    }
+    return e;
+  }
+  const numeroSuivant = (e) => '2026-' + String(e.factures.length + 1).padStart(3, '0');
+  const rangAcompte = (e) => e.factures.filter((f) => f.genre === 'acompte').length + 1;
+  function projet(e) {
+    if (e.genre === 'acompte') {
+      const rang = rangAcompte(e);
+      let ht, tva, brut, libelle;
+      if (e.unite === 'pct') { ht = r2(HT_OFFRE * e.pct / 100); tva = r2(ht * 0.081); brut = r2(ht + tva); libelle = e.pct + ' %'; }
+      else { const a = Number(String(e.montant).replace(/[' ]/g, '').replace(',', '.')) || 0; ht = r2(a / 1.081); tva = r2(a - ht); brut = a; libelle = 'montant convenu'; }
+      const ttc = r5(brut);
+      return { genre: 'acompte', titre: `Acompte ${rang} sur 3`, lignes: [{ s: 'Acompte', n: `Acompte ${rang} sur 3 (${libelle}), selon offre n° 2`, q: 1, u: 'forfait', p: ht }], ht, tva, arrondi: r2(ttc - brut), ttc, deja: 0, apayer: ttc };
+    }
+    const lignes = e.brouillon || e.lignesOffre;
+    const t = totaux(lignes);
+    const deja = r2(e.factures.filter((f) => f.genre === 'acompte').reduce((a, f) => a + f.apayer, 0));
+    return { genre: 'finale', titre: 'Facture finale', lignes, ...t, deja, apayer: r2(t.ttc - deja) };
+  }
+  function papier(doc, titre, apercu) {
+    const groupes = [];
+    doc.lignes.forEach((l) => { let g = groupes.find((x) => x.s === l.s); if (!g) groupes.push(g = { s: l.s, l: [] }); g.l.push(l); });
+    const rangs = groupes.map((g) => `<tr><td class="s" colspan="4">${esc(g.s)}</td></tr>` + g.l.map((l) => `<tr><td${l.mod ? ' class="mod"' : ''}>${esc(l.n)}</td><td${l.mod ? ' class="mod"' : ''}>${l.q} ${esc(l.u)}</td><td>${chf(l.p)}</td><td>${chf(r2(l.q * l.p))}</td></tr>`).join('')).join('');
+    const deja = doc.deja ? `<div><span>Total TTC</span><span>${chf(doc.ttc)}</span></div><div><span>Acomptes déjà facturés</span><span>−${chf(doc.deja)}</span></div><div class="g"><span>À payer</span><span>CHF ${chf(doc.apayer)}</span></div>` : `<div class="g"><span>Total TTC</span><span>CHF ${chf(doc.ttc)}</span></div>`;
+    return `<div class="papier">${apercu ? '<div class="fili">APERÇU</div>' : ''}
+      <div class="ph"><i></i><span>Peinture Morel Sàrl<br>Rue de la Gare 4<br>2800 Delémont</span></div>
+      <div class="pa">Famille Exemple<br>Chemin des Essais 4<br>1700 Fribourg</div>
+      <div class="pt">${esc(titre)}</div><div class="pm">Delémont, le 15.11.2026 · Objet : Rafraîchissement du séjour · selon offre n° 2</div>
+      <table><tr><th>Désignation</th><th>Quantité</th><th>Prix</th><th>Montant</th></tr>${rangs}</table>
+      <div class="ptot"><div><span>Sous-total HT</span><span>${chf(doc.ht)}</span></div><div><span>TVA 8,1 %</span><span>${chf(doc.tva)}</span></div>${doc.arrondi ? `<div><span>Arrondi</span><span>${chf(doc.arrondi)}</span></div>` : ''}${deja}</div>
+      <div class="pcond">${titre.startsWith('OFFRE') ? 'Paiement : 30 % à la commande, 30 % en cours de travaux, 40 % à la fin des travaux.' : 'Payable jusqu\'au 15.12.2026 avec la section de paiement ci-dessous. Merci de votre confiance.'}</div>
+      ${titre.startsWith('OFFRE') ? '' : '<div class="qr"><i></i><span><b>Section paiement</b><br>CH93 0076 2011 6238 5295 7<br>Peinture Morel Sàrl</span></div>'}</div>`;
+  }
+  const docOffre = (e) => ({ lignes: e.lignesOffre, ...totaux(e.lignesOffre), deja: 0 });
+
+  // ---------- Moteur commun : un état, des actions, deux dessins ----------
+  function moteur(id, dessiner, buts) {
+    const racine = document.getElementById(id);
+    const cle = id;
+    let e = nouvelEtat(1), compte = 0, minuteur = null;
+    const journal = document.querySelector(`[data-journal="${cle}"]`);
+    const compteur = document.querySelector(`[data-compte="${cle}"]`);
+    const but = document.querySelector(`[data-but="${cle}"]`);
+    function demarrer(sc) {
+      e = nouvelEtat(sc); compte = 0; compteur.textContent = '0'; journal.innerHTML = '';
+      but.textContent = buts[sc];
+      document.querySelectorAll(`[data-scenarios="${cle}"] button`).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sc === String(sc))));
+      rendre();
+    }
+    function dire(texte, annuler) { e.toast = { texte, annuler }; clearTimeout(minuteur); minuteur = setTimeout(() => { e.toast = null; rendre(); }, 3200); }
+    function rendre() {
+      racine.innerHTML = dessiner(e);
+      const f = e.focus && racine.querySelector(e.focus);
+      if (f) { f.focus(); if (f.select) f.select(); }
+      else if (e.feuille || e.dialogue) { const d = racine.querySelector('.dialogue, .feuille'); if (d && !d.contains(document.activeElement)) d.focus({ preventScroll: true }); }
+      e.focus = null;
+    }
+    const actions = {
+      scenario: (v) => demarrer(Number(v)),
+      aller: (v) => { e.ecran = v; e.feuille = null; e.dialogue = null; },
+      fermer: () => { e.feuille = null; e.dialogue = null; },
+      facturer: () => { e.feuille = 'facturer'; e.dialogue = 'facturer'; e.genre = rangAcompte(e) <= 3 ? 'acompte' : 'finale'; e.details = false; },
+      genre: (v) => { e.genre = v; },
+      pct: (v) => { e.unite = 'pct'; e.pct = Number(v); },
+      chf: () => { e.unite = 'chf'; if (!e.montant) e.montant = '1000'; e.focus = '[data-montant]'; },
+      details: () => { e.details = !e.details; },
+      apercu: () => { e.ecran = 'apercu'; e.feuille = null; },
+      retourFacturer: () => { e.ecran = e.brouillon ? 'brouillon' : 'offre'; if (!e.brouillon) { e.feuille = 'facturer'; e.dialogue = 'facturer'; } },
+      creer: () => {
+        const t = projet(e), num = numeroSuivant(e);
+        const fa = { ...t, lignes: t.lignes.map((l) => ({ ...l })), num, envoyee: false };
+        e.factures.push(fa); e.courante = fa; e.brouillon = null; e.ecran = 'facture'; e.feuille = null; e.dialogue = null;
+        dire(`Facture ${num} créée`);
+      },
+      corriger: () => { e.brouillon = e.lignesOffre.map((l) => ({ ...l })); e.ecran = 'brouillon'; e.feuille = null; e.dialogue = null; },
+      envoyer: (v) => { e.feuille = 'partage'; e.dialogue = 'partage'; e.quoi = v; },
+      partage: (v) => {
+        e.feuille = null; e.dialogue = null;
+        if (e.quoi === 'offre') { e.envoyee = true; dire(`Offre envoyée par ${v}`); } else { e.courante.envoyee = true; dire(`Facture ${e.courante.num} envoyée par ${v}`); }
+      },
+      plus: () => { e.feuille = 'plus'; },
+      ajouter: (v) => { e.cible = v; e.feuille = 'ajouter'; e.recherche = ''; e.ajoutees = []; e.focus = '[data-recherche]'; },
+      produit: (v) => {
+        const p = CATALOGUE[Number(v)];
+        const l = { s: p.s, n: p.n, q: 1, u: p.u, p: p.p, mod: true };
+        (e.cible === 'brouillon' ? e.brouillon : e.lignesOffre).push(l);
+        e.ajoutees.push(l); dire(`« ${p.n} » ajoutée`, true);
+        e.focus = e.feuille ? '[data-recherche]' : '[data-neuve]';
+        e.recherche = '';
+      },
+      libre: () => {
+        const l = { s: 'Divers', n: e.recherche.trim() || 'Ligne libre', q: 1, u: 'forfait', p: 0, mod: true };
+        (e.cible === 'brouillon' ? e.brouillon : e.lignesOffre).push(l); e.ajoutees.push(l);
+        dire(`« ${l.n} » ajoutée, prix à compléter`, true); e.recherche = ''; e.focus = e.feuille ? '[data-recherche]' : '[data-neuve]';
+      },
+      annulerAjout: () => {
+        const l = e.ajoutees.pop(); if (!l) return;
+        [e.lignesOffre, e.brouillon || []].forEach((t) => { const i = t.indexOf(l); if (i >= 0) t.splice(i, 1); });
+        e.toast = null;
+      },
+      client: () => { e.feuille = 'client'; e.dialogue = 'client'; e.apres = null; },
+      generer: () => { if (!e.clientOk) { e.feuille = 'client'; e.dialogue = 'client'; e.apres = 'pdfoffre'; } else { e.ecran = 'pdfoffre'; } },
+      choisirClient: (v) => { e.clientOk = true; e.feuille = null; e.dialogue = null; dire(v === 'creer' ? 'Fiche « Famille Exemple » créée' : 'Client confirmé'); if (e.apres) { e.ecran = e.apres; e.apres = null; } },
+      ouvrirFacture: (v) => { e.courante = e.factures[Number(v)]; e.ecran = 'facture'; },
+    };
+    racine.addEventListener('click', (ev) => {
+      const a = ev.target.closest('[data-a]');
+      if (!a || !racine.contains(a)) return;
+      const [nom, v] = a.dataset.a.split(':');
+      if (!a.hasAttribute('data-gratuit')) {
+        compte++; compteur.textContent = String(compte);
+        const li = document.createElement('li'); li.textContent = (a.getAttribute('aria-label') || a.textContent).replace(/\s+/g, ' ').trim().slice(0, 60); journal.appendChild(li);
+      }
+      actions[nom](v);
+      rendre();
+    });
+    racine.addEventListener('input', (ev) => {
+      const t = ev.target;
+      if (t.matches('[data-montant]')) { e.montant = t.value; majFacturer(); }
+      if (t.matches('[data-recherche]')) { e.recherche = t.value; e.sel = 0; majListe(); }
+      if (t.matches('[data-q]')) {
+        const l = (e.ecran === 'brouillon' ? e.brouillon : e.lignesOffre)[Number(t.dataset.q)];
+        const v = Number(t.value.replace(',', '.'));
+        if (!Number.isNaN(v)) { l.q = v; l.mod = true; majFacturer(); }
+      }
+    });
+    racine.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && (e.feuille || e.dialogue)) { actions.fermer(); rendre(); }
+      if (ev.target.matches('[data-recherche]')) {
+        const n = racine.querySelectorAll('[data-liste] [data-a]').length;
+        if (ev.key === 'ArrowDown') { e.sel = Math.min(n - 1, e.sel + 1); majListe(); ev.preventDefault(); }
+        if (ev.key === 'ArrowUp') { e.sel = Math.max(0, e.sel - 1); majListe(); ev.preventDefault(); }
+        if (ev.key === 'Enter') { const b = racine.querySelectorAll('[data-liste] [data-a]')[e.sel]; if (b) { ev.preventDefault(); b.click(); } }
+      }
+    });
+    // Mises à jour partielles : le champ en cours de saisie garde le curseur.
+    function majFacturer() {
+      racine.querySelectorAll('[data-maj]').forEach((x) => {
+        const quoi = x.dataset.maj, t = projet(e);
+        if (quoi === 'papier') x.innerHTML = papier(t, e.brouillon ? 'FACTURE · N° À LA CRÉATION' : `FACTURE N° ${numeroSuivant(e)}`, true);
+        if (quoi === 'apayer') x.textContent = 'CHF ' + chf(t.apayer);
+        if (quoi === 'bouton') x.textContent = `${dessiner.mot} · CHF ${chf(t.apayer)}`;
+        if (quoi === 'ligne') { const l = (e.ecran === 'offre' ? e.lignesOffre : e.brouillon || [])[Number(x.dataset.i)]; if (l) x.textContent = chf(r2(l.q * l.p)); }
+        if (quoi === 'totoffre') x.textContent = 'CHF ' + chf(totaux(e.lignesOffre).ttc);
+      });
+    }
+    function majListe() { const x = racine.querySelector('[data-liste]'); if (!x) return; x.innerHTML = dessiner.liste(e); if (x.classList.contains('sugg')) x.hidden = !e.recherche.trim(); }
+    document.querySelectorAll(`[data-scenarios="${cle}"] button`).forEach((b) => b.addEventListener('click', () => demarrer(Number(b.dataset.sc))));
+    demarrer(1);
+  }
+  function resultats(e) {
+    const q = sans(e.recherche.trim());
+    return CATALOGUE.map((p, i) => ({ p, i })).filter(({ p }) => !q || q.split(/\s+/).every((m) => sans(p.n + ' ' + p.s).includes(m)));
+  }
+
+  // ---------- Téléphone ----------
+  const MOT = 'Créer la facture';
+  function tel(e) {
+    const t = projet(e);
+    const sur = (contenu) => `<div class="voile" data-a="fermer" data-gratuit></div><div class="feuille">${contenu}</div>`;
+    let ecran = '', feuille = '';
+    const totOffre = totaux(e.lignesOffre);
+    if (e.ecran === 'offre') {
+      const carte = e.clientOk
+        ? `<button class="c" data-a="client"><div class="d"><b>Famille Exemple</b><span>Chemin des Essais 4, 1700 Fribourg</span></div><span aria-hidden="true">⌕ ›</span></button>`
+        : `<button class="c orange" data-a="client"><div class="d"><b>Famille Exemple ?</b><span>Entendu dans la dictée · à confirmer</span></div><span class="etiq warn">Confirmer</span></button>`;
+      const lignes = e.lignesOffre.map((l) => `<div class="ligne"><div>${esc(l.n)}<span>${l.q} ${esc(l.u)} × ${l.p ? chf(l.p) : 'prix ?'}</span></div><b>${chf(r2(l.q * l.p))}</b></div>`).join('');
+      const fact = e.factures.map((f, i) => `<button class="etiq bleu" style="border:0;min-height:32px;cursor:pointer;margin:0 4px 4px 0" data-a="ouvrirFacture:${i}">Facture ${f.num}</button>`).join('');
+      const principal = e.envoyee ? `<button class="b p" data-a="facturer">Facturer ›</button>` : `<button class="b p" data-a="generer">Générer l'offre ›</button>`;
+      ecran = `<div class="bar"><span class="ret">‹ Offres</span>Offre 2</div><div class="corps">${carte}
+        <div class="c"><div class="d"><b>Rafraîchissement du séjour</b><span>Objet de l'offre</span></div></div>
+        ${fact ? `<div>${fact}</div>` : ''}${e.envoyee ? '<span class="etiq ok">Envoyée le 14.11</span>' : '<span class="etiq">Prête</span>'}${lignes}</div>
+        <div class="bas"><div class="tot"><span class="muted">Total TTC</span><b>CHF ${chf(totOffre.ttc)}</b></div><div class="r"><button class="b carre" data-a="ajouter:offre" aria-label="Ajouter une ligne">+</button>${principal}</div></div>`;
+    } else if (e.ecran === 'pdfoffre') {
+      ecran = `<div class="bar"><button class="ret" data-a="aller:offre">‹ Offre</button>Offre 2 · PDF</div><div class="corps sombre">${papier(docOffre(e), 'OFFRE N° 2')}</div>
+        <div class="bas"><div class="r"><button class="b" data-a="aller:offre">Modifier</button>${e.envoyee ? '<button class="b" data-a="facturer">Facturer</button>' : ''}<button class="b p" data-a="envoyer:offre">Envoyer</button></div></div>`;
+    } else if (e.ecran === 'apercu') {
+      ecran = `<div class="bar"><button class="ret" data-a="retourFacturer">‹ Retour</button>Aperçu, rien n'est créé</div><div class="corps sombre">${papier(t, e.brouillon ? 'FACTURE · N° À LA CRÉATION' : `FACTURE N° ${numeroSuivant(e)}`, true)}</div>
+        <div class="bas"><button class="b p" style="width:100%" data-a="creer">${MOT} · CHF ${chf(t.apayer)}</button></div>`;
+    } else if (e.ecran === 'facture') {
+      const f = e.courante;
+      ecran = `<div class="bar"><button class="ret" data-a="aller:offre">‹ Offre</button>Facture ${f.num}<span style="margin-left:auto">${f.envoyee ? '<span class="etiq ok">Envoyée</span>' : '<span class="etiq">Pas encore envoyée</span>'}</span></div>
+        <div class="corps sombre">${papier(f, `FACTURE N° ${f.num}`)}</div>
+        <div class="bas"><div class="r"><button class="b carre" data-a="plus" aria-label="Plus d'actions">⋯</button><button class="b p" data-a="envoyer:facture">Envoyer</button></div></div>`;
+    } else if (e.ecran === 'brouillon') {
+      const lignes = e.brouillon.map((l, i) => `<div class="ligne edit"><div>${esc(l.n)}<span>${esc(l.u)} × ${chf(l.p)}</span></div><input data-q="${i}" value="${l.q}" inputmode="decimal" aria-label="Quantité"><b data-maj="ligne" data-i="${i}" style="min-width:64px;text-align:right">${chf(r2(l.q * l.p))}</b></div>`).join('');
+      ecran = `<div class="bar"><button class="ret" data-a="aller:offre">‹ Offre</button>Facture finale · brouillon</div>
+        <div class="corps"><p class="petit muted" style="margin:0 0 6px">Corrigez les quantités réelles, ajoutez les travaux en plus. L'offre ne change pas. Pas encore de numéro.</p>${lignes}
+        <button class="b" style="width:100%;margin-top:10px" data-a="ajouter:brouillon">+ Ajouter une ligne</button></div>
+        <div class="bas"><div class="tot"><span class="muted">À payer</span><b data-maj="apayer">CHF ${chf(t.apayer)}</b></div><div class="r"><button class="b" style="flex:0 0 110px" data-a="apercu">Aperçu</button><button class="b p" data-a="creer">${MOT}</button></div></div>`;
+    }
+    if (e.feuille === 'facturer') {
+      const corps = e.genre === 'acompte'
+        ? `<div class="puces" style="margin:12px 0 8px">${[20, 30, 40, 50].map((p) => `<button data-a="pct:${p}" aria-pressed="${e.unite === 'pct' && e.pct === p}">${p} %</button>`).join('')}<button data-a="chf" aria-pressed="${e.unite === 'chf'}">CHF</button></div>
+           ${e.unite === 'chf' ? `<label class="champ-chf"><span class="muted">CHF</span><input data-montant value="${esc(e.montant)}" inputmode="decimal" aria-label="Montant de l'acompte, TVA comprise"></label><p class="petit muted" style="margin:4px 0 0">TVA comprise : ce que le client paie.</p>` : `<div class="montant" data-maj="apayer">CHF ${chf(t.apayer)}</div><p class="petit muted" style="margin:0">${e.pct} % de l'offre, TVA comprise</p>`}`
+        : `<div style="margin:12px 0 4px"><div class="resume" style="border:0;padding:2px 0"><span>Offre, ${e.lignesOffre.length} lignes</span><span>CHF ${chf(t.ttc)}</span></div>${t.deja ? `<div class="resume" style="border:0;padding:2px 0"><span>Acomptes déjà facturés</span><span>−${chf(t.deja)}</span></div>` : ''}<div class="montant" data-maj="apayer">CHF ${chf(t.apayer)}</div></div>
+           <button class="lien" data-a="corriger">Corriger des lignes d'abord (travaux en plus, quantités réelles) ›</button>`;
+      feuille = sur(`<h4>Facturer l'offre n° 2 <button class="lien" data-a="fermer" aria-label="Fermer" data-gratuit>✕</button></h4><div class="fc">
+        <div class="seg"><button data-a="genre:acompte" aria-pressed="${e.genre === 'acompte'}" ${rangAcompte(e) > 3 ? 'disabled' : ''}>Acompte ${rangAcompte(e)} sur 3<small>selon vos conditions</small></button><button data-a="genre:finale" aria-pressed="${e.genre === 'finale'}">Facture finale<small>moins les acomptes</small></button></div>
+        ${corps}
+        <button class="vign" data-a="apercu"><span class="cadre" data-maj="papier">${papier(t, `FACTURE N° ${numeroSuivant(e)}`, true)}</span><span><b>Voir la facture</b><br><span class="petit muted">en grand, avant de la créer</span></span></button>
+        <div class="resume"><span>N° ${numeroSuivant(e)} · le 15.11.2026 · payable sous 30 jours</span><button class="lien" data-a="details">${e.details ? 'Fermer' : 'Modifier'}</button></div>
+        ${e.details ? `<div class="details"><label>Numéro<input value="${numeroSuivant(e)}"></label><label>Date<input value="15.11.2026"></label><label>Échéance<input value="15.12.2026"></label><label>Client<input value="Famille Exemple" readonly></label></div>` : ''}
+        </div><button class="b p" style="width:100%;flex:0 0 auto" data-a="creer" data-maj="bouton">${MOT} · CHF ${chf(t.apayer)}</button>
+        <p class="petit muted" style="margin:6px 0 0;text-align:center">Elle devient définitive et numérotée ; pour la corriger ensuite, on l'annule.</p>`);
+    } else if (e.feuille === 'partage') {
+      feuille = sur(`<h4>Partager ${e.quoi === 'offre' ? 'Offre-2.pdf' : `Facture-${e.courante.num}.pdf`}</h4><p class="petit muted" style="margin:0">Le partage du téléphone, PDF joint.</p>
+        <div class="partage">${[['WhatsApp', '#25D366', 'W'], ['E-mail', '#2457C5', '@'], ['Messages', '#34C759', '✉'], ['Fichiers', '#69717C', '⇩']].map(([n, c, i]) => `<button data-a="partage:${n}" data-gratuit><i style="background:${c}">${i}</i>${n}</button>`).join('')}</div><p class="petit muted" style="margin:0">Le choix de l'application ne compte pas : c'est l'écran du téléphone.</p>`);
+    } else if (e.feuille === 'plus') {
+      feuille = sur(`<h4>Facture ${e.courante.num}</h4><button class="c" data-a="fermer"><div class="d"><b>Télécharger le PDF</b></div></button><button class="c" data-a="aller:offre"><div class="d"><b>Voir l'offre n° 2</b></div></button><button class="c" data-a="fermer"><div class="d"><b style="color:#B42318">Annuler la facture</b><span>Son numéro ne sera pas repris</span></div></button>`);
+    } else if (e.feuille === 'ajouter') {
+      feuille = sur(`<h4>Ajouter ${e.cible === 'brouillon' ? 'à la facture' : 'à l\'offre'} <button class="lien" data-a="fermer">Terminé${e.ajoutees.length ? ` (${e.ajoutees.length})` : ''}</button></h4>
+        <label class="cherche"><span aria-hidden="true">⌕</span><input data-recherche value="${esc(e.recherche)}" placeholder="Chercher ou écrire une ligne" aria-label="Chercher dans le catalogue"></label>
+        ${e.toast ? `<div class="toast"><span>${esc(e.toast.texte)}</span>${e.toast.annuler ? '<u data-a="annulerAjout" role="button" tabindex="0">Annuler</u>' : ''}</div>` : ''}
+        <div class="fc" data-liste>${listeTel(e)}</div>`);
+    } else if (e.feuille === 'client') {
+      feuille = sur(`<h4>Pour qui est cette offre ? <button class="lien" data-a="fermer" data-gratuit>✕</button></h4><div class="fc">
+        <p class="petit muted" style="margin:0">Entendu dans la dictée</p><p style="margin:2px 0 8px"><b>Famille Exemple</b>, Chemin des Essais 4, 1700 Fribourg</p>
+        <button class="b p" style="width:100%" data-a="choisirClient:creer">Nouveau client : créer la fiche</button>
+        <p class="pas" style="margin-top:14px;font-size:12px;font-weight:700;color:#69717C;text-transform:uppercase">Ou une fiche qui ressemble</p>
+        <button class="c" data-a="choisirClient:existant"><div class="d"><b>Exemple Martine</b><span>Fribourg · 82 % de ressemblance · 2 offres</span></div></button>
+        <label class="cherche"><span aria-hidden="true">⌕</span><input placeholder="Chercher un autre client" aria-label="Chercher un client"></label></div>`);
+    }
+    const toast = e.toast && e.feuille !== 'ajouter' ? `<div class="toast"><span>${esc(e.toast.texte)}</span>${e.toast.annuler ? '<u data-a="annulerAjout" role="button" tabindex="0">Annuler</u>' : ''}</div>` : '';
+    return `<div class="ecr">${ecran}</div>${feuille.replace('<div class="feuille">', '<div class="feuille" tabindex="-1">')}${toast}`;
+  }
+  function listeTel(e) {
+    const r = resultats(e).slice(0, 8);
+    const libre = e.recherche.trim() ? `<button class="prod" data-a="libre"><span><b>Ligne libre : « ${esc(e.recherche.trim())} »</b><small>prix à compléter</small></span><em>+</em></button>` : '';
+    return (e.recherche.trim() ? '' : '<p class="petit muted" style="margin:0">Les plus utilisés</p>') + r.map(({ p, i }, k) => `<button class="prod" data-a="produit:${i}"${k === e.sel && e.recherche ? ' style="background:#E8EEFB"' : ''}><span>${esc(p.n)}<small>${esc(p.s)} · ${p.p ? chf(p.p) : 'prix ?'} / ${esc(p.u)}</small></span><em>+</em></button>`).join('') + (r.length ? libre : `<p class="petit muted">Rien dans le catalogue.</p>${libre}`);
+  }
+  tel.liste = listeTel; tel.mot = MOT;
+
+  // ---------- PC ----------
+  function pc(e) {
+    const t = projet(e);
+    const menu = `<nav class="menu"><b class="marque">offreGen</b>${['Offres', 'Clients', 'Factures', 'Catalogue', 'Réglages'].map((m) => `<span class="${(m === 'Offres' && e.ecran !== 'facture') || (m === 'Factures' && e.ecran === 'facture') ? 'on' : ''}">${m}</span>`).join('')}<span class="dicter">● Dicter une offre</span></nav>`;
+    let zone = '', dial = '';
+    const totOffre = totaux(e.lignesOffre);
+    const tableau = (lignes, editable, cible) => {
+      let s = '', html = '';
+      lignes.forEach((l, i) => {
+        if (l.s !== s) { s = l.s; html += `<tr><td class="s" colspan="5">${esc(s)}</td></tr>`; }
+        html += `<tr${l.mod ? ' class="neuve"' : ''}><td>${esc(l.n)}</td><td>${editable ? `<input data-q="${i}" value="${l.q}"${i === lignes.length - 1 && l.mod ? ' data-neuve' : ''} aria-label="Quantité">` : l.q} <span class="muted petit">${esc(l.u)}</span></td><td>${l.p ? chf(l.p) : '<span style="color:#B42318">prix ?</span>'}</td><td><b data-maj="ligne" data-i="${i}">${chf(r2(l.q * l.p))}</b></td><td></td></tr>`;
+      });
+      html += `<tr class="ajout-pc"><td colspan="5"><input data-recherche value="${esc(e.recherche)}" placeholder="+ Ajouter une ligne : tapez un produit du catalogue ou une ligne libre" aria-label="Ajouter une ligne"${e.recherche ? '' : ''}><div class="sugg" data-liste${e.recherche.trim() ? '' : ' hidden'}>${e.recherche.trim() ? listePc(e) : ''}</div></td></tr>`;
+      return `<table class="lignes"><tr><th>Désignation</th><th>Qté</th><th>Prix</th><th>Total</th><th style="width:20px"></th></tr>${html}</table>`;
+    };
+    if (e.ecran === 'offre') {
+      e.cible = 'offre';
+      const carte = e.clientOk
+        ? `<button class="c" data-a="client"><div class="d"><b>Famille Exemple</b><span>Chemin des Essais 4, 1700 Fribourg</span></div><span>⌕ ›</span></button>`
+        : `<button class="c orange" data-a="client"><div class="d"><b>Famille Exemple ?</b><span>Entendu dans la dictée · à confirmer</span></div><span class="etiq warn">Confirmer</span></button>`;
+      const fact = e.factures.map((f, i) => `<button class="etiq bleu" style="border:0;min-height:30px;cursor:pointer;margin-right:6px" data-a="ouvrirFacture:${i}">Facture ${f.num}</button>`).join('');
+      zone = `<div class="haut"><span class="ret">‹ Offres</span>Offre 2 ${e.envoyee ? '<span class="etiq ok">Envoyée le 14.11</span>' : '<span class="etiq">Prête</span>'} ${fact}</div>
+        <div class="contenu"><div class="entete">${carte}<div class="c"><div class="d"><b>Rafraîchissement du séjour</b><span>Objet de l'offre</span></div></div></div>${tableau(e.lignesOffre, true, 'offre')}
+        <p class="petit muted"><span class="kbd">Tab</span> champ suivant · <span class="kbd">Entrée</span> ligne suivante · <span class="kbd">J</span> c'est juste · <span class="kbd">Suppr</span> retirer la ligne</p></div>
+        <div class="pied"><span class="tt">Total TTC<b data-maj="totoffre">CHF ${chf(totOffre.ttc)}</b></span>${e.envoyee ? `<button class="b" data-a="generer">Voir le PDF</button><button class="b p" data-a="facturer">Facturer ›</button>` : `<button class="b p" data-a="generer">Générer l'offre ›</button>`}</div>`;
+    } else if (e.ecran === 'pdfoffre') {
+      zone = `<div class="haut"><button class="ret" data-a="aller:offre">‹ Offre 2</button>Offre 2 · PDF</div><div class="lecture"><div class="doc">${papier(docOffre(e), 'OFFRE N° 2')}</div>
+        <div class="panneau"><dl><dt>Client</dt><dd>Famille Exemple</dd><dt>Total TTC</dt><dd>CHF ${chf(totOffre.ttc)}</dd><dt>État</dt><dd>${e.envoyee ? 'Envoyée' : 'Pas encore envoyée'}</dd></dl>
+        <button class="b p" data-a="envoyer:offre">Envoyer</button>${e.envoyee ? '<button class="b" data-a="facturer">Facturer</button>' : ''}<button class="b" data-a="aller:offre">Modifier</button></div></div>`;
+    } else if (e.ecran === 'facture') {
+      const f = e.courante;
+      zone = `<div class="haut"><button class="ret" data-a="aller:offre">‹ Offre 2</button>Facture ${f.num}</div><div class="lecture"><div class="doc">${papier(f, `FACTURE N° ${f.num}`)}</div>
+        <div class="panneau"><dl><dt>${f.deja ? 'À payer' : 'Montant'}</dt><dd style="font-size:22px">CHF ${chf(f.apayer)}</dd><dt>Échéance</dt><dd>15.12.2026</dd><dt>Client</dt><dd>Famille Exemple</dd><dt>État</dt><dd>${f.envoyee ? '<span class="etiq ok">Envoyée</span>' : '<span class="etiq">Créée, pas encore envoyée</span>'}</dd></dl>
+        <button class="b p" data-a="envoyer:facture">Envoyer</button><button class="b" data-a="fermer">Télécharger le PDF</button><span style="flex:1"></span><button class="b x" data-a="fermer">Annuler la facture</button></div></div>`;
+    } else if (e.ecran === 'brouillon' || e.ecran === 'apercu') {
+      e.cible = 'brouillon';
+      zone = `<div class="haut"><button class="ret" data-a="aller:offre">‹ Offre 2</button>Facture finale · brouillon <span class="muted petit" style="font-weight:400">pas encore de numéro</span></div>
+        <div class="deuxvol"><div class="gauche" style="width:560px">${tableau(e.brouillon || e.lignesOffre, true, 'brouillon')}<p class="petit muted">Les quantités réelles et les travaux en plus ; l'offre ne change pas.</p></div><div class="droite" data-maj="papier">${papier(t, 'FACTURE · N° À LA CRÉATION', true)}</div></div>
+        <div class="pied"><span class="tt">À payer<b data-maj="apayer">CHF ${chf(t.apayer)}</b></span><button class="b p" data-a="creer" data-maj="bouton">${MOT} · CHF ${chf(t.apayer)}</button></div>`;
+    }
+    if (e.dialogue === 'facturer') {
+      const corps = e.genre === 'acompte'
+        ? `<div class="puces" style="margin:14px 0 8px">${[20, 30, 40, 50].map((p) => `<button data-a="pct:${p}" aria-pressed="${e.unite === 'pct' && e.pct === p}">${p} %</button>`).join('')}<button data-a="chf" aria-pressed="${e.unite === 'chf'}">CHF</button></div>
+           ${e.unite === 'chf' ? `<label class="champ-chf"><span class="muted">CHF</span><input data-montant value="${esc(e.montant)}" aria-label="Montant de l'acompte, TVA comprise"></label><p class="petit muted">TVA comprise : ce que le client paie.</p>` : `<div class="montant" data-maj="apayer">CHF ${chf(t.apayer)}</div><p class="petit muted" style="margin:0">${e.pct} % de l'offre, TVA comprise</p>`}`
+        : `<div style="margin:14px 0 6px"><div class="resume" style="border:0;padding:2px 0"><span>Offre, ${e.lignesOffre.length} lignes</span><span>CHF ${chf(t.ttc)}</span></div>${t.deja ? `<div class="resume" style="border:0;padding:2px 0"><span>Acomptes déjà facturés</span><span>−${chf(t.deja)}</span></div>` : ''}<div class="montant" data-maj="apayer">CHF ${chf(t.apayer)}</div></div>
+           <button class="lien" data-a="corriger">Corriger des lignes d'abord ›</button>`;
+      dial = `<div class="voile" data-a="fermer" data-gratuit></div><div class="dialogue" style="left:110px;top:30px;width:980px;height:680px">
+        <div class="dh">Facturer l'offre n° 2 <small>Échap pour fermer · rien n'est créé avant « ${MOT} »</small></div>
+        <div class="deuxvol"><div class="gauche"><div class="seg"><button data-a="genre:acompte" aria-pressed="${e.genre === 'acompte'}">Acompte ${rangAcompte(e)} sur 3<small>selon vos conditions</small></button><button data-a="genre:finale" aria-pressed="${e.genre === 'finale'}">Facture finale<small>moins les acomptes</small></button></div>
+          ${corps}
+          <div class="details" style="margin-top:16px"><label>Numéro<input value="${numeroSuivant(e)}"></label><label>Date<input value="15.11.2026"></label><label>Échéance<input value="15.12.2026"></label><label>Client<input value="Famille Exemple" readonly></label></div>
+          <p class="petit muted">Elle devient définitive et numérotée ; pour la corriger ensuite, on l'annule.</p></div>
+          <div class="droite" data-maj="papier">${papier(t, `FACTURE N° ${numeroSuivant(e)}`, true)}</div></div>
+        <div class="dp"><span style="flex:1"></span><button class="b" data-a="fermer">Fermer</button><button class="b p" data-a="creer" data-maj="bouton">${MOT} · CHF ${chf(t.apayer)}</button></div></div>`;
+    } else if (e.dialogue === 'partage') {
+      dial = `<div class="voile" data-a="fermer" data-gratuit></div><div class="dialogue" style="left:380px;top:200px;width:460px"><div class="dh">Partager ${e.quoi === 'offre' ? 'Offre-2.pdf' : `Facture-${e.courante.num}.pdf`}<small>partage de Windows</small></div>
+        <div class="partage-pc">${[['Outlook', '#0F6CBD', 'O'], ['Courrier', '#2457C5', '@'], ['Teams', '#5B5FC7', 'T'], ['WhatsApp', '#25D366', 'W']].map(([n, c, i]) => `<button data-a="partage:${n}" data-gratuit><i style="background:${c}">${i}</i>${n}</button>`).join('')}</div></div>`;
+    } else if (e.dialogue === 'client') {
+      dial = `<div class="voile" data-a="fermer" data-gratuit></div><div class="dialogue" style="left:330px;top:110px;width:560px"><div class="dh">Pour qui est cette offre ?<small>Échap pour fermer</small></div><div style="padding:14px 20px">
+        <p class="petit muted" style="margin:0">Entendu dans la dictée</p><p style="margin:2px 0 10px"><b>Famille Exemple</b>, Chemin des Essais 4, 1700 Fribourg</p>
+        <button class="b p" style="width:100%" data-a="choisirClient:creer">Nouveau client : créer la fiche</button>
+        <p class="petit muted" style="margin:14px 0 4px">Ou une fiche qui ressemble</p><button class="c" data-a="choisirClient:existant"><div class="d"><b>Exemple Martine</b><span>Fribourg · 82 % de ressemblance · 2 offres</span></div></button>
+        <label class="cherche"><span aria-hidden="true">⌕&nbsp;</span><input placeholder="Chercher un autre client" aria-label="Chercher un client"></label></div></div>`;
+    }
+    const toast = e.toast ? `<div class="toast"><span>${esc(e.toast.texte)}</span>${e.toast.annuler ? '<u data-a="annulerAjout" role="button" tabindex="0">Annuler</u>' : ''}</div>` : '';
+    return `${menu}<div class="zone">${zone}${toast}</div>${dial.replace('<div class="dialogue"', '<div tabindex="-1" class="dialogue"')}`;
+  }
+  function listePc(e) {
+    const r = resultats(e).slice(0, 6);
+    const items = r.map(({ p, i }) => `<button data-a="produit:${i}" class="${''}"><span>${esc(p.n)} <small>${esc(p.s)}</small></span><small>${p.p ? chf(p.p) : 'prix ?'} / ${esc(p.u)}</small></button>`);
+    items.push(`<button data-a="libre"><span>Ligne libre : « ${esc(e.recherche.trim())} »</span><small>prix à compléter</small></button>`);
+    return items.map((x, k) => (k === e.sel ? x.replace('class=""', 'class="sel"') : x)).join('');
+  }
+  pc.liste = listePc; pc.mot = MOT;
+
+  const BUTS = {
+    1: 'But : facturer l\'acompte et l\'envoyer. Proposé : 3 touchers (aujourd\'hui 6, et le PDF hors de l\'application). Essaie aussi « CHF », « Voir la facture », puis « + » pour ajouter des lignes.',
+    2: 'But : générer l\'offre dont le client n\'est pas confirmé, puis l\'envoyer. Le client se règle en passant.',
+    3: 'But : facture finale avec 6 m² de murs en plus et 2 heures de régie, l\'acompte de 932.05 déduit, puis l\'envoyer.',
+  };
+  moteur('tel', tel, BUTS);
+  moteur('pc', pc, { 1: 'But : facturer l\'acompte et l\'envoyer en 3 clics. Essaie la dernière ligne du tableau : tape « regie » puis Entrée.', 2: BUTS[2], 3: BUTS[3] });
+
+  // Le PC à l'échelle de la page.
+  const cadre = document.getElementById('pc-cadre'), ecranPc = document.getElementById('pc');
+  const ajuster = () => { const k = Math.min(1, cadre.clientWidth / 1200); ecranPc.style.transform = `scale(${k})`; cadre.style.height = Math.round(740 * k) + 'px'; };
+  ajuster(); window.addEventListener('resize', ajuster);
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

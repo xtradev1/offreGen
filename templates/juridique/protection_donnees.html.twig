@@ -1,0 +1,91 @@
+{% extends 'juridique/_page.html.twig' %}
+{% block titre %}Protection des données{% endblock %}
+{% block version %}Projet du 20&nbsp;novembre 2026. Ce texte suit la loi fédérale sur la protection des données (LPD).{% endblock %}
+{% block contenu %}
+<h2>En bref</h2>
+<ul>
+<li>Vos données et celles de vos clients sont hébergées et traitées en Suisse, chez Infomaniak.</li>
+<li>L'intelligence artificielle qui transcrit vos dictées et rédige vos offres tourne chez Infomaniak. Ses conditions excluent l'entraînement de ses modèles sur vos données.</li>
+<li>Dicta ne vend aucune donnée, n'affiche aucune publicité et ne mesure pas l'audience de ses pages.</li>
+<li>Le site pose un seul cookie, celui qui vous garde connecté.</li>
+</ul>
+
+<h2>1. Qui est responsable</h2>
+<div class="fiche">
+<p><b>XtraDev</b>, Xavier Freléchoz<br>
+Rue de la Fenaison 37, 2800 Delémont, Suisse<br>
+Courriel&nbsp;: <span class="a-completer">adresse de contact</span></p>
+</div>
+<ul>
+<li><b>Votre compte et votre visite du site.</b> XtraDev décide de ces traitements et en répond&nbsp;: c'est le responsable du traitement.</li>
+<li><b>Les données de vos propres clients</b> (noms, adresses, travaux, montants, voix éventuelle dans une dictée). Vous en êtes le responsable du traitement. XtraDev les traite pour votre compte, comme sous-traitant au sens de l'art.&nbsp;9 LPD, selon l'annexe des <a href="/conditions#sous-traitance">conditions d'utilisation</a>.</li>
+</ul>
+
+<h2>2. Les données traitées, et pourquoi</h2>
+
+<h3>Visite de la page de présentation</h3>
+<p>La page ne pose aucun cookie et ne charge aucune ressource d'un autre site. Le serveur web d'Infomaniak tient un journal technique des pages demandées (adresse IP, page, date et heure), qui sert à l'exploitation et à la sécurité. <span class="a-completer">Durée de garde de ce journal chez Infomaniak&nbsp;: à vérifier.</span></p>
+
+<h3>Demande d'essai</h3>
+<p>L'adresse électronique laissée dans le formulaire d'essai est transmise par courriel à XtraDev, pour vous recontacter et ouvrir votre compte. Elle n'est pas enregistrée dans la base de Dicta. <span class="a-completer">Durée de garde du courriel reçu&nbsp;: à décider.</span></p>
+
+<h3>Votre compte</h3>
+<ul>
+<li>Nom, adresse électronique et mot de passe, pour vous connecter. Le mot de passe est enregistré sous forme d'empreinte&nbsp;: personne ne peut le relire, XtraDev compris.</li>
+<li>Les informations de votre entreprise (raison sociale, adresse, coordonnées, IBAN, numéro de TVA, logo, couleurs, modèle de mise en page), pour les imprimer sur vos offres et vos factures.</li>
+<li>Votre catalogue, vos offres, vos factures et vos clients, pour fournir le service.</li>
+</ul>
+
+<h3>Journal des connexions</h3>
+<p>Chaque tentative de connexion est notée&nbsp;: adresse électronique saisie, adresse IP, date et heure, réussite ou échec. Ce journal protège votre compte&nbsp;: après 5&nbsp;échecs en 15&nbsp;minutes, les tentatives suivantes sont refusées. <span class="a-completer">Durée de garde&nbsp;: à décider (aujourd'hui, aucune suppression automatique).</span></p>
+
+<h3>Vos dictées</h3>
+<p>Une dictée produit trois éléments&nbsp;: l'enregistrement audio, le texte transcrit et l'offre rédigée à partir de ce texte et de votre catalogue.</p>
+<ul>
+<li>L'enregistrement audio reçu par Dicta est effacé <span class="a-completer">30&nbsp;jours après que l'offre est prête (suppression automatique écrite, encore éteinte&nbsp;: à allumer sur la production avant publication)</span>.</li>
+<li>Le texte transcrit et l'offre restent dans votre compte. <span class="a-completer">Durée après la suppression d'une offre ou la fermeture du compte&nbsp;: à décider.</span></li>
+</ul>
+<p>Une dictée peut contenir des propos de votre client ou des informations sur ses proches (santé d'un occupant, par exemple). Évitez de dicter ce qui n'est pas utile à l'offre.</p>
+
+<h3>Adresses saisies</h3>
+<p>Pour vous proposer et vérifier une adresse, le texte de l'adresse tapée est envoyé au service de recherche de la Confédération (geo.admin.ch, Office fédéral de topographie swisstopo). C'est le serveur de Dicta qui l'envoie&nbsp;: swisstopo ne reçoit ni le nom de votre client, ni votre adresse IP. Dicta ne garde pas ces recherches.</p>
+
+<h3>Courriels envoyés par Dicta</h3>
+<p>Dicta vous envoie un courriel pour vous donner accès à votre compte ou remplacer un mot de passe oublié. Le lien qu'il contient ne sert qu'une fois et expire après 1&nbsp;heure (mot de passe oublié) ou 7&nbsp;jours (premier accès). <span class="a-completer">Serveur d'envoi des courriels&nbsp;: à compléter (Infomaniak&nbsp;?).</span></p>
+
+<h2>3. Qui reçoit ces données</h2>
+<ul>
+<li><b>Infomaniak Network SA</b>, Genève&nbsp;: hébergement du site, de la base de données et des enregistrements, transcription de la voix et rédaction des offres par intelligence artificielle. Selon les conditions de son service d'intelligence artificielle (révision du 7&nbsp;octobre 2025), Infomaniak garde les données transmises seulement le temps du traitement. Elle ne les utilise pas pour entraîner ses modèles. Infomaniak garde des données de facturation (numéro client, nombre, durée et heure des appels, taille, format et durée des fichiers).</li>
+<li><b>swisstopo</b>, Office fédéral de topographie, Wabern&nbsp;: le texte des adresses recherchées.</li>
+</ul>
+<p>Aucune donnée n'est communiquée à l'étranger. <span class="a-completer">À vérifier avant publication&nbsp;: serveur d'envoi des courriels et futur prestataire de paiement.</span></p>
+
+<h2>4. Ce qui reste sur votre téléphone ou votre ordinateur</h2>
+<ul>
+<li><b>Un cookie de session</b> («&nbsp;offregen&nbsp;»), pour vous garder connecté pendant 14&nbsp;jours sans retaper votre mot de passe. Il est indispensable au fonctionnement de l'application. Dicta ne pose aucun autre cookie.</li>
+<li><b>L'audio de vos dictées.</b> Pendant et après un enregistrement, une copie de l'audio est gardée dans le navigateur jusqu'à ce que son offre soit prête, puis effacée du téléphone. Si le réseau coupe, la dictée reste ainsi sur le téléphone. Cet audio n'est pas chiffré sur le téléphone&nbsp;: toute personne qui tient votre téléphone déverrouillé peut y accéder. Il reste aussi après une déconnexion, pour garder une dictée en attente d'envoi.</li>
+<li><b>Des préférences d'affichage</b>, comme la disposition de l'écran sur ordinateur, gardées dans le navigateur.</li>
+</ul>
+
+<h2>5. Sécurité</h2>
+<ul>
+<li>Tous les échanges passent par une connexion chiffrée (HTTPS).</li>
+<li>Chaque compte ne voit que ses propres données. Des tests automatiques le vérifient sur chaque écran de l'application.</li>
+<li>Les mots de passe sont enregistrés sous forme d'empreinte, et les liens d'accès envoyés par courriel ne servent qu'une fois.</li>
+</ul>
+
+<h2>6. Vos droits</h2>
+<p>Vous pouvez demander à tout moment&nbsp;:</p>
+<ul>
+<li>quelles données Dicta traite sur vous (droit d'accès, art.&nbsp;25 LPD)&nbsp;;</li>
+<li>la correction de données inexactes&nbsp;;</li>
+<li>la suppression de vos données, sous réserve de ce que la loi oblige à garder&nbsp;;</li>
+<li>la remise de vos données dans un format courant (art.&nbsp;28 LPD).</li>
+</ul>
+<p>Écrivez à <span class="a-completer">adresse de contact</span>. La réponse vous parvient dans les 30&nbsp;jours.</p>
+<p>Vos clients exercent leurs droits auprès de vous, puisque vous êtes responsable de leurs données. XtraDev vous aide à leur répondre.</p>
+<p>Si vous estimez que vos données sont mal traitées, vous pouvez vous adresser au Préposé fédéral à la protection des données et à la transparence (PFPDT), <a href="https://www.edoeb.admin.ch">www.edoeb.admin.ch</a>.</p>
+
+<h2>7. Modifications</h2>
+<p>Ce texte suit l'évolution de Dicta. Une modification importante vous est annoncée par courriel <span class="a-completer">30&nbsp;jours</span> avant d'entrer en vigueur. La date de la version en vigueur figure en tête de page.</p>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+{% set onglet = (facture ?? null) ? 'factures' : 'offres' %}
+
+{# Le PDF tel que le client le recevra, offre ou facture émise (Xavier, 2026-11-15 ; décisions D7 A et D8). PDF.js le
+   dessine page par page ; pincer pour agrandir. « Envoyer » passe par le partage du téléphone, le PDF joint ; sans
+   partage possible, le PDF se télécharge. Variables : titre, retour {href, texte}, pdf, fichier, partage, marquer (ou
+   null), modifier (ou null), facturer (ou null), facture (pour une facture : {f, etat, annuler}, sinon absent).
+   Une facture a son panneau (maquette 25, E8) : montant, état, échéance, client, offre, « Annuler la facture » ; sous
+   le PDF au téléphone, à côté sur PC. #}
+{% block titre %}{{ titre }} · PDF · {{ nom_application }}{% endblock %}
+{% block entete_html %}<script type="module" src="{{ fichier('/js/apercu-pdf.js') }}"></script>{% if nom_provisoire ?? null %}<link rel="stylesheet" href="{{ fichier('/css/avertissement-envoi.css') }}"><script src="{{ fichier('/js/avertissement-envoi.js') }}" defer></script>{% endif %}{% endblock %}
+{% block retour %}<a class="back" href="{{ retour.href }}">{{ retour.texte }}</a>{% endblock %}
+{% block entete %}{{ titre }} · PDF{% endblock %}
+{% block ecran_classe %} apercu-pdf{% endblock %}
+
+{% block contenu %}
+  {% set fac = facture ?? null %}
+  {% if fac and fac.f.statut == 'annulee' %}<p class="alerte bad">Facture annulée le {{ fac.f.annulee_le|jour }}. Son numéro n'est pas repris.</p>{% endif %}
+  <div class="pdf-zone">
+    <div class="pdf-pages" data-pdf="{{ pdf }}" data-worker="{{ pdfjs }}/pdf.worker.min.js">
+      <p class="pdf-attente" data-pdf-etat>Préparation du PDF…</p>
+    </div>
+    {% if fac %}
+      <aside class="panneau-facture" aria-label="La facture">
+        <p class="pf-montant">{{ fac.f.a_payer|chf }}</p>
+        <p><span class="status {{ fac.etat.classe }}">{{ fac.etat.texte }}</span></p>
+        <dl>
+          <dt>Client</dt><dd>{{ fac.f.client_nom }}{% if fac.f.client_adresse %}<br><small>{{ fac.f.client_adresse|replace({"\n": ', '}) }}</small>{% endif %}</dd>
+          <dt>Datée du</dt><dd>{{ fac.f.date_facture|jour }}</dd>
+          {% if fac.f.envoyee_le %}<dt>Envoyée le</dt><dd>{{ fac.f.envoyee_le|jour }}</dd>{% endif %}
+          <dt>Offre</dt><dd><a href="/offres/{{ fac.f.offre_id }}">n°&nbsp;{{ fac.f.offre_numero }}, {{ fac.f.titre }}</a></dd>
+        </dl>
+        {% if fac.annuler %}<a class="lien-discret" href="{{ fac.annuler }}">Annuler la facture</a>{% endif %}
+      </aside>
+    {% endif %}
+  </div>
+  <noscript><p><a href="{{ pdf }}">Ouvrir le PDF</a></p></noscript>
+  {# L'offre porte encore le nom provisoire de la démo (chantier onboarding, lot 5 ; O7 de Xavier : « c'est l'utilisateur
+     qui gère ses envois, mais un warning est le bienvenu »). Avant le partage, une fois ; « Envoyer quand même » continue. #}
+  {% if nom_provisoire ?? null %}
+  <div class="avertissement-envoi" data-avertissement-envoi hidden>
+    <div class="avertissement-carte" role="alertdialog" aria-modal="true" aria-labelledby="avertissement-titre" aria-describedby="avertissement-texte">
+      <h2 id="avertissement-titre">{{ texte('w.titre', {entreprise: nom_provisoire}) }}</h2>
+      <p id="avertissement-texte">{{ texte('w.texte') }}</p>
+      <a class="btn primary" href="/reglages/entreprise">{{ texte('w.b1') }}</a>
+      <button class="btn" type="button" data-envoyer-quand-meme>{{ texte('w.b2') }}</button>
+    </div>
+  </div>
+  {% endif %}
+  {# etat-envoi : le morceau que demande l'envoi noté (apercu-pdf.js), pour en recevoir le message « envoyée ». #}
+  <span id="etat-envoi" hidden></span>
+  {% if marquer %}<form method="post" action="{{ marquer }}" data-apres-partage><input type="hidden" name="_csrf" value="{{ csrf() }}"></form>{% endif %}
+{% endblock %}
+
+{% block actions %}
+  {% set fac = facture ?? null %}
+  {% if fac and fac.f.statut == 'annulee' %}
+    {# 1 C (2026-11-19) : déjà envoyée, le client doit recevoir la version annulée ; jamais partie, le PDF suffit. #}
+    <div class="actionbar avec-phrase">
+      {% if fac.f.envoyee_le %}
+        <a class="btn grand" href="{{ pdf }}" download="{{ fichier }}" data-partager data-titre="{{ partage }}">
+          <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>Envoyer la facture annulée</a>
+        <p class="phrase">Elle a été envoyée le {{ fac.f.envoyee_le|jour }}&nbsp;: prévenez votre client qu'elle ne doit pas être payée.</p>
+      {% else %}
+        <a class="btn grand" href="{{ pdf }}" download="{{ fichier }}">Télécharger le PDF</a>
+      {% endif %}
+    </div>
+  {% else %}
+  {# actions-apercu : la barre revient en morceau quand l'envoi est noté (apercu-pdf.js). L'offre envoyée et inchangée
+     depuis, le bouton principal devient « Retour aux offres », « Renvoyer » et « Facturer » à côté (constat 7 de
+     l'analyse des parcours, Xavier, 2026-11-26) ; pour modifier, le retour « Offre » de la barre du haut. Au téléphone, le
+     bouton principal prend sa ligne (classe apres-envoi) : ses trois mots ne tiennent pas à côté de deux boutons. #}
+  {% set icone_envoi %}<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>{% endset %}
+  <div class="actionbar{{ (envoyee ?? false) ? ' apres-envoi' }}" id="actions-apercu">
+    {% if envoyee ?? false %}
+      {% if facturer %}<a class="btn grand" href="{{ facturer }}" data-en-feuille>Facturer</a>{% endif %}
+      <a class="btn grand" href="{{ pdf }}" download="{{ fichier }}" data-partager data-titre="{{ partage }}">
+        {{ icone_envoi }}Renvoyer</a>
+      <a class="btn primary grand" href="/">Retour aux offres</a>
+    {% else %}
+      {% if facture ?? null %}<a class="btn grand pc-seul" href="{{ pdf }}" download="{{ fichier }}">Télécharger</a>{% endif %}
+      {% if modifier %}<a class="btn grand" href="{{ modifier }}">Modifier</a>{% endif %}
+      {# « Facturer » s'ouvre dans une feuille par-dessus le PDF de l'offre (maquette 25, E1). #}
+      {% if facturer %}<a class="btn grand" href="{{ facturer }}" data-en-feuille>Facturer</a>{% endif %}
+      <a class="btn primary grand" href="{{ pdf }}" download="{{ fichier }}" data-partager data-titre="{{ partage }}">
+        {{ icone_envoi }}Envoyer</a>
+    {% endif %}
+  </div>
+  {# Hors de la barre : remplacée en morceau, elle emporterait la fenêtre et ce qu'app.js y a branché. #}
+  {% if facturer %}{% include '_feuille.html.twig' %}{% endif %}
+  {% endif %}
+{% endblock %}

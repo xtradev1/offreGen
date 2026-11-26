@@ -1,0 +1,86 @@
+[
+ {
+  "profil": "4g",
+  "delai_apres_ouverture_ms": 800,
+  "offre_visible_ms": 456,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 1,
+  "confirme_ms": 151,
+  "recharge": false,
+  "en_vol_au_toucher": [],
+  "requetes_pendant": [
+   "POST /offres/3/lignes/14/juste 47..184"
+  ]
+ },
+ {
+  "profil": "4g",
+  "delai_apres_ouverture_ms": 2000,
+  "offre_visible_ms": 458,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 2,
+  "confirme_ms": 125,
+  "recharge": false,
+  "en_vol_au_toucher": [],
+  "requetes_pendant": [
+   "POST /offres/3/lignes/14/juste 44..156"
+  ]
+ },
+ {
+  "profil": "4g",
+  "delai_apres_ouverture_ms": 4000,
+  "offre_visible_ms": 464,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 2,
+  "confirme_ms": 155,
+  "recharge": false,
+  "en_vol_au_toucher": [],
+  "requetes_pendant": [
+   "POST /offres/3/lignes/14/juste 43..183"
+  ]
+ },
+ {
+  "profil": "4g",
+  "delai_apres_ouverture_ms": 6000,
+  "offre_visible_ms": 445,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 0,
+  "confirme_ms": 150,
+  "recharge": false,
+  "en_vol_au_toucher": [],
+  "requetes_pendant": [
+   "POST /offres/3/lignes/14/juste 30..166"
+  ]
+ },
+ {
+  "profil": "4g",
+  "delai_apres_ouverture_ms": 9000,
+  "offre_visible_ms": 445,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 2,
+  "confirme_ms": 156,
+  "recharge": false,
+  "en_vol_au_toucher": [],
+  "requetes_pendant": [
+   "POST /offres/3/lignes/14/juste 40..182"
+  ]
+ },
+ {
+  "profil": "4g",
+  "delai_apres_ouverture_ms": 15000,
+  "offre_visible_ms": 468,
+  "scripts": true,
+  "document": "complete",
+  "ecran_ms": 1,
+  "confirme_ms": 154,
+  "recharge": false,
+  "en_vol_au_toucher": [],
+  "requetes_pendant": [
+   "POST /offres/3/lignes/14/juste 40..183"
+  ]
+ }
+]

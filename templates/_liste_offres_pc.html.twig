@@ -1,0 +1,19 @@
+{# Colonne des offres en cours à côté de l'offre, sur PC seulement (décision D12, 2026-11-15) : app.css la cache
+   sous 1024 px. « liste » : offres, totaux, a_relire, textes (OffreControleur::afficher) ; « courante » : l'offre ouverte. #}
+<aside class="colonne-liste" aria-label="Offres en cours">
+  <form class="search" method="get" action="/" role="search">
+    <div class="box">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" placeholder="Chercher une offre, un client" autocomplete="off" aria-label="Chercher une offre ou un client" data-filtre="#liste-pc">
+    </div>
+  </form>
+  <div id="liste-pc">
+    {% for o in liste.offres %}
+      <a class="lcard" id="pc-{{ o.id }}" href="/offres/{{ o.id }}"{% if o.id == courante %} aria-current="page"{% endif %} data-texte="{{ liste.textes[o.id] }}">
+        <span class="l1"><b>{{ o.titre }}</b><span class="montant">{{ liste.totaux[o.id]|montant }}</span></span>
+        <small>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}{% if liste.a_relire[o.id] > 0 %}{{ liste.a_relire[o.id] }} à relire{% elseif o.envoyee_le %}envoyée{% else %}prête{% endif %}</small>
+      </a>
+    {% endfor %}
+    <p class="vide" data-aucun hidden>Aucune offre ne correspond.</p>
+  </div>
+</aside>

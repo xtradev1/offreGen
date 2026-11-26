@@ -1,0 +1,512 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OffreGen\Http\Controleur;
+
+use OffreGen\Compte\Activite;
+use OffreGen\Compte\LogoRefuse;
+use OffreGen\Compte\Iban;
+use OffreGen\Compte\Marque;
+use OffreGen\Compte\PhrasesLettre;
+use OffreGen\Compte\Reglages;
+use OffreGen\Donnees\Portee;
+use OffreGen\Http\Conteneur;
+use OffreGen\Http\Flash;
+use OffreGen\Http\Formats;
+use OffreGen\Http\PageIntrouvable;
+use OffreGen\Offre\SaisieRefusee;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * @phpstan-import-type Offre from \OffreGen\Donnees\DepotOffres
+ * @phpstan-import-type Ligne from \OffreGen\Donnees\DepotOffres
+ */
+final class ReglagesControleur
+{
+    private const CHAMPS = ['entreprise', 'contact_nom', 'adresse_rue', 'adresse_numero', 'adresse_npa', 'adresse_localite', 'adresse_pays', 'telephone', 'courriel_contact', 'ide', 'iban', 'tva', 'validite_choix', 'validite_jours',
+                            'paiement_type', 'paiement_jours_choix', 'paiement_jours', 'paiement_acomptes_choix', 'paiement_acomptes',
+                            'escompte_pourcent', 'escompte_jours',
+                            'modele', 'couleur_choix', 'couleur',
+                            'lettre_appel', 'lettre_offre_debut', 'lettre_offre_fin', 'lettre_facture_debut', 'lettre_facture_fin', 'lettre_partout',
+                            'activite'];
+
+    /**
+     * Les rubriques du sommaire, dans l'ordre de la maquette validée le 2026-11-12 ; les phrases du document, sorties de
+     * Ma marque, viennent après elle (LC-3, L1 A de Xavier, 2026-11-24).
+     */
+    public const RUBRIQUES = ['entreprise' => 'Mon entreprise', 'marque' => 'Ma marque', 'phrases' => 'Phrases du document', 'conditions' => "Conditions de l'offre", 'tva' => 'TVA et arrondi'];
+
+    /**
+     * Les étapes de l'assistant du premier lancement et du passage d'une démo à l'essai (mise en route, chantier
+     * onboarding, O15, O28 et O34 de Xavier) : l'entreprise et son IBAN, la TVA, le logo, le modèle et la couleur ; puis
+     * « Vos prix » s'il reste des produits sans prix. Les conditions restent dans les réglages (PLAN.md, décision 2).
+     */
+    public const ETAPES = ['entreprise' => 'Votre entreprise', 'tva' => 'La TVA', 'logo' => 'Votre logo', 'marque' => 'Modèle et couleur'];
+
+    public function __construct(private readonly Conteneur $c)
+    {
+    }
+
+    /** Le sommaire : une ligne par rubrique, son résumé, « à compléter » si un champ attendu manque. */
+    public function afficher(Request $requete): Response
+    {
+        $portee = $this->portee($requete);
+        $r = $this->c->reglages($portee)->lire();
+        $m = $this->c->reglages($portee)->lireMarque();
+        // L'IBAN manque à la section de paiement des factures, pas aux offres (maquette 18, point réglé).
+        $manque = array_merge($r->adresse->estVide() ? ['adresse'] : [], $r->tvaPourDixMille > 0 && $r->ide === '' ? ['IDE'] : [], $r->iban === '' ? ['IBAN'] : []);
+        $rubriques = [
+            'entreprise' => ['complete' => $manque === [],
+                'resume' => $r->entreprise . ' · ' . ($manque === [] ? ($r->localite() !== '' ? $r->localite() : $r->telephone) : self::enumeration($manque) . (count($manque) > 1 ? ' manquent' : ' manque'))],
+            'marque' => ['complete' => true, 'resume' => ($m->logo !== null ? 'Logo' : 'Sans logo') . ' · modèle ' . Marque::MODELES[$m->modele]],
+            'phrases' => ['complete' => true, 'resume' => self::resumePhrases($r->lettre)],
+            'conditions' => ['complete' => true, 'resume' => 'Valable ' . $r->validiteJours . ' jours · ' . $r->resumePaiement()],
+            'tva' => ['complete' => true,
+                'resume' => ($r->tvaPourDixMille > 0 ? 'Assujetti ' . Formats::taux($r->tvaPourDixMille) : 'Non assujetti') . ' · ' . ($r->arrondiCinqCentimes ? 'arrondi aux 5 centimes' : 'au centime')],
+        ];
+        foreach ($rubriques as $cle => $x) {
+            $rubriques[$cle]['titre'] = self::RUBRIQUES[$cle];
+        }
+        $artisan = $this->c->artisans()->parId($portee->artisanId);
+        return new Response($this->c->twig()->render('reglages.html.twig', [
+            'rubriques' => $rubriques,
+            'completes' => count(array_filter($rubriques, static fn (array $x): bool => $x['complete'])),
+            'courriel' => $artisan['courriel'] ?? '',
+            'demo' => ($artisan['demo'] ?? 0) === 1,
+        ]));
+    }
+
+    /** Une rubrique seule à l'écran ; chaque changement s'y enregistre seul (app.js). */
+    public function rubrique(Request $requete, string $nom): Response
+    {
+        $portee = $this->portee($requete);
+        $r = $this->c->reglages($portee)->lire();
+        return $this->page($portee, [$nom], self::RUBRIQUES[$nom], $this->champsActuels($portee), $r->arrondiCinqCentimes, [], 200, '/reglages/' . $nom, null);
+    }
+
+    /**
+     * Enregistre les champs reçus, et eux seuls : les autres gardent leur valeur. Ainsi chaque rubrique,
+     * et chaque champ de l'enregistrement automatique, part sans le reste du formulaire. app.js demande une
+     * réponse en JSON ; sans JavaScript, retour à la rubrique d'où vient le formulaire.
+     */
+    public function enregistrer(Request $requete): Response
+    {
+        $portee = $this->portee($requete);
+        [$erreurs, $champs, $arrondi] = $this->sauver($requete, $portee);
+        $retour = $requete->request->getString('retour');
+        $rubrique = str_starts_with($retour, '/reglages/') ? substr($retour, strlen('/reglages/')) : '';
+        $json = str_contains((string) $requete->headers->get('Accept'), 'application/json');
+        if ($erreurs !== []) {
+            if ($json) {
+                return new JsonResponse(['ok' => false, 'erreurs' => $erreurs], 422);
+            }
+            $sections = array_key_exists($rubrique, self::RUBRIQUES) ? [$rubrique] : array_keys(self::RUBRIQUES);
+            $titre = array_key_exists($rubrique, self::RUBRIQUES) ? self::RUBRIQUES[$rubrique] : 'Réglages';
+            return $this->page($portee, $sections, $titre, $champs, $arrondi, $erreurs, 422, $retour, null);
+        }
+        if ($json) {
+            return new JsonResponse(['ok' => true]);
+        }
+        Flash::dire($requete, 'info', 'Réglages enregistrés');
+        if ($retour === '/bienvenue/marque') {
+            // Modèle choisi depuis son aperçu, pendant l'assistant : retour à l'étape.
+            return new RedirectResponse($retour, 303);
+        }
+        return new RedirectResponse(array_key_exists($rubrique, self::RUBRIQUES) ? '/reglages/' . $rubrique : '/reglages', 303);
+    }
+
+    /**
+     * « Voir en grand » : le vrai document dans le modèle demandé, avec le logo et la couleur de l'artisan
+     * et sa dernière offre (un exemple s'il n'en a pas). Rien n'est enregistré.
+     */
+    public function apercuModele(Request $requete, string $modele): Response
+    {
+        $portee = $this->portee($requete);
+        [$offre, $lignes] = $this->offreDApercu($portee);
+        $m = $this->c->reglages($portee)->lireMarque();
+        $apercu = new Marque($modele, $m->couleurChoisie, $m->logo, $m->couleurDuLogo);
+        $assistant = $requete->query->getString('depuis') === 'bienvenue';
+        return new Response($this->c->twig()->render('modele_apercu.html.twig', (new OffreControleur($this->c))->vueDocument($portee, $offre, $lignes, $apercu) + [
+            'modele' => $modele,
+            'modeles' => Marque::MODELES,
+            'choisi' => $m->modele,
+            'retour' => $assistant ? '/bienvenue/marque' : '/reglages/marque',
+            'depuis' => $assistant ? '?depuis=bienvenue' : '',
+        ]));
+    }
+
+    /**
+     * L'offre montrée dans les aperçus de modèle : la dernière de l'artisan, ou l'exemple s'il n'a rien dicté.
+     *
+     * @return array{Offre, list<Ligne>}
+     */
+    private function offreDApercu(Portee $portee): array
+    {
+        $offres = $this->c->offres($portee);
+        $offre = $offres->liste(1)[0] ?? null;
+        $lignes = $offre === null ? [] : $offres->lignes($offre['id']);
+        return $offre === null || $lignes === [] ? self::exemple($this->c->horloge()->now()) : [$offre, $lignes];
+    }
+
+    /**
+     * Les vignettes de « Ma marque » (2a, 2026-11-19) : le vrai document de chaque modèle, dans la couleur de l'artisan.
+     * app.js les réduit à la largeur de leur case et change leur couleur au toucher d'une pastille.
+     *
+     * @return array<string, string> le HTML de chaque modèle, par clé
+     */
+    private function vignettes(Portee $portee, Marque $m): array
+    {
+        [$offre, $lignes] = $this->offreDApercu($portee);
+        $vue = new OffreControleur($this->c);
+        $html = [];
+        foreach (array_keys(Marque::MODELES) as $cle) {
+            $html[$cle] = $this->c->twig()->render('_vignette_modele.html.twig',
+                $vue->vueDocument($portee, $offre, $lignes, new Marque($cle, $m->couleurChoisie, $m->logo, $m->couleurDuLogo)));
+        }
+        return $html;
+    }
+
+    /**
+     * Une petite offre de peintre, pour l'aperçu d'un compte qui n'a encore rien dicté.
+     *
+     * @return array{array{id: int, numero: int, enregistrement_id: null, titre: string, client_id: null, client_nom: string, client_adresse: string, client_dicte: null, lieu_dicte: null, cree_le: string, modifiee_le: null, envoyee_le: null, postes_coupes: int, chantier_adresse: null, chantier_contact: null, chantier_acces: null, debut_travaux: null, duree_travaux: null, non_compris: null, visite_le: null, rabais: null, conditions: null, texte_avant: null, texte_apres: null, representant_id: null, representant_nom: null, representant_adresse: null, offre_adressee: string, factures_adressees: string}, list<array{id: int, offre_id: int, rang: int, designation: string, quantite_milliemes: int, unite: string, prix_centimes: int, offerte: int, a_verifier: int, entendu: null, produit_id: null, categorie: string, tva_pour_dix_mille: null, tva_ligne: null, prix_dicte_centimes: null, prix_catalogue: null, piece: null, nature: string, remplace_id: null, retenue: int}>}
+     */
+    private static function exemple(\DateTimeImmutable $maintenant): array
+    {
+        $offre = ['id' => 0, 'numero' => 1, 'enregistrement_id' => null, 'titre' => 'Rafraîchissement du séjour', 'client_id' => null,
+                  'client_nom' => 'Madame Exemple', 'client_adresse' => "Rue de l'Exemple 1\n2800 Delémont", 'client_dicte' => null, 'lieu_dicte' => null,
+                  'cree_le' => $maintenant->format('Y-m-d H:i:s'), 'modifiee_le' => null, 'envoyee_le' => null, 'postes_coupes' => 0,
+                  'chantier_adresse' => null, 'chantier_contact' => null, 'chantier_acces' => null, 'debut_travaux' => null, 'duree_travaux' => null, 'non_compris' => null, 'visite_le' => null, 'rabais' => null, 'conditions' => null, 'texte_avant' => null, 'texte_apres' => null,
+            'representant_id' => null, 'representant_nom' => null, 'representant_adresse' => null, 'offre_adressee' => 'representant', 'factures_adressees' => 'pa'];
+        $lignes = [];
+        foreach ([['Préparation', 'Protection des sols et des meubles', 1000, 'forfait', 18000],
+                  ['Préparation', 'Ponçage et rebouchage des murs', 42000, 'm²', 900],
+                  ['Peinture', 'Peinture murale, deux couches', 42000, 'm²', 1850],
+                  ['Peinture', 'Peinture du plafond', 18000, 'm²', 2100]] as $i => [$categorie, $designation, $quantite, $unite, $prix]) {
+            $lignes[] = ['id' => $i + 1, 'offre_id' => 0, 'rang' => $i + 1, 'designation' => $designation, 'quantite_milliemes' => $quantite,
+                         'unite' => $unite, 'prix_centimes' => $prix, 'offerte' => 0, 'a_verifier' => 0, 'entendu' => null, 'produit_id' => null, 'categorie' => $categorie, 'tva_pour_dix_mille' => null, 'tva_ligne' => null, 'prix_dicte_centimes' => null, 'prix_catalogue' => null, 'piece' => null, 'nature' => 'ligne', 'remplace_id' => null, 'retenue' => 0];
+        }
+        return [$offre, $lignes];
+    }
+
+    /** Une étape de l'assistant du premier lancement. */
+    public function etape(Request $requete, string $nom): Response
+    {
+        $portee = $this->portee($requete);
+        $r = $this->c->reglages($portee)->lire();
+        return $this->page($portee, [$nom], self::ETAPES[$nom], $this->champsActuels($portee), $r->arrondiCinqCentimes, [], 200, '', $nom);
+    }
+
+    /** « Suivant » : enregistre l'étape, passe à la suivante ; la dernière termine l'assistant. */
+    public function enregistrerEtape(Request $requete, string $nom): Response
+    {
+        $portee = $this->portee($requete);
+        [$erreurs, $champs, $arrondi] = $this->sauver($requete, $portee);
+        if ($erreurs !== []) {
+            return $this->page($portee, [$nom], self::ETAPES[$nom], $champs, $arrondi, $erreurs, 422, '', $nom);
+        }
+        $etapes = array_keys(self::ETAPES);
+        $suivante = $etapes[array_search($nom, $etapes, true) + 1] ?? null;
+        if ($suivante !== null) {
+            return new RedirectResponse('/bienvenue/' . $suivante, 303);
+        }
+        $this->c->reglages($portee)->marquerAssistantFait($this->c->horloge()->now());
+        // Les produits gardés de la démo, sans prix : « Vos prix », un par un, avec le prix de la démo proposé. Le message
+        // « Votre compte est prêt » (il renvoie au micro) seulement sur « Offres » (relecture du 2026-11-22).
+        if ($this->c->produits($portee)->sansPrix() !== []) {
+            // Cinquième étape de la mise en route (E8 de Xavier, 2026-11-23) : « Étape 5 sur 5 » et « Passer le guide ».
+            return new RedirectResponse('/vos-prix?mise_en_route=1', 303);
+        }
+        $textes = $this->c->textes();
+        Flash::dire($requete, 'info', html_entity_decode(strip_tags($textes->texte('e.fin.titre') . '. ' . $textes->texte('e.fin.texte')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        return new RedirectResponse('/', 303);
+    }
+
+    /** « Plus tard » : l'assistant ne revient plus ; tout reste dans Réglages. */
+    public function passer(Request $requete): RedirectResponse
+    {
+        $this->c->reglages($this->portee($requete))->marquerAssistantFait($this->c->horloge()->now());
+        return new RedirectResponse('/', 303);
+    }
+
+    /**
+     * Les champs reçus par-dessus les valeurs actuelles, validés ensemble ; enregistrés s'ils sont justes.
+     *
+     * @return array{array<string, string>, array<string, string>, bool} erreurs, champs, arrondi
+     */
+    private function sauver(Request $requete, Portee $portee): array
+    {
+        $champs = $this->champsActuels($portee);
+        // L'activité d'avant cet envoi : les phrases de Lettre de l'écran, reçues ou reprises, sont dans ses mots. Les
+        // comparer à celles d'une activité qui change ici les ferait enregistrer comme tapées (revue du 2026-11-22).
+        $activiteAvant = Activite::lire($champs['activite']);
+        $recus = $requete->request;
+        // Les phrases du document : un champ phrase_<clé> par phrase de PhrasesLettre::DOCUMENT.
+        $phrases = array_map(static fn (string $cle): string => 'phrase_' . $cle, array_keys(PhrasesLettre::DOCUMENT));
+        foreach ([...self::CHAMPS, ...$phrases] as $nom) {
+            if ($recus->has($nom)) {
+                $champs[$nom] = $recus->getString($nom);
+            }
+        }
+        // 2b : une version plus foncée prise d'un toucher dans l'encadré sous la couleur. Sans JavaScript, son bouton envoie
+        // le formulaire ; une valeur invalide tombe dans le contrôle de la couleur, plus bas.
+        if ($recus->has('couleur_prise')) {
+            $champs['couleur_choix'] = 'autre';
+            $champs['couleur'] = $recus->getString('couleur_prise');
+        }
+        // Un nombre tapé sans son choix (formulaire ancien) vaut « Autre » : sinon le choix actuel l'emporterait.
+        foreach (['validite_jours' => 'validite_choix', 'paiement_jours' => 'paiement_jours_choix', 'paiement_acomptes' => 'paiement_acomptes_choix'] as $tape => $choix) {
+            if ($recus->has($tape) && !$recus->has($choix)) {
+                $champs[$choix] = 'autre';
+            }
+        }
+        $r = $this->c->reglages($portee)->lire();
+        $arrondi = $recus->has('arrondi') ? $recus->getString('arrondi') === '1' : $r->arrondiCinqCentimes;
+        $erreurs = [];
+        $reglages = null;
+        // L'activité du compte (Compte\Activite) : une des trois, rien d'autre. Elle vit sur le compte, pas dans Reglages.
+        $activite = Activite::tryFrom($champs['activite']);
+        try {
+            $reglages = Reglages::depuisSaisie($champs, $arrondi, $activiteAvant);
+        } catch (SaisieRefusee $e) {
+            $erreurs = $e->erreurs;
+        }
+        if ($activite === null) {
+            $erreurs['activite'] = 'Choisissez votre activité.';
+        }
+        $couleur = Marque::couleurValide($champs['couleur_choix'] === 'autre' ? $champs['couleur'] : $champs['couleur_choix']);
+        if ($couleur === null) {
+            $erreurs['couleur'] = 'Une couleur de la forme #1D4E89.';
+        }
+        if ($reglages !== null && $erreurs === []) {
+            $this->c->reglages($portee)->enregistrer($reglages);
+            $this->c->reglages($portee)->enregistrerMarque(Marque::modeleValide($champs['modele']), $couleur);
+            // Le compte de la session, et lui seul. Ni le métier, ni le catalogue, ni les offres ne changent.
+            if ($activite !== null && $recus->has('activite')) {
+                $this->c->artisans()->changerActivite($portee->artisanId, $activite);
+            }
+        }
+        return [$erreurs, $champs, $arrondi];
+    }
+
+    /**
+     * Les phrases du document à l'écran de « Ma marque », par document : nom, moment, pastilles et phrase d'origine dans
+     * les mots de l'activité (MAQUETTE-lettre-phrases-auto.html, M3 A : repliées).
+     *
+     * @return array{offre: list<array{cle: string, nom: string, quand: string, pastilles: list<string>, origine: string}>, facture: list<array{cle: string, nom: string, quand: string, pastilles: list<string>, origine: string}>}
+     */
+    private static function phrasesDocument(Activite $activite): array
+    {
+        $phrases = ['offre' => [], 'facture' => []];
+        foreach (PhrasesLettre::DOCUMENT as $cle => $p) {
+            $phrases[$p['doc']][] = ['cle' => $cle, 'nom' => PhrasesLettre::nomPhrase($cle, $activite), 'quand' => $p['quand'],
+                'pastilles' => $p['pastilles'], 'origine' => PhrasesLettre::origine($cle, $activite)];
+        }
+        return $phrases;
+    }
+
+    /** « Dans Lettre seulement », ou « Dans les douze modèles · 2 phrases réécrites ». */
+    private static function resumePhrases(PhrasesLettre $p): string
+    {
+        $reecrites = count(array_intersect_key($p->reecrites, PhrasesLettre::DOCUMENT));
+        return ($p->partout ? 'Dans les douze modèles' : 'Dans Lettre seulement')
+            . ($reecrites > 0 ? ' · ' . $reecrites . ' phrase' . ($reecrites > 1 ? 's réécrites' : ' réécrite') : '');
+    }
+
+    /**
+     * « adresse », « adresse et IDE », « adresse, IDE et IBAN ».
+     *
+     * @param non-empty-list<string> $mots
+     */
+    private static function enumeration(array $mots): string
+    {
+        $dernier = array_pop($mots);
+        return $mots === [] ? $dernier : implode(', ', $mots) . ' et ' . $dernier;
+    }
+
+    /** @return array<string, string> les réglages actuels, sous la forme des champs de l'écran */
+    private function champsActuels(Portee $portee): array
+    {
+        $r = $this->c->reglages($portee)->lire();
+        $m = $this->c->reglages($portee)->lireMarque();
+        $activite = Activite::lire($this->c->artisans()->parId($portee->artisanId)['activite'] ?? null);
+        return ['entreprise' => $r->entreprise, 'contact_nom' => $r->contactNom, 'activite' => $activite->value,
+                'adresse_rue' => $r->adresse->rue, 'adresse_numero' => $r->adresse->numero, 'adresse_npa' => $r->adresse->npa,
+                'adresse_localite' => $r->adresse->localite, 'adresse_pays' => $r->adresse->pays,
+                // Montrée seulement (elle n'est pas dans CHAMPS) : l'adresse d'avant, à reporter dans les champs.
+                'adresse_ancienne' => $this->c->reglages($portee)->adresseAReprendre(),
+                'telephone' => $r->telephone, 'courriel_contact' => $r->courrielContact,
+                'ide' => $r->ide, 'iban' => Iban::lisible($r->iban), 'tva' => (string) $r->tvaPourDixMille,
+                'modele' => $m->modele,
+                'couleur_choix' => in_array($m->couleur(), self::teintes($m), true) ? $m->couleur() : 'autre',
+                'couleur' => $m->couleur()] + $r->conditions()->versChamps() + $r->lettre->versChamps($activite);
+    }
+
+    private function portee(Request $requete): Portee
+    {
+        return new Portee($requete->attributes->getInt('_artisan'));
+    }
+
+    /** Le logo de l'artisan connecté, et de lui seul : l'adresse ne prend aucun paramètre. */
+    public function logo(Request $requete): Response
+    {
+        $m = $this->c->reglages(new Portee($requete->attributes->getInt('_artisan')))->lireMarque();
+        $chemin = $m->logo === null ? null : $this->c->dossierLogos() . '/' . basename($m->logo);
+        if ($chemin === null || !is_file($chemin)) {
+            throw new PageIntrouvable();
+        }
+        $reponse = new BinaryFileResponse($chemin, 200, ['Content-Type' => 'image/jpeg']);
+        // L'adresse change avec le fichier (?v=…) : le navigateur peut le garder.
+        $reponse->headers->set('Cache-Control', 'private, max-age=86400');
+        return $reponse;
+    }
+
+    /** La couleur des documents de l'artisan connecté, en CSS (voir Marque::css). */
+    public function css(Request $requete): Response
+    {
+        $m = $this->c->reglages(new Portee($requete->attributes->getInt('_artisan')))->lireMarque();
+        // ?apercu=#B23A2E : la couleur touchée, avant que l'enregistrement revienne (2a). Rien n'est écrit.
+        $apercu = Marque::couleurValide($requete->query->getString('apercu'));
+        if ($apercu !== null) {
+            $m = new Marque($m->modele, $apercu, $m->logo, $m->couleurDuLogo);
+        }
+        return new Response($m->css(), 200, ['Content-Type' => 'text/css; charset=utf-8', 'Cache-Control' => 'private, max-age=86400']);
+    }
+
+    /** Nouveau logo : contrôlé, réencodé, rangé hors du site public ; sa couleur devient celle des documents. */
+    public function envoyerLogo(Request $requete): RedirectResponse
+    {
+        $portee = new Portee($requete->attributes->getInt('_artisan'));
+        $fichier = $requete->files->get('logo');
+        if (!$fichier instanceof UploadedFile || !$fichier->isValid()) {
+            Flash::dire($requete, 'erreur', 'Choisissez une image PNG ou JPEG.');
+            return new RedirectResponse(self::retourDuLogo($requete), 303);
+        }
+        $dossier = $this->c->dossierLogos();
+        if (!is_dir($dossier)) {
+            mkdir($dossier, 0700, true);
+        }
+        $nom = $portee->artisanId . '-' . bin2hex(random_bytes(6)) . '.jpg';
+        $logos = $this->c->traitementLogo();
+        try {
+            $logos->preparer($fichier->getPathname(), "$dossier/$nom");
+        } catch (LogoRefuse $e) {
+            Flash::dire($requete, 'erreur', $e->getMessage());
+            return new RedirectResponse(self::retourDuLogo($requete), 303);
+        }
+        chmod("$dossier/$nom", 0600);
+        $ancien = $this->c->reglages($portee)->lireMarque()->logo;
+        $this->c->reglages($portee)->changerLogo($nom, $logos->couleurDominante("$dossier/$nom"));
+        $this->effacer($ancien);
+        Flash::dire($requete, 'info', 'Logo enregistré');
+        return new RedirectResponse(self::retourDuLogo($requete), 303);
+    }
+
+    public function retirerLogo(Request $requete): RedirectResponse
+    {
+        $portee = new Portee($requete->attributes->getInt('_artisan'));
+        $ancien = $this->c->reglages($portee)->lireMarque()->logo;
+        $this->c->reglages($portee)->changerLogo(null, null);
+        $this->effacer($ancien);
+        Flash::dire($requete, 'info', 'Logo retiré');
+        return new RedirectResponse(self::retourDuLogo($requete), 303);
+    }
+
+    /** Seules trois adresses : la rubrique Marque, ou les étapes Logo et Marque de l'assistant. */
+    private static function retourDuLogo(Request $requete): string
+    {
+        $retour = $requete->request->getString('retour');
+        return in_array($retour, ['/bienvenue/logo', '/bienvenue/marque'], true) ? $retour : '/reglages/marque';
+    }
+
+    private function effacer(?string $logo): void
+    {
+        $chemin = $logo === null ? null : $this->c->dossierLogos() . '/' . basename($logo);
+        if ($chemin !== null && is_file($chemin)) {
+            unlink($chemin);
+        }
+    }
+
+    /** Le modèle marqué « Proposé pour votre métier » ; aucun pour un compte sans métier, ou d'un métier « autre ». */
+    private function modelePropose(Portee $portee): ?string
+    {
+        $metier = $this->c->artisans()->parId($portee->artisanId)['metier'] ?? null;
+        return $metier === null || $metier === 'autre' ? null : Marque::pourMetier($metier);
+    }
+
+    /**
+     * L'encadré sous la couleur (2b) : pour une couleur tapée, ou celle du logo, sous 7:1 ; jamais pour les six couleurs
+     * proposées (maquette du 5e tour du chantier responsive). Contrastes déjà écrits pour l'écran.
+     *
+     * @param array<string, string> $champs
+     * @return array{contraste: float, rapport: string, bien: string, bien_rapport: string, visible: string, visible_rapport: string}|null
+     */
+    private static function avisCouleur(array $champs): ?array
+    {
+        $choix = $champs['couleur_choix'] ?? '';
+        $couleur = Marque::couleurValide($choix === 'autre' ? ($champs['couleur'] ?? '') : $choix);
+        $p = $couleur === null || in_array($couleur, Marque::TEINTES, true) ? null : Marque::propositions($couleur);
+        return $p === null ? null : $p + [
+            'rapport' => Marque::rapport($p['contraste']),
+            'bien_rapport' => Marque::rapport(Marque::contraste($p['bien'], '#FFFFFF')),
+            'visible_rapport' => Marque::rapport(Marque::contraste($p['visible'], '#FFFFFF')),
+        ];
+    }
+
+    /** @return list<string> la couleur du logo d'abord, puis les couleurs proposées */
+    private static function teintes(Marque $m): array
+    {
+        return array_values(array_unique(array_filter([$m->couleurDuLogo, ...Marque::TEINTES])));
+    }
+
+    /**
+     * La rubrique (ou l'étape de l'assistant) avec ses champs.
+     *
+     * @param list<string> $sections rubriques montrées (_reglages_<rubrique>.html.twig)
+     * @param array<string, string> $champs
+     * @param array<string, string> $erreurs
+     * @param string|null $etape l'étape de l'assistant, null dans les réglages
+     */
+    private function page(Portee $portee, array $sections, string $titre, array $champs, bool $arrondi, array $erreurs, int $code, string $retour, ?string $etape): Response
+    {
+        $marque = $this->c->reglages($portee)->lireMarque();
+        $assistant = null;
+        if ($etape !== null) {
+            $etapes = array_keys(self::ETAPES);
+            // « Vos prix » compte pour une étape quand des produits attendent leur prix (maquette v6, cinq étapes).
+            $total = count($etapes) + ($this->c->produits($portee)->sansPrix() !== [] ? 1 : 0);
+            $assistant = ['etapes' => $etapes, 'numero' => (int) array_search($etape, $etapes, true) + 1, 'total' => $total];
+        }
+        return new Response($this->c->twig()->render('reglages_rubrique.html.twig', [
+            'sections' => $sections,
+            'titre' => $titre,
+            'retour' => $retour,
+            'assistant' => $assistant,
+            'champs' => $champs,
+            'arrondi' => $arrondi,
+            'erreurs' => $erreurs,
+            'validites' => Reglages::VALIDITES_PROPOSEES,
+            'types' => Reglages::TYPES_PAIEMENT,
+            'delais' => Reglages::DELAIS_PROPOSES,
+            'acomptes' => array_map(static fn (array $a): string => implode(',', $a), Reglages::ACOMPTES_PROPOSES),
+            'phrase' => $this->c->activiteCourante()->dire($this->c->reglages($portee)->lire()->conditionsPaiement()),
+            'marque' => $marque,
+            'teintes' => self::teintes($marque),
+            'modeles' => Marque::MODELES,
+            'familles' => Marque::FAMILLES,
+            'propose' => $this->modelePropose($portee),
+            'vignettes' => in_array('marque', $sections, true) ? $this->vignettes($portee, $marque) : [],
+            'proposees' => Marque::TEINTES,
+            'tournures' => PhrasesLettre::tournures($this->c->activiteCourante()),
+            'phrases' => self::phrasesDocument($this->c->activiteCourante()),
+            'activites' => Activite::cases(),
+            'avis' => self::avisCouleur($champs),
+        ]), $code);
+    }
+}

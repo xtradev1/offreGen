@@ -1,0 +1,493 @@
+<!doctype html><html lang="fr-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Écrans à compléter</title><style>
+:root{--mk-ink:#1c2430;--mk-bg:#f4f5f7;--mk-surface:#fff;--mk-line:#d8dce3;--mk-accent:#2f6fd6}
+[data-theme="dark"]{--mk-ink:#e8ebf0;--mk-bg:#12161c;--mk-surface:#1b2129;--mk-line:#323a45;--mk-accent:#7aa7ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--mk-ink:#e8ebf0;--mk-bg:#12161c;--mk-surface:#1b2129;--mk-line:#323a45;--mk-accent:#7aa7ff}}
+body{margin:0;background:var(--mk-bg);color:var(--mk-ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.page{max-width:1240px;margin:0 auto;padding:16px}
+h1{font-size:24px;margin:8px 0} h2{font-size:20px;margin:32px 0 8px}
+.ecrans{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.ecrans figure{margin:0;max-width:100%}
+.ecrans figcaption{font-size:13px;opacity:.8;margin-top:4px}
+iframe.tel{width:390px;max-width:100%;box-sizing:border-box;border:1px solid var(--mk-line);border-radius:22px;background:#fff}
+.pc-cadre{width:592px;max-width:100%;box-sizing:border-box;overflow:hidden;border:1px solid var(--mk-line);border-radius:10px;background:#fff}
+iframe.pc{width:1180px;border:0;transform:scale(.5);transform-origin:0 0}
+.courriel{width:390px;max-width:100%;box-sizing:border-box;background:var(--mk-surface);border:1px solid var(--mk-line);border-radius:12px;padding:14px;font-size:15px}
+.courriel .entetes{font-size:13px;opacity:.85;border-bottom:1px solid var(--mk-line);padding-bottom:8px}
+.choix{background:var(--mk-surface);border:1px solid var(--mk-line);border-radius:12px;padding:12px;margin:12px 0;max-width:820px}
+.choix .q{margin:0 0 8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.opts button{font:inherit;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--mk-line);background:var(--mk-bg);color:var(--mk-ink);cursor:pointer}
+.opts button[aria-pressed="true"]{background:var(--mk-accent);border-color:var(--mk-accent);color:#fff}
+.choix textarea{width:100%;box-sizing:border-box;font:inherit;border:1px solid var(--mk-line);border-radius:10px;padding:8px;background:var(--mk-bg);color:var(--mk-ink)}
+#copier{font:inherit;min-height:48px;padding:10px 16px;border-radius:12px;border:0;background:var(--mk-accent);color:#fff;cursor:pointer}
+#texte{width:100%;box-sizing:border-box;min-height:120px;margin-top:8px;font:13px/1.4 ui-monospace,monospace}
+</style><style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head><body><div class="page"><h1>Compléter avant la production : les nouveaux écrans</h1><p>Tous dessinés avec la feuille de style de l'application et la structure de ses pages : mêmes boutons, mêmes champs, mêmes cartes, même barre du bas. Ta remarque du 18.11 : « une cohérence visuelle sur tout le site ». Réponds sous chaque écran, puis « Copier le texte » en bas.</p><nav id="mk-toc"></nav><h2 id="mdp">Mot de passe oublié</h2><p>Aujourd'hui, un artisan qui oublie son mot de passe dépend de toi. Le lien part par courriel, il vaut une heure, et la page dit la même chose que le compte existe ou non (personne ne peut savoir qui est client).</p><div class="ecrans"><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Connexion&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;&lt;p class=&quot;muted&quot;&gt;Connectez-vous pour importer une visite et retrouver vos offres.&lt;/p&gt;
+&lt;form id=&quot;connexion&quot;&gt;&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Courriel&lt;/label&gt;&lt;input type=&quot;email&quot; value=&quot;luigi@exemple.ch&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Mot de passe&lt;/label&gt;&lt;input type=&quot;password&quot; value=&quot;motdepasse&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Mot de passe oublié&amp;nbsp;?&lt;/a&gt;&lt;/p&gt;&lt;/form&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Se connecter&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>Connexion : le lien sous le mot de passe</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Mot de passe oublié&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;&lt;p class=&quot;muted&quot;&gt;Indiquez le courriel de votre compte. Vous recevrez un lien pour choisir un nouveau mot de passe.&lt;/p&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Courriel&lt;/label&gt;&lt;input type=&quot;email&quot; value=&quot;luigi@exemple.ch&quot;&gt;&lt;/div&gt;
+&lt;p class=&quot;centre&quot;&gt;&lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Retour à la connexion&lt;/a&gt;&lt;/p&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Recevoir le lien&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>La demande</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Mot de passe oublié&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;&lt;p class=&quot;alerte info&quot; role=&quot;status&quot;&gt;Si un compte existe pour luigi@exemple.ch, un courriel vient de partir. Le lien vaut une heure.&lt;/p&gt;
+&lt;p class=&quot;muted&quot;&gt;Rien reçu dans quelques minutes&amp;nbsp;? Regardez dans les indésirables, ou demandez un nouveau lien.&lt;/p&gt;
+&lt;p class=&quot;centre&quot;&gt;&lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Retour à la connexion&lt;/a&gt;&lt;/p&gt;&lt;/main&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>Après la demande</figcaption></figure></div><div class="choix" data-cle="P1"><p class="q"><b>P1</b> · Le parcours « mot de passe oublié » (connexion, demande, message)</p><div class="opts"><button type="button" data-q="P1" data-v="Valider">Valider</button><button type="button" data-q="P1" data-v="Pas valider">Pas valider</button></div><textarea data-c="P1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><h2 id="courriel">Le courriel</h2><p>Texte sobre, sans image. L'adresse d'envoi dépend du domaine que tu choisis.</p><div class="ecrans"><figure><div class="courriel"><p class="entetes"><b>De</b> offreGen &lt;notifications@easy-offre.ch&gt;<br><b>À</b> luigi@exemple.ch<br><b>Objet</b> Votre nouveau mot de passe offreGen</p>
+<p>Bonjour,</p><p>Pour choisir un nouveau mot de passe, ouvrez ce lien dans l'heure&nbsp;:</p>
+<p><a href="#">https://easy-offre.ch/mot-de-passe/…</a></p>
+<p>Vous n'avez rien demandé&nbsp;? Ignorez ce courriel, votre mot de passe ne change pas.</p><p>offreGen</p></div><figcaption>Le courriel reçu</figcaption></figure></div><div class="choix" data-cle="P2"><p class="q"><b>P2</b> · Le texte du courriel</p><div class="opts"><button type="button" data-q="P2" data-v="Valider">Valider</button><button type="button" data-q="P2" data-v="Pas valider">Pas valider</button></div><textarea data-c="P2" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><h2 id="nouveau">Le nouveau mot de passe</h2><p>A : un seul champ, lisible, avec « Masquer ». B : deux champs masqués, le second pour confirmer. Sur un téléphone, A évite les fautes de frappe sans demander deux fois.</p><div class="ecrans"><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Nouveau mot de passe&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;&lt;p class=&quot;muted&quot;&gt;Pour luigi@exemple.ch.&lt;/p&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Nouveau mot de passe&lt;/label&gt;&lt;input type=&quot;text&quot; value=&quot;Echafaudage-2026&quot;&gt;&lt;small class=&quot;muted petit&quot;&gt;10 caractères au moins. &lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Masquer&lt;/a&gt;&lt;/small&gt;&lt;/div&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Enregistrer et me connecter&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>A : un champ, lisible</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Nouveau mot de passe&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;&lt;p class=&quot;muted&quot;&gt;Pour luigi@exemple.ch.&lt;/p&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Nouveau mot de passe&lt;/label&gt;&lt;input type=&quot;password&quot; value=&quot;Echafaudage-2026&quot;&gt;&lt;small class=&quot;muted petit&quot;&gt;10 caractères au moins.&lt;/small&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Encore une fois&lt;/label&gt;&lt;input type=&quot;password&quot; value=&quot;Echafaudage-2026&quot;&gt;&lt;/div&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Enregistrer et me connecter&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>B : deux champs</figcaption></figure></div><div class="choix" data-cle="P3"><p class="q"><b>P3</b> · Saisie du nouveau mot de passe</p><div class="opts"><button type="button" data-q="P3" data-v="A">A</button><button type="button" data-q="P3" data-v="B">B</button></div><textarea data-c="P3" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><h2 id="changer">Changer son mot de passe</h2><p>Une cinquième rubrique dans les réglages. Changer le mot de passe déconnecte les autres appareils (revue du 18.11, M6 : aujourd'hui une session volée le reste 14 jours).</p><div class="ecrans"><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Réglages&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris&quot;&gt;  &lt;p class=&quot;etat-reglages&quot;&gt;
+    &lt;span class=&quot;points&quot; aria-hidden=&quot;true&quot;&gt;&lt;i class=&quot;ok&quot;&gt;&lt;/i&gt;&lt;i class=&quot;ok&quot;&gt;&lt;/i&gt;&lt;i class=&quot;ok&quot;&gt;&lt;/i&gt;&lt;i class=&quot;ok&quot;&gt;&lt;/i&gt;&lt;/span&gt;
+    &lt;span&gt;4 rubriques sur 4 complètes&lt;/span&gt;
+  &lt;/p&gt;
+      &lt;a class=&quot;rubrique&quot; href=&quot;/reglages/entreprise&quot;&gt;
+      &lt;span class=&quot;ic&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 21V5l8-2v18M12 8h8v13M4 21h16M8 8h.01M8 12h.01M8 16h.01M16 12h.01M16 16h.01&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;
+      &lt;span class=&quot;corps&quot;&gt;&lt;b&gt;Mon entreprise&lt;/b&gt;&lt;small&gt;Peinture Morel Sàrl · Delémont&lt;/small&gt;&lt;/span&gt;
+      &lt;span class=&quot;fl&quot; aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;
+    &lt;/a&gt;
+      &lt;a class=&quot;rubrique&quot; href=&quot;/reglages/marque&quot;&gt;
+      &lt;span class=&quot;ic&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.9 1.2-1.8-.5-1-.1-2.2 1.1-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z&quot;/&gt;&lt;circle cx=&quot;7.5&quot; cy=&quot;11&quot; r=&quot;1&quot;/&gt;&lt;circle cx=&quot;10.5&quot; cy=&quot;7.5&quot; r=&quot;1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;8&quot; r=&quot;1&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;
+      &lt;span class=&quot;corps&quot;&gt;&lt;b&gt;Ma marque&lt;/b&gt;&lt;small&gt;Logo · modèle Bandeau&lt;/small&gt;&lt;/span&gt;
+      &lt;span class=&quot;fl&quot; aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;
+    &lt;/a&gt;
+      &lt;a class=&quot;rubrique&quot; href=&quot;/reglages/conditions&quot;&gt;
+      &lt;span class=&quot;ic&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;
+      &lt;span class=&quot;corps&quot;&gt;&lt;b&gt;Conditions de l&amp;#039;offre&lt;/b&gt;&lt;small&gt;Valable 30 jours · acomptes 30 / 30 / 40 %&lt;/small&gt;&lt;/span&gt;
+      &lt;span class=&quot;fl&quot; aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;
+    &lt;/a&gt;
+      &lt;a class=&quot;rubrique&quot; href=&quot;/reglages/tva&quot;&gt;
+      &lt;span class=&quot;ic&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M19 5 5 19&quot;/&gt;&lt;circle cx=&quot;7&quot; cy=&quot;7&quot; r=&quot;2.5&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;17&quot; r=&quot;2.5&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;
+      &lt;span class=&quot;corps&quot;&gt;&lt;b&gt;TVA et arrondi&lt;/b&gt;&lt;small&gt;Assujetti 8,1 % · arrondi aux 5 centimes&lt;/small&gt;&lt;/span&gt;
+      &lt;span class=&quot;fl&quot; aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;
+    &lt;/a&gt;&lt;a class=&quot;rubrique&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;ic&quot;&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;5&quot; y=&quot;11&quot; width=&quot;14&quot; height=&quot;10&quot; rx=&quot;2&quot;/&gt;&lt;path d=&quot;M8 11V7a4 4 0 0 1 8 0v4&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;
+&lt;span class=&quot;corps&quot;&gt;&lt;b&gt;Mot de passe&lt;/b&gt;&lt;small&gt;Changé le 18.11.2026&lt;/small&gt;&lt;/span&gt;&lt;span class=&quot;fl&quot; aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;&lt;/a&gt;
+  
+  &lt;form class=&quot;compte&quot; method=&quot;post&quot; action=&quot;/deconnexion&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;_csrf&quot; value=&quot;7e6cb1130.CKUUU48oRloRcHLt-9Nhba5duTzdtHBaIiDejKe3XxM.aZJVEdd-PA5kISausYU-LMMqy1Ky3SIrdne_7_PiJys40mMc338EEkRGMw&quot;&gt;
+    &lt;span class=&quot;muted&quot;&gt;Compte&amp;nbsp;: demo-peintre@exemple.ch (démonstration)&lt;/span&gt;
+    &lt;button class=&quot;lien&quot; type=&quot;submit&quot;&gt;Se déconnecter&lt;/button&gt;
+  &lt;/form&gt;
+&lt;/main&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;offreGen&lt;/span&gt;
+  &lt;a href=&quot;/&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>Réglages : la rubrique en plus</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;a class=&quot;back&quot; href=&quot;#&quot;&gt;Réglages&lt;/a&gt;&lt;h1&gt;Mot de passe&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Mot de passe actuel&lt;/label&gt;&lt;input type=&quot;password&quot; value=&quot;motdepasse&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Nouveau mot de passe&lt;/label&gt;&lt;input type=&quot;password&quot; value=&quot;Echafaudage-2026&quot;&gt;&lt;small class=&quot;muted petit&quot;&gt;10 caractères au moins.&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p class=&quot;muted petit&quot;&gt;Vos autres appareils (un deuxième téléphone, un ordinateur) seront déconnectés.&lt;/p&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Changer le mot de passe&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>La rubrique</figcaption></figure></div><div class="choix" data-cle="P4"><p class="q"><b>P4</b> · La rubrique « Mot de passe » et la déconnexion des autres appareils</p><div class="opts"><button type="button" data-q="P4" data-v="Valider">Valider</button><button type="button" data-q="P4" data-v="Pas valider">Pas valider</button></div><textarea data-c="P4" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><h2 id="admin">Administration : les comptes</h2><p>Premier morceau de la partie administration validée au sous-chantier 26 (G1) : son propre menu, réservé au droit administrateur, 404 pour tout autre compte. Sur PC, le menu passe à gauche comme dans l'application.</p><div class="ecrans"><figure><div class="pc-cadre" style="height:362px"><iframe class="pc" title="écran sur PC" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Comptes&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris&quot;&gt;&lt;div class=&quot;cat liste&quot;&gt;&lt;h5&gt;Comptes&lt;/h5&gt;&lt;span&gt;4&lt;/span&gt;&lt;/div&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Peinture Luigi&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Essai&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;luigi@exemple.ch · connecté le 18.11.2026&lt;/span&gt;&lt;b&gt;3 offres sur 20&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Menuiserie Exemple&lt;/b&gt;&lt;span class=&quot;status&quot;&gt;Essai&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;menuisier@exemple.ch · jamais connecté&lt;/span&gt;&lt;b&gt;0 sur 20&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Sanitaire Modèle&lt;/b&gt;&lt;span class=&quot;status attente&quot;&gt;Essai épuisé&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;sanitaire@exemple.ch · connecté le 12.11.2026&lt;/span&gt;&lt;b&gt;20 sur 20&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Peinture Morel Sàrl&lt;/b&gt;&lt;span class=&quot;status&quot;&gt;Démonstration&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;demo-peintre@exemple.ch · 10 imports par jour&lt;/span&gt;&lt;b&gt;5 ce mois&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Créer un compte d&#x27;essai&lt;/button&gt;&lt;/div&gt;&lt;nav class=&quot;tabs&quot; aria-label=&quot;Administration&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;offreGen · administration&lt;/span&gt;
+  &lt;a href=&quot;#&quot; aria-current=&quot;page&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Comptes&lt;/a&gt;
+  &lt;a href=&quot;#&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 20V10M10 20V4M16 20v-7M22 20H2&quot;/&gt;&lt;/svg&gt;Coût de l&#x27;IA&lt;/a&gt;
+  &lt;a href=&quot;#&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;#&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M15 18l-6-6 6-6&quot;/&gt;&lt;/svg&gt;Retour à l&#x27;application&lt;/a&gt;
+&lt;/nav&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:720px"></iframe></div><figcaption>Sur PC</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Comptes&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris&quot;&gt;&lt;div class=&quot;cat liste&quot;&gt;&lt;h5&gt;Comptes&lt;/h5&gt;&lt;span&gt;4&lt;/span&gt;&lt;/div&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Peinture Luigi&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Essai&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;luigi@exemple.ch · connecté le 18.11.2026&lt;/span&gt;&lt;b&gt;3 offres sur 20&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Menuiserie Exemple&lt;/b&gt;&lt;span class=&quot;status&quot;&gt;Essai&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;menuisier@exemple.ch · jamais connecté&lt;/span&gt;&lt;b&gt;0 sur 20&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Sanitaire Modèle&lt;/b&gt;&lt;span class=&quot;status attente&quot;&gt;Essai épuisé&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;sanitaire@exemple.ch · connecté le 12.11.2026&lt;/span&gt;&lt;b&gt;20 sur 20&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Peinture Morel Sàrl&lt;/b&gt;&lt;span class=&quot;status&quot;&gt;Démonstration&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;demo-peintre@exemple.ch · 10 imports par jour&lt;/span&gt;&lt;b&gt;5 ce mois&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Créer un compte d&#x27;essai&lt;/button&gt;&lt;/div&gt;&lt;nav class=&quot;tabs&quot; aria-label=&quot;Administration&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;offreGen · administration&lt;/span&gt;
+  &lt;a href=&quot;#&quot; aria-current=&quot;page&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Comptes&lt;/a&gt;
+  &lt;a href=&quot;#&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 20V10M10 20V4M16 20v-7M22 20H2&quot;/&gt;&lt;/svg&gt;Coût de l&#x27;IA&lt;/a&gt;
+  &lt;a href=&quot;#&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;#&quot;&gt;&lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M15 18l-6-6 6-6&quot;/&gt;&lt;/svg&gt;Retour à l&#x27;application&lt;/a&gt;
+&lt;/nav&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>Au téléphone</figcaption></figure></div><div class="choix" data-cle="A1"><p class="q"><b>A1</b> · La liste des comptes (essai, plafond, dernière connexion)</p><div class="opts"><button type="button" data-q="A1" data-v="Valider">Valider</button><button type="button" data-q="A1" data-v="Pas valider">Pas valider</button></div><textarea data-c="A1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><h2 id="creer">Créer un compte d'essai</h2><p>A : l'artisan reçoit un courriel et choisit lui-même son mot de passe (le même lien que « mot de passe oublié », valable 7 jours). B : le mot de passe s'affiche une fois, tu le lui transmets. A évite qu'un mot de passe passe par un SMS ou un papier.</p><div class="ecrans"><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;a class=&quot;back&quot; href=&quot;#&quot;&gt;Comptes&lt;/a&gt;&lt;h1&gt;Nouveau compte d&#x27;essai&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Entreprise&lt;/label&gt;&lt;input value=&quot;Peinture Luigi&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Courriel&lt;/label&gt;&lt;input type=&quot;email&quot; value=&quot;luigi@exemple.ch&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Offres d&#x27;essai&lt;/label&gt;&lt;input inputmode=&quot;numeric&quot; value=&quot;20&quot;&gt;&lt;small class=&quot;muted petit&quot;&gt;En tout, pas par mois. Modifiable ensuite.&lt;/small&gt;&lt;/div&gt;&lt;/div&gt;&lt;/main&gt;&lt;div class=&quot;bas&quot;&gt;&lt;div class=&quot;actionbar&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Créer le compte&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>Le formulaire</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;a class=&quot;back&quot; href=&quot;#&quot;&gt;Comptes&lt;/a&gt;&lt;h1&gt;Peinture Luigi&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris&quot;&gt;&lt;p class=&quot;alerte info&quot; role=&quot;status&quot;&gt;Compte créé. Luigi a reçu un courriel pour choisir son mot de passe (lien valable 7 jours).&lt;/p&gt;
+&lt;div class=&quot;card&quot;&gt;&lt;p&gt;&lt;b&gt;luigi@exemple.ch&lt;/b&gt;&lt;/p&gt;&lt;p class=&quot;muted&quot;&gt;Essai · 0 offre sur 20&lt;/p&gt;&lt;/div&gt;
+&lt;p class=&quot;centre&quot;&gt;&lt;a class=&quot;lien&quot; href=&quot;#&quot;&gt;Renvoyer le courriel d&#x27;accès&lt;/a&gt;&lt;/p&gt;&lt;/main&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>A : courriel d'accès</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;a class=&quot;back&quot; href=&quot;#&quot;&gt;Comptes&lt;/a&gt;&lt;h1&gt;Peinture Luigi&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris&quot;&gt;&lt;p class=&quot;alerte warn&quot; role=&quot;status&quot;&gt;Compte créé. Mot de passe à transmettre à Luigi, affiché une seule fois&amp;nbsp;:&lt;/p&gt;
+&lt;div class=&quot;card centre&quot;&gt;&lt;p style=&quot;font-size:22px;font-weight:700;letter-spacing:1px&quot;&gt;tilleul-ardoise-47-pinceau&lt;/p&gt;&lt;/div&gt;
+&lt;p class=&quot;muted petit&quot;&gt;Personne d&#x27;autre ne le reverra, ni vous ni l&#x27;application. Perdu&amp;nbsp;: « Mot de passe oublié » sur la page de connexion.&lt;/p&gt;&lt;/main&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>B : mot de passe affiché</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;a class=&quot;back&quot; href=&quot;#&quot;&gt;Comptes&lt;/a&gt;&lt;h1&gt;Peinture Luigi&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;p&gt;&lt;b&gt;luigi@exemple.ch&lt;/b&gt;&lt;/p&gt;&lt;p class=&quot;muted&quot;&gt;Essai · 3 offres sur 20 · connecté le 18.11.2026&lt;/p&gt;&lt;/div&gt;
+&lt;div class=&quot;card&quot;&gt;&lt;div class=&quot;champ&quot;&gt;&lt;label&gt;Offres d&#x27;essai&lt;/label&gt;&lt;input inputmode=&quot;numeric&quot; value=&quot;20&quot;&gt;&lt;/div&gt;
+&lt;button class=&quot;btn&quot; type=&quot;button&quot;&gt;Enregistrer&lt;/button&gt;&lt;/div&gt;
+&lt;p&gt;&lt;button class=&quot;btn danger-texte&quot; type=&quot;button&quot;&gt;Suspendre le compte&lt;/button&gt;&lt;/p&gt;&lt;/main&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>La fiche : plafond, suspendre</figcaption></figure></div><div class="choix" data-cle="A2"><p class="q"><b>A2</b> · Le formulaire et la fiche du compte</p><div class="opts"><button type="button" data-q="A2" data-v="Valider">Valider</button><button type="button" data-q="A2" data-v="Pas valider">Pas valider</button></div><textarea data-c="A2" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><div class="choix" data-cle="A3"><p class="q"><b>A3</b> · Comment l'artisan reçoit son accès</p><div class="opts"><button type="button" data-q="A3" data-v="A">A</button><button type="button" data-q="A3" data-v="B">B</button></div><textarea data-c="A3" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><h2 id="reprise">Un enregistrement pas encore arrivé</h2><p>Sous-chantier 27, ta décision du 17.11 : le téléphone garde l'enregistrement jusqu'à ce que l'offre soit prête. Si l'envoi a été coupé (réseau, application fermée), l'application le propose à la réouverture. A : une carte en tête de la liste. B : une fenêtre qui monte.</p><div class="ecrans"><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Offres&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris avec-rond&quot;&gt;&lt;div class=&quot;card reprise&quot;&gt;&lt;p&gt;&lt;b&gt;Un enregistrement de 12 min n&#x27;est pas encore arrivé.&lt;/b&gt;&lt;/p&gt;
+&lt;p class=&quot;muted petit&quot;&gt;Dicté le 18.11.2026 à 09:14. Il reste dans ce téléphone jusqu&#x27;à ce que l&#x27;offre soit prête.&lt;/p&gt;
+&lt;button class=&quot;btn primary large&quot; type=&quot;button&quot;&gt;Envoyer maintenant&lt;/button&gt;
+&lt;p class=&quot;centre&quot;&gt;&lt;button class=&quot;lien&quot; type=&quot;button&quot;&gt;Le supprimer&lt;/button&gt;&lt;/p&gt;&lt;/div&gt;&lt;p class=&quot;muted ent&quot;&gt;Peinture Luigi&lt;/p&gt;&lt;p class=&quot;compteur&quot;&gt;3 offres ce mois&lt;/p&gt;
+&lt;div class=&quot;cat liste&quot;&gt;&lt;h5&gt;Offres&lt;/h5&gt;&lt;span&gt;3&lt;/span&gt;&lt;/div&gt;
+&lt;nav class=&quot;fchips tri&quot; aria-label=&quot;Trier les offres&quot;&gt;&lt;a href=&quot;#&quot; aria-current=&quot;true&quot;&gt;&lt;span&gt;Récentes&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Client&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Montant&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;À relire d&#x27;abord&lt;/span&gt;&lt;/a&gt;&lt;/nav&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Madame Exemple · Offre 3 · créée le 18.11.2026&lt;/span&gt;&lt;b&gt;CHF 3’377.05&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Façade de la maison&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Monsieur Modèle · Offre 2 · créée le 17.11.2026&lt;/span&gt;&lt;b&gt;CHF 8’107.50&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Cage d&#x27;escalier&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Famille Test · Offre 1 · créée le 16.11.2026&lt;/span&gt;&lt;b&gt;CHF 2’140.00&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;&lt;/main&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;offreGen&lt;/span&gt;
+  &lt;a href=&quot;/&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>A : carte en tête de liste</figcaption></figure><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Offres&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen gris avec-rond&quot;&gt;&lt;p class=&quot;muted ent&quot;&gt;Peinture Luigi&lt;/p&gt;&lt;p class=&quot;compteur&quot;&gt;3 offres ce mois&lt;/p&gt;
+&lt;div class=&quot;cat liste&quot;&gt;&lt;h5&gt;Offres&lt;/h5&gt;&lt;span&gt;3&lt;/span&gt;&lt;/div&gt;
+&lt;nav class=&quot;fchips tri&quot; aria-label=&quot;Trier les offres&quot;&gt;&lt;a href=&quot;#&quot; aria-current=&quot;true&quot;&gt;&lt;span&gt;Récentes&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Client&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;Montant&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;&lt;span&gt;À relire d&#x27;abord&lt;/span&gt;&lt;/a&gt;&lt;/nav&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Appartement Exemple, rafraîchissement&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Madame Exemple · Offre 3 · créée le 18.11.2026&lt;/span&gt;&lt;b&gt;CHF 3’377.05&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Façade de la maison&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Monsieur Modèle · Offre 2 · créée le 17.11.2026&lt;/span&gt;&lt;b&gt;CHF 8’107.50&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;
+&lt;a class=&quot;ocard&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;l1&quot;&gt;&lt;b class=&quot;titre&quot;&gt;Cage d&#x27;escalier&lt;/b&gt;&lt;span class=&quot;status relue&quot;&gt;Prête&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;l2&quot;&gt;&lt;span&gt;Famille Test · Offre 1 · créée le 16.11.2026&lt;/span&gt;&lt;b&gt;CHF 2’140.00&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;&lt;div class=&quot;feuille-fond ouvert&quot;&gt;&lt;div class=&quot;feuille&quot;&gt;
+&lt;div class=&quot;poignee&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;&lt;div class=&quot;reprise&quot;&gt;&lt;p&gt;&lt;b&gt;Un enregistrement de 12 min n&#x27;est pas encore arrivé.&lt;/b&gt;&lt;/p&gt;
+&lt;p class=&quot;muted petit&quot;&gt;Dicté le 18.11.2026 à 09:14. Il reste dans ce téléphone jusqu&#x27;à ce que l&#x27;offre soit prête.&lt;/p&gt;
+&lt;button class=&quot;btn primary large&quot; type=&quot;button&quot;&gt;Envoyer maintenant&lt;/button&gt;
+&lt;p class=&quot;centre&quot;&gt;&lt;button class=&quot;lien&quot; type=&quot;button&quot;&gt;Le supprimer&lt;/button&gt;&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/main&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;offreGen&lt;/span&gt;
+  &lt;a href=&quot;/&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:760px"></iframe><figcaption>B : fenêtre qui monte</figcaption></figure></div><div class="choix" data-cle="R1"><p class="q"><b>R1</b> · Où proposer la reprise</p><div class="opts"><button type="button" data-q="R1" data-v="A">A</button><button type="button" data-q="R1" data-v="B">B</button></div><textarea data-c="R1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><h2 id="coupes">Au-delà de 300 postes</h2><p>Déjà codé et déployé sur le test (revue du 18.11, A13). Le même avertissement orange que « 5 secondes au minimum ».</p><div class="ecrans"><figure><iframe class="tel" title="écran" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;fr-CH&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;../../../public/css/app.css&quot;&gt;&lt;style&gt;body{margin:0}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;app&quot;&gt;&lt;header class=&quot;bar&quot;&gt;&lt;h1&gt;Offre 12&lt;/h1&gt;&lt;/header&gt;&lt;main class=&quot;screen&quot;&gt;&lt;p class=&quot;alerte warn&quot; role=&quot;alert&quot;&gt;La dictée comptait 12 postes de plus que les 300 d&#x27;une offre&amp;nbsp;: ils n&#x27;y sont pas. Dictez la suite dans une seconde offre.&lt;/p&gt;
+&lt;div class=&quot;cat&quot;&gt;&lt;h5&gt;Général&lt;/h5&gt;&lt;/div&gt;&lt;p class=&quot;muted&quot;&gt;… les 300 lignes de l&#x27;offre …&lt;/p&gt;&lt;/main&gt;                            &lt;div class=&quot;bas&quot;&gt;
+                  &lt;nav class=&quot;tabs&quot; aria-label=&quot;Sections&quot;&gt;
+  &lt;span class=&quot;marque-pc pc-seul&quot;&gt;offreGen&lt;/span&gt;
+  &lt;a href=&quot;/&quot; aria-current=&quot;page&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M7 3h7l5 5v13H7z&quot;/&gt;&lt;path d=&quot;M14 3v5h5M10 13h6M10 17h6&quot;/&gt;&lt;/svg&gt;Offres&lt;/a&gt;
+  &lt;a href=&quot;/clients&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;9&quot; cy=&quot;8&quot; r=&quot;3.5&quot;/&gt;&lt;path d=&quot;M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6&quot;/&gt;&lt;path d=&quot;M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6&quot;/&gt;&lt;/svg&gt;Clients&lt;/a&gt;
+  &lt;button class=&quot;micro-central&quot; type=&quot;button&quot; aria-label=&quot;Dicter une offre&quot; aria-keyshortcuts=&quot;D&quot; data-enregistrer&gt;&lt;span&gt;&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;11&quot; rx=&quot;3&quot;/&gt;&lt;path d=&quot;M5 11a7 7 0 0 0 14 0M12 18v3&quot;/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;b class=&quot;pc-seul&quot;&gt;Dicter une offre&lt;/b&gt;&lt;/button&gt;
+  &lt;a href=&quot;/factures&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M6 3h12v18l-3-2-3 2-3-2-3 2z&quot;/&gt;&lt;path d=&quot;M9 8h6M9 12h6M9 16h3&quot;/&gt;&lt;/svg&gt;Factures&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/catalogue&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M21 8 12 3 3 8v8l9 5 9-5z&quot;/&gt;&lt;path d=&quot;m3 8 9 5 9-5M12 13v8&quot;/&gt;&lt;/svg&gt;Catalogue&lt;/a&gt;
+  &lt;a class=&quot;pc-seul&quot; href=&quot;/reglages&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1&quot;/&gt;&lt;circle cx=&quot;15&quot; cy=&quot;6&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;9&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;17&quot; cy=&quot;18&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Réglages&lt;/a&gt;
+  &lt;a class=&quot;mobile-seul&quot; href=&quot;/plus&quot;&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;currentColor&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;5&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;circle cx=&quot;19&quot; cy=&quot;12&quot; r=&quot;2&quot;/&gt;&lt;/svg&gt;Plus&lt;/a&gt;
+  &lt;a class=&quot;pc-seul importer&quot; href=&quot;/import&quot; data-importer&gt;
+    &lt;svg class=&quot;i&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M12 16V4M7 9l5-5 5 5M5 20h14&quot;/&gt;&lt;/svg&gt;Importer un fichier&lt;/a&gt;
+  &lt;small class=&quot;pc-seul aide-micro&quot;&gt;Micro du portable ou d&#x27;un casque · touche &lt;kbd&gt;D&lt;/kbd&gt;&lt;/small&gt;
+&lt;/nav&gt;
+&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" style="height:420px"></iframe><figcaption>En haut de l'offre</figcaption></figure></div><div class="choix" data-cle="C1"><p class="q"><b>C1</b> · L'avertissement des postes coupés</p><div class="opts"><button type="button" data-q="C1" data-v="Valider">Valider</button><button type="button" data-q="C1" data-v="Pas valider">Pas valider</button></div><textarea data-c="C1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div><h2 id="questions">Trois questions sans écran</h2>
+<div class="choix" data-cle="Q1"><p class="q"><b>Q1</b> · Conservation des voix et des textes en production. Deux décisions se contredisent : le 7 novembre, « audio supprimé 30 jours après l'offre » ; le 14 novembre, « enregistre toutes les voix, textes pour l'instant car ils seront utilisés pour l'entraînement ». Avec de vrais clients, la politique de confidentialité doit dire une seule durée.</p>
+<div class="opts"><button type="button" data-q="Q1" data-v="A : audio effacé 30 jours après l'offre, texte gardé">A : audio 30 jours, texte gardé</button><button type="button" data-q="Q1" data-v="B : tout gardé 12 mois pour améliorer l'outil, dit dans la politique">B : tout 12 mois, dit aux artisans</button><button type="button" data-q="Q1" data-v="C : tout gardé sans limite">C : sans limite</button></div>
+<textarea data-c="Q1" rows="2" placeholder="Commentaire (facultatif)"></textarea></div>
+<div class="choix" data-cle="Q2"><p class="q"><b>Q2</b> · Adresse d'envoi des courriels (mot de passe, accès, alertes). Proposition : notifications@ sur le domaine de production.</p>
+<div class="opts"><button type="button" data-q="Q2" data-v="notifications@ sur le domaine de production">Valider</button></div>
+<textarea data-c="Q2" rows="2" placeholder="Autre adresse, ou le domaine choisi"></textarea></div>
+<div class="choix" data-cle="Q3"><p class="q"><b>Q3</b> · Les alertes (erreur de l'application, traitement en échec, coût du jour anormal) partent par courriel à une adresse à toi. Laquelle ?</p>
+<div class="opts"><button type="button" data-q="Q3" data-v="mon adresse habituelle">Mon adresse habituelle</button></div>
+<textarea data-c="Q3" rows="2" placeholder="Autre adresse"></textarea></div><h2 id="copier-texte">Copier le texte</h2><p><button id="copier" type="button">Copier le texte</button></p><textarea id="texte" readonly></textarea></div><script>
+(function(){
+  var CLE='maquette-completer-2026-11-18', etat={};
+  try{etat=JSON.parse(localStorage.getItem(CLE)||'{}')}catch(e){etat={}}
+  function garder(){try{localStorage.setItem(CLE,JSON.stringify(etat))}catch(e){}}
+  document.querySelectorAll('.opts button').forEach(function(b){
+    var q=b.dataset.q; if(etat[q]&&etat[q].v===b.dataset.v){b.setAttribute('aria-pressed','true')}
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.opts button[data-q="'+q+'"]').forEach(function(x){x.setAttribute('aria-pressed','false')});
+      b.setAttribute('aria-pressed','true'); etat[q]=etat[q]||{}; etat[q].v=b.dataset.v; garder();
+    });
+  });
+  document.querySelectorAll('textarea[data-c]').forEach(function(t){
+    var q=t.dataset.c; if(etat[q]&&etat[q].c){t.value=etat[q].c}
+    t.addEventListener('input',function(){etat[q]=etat[q]||{}; etat[q].c=t.value; garder();});
+  });
+  document.getElementById('copier').addEventListener('click',function(){
+    var lignes=['Maquette Compléter (mise en production)'];
+    document.querySelectorAll('.choix').forEach(function(c){
+      var k=c.dataset.cle, e=etat[k]||{}; lignes.push(k+' : '+(e.v||'(sans réponse)')+(e.c?' · '+e.c:''));
+    });
+    var txt=lignes.join('\n'), zone=document.getElementById('texte'); zone.value=txt; zone.select();
+    try{navigator.clipboard.writeText(txt)}catch(e){}
+  });
+})();
+</script><script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body></html>

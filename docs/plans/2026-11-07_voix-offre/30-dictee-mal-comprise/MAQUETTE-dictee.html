@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dictée mal comprise</title>
+<style>
+:root {
+  --ink: #23272D; --muted: #454B55; --line: #DDD8CC; --surface: #FFFFFF; --bg: #F4F1EA; --chip: #EBE7DE; --bord: #7C838C;
+  --accent: #23272D; --on-accent: #FFFFFF; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3;
+  --bad: #8C1D18; --bad-soft: #FBE7E4; --marque: #C4552D; --on-marque: #FFFFFF; --bande: #23272D; --on-bande: #FFFFFF;
+  --onde-faible: #D9822B; --onde-nette: #2F8F5B; --onde-vide: #C9C3B6; --cadre: #16181B;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+    --accent: #ECEAE6; --on-accent: #15171A; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10;
+    --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113; --onde-vide: #4A4E55; --cadre: #000;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #1E2125; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+  --accent: #ECEAE6; --on-accent: #15171A; --ok: #7DD3A8; --ok-soft: #183126; --warn: #F0B860; --warn-soft: #3A2A10;
+  --bad: #FF9A91; --bad-soft: #3B1613; --bande: #0F1113; --onde-vide: #4A4E55; --cadre: #000;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px 16px 80px; }
+header.page h1 { font-size: 26px; margin: 8px 0 4px; }
+header.page p { margin: 0 0 12px; color: var(--muted); max-width: 760px; }
+h2 { font-size: 21px; margin: 40px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p.note { color: var(--muted); font-size: 14px; max-width: 760px; }
+.encart { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin: 12px 0; max-width: 860px; }
+.encart.regle { border-left: 5px solid var(--ok); }
+.encart.ecarte { border-left: 5px solid var(--bord); }
+.rangee { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin: 14px 0; }
+.legende { font-size: 14px; color: var(--muted); margin: 8px 0 0; max-width: 340px; }
+.legende b { color: var(--ink); }
+
+/* Téléphone */
+.tel { width: 320px; max-width: 100%; border: 9px solid var(--cadre); border-radius: 34px; overflow: hidden; background: var(--surface); box-shadow: 0 6px 20px rgba(0,0,0,.18); flex: none; }
+.tel .barre { display: flex; align-items: center; gap: 8px; min-height: 50px; padding: 6px 14px; background: var(--bande); color: var(--on-bande); font-weight: 600; font-size: 15px; }
+.tel .barre small { font-weight: 400; opacity: .8; margin-left: auto; font-size: 12px; }
+.tel .ecran { padding: 14px; min-height: 470px; display: flex; flex-direction: column; }
+.fig { margin: 0; }
+.rangee > .fig.large { flex: 1 1 420px; max-width: 540px; }
+.rangee > .fig.large figcaption { max-width: none; }
+@media (max-width: 600px) { .recap { position: static; } }
+.fig figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; max-width: 320px; }
+.fig figcaption b { color: var(--ink); }
+
+/* Composants repris de l'application */
+.btn { font: inherit; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 10px 14px; min-height: 48px; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.large { width: 100%; }
+.lien { background: none; border: 0; color: var(--ink); text-decoration: underline; font: inherit; font-size: 14px; cursor: pointer; padding: 8px; }
+.alerte { border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 0 0 12px; }
+.alerte.warn { background: var(--warn-soft); color: var(--warn); }
+.alerte.bad { background: var(--bad-soft); color: var(--bad); }
+.alerte.info { background: var(--chip); color: var(--ink); }
+.alerte b { display: block; margin-bottom: 2px; }
+.alerte .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.alerte .actions .btn { min-height: 40px; font-size: 14px; padding: 6px 10px; }
+.minuteur { font-size: 40px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; margin: 18px 0 4px; }
+.point { width: 14px; height: 14px; border-radius: 50%; background: var(--marque); margin: 0 auto 8px; animation: clignote 1.2s infinite; }
+@keyframes clignote { 50% { opacity: .25; } }
+.consigne { text-align: center; color: var(--muted); margin: 4px 0 12px; }
+.bas-rec { margin-top: auto; }
+
+/* Jauge du micro */
+.jauge { margin: 10px 0 6px; }
+.jauge .piste { height: 14px; border-radius: 7px; background: var(--chip); position: relative; overflow: hidden; }
+.jauge .niveau { position: absolute; inset: 0 auto 0 0; border-radius: 7px; transition: width .12s linear; }
+.jauge .seuil { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .55; }
+.jauge .texte { display: flex; justify-content: space-between; font-size: 13px; margin-top: 5px; color: var(--muted); }
+.jauge.ok .niveau { background: var(--onde-nette); }
+.jauge.faible .niveau { background: var(--onde-faible); }
+.jauge.ok .texte b { color: var(--ok); }
+.jauge.faible .texte b { color: var(--warn); }
+
+/* Offre */
+.offre-titre { font-weight: 700; font-size: 16px; margin: 0 0 2px; }
+.offre-sous { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.ligne { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; font-size: 14px; }
+.ligne .haut { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+.ligne .bas { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.ligne.averif { border-color: var(--warn); }
+.pastille-av { display: inline-block; font-size: 11px; font-weight: 700; background: var(--warn-soft); color: var(--warn); border-radius: 6px; padding: 1px 6px; margin-top: 4px; }
+.total { display: flex; justify-content: space-between; font-weight: 700; border-top: 1px solid var(--line); padding-top: 10px; margin-top: auto; }
+
+/* Lecteur de la dictée */
+.lecteur { border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin: 0 0 12px; background: var(--surface); }
+.lecteur .tete { display: flex; align-items: center; gap: 10px; }
+.lecteur .jouer { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--marque); color: var(--on-marque); display: grid; place-items: center; cursor: pointer; flex: none; }
+.lecteur .jouer svg { width: 18px; height: 18px; }
+.lecteur .titre { font-weight: 600; font-size: 14px; }
+.lecteur .duree { font-size: 12px; color: var(--muted); }
+.onde { display: flex; align-items: center; gap: 2px; height: 46px; margin: 10px 0 4px; position: relative; cursor: pointer; }
+.onde span { flex: 1; border-radius: 2px; background: var(--onde-vide); min-width: 1px; }
+.onde span.faible { background: var(--onde-faible); }
+.onde span.nette { background: var(--onde-nette); }
+.onde span.passe { opacity: .45; }
+.onde .curseur { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); left: 0; pointer-events: none; }
+.onde-legende { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+.onde-legende i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.compris { font-size: 13px; background: var(--chip); border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
+.compris b { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+details.repli summary { cursor: pointer; font-size: 14px; font-weight: 600; min-height: 40px; display: flex; align-items: center; }
+
+/* Feuille (fenêtre du bas) */
+.tel .ecran.avec-feuille { position: relative; padding: 0; }
+.tel .ecran.avec-feuille .derriere { padding: 14px; opacity: .35; }
+.feuille { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 18px 18px 0 0; box-shadow: 0 -6px 24px rgba(0,0,0,.25); padding: 8px 14px 14px; }
+.feuille .poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 10px; }
+.feuille h4 { margin: 0 0 6px; font-size: 16px; }
+.feuille p { font-size: 14px; margin: 0 0 10px; }
+.feuille .btn { margin-bottom: 8px; }
+
+/* PC */
+.pc { border: 9px solid var(--cadre); border-radius: 14px; overflow: hidden; background: var(--surface); max-width: 980px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.pc .barre { display: flex; align-items: center; min-height: 46px; padding: 6px 16px; background: var(--bande); color: var(--on-bande); font-weight: 600; }
+.pc .corps { display: grid; grid-template-columns: 200px 1fr 300px; min-height: 420px; }
+.pc .col { padding: 14px; border-right: 1px solid var(--line); }
+.pc .col:last-child { border-right: 0; }
+.pc .liste-offre { font-size: 13px; padding: 8px; border-radius: 8px; margin-bottom: 4px; }
+.pc .liste-offre.cur { background: var(--chip); font-weight: 600; }
+.pc .liste-offre .pt { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--onde-faible); margin-right: 6px; }
+@media (max-width: 900px) { .pc .corps { grid-template-columns: 1fr; } .pc .col { border-right: 0; border-bottom: 1px solid var(--line); } }
+
+/* Choix de Xavier */
+.choix { background: var(--surface); border: 1px dashed var(--bord); border-radius: 12px; padding: 12px 14px; margin: 14px 0 4px; max-width: 860px; }
+.choix .q { font-weight: 600; margin: 0 0 8px; }
+.choix .opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.choix .opts button { font: inherit; font-size: 14px; border: 1px solid var(--bord); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 12px; min-height: 44px; cursor: pointer; text-align: left; }
+.choix .opts button[aria-pressed="true"] { background: var(--marque); border-color: var(--marque); color: var(--on-marque); }
+.choix textarea { width: 100%; min-height: 54px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--bg); color: var(--ink); }
+.recap { position: sticky; bottom: 12px; display: flex; justify-content: flex-end; gap: 8px; margin-top: 30px; }
+.recap .btn { box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+.essai { max-width: 860px; }
+.essai .ligne-essai { font-size: 14px; margin: 6px 0; }
+.essai code { background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<header class="page">
+  <h1>Dictée mal comprise</h1>
+  <p>Sous-chantier 30 de voix-offre. Le but : quand l'enregistrement est mauvais, l'application le dit, l'artisan l'entend lui-même et peut recommencer. Jamais une offre fausse sans avertissement.</p>
+</header>
+<nav id="mk-toc"></nav>
+
+<h2 id="constat">Ce qui s'est passé le 21 novembre</h2>
+<div class="encart">
+  <p style="margin-top:0">Aliette dictait depuis le siège passager, le téléphone relié au <b>Bluetooth de la voiture</b>. Le micro de la voiture est près du conducteur : sa voix arrivait plus fort que celle d'Aliette. Whisper a transcrit la voix la plus forte et pris celle d'Aliette pour du bruit de fond. Sur 60 secondes, il a gardé une seule phrase, celle du conducteur.</p>
+  <p style="margin-bottom:0">Ci-dessous, le volume réel des deux enregistrements, une barre par seconde. <b>Orange</b> : voix trop faible pour être bien comprise (volume moyen sur 3 secondes sous -38 dB). <b>Vert</b> : voix nette.</p>
+</div>
+
+<div class="rangee">
+  <figure class="fig large">
+    <div class="lecteur" data-lecteur="o59">
+      <div class="tete">
+        <button class="jouer" type="button" aria-label="Écouter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+        <div><div class="titre">Ta dictée, offre 59</div><div class="duree">27 s, 84 mots compris</div></div>
+      </div>
+      <div class="onde"></div>
+      <div class="compris"><b>Ce que l'application a compris</b>« Je suis du coup avec LCA, à côté de chez lui. Donc, il a une pièce, on va appeler ça le salon. Il a besoin qu'on repeigne les murs avec deux couches… »</div>
+    </div>
+    <figcaption><b>Normal</b> : voix nette du début à la fin, 3 mots par seconde.</figcaption>
+  </figure>
+  <figure class="fig large">
+    <div class="lecteur" data-lecteur="o61">
+      <div class="tete">
+        <button class="jouer" type="button" aria-label="Écouter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+        <div><div class="titre">Dictée d'Aliette, offre 61</div><div class="duree">60 s, 17 mots compris</div></div>
+      </div>
+      <div class="onde"></div>
+      <div class="compris"><b>Ce que l'application a compris</b>« Il y a une personne qui s'est retrouvée bloquée et puis ça a bloqué tout le monde. »</div>
+    </div>
+    <figcaption><b>Raté</b> : la voix d'Aliette reste orange presque partout. Le seul passage net (vers 36 s), c'est le conducteur. Les boutons jouent le vrai son tant que les fichiers restent dans le dossier temporaire de la session.</figcaption>
+  </figure>
+</div>
+
+<h2 id="pendant">Pendant l'enregistrement</h2>
+<p class="note">Deux aides en direct, sans aucun appel au serveur : le nom du micro utilisé (le navigateur le donne) et le volume de la voix, mesuré dans le téléphone.</p>
+<div class="rangee">
+  <figure class="fig">
+    <div class="tel"><div class="barre">Nouvelle offre</div>
+      <div class="ecran">
+        <div class="minuteur">00:24</div><div class="point"></div>
+        <p class="consigne">Parlez, pièce par pièce.</p>
+        <div class="jauge ok" data-jauge="ok"><div class="piste"><div class="niveau" style="width:72%"></div><div class="seuil" style="left:38%"></div></div><div class="texte"><b>Voix bien captée</b><span>Micro du téléphone</span></div></div>
+        <div class="bas-rec"><button class="btn danger large" type="button">Terminer et créer l'offre</button><p style="text-align:center;margin:4px 0 0"><button class="lien" type="button">Abandonner sans envoyer</button></p></div>
+      </div></div>
+    <figcaption><b>E1, normal.</b> La jauge bouge avec la voix. Le trait marque le seuil sous lequel la compréhension baisse.</figcaption>
+  </figure>
+  <figure class="fig">
+    <div class="tel"><div class="barre">Nouvelle offre</div>
+      <div class="ecran">
+        <div class="alerte info"><b>Micro de la voiture (Bluetooth)</b>Si quelqu'un parle plus près de ce micro, sa voix couvrira la vôtre.<div class="actions"><button class="btn" type="button">Prendre le micro du téléphone</button></div></div>
+        <div class="minuteur">00:06</div><div class="point"></div>
+        <p class="consigne">Parlez, pièce par pièce.</p>
+        <div class="jauge ok" data-jauge="anime"><div class="piste"><div class="niveau" style="width:55%"></div><div class="seuil" style="left:38%"></div></div><div class="texte"><b>Voix bien captée</b><span>Kit mains libres</span></div></div>
+        <div class="bas-rec"><button class="btn danger large" type="button">Terminer et créer l'offre</button></div>
+      </div></div>
+    <figcaption><b>E2, Bluetooth.</b> Un petit message en haut, l'enregistrement continue. Le bouton fait passer sur le micro du téléphone sans couper.</figcaption>
+  </figure>
+  <figure class="fig">
+    <div class="tel"><div class="barre">Nouvelle offre</div>
+      <div class="ecran">
+        <div class="minuteur">00:15</div><div class="point"></div>
+        <p class="consigne">Parlez, pièce par pièce.</p>
+        <div class="jauge faible" data-jauge="faible"><div class="piste"><div class="niveau" style="width:22%"></div><div class="seuil" style="left:38%"></div></div><div class="texte"><b>Voix faible</b><span>depuis 4 s</span></div></div>
+        <div class="alerte warn"><b>On vous entend mal</b>Rapprochez le téléphone de votre bouche, ou éloignez-vous des autres voix. La compréhension baisse.</div>
+        <div class="bas-rec"><button class="btn danger large" type="button">Terminer et créer l'offre</button></div>
+      </div></div>
+    <figcaption><b>E3, voix faible.</b> La jauge passe à l'orange. Après 3 à 4 secondes de voix sous le seuil, le message apparaît. Il disparaît quand la voix revient.</figcaption>
+  </figure>
+</div>
+
+<div class="choix" data-q="D1">
+  <p class="q">D1. Le message Bluetooth (E2)</p>
+  <div class="opts">
+    <button type="button" data-c="A">A. Petit message pendant l'enregistrement (proposé)</button>
+    <button type="button" data-c="B">B. Une fenêtre avant de commencer : « micro de la voiture ou du téléphone ? »</button>
+    <button type="button" data-c="C">C. Pas de message Bluetooth</button>
+  </div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+<div class="choix" data-q="D2">
+  <p class="q">D2. La jauge et le message « voix faible » (E1 et E3)</p>
+  <div class="opts">
+    <button type="button" data-c="A">A. Jauge toujours visible, message après 3 à 4 s de voix faible (proposé)</button>
+    <button type="button" data-c="B">B. Pas de jauge, seulement le message</button>
+    <button type="button" data-c="C">C. Ni l'un ni l'autre</button>
+  </div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<div class="encart essai" id="essai-micro">
+  <h3 style="margin-top:0">Essai en direct avec ton micro</h3>
+  <p class="note" style="margin-top:0">Ce bouton fait ce que ferait l'application : il lit le nom du micro et mesure ta voix. Rien n'est enregistré ni envoyé. Essaie avec le micro du PC, puis avec un casque Bluetooth s'il y en a un.</p>
+  <button class="btn primary" type="button" data-essai>Essayer le micro</button>
+  <div data-essai-res hidden>
+    <div class="jauge ok" data-jauge-essai><div class="piste"><div class="niveau" style="width:0%"></div><div class="seuil" style="left:38%"></div></div><div class="texte"><b>…</b><span data-db></span></div></div>
+    <p class="ligne-essai">Micro utilisé : <code data-label>…</code></p>
+    <p class="ligne-essai">Fréquence : <code data-taux>…</code></p>
+    <p class="ligne-essai" data-bt></p>
+  </div>
+  <p class="note">À savoir : le nom du micro est donné par le navigateur. Sur PC et Android, il contient souvent « Bluetooth », « Hands-Free » ou le nom du casque. Sur iPhone, le nom exact est <b>non vérifié</b> : à tester dans ta voiture pendant la recette. Une fréquence de 8 000 ou 16 000 Hz trahit aussi un micro Bluetooth en mode appel.</p>
+</div>
+
+<h2 id="apres">Après l'envoi : l'offre douteuse</h2>
+<p class="note">Le serveur compare ce qu'il a compris à ce qu'il a reçu : mots par seconde, part de parole sans texte, volume de la voix. Sur les cinq enregistrements mesurés, les dictées normales font 1,5 à 3 mots par seconde, les ratées 0,3 et 0,65.</p>
+<div class="mk-compare">
+  <figure class="fig">
+    <div class="tel"><div class="barre">Offre 61<small>À vérifier</small></div>
+      <div class="ecran">
+        <p class="offre-titre">Intervention pour personne bloquée</p>
+        <p class="offre-sous">Aucun client</p>
+        <div class="ligne averif"><div class="haut"><span>Intervention pour personne bloquée</span><span>0.00</span></div><div class="bas">1 forfait</div><span class="pastille-av">À vérifier</span></div>
+        <div class="total"><span>Total TTC</span><span>CHF 0.00</span></div>
+      </div></div>
+    <figcaption><b>Aujourd'hui.</b> Une offre absurde, sans un mot sur la dictée. L'artisan croit que l'application ne marche pas.</figcaption>
+  </figure>
+  <figure class="fig">
+    <div class="tel"><div class="barre">Offre 61<small>À vérifier</small></div>
+      <div class="ecran">
+        <div class="alerte warn"><b>Dictée difficile à comprendre</b>On a compris 17 mots sur 1 minute. Votre voix était faible, une autre voix plus forte. Écoutez votre enregistrement : si le son est mauvais, refaites-le.
+          <div class="actions"><button class="btn primary" type="button">Refaire la dictée</button><button class="btn" type="button">Garder</button></div></div>
+        <div class="lecteur" data-lecteur="o61" data-compact>
+          <div class="tete"><button class="jouer" type="button" aria-label="Écouter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button><div><div class="titre">Votre dictée</div><div class="duree">1:00</div></div></div>
+          <div class="onde"></div>
+          <div class="onde-legende"><span><i style="background:var(--onde-faible)"></i>voix faible</span><span><i style="background:var(--onde-nette)"></i>voix nette</span></div>
+        </div>
+        <div class="ligne averif"><div class="haut"><span>Intervention pour personne bloquée</span><span>0.00</span></div><div class="bas">1 forfait</div><span class="pastille-av">À vérifier</span></div>
+      </div></div>
+    <figcaption><b>Proposé.</b> Le bandeau dit ce qui a été mesuré, en mots simples. Le lecteur est ouvert, l'onde montre où la voix était faible. « Garder » fait disparaître le bandeau.</figcaption>
+  </figure>
+</div>
+
+<div class="rangee">
+  <figure class="fig">
+    <div class="tel"><div class="barre">Offres</div>
+      <div class="ecran avec-feuille">
+        <div class="derriere"><p class="offre-titre">Vos offres</p><div class="ligne">Peinture salon, Madame Exemple</div><div class="ligne">Paysagisme, M. Fermiot</div></div>
+        <div class="feuille"><div class="poignee"></div>
+          <h4>On a mal compris votre dictée</h4>
+          <p>17 mots compris sur 1 minute. Votre voix était faible, une autre voix plus forte.</p>
+          <div class="lecteur" data-lecteur="o61" data-compact><div class="tete"><button class="jouer" type="button" aria-label="Écouter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button><div><div class="titre">Votre dictée</div><div class="duree">1:00</div></div></div><div class="onde"></div></div>
+          <button class="btn primary large" type="button">Refaire la dictée</button>
+          <button class="btn large" type="button">Créer l'offre quand même</button>
+        </div>
+      </div></div>
+    <figcaption><b>Variante B.</b> Rien n'est créé tant que l'artisan n'a pas choisi : une fenêtre s'ouvre à la place de l'offre.</figcaption>
+  </figure>
+</div>
+
+<div class="choix" data-q="D3">
+  <p class="q">D3. Quand la dictée est douteuse</p>
+  <div class="opts">
+    <button type="button" data-c="A">A. Offre créée avec le bandeau (proposé)</button>
+    <button type="button" data-c="B">B. Fenêtre de choix, l'offre n'est créée qu'après</button>
+  </div>
+  <textarea placeholder="Commentaire (le texte du bandeau aussi)"></textarea>
+</div>
+
+<h2 id="reecouter">Réécouter sur chaque offre</h2>
+<div class="rangee">
+  <figure class="fig">
+    <div class="tel"><div class="barre">Offre 59<small>Brouillon</small></div>
+      <div class="ecran">
+        <p class="offre-titre">Peinture du salon, chauffe-eau et robinetterie</p>
+        <p class="offre-sous">LCA</p>
+        <details class="repli"><summary>Votre dictée, 0:27</summary>
+          <div class="lecteur" data-lecteur="o59" data-compact><div class="tete"><button class="jouer" type="button" aria-label="Écouter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button><div><div class="titre">Votre dictée</div><div class="duree">0:27</div></div></div><div class="onde"></div>
+          <div class="compris"><b>Ce que l'application a compris</b>« Je suis du coup avec LCA, à côté de chez lui. Donc, il a une pièce, on va appeler ça le salon… »</div></div>
+        </details>
+        <div class="ligne"><div class="haut"><span>Peinture des murs du salon, deux couches</span><span>25.00</span></div><div class="bas">1 forfait · Salon</div></div>
+        <div class="ligne"><div class="haut"><span>Changement du chauffe-eau</span><span>3 000.00</span></div><div class="bas">1 forfait</div></div>
+        <div class="ligne"><div class="haut"><span>Robinetterie de la salle de bain</span><span>200.00</span></div><div class="bas">1 forfait · Salle de bain</div></div>
+      </div></div>
+    <figcaption><b>Offre normale.</b> La dictée est repliée sous le titre : un toucher pour l'écouter et lire ce qui a été compris. Ouvre « Votre dictée » pour voir.</figcaption>
+  </figure>
+  <div class="encart" style="max-width:420px">
+    <h3 style="margin-top:0">Ce qu'on garde, et combien de temps</h3>
+    <p>L'audio reste sur le serveur 30 jours après l'offre (réglage actuel, colonne <code>supprimer_apres</code>). Passé ce délai, la ligne devient « Dictée supprimée après 30 jours », le texte compris reste.</p>
+    <p style="margin-bottom:0">Le fichier n'est servi qu'au compte qui l'a dicté. Un autre compte reçoit une page introuvable.</p>
+  </div>
+</div>
+<div class="choix" data-q="D4">
+  <p class="q">D4. Le lecteur</p>
+  <div class="opts">
+    <button type="button" data-c="A">A. Sur toutes les offres dictées, replié (proposé)</button>
+    <button type="button" data-c="B">B. Seulement sur les offres douteuses</button>
+  </div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<h2 id="refaire">Refaire la dictée</h2>
+<div class="rangee">
+  <figure class="fig">
+    <div class="tel"><div class="barre">Offre 61</div>
+      <div class="ecran avec-feuille">
+        <div class="derriere"><p class="offre-titre">Intervention pour personne bloquée</p><div class="ligne">Intervention pour personne bloquée</div></div>
+        <div class="feuille"><div class="poignee"></div>
+          <h4>Refaire la dictée</h4>
+          <p>La nouvelle dictée remplacera la ligne de cette offre. Le numéro et le client restent.</p>
+          <div class="alerte info" style="margin-bottom:10px">Conseil : téléphone près de la bouche, à l'écart des autres voix. Hors du Bluetooth de la voiture.</div>
+          <button class="btn danger large" type="button">Commencer l'enregistrement</button>
+          <button class="btn large" type="button">Annuler</button>
+        </div>
+      </div></div>
+    <figcaption><b>Refaire.</b> La fenêtre rappelle les bons gestes, puis ouvre l'enregistreur habituel, avec la jauge.</figcaption>
+  </figure>
+</div>
+<div class="choix" data-q="D5">
+  <p class="q">D5. Ce que fait la nouvelle dictée</p>
+  <div class="opts">
+    <button type="button" data-c="A">A. Remplace les lignes, même offre (proposé)</button>
+    <button type="button" data-c="B">B. Crée une nouvelle offre, l'ancienne reste</button>
+    <button type="button" data-c="C">C. Ajoute ses lignes à celles de l'offre</button>
+  </div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<h2 id="pc">Sur PC</h2>
+<figure class="fig">
+  <div class="pc"><div class="barre">Dicta</div>
+    <div class="corps">
+      <div class="col">
+        <div class="liste-offre"><span class="pt" style="background:var(--onde-nette)"></span>Peinture du salon, LCA</div>
+        <div class="liste-offre cur"><span class="pt"></span>Intervention pour personne bloquée</div>
+        <div class="liste-offre"><span class="pt" style="background:var(--onde-nette)"></span>Paysagisme, M. Fermiot</div>
+      </div>
+      <div class="col">
+        <div class="alerte warn"><b>Dictée difficile à comprendre</b>On a compris 17 mots sur 1 minute. Votre voix était faible, une autre voix plus forte. Écoutez votre enregistrement : si le son est mauvais, refaites-le.<div class="actions"><button class="btn primary" type="button">Refaire la dictée</button><button class="btn" type="button">Garder</button></div></div>
+        <p class="offre-titre">Intervention pour personne bloquée</p>
+        <div class="ligne averif"><div class="haut"><span>Intervention pour personne bloquée</span><span>0.00</span></div><div class="bas">1 forfait</div><span class="pastille-av">À vérifier</span></div>
+      </div>
+      <div class="col">
+        <div class="lecteur" data-lecteur="o61"><div class="tete"><button class="jouer" type="button" aria-label="Écouter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button><div><div class="titre">Votre dictée</div><div class="duree">1:00</div></div></div><div class="onde"></div>
+          <div class="onde-legende"><span><i style="background:var(--onde-faible)"></i>voix faible</span><span><i style="background:var(--onde-nette)"></i>voix nette</span></div>
+          <div class="compris"><b>Ce que l'application a compris</b>« Il y a une personne qui s'est retrouvée bloquée et puis ça a bloqué tout le monde. »</div></div>
+      </div>
+    </div></div>
+  <figcaption><b>PC.</b> Le bandeau au-dessus des lignes, la dictée dans la colonne de droite, à côté du document. Un point orange marque l'offre douteuse dans la liste.</figcaption>
+</figure>
+<div class="choix" data-q="D6">
+  <p class="q">D6. La version PC et le point orange dans la liste</p>
+  <div class="opts"><button type="button" data-c="Valider">Valider</button><button type="button" data-c="Pas valider">Pas valider</button></div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<h2 id="reste">Le reste</h2>
+<div class="encart ecarte">
+  <h3 style="margin-top:0">Nettoyer le son : écarté</h3>
+  <p style="margin-bottom:0">Essayé le 21 novembre : monter le volume ne rend pas la voix d'Aliette à Whisper, et ajoute une phrase inventée (« Sous-titrage FR ? »). Séparer deux voix demande un modèle trop lourd pour l'hébergement. Prévenir pendant l'enregistrement coûte moins cher et marche mieux.</p>
+</div>
+<div class="choix" data-q="D7">
+  <p class="q">D7. Seuils calibrés sur la vingtaine d'enregistrements du test avant d'être fixés (aucune dictée normale marquée douteuse)</p>
+  <div class="opts"><button type="button" data-c="Valider">Valider</button><button type="button" data-c="Pas valider">Pas valider</button></div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+<div class="choix" data-q="D8">
+  <p class="q">D8. Tâche Origin « Dictée mal comprise » dans offreGen, 12 h (estimation de Claude)</p>
+  <div class="opts"><button type="button" data-c="Créer">Créer</button><button type="button" data-c="Pas maintenant">Pas maintenant</button></div>
+  <textarea placeholder="Commentaire"></textarea>
+</div>
+
+<div class="recap"><button class="btn primary" type="button" data-copier>Copier le texte</button></div>
+</main>
+
+<audio data-son="o59" preload="none" src="file:///C:/Users/xavie/AppData/Local/Temp/claude/42fd285555aa8bf3/97c26926-6798-47a0-9ab4-07d5bd6c9c8b/scratchpad/audio/o59.webm"></audio>
+<audio data-son="o61" preload="none" src="file:///C:/Users/xavie/AppData/Local/Temp/claude/42fd285555aa8bf3/97c26926-6798-47a0-9ab4-07d5bd6c9c8b/scratchpad/audio/o61.webm"></audio>
+
+<script>
+(function () {
+  // Volume réel par demi-seconde (dB RMS, ffmpeg astats, 2026-11-21).
+  var NIVEAUX = {
+    o59: [-21,-24,-19,-29,-21,-22,-37,-25,-19,-30,-54,-20,-18,-21,-23,-27,-32,-26,-29,-24,-26,-32,-44,-41,-30,-24,-22,-23,-25,-47,-23,-21,-29,-82,-40,-25,-24,-30,-22,-51,-70,-25,-20,-17,-22,-21,-24,-46,-20,-21,-22,-49,-75,-74,-82],
+    o61: [-58,-53,-49,-46,-39,-33,-43,-51,-37,-44,-36,-54,-49,-39,-41,-49,-40,-56,-41,-37,-41,-37,-47,-57,-39,-40,-40,-55,-57,-55,-51,-57,-55,-57,-46,-40,-52,-40,-37,-50,-42,-50,-52,-58,-58,-37,-49,-54,-47,-41,-56,-53,-54,-51,-56,-58,-38,-39,-45,-55,-47,-50,-46,-44,-38,-38,-49,-42,-37,-55,-35,-54,-37,-30,-31,-33,-30,-32,-30,-34,-36,-47,-40,-42,-35,-39,-41,-41,-51,-45,-43,-54,-51,-45,-52,-37,-56,-39,-42,-44,-42,-41,-49,-55,-57,-59,-46,-40,-45,-57,-60,-46,-54,-42,-56,-56,-58,-60,-54,-57]
+  };
+  // Une barre par seconde (hauteur : la plus forte des deux demi-secondes). Couleur : volume moyen, en énergie,
+  // sur les 3 secondes autour ; sous -38 dB, voix faible (seuil vérifié sur les offres 59 et 61, à calibrer).
+  function barres(v) {
+    var s = [];
+    for (var i = 0; i < v.length; i += 2) {
+      var w = v.slice(Math.max(0, i - 2), i + 4), e = w.reduce(function (a, x) { return a + Math.pow(10, x / 10); }, 0) / w.length;
+      var haut = Math.max(v[i], v[i + 1] === undefined ? -90 : v[i + 1]);
+      s.push({ h: Math.max(6, Math.min(100, (haut + 62) * 2.6)), cls: haut < -60 ? '' : (10 * Math.log10(e) < -38 ? 'faible' : 'nette') });
+    }
+    return s;
+  }
+  document.querySelectorAll('[data-lecteur]').forEach(function (lect) {
+    var id = lect.getAttribute('data-lecteur'), onde = lect.querySelector('.onde'), b = barres(NIVEAUX[id]);
+    b.forEach(function (x) { var sp = document.createElement('span'); sp.style.height = x.h + '%'; if (x.cls) sp.className = x.cls; onde.appendChild(sp); });
+    var cur = document.createElement('div'); cur.className = 'curseur'; onde.appendChild(cur);
+    var son = document.querySelector('audio[data-son="' + id + '"]'), btn = lect.querySelector('.jouer'), duree = b.length, t0 = 0, timer = null, simule = false;
+    function poser(p) { cur.style.left = (p * 100) + '%'; onde.querySelectorAll('span').forEach(function (sp, i) { sp.classList.toggle('passe', i / duree < p); }); }
+    function stop() { clearInterval(timer); timer = null; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'; }
+    btn.addEventListener('click', function () {
+      if (timer) { if (!simule) son.pause(); stop(); return; }
+      document.querySelectorAll('audio').forEach(function (a) { a.pause(); });
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>';
+      simule = false;
+      var p = son.play();
+      if (p && p.catch) p.catch(function () { simule = true; t0 = Date.now(); });
+      timer = setInterval(function () {
+        var pos = simule ? (Date.now() - t0) / 1000 / duree : (son.duration && isFinite(son.duration) ? son.currentTime / son.duration : son.currentTime / duree);
+        if (pos >= 1 || (!simule && son.ended)) { poser(0); stop(); return; }
+        poser(pos);
+      }, 100);
+    });
+    onde.addEventListener('click', function (e) {
+      var r = onde.getBoundingClientRect(), p = (e.clientX - r.left) / r.width;
+      try { son.currentTime = p * (isFinite(son.duration) ? son.duration : duree); } catch (er) {}
+      t0 = Date.now() - p * duree * 1000; poser(p);
+    });
+  });
+
+  // Jauge animée des écrans E1 à E3.
+  var jauges = document.querySelectorAll('[data-jauge]');
+  setInterval(function () {
+    jauges.forEach(function (j) {
+      var k = j.getAttribute('data-jauge'), base = k === 'faible' ? 20 : (k === 'anime' ? 58 : 68), amp = k === 'faible' ? 9 : 22;
+      j.querySelector('.niveau').style.width = Math.max(4, base + (Math.random() - .5) * amp) + '%';
+    });
+  }, 140);
+
+  // Essai réel du micro.
+  var boutonEssai = document.querySelector('[data-essai]');
+  boutonEssai.addEventListener('click', function () {
+    var res = document.querySelector('[data-essai-res]');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { res.hidden = false; res.querySelector('[data-label]').textContent = 'micro inaccessible dans ce navigateur'; return; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (flux) {
+      res.hidden = false; boutonEssai.hidden = true;
+      var piste = flux.getAudioTracks()[0], reglages = piste.getSettings ? piste.getSettings() : {};
+      var nom = piste.label || '(nom non donné)';
+      res.querySelector('[data-label]').textContent = nom;
+      var ctx = new (window.AudioContext || window.webkitAudioContext)(), src = ctx.createMediaStreamSource(flux), an = ctx.createAnalyser();
+      an.fftSize = 2048; src.connect(an);
+      var taux = reglages.sampleRate || ctx.sampleRate;
+      res.querySelector('[data-taux]').textContent = taux + ' Hz';
+      var bt = /bluetooth|hands-?free|mains libres|airpods|buds|headset|casque|car|voiture|bt\b/i.test(nom) || taux <= 16000;
+      res.querySelector('[data-bt]').innerHTML = bt ? '<b>Bluetooth probable</b> : l\'application afficherait le message E2.' : 'Micro de l\'appareil : pas de message Bluetooth.';
+      var buf = new Float32Array(an.fftSize), j = res.querySelector('[data-jauge-essai]'), lisse = -90, faibleDepuis = null;
+      (function boucle() {
+        an.getFloatTimeDomainData(buf);
+        var s = 0; for (var i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+        var db = 10 * Math.log10(s / buf.length + 1e-12);
+        lisse = Math.max(db, lisse - 1.5);
+        var faible = lisse < -42;
+        if (faible) { if (faibleDepuis === null) faibleDepuis = Date.now(); } else faibleDepuis = null;
+        j.className = 'jauge ' + (faible ? 'faible' : 'ok');
+        j.querySelector('.niveau').style.width = Math.max(2, Math.min(100, (lisse + 62) * 2.6)) + '%';
+        j.querySelector('b').textContent = faible ? (faibleDepuis && Date.now() - faibleDepuis > 3500 ? 'Voix faible : rapprochez-vous' : 'Voix faible') : 'Voix bien captée';
+        j.querySelector('[data-db]').textContent = Math.round(lisse) + ' dB';
+        requestAnimationFrame(boucle);
+      })();
+    }).catch(function (e) { res.hidden = false; res.querySelector('[data-label]').textContent = 'refusé : ' + e.name; });
+  });
+
+  // Choix de Xavier, gardés dans le navigateur.
+  var CLE = 'mk-offregen-30-dictee';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  document.querySelectorAll('.choix').forEach(function (c) {
+    var q = c.getAttribute('data-q'), ta = c.querySelector('textarea');
+    etat[q] = etat[q] || { c: '', t: '' };
+    c.querySelectorAll('.opts button').forEach(function (b) {
+      b.setAttribute('aria-pressed', etat[q].c === b.getAttribute('data-c') ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        etat[q].c = b.getAttribute('data-c');
+        c.querySelectorAll('.opts button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        garder();
+      });
+    });
+    ta.value = etat[q].t;
+    ta.addEventListener('input', function () { etat[q].t = ta.value; garder(); });
+  });
+  document.querySelector('[data-copier]').addEventListener('click', function () {
+    var lignes = [];
+    document.querySelectorAll('.choix').forEach(function (c) {
+      var q = c.getAttribute('data-q'), e = etat[q] || {};
+      var titre = c.querySelector('.q').textContent;
+      lignes.push(titre + ' : ' + (e.c || '(pas de choix)') + (e.t ? ' | ' + e.t : ''));
+    });
+    var texte = lignes.join('\n'), b = this;
+    function fait() { b.textContent = 'Copié'; setTimeout(function () { b.textContent = 'Copier le texte'; }, 1500); }
+    if (navigator.clipboard) navigator.clipboard.writeText(texte).then(fait, function () { window.prompt('Copier :', texte); });
+    else window.prompt('Copier :', texte);
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

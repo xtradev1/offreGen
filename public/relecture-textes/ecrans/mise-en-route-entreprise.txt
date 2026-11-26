@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="fr-CH" class="rls-0"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/css/mise-en-route.css?v=258334d25005">  <title>Votre entreprise · Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  
+  
+  <link rel="stylesheet" href="/css/app.css?v=e78f7334a14b">
+    
+<link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/mise-en-route-entreprise.css"></head>
+<body data-compte="2">
+        <div class="app">
+    <header class="bar"><h1 data-t="T218">Bienvenue</h1><a class="vers-site mobile-seul" href="/decouvrir" aria-label="Dicta, le site"><img class="logo" src="/img/dicta-logo-sombre.svg?v=b0fbcb97f417" alt="" width="177" height="64"></a></header>
+      <link rel="stylesheet" href="/css/demo.css">
+  <div class="ruban-demo" role="note">
+    <span data-t="T219"><b>Mois gratuit</b> · 30 jours restants</span>
+  </div>
+<main class="screen gris">          <form method="post" action="/bienvenue/passer" class="passer-guide"><input type="hidden" name="_csrf" value=""><button class="lien" type="submit" data-t="T220">Passer le guide</button></form>
+    <div class="progression" aria-hidden="true"><i class="fait"></i><i></i><i></i><i></i><i></i></div>
+    <p class="muted petit" data-t="T221">Étape 1 sur 5</p>
+    <h2 class="etape-titre" data-t="T222">Votre entreprise</h2>
+    <p class="etape-sous" data-t="T223">Elle figure sur chaque offre et chaque facture.</p>
+      <form id="reglages" class="etape-entreprise" method="post" action="/bienvenue/entreprise">
+    <input type="hidden" name="_csrf" value="">
+    <input type="hidden" name="retour" value="">
+        <div class="card">
+  <div class="champ">
+    <label for="entreprise" data-t="T224">Nom</label>
+    <input id="entreprise" name="entreprise" value="Démo Peintre" maxlength="190" required="" autocomplete="organization" aria-describedby="err-entreprise">
+    <span class="err" id="err-entreprise" data-erreur="entreprise" hidden=""></span>
+  </div>
+  <div class="champ">
+    <label for="contact_nom" data-t="T225">Personne de contact</label>
+    <input id="contact_nom" name="contact_nom" value="" maxlength="120" autocomplete="name" aria-describedby="err-contact_nom">
+    <span class="muted petit" data-t="T226">Sur vos offres&nbsp;: «&nbsp;Votre contact&nbsp;», et sous la signature de l'entreprise.</span>
+    <span class="err" id="err-contact_nom" data-erreur="contact_nom" hidden=""></span>
+  </div>
+  <fieldset class="adresse" data-adresse="" data-adresse-branchee="1">
+  <legend data-t="T227">Adresse <span class="badge manque" data-adresse-badge="">à compléter</span></legend>
+    <div class="rue-numero">
+    <div class="champ">
+      <label for="adresse_rue" data-t="T228">Rue</label>
+      <input id="adresse_rue" name="adresse_rue" value="" maxlength="70" autocomplete="off" data-a="rue" aria-describedby="err-adresse_rue">
+      <span class="err" id="err-adresse_rue" data-erreur="adresse_rue" hidden=""></span>
+    </div>
+    <div class="champ">
+      <label for="adresse_numero">N°</label>
+      <input id="adresse_numero" name="adresse_numero" value="" maxlength="16" autocomplete="off" data-a="numero" aria-describedby="err-adresse_numero">
+      <span class="err" id="err-adresse_numero" data-erreur="adresse_numero" hidden=""></span>
+    </div>
+  </div>
+  <ul class="suggestions" data-adresse-suggestions="" hidden="" aria-label="Adresses du registre officiel"></ul>
+  <div class="npa-localite">
+    <div class="champ">
+      <label for="adresse_npa" data-t="T229">NPA</label>
+      <input id="adresse_npa" name="adresse_npa" value="" maxlength="16" inputmode="numeric" autocomplete="off" data-a="npa" aria-describedby="err-adresse_npa">
+      <span class="err" id="err-adresse_npa" data-erreur="adresse_npa" hidden=""></span>
+    </div>
+    <div class="champ">
+      <label for="adresse_localite" data-t="T230">Localité</label>
+      <input id="adresse_localite" name="adresse_localite" value="" maxlength="35" autocomplete="off" data-a="localite" aria-describedby="err-adresse_localite">
+      <span class="err" id="err-adresse_localite" data-erreur="adresse_localite" hidden=""></span>
+    </div>
+  </div>
+  <div class="champ">
+    <label for="adresse_pays" data-t="T231">Pays</label>
+    <select id="adresse_pays" name="adresse_pays" data-a="pays" aria-describedby="err-adresse_pays">
+      <option value="CH" selected="">Suisse</option><option value="LI">Liechtenstein</option><option value="FR">France</option><option value="DE">Allemagne</option><option value="IT">Italie</option><option value="AT">Autriche</option>    </select>
+    <span class="err" id="err-adresse_pays" data-erreur="adresse_pays" hidden=""></span>
+  </div>
+  <p class="adresse-etat" data-adresse-etat="" aria-live="polite"></p>
+</fieldset>
+  <p class="muted petit" data-t="T232">En tête de chaque offre et de chaque facture, pour la date «&nbsp;Delémont, le…&nbsp;» et dans la section de paiement.</p>
+  <div class="duo">
+    <div class="champ">
+      <label for="telephone" data-t="T233">Téléphone</label>
+      <input id="telephone" name="telephone" value="" inputmode="tel" autocomplete="tel" aria-describedby="err-telephone">
+      <span class="err" id="err-telephone" data-erreur="telephone" hidden=""></span>
+    </div>
+    <div class="champ">
+      <label for="ide" data-t="T234">Numéro IDE <span class="badge manque">à compléter</span></label>
+      <input id="ide" name="ide" value="" placeholder="CHE-123.456.789" autocomplete="off" class="manque" aria-describedby="err-ide" data-t="T246">
+      <span class="err" id="err-ide" data-erreur="ide" hidden=""></span>
+    </div>
+  </div>
+  <div class="champ">
+    <label for="iban" data-t="T235">IBAN <span class="badge manque">à compléter</span></label>
+    <input id="iban" name="iban" value="" placeholder="CH93 0076 2011 6238 5295 7" autocomplete="off" spellcheck="false" class="manque" aria-describedby="err-iban" data-t="T247">
+    <span class="muted petit" data-t="T236">Pour la QR-facture. Vous pouvez l'ajouter plus tard.</span>
+    <span class="err" id="err-iban" data-erreur="iban" hidden=""></span>
+  </div>
+  <div class="champ">
+    <label for="courriel_contact" data-t="T237">Courriel pour les clients</label>
+    <input id="courriel_contact" name="courriel_contact" type="email" value="" inputmode="email" autocomplete="email" aria-describedby="err-courriel_contact">
+    <span class="err" id="err-courriel_contact" data-erreur="courriel_contact" hidden=""></span>
+  </div>
+</div>
+<div class="card">
+  <fieldset class="groupe">
+    <legend data-t="T238">Votre activité</legend>
+          <label class="radio"><input type="radio" name="activite" value="batiment" checked="">
+        <span data-t="T239">Bâtiment<small data-t="T240">Peinture, plâtrerie, carrelage, maçonnerie, sanitaire, menuiserie, sols.</small></span></label>
+          <label class="radio"><input type="radio" name="activite" value="exterieur">
+        <span data-t="T241">Extérieur<small data-t="T242">Jardin, paysage, entretien extérieur.</small></span></label>
+          <label class="radio"><input type="radio" name="activite" value="prestations">
+        <span data-t="T243">Prestations<small data-t="T244">Informatique, conseil, marketing, autres services.</small></span></label>
+        <span class="err" id="err-activite" data-erreur="activite" hidden=""></span>
+  </fieldset>
+  <p class="muted petit" data-t="T245">Elle règle les mots de l'application et de vos documents, et le rangement de vos prochaines offres. Votre catalogue et vos offres ne changent pas.</p>
+</div>
+  </form>
+  </main>
+                            <div class="bas">
+        <div class="actionbar">
+          <button class="btn primary" type="submit" form="reglages" data-t="T155">Suivant</button>
+      </div>
+                </div>
+  </div>
+
+
+</body></html>

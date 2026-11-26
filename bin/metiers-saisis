@@ -1,0 +1,29 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Liste les métiers tapés sous « Autre métier », du plus fréquent au plus rare : ils disent quel catalogue
+// ajouter ensuite. Lecture seule.
+// Usage : bin/metiers-saisis
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+if (count($argv) !== 1) {
+    fwrite(STDERR, "Usage : bin/metiers-saisis\n");
+    exit(2);
+}
+
+$saisis = Conteneur::depuisEnvironnement(dirname(__DIR__))->artisans()->metiersSaisis();
+if ($saisis === []) {
+    echo "Aucun métier saisi sous « Autre métier ».\n";
+    exit(0);
+}
+foreach ($saisis as $s) {
+    printf("%4d  %s\n", $s['nombre'], $s['texte']);
+}

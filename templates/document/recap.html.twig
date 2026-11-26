@@ -1,0 +1,35 @@
+{% extends 'document/_base.html.twig' %}
+{% import 'document/_blocs.html.twig' as b %}
+{# Récapitulatif : chaque poste et son total d'abord, à côté des totaux de l'offre, puis le détail des travaux. La lettre
+   d'un poste est dans une cellule de tableau : dompdf met tout l'interligne au-dessus du texte, une hauteur de ligne ne
+   la centrerait pas (correction demandée par Xavier le 2026-11-20). #}
+
+{% block fixes %}{{ b.pied(_context) }}{% endblock %}
+
+{% block corps %}
+  <div class="doc-in">
+    {{ b.tete(_context) }}
+    <div class="doc-filet"></div>
+    {{ b.adresse(_context) }}
+    <div class="doc-titre"><span class="c-texte">{{ doc_nom }} n°&nbsp;{{ doc_numero }}</span> · {{ doc_objet }}</div>
+    <div class="doc-meta">{{ b.meta(_context, {contact: true}) }}</div>
+    {{ b.annulee(_context) }}
+    {{ b.debut(_context) }}
+    <table class="doc-duo2"><tr>
+      <td class="doc-g">
+        <div class="doc-h2">Récapitulatif</div>
+        <table class="doc-rec">{% for g in groupes_document ?? groupes %}<tr><td class="doc-let"><table class="doc-pas"><tr><td class="c-fond">{{ b.lettre(loop.index0) }}</td></tr></table></td><td>{{ g.nom ?: 'Autres postes' }}</td><td class="n">{{ g.total|montant }}</td></tr>{% endfor %}</table>
+      </td>
+      <td><div class="doc-h2">&nbsp;</div>{{ b.totaux(_context, {classe: 'doc-bloc-tot c-teinte'}) }}</td>
+    </tr></table>
+    <div class="doc-h2 doc-detail">{{ mots.doc_detail }}</div>
+    {{ b.lignes(_context, {st: false, lettres: true, grp: 'c-texte', sans_titre: 'Autres postes'}) }}
+    {{ b.options(_context) }}
+    {{ b.texte(_context, 'apres') }}
+    <div class="doc-fin">
+      {{ b.conditions(_context) }}
+      {{ b.fin(_context) }}
+      {{ b.signatures(_context) }}
+    </div>
+  </div>
+{% endblock %}

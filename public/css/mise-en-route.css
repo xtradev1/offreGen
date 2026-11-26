@@ -1,0 +1,16 @@
+/* La mise en route (assistant du premier lancement et passage d'une démo à l'essai ; chantier onboarding, lot 4).
+   À part : app.css est modifiée par d'autres chantiers. La TVA en quatre boutons (O5 de Xavier : « mets des boutons
+   pour les taux existants »). */
+.passer-guide { display: flex; justify-content: flex-end; margin: -4px 0 4px; }
+.passer-guide .lien { min-height: 48px; padding: 0 4px; font-weight: 600; }
+.etape-sous { margin: 4px 0 12px; color: var(--muted); font-size: 16px; }
+.etape-tva .card > fieldset:first-of-type { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.etape-tva .card > fieldset:first-of-type legend, .etape-tva .card > fieldset:first-of-type > .muted, .etape-tva .card > fieldset:first-of-type > .erreur { grid-column: 1 / -1; }
+.etape-tva .card > fieldset:first-of-type .radio { position: relative; min-height: 72px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--bord); background: var(--surface); align-items: center; }
+.etape-tva .card > fieldset:first-of-type .radio input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.etape-tva .card > fieldset:first-of-type .radio span { font-weight: 700; font-size: 16px; }
+.etape-tva .card > fieldset:first-of-type .radio small { font-weight: 400; }
+.etape-tva .card > fieldset:first-of-type .radio:has(input:checked) { border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); background: var(--accent-soft); }
+.etape-tva .card > fieldset:first-of-type .radio:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+#logo-etape .logo-ligne { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+#logo-etape .btn { min-height: 56px; font-weight: 600; }

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="fr-CH" class="rls-0"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+    <title>Aucun travail dicté · Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  
+  
+  <link rel="stylesheet" href="/css/app.css?v=e78f7334a14b">
+    
+<link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/guide-5-reperes.css"></head>
+<body data-compte="2">
+    <aside class="colonne-liste" aria-label="Offres en cours">
+  <form class="search" method="get" action="/" role="search">
+    <div class="box">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <input type="search" placeholder="Chercher une offre, un client" autocomplete="off" aria-label="Chercher une offre ou un client" data-filtre="#liste-pc" data-branche="1" value="">
+    </div>
+  </form>
+  <div id="liste-pc">
+          <a class="lcard" id="pc-3" href="/offres/3" aria-current="page" data-texte="aucun travail dicte 3">
+        <span class="l1"><b>Aucun travail dicté</b><span class="montant">0.00</span></span>
+        <small>prête</small>
+      </a>
+          <a class="lcard" id="pc-2" href="/offres/2" data-texte="rafraichissement du sejour famille exemple 2">
+        <span class="l1"><b>Rafraîchissement du séjour</b><span class="montant">3’106.80</span></span>
+        <small>Famille Exemple · prête</small>
+      </a>
+          <a class="lcard" id="pc-1" href="/offres/1" data-texte="facade de la maison monsieur modele 1">
+        <span class="l1"><b>Façade de la maison</b><span class="montant">8’496.65</span></span>
+        <small>Monsieur Modèle · prête</small>
+      </a>
+        <p class="vide" data-aucun="" hidden="">Aucune offre ne correspond.</p>
+  </div>
+</aside>
+    <div class="app">
+    <header class="bar"><a class="back" href="/" data-t="T119">Offres</a><h1 data-t="T156">Offre 3</h1><a class="vers-site mobile-seul" href="/decouvrir" aria-label="Dicta, le site"><img class="logo" src="/img/dicta-logo-sombre.svg?v=b0fbcb97f417" alt="" width="177" height="64"></a></header>
+      <link rel="stylesheet" href="/css/demo.css?v=0a863d2e76ba">
+  <div class="ruban-demo" role="note">
+    <span data-t="T114"><b>Démo</b> · 7 jours restants</span>
+              <a class="btn" href="/passer-a-l-essai" data-t="T115">Passer à l'essai</a>
+      </div>
+<main class="screen" data-resume="etat-offre sauvegarde totaux options total-fixe renvoi actions-offre pc-3" data-fenetre="carte-client carte-representant carte-objet factures-offre carte-conditions lignes">      <div class="ohead">
+    <a class="who carte-lien" id="carte-client" href="/offres/3/client" data-en-feuille="" aria-label="Client de l'offre : chercher ou changer"><span><span class="manque-client" data-t="T157">Choisir le client</span></span>
+      <svg class="i loupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></a>
+        <a class="rep carte-lien" id="carte-representant" href="/offres/3/representant" data-en-feuille=""><span><small data-t="T158">Représenté par</small><span class="muted" data-t="T159">Ajouter une régie, un architecte…</span></span></a>
+    <a class="t carte-lien" id="carte-objet" href="/offres/3/modifier" data-en-feuille=""><span><b data-t="T160">Aucun travail dicté</b><small data-t="T161">Objet de l'offre</small></span></a>
+            <span class="meta"><span id="etat-offre" class="status relue" data-t="T125">Prête</span><span class="muted" id="sauvegarde" data-sauvegarde="" data-t="T162">Créée le 25.11.2026 09:34</span>
+            <button class="btn pc-seul doc-cote" type="button" data-doc-cote="/offres/3/document" aria-pressed="false">Document à côté</button></span>
+  </div>
+
+    
+        <form class="texte-offre" method="post" action="/offres/3/textes" data-texte-offre="">
+    <input type="hidden" name="_csrf" value=""><input type="hidden" name="ou" value="avant">
+    <label for="texte-avant" data-t="T163">Texte avant les lignes</label>
+    <textarea id="texte-avant" name="texte" rows="2" maxlength="1000" placeholder="Facultatif" data-t="T179"></textarea>
+    <button class="lien" type="submit" data-sans-js="" hidden="">Enregistrer le texte</button>
+  </form>
+
+  <div class="rows une" id="lignes">
+      <p class="vide" data-t="T164">Aucun poste dans cette offre. «&nbsp;Ajouter&nbsp;», en bas, en ajoute un.</p>
+  </div>
+  <form class="ajout-pc pc-seul" method="get" action="/offres/3/ajouter" role="search" data-ajout-pc="" data-poste="/offres/3/lignes" data-csrf="3dedeef100abe9b6023904d3cb.uS79sjghszg-JMa58QnUUpDEWvPBQSL0z411ScMJbhQ.gV7L9GlU609XfZfhxX7lM8WHaJ-QAFCT-e42EKljLEDgeL7cYnH0bxN19g">
+  <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+  <input name="q" type="search" placeholder="Ajouter une ligne : tapez un produit, puis Entrée" autocomplete="off" aria-label="Ajouter une ligne" aria-autocomplete="list" aria-controls="ajout-pc-liste" aria-expanded="false" value="">
+  <ul id="ajout-pc-liste" class="ajout-pc-liste" role="listbox" hidden="">
+    <li role="option" data-id="11" data-texte="deplacement divers deplacement" hidden=""><span>Déplacement</span><small>60.00 /&nbsp;forfait</small></li><li role="option" data-id="12" data-texte="heure de regie divers regie, heure" hidden=""><span>Heure de régie</span><small>80.00 /&nbsp;h</small></li><li role="option" data-id="10" data-texte="echafaudage, montage et location peinture exterieure echafaudage" hidden=""><span>Échafaudage, montage et location</span><small>20.00 /&nbsp;m²</small></li><li role="option" data-id="9" data-texte="peinture de facade, 2 couches peinture exterieure facade" hidden=""><span>Peinture de façade, 2 couches</span><small>45.00 /&nbsp;m²</small></li><li role="option" data-id="7" data-texte="laquage de porte, 2 faces peinture interieure porte" hidden=""><span>Laquage de porte, 2 faces</span><small>160.00 /&nbsp;pce</small></li><li role="option" data-id="6" data-texte="laquage des plinthes peinture interieure plinthes" hidden=""><span>Laquage des plinthes</span><small>12.00 /&nbsp;m</small></li><li role="option" data-id="8" data-texte="peinture anti-moisissure peinture interieure anti-moisissure" hidden=""><span>Peinture anti-moisissure</span><small>prix&nbsp;? /&nbsp;m²</small></li><li role="option" data-id="4" data-texte="peinture des murs, 2 couches peinture interieure murs, dispersion" hidden=""><span>Peinture des murs, 2 couches</span><small>28.00 /&nbsp;m²</small></li><li role="option" data-id="5" data-texte="peinture des plafonds, 2 couches peinture interieure plafond" hidden=""><span>Peinture des plafonds, 2 couches</span><small>32.00 /&nbsp;m²</small></li><li role="option" data-id="3" data-texte="couche d'impression preparation fond, primaire" hidden=""><span>Couche d'impression</span><small>5.00 /&nbsp;m²</small></li><li role="option" data-id="1" data-texte="protection des sols et des meubles preparation bacher, proteger" hidden=""><span>Protection des sols et des meubles</span><small>180.00 /&nbsp;forfait</small></li><li role="option" data-id="2" data-texte="rebouchage et poncage des murs preparation reboucher, enduit" hidden=""><span>Rebouchage et ponçage des murs</span><small>9.00 /&nbsp;m²</small></li>    <li role="option" data-libre="" hidden=""><span data-libre-texte=""></span><small>ligne libre</small></li>
+  </ul>
+</form>
+
+        <div class="totals" id="totaux">
+    <div class="r"><span data-t="T165">Sous-total HT</span><span>CHF&nbsp;0.00</span></div>
+        <a class="lien plus" href="/offres/3/rabais" data-en-feuille="" data-t="T166">+ Rabais</a>
+        <div class="r"><span data-t="T167">TVA 8,1&nbsp;%</span><span>CHF&nbsp;0.00</span></div>      </div>
+    <div class="options" id="options" data-options=""></div>
+  <a class="carte-lien conditions" id="carte-conditions" href="/offres/3/conditions" data-en-feuille=""><span><small data-t="T109">Conditions</small><b data-t="T168">Valable 30 jours, paiement à 30 jours</b><small data-t="T169">Pas d'escompte</small></span></a>
+    <form class="texte-offre" method="post" action="/offres/3/textes" data-texte-offre="">
+    <input type="hidden" name="_csrf" value=""><input type="hidden" name="ou" value="apres">
+    <label for="texte-apres" data-t="T170">Texte après les lignes</label>
+    <textarea id="texte-apres" name="texte" rows="2" maxlength="1000" placeholder="Facultatif"></textarea>
+    <button class="lien" type="submit" data-sans-js="" hidden="">Enregistrer le texte</button>
+  </form>
+
+  <p class="muted petit mobile-seul" data-t="T171">Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.</p>
+  <p class="aide-clavier pc-seul"><kbd>Tab</kbd> champ suivant · <kbd>Entrée</kbd> ligne suivante · <kbd>J</kbd> c'est juste · <kbd>Suppr</kbd> retirer la ligne (avec Annuler) · <kbd>D</kbd> dicter une offre</p>
+    <link rel="stylesheet" href="/css/guide.css?v=58b91ae2c923">
+
+<div class="guide" hidden="" data-guide="artisan" data-total="5" data-fin="/guide/fini" data-csrf="3dedeef100abe9b6023904d3cb.uS79sjghszg-JMa58QnUUpDEWvPBQSL0z411ScMJbhQ.gV7L9GlU609XfZfhxX7lM8WHaJ-QAFCT-e42EKljLEDgeL7cYnH0bxN19g">
+      <template data-n="5" data-pastilles=".row.flag|.okbtn|.del" data-dernier=""><ol class="guide-reperes"><li><span><b>À vérifier</b>&nbsp;: Dicta doute de cette ligne. Touchez-la pour confirmer ou corriger.</span></li><li><span><b>Prendre</b> applique le prix que vous avez dit.</span></li><li><span>La corbeille retire une ligne&nbsp;; «&nbsp;Annuler&nbsp;» la remet.</span></li></ol></template>
+    </div>
+</main>
+                            <div class="bas">
+          <div class="feuille-fond" data-feuille-page="" hidden="" data-rafraichir=".ohead" data-recharger="1">
+  <div class="feuille cadre" role="dialog" aria-modal="true" aria-labelledby="titre-fiche" tabindex="-1">
+    <div class="poignee" aria-hidden="true"></div>
+    <div class="sh-h"><h2 id="titre-fiche" data-feuille-titre=""></h2>
+      <button class="x" type="button" data-fermer="" aria-label="Fermer"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button></div>
+    <div class="sh-corps" data-feuille-corps=""></div>
+    <div class="sh-pied" data-feuille-pied=""></div>
+  </div>
+</div>
+          <div class="totalbar" id="total-fixe" data-total-fixe=""><span>Total TTC</span><b>CHF&nbsp;0.00</b></div>
+      <div class="actionbar" id="actions-offre">
+    <a class="btn ajout" href="/offres/3/ajouter" aria-label="Ajouter une ligne" data-en-feuille="" data-t="T172">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Ligne</a>
+                <a class="btn primary grand" href="/offres/3/client?suite=apercu" data-en-feuille=""><span class="libelle-total"><span data-t="T173">Générer l'offre</span><small data-total-bouton="">CHF&nbsp;0.00</small></span>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></a>
+      </div>
+            <nav class="tabs" aria-label="Sections">
+  <a class="marque-pc pc-seul" href="/decouvrir" aria-label="Dicta, le site"><picture><source srcset="/img/dicta-logo-sombre.svg?v=b0fbcb97f417" media="(prefers-color-scheme: dark)"><img src="/img/dicta-logo-clair.svg?v=6e7fb5d646e8" alt="" width="177" height="64"></picture></a>
+  <a href="/" aria-current="page">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5M10 13h6M10 17h6"></path></svg>Offres</a>
+  <a href="/clients" data-t="T129">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6"></path></svg>Clients</a>
+  <button class="micro-central" type="button" aria-label="Dicter une offre" aria-keyshortcuts="D" data-enregistrer=""><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></span><b class="pc-seul">Dicter une offre</b></button>
+  <a href="/factures" data-t="T130">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path><path d="M9 8h6M9 12h6M9 16h3"></path></svg>Factures</a>
+  <a class="pc-seul" href="/catalogue">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"></path><path d="m3 8 9 5 9-5M12 13v8"></path></svg>Catalogue</a>
+  <a class="pc-seul" href="/reglages">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"></path><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="17" cy="18" r="2"></circle></svg>Réglages</a>
+  <a class="mobile-seul" href="/plus" data-t="T131">
+    <svg class="i" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>Plus</a>
+      <a class="pc-seul importer" href="/import" data-importer="">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg>Importer un fichier</a>
+  <small class="pc-seul aide-micro">Micro du portable ou d'un casque · touche <kbd>D</kbd></small>
+</nav>
+
+<div class="nouvelle" data-nouvelle="" data-duree-max="1800">
+  <form id="import" method="post" action="/import" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="">
+    <input class="cache" id="audio" name="audio" type="file" accept="audio/*,.m4a,.mp3,.ogg,.opus,.wav,.amr,.3gp,.webm" required="" data-envoi-fichier="">
+      </form>
+
+          <div class="feuille-fond" data-feuille="" hidden="">
+      <div class="feuille" role="dialog" aria-modal="true" aria-label="Nouvelle offre">
+        <div class="poignee" aria-hidden="true"></div>
+        <button class="x coin" type="button" data-fermer="" aria-label="Fermer" hidden=""><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        <div data-etat="refus" hidden="">
+          <p class="alerte warn" role="alert" data-sans-micro="">Le micro demande une connexion sécurisée (https). En attendant, enregistrez avec le téléphone, puis importez le fichier.</p>
+          <a class="btn primary large" href="/import" data-importer=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg>Importer un fichier</a>
+        </div>
+          <div class="rec" data-etat="enregistrement" hidden="">
+    <div class="timer" data-minuteur="">00:00</div>
+    <div class="dot on" aria-hidden="true"></div>
+            <p data-consigne="Parlez, pièce par pièce.">Parlez, pièce par pièce.</p>
+    <button class="btn danger large" type="button" data-terminer="">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"></rect></svg>Terminer et créer l'offre</button>
+    <button class="lien" type="button" data-abandonner="">Abandonner sans envoyer</button>
+        <p class="muted petit centre" data-astuce-micro="" hidden="" data-ecran="Pour ne plus autoriser le micro à chaque fois&nbsp;: dans les Réglages, ouvrez Safari, puis Micro, Autoriser.">Pour ne plus autoriser le micro à chaque fois&nbsp;: touchez «&nbsp;aA&nbsp;» à côté de l'adresse, puis Réglages du site web, Micro, Autoriser.</p>
+  </div>
+
+                                <div class="suivi" data-etat="envoi" hidden="">
+    <h2 class="suivi-titre">Préparation de l'offre</h2>
+    <ol class="etapes" data-etapes="">
+      <li class="cur"><span class="marque" aria-hidden="true"></span><span class="lib">Envoi de l'enregistrement</span>
+      <progress max="100" value="0" data-progression="" hidden=""></progress>    </li>
+      <li class="todo"><span class="marque" aria-hidden="true"></span><span class="lib">Transcription de la dictée</span>
+          </li>
+      <li class="todo"><span class="marque" aria-hidden="true"></span><span class="lib">Création de l'offre</span>
+          </li>
+      <li class="todo"><span class="marque" aria-hidden="true"></span><span class="lib">Offre prête</span>
+          </li>
+  </ol>
+<p class="muted petit centre" data-etapes-message="" aria-live="polite"></p>
+<p class="alerte warn" role="status" data-etapes-panne="" hidden=""><b>Le traitement s'est arrêté en route.</b> Il reprend tout seul d'ici une minute. Vous pouvez rester sur cet écran ou revenir plus tard.</p>
+    <p class="muted petit centre" data-progression-texte=""></p>
+  </div>
+
+  <div data-etat="court" hidden="">
+    <p class="alerte warn" role="alert">Enregistrement non pris en compte&nbsp;: 5 secondes au minimum.</p>
+    <button class="btn primary large" type="button" data-recommencer="">Recommencer</button>
+  </div>
+
+    <div data-etat="long" hidden="">
+    <p class="alerte warn" role="alert">Fichier trop long&nbsp;: 30&nbsp;minutes au maximum. Il n'a pas été envoyé.</p>
+    <button class="btn primary large" type="button" data-autre-fichier="">Choisir un autre fichier</button>
+  </div>
+
+  <div data-etat="echec" hidden="">
+    <p class="alerte bad" role="alert" data-echec-texte="">L'envoi a échoué.</p>
+    <button class="btn primary large" type="button" data-reessayer="">Réessayer l'envoi</button>
+    <p class="centre"><a class="lien" href="#" download="visite.webm" data-garder="" hidden="">Garder l'enregistrement dans un fichier</a></p>
+  </div>
+
+    <div class="suivi" data-etat="reprise" hidden="">
+    <h2 class="suivi-titre">Une dictée n'est pas partie</h2>
+    <p data-reprise-texte=""></p>
+        <button class="btn primary large" type="button" data-reprise-continuer="" hidden="">Continuer la dictée</button>
+    <button class="btn primary large" type="button" data-reprise-envoyer="">Envoyer et créer l'offre</button>
+    <p class="centre"><a class="lien" href="#" data-reprise-garder="">Garder dans un fichier</a></p>
+    <p class="centre"><button class="lien" type="button" data-reprise-supprimer="">Supprimer la dictée</button></p>
+  </div>
+
+      </div>
+    </div>
+  </div>
+    </div>
+  </div>
+
+
+<div class="guide-bulle en-bas" role="dialog" aria-live="polite"><span class="guide-pas" data-t="T174">Guide · 5 sur 5</span><div class="guide-texte"><ol class="guide-reperes"><li><span data-t="T175"><b>À vérifier</b>&nbsp;: Dicta doute de cette ligne. Touchez-la pour confirmer ou corriger.</span></li><li><span data-t="T176"><b>Prendre</b> applique le prix que vous avez dit.</span></li><li><span data-t="T177">La corbeille retire une ligne&nbsp;; «&nbsp;Annuler&nbsp;» la remet.</span></li></ol></div><div class="guide-bas"><button type="button" class="guide-quitter" data-t="T134">Quitter le guide</button><button type="button" class="guide-suite" data-t="T178">Compris</button></div></div></body></html>

@@ -1,0 +1,40 @@
+{
+ "prechargees": [
+  {
+   "t": 4043,
+   "url": "/"
+  },
+  {
+   "t": 14234,
+   "url": "/catalogue"
+  },
+  {
+   "t": 14712,
+   "url": "/clients"
+  },
+  {
+   "t": 15164,
+   "url": "/offres/3"
+  },
+  {
+   "t": 15629,
+   "url": "/offres/2"
+  },
+  {
+   "t": 16093,
+   "url": "/offres/4"
+  },
+  {
+   "t": 16561,
+   "url": "/offres/1"
+  }
+ ],
+ "activite": [
+  4072,
+  10774
+ ],
+ "partiesPendantLActivite": 0,
+ "reprise": 3460,
+ "ok": true,
+ "texte": "Téléphone neuf, réseau 4G simulé : le préchargement part (/ à 4,0 s) ; l'écran fait alors une requête toutes les 0,7 s pendant 6,7 s : aucune page préchargée ne part pendant ce temps ; la suivante part 3,5 s après la dernière requête de l'écran. 7 pages préchargées en tout."
+}

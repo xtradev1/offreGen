@@ -1,0 +1,372 @@
+_ajout_pc.html.twig
+  FORM GET  {{ base }}/ajouter                                           data-ajout-pc data-poste data-csrf boutons=[]
+_fenetre_demo.html.twig
+  LIEN /passer-a-l-essai                                             « Passer à l'essai »
+_lignes.html.twig
+  LIEN {{ base }}/pieces?nom={{ g.piece|url_encode }}                « Renommer »
+_liste_offres_pc.html.twig
+  FORM GET  /                                                             boutons=[]
+  LIEN /offres/{{ o.id }}                                           data-texte « {{ o.titre }} {{ liste.totaux[o.id]|montant }} {% if o.client_nom %}{{ »
+_nouvelle_offre.html.twig
+  FORM POST /import                                                       boutons=['Envoyer le fichier choisi']
+  LIEN #                                                            data-garder « Garder l'enregistrement dans un fichier »
+  LIEN #                                                            data-reprise-garder « Garder dans un fichier »
+  LIEN /import                                                      data-importer « {{ icone_import }}Importer un fichier »
+_onglets.html.twig
+  LIEN /decouvrir                                                    « {{ nom_application }}, le site »
+  LIEN /                                                             « Offres »
+  LIEN /clients                                                      « Clients »
+  LIEN /factures                                                     « Factures »
+  LIEN /catalogue                                                    « Catalogue »
+  LIEN /reglages                                                     « Réglages »
+  LIEN /plus                                                         « Plus »
+  LIEN /admin                                                        « {{ role_du_compte.espace }} »
+  LIEN /import                                                      data-importer « Importer un fichier »
+_rangee.html.twig
+  FORM POST {{ lien }}                                                    boutons=[] champs-seuls=1
+  FORM POST {{ lien }}                                                    boutons=[] champs-seuls=1
+  FORM POST {{ lien }}/supprimer                                          boutons=['[Supprimer la ligne {{ l.designation }}]']
+  FORM POST {{ lien }}/retenue                                           data-choix boutons=['Enregistrer'] champs-seuls=1
+  FORM POST {{ lien }}/prix-dicte                                         boutons=['Prendre {{ dicte|montant }}']
+  FORM POST {{ lien }}/prix-dicte/catalogue                               boutons=['Oui', 'Non']
+  FORM POST {{ lien }}/juste                                              boutons=["C'est juste"]
+  LIEN {{ lien }}                                                   data-en-feuille-pc « {% if sorte == 'variante' %} Variante {% elseif sorte == 'option' and  »
+  LIEN {{ lien }}/catalogue                                         data-en-feuille « Pas dans votre catalogue Ajoutez-le pour la prochaine dictée »
+_reglages_marque.html.twig
+  LIEN /reglages/modeles/{{ cle }}{% if assistant %}?depuis=bienven data-grand data-cle data-nom « Voir en grand »
+_ruban_demo.html.twig
+  FORM POST /retour-espace                                                boutons=['Revenir à mon espace']
+  LIEN /passer-a-l-essai                                             « Passer à l'essai »
+accueil.html.twig
+  FORM POST /vos-prix/plus-tard                                           boutons=['Plus tard']
+  FORM POST /enregistrements/{{ e.uuid }}/reessayer                       boutons=['Réessayer']
+  FORM POST /enregistrements/{{ e.uuid }}/retirer                         boutons=['Retirer']
+  FORM POST /offres/{{ o.id }}/archiver                                   boutons=['Archiver']
+  FORM POST /offres/{{ o.id }}/supprimer                                  boutons=['Supprimer']
+  FORM POST /offres/{{ o.id }}/restaurer                                  boutons=['Restaurer']
+  LIEN /vos-prix                                                     « Compléter »
+  LIEN /vos-prix                                                     « Mettre mes prix »
+  LIEN /enregistrements/{{ e.uuid }}                                 « {{ m.dictee_nom }} du {{ e.recu_le|date_locale }} {{ e.statut == 'tran »
+  LIEN {{ cle == 'recent' ? '/' : '/?tri=' ~ cle }}                  « {{ libelle }} »
+  LIEN /offres/{{ o.id }}                                            « {{ o.titre }} {% if a_relire[o.id] > 0 %} {{ a_relire[o.id] }} à vérif »
+  LIEN /offres/{{ o.id }}                                            « {{ o.titre }} {% if o.client_nom %}{{ o.client_nom }} · {% endif %}Off »
+admin/_menu.html.twig
+  LIEN /decouvrir                                                    « {{ nom_application }}, le site »
+  LIEN {{ e[1] }}                                                    « {{ e[2] }} »
+admin/aide_vente.html.twig
+  LIEN /admin/plus                                                   « Plus »
+  LIEN /admin/bienvenue                                              « Revoir la bienvenue et le guide »
+admin/artisan.html.twig
+  FORM POST /admin/artisans/{{ compte.id }}/offres                        boutons=['+{{ n }}']
+  FORM POST /admin/artisans/{{ compte.id }}/message                       boutons=['Envoyer par message']
+  LIEN /admin/artisans                                               « Clients »
+  LIEN /admin/artisans/{{ compte.id }}/qr                            « Afficher le code QR »
+admin/artisans.html.twig
+  FORM GET  /admin/artisans                                               boutons=[]
+  LIEN /admin/artisans                                               « Voir tous les clients »
+  LIEN /admin/demos/nouvelle                                         « Créer une démo »
+  LIEN /admin/artisans?type={{ cle }}{% if q != '' %}&amp;q={{ q|ur  « {{ nom }} »
+  LIEN /admin/artisans/{{ c.id }}                                    « {{ c.entreprise }} {{ c.demo == 1 ? 'Démo' : (c.offres_max is null ? ' »
+  LIEN /admin/demos/nouvelle                                         « Créer une démo »
+admin/bienvenue.html.twig
+  FORM POST /admin/bienvenue/vue                                          boutons=['Plus tard']
+  FORM POST /admin/bienvenue/vue                                          boutons=["{{ texte('c.b3.bouton') }}"]
+  LIEN /admin/bienvenue?ecran={{ ecran + 1 }}                        « Suivant »
+admin/demo_message.html.twig
+  LIEN /admin/artisans/{{ compte.id }}                               « {{ compte.entreprise }} »
+  LIEN https://wa.me/?text={{ message|url_encode }}                  « Envoyer par WhatsApp »
+  LIEN mailto:{{ (compte.courriel_saisi ?? '')|url_encode }}?subjec  « Envoyer par courriel »
+  LIEN /admin/artisans/{{ compte.id }}                               « Terminé »
+  LIEN /admin/artisans/{{ compte.id }}                               « Terminé »
+admin/demo_nouvelle.html.twig
+  FORM POST /admin/demos                                                  boutons=['Créer la démo']
+  LIEN /admin/artisans                                               « Clients »
+admin/demo_prete.html.twig
+  FORM POST /admin/artisans/{{ compte.id }}/message                       boutons=['Envoyer par message']
+  FORM POST {{ lien_chemin }}                                             boutons=['Ouvrir la démo sur cet appareil']
+  LIEN /admin/artisans/{{ compte.id }}                               « {{ compte.entreprise }} »
+  LIEN {{ lien }}                                                    « Ouvrir la démo sur cet appareil »
+  LIEN /admin/artisans/{{ compte.id }}                               « Terminé »
+  LIEN /admin/artisans/{{ compte.id }}                               « Terminé »
+admin/equipe.html.twig
+  FORM POST /admin/equipe/{{ membre.id }}                                 boutons=['Enregistrer']
+  FORM POST /admin/equipe/{{ membre.id }}/acces                           boutons=["Renvoyer un lien d'accès"]
+  FORM POST /admin/equipe/{{ membre.id }}/role                            boutons=["Retirer de l'équipe"]
+  LIEN /admin/equipe                                                 « Équipe »
+  LIEN /admin/equipe/nouveau                                         « Ajouter un membre »
+  LIEN /admin/equipe/{{ m.id }}                                      « {{ m.entreprise }} »
+  LIEN /admin/artisans?par={{ membre.id }}                           « Ses clients {{ membre.artisans }} client{{ membre.artisans > 1 ? 's' : »
+  LIEN /admin/equipe/nouveau                                         « Ajouter un membre »
+admin/membre_cree.html.twig
+  LIEN /admin/equipe                                                 « Équipe »
+  LIEN /admin/equipe                                                 « Terminé »
+  LIEN /admin/equipe                                                 « Terminé »
+admin/membre_nouveau.html.twig
+  FORM POST /admin/equipe                                                 boutons=["Créer et envoyer l'accès"]
+  LIEN /admin/equipe                                                 « Équipe »
+admin/plus.html.twig
+  FORM POST /admin/plus/nom                                               boutons=['Enregistrer']
+  FORM POST /deconnexion                                                  boutons=['Se déconnecter']
+  LIEN /                                                             « Revenir à mon espace Offres, clients, factures »
+  LIEN /admin/aide-vente                                             « {{ texte('k.titre') }} {{ texte('k.sous') }} »
+admin/suivi.html.twig
+  LIEN /admin/demos/nouvelle                                         « Créer une démo »
+  LIEN /admin/artisans/{{ d.id }}                                    « {{ d.entreprise }}{% if d.pas_encore_dicte %} {{ texte('s.pasdicte') } »
+  LIEN /admin/demos/nouvelle                                         « Créer une démo »
+ajout.html.twig
+  FORM GET  {{ cible.base }}/ajouter                                      boutons=['Choisir']
+  FORM GET  {{ cible.base }}/ajouter                                      boutons=['Choisir'] champs-seuls=1
+  FORM GET  {{ cible.base }}/ajouter                                      boutons=[]
+  FORM POST {{ cible.base }}/lignes                                      data-texte boutons=['{{ p.designation }} {% if p.prix_centimes == 0 %}prix&nbsp;?{% else %}']
+  FORM POST {{ cible.base }}/lignes                                      data-aucun boutons=['Ajouter «&nbsp; {{ q }} &nbsp;» ligne libre']
+  FORM POST {{ cible.base }}/lignes                                       boutons=['Ajouter la ligne']
+  LIEN {{ cible.base }}                                              « {{ cible.retour }} »
+  LIEN {{ cible.base }}/ajouter?piece={{ nom|url_encode }}           « {{ nom == '' ? 'Général' : nom }} »
+  LIEN {{ cible.base }}/ajouter?nature={{ v }}{{ suite_piece }}      « {{ lib }} »
+  LIEN {{ cible.base }}                                              « Terminé »
+apercu_pdf.html.twig
+  FORM POST {{ marquer }}                                                data-apres-partage boutons=[]
+  LIEN {{ retour.href }}                                             « {{ retour.texte }} »
+  LIEN /offres/{{ fac.f.offre_id }}                                  « n°&nbsp;{{ fac.f.offre_numero }}, {{ fac.f.titre }} »
+  LIEN {{ fac.annuler }}                                             « Annuler la facture »
+  LIEN {{ pdf }}                                                     « Ouvrir le PDF »
+  LIEN /reglages/entreprise                                          « {{ texte('w.b1') }} »
+  LIEN {{ pdf }}                                                    data-partager data-titre « Envoyer la facture annulée »
+  LIEN {{ pdf }}                                                     « Télécharger le PDF »
+  LIEN {{ pdf }}                                                     « Télécharger »
+  LIEN {{ modifier }}                                                « Modifier »
+  LIEN {{ facturer }}                                               data-en-feuille « Facturer »
+  LIEN {{ pdf }}                                                    data-partager data-titre « Envoyer »
+base.html.twig
+  FORM POST {{ a.action ?? ('/offres/' ~ a.offre ~ '/lignes/' ~ a.ligne  data-disparait boutons=['Annuler']
+  LIEN /decouvrir                                                    « {{ nom_application }}, le site »
+  LIEN /decouvrir                                                    « {{ nom_application }}, le site »
+catalogue.html.twig
+  FORM GET  /catalogue                                                    boutons=[]
+  LIEN /vos-prix                                                     « Compléter »
+  LIEN /import-catalogue                                             « Importer »
+  LIEN /catalogue{% if q %}?q={{ q|url_encode }}{% endif %}          « Tout »
+  LIEN /catalogue?cat={{ c|url_encode }}{% if q %}&amp;q={{ q|url_e  « {{ c }} »
+  LIEN /catalogue/{{ p.id }}                                        data-en-feuille data-texte data-hors-cat « {{ p.designation }}{% if p.synonymes %} {{ p.synonymes }} {% endif %}  »
+  LIEN /catalogue/nouveau?q={{ q|url_encode }}                      data-en-feuille data-creer « Créer ce produit »
+  LIEN /catalogue/nouveau{% if cat %}?cat={{ cat|url_encode }}{% en data-en-feuille « Nouveau produit »
+client.html.twig
+  FORM POST {{ k ? '/clients/' ~ k.id : '/clients' }}                    data-auto data-sortir boutons=[]
+  FORM POST /clients/{{ k.id }}/supprimer                                 boutons=['Supprimer ce client']
+  LIEN {{ offre ? '/offres/' ~ offre.id : '/clients' }}              « {{ offre ? 'Offre' : 'Clients' }} »
+  LIEN /offres/{{ o.id }}                                           data-sortir « N°&nbsp;{{ o.numero }} · {{ o.titre }} {{ o.total|chf }} Faite le {{ o »
+  LIEN {{ offre ? '/offres/' ~ offre.id : '/clients' }}              « Annuler »
+clients.html.twig
+  FORM GET  /clients                                                      boutons=[]
+  LIEN /clients/{{ k.id }}                                          data-en-feuille data-texte « {{ k.initiales }} {{ k.nom }} {% if k.localite %}{{ k.localite }} · {% »
+  LIEN /clients/nouveau                                             data-en-feuille data-creer « Créer ce client »
+  LIEN /clients/nouveau                                             data-en-feuille « Nouveau client »
+conditions_offre.html.twig
+  FORM POST /offres/{{ offre.id }}/conditions                             boutons=[]
+  LIEN /offres/{{ offre.id }}                                        « Offre »
+  LIEN /offres/{{ offre.id }}                                        « Annuler »
+connexion.html.twig
+  FORM POST /connexion                                                    boutons=[]
+  LIEN /                                                             « {{ nom_application }}, page d'accueil »
+  LIEN /mot-de-passe/oubli                                           « Mot de passe oublié&nbsp;? »
+demo_entrer.html.twig
+  FORM POST {{ action }}                                                  boutons=[]
+demo_terminee.html.twig
+  LIEN /passer-a-l-essai                                             « Passer à l'essai »
+  LIEN /                                                             « Voir mes offres »
+document.html.twig
+  LIEN /offres/{{ offre.id }}                                        « Offre »
+  LIEN /offres/{{ offre.id }}/client                                 « le choisir »
+  LIEN /reglages                                                     « la compléter dans les réglages »
+  LIEN /offres/{{ offre.id }}                                        « Modifier »
+  LIEN /offres/{{ offre.id }}/facturer                               « Facturer »
+  LIEN /offres/{{ offre.id }}/pdf                                    « PDF »
+enregistrement.html.twig
+  LIEN /                                                             « Offres »
+  LIEN /offres/{{ e.offre_id }}                                      « Voir l'offre »
+  LIEN /import                                                       « Importer à nouveau »
+  LIEN /                                                             « Revenir aux offres »
+erreur.html.twig
+  LIEN /                                                             « Retour à l'accueil »
+essai_passer.html.twig
+  FORM POST /passer-a-l-essai                                             boutons=[]
+  LIEN /                                                             « Offres »
+facture.html.twig
+  FORM POST /factures/{{ f.id }}/emettre                                  boutons=[]
+  LIEN /offres/{{ f.offre_id }}                                      « Offre {{ f.offre_numero }} »
+  LIEN /offres/{{ f.offre_id }}                                      « selon offre n°&nbsp;{{ f.offre_numero }} »
+  LIEN /factures/{{ f.id }}/modifier                                 « {{ f.titre }} »
+  LIEN /factures/{{ f.id }}/document                                 « Voir l'aperçu de la facture »
+  LIEN /factures/{{ f.id }}/ajouter                                 data-en-feuille « Ligne »
+facture_annuler.html.twig
+  FORM POST /factures/{{ f.id }}/annuler                                  boutons=[]
+  FORM POST /factures/{{ f.id }}/annuler                                  boutons=[]
+  LIEN /factures/{{ f.id }}/apercu                                   « Facture »
+  LIEN /factures/{{ bloquee.id }}/apercu                             « Voir la facture finale »
+  LIEN /factures/{{ f.id }}/apercu                                   « Retour à l'acompte »
+facture_document.html.twig
+  FORM POST /factures/{{ f.id }}/emettre                                  boutons=[]
+  LIEN /factures/{{ f.id }}                                          « Brouillon »
+  LIEN /reglages/entreprise                                          « la compléter dans les réglages »
+  LIEN /reglages/entreprise                                          « compléter dans les réglages »
+  LIEN /factures/{{ f.id }}                                          « Corriger les lignes »
+facture_entete.html.twig
+  FORM POST /factures/{{ f.id }}/modifier                                 boutons=[]
+  FORM POST /factures/{{ f.id }}/supprimer                                boutons=['Supprimer ce brouillon']
+  LIEN /factures/{{ f.id }}                                          « Facture »
+  LIEN /factures/{{ f.id }}                                          « Annuler »
+facturer.html.twig
+  FORM POST /offres/{{ offre.id }}/lignes/{{ x.id }}/retenue              boutons=['{{ x.designation }} {{ x.libelle }} {{ x.montant|montant }}']
+  FORM POST /offres/{{ offre.id }}/facturer                              data-facturer data-apercu data-sortir boutons=["Corriger des lignes d'abord"]
+  LIEN /offres/{{ offre.id }}                                        « Offre »
+  LIEN /offres/{{ offre.id }}/client                                 « Choisir le client »
+  LIEN /factures/{{ x.id }}                                         data-sortir « Facture {{ x.numero ?? '(brouillon)' }} »
+  LIEN /offres/{{ offre.id }}                                        « Revenir à l'offre »
+factures.html.twig
+  FORM GET  /factures                                                     boutons=[]
+  LIEN /factures/{{ x.id }}{{ x.statut != 'brouillon' ? '/apercu' } data-texte « {{ x.numero ?? 'Brouillon' }} · {{ x.client_nom }} {% if x.localite %} »
+import.html.twig
+  LIEN /                                                             « Offres »
+import_bilan.html.twig
+  FORM POST /import-catalogue/{{ import.id }}/annuler                     boutons=['Annuler cet import']
+  LIEN /catalogue                                                    « Catalogue »
+  LIEN /catalogue                                                    « Voir mon catalogue »
+import_catalogue.html.twig
+  LIEN /catalogue                                                    « Catalogue »
+import_relecture.html.twig
+  FORM POST /import-catalogue/{{ import.id }}                            data-relecture boutons=[]
+  LIEN /catalogue                                                    « Catalogue »
+  LIEN /import-catalogue                                             « Choisir d'autres PDF »
+ligne.html.twig
+  FORM POST {{ cible.base }}/lignes/{{ l.id }}                            boutons=[]
+  FORM POST {{ cible.base }}/lignes/{{ l.id }}/supprimer                  boutons=['Supprimer la ligne']
+  LIEN {{ cible.base }}#l{{ l.id }}                                  « {{ cible.retour }} »
+  LIEN {{ cible.base }}/ajouter?nature=variante&amp;remplace={{ l.i  « + Variante de cette ligne »
+  LIEN {{ cible.base }}#l{{ l.id }}                                  « Annuler »
+ligne_catalogue.html.twig
+  FORM POST {{ lien }}/produit                                            boutons=['Créer et ranger']
+  FORM GET  {{ lien }}/catalogue                                          boutons=[]
+  FORM POST {{ lien }}/rattacher                                         data-texte boutons=['{{ p.designation }} {{ p.categorie }}{% if p.unite != l.unite %} · se ']
+  LIEN /offres/{{ offre.id }}#l{{ l.id }}                            « Offre »
+modele_apercu.html.twig
+  FORM POST /reglages                                                     boutons=['Choisir ce modèle']
+  LIEN {{ retour }}                                                  « Ma marque »
+  LIEN /reglages/modeles/{{ cle }}{{ depuis }}                       « {{ nom }} »
+  LIEN {{ retour }}                                                  « C'est votre modèle actuel »
+mot_de_passe_envoye.html.twig
+  LIEN /connexion                                                    « Retour à la connexion »
+mot_de_passe_nouveau.html.twig
+  FORM POST {{ action }}                                                  boutons=[]
+mot_de_passe_oubli.html.twig
+  FORM POST /mot-de-passe/oubli                                           boutons=[]
+  LIEN /connexion                                                    « Connexion »
+mot_de_passe_perime.html.twig
+  LIEN /mot-de-passe/oubli                                           « Demander un nouveau lien »
+offre.html.twig
+  FORM POST /offres/{{ offre.id }}/textes                                data-texte-offre boutons=['Enregistrer le texte']
+  LIEN /                                                             « Offres »
+  LIEN /offres/{{ offre.id }}/client                                data-en-feuille « {% if offre.client_nom %} {{ offre.client_nom }} {% if offre.client_ad »
+  LIEN /offres/{{ offre.id }}/representant                          data-en-feuille « {% if offre.representant_nom %} Représenté par {{ offre.representant_n »
+  LIEN /offres/{{ offre.id }}/modifier                              data-en-feuille-pc « {{ offre.titre }} Objet de l'offre »
+  LIEN /factures/{{ f.id }}{{ f.statut != 'brouillon' ? '/apercu' }  « {{ f.numero ? 'Facture ' ~ f.numero : 'Brouillon de facture' }} »
+  LIEN /offres/{{ offre.id }}/rabais/{{ loop.index }}               data-en-feuille « {{ r.libelle }}{% if r.pour_dix_mille %} {{ r.pour_dix_mille|taux }} { »
+  LIEN /offres/{{ offre.id }}/rabais                                data-en-feuille « + Rabais »
+  LIEN /offres/{{ offre.id }}/conditions                            data-en-feuille « Conditions Valable {{ r.validiteJours }} jours, paiement {{ r.conditio »
+  LIEN /offres/{{ offre.id }}/apercu                                 « Renvoyer »
+  LIEN /offres/{{ offre.id }}/ajouter                               data-en-feuille « Ligne »
+  LIEN /offres/{{ offre.id }}/relire                                 « Relire {{ a_relire }} ligne{{ a_relire > 1 ? 's' : '' }} {{ totaux.ttc »
+  LIEN /offres/{{ offre.id }}/facturer                              data-en-feuille « Facturer {{ totaux.ttc|chf }} »
+  LIEN /offres/{{ offre.id }}/client?suite=apercu                   data-en-feuille « Générer l'offre {{ totaux.ttc|chf }} »
+  LIEN /offres/{{ offre.id }}/apercu                                 « Générer l'offre {{ totaux.ttc|chf }} »
+offre_client.html.twig
+  FORM POST /offres/{{ offre.id }}/client                                data-sortir boutons=['{{ k.nom }} {{ detail }}']
+  FORM POST /offres/{{ offre.id }}/client                                data-sortir boutons=['Créer la fiche «&nbsp;{{ offre.client_dicte }}&nbsp;»']
+  LIEN /offres/{{ offre.id }}                                        « Offre »
+  LIEN /clients/nouveau?offre={{ offre.id }}{% if suite %}&amp;suit  « Nouveau client »
+offre_entete.html.twig
+  FORM POST /offres/{{ offre.id }}/modifier                               boutons=[]
+  LIEN /offres/{{ offre.id }}                                        « Offre »
+  LIEN /offres/{{ offre.id }}                                        « Annuler »
+piece.html.twig
+  FORM POST /offres/{{ offre.id }}/pieces                                 boutons=[]
+  LIEN /offres/{{ offre.id }}                                        « Offre »
+  LIEN /offres/{{ offre.id }}                                        « Annuler »
+plus.html.twig
+  FORM POST /guide/revoir                                                 boutons=['Revoir le guide Le micro, les conseils, la première offre']
+  FORM POST /deconnexion                                                  boutons=['Se déconnecter']
+  LIEN /catalogue                                                    « Catalogue Produits, prix et synonymes »
+  LIEN /import-catalogue                                             « Importer d'anciennes offres Vos produits et vos prix, tirés de vos PDF »
+  LIEN /reglages                                                     « Réglages Entreprise, marque, conditions, TVA »
+  LIEN /import                                                      data-importer « Importer un enregistrement Un fichier audio du téléphone »
+  LIEN /admin                                                        « {{ role.espace }} Artisans, démos, suivi »
+presentation.html.twig
+  FORM POST /essai                                                        boutons=['Demander mon essai Me prévenir']
+  LIEN #produit                                                      « Ce que fait Dicta »
+  LIEN #image                                                        « Logo et couleurs »
+  LIEN #suisse                                                       « Vos données en Suisse »
+  LIEN /                                                             « Mes offres »
+  LIEN /connexion                                                    « Se connecter »
+  LIEN #essai                                                        « Essayer Dicta Être prévenu »
+  LIEN #essai                                                        « Essayer Dicta Être prévenu de l&#x27;ouverture »
+  LIEN #                                                             « Mentions légales »
+  LIEN #                                                             « Protection des données »
+  LIEN #                                                             « Conditions »
+  LIEN /                                                             « Mes offres »
+  LIEN /connexion                                                    « Se connecter »
+  LIEN #essai                                                        « Essayer Dicta Être prévenu »
+produit.html.twig
+  FORM POST {{ p ? '/catalogue/' ~ p.id : '/catalogue' }}                 boutons=[]
+  LIEN /catalogue{% if p %}#p{{ p.id }}{% endif %}                   « Catalogue »
+  LIEN /catalogue/{{ p.id }}/supprimer                               « Supprimer ce produit du catalogue »
+  LIEN /catalogue{% if p %}#p{{ p.id }}{% endif %}                   « Annuler »
+produit_supprimer.html.twig
+  FORM POST /catalogue/{{ p.id }}/supprimer                               boutons=[]
+  LIEN /catalogue/{{ p.id }}                                         « Produit »
+  LIEN /catalogue/{{ p.id }}                                         « Garder »
+rabais.html.twig
+  FORM POST {{ action }}                                                 data-rabais boutons=[]
+  FORM POST {{ action }}/retirer                                          boutons=['Retirer ce rabais']
+  LIEN /offres/{{ offre.id }}                                        « Offre »
+  LIEN /offres/{{ offre.id }}                                        « Annuler »
+rattacher.html.twig
+  FORM GET  /offres/{{ offre.id }}/lignes/{{ l.id }}/rattacher            boutons=[]
+  FORM POST /offres/{{ offre.id }}/lignes/{{ l.id }}/rattacher           data-texte boutons=['{{ p.designation }} {{ p.categorie }} {% if p.prix_centimes == 0 %}pri']
+  LIEN /offres/{{ offre.id }}#l{{ l.id }}                            « Offre »
+  LIEN /offres/{{ offre.id }}#l{{ l.id }}                            « Annuler »
+reglages.html.twig
+  FORM POST /deconnexion                                                  boutons=['Se déconnecter']
+  LIEN /reglages/{{ cle }}                                           « {{ r.titre }}{% if not r.complete %} à compléter {% endif %} {{ r.resu »
+  LIEN /reglages/courriels                                           « Courriels Être prévenu quand une offre est prête › »
+  LIEN /reglages/mot-de-passe                                        « Mot de passe Changer le mot de passe › »
+reglages_courriels.html.twig
+  FORM POST /reglages/courriels                                           boutons=[]
+  LIEN /reglages                                                     « Réglages »
+reglages_mot_de_passe.html.twig
+  FORM POST /reglages/mot-de-passe                                        boutons=[]
+  LIEN /reglages                                                     « Réglages »
+reglages_rubrique.html.twig
+  FORM POST /bienvenue/passer                                             boutons=["{{ texte('e.passer') }}"]
+  FORM POST {{ assistant ? '/bienvenue/' ~ sections|first : '/reglages'  data-auto boutons=[]
+  FORM POST /reglages/logo                                                boutons=[]
+  FORM POST /reglages/logo/retirer                                        boutons=[]
+  LIEN /reglages                                                     « Réglages »
+relecture.html.twig
+  FORM POST /offres/{{ offre.id }}/relire/{{ l.id }}                      boutons=[]
+  LIEN /offres/{{ offre.id }}                                        « Offre »
+  LIEN /offres/{{ offre.id }}                                        « Revenir à l'offre »
+  LIEN /offres/{{ offre.id }}/apercu                                 « Générer l'offre »
+  LIEN /offres/{{ offre.id }}/lignes/{{ l.id }}                      « Corriger »
+representant.html.twig
+  FORM POST /offres/{{ offre.id }}/representant                           boutons=[]
+  FORM POST /offres/{{ offre.id }}/representant                           boutons=['Retirer le représentant']
+  FORM POST /offres/{{ offre.id }}/representant                           boutons=['{{ k.nom }} {{ k.lieu }}']
+  LIEN /offres/{{ offre.id }}                                        « Offre »
+  LIEN /offres/{{ offre.id }}                                        « {{ offre.representant_nom ? 'Annuler' : 'Fermer' }} »
+vos_prix.html.twig
+  FORM POST /vos-prix/plus-tard                                           boutons=['Plus tard']
+  FORM POST /vos-prix/plus-tard                                           boutons=["{{ texte('e.passer') }}"]
+  FORM POST /vos-prix/{{ p.id }}                                         data-vos-prix data-dernier boutons=['Suivant', 'Passer', 'Prix de la démo&nbsp;: {{ p.prix_exemple_centimes|montant }} Reprendre', 'Je ne fais pas ça']
+  LIEN /catalogue                                                    « Catalogue »
+  LIEN /vos-prix                                                     « Reprendre les produits passés »
+  LIEN /catalogue                                                    « Catalogue »
+  LIEN /                                                             « Mes offres »

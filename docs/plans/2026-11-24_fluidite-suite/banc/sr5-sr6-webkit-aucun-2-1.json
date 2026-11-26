@@ -1,0 +1,168 @@
+{
+ "moteur": "webkit",
+ "ou": "aucun",
+ "offre": "1",
+ "etapes": [
+  {
+   "quoi": "offre, avec réseau",
+   "adresse": "/offres/2",
+   "en_ligne": true,
+   "file": [],
+   "garde": [],
+   "bandeaux": []
+  },
+  {
+   "quoi": "SR-5 quantité hors réseau",
+   "adresse": "/offres/2",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/2/lignes/4",
+     "corps": "quantite=9",
+     "gardee": false
+    }
+   ],
+   "garde": [
+    "/offres/2/lignes/4"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend (offre 2, quantité 9), il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "SR-5 Plus",
+   "adresse": "/plus",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/2/lignes/4",
+     "corps": "quantite=9",
+     "gardee": true
+    }
+   ],
+   "garde": [
+    "/offres/2/lignes/4"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend (offre 2, quantité 9), il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "SR-5 déconnexion annulée",
+   "adresse": "/plus",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/2/lignes/4",
+     "corps": "quantite=9",
+     "gardee": true
+    }
+   ],
+   "garde": [
+    "/offres/2/lignes/4"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend (offre 2, quantité 9), il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "SR-6 offre",
+   "adresse": "/offres/1",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/2/lignes/4",
+     "corps": "quantite=9",
+     "gardee": true
+    }
+   ],
+   "garde": [
+    "/offres/2/lignes/4"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend (offre 2, quantité 9), il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "SR-6 aperçu 1",
+   "adresse": "/offres/1/apercu",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/2/lignes/4",
+     "corps": "quantite=9",
+     "gardee": true
+    }
+   ],
+   "garde": [
+    "/offres/2/lignes/4"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend (offre 2, quantité 9), il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "SR-6 offre revenue",
+   "adresse": "/offres/1",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/2/lignes/4",
+     "corps": "quantite=9",
+     "gardee": true
+    }
+   ],
+   "garde": [
+    "/offres/2/lignes/4"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend (offre 2, quantité 9), il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "SR-6 aperçu 2",
+   "adresse": "/offres/1/apercu",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/2/lignes/4",
+     "corps": "quantite=9",
+     "gardee": true
+    }
+   ],
+   "garde": [
+    "/offres/2/lignes/4"
+   ],
+   "bandeaux": [
+    "Hors réseau : 1 changement attend (offre 2, quantité 9), il partira au retour du réseau."
+   ]
+  },
+  {
+   "quoi": "SR-6 après « Envoyer »",
+   "adresse": "/offres/1/apercu",
+   "en_ligne": false,
+   "file": [
+    {
+     "action": "/offres/2/lignes/4",
+     "corps": "quantite=9",
+     "gardee": true
+    },
+    {
+     "action": "/offres/1/envoyee",
+     "corps": "",
+     "gardee": false
+    }
+   ],
+   "garde": [
+    "/offres/1/envoyee",
+    "/offres/2/lignes/4"
+   ],
+   "bandeaux": [
+    "Hors réseau : 2 changements attendent (offre 2, quantité 9), ils partiront au retour du réseau.",
+    "PDF partagé. L’envoi sera noté au retour du réseau."
+   ]
+  }
+ ],
+ "posts": [],
+ "dialogue": "Un changement attend encore le réseau. Se déconnecter les perd. Se déconnecter quand même ?"
+}

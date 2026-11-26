@@ -1,0 +1,127 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}{{ offre.titre }} · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
+{% block entete %}Offre {{ offre.numero }}{% endblock %}
+{% block ecran_donnees %} data-resume="etat-offre sauvegarde totaux options total-fixe renvoi actions-offre pc-{{ offre.id }}" data-fenetre="carte-client carte-representant carte-objet factures-offre avant-lignes carte-conditions lignes"{% endblock %}
+
+{% block colonne %}{% include '_liste_offres_pc.html.twig' with {liste: liste_pc, courante: offre.id} %}{% endblock %}
+
+{% macro texte(offre, ou, libelle, indice) %}
+  <form class="texte-offre" method="post" action="/offres/{{ offre.id }}/textes" data-texte-offre>
+    <input type="hidden" name="_csrf" value="{{ csrf() }}"><input type="hidden" name="ou" value="{{ ou }}">
+    <label for="texte-{{ ou }}">{{ libelle }}</label>
+    <textarea id="texte-{{ ou }}" name="texte" rows="2" maxlength="1000" placeholder="{{ indice }}">{{ offre['texte_' ~ ou] }}</textarea>
+    <button class="lien" type="submit" data-sans-js>Enregistrer le texte</button>
+  </form>
+{% endmacro %}
+
+{% block contenu %}
+  {# Le client ouvre « Client de l'offre » par-dessus l'offre ; l'objet ouvre son écran. #}
+  {# Client et objet en cartes de 60 px, touchées pour les changer (décision D3, 2026-11-15). Le client dicté reste
+     « à confirmer », en orange ; la loupe dit qu'on y cherche une fiche (maquette 25, E6). #}
+  <div class="ohead">
+    <a class="who carte-lien" id="carte-client" href="/offres/{{ offre.id }}/client" data-en-feuille aria-label="Client de l'offre : chercher ou changer"><span>{% if offre.client_nom %}<b>{{ offre.client_nom }}</b>{% if offre.client_adresse %}<small>{{ offre.client_adresse|replace({"\n": ', '}) }}</small>{% endif %}{% if offre.client_id is null %}<span class="etiquette nouveau">à confirmer</span>{% endif %}{% else %}<span class="manque-client">Choisir le client</span>{% endif %}</span>
+      <svg class="i loupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
+    {# Représenté par (D8 A, 2026-11-21) : une régie, une gérance, un architecte ; à qui vont l'offre et les factures.
+       Sans représentant, pas de carte : un lien « + Représentant » sous l'en-tête (analyse des parcours, 2026-11-26).
+       data-apres : la carte, arrivée en morceau après le choix, se pose sous le client. #}
+    {% if offre.representant_nom %}<a class="rep carte-lien" id="carte-representant" data-apres="carte-client" href="/offres/{{ offre.id }}/representant" data-en-feuille><span><small>Représenté par</small><b>{{ offre.representant_nom }}</b><small>{{ offre.offre_adressee == 'client' ? "L'offre va au client" : "L'offre lui est adressée" }}</small></span></a>{% endif %}
+    <a class="t carte-lien" id="carte-objet" href="/offres/{{ offre.id }}/modifier" data-en-feuille><span><b>{{ offre.titre }}</b><small>Objet de l'offre</small></span></a>
+    {% if factures is not empty %}<span class="factures-offre" id="factures-offre" data-apres="carte-objet">{% for f in factures %}<a class="etiquette facture{% if f.statut == 'annulee' %} annulee{% endif %}" href="/factures/{{ f.id }}{{ f.statut != 'brouillon' ? '/apercu' }}">{{ f.numero ? 'Facture ' ~ f.numero : 'Brouillon de facture' }}</a>{% endfor %}</span>{% endif %}
+    {# Toutes les lignes, options et variantes comprises (vueDocument : manque et doute). #}{% set a_relire = manque + doute %}
+    <span class="meta"><span id="etat-offre" class="status {{ a_relire > 0 ? 'a-verifier' : (offre.envoyee_le ? 'pret' : 'relue') }}">{% if a_relire > 0 %}À relire{% elseif offre.envoyee_le %}Envoyée le {{ offre.envoyee_le|date_locale|slice(0, 10) }}{% else %}Prête{% endif %}</span><span class="muted" id="sauvegarde" data-sauvegarde>{% if offre.modifiee_le %}Enregistrée le {{ offre.modifiee_le|date_locale }}{% else %}Créée le {{ offre.cree_le|date_locale }}{% endif %}</span>
+      {# Sur PC, le document à côté des lignes, qui suit chaque correction (D13). Sans JavaScript, le bouton reste caché. #}
+      <button class="btn pc-seul doc-cote" type="button" data-doc-cote="/offres/{{ offre.id }}/document" aria-pressed="false" hidden>Document à côté</button></span>
+  </div>
+
+  {# Revue du 2026-11-18 (A13) : des postes dictés au-delà du plafond de l'offre n'y sont pas ; l'artisan le sait. #}
+  {% if offre.postes_coupes > 0 %}<p class="alerte warn" role="alert">La dictée comptait {{ offre.postes_coupes }} poste{{ offre.postes_coupes > 1 ? 's' }} de plus que les 300 d'une offre : ils n'y sont pas. Dictez la suite dans une seconde offre.</p>{% endif %}
+
+  {# Textes avant et après les lignes (D5 A) ; dans Lettre, le texte avant remplace la phrase de Ma marque (D6 A), le
+     texte après se place avant la formule de politesse (D16 A). #}
+  {% import _self as o %}{% set lettre = m.modele == 'lettre' %}
+  {# Les lignes plus haut (constat 3 de l'analyse des parcours, Xavier, 2026-11-26) : tant qu'ils sont vides, le
+     représentant et le texte avant les lignes tiennent sur une ligne de deux liens. Le texte se déplie sur place, sans
+     JavaScript ; rempli, il reprend son champ au-dessus des lignes. Le champ et les liens sont dans un seul morceau
+     (avant-lignes), que les fenêtres de l'offre remplacent entier : le texte tapé dans le bloc replié reste à l'écran. #}
+  {% set texte_avant = o.texte(offre, 'avant', "Texte avant les lignes", lettre ? r.lettre.texte('offre_debut', offre.client_nom, activite()) : 'Facultatif') %}
+  {% set sans_representant = not offre.representant_nom %}
+  {% set sans_texte_avant = (offre.texte_avant ?? '') == '' %}
+  <div id="avant-lignes">
+  {% if not sans_texte_avant %}{{ texte_avant }}{% endif %}
+  <div class="ajouts-offre" id="ajouts-offre"{% if not (sans_representant or sans_texte_avant) %} hidden{% endif %}>
+    {% if sans_representant %}<a class="lien" href="/offres/{{ offre.id }}/representant" data-en-feuille>+ Représentant</a>{% endif %}
+    {% if sans_texte_avant %}<details><summary>+ Texte avant les lignes</summary>{{ texte_avant }}</details>{% endif %}
+  </div>
+  </div>
+  {% include '_lignes.html.twig' with {base: '/offres/' ~ offre.id, modifiable: true, ranger: true, vide:"Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un."} %}
+  {% include '_ajout_pc.html.twig' with {base: '/offres/' ~ offre.id} %}
+
+  {# La TVA par taux dès que l'offre en a plusieurs (D11, 2026-11-15). #}
+  {% set avec_tva = totaux.par_taux|filter(g => g.taux > 0)|length > 0 %}
+  {# 9a (2026-11-19) : le total est dans la barre du bas ; ici, le détail. Les rabais sous le sous-total, avant la TVA
+     (D4 B, D15 A, 2026-11-21) : chacun se touche pour le modifier, « + Rabais » en ajoute un. #}
+  <div class="totals" id="totaux">
+    <div class="r"><span>Sous-total{% if avec_tva and totaux.rabais is empty %} HT{% endif %}</span><span>{{ totaux.sous_total|chf }}</span></div>
+    {% for r in totaux.rabais %}<a class="r" href="/offres/{{ offre.id }}/rabais/{{ loop.index }}" data-en-feuille><span>{{ r.libelle }}{% if r.pour_dix_mille %}<span class="etiquette">{{ r.pour_dix_mille|taux }}</span>{% endif %}</span><span>−&nbsp;{{ r.montant|chf }}</span></a>{% endfor %}
+    <a class="lien plus" href="/offres/{{ offre.id }}/rabais" data-en-feuille>+ Rabais</a>
+    {% if totaux.rabais is not empty %}<div class="r"><span>Total{% if avec_tva %} HT{% endif %}</span><span>{{ totaux.ht|chf }}</span></div>{% endif %}
+    {% if totaux.par_taux|length > 1 %}{% for g in totaux.par_taux %}<div class="r"><span>TVA {{ g.taux|taux }} sur {{ g.ht|chf }}</span><span>{{ g.tva|chf }}</span></div>{% endfor %}{% elseif avec_tva %}<div class="r"><span>TVA {{ totaux.par_taux[0].taux|taux }}</span><span>{{ totaux.tva|chf }}</span></div>{% endif %}
+    {% if totaux.arrondi != 0 %}<div class="r"><span>Arrondi</span><span>{{ totaux.arrondi|chf }}</span></div>{% endif %}
+  </div>
+  {# Options (O1, E2 A) : sous le total, hors de lui tant que le client ne les retient pas ; puis le total s'il les prend
+     toutes (point 4). Le conteneur reste vide sans option : app.js le remplace après chaque case cochée. #}
+  <div class="options" id="options" data-options>{% if options is not empty %}
+    <div class="rows une">
+      <div class="cat"><h5>Options <span class="st">hors du total</span></h5><span class="ch">Qté</span><span class="ch">Prix</span><span class="ch">Total</span><span></span></div>
+      {% for o in options %}{% include '_rangee.html.twig' with {r: o, sorte: 'option', base: '/offres/' ~ offre.id, modifiable: true, ranger: true} %}{% endfor %}
+    </div>
+    {% if totaux.avec_options %}<div class="totals"><div class="r avec"><span>Total avec toutes les options</span><span>{{ totaux.avec_options.ttc|chf }}</span></div></div>{% endif %}
+  {% endif %}</div>
+  <a class="carte-lien conditions" id="carte-conditions" href="/offres/{{ offre.id }}/conditions" data-en-feuille><span><small>Conditions</small><b>Valable {{ r.validiteJours }} jours, paiement {{ r.conditions.paiementType == 'acomptes' ? 'par ' }}{{ r.conditions.resumePaiement }}</b><small>{{ r.phraseEscompte ?? "Pas d'escompte" }}</small></span></a>
+  {{ o.texte(offre, 'apres', "Texte après les lignes", lettre ? 'Facultatif, avant la formule de politesse' : 'Facultatif') }}
+  <p class="muted petit mobile-seul">Touchez une quantité ou un prix pour le corriger, une désignation pour la ligne entière.</p>
+  <p class="aide-clavier pc-seul"><kbd>Tab</kbd> champ suivant · <kbd>Entrée</kbd> ligne suivante · <kbd>J</kbd> c'est juste · <kbd>Suppr</kbd> retirer la ligne (avec Annuler) · <kbd>D</kbd> dicter une offre</p>
+  {# Les repères 1, 2, 3 du guide, sur une offre dictée, jamais sur une offre d'exemple (chantier onboarding, lot 3). #}
+  {% if guide_artisan() and offre.enregistrement_id %}{% include '_guide_artisan.html.twig' with {page: 'offre'} %}{% endif %}
+{% endblock %}
+
+{% block actions %}
+  {# recharger : une fenêtre qui a changé l'offre (lignes ajoutées, ligne ou objet corrigés) la recharge en se fermant. #}
+  {% include '_feuille.html.twig' with {options: {rafraichir: '.ohead', recharger: '1'}} %}
+  {# Décision 3 A du chantier responsive (2026-11-20) : au téléphone et sur tablette, le total passe dans le bouton
+     principal (data-total-bouton) et la ligne du total se cache ; au PC, elle reste et le bouton garde son seul libellé. #}
+  {# Décision D3 (2026-11-15) : le total reste visible en bas ; l'action principale suit l'état de l'offre.
+     Une ligne à vérifier ou sans prix demande d'abord la relecture, une à la fois (D5). #}
+  {# Toutes les lignes, options et variantes comprises (vueDocument : manque et doute). #}{% set a_relire = manque + doute %}
+  {% set avec_tva = totaux.par_taux|filter(g => g.taux > 0)|length > 0 %}
+  <div class="totalbar" id="total-fixe" data-total-fixe><span>Total{% if avec_tva %} TTC{% endif %}</span><b>{{ totaux.ttc|chf }}</b></div>
+  {# Une offre reste modifiable après l'envoi (Xavier, 2026-11-21) ; changée depuis, elle le dit, au-dessus des boutons, et
+     « Renvoyer » mène au PDF à jour et à « Envoyer ». Renvoyée, le bandeau part. #}
+  {% if offre.envoyee_le and offre.modifiee_le and offre.modifiee_le > offre.envoyee_le %}
+    <div class="bandeau-renvoi" id="renvoi" role="status" data-renvoi data-apres="total-fixe"><span>Modifiée depuis l'envoi du {{ offre.envoyee_le|date_locale|slice(0, 10) }}</span>
+      <a class="btn" href="/offres/{{ offre.id }}/apercu">Renvoyer</a></div>
+  {% endif %}
+  <div class="actionbar" id="actions-offre">
+    <a class="btn ajout" href="/offres/{{ offre.id }}/ajouter" aria-label="Ajouter une ligne" data-en-feuille>
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ligne</a>
+    {% if a_relire > 0 %}
+      <a class="btn primary grand" href="/offres/{{ offre.id }}/relire">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="libelle-total"><span>Relire {{ a_relire }} ligne{{ a_relire > 1 ? 's' : '' }}</span><small data-total-bouton>{{ totaux.ttc|chf }}</small></span></a>
+    {% elseif offre.envoyee_le %}
+      {# Envoyée : le geste suivant est de facturer (décision D3), dans une feuille par-dessus l'offre (maquette 25, E1). #}
+      <a class="btn primary grand" href="/offres/{{ offre.id }}/facturer" data-en-feuille><span class="libelle-total"><span>Facturer</span><small data-total-bouton>{{ totaux.ttc|chf }}</small></span>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    {% elseif offre.client_id is null %}
+      {# E6 : le client se confirme avant le PDF (« Pour qui est cette offre ? »), plus jamais au moment de facturer. #}
+      <a class="btn primary grand" href="/offres/{{ offre.id }}/client?suite=apercu" data-en-feuille><span class="libelle-total"><span>Générer l'offre</span><small data-total-bouton>{{ totaux.ttc|chf }}</small></span>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    {% else %}
+      <a class="btn primary grand" href="/offres/{{ offre.id }}/apercu"><span class="libelle-total"><span>Générer l'offre</span><small data-total-bouton>{{ totaux.ttc|chf }}</small></span>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'offres'} %}{% endblock %}

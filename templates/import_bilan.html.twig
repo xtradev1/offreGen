@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{# Bilan d'un import intégré ou annulé (maquette validée le 2026-11-20 : D8, « Annuler cet import »). #}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/import-catalogue.css') }}">{% endblock %}
+{% block titre %}Import du catalogue · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/catalogue">Catalogue</a>{% endblock %}
+{% block entete %}Import du catalogue{% endblock %}
+
+{% block contenu %}
+  <div class="ic ic-fin">
+    {% if import.etat == 'annule' %}
+      <h2>Import annulé</h2>
+      <p class="ic-intro">Votre catalogue est revenu comme avant cet import.</p>
+    {% else %}
+      <span class="ic-coche" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+      <h2>{{ total }} produit{% if total > 1 %}s{% endif %} intégré{% if total > 1 %}s{% endif %}</h2>
+      <ul class="ic-bilan">
+        <li>Nouveaux produits<b>{{ nouveaux }}</b></li>
+        <li>Prix complétés<b>{{ completes }}</b></li>
+        <li>Prix changés<b>{{ changes }}</b></li>
+        <li>Lignes laissées de côté<b>{{ cote }}</b></li>
+      </ul>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    {% if import.etat == 'integre' %}
+      <form class="ic-annuler" method="post" action="/import-catalogue/{{ import.id }}/annuler">
+        <input type="hidden" name="_csrf" value="{{ csrf() }}">
+        <button class="btn" type="submit">Annuler cet import</button>
+      </form>
+    {% endif %}
+    <a class="btn primary" href="/catalogue">Voir mon catalogue</a>
+  </div>
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'catalogue', pc_seul: true} %}{% endblock %}

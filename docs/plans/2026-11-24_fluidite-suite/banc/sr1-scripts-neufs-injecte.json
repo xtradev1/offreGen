@@ -1,0 +1,54 @@
+[
+ {
+  "etiquette": "injecte",
+  "profil": "chantier",
+  "passe": 0,
+  "otes": 2,
+  "lignes_visibles_ms": 1903,
+  "gestes_ms": 1916,
+  "fcp": 1644,
+  "css": 578,
+  "fluide": 1477,
+  "app": 3994,
+  "dcl": 1571
+ },
+ {
+  "etiquette": "injecte",
+  "profil": "chantier",
+  "passe": 1,
+  "otes": 2,
+  "lignes_visibles_ms": 1899,
+  "gestes_ms": 1914,
+  "fcp": 1660,
+  "css": 573,
+  "fluide": 1472,
+  "app": 3995,
+  "dcl": 1571
+ },
+ {
+  "etiquette": "injecte",
+  "profil": "4g",
+  "passe": 0,
+  "otes": 2,
+  "lignes_visibles_ms": 405,
+  "gestes_ms": 416,
+  "fcp": 468,
+  "css": 141,
+  "fluide": 287,
+  "app": 516,
+  "dcl": 380
+ },
+ {
+  "etiquette": "injecte",
+  "profil": "4g",
+  "passe": 1,
+  "otes": 2,
+  "lignes_visibles_ms": 402,
+  "gestes_ms": 415,
+  "fcp": 464,
+  "css": 139,
+  "fluide": 270,
+  "app": 442,
+  "dcl": 376
+ }
+]

@@ -1,0 +1,50 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Nouvelle démo (D1 et D2 de Xavier, 2026-11-19 ; demande du 2026-11-20) : le commercial choisit le métier. Le nom de
+   l'entreprise et le courriel du prospect sont facultatifs : le prospect tape son courriel en ouvrant sa démo. #}
+{% block retour %}<a class="back" href="/admin/artisans">Clients</a>{% endblock %}
+
+{% block contenu %}
+  <div class="carte-admin">
+    {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+    <form id="demo" method="post" action="/admin/demos">
+      <input type="hidden" name="_csrf" value="{{ csrf() }}">
+      {# Le guide du commercial : cette démo est sa démo d'entraînement (chantier onboarding, lot 8). #}
+      {% if guide %}<input type="hidden" name="entrainement" value="1"><p class="note-bienvenue">{{ texte('c.b3.note') }}</p>{% endif %}
+      {# Les métiers sous leur activité (Compte\Activite::grouper) : un intertitre et un groupe de boutons par activité,
+         un seul choix pour tous (même nom de champ). #}
+      {% for groupe in groupes %}
+      <span class="libelle" aria-hidden="true">{{ groupe.nom }}</span>
+      <fieldset class="metiers">
+        <legend class="cache">Métier, {{ groupe.nom|lower }}</legend>
+        {% for cle, nom in groupe.metiers %}
+          <label><input type="radio" name="metier" value="{{ cle }}"{% if saisie.metier == cle %} checked{% endif %} required><span>{{ nom }}</span></label>
+        {% endfor %}
+      </fieldset>
+      {# Le texte du métier suit le groupe qui porte « Autre métier » (revue du 2026-11-22), pas le dernier groupe. #}
+      {% if groupe.metiers.autre is defined %}
+      <div class="champ metier-autre">
+        <label for="metier_saisi">Quel métier&nbsp;?</label>
+        <input id="metier_saisi" name="metier_saisi" type="text" maxlength="60" autocomplete="off" value="{{ saisie.metier_saisi }}">
+        <small class="muted">Pour «&nbsp;Autre métier&nbsp;» seulement.</small>
+      </div>
+      {% endif %}
+      {% endfor %}
+      <div class="champ">
+        <label for="entreprise">Entreprise <span class="facultatif">facultatif</span></label>
+        <input id="entreprise" name="entreprise" type="text" maxlength="120" autocomplete="off" value="{{ saisie.entreprise }}">
+      </div>
+      <div class="champ">
+        <label for="courriel">Courriel du prospect <span class="facultatif">facultatif</span></label>
+        <input id="courriel" name="courriel" type="email" inputmode="email" autocomplete="off" maxlength="190" value="{{ saisie.courriel }}">
+        <small class="muted">Sinon, il le tape lui-même en ouvrant sa démo.</small>
+      </div>
+      <button class="btn primary pc-seul" type="submit">Créer la démo</button>
+    </form>
+  </div>
+  {% if guide %}{% include 'admin/_guide_equipe.html.twig' with {page: 'nouvelle'} %}{% endif %}
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar mobile-seul"><button class="btn primary" type="submit" form="demo">Créer la démo</button></div>
+{% endblock %}

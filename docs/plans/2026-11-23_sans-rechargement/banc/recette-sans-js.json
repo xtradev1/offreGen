@@ -1,0 +1,34 @@
+[
+ {
+  "cle": "scripts de la page exécutés",
+  "valeur": false
+ },
+ {
+  "cle": "« C'est juste » : en base (a_verifier)",
+  "valeur": "0"
+ },
+ {
+  "cle": "« C'est juste » : étiquette à l'écran",
+  "valeur": 0
+ },
+ {
+  "cle": "quantité 27 : en base (millièmes)",
+  "valeur": "27000"
+ },
+ {
+  "cle": "corbeille : supprimée en base",
+  "valeur": "1"
+ },
+ {
+  "cle": "corbeille : « Annuler » à l'écran",
+  "valeur": 1
+ },
+ {
+  "cle": "liste : bouton archiver présent",
+  "valeur": 1
+ },
+ {
+  "cle": "archiver : en base (archivee_le posée)",
+  "valeur": "0"
+ }
+]

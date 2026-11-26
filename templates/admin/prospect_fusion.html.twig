@@ -1,0 +1,41 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Fusionner deux fiches d'un même artisan (administrateur ; P8 validé le 2026-11-24). La fiche ouverte reste : elle
+   reçoit les notes de l'autre et ce qui lui manquait. L'autre disparaît. #}
+{% set vue = 'tous' %}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/suivi.css') }}"><link rel="stylesheet" href="{{ fichier('/css/prospects.css') }}">{% endblock %}
+{% block retour %}<a class="back" href="/admin/prospects/{{ p.id }}">Fiche</a>{% endblock %}
+{% block sous %}<p>«&nbsp;{{ p.entreprise }}&nbsp;», {{ p.localite }}, reste. La fiche choisie lui donne ses notes et ce qui lui manque, puis disparaît.</p>{% endblock %}
+
+{% block contenu %}
+  <div class="carte-admin">
+    {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+    <form class="search box-seule" method="get" action="/admin/prospects/{{ p.id }}/fusion" role="search">
+      <div class="box">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input name="q" type="search" value="{{ q }}" placeholder="Chercher l'autre fiche" autocomplete="off" aria-label="Chercher l'autre fiche" maxlength="80">
+      </div>
+      <button class="btn" type="submit">Chercher</button>
+    </form>
+    {% if lignes is empty %}
+      <p class="muted">Aucune autre fiche à ce nom. Cherchez-la par son nom.</p>
+    {% else %}
+      <div class="lignes-prospects">
+        {% for l in lignes %}
+          <div class="ligne-prospect">
+            <a href="/admin/prospects/{{ l.id }}">
+              <b>{{ l.entreprise }}{% include 'admin/_prospect_badges.html.twig' %}</b>
+              <small>{% include 'admin/_prospect_sous.html.twig' %}</small>
+            </a>
+            <form method="post" action="/admin/prospects/{{ p.id }}/fusion">
+              <input type="hidden" name="_csrf" value="{{ csrf() }}">
+              <input type="hidden" name="avec" value="{{ l.id }}">
+              <button class="btn" type="submit" aria-label="Fusionner {{ l.entreprise }} dans {{ p.entreprise }}">Fusionner</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+      <p class="muted">La fusion ne s'annule pas.</p>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{# Import du catalogue depuis d'anciennes offres (chantier 2026-11-20_import-catalogue, maquette validée le 2026-11-20).
+   import-catalogue.js sort le texte de chaque PDF dans le navigateur : le fichier ne quitte pas l'appareil. Il envoie
+   ensuite chaque offre au serveur, qui la lit ; puis le regroupement, puis « Voir les produits trouvés ». #}
+{% block entete_html %}<link rel="stylesheet" href="{{ fichier('/css/import-catalogue.css') }}"><script type="module" src="{{ fichier('/js/import-catalogue.js') }}"></script>{% endblock %}
+{% block titre %}Importer d'anciennes offres · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/catalogue">Catalogue</a>{% endblock %}
+{% block entete %}Importer d'anciennes offres{% endblock %}
+
+{% block contenu %}
+  <div class="ic" data-import-catalogue data-csrf="{{ csrf() }}" data-offres-max="{{ offres_max }}" data-worker="{{ pdfjs }}/pdf.worker.min.js">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <p class="ic-intro">Des offres en PDF, créées par ordinateur&nbsp;: Word, Excel, logiciel d'offres. Dicta y lit vos produits, vos unités et vos prix.</p>
+    <p class="ic-reste">{{ restants }} import{% if restants > 1 %}s{% endif %} restant{% if restants > 1 %}s{% endif %} ce mois, sur {{ par_mois }}&nbsp;; {{ offres_max }}&nbsp;offres au plus par import.</p>
+    {% if restants > 0 %}
+      <label class="ic-depot" data-depot>
+        <input type="file" accept="application/pdf" multiple data-fichiers>
+        <b><span class="ic-pc">Glissez vos PDF ici</span><span class="ic-tel">Choisir des PDF</span></b>
+        <span><span class="ic-pc">ou cliquez pour les choisir.</span></span>
+      </label>
+      <p class="ic-etat" data-etat aria-live="polite" hidden></p>
+      <ul class="ic-liste" data-liste hidden></ul>
+      <p class="alerte bad" data-erreur role="alert" hidden></p>
+      <p class="ic-note">Le fichier reste sur votre appareil&nbsp;: seul son texte est lu, par l'IA d'Infomaniak, en Suisse. Dicta garde les produits, les unités et les prix, jamais les noms ni les adresses de vos clients.</p>
+    {% else %}
+      <p class="alerte warn">Vous avez fait vos {{ par_mois }}&nbsp;imports de ce mois. Le prochain est possible dès le {{ prochain }}.</p>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block actions %}
+  {% if restants > 0 %}<div class="actionbar"><button class="btn primary" type="button" data-lire disabled>Choisissez des PDF</button></div>{% endif %}
+{% endblock %}
+
+{% block onglets %}{% include '_onglets.html.twig' with {actif: 'catalogue', pc_seul: true} %}{% endblock %}

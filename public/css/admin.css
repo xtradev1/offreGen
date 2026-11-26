@@ -1,0 +1,183 @@
+/* Partie administration (G1, 2026-11-17 ; maquettes de docs/plans/2026-11-19_admin-comptes, validées le 2026-11-19).
+   Chargée après app.css, dont elle reprend les couleurs et les composants. Aucun style en ligne : la CSP les refuse.
+   Le terracotta ne porte ici que des formes, comme le veut la charte : le filet sous l'en-tête et le contour du rôle. */
+.admin .bar { border-bottom: 3px solid var(--marque); }
+/* Blanc sur l'en-tête anthracite : 15:1. Le contour terracotta sur l'en-tête : 3,35:1 (forme). */
+.role-puce { font-family: var(--titre); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; line-height: 1; color: var(--on-bande); border: 1.5px solid var(--marque); border-radius: 999px; padding: 5px 10px; white-space: nowrap; margin-left: auto; }
+.admin-tete { margin: 4px 0 14px; }
+.admin-tete h1 { margin: 0; font-family: var(--titre); font-size: 25px; font-weight: 600; line-height: 1.2; letter-spacing: -.4px; }
+.admin-tete p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+/* Étiquette de rôle dans une liste : neutre, comme les étiquettes d'état sans alerte de la charte. */
+.badge.role { background: var(--chip); color: var(--ink); font-style: normal; }
+/* Bouton qui retire ou ferme : contour et libellé rouges, comme le veut la charte (rouge sur carte : 9,6:1 en clair).
+   Il pèse moins que l'action courante posée au-dessus de lui. */
+.admin .btn.danger { background: var(--surface); color: var(--bad); border-color: var(--bad); }
+.actions-admin { display: grid; gap: 0; margin: 12px 0 4px; }
+.filtres-admin { margin: 0 0 8px; }
+/* Fiche d'un artisan : la jauge des dictées, les ajouts d'un toucher, le fil. Aucune largeur en ligne : <progress>. */
+.jauge { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 0 0 12px; }
+.jauge .haut { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.jauge .haut b { font-family: var(--titre); font-size: 24px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.jauge .badge { justify-self: start; margin-left: 0; }
+.jauge progress { appearance: none; -webkit-appearance: none; display: block; width: 100%; height: 10px; border: 0; border-radius: 5px; background: var(--chip); overflow: hidden; }
+.jauge progress::-webkit-progress-bar { background: var(--chip); border-radius: 5px; }
+.jauge progress::-webkit-progress-value { background: var(--ink); border-radius: 5px; }
+.jauge progress::-moz-progress-bar { background: var(--ink); border-radius: 5px; }
+.ajouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.ajouts .btn { font-variant-numeric: tabular-nums; }
+.fil { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.fil li { display: grid; grid-template-columns: 124px 1fr; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 14px; }
+.fil li:first-child { border-top: 0; }
+.fil time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.fil .err { color: var(--bad); }
+
+/* Écran Équipe (maquette v7, L1 à L4 validées par Xavier le 2026-11-19). Les couleurs viennent des variables de
+   app.css, déjà mesurées : texte principal et secondaire sur fond et sur carte au-dessus de 7:1. */
+.admin i.badge { font-style: normal; }
+.badge.contour { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--bord); }
+.groupe { font-family: var(--titre); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 16px 2px 6px; }
+.groupe-note { margin: 0 2px 8px; }
+.equipe .plus { margin: 0 0 4px; }
+.plus-ligne .va { margin-left: auto; font-style: normal; font-size: 22px; line-height: 1; color: var(--muted); }
+.roles-cartes { display: grid; gap: 10px; }
+.role-carte { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.role-carte h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-family: var(--titre); font-size: 17px; font-weight: 600; }
+.role-carte p { margin: 0; font-size: 14px; color: var(--muted); }
+.admin-tete h2 { margin: 0; font-family: var(--titre); font-size: 25px; font-weight: 600; line-height: 1.2; letter-spacing: -.4px; }
+/* Le tableau de l'équipe, sur PC seulement. */
+.table-admin { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; font-size: 15px; margin: 0 0 10px; }
+.table-admin th, .table-admin td { text-align: left; padding: 12px 14px; border-top: 1px solid var(--line); font-weight: 400; vertical-align: middle; }
+.table-admin thead th { border-top: 0; font-family: var(--titre); font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.table-admin tbody th { font-weight: 600; }
+.table-admin tbody th a { color: inherit; text-underline-offset: 3px; }
+.table-admin tbody th a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.table-admin .n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table-admin tr[aria-current] > * { background: var(--bg); }
+.table-admin tr[aria-current] > :first-child { box-shadow: inset 4px 0 0 var(--ink); }
+/* La fiche d'un membre. */
+.libelle { display: block; font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+.equipe-fiche .segments { margin-bottom: 8px; }
+.role-note { margin: 0 0 4px; }
+@supports selector(:has(*)) {
+  #membre:has(input[value="commercial"]:checked) .role-note[data-role="moderateur"],
+  #membre:has(input[value="moderateur"]:checked) .role-note[data-role="commercial"] { display: none; }
+}
+.compteur { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; margin: 12px 0 14px; }
+.compteur label { display: grid; font-size: 16px; }
+.compteur label b { font-weight: 600; }
+.compteur label small { font-size: 14px; color: var(--muted); }
+.compteur .pas { display: flex; align-items: center; gap: 8px; }
+.compteur .pas .btn { width: 48px; min-height: 48px; padding: 0; font-size: 22px; line-height: 1; border-color: var(--bord); }
+.compteur .pas .btn[hidden] { display: none; }
+.compteur input { font: inherit; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; width: 68px; min-height: 48px; padding: 0 4px; text-align: center; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); color: var(--ink); -moz-appearance: textfield; appearance: textfield; }
+.compteur input::-webkit-outer-spin-button, .compteur input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.compteur input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.equipe-fiche .plus { margin: 0 0 10px; }
+.equipe-fiche .retrait { margin-top: 18px; }
+/* Au téléphone, la fiche a son écran : la liste ne s'y montre pas. */
+.equipe.avec-fiche .equipe-liste { display: none; }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  /* L'application s'arrête à 1040 px pour ses lignes d'offre. L'administration prend la largeur : sur un grand
+     écran, l'en-tête ne s'arrête plus au milieu. Le contenu garde une largeur lisible. */
+  body.admin:has(.tabs) .app { max-width: none; }
+  .admin .screen > * { max-width: 920px; }
+  /* Les tableaux du chronomètre ont plus de quinze colonnes : toute la largeur de l'écran. */
+  .admin .screen > .dictees-defile, .admin .screen > .dictee-rejeux { max-width: 1400px; }
+  .admin-tete.avec-action { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .admin-tete.avec-action .btn { flex: none; }
+  .admin .screen > .equipe.avec-fiche { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; max-width: 1300px; }
+  .equipe.avec-fiche .equipe-liste { display: block; }
+  .equipe-fiche { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .equipe-fiche .admin-tete h1 { font-size: 21px; }
+  /* Sur PC, tous les boutons de la fiche ont la même taille (L4, Xavier : « la taille doit être la même »). */
+  .equipe-fiche .btn, .equipe-fiche .btn.large { width: 100%; min-height: 48px; margin: 0 0 10px; font-size: 15px; }
+  .equipe-fiche .compteur .pas .btn { width: 48px; margin: 0; font-size: 22px; }
+  .equipe-fiche .plus-ligne { min-height: 56px; }
+  .equipe-fiche .compteur { background: var(--bg); }
+  .roles-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Un formulaire ou un message court : une carte étroite, son bouton sous les champs (Xavier, 2026-11-19 : « une
+     interface plus petite et plus propre », le bouton était « à l'autre bout de l'univers »). */
+  .admin .screen > .carte-admin { max-width: 480px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .carte-admin .btn.primary { width: 100%; min-height: 48px; margin-top: 8px; }
+  .carte-admin .compteur { background: var(--bg); }
+  .carte-admin > :last-child, .carte-admin form > :last-child { margin-bottom: 0; }
+}
+
+/* Démos (lot 5) : choix du métier, code QR, envoi par message. */
+.admin .btn[hidden] { display: none; }
+.facultatif { font-weight: 400; color: var(--muted); }
+.metiers { border: 0; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.metiers label { position: relative; }
+.metiers input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.metiers span { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 6px 8px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); font-size: 15px; font-weight: 600; text-align: center; }
+.metiers input:checked + span { border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); }
+.metiers input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+@supports selector(:has(*)) {
+  #demo:not(:has(input[value="autre"]:checked)) .metier-autre { display: none; }
+}
+/* Le code QR reste noir sur blanc dans les deux thèmes : un téléphone doit le lire. */
+.qr { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin: 0 0 14px; }
+.qr svg { display: block; width: 100%; max-width: 320px; height: auto; margin: 0 auto; }
+.carte-admin textarea { min-height: 176px; }
+.actions-demo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.actions-demo .btn { width: 100%; }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .metiers { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .carte-admin .btn.large { min-height: 48px; margin: 0 0 10px; }
+}
+
+/* Le nombre de demandes d'appel en attente sur l'onglet du suivi ou du tableau (S1, chantier onboarding, E1). */
+.tabs a { position: relative; }
+.compte-appels { position: absolute; top: 4px; left: calc(50% + 6px); min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--marque); color: var(--on-marque); font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) { .compte-appels { position: static; margin-left: auto; } }
+
+/* Chronomètre des dictées (sous-chantier 31). Palette de la frise validée (validate_palette.js, clair et sombre). */
+.admin { --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --attente: #B9B3A6; --critique: #d03b3b; --grille: #ECE8DF; }
+@media (prefers-color-scheme: dark) { .admin { --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --attente: #5A5F66; --grille: #2A2D32; } }
+.dictees-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin: 0 0 14px; }
+.dictees-outils label { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--muted); }
+.dictees-outils input, .dictees-outils select { font: inherit; font-size: 15px; min-height: 48px; border: 1px solid var(--bord); border-radius: 10px; padding: 6px 10px; background: var(--surface); color: var(--ink); }
+.dictees-titre { font-family: var(--titre); font-size: 17px; margin: 22px 0 8px; }
+.dictees-defile { overflow-x: auto; margin: 0 0 10px; }
+.dictees-stats, .dictees-liste, .dictee-etapes, .dictees-rejeux { font-size: 13px; }
+.dictees-stats th, .dictees-stats td, .dictees-liste th, .dictees-liste td, .dictee-etapes th, .dictee-etapes td, .dictees-rejeux th, .dictees-rejeux td { padding: 7px 8px; white-space: nowrap; }
+.dictees-liste td.lent { color: var(--bad); font-weight: 700; }
+.dictees-liste tr.accroc > :first-child { box-shadow: inset 4px 0 0 var(--critique); }
+.sous-info { display: block; font-size: 11px; color: var(--muted); white-space: normal; }
+.dictees-liste td .sous-info { white-space: nowrap; }
+.dictees-liste thead th, .dictee-etapes thead th, .dictees-rejeux thead th { white-space: normal; }
+.dictees-liste th, .dictees-liste td { padding: 7px 6px; }
+.dictees-pages { display: flex; gap: 8px; justify-content: center; margin: 12px 0; }
+.dictees-cartes { list-style: none; padding: 0; margin: 0 0 10px; }
+.dictees-cartes a { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 0 0 8px; color: inherit; text-decoration: none; font-size: 14px; }
+.dictees-cartes .dc-haut { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+.dictees-cartes .dc-bas { display: block; color: var(--muted); font-size: 13px; }
+.dictees-cartes .dc-lent { display: block; color: var(--bad); font-weight: 700; }
+.barre-parts { display: block; width: 100%; height: 10px; margin: 8px 0 4px; border-radius: 5px; background: var(--chip); }
+.barre-parts .c-envoi { fill: var(--s1); } .barre-parts .c-attente { fill: var(--attente); } .barre-parts .c-transcription { fill: var(--s2); }
+.barre-parts .c-extraction, .barre-parts .c-pieces, .barre-parts .c-options { fill: var(--s3); } .barre-parts .c-ecriture { fill: var(--s4); }
+.dictee-fiche { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px; margin: 0 0 14px; font-size: 14px; }
+.dictee-fiche dt { font-size: 12px; color: var(--muted); font-weight: 600; }
+.dictee-fiche dd { margin: 0; }
+.frise-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; list-style: none; padding: 0; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.frise-legende i { display: inline-block; width: 14px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.frise-legende .f1 { background: var(--s1); } .frise-legende .f2 { background: var(--s2); } .frise-legende .f3 { background: var(--s3); }
+.frise-legende .f4 { background: var(--s4); } .frise-legende .fx { background: var(--critique); }
+.frise-legende .fa { background: repeating-linear-gradient(45deg, var(--attente) 0 3px, transparent 3px 6px); border: 1px solid var(--attente); }
+.frise-tete { font-size: 14px; margin: 14px 0 4px; }
+.frise-tete small { font-weight: 400; color: var(--muted); }
+.frise { list-style: none; padding: 0; margin: 0 0 6px; }
+.frise li, .frise-coupure { display: grid; grid-template-columns: 200px 1fr 96px; align-items: center; gap: 8px; min-height: 28px; font-size: 13px; }
+.frise .nom, .frise-coupure .nom { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.frise small, .frise-coupure small { color: var(--muted); }
+.frise .piste { width: 100%; height: 16px; background: repeating-linear-gradient(90deg, var(--grille) 0 1px, transparent 1px 10%); }
+.frise .duree, .frise-coupure .duree { text-align: right; font-variant-numeric: tabular-nums; }
+.frise .croix { color: var(--critique); font-weight: 700; }
+.frise .f1 { fill: var(--s1); } .frise .f2 { fill: var(--s2); } .frise .f3 { fill: var(--s3); } .frise .f4 { fill: var(--s4); }
+.frise .fa { fill: var(--attente); } .frise .fx { fill: var(--critique); }
+.frise-coupure { margin: 10px 0; }
+.frise-coupure .zz { border-top: 2px dashed var(--attente); border-bottom: 2px dashed var(--attente); text-align: center; font-size: 12px; color: var(--muted); padding: 2px 0; }
+@media (max-width: 700px) {
+  .frise li, .frise-coupure { grid-template-columns: 1fr auto; row-gap: 2px; padding: 3px 0; }
+  .frise .piste, .frise-coupure .zz { grid-column: 1 / -1; grid-row: 2; }
+}

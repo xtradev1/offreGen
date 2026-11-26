@@ -1,0 +1,41 @@
+{% extends 'document/_base.html.twig' %}
+{% import 'document/_blocs.html.twig' as b %}
+{# Enseigne : pour l'artisan sans logo, le nom officiel de son entreprise en grandes capitales (Xavier, 2026-11-20 :
+   « on peut utiliser le nom officiel de l'entreprise et on regarde dans un premier temps si ça joue »). Le corps du nom
+   suit sa longueur (Marque::corpsEnseigne) ; le logo, s'il y en a un, ne paraît pas dans ce modèle. #}
+
+{% block fixes %}{{ b.pied(_context) }}{% endblock %}
+
+{% block corps %}
+  {% set rangs = [[doc_nom ~ ' n°', doc_numero], ['Date', doc_date]] %}
+  {% if facture %}{% set rangs = rangs|merge([['Échéance', f.echeance|jour], ['Référence', b.ref(_context)]]) %}
+  {% else %}
+    {% set rangs = rangs|merge([["Valable jusqu'au", valable_jusqu_au]]) %}
+    {% if chantier and chantier.adresse %}{% set rangs = rangs|merge([[mots.doc_lieu, chantier.adresse]]) %}{% endif %}
+    {% if r.contactNom %}{% set rangs = rangs|merge([['Votre contact', r.contactNom]]) %}{% endif %}
+  {% endif %}
+  <div class="doc-in">
+    <div class="doc-haut">
+      <div class="doc-enseigne c-texte t{{ m.corpsEnseigne(r.entreprise) }}">{{ r.entreprise }}</div>
+      {% if r.localite %}<div class="doc-enseigne-s">{{ r.localite }}</div>{% endif %}
+      <div class="doc-barre c-fond"></div>
+      <div class="doc-enseigne-c">{% for l in coord %}{{ l }}{% if not loop.last or r.telephone or r.courrielContact %} · {% endif %}{% endfor %}{{ r.telephone }}{% if r.telephone and r.courrielContact %} · {% endif %}{{ r.courrielContact }}</div>
+    </div>
+    <table class="doc-duo"><tr>
+      <td><table class="doc-ref">{% for rang in rangs %}<tr><td>{{ rang[0] }}</td><td>{% if loop.first %}<b>{{ rang[1] }}</b>{% else %}{{ rang[1] }}{% endif %}</td></tr>{% endfor %}</table></td>
+      <td>{{ b.adresse(_context) }}</td>
+    </tr></table>
+    <div class="doc-titre">{{ doc_objet }}</div>
+    {{ b.annulee(_context) }}
+    {{ b.debut(_context) }}
+    {{ b.lignes(_context, {grp: 'c-texte'}) }}
+    {{ b.totaux(_context, {tt: 'c-filet'}) }}
+    {{ b.options(_context) }}
+    {{ b.texte(_context, 'apres') }}
+    <div class="doc-fin">
+      {{ b.conditions(_context) }}
+      {{ b.fin(_context) }}
+      {{ b.signatures(_context) }}
+    </div>
+  </div>
+{% endblock %}

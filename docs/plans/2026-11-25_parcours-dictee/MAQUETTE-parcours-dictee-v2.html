@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette v2 : attente et arrivée sur le PDF</title>
+<style>
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("MAQUETTE-parcours-dictee-img/inter-latin.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-weight: 500 700; font-display: swap; src: url("MAQUETTE-parcours-dictee-img/archivo-latin.woff2") format("woff2"); }
+
+:root { --mk-ink: #23272D; --mk-bg: #F4F1EA; --mk-surface: #FFFFFF; --mk-line: #DDD8CC; --mk-accent: #9E3F1E; --p-muted: #454B55; --p-ok: #13553A; --p-ok-soft: #E1EFE6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #F0A27F; --p-muted: #B4B9C0; --p-ok: #7DD3A8; --p-ok-soft: #183126; } }
+:root[data-theme="dark"] { --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #F0A27F; --p-muted: #B4B9C0; --p-ok: #7DD3A8; --p-ok-soft: #183126; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1060px; margin: 0 auto; padding: 24px 16px 80px; }
+h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; line-height: 1.2; }
+h1 { font-size: 28px; margin: 8px 0 10px; }
+h2 { font-size: 22px; margin: 48px 0 10px; padding-top: 8px; border-top: 1px solid var(--mk-line); }
+h3 { font-size: 17px; margin: 0 0 6px; }
+p { margin: 0 0 12px; }
+.chapeau { font-size: 17px; max-width: 760px; }
+.muted { color: var(--p-muted); }
+.petit { font-size: 14px; }
+.bloc { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 14px; padding: 16px 18px; margin: 14px 0; }
+.regle { border-color: var(--p-ok); background: var(--p-ok-soft); }
+.regle li b { color: var(--p-ok); }
+ul.serre { margin: 6px 0 0; padding-left: 20px; }
+ul.serre li { margin: 5px 0; }
+.chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
+.chiffres div { background: var(--mk-bg); border: 1px solid var(--mk-line); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.chiffres b { display: block; font: 700 24px/1.2 "Archivo", sans-serif; }
+
+.demo { display: flex; flex-direction: column; align-items: center; margin: 18px 0; }
+.commandes { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 0; max-width: 520px; }
+.commandes button, .choix-btns button, .copier { font: 600 14px/1.2 "Archivo", sans-serif; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--mk-ink); background: var(--mk-surface); color: var(--mk-ink); cursor: pointer; }
+.commandes button[aria-pressed="true"], .choix-btns button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.commandes button:focus-visible, .choix-btns button:focus-visible, .copier:focus-visible, .choix textarea:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+.commandes .titre { flex-basis: 100%; text-align: center; font-size: 14px; color: var(--p-muted); margin: 4px 0 0; }
+
+/* Un cas d'arrivée : une rangée d'écrans reliés par des flèches. */
+.cas { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 14px; padding: 16px 16px 6px; margin: 16px 0; }
+.cas > p { max-width: 760px; }
+.suite { display: flex; flex-wrap: wrap; gap: 8px 6px; align-items: center; justify-content: center; margin: 12px 0; }
+.suite figure { margin: 0; width: 232px; }
+.suite figcaption { font-size: 13.5px; text-align: center; margin-top: 8px; min-height: 40px; }
+.suite .fleche { font: 700 26px/1 "Archivo", sans-serif; color: var(--p-muted); padding: 0 2px; }
+.suite .fleche small { display: block; font: 500 11.5px/1.2 "Inter", sans-serif; text-align: center; max-width: 76px; }
+@media (max-width: 640px) { .suite { flex-direction: column; } .suite .fleche { transform: rotate(90deg); } .suite .fleche small { display: none; } }
+.reel { width: 232px; height: 502px; object-fit: cover; object-position: top; border-radius: 26px; border: 7px solid #111; background: #111; display: block; cursor: zoom-in; }
+
+.choix { background: var(--mk-surface); border: 2px solid var(--mk-ink); border-radius: 14px; padding: 14px 16px; margin: 18px 0 6px; }
+.choix > p { font-weight: 600; margin-bottom: 10px; }
+.choix .note { font-size: 14px; color: var(--p-muted); margin: 0 0 10px; font-weight: 400; }
+.choix-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.choix textarea { width: 100%; min-height: 64px; font: 15px/1.4 "Inter", sans-serif; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--mk-line); background: var(--mk-bg); color: var(--mk-ink); resize: vertical; }
+table.couts { width: 100%; border-collapse: collapse; background: var(--mk-surface); border-radius: 12px; overflow: hidden; font-size: 15px; }
+table.couts th, table.couts td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--mk-line); }
+table.couts th { font-family: "Archivo", sans-serif; }
+.recap { white-space: pre-wrap; font: 14px/1.5 ui-monospace, "Cascadia Mono", monospace; background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 14px; margin: 10px 0; overflow-wrap: anywhere; }
+
+/* ===== Téléphone : couleurs de l'application, indépendantes du thème de la page. ===== */
+.tel { --ink: #23272D; --muted: #454B55; --line: #DDD8CC; --surface: #FFFFFF; --bg: #F4F1EA; --chip: #EBE7DE; --bord: #7C838C; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --marque: #C4552D; --bande: #23272D;
+  width: 300px; height: 650px; border-radius: 34px; border: 8px solid #111; background: #111; position: relative; overflow: hidden; flex: none; box-shadow: 0 14px 30px rgba(0, 0, 0, .18); }
+.tel.mini { width: 232px; height: 502px; border-width: 7px; border-radius: 26px; box-shadow: none; }
+.tel.mini .ecran { width: 286px; height: 641px; transform: scale(.7622); transform-origin: top left; inset: 0 auto auto 0; }
+.ecran { position: absolute; inset: 0; background: var(--bg); color: var(--ink); font: 12.5px/1.4 "Inter", system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+.ecran button { font: inherit; color: inherit; cursor: pointer; }
+.ecran img.plein { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.ecran .zone { position: absolute; inset: 0; border: 0; background: none; padding: 0; animation: fondu .3s ease-out; }
+.ecran .indice { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); background: #23272D; color: #fff; font-size: 11.5px; padding: 6px 10px; border-radius: 999px; white-space: nowrap; pointer-events: none; }
+.t-bar { height: 46px; flex: none; background: var(--bande); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font: 600 14px/1 "Archivo", sans-serif; }
+.t-bar .logo { font: 700 16px/1 "Archivo", sans-serif; }
+.t-bar .logo::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 3px 3px 3px 0; background: var(--marque); vertical-align: -1px; }
+.t-corps { flex: 1; overflow: hidden; padding: 12px; background: var(--surface); }
+.t-entete { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.t-carte { border: 1px solid var(--line); border-radius: 12px; padding: 10px 11px; margin-bottom: 8px; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+.t-carte b { font: 600 13px/1.25 "Archivo", sans-serif; }
+.t-carte small { color: var(--muted); font-size: 11.5px; }
+.t-carte .m { font-weight: 700; font-size: 12px; align-self: end; }
+.badge { justify-self: end; font-size: 10.5px; font-weight: 600; padding: 3px 7px; border-radius: 999px; align-self: start; white-space: nowrap; }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.ok { background: var(--ok-soft); color: var(--ok); }
+.t-tabs { height: 58px; flex: none; display: flex; align-items: stretch; background: var(--surface); border-top: 1px solid var(--line); }
+.t-tabs > span { flex: 1; display: grid; place-items: center; font-size: 10.5px; color: var(--muted); padding-top: 18px; }
+.t-tabs > span:first-child { color: var(--ink); font-weight: 600; }
+.t-micro { flex: 1.15; position: relative; border: 0; background: none; padding: 0; -webkit-tap-highlight-color: transparent; }
+.t-micro > span { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); width: 58px; height: 58px; border-radius: 50%; background: var(--marque); color: #fff; display: grid; place-items: center; border: 4px solid var(--surface); box-shadow: 0 5px 12px rgba(35, 39, 45, .24); transition: scale .09s ease-out; animation: appel 1.6s ease-in-out infinite; }
+.t-micro:active > span { scale: .92; }
+.t-micro svg { width: 24px; height: 24px; }
+@keyframes appel { 0%, 100% { box-shadow: 0 5px 12px rgba(35, 39, 45, .24), 0 0 0 0 rgba(196, 85, 45, .45); } 50% { box-shadow: 0 5px 12px rgba(35, 39, 45, .24), 0 0 0 10px rgba(196, 85, 45, 0); } }
+.t-btn { border: 1px solid var(--bord); background: var(--surface); border-radius: 11px; min-height: 44px; padding: 8px 12px; font: 600 13px/1.2 "Archivo", sans-serif; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.t-btn.grand { width: 100%; min-height: 54px; font-size: 15px; }
+.t-btn.noir { background: var(--ink); border-color: var(--ink); color: #fff; }
+.t-lien { border: 0; background: none; text-decoration: underline; text-underline-offset: 3px; color: var(--muted); min-height: 40px; font-size: 12.5px; }
+@keyframes clignote { 50% { opacity: .25; } }
+@keyframes tourne { to { transform: rotate(360deg); } }
+@keyframes fondu { from { opacity: 0; transform: scale(.97); } }
+
+/* Enregistrement plein écran (piste B, choisie le 26.11), avec l'alerte de silence et la pause. */
+.b { position: absolute; inset: 0; background: #15171A; color: #ECEAE6; display: flex; flex-direction: column; align-items: center; padding: 18px 16px 16px; text-align: center; animation: fondu .25s ease-out; }
+.b-haut { align-self: stretch; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #B4B9C0; min-height: 24px; }
+.b-rec { display: inline-flex; align-items: center; gap: 6px; color: #FF9A91; font-weight: 600; }
+.b-rec i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: clignote 1.4s ease-in-out infinite; }
+.b.ouv .b-rec { color: #B4B9C0; }
+.b.ouv .b-rec i { background: none; border: 2px solid currentColor; border-right-color: transparent; width: 11px; height: 11px; animation: tourne .8s linear infinite; }
+.b.pause .b-rec { color: #F0B860; }
+.b.pause .b-rec i { animation: none; border-radius: 1px; background: linear-gradient(90deg, currentColor 35%, transparent 35% 65%, currentColor 65%); }
+.b-min { font: 600 54px/1 "Inter", sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -.02em; margin: 26px 0 18px; }
+.b.ouv .b-min, .b.pause .b-min { color: #8B9098; }
+.b-onde { height: 86px; align-self: stretch; display: flex; align-items: center; justify-content: center; gap: 3px; }
+.b-onde i { width: 4px; border-radius: 2px; background: #E07A52; height: 4px; transition: height .09s linear; }
+.b-onde i.vieux { background: #6B4A3E; }
+.b-conseil { margin: 22px 0 0; min-height: 76px; align-self: stretch; background: #1E2125; border-radius: 14px; padding: 10px 14px; text-align: left; }
+.b-conseil small { color: #B4B9C0; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; }
+.b-conseil p { margin: 3px 0 0; font-size: 13.5px; line-height: 1.35; }
+.b-conseil.alerte { background: #3A2A10; }
+.b-conseil.alerte small, .b-conseil.alerte p { color: #F0B860; }
+.b-conseil.alerte p { font-weight: 600; }
+.b-ctrl { margin-top: auto; align-self: stretch; display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; }
+.b-ctrl button { background: none; border: 0; color: #ECEAE6; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; }
+.b-ctrl .petit span { width: 50px; height: 50px; border-radius: 50%; background: #2A2E34; display: grid; place-items: center; }
+.b-ctrl .petit span svg { width: 20px; height: 20px; }
+.b-stop span { width: 76px; height: 76px; border-radius: 50%; border: 4px solid #ECEAE6; display: grid; place-items: center; }
+.b-stop span i { width: 28px; height: 28px; border-radius: 7px; background: #E5484D; }
+.b-stop:active span { scale: .93; }
+.b.ouv .b-stop { visibility: hidden; }
+.b-stop b { font-weight: 600; font-size: 12px; }
+
+/* Attente « entre A et B » : le plein écran sombre et l'anneau de B, les trois étapes de A. Ni texte entendu ni lignes. */
+.b-anneau { --p: 0; width: 132px; height: 132px; border-radius: 50%; margin: 26px 0 22px; display: grid; place-items: center; background: conic-gradient(#E07A52 calc(var(--p) * 360deg), #2A2E34 0); position: relative; flex: none; }
+.b-anneau::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: #15171A; }
+.b-anneau div { position: relative; display: flex; flex-direction: column; }
+.b-anneau b { font: 600 28px/1 "Inter", sans-serif; font-variant-numeric: tabular-nums; }
+.b-anneau small { color: #B4B9C0; font-size: 11.5px; margin-top: 4px; }
+.h-etapes { list-style: none; padding: 4px 14px; margin: 0; align-self: stretch; background: #1E2125; border-radius: 14px; text-align: left; }
+.h-etapes li { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; padding: 11px 0; color: #8B9098; font-size: 13px; }
+.h-etapes li + li { border-top: 1px solid #2A2E34; }
+.h-etapes li span { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #3A3F46; display: grid; place-items: center; box-sizing: border-box; }
+.h-etapes li.cur { color: #ECEAE6; font-weight: 600; }
+.h-etapes li.cur span { border-color: #3A3F46; border-top-color: #E07A52; animation: tourne .8s linear infinite; }
+.h-etapes li.done { color: #ECEAE6; }
+.h-etapes li.done span { background: #7DD3A8; border-color: #7DD3A8; }
+.h-etapes li.done span::before { content: ""; width: 4px; height: 9px; border: solid #15171A; border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg); }
+.h-etapes em { font-style: normal; font-size: 11px; color: #B4B9C0; font-variant-numeric: tabular-nums; }
+.b-quitter { margin-top: auto; font-size: 11.5px; color: #B4B9C0; }
+
+/* Offre prête, quand il reste des lignes à vérifier : sans le prix (Xavier, 26.11). */
+.v { position: absolute; inset: 0; background: var(--surface); display: flex; flex-direction: column; align-items: center; text-align: center; padding: 56px 18px 18px; animation: fondu .3s ease-out; }
+.v-coche { width: 74px; height: 74px; border-radius: 50%; background: var(--ok); display: grid; place-items: center; }
+.v-coche::before { content: ""; width: 14px; height: 28px; border: solid #fff; border-width: 0 5px 5px 0; transform: translateY(-3px) rotate(45deg); }
+.v h3 { font: 700 21px/1.2 "Archivo", sans-serif; margin: 16px 0 4px; }
+.v p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.v p b { color: var(--ink); }
+.v-tuiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-self: stretch; margin: 22px 12px 0; }
+.v-tuiles div { border: 1px solid var(--line); border-radius: 12px; padding: 10px 4px; display: flex; flex-direction: column; font-size: 11.5px; color: var(--muted); }
+.v-tuiles b { font: 700 20px/1.2 "Archivo", sans-serif; color: var(--ink); }
+.v-tuiles .warn { background: var(--warn-soft); border-color: var(--warn-soft); color: var(--warn); }
+.v-tuiles .warn b { color: var(--warn); }
+.v .t-btn { margin-top: auto; }
+.ecran:not(.neuf) .b, .ecran:not(.neuf) .v, .ecran:not(.neuf) .zone { animation: none; }
+@media (prefers-reduced-motion: reduce) { .ecran *, .ecran *::before, .ecran *::after { animation: none !important; transition: none !important; } }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Parcours de la dictée, version 2</h1>
+<p class="chapeau">Vos réponses du 26.11 sont rangées. Il reste deux choses à trancher : l'attente « entre A et B », et la règle d'arrivée sur le PDF que vous proposez.</p>
+<nav id="mk-toc"></nav>
+
+<h2 id="regle" data-toc="Réglé">Déjà réglé (vos réponses du 26.11)</h2>
+<div class="bloc regle"><ul class="serre">
+  <li><b>Enregistrement : piste B.</b> Plein écran sombre, onde de la voix, conseils, arrêt au centre.</li>
+  <li><b>Alerte après 5 secondes de silence : oui.</b></li>
+  <li><b>Pause pendant la dictée : oui.</b> À prouver sur votre iPhone, je ne peux pas le faire d'ici.</li>
+  <li><b>Texte entendu pendant l'attente : non</b> (« pas obliger »).</li>
+  <li><b>Offre prête : piste B, sans le prix</b>, puis l'offre s'ouvre directement avec son petit menu.</li>
+</ul></div>
+
+<h2 id="avis" data-toc="Mon avis">Arriver directement sur le PDF : mon avis</h2>
+<div class="bloc">
+  <p><b>Oui, avec une règle écrite.</b> Le PDF est ce que l'artisan vend : y arriver sans toucher supprime la page des lignes et le bouton « Générer l'offre ». L'écran du PDF porte déjà le petit menu (Modifier, Facturer, Envoyer).</p>
+  <p><b>« Sans erreur » veut dire deux choses dans le code d'aujourd'hui :</b> aucune ligne « à vérifier », et un client rattaché (le nom dicté ressemble à plus de 80 % à une fiche existante, règle du 12.11). Pour un nouveau client, la question « Pour qui est cette offre ? » reste : sans elle, le PDF sortirait sans adresse.</p>
+  <div class="chiffres">
+    <div><b>43</b>offres nées d'une dictée sur le site de test</div>
+    <div><b>28</b>sans ligne à vérifier aujourd'hui</div>
+    <div><b>22</b>avec un client rattaché, toutes sans ligne à vérifier</div>
+  </div>
+  <p class="muted petit">Compté le 26.11 en lecture seule. Ces chiffres sont l'état actuel, relecture et choix du client compris : à la naissance de l'offre, la part « tout est propre » est donc de la moitié au plus. L'arrivée directe ne servira pas à chaque dictée.</p>
+  <p><b>Le risque :</b> une ligne sans marque « à vérifier » peut quand même être fausse (une quantité mal entendue). Sur le PDF, l'artisan lit son offre comme son client la lira, c'est une bonne relecture ; « Envoyer » reste un geste voulu (le partage du téléphone) et « Modifier » est à côté. Je n'irais pas plus loin : jamais d'envoi sans ce geste.</p>
+  <p><b>Pour simplifier encore,</b> une seule règle : dès que l'offre est propre, on est sur le PDF. Elle vaut à trois moments, montrés plus bas : à la fin de la dictée, après la dernière ligne relue, et après le choix du client. L'écran « Offre prête » ne se montre que s'il reste des lignes à vérifier.</p>
+</div>
+
+<h2 id="demo" data-toc="Démo">Démo : le parcours entier</h2>
+<p>Choisissez un cas, touchez le micro, puis l'arrêt rouge. <span class="muted">Voix simulée ; attente raccourcie à 10 secondes (30 à 50 en vrai). Les écrans du PDF, de la relecture et du client sont des captures de l'application : touchez-les pour avancer.</span></p>
+<div class="demo">
+  <div class="tel" id="tel-demo"><div class="ecran"></div></div>
+  <div class="commandes">
+    <p class="titre">Ce que la dictée a donné</p>
+    <button type="button" data-cas="propre" aria-pressed="true">Tout est propre</button>
+    <button type="button" data-cas="verifier" aria-pressed="false">5 lignes à vérifier</button>
+    <button type="button" data-cas="client" aria-pressed="false">Client à confirmer</button>
+    <p class="titre">Pendant l'enregistrement</p>
+    <button type="button" data-cmd="silence">Couper la voix 7 s</button>
+    <button type="button" data-cmd="rejouer">Rejouer</button>
+  </div>
+</div>
+
+<h2 id="attente" data-toc="1. Attente">À trancher 1 : l'attente, entre A et B</h2>
+<div class="suite">
+  <figure><div class="tel mini" data-fige="prep 0.08"><div class="ecran"></div></div><figcaption>Envoi : l'anneau démarre, le pourcentage de l'envoi s'affiche.</figcaption></figure>
+  <figure><div class="tel mini" data-fige="prep 0.62"><div class="ecran"></div></div><figcaption>Lignes de l'offre : deux étapes cochées, « environ 15 s ».</figcaption></figure>
+</div>
+<p>De B : le plein écran sombre, à la suite de l'enregistrement, et l'anneau qui se remplit avec la durée restante. De A : les trois étapes nommées, sans texte entendu ni lignes qui se dessinent. « Offre prête » n'est plus une étape.</p>
+<div class="choix" data-q="attente" data-titre="Attente entre A et B">
+  <p>Cette attente vous convient ?</p>
+  <div class="choix-btns"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="À revoir">À revoir</button></div>
+  <textarea aria-label="Commentaire sur l'attente" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h2 id="arrivee" data-toc="2. Arrivée">À trancher 2 : l'arrivée</h2>
+
+<div class="cas">
+  <h3>Cas 1 : tout est propre</h3>
+  <p>Aucune ligne à vérifier, client reconnu : le PDF s'ouvre tout seul. Aucun toucher entre « Terminer » et le PDF (deux aujourd'hui : la page des lignes, puis « Générer l'offre »).</p>
+  <div class="suite">
+    <figure><div class="tel mini" data-fige="prep 0.97"><div class="ecran"></div></div><figcaption>Fin de l'attente.</figcaption></figure>
+    <span class="fleche">→<small>tout seul</small></span>
+    <figure><img class="reel" src="MAQUETTE-parcours-dictee-v2-img/reel-pdf.jpg" alt="Capture de l'application : le PDF de l'offre avec les boutons Modifier, Facturer et Envoyer"><figcaption>Le PDF et son menu (capture de l'application).</figcaption></figure>
+  </div>
+</div>
+
+<div class="cas">
+  <h3>Cas 2 : des lignes à vérifier</h3>
+  <p>L'écran « Offre prête » dit combien, sans le prix. Un toucher mène à la relecture ; la dernière ligne validée, le PDF s'ouvre (aujourd'hui : un écran « Générer l'offre » de plus).</p>
+  <div class="suite">
+    <figure><div class="tel mini" data-fige="resultat"><div class="ecran"></div></div><figcaption>Offre prête, sans le prix.</figcaption></figure>
+    <span class="fleche">→<small>un toucher</small></span>
+    <figure><img class="reel" src="MAQUETTE-parcours-dictee-v2-img/reel-relire.jpg" alt="Capture de l'application : relecture d'une ligne, boutons Corriger et C'est juste"><figcaption>La relecture, inchangée (capture de l'application).</figcaption></figure>
+    <span class="fleche">→<small>dernière ligne validée</small></span>
+    <figure><img class="reel" src="MAQUETTE-parcours-dictee-v2-img/reel-pdf.jpg" alt="Capture de l'application : le PDF de l'offre"><figcaption>Le PDF.</figcaption></figure>
+  </div>
+</div>
+
+<div class="cas">
+  <h3>Cas 3 : lignes propres, client à confirmer</h3>
+  <p>Le nom dicté ne correspond à aucune fiche (nouveau client, le cas courant). Je propose d'ouvrir tout de suite « Pour qui est cette offre ? » ; le client choisi ou créé, le PDF s'ouvre.</p>
+  <div class="suite">
+    <figure><div class="tel mini" data-fige="prep 0.97"><div class="ecran"></div></div><figcaption>Fin de l'attente.</figcaption></figure>
+    <span class="fleche">→<small>tout seul</small></span>
+    <figure><img class="reel" src="MAQUETTE-parcours-dictee-v2-img/reel-client.jpg" alt="Capture de l'application : écran Pour qui est cette offre, liste des clients et bouton Nouveau client"><figcaption>Le choix du client (capture d'une offre sans nom dicté ; avec un nom dicté, il est proposé en tête, non capturé).</figcaption></figure>
+    <span class="fleche">→<small>client choisi</small></span>
+    <figure><img class="reel" src="MAQUETTE-parcours-dictee-v2-img/reel-pdf.jpg" alt="Capture de l'application : le PDF de l'offre"><figcaption>Le PDF.</figcaption></figure>
+  </div>
+</div>
+
+<div class="choix" data-q="regle" data-titre="Règle « offre propre, PDF »">
+  <p>La règle : dès que l'offre est propre (aucune ligne à vérifier, client rattaché), le PDF s'ouvre</p>
+  <div class="choix-btns"><button type="button" data-v="Valider">Valider</button><button type="button" data-v="À revoir">À revoir</button></div>
+  <textarea aria-label="Commentaire sur la règle" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="choix" data-q="client" data-titre="Cas 3, client à confirmer">
+  <p>Cas 3 : où arriver quand il ne manque que le client ?</p>
+  <div class="choix-btns"><button type="button" data-v="Choix du client tout de suite">Choix du client tout de suite</button><button type="button" data-v="Page de l'offre, comme aujourd'hui">Page de l'offre, comme aujourd'hui</button></div>
+  <textarea aria-label="Commentaire sur le cas du client" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="choix" data-q="relecture" data-titre="Après la dernière ligne relue">
+  <p>Cas 2 : après la dernière ligne relue</p>
+  <div class="choix-btns"><button type="button" data-v="PDF directement">PDF directement</button><button type="button" data-v="Écran « Générer l'offre », comme aujourd'hui">Écran « Générer l'offre », comme aujourd'hui</button></div>
+  <textarea aria-label="Commentaire sur la fin de la relecture" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="choix" data-q="prix" data-titre="« Ne pas afficher le prix »">
+  <p>« Ne pas afficher le prix » : j'ai compris « sur l'écran Offre prête ». C'est bien cela ?</p>
+  <p class="note">Le PDF et la page de l'offre gardent leurs totaux. Si vous vouliez dire autre chose (le bouton « Relire 5 lignes, CHF … », la liste des offres), écrivez-le.</p>
+  <div class="choix-btns"><button type="button" data-v="Oui, seulement cet écran">Oui, seulement cet écran</button><button type="button" data-v="Non">Non</button></div>
+  <textarea aria-label="Commentaire sur le prix" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h2 id="couts" data-toc="Coûts">Ce que cela coûte (estimation de Claude)</h2>
+<table class="couts">
+  <thead><tr><th>Lot</th><th>Travail</th><th>Ce qui change</th></tr></thead>
+  <tbody>
+    <tr><td>Attente entre A et B</td><td>Environ 1 h 30</td><td>Le navigateur seulement.</td></tr>
+    <tr><td>Arrivée : règle « offre propre, PDF » et écran « Offre prête »</td><td>Environ 2 h 30</td><td>Le serveur dit où arriver (PDF, relecture ou client) ; la fin de la relecture et le choix du client mènent au PDF.</td></tr>
+    <tr><td>Enregistrement B, alerte de silence, pause</td><td>Environ 4 h 30</td><td>Le navigateur ; la pause touche la durée, la limite des 30 minutes et la reprise d'une dictée coupée.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="reponses" data-toc="Réponses">Vos réponses</h2>
+<p class="muted petit">Elles restent dans ce navigateur. Le bouton copie le texte à coller dans la conversation.</p>
+<div class="recap" id="recap">Aucune réponse pour l'instant.</div>
+<button type="button" class="copier" id="copier">Copier le texte</button>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var IMG = 'MAQUETTE-parcours-dictee-v2-img/';
+  var MICRO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  var CROIX = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  var PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  var REPRENDRE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  var CONSEILS = ['Commencez par le client et le lieu du chantier.', 'Puis pièce par pièce : les travaux, les surfaces, les quantités.', 'Les fournitures et le déplacement, s\'il y en a.'];
+  var OFFRES = [
+    ['Appartement Rue du Marché, rénovation complète', 'Famille Dupont · Offre 3', 'CHF 27’080.65', '3 à vérifier', 'warn'],
+    ['Rafraîchissement du séjour', 'Famille Exemple · Offre 2', 'CHF 3’106.80', 'Prête', 'ok'],
+    ['Cage d\'escalier, immeuble Avenue de la Gare', 'Madame Rochat · Offre 4', 'CHF 14’615.10', 'Prête', 'ok'],
+  ];
+  var DUREE_REELLE = 40;
+  var DUREE_DEMO = 10000;
+  var deux = function (n) { return String(n).padStart(2, '0'); };
+  var horloge = function (s) { return deux(Math.floor(s / 60)) + ':' + deux(s % 60); };
+  var esc = function (t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+  var phase = function (p) { return p < 0.125 ? 0 : p < 0.42 ? 1 : 2; };
+  var reste = function (p) { return Math.max(5, Math.round((1 - p) * DUREE_REELLE / 5) * 5); };
+
+  function accueil() {
+    return '<div class="t-bar"><span>Mes offres</span><span class="logo">Dicta</span></div><div class="t-corps"><div class="t-entete">Peinture Mesure Sàrl · 5 offres ce mois</div>'
+      + OFFRES.map(function (o) { return '<div class="t-carte"><b>' + esc(o[0]) + '</b><span class="badge ' + o[4] + '">' + o[3] + '</span><small>' + esc(o[1]) + '</small><span class="m">' + o[2] + '</span></div>'; }).join('')
+      + '</div><div class="t-tabs"><span>Offres</span><span>Clients</span><button type="button" class="t-micro" data-act="micro" aria-label="Dicter une offre"><span>' + MICRO + '</span></button><span>Factures</span><span>Plus</span></div>';
+  }
+  function onde(n) { var h = ''; for (var i = 0; i < n; i++) h += '<i></i>'; return h; }
+  function rec(d) {
+    var ouv = d.etat === 'ouverture';
+    var classe = ouv ? ' ouv' : d.pause ? ' pause' : '';
+    var etat = ouv ? 'Le micro s\'ouvre…' : d.pause ? 'En pause' : 'Enregistrement';
+    var carte = d.silence && !d.pause
+      ? '<div class="b-conseil alerte"><small>Le micro n\'entend rien</small><p>Parlez plus près, ou vérifiez qu\'un casque Bluetooth ne l\'a pas pris.</p></div>'
+      : '<div class="b-conseil"><small>Conseil ' + (d.conseil + 1) + ' sur ' + CONSEILS.length + '</small><p>' + esc(CONSEILS[d.conseil]) + '</p></div>';
+    return '<div class="b' + classe + '"><div class="b-haut"><span class="b-rec"><i></i>' + etat + '</span><span>Nouvelle offre</span></div>'
+      + '<div class="b-min">' + horloge(d.s) + '</div><div class="b-onde">' + onde(34) + '</div>' + carte
+      + '<div class="b-ctrl"><button type="button" class="petit" data-act="abandon"><span>' + CROIX + '</span>' + (ouv ? 'Annuler' : 'Abandonner') + '</button>'
+      + '<button type="button" class="b-stop" data-act="terminer" aria-label="Terminer et créer l\'offre"><span><i></i></span><b>Terminer</b></button>'
+      + '<button type="button" class="petit" data-act="pause"' + (ouv ? ' style="visibility:hidden"' : '') + '><span>' + (d.pause ? REPRENDRE : PAUSE) + '</span>' + (d.pause ? 'Reprendre' : 'Pause') + '</button></div></div>';
+  }
+  function prep(d) {
+    var ph = phase(d.p);
+    var envoi = Math.min(100, Math.round(d.p / 0.125 * 100));
+    var li = function (i, lib, extra) { return '<li class="' + (i < ph ? 'done' : i === ph ? 'cur' : 'todo') + '"><span></span>' + lib + '<em>' + (extra || '') + '</em></li>'; };
+    return '<div class="b"><div class="b-haut"><span>Préparation de l\'offre</span><span></span></div>'
+      + '<div class="b-anneau" style="--p:' + d.p.toFixed(3) + '"><div><b>' + Math.round(d.p * 100) + ' %</b><small>environ ' + reste(d.p) + ' s</small></div></div>'
+      + '<ol class="h-etapes">' + li(0, 'Envoi de l\'enregistrement', envoi + ' %') + li(1, 'Transcription de la dictée') + li(2, 'Lignes de l\'offre') + '</ol>'
+      + '<p class="b-quitter">Vous pouvez quitter l\'application : l\'offre vous attendra dans « Offres ».</p></div>';
+  }
+  function resultat() {
+    return '<div class="v"><div class="v-coche"></div><h3>Offre prête</h3><p><b>Famille Dupont</b><br>Appartement Rue du Marché, rénovation complète</p>'
+      + '<div class="v-tuiles"><div><b>8</b>lignes</div><div class="warn"><b>5</b>à vérifier</div></div>'
+      + '<button type="button" class="t-btn noir grand" data-act="relire">Relire les 5 lignes</button><button type="button" class="t-lien" data-act="relire">Voir l\'offre entière</button></div>';
+  }
+  function reel(nom, alt, indice) {
+    return '<button type="button" class="zone" data-act="suite" aria-label="' + alt + '"><img class="plein" data-no-zoom src="' + IMG + 'reel-' + nom + '.jpg" alt="' + alt + '"></button>'
+      + (indice ? '<span class="indice">' + indice + '</span>' : '');
+  }
+  function ecran(d) {
+    if (d.etat === 'accueil') return accueil();
+    if (d.etat === 'ouverture' || d.etat === 'rec') return rec(d);
+    if (d.etat === 'prep') return prep(d);
+    if (d.etat === 'resultat') return resultat();
+    if (d.etat === 'relire') return reel('relire', 'Relecture d\'une ligne', 'Touchez pour valider les lignes');
+    if (d.etat === 'client') return reel('client', 'Pour qui est cette offre ?', 'Touchez pour choisir le client');
+    return reel('pdf', 'Le PDF de l\'offre', '');
+  }
+  function remplirOnde(el, niveaux) {
+    var barres = el.querySelectorAll('.b-onde i');
+    barres.forEach(function (b, i) { var v = niveaux[i] || 0; b.style.height = Math.max(4, Math.round(v * 80)) + 'px'; b.classList.toggle('vieux', i < barres.length - 8); });
+  }
+
+  // Écrans figés.
+  document.querySelectorAll('[data-fige]').forEach(function (tel) {
+    var p = tel.dataset.fige.split(' ');
+    var d = { etat: p[0], s: 47, pause: false, silence: false, conseil: 1, p: Number(p[1] || 0) };
+    var e = tel.querySelector('.ecran');
+    e.classList.add('neuf');
+    e.innerHTML = ecran(d);
+  });
+
+  // Démo.
+  var tel = document.getElementById('tel-demo');
+  var e = tel.querySelector('.ecran');
+  var cas = 'propre';
+  var d;
+  var minuteurs = [];
+  var boucle = null;
+  var niveaux = [];
+  var t = 0;
+  var debut = 0;
+  var dansPause = 0;
+  var pauseDepuis = 0;
+  var silenceJusqua = 0;
+  var muetDepuis = 0;
+  var conseilAffiche = 0;
+  var plus = function (f, ms) { minuteurs.push(setTimeout(f, ms)); };
+  var tout = function (neuf) { e.classList.toggle('neuf', !!neuf); e.innerHTML = ecran(d); if (d.etat === 'rec') remplirOnde(e, niveaux); };
+  var arreter = function () { minuteurs.forEach(clearTimeout); minuteurs = []; if (boucle) cancelAnimationFrame(boucle); boucle = null; };
+  var raz = function () { arreter(); d = { etat: 'accueil', s: 0, pause: false, silence: false, conseil: 0, p: 0 }; niveaux = []; dansPause = 0; conseilAffiche = 0; silenceJusqua = 0; tout(true); };
+  var voix = function (ms) {
+    if (ms < silenceJusqua) return 0;
+    var parole = (Math.sin(ms / 900) + Math.sin(ms / 370) * 0.6) > -0.6;
+    return parole ? Math.min(1, 0.25 + Math.random() * 0.55 + Math.abs(Math.sin(ms / 120)) * 0.25) : Math.random() * 0.06;
+  };
+  var enregistrer = function () {
+    var ms = performance.now();
+    if (d.etat !== 'rec') return;
+    if (!d.pause) {
+      var v = voix(ms);
+      d.s = Math.floor((ms - debut - dansPause) / 1000);
+      d.conseil = Math.floor(d.s / 6) % CONSEILS.length;
+      if (v > 0.12) muetDepuis = ms;
+      var avant = d.silence;
+      d.silence = ms - muetDepuis > 5000;
+      if (ms - t > 90) { t = ms; niveaux.push(v); if (niveaux.length > 34) niveaux.shift(); }
+      var m = e.querySelector('.b-min'); if (m) m.textContent = horloge(d.s);
+      if (d.conseil !== conseilAffiche || avant !== d.silence) { conseilAffiche = d.conseil; tout(false); } else remplirOnde(e, niveaux);
+    }
+    boucle = requestAnimationFrame(enregistrer);
+  };
+  var majAttente = function () {
+    var a = e.querySelector('.b-anneau');
+    a.style.setProperty('--p', d.p.toFixed(3));
+    a.querySelector('b').textContent = Math.round(d.p * 100) + ' %';
+    a.querySelector('small').textContent = 'environ ' + reste(d.p) + ' s';
+    e.querySelector('.h-etapes em').textContent = Math.min(100, Math.round(d.p / 0.125 * 100)) + ' %';
+  };
+  var preparer = function () {
+    var t0 = performance.now();
+    var phaseAffichee = -1;
+    var tour = function () {
+      if (d.etat !== 'prep') return;
+      d.p = Math.min(1, (performance.now() - t0) / DUREE_DEMO);
+      var ph = phase(d.p);
+      if (ph !== phaseAffichee) { phaseAffichee = ph; tout(false); } else majAttente();
+      if (d.p >= 1) { plus(function () { d.etat = cas === 'propre' ? 'pdf' : cas === 'verifier' ? 'resultat' : 'client'; tout(true); }, 300); return; }
+      plus(tour, 100);
+    };
+    tour();
+  };
+  tel.addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-act]');
+    if (!b) return;
+    var act = b.dataset.act;
+    if (act === 'micro' && d.etat === 'accueil') {
+      d.etat = 'ouverture'; tout(true);
+      plus(function () { d.etat = 'rec'; debut = performance.now(); muetDepuis = debut; tout(false); enregistrer(); }, 700);
+    } else if (act === 'abandon') {
+      raz();
+    } else if (act === 'terminer' && d.etat === 'rec') {
+      arreter(); d.etat = 'prep'; d.p = 0; tout(false); preparer();
+    } else if (act === 'pause' && d.etat === 'rec') {
+      if (d.pause) { dansPause += performance.now() - pauseDepuis; muetDepuis = performance.now(); } else { pauseDepuis = performance.now(); }
+      d.pause = !d.pause; tout(false);
+    } else if (act === 'relire') {
+      d.etat = 'relire'; tout(true);
+    } else if (act === 'suite' && (d.etat === 'relire' || d.etat === 'client')) {
+      d.etat = 'pdf'; tout(true);
+    }
+  });
+  var boutonsCas = document.querySelectorAll('[data-cas]');
+  boutonsCas.forEach(function (b) {
+    b.addEventListener('click', function () {
+      cas = b.dataset.cas;
+      boutonsCas.forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      raz();
+    });
+  });
+  document.querySelector('[data-cmd="rejouer"]').addEventListener('click', raz);
+  document.querySelector('[data-cmd="silence"]').addEventListener('click', function () { silenceJusqua = performance.now() + 7000; });
+  raz();
+
+  // Choix : gardés dans le navigateur, rassemblés en un texte à copier.
+  var CLE = 'maquette-parcours-dictee-v2-2026-11-26';
+  var lire = function () { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (err) { return {}; } };
+  var ecrire = function (r) { try { localStorage.setItem(CLE, JSON.stringify(r)); } catch (err) { /* stockage refusé : les réponses restent à l'écran */ } };
+  var reponses = lire();
+  var blocs = Array.prototype.slice.call(document.querySelectorAll('.choix'));
+  var recap = document.getElementById('recap');
+  var texte = function () {
+    var l = [];
+    blocs.forEach(function (c) {
+      var r = reponses[c.dataset.q] || {};
+      if (!r.v && !r.c) return;
+      l.push('- ' + c.dataset.titre + ' : ' + (r.v || 'sans choix') + (r.c ? '. Commentaire : ' + r.c.trim() : ''));
+    });
+    return l.length ? 'Maquette v2 du parcours de la dictée, mes réponses :\n' + l.join('\n') : '';
+  };
+  var majRecap = function () { recap.textContent = texte() || 'Aucune réponse pour l\'instant.'; };
+  blocs.forEach(function (c) {
+    var q = c.dataset.q;
+    var r = reponses[q] || {};
+    var boutons = c.querySelectorAll('.choix-btns button');
+    var zone = c.querySelector('textarea');
+    boutons.forEach(function (b) {
+      b.setAttribute('aria-pressed', String(r.v === b.dataset.v));
+      b.addEventListener('click', function () {
+        var cur = reponses[q] || {};
+        cur.v = cur.v === b.dataset.v ? '' : b.dataset.v;
+        reponses[q] = cur;
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', String(cur.v === x.dataset.v)); });
+        ecrire(reponses); majRecap();
+      });
+    });
+    zone.value = r.c || '';
+    zone.addEventListener('input', function () { var cur = reponses[q] || {}; cur.c = zone.value; reponses[q] = cur; ecrire(reponses); majRecap(); });
+  });
+  majRecap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t2 = texte();
+    var bouton = this;
+    if (!t2) { bouton.textContent = 'Rien à copier'; setTimeout(function () { bouton.textContent = 'Copier le texte'; }, 1500); return; }
+    var fini = function () { bouton.textContent = 'Copié'; setTimeout(function () { bouton.textContent = 'Copier le texte'; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(t2).then(fini, function () { window.prompt('Copiez ce texte :', t2); });
+    else window.prompt('Copiez ce texte :', t2);
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

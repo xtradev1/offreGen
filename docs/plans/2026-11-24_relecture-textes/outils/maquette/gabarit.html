@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Textes de Dicta à relire</title>
+%%CSS%%
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<div class="page">
+  <header class="tete">
+    <h1>Textes de Dicta à relire</h1>
+    <p class="chapeau">Dicta aide les artisans du bâtiment à faire leurs offres en les dictant. Voici les écrans qu’un artisan découvre, dans l’ordre&nbsp;: le site, la démo et son guide, le passage à l’essai, puis les courriels qu’il reçoit. À côté de chaque capture, les textes de l’écran sont numérotés. Un texte qui revient sur un autre écran n’est numéroté qu’une fois.</p>
+    <div class="consignes">
+      <section>
+        <h2>Corriger</h2>
+        <p>Chaque texte a trois colonnes&nbsp;: l’original, votre version, et les différences. Modifiez votre version directement, les différences suivent à droite&nbsp;: en vert ce que vous ajoutez, en rouge barré ce que vous retirez.</p>
+        <p>Dans les différences, ␣ marque une espace et ⍽ une espace insécable. Ctrl+Maj+Espace en pose une dans votre version.</p>
+        <p>Une remarque sur tout un écran va dans le champ sous ses textes. Touchez une capture pour l’agrandir.</p>
+      </section>
+      <section>
+        <h2>Envoyer</h2>
+        <p>Vos corrections restent dans ce navigateur, même si vous fermez la page. À la fin, touchez «&nbsp;Copier mes corrections&nbsp;» en bas de l’écran, puis collez le tout dans un courriel à la personne qui vous a envoyé ce lien.</p>
+      </section>
+      <section>
+        <h2>Ce qui est voulu</h2>
+        <p>Le vouvoiement, des phrases courtes, les termes suisses (NPA, francs, TVA) et la typographie française&nbsp;: guillemets «&nbsp;», espace insécable avant les deux-points et les points d’interrogation. Les noms, adresses, prix et dates sont des exemples.</p>
+      </section>
+    </div>
+    <div class="qui">
+      <label for="nom">Votre nom</label>
+      <input id="nom" type="text" autocomplete="name" maxlength="80">
+      <label class="bascule" for="voir-nb"><input type="checkbox" id="voir-nb"> Surligner les espaces insécables</label>
+    </div>
+  </header>
+  <main id="ecrans"></main>
+  <section class="export" id="export" hidden>
+    <h2>Vos corrections</h2>
+    <textarea id="export-texte" readonly aria-label="Vos corrections, à copier"></textarea>
+  </section>
+</div>
+<div class="barre">
+  <span class="compte" id="compte" aria-live="polite"></span>
+  <button type="button" id="copier">Copier mes corrections</button>
+  <span class="etat" id="etat-copie" aria-live="polite"></span>
+</div>
+<script type="application/json" id="donnees">%%DONNEES%%</script>
+%%JS%%
+</body>
+</html>

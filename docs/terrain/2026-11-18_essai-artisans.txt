@@ -1,0 +1,63 @@
+===== MESSAGE 1 : à envoyer avec l'accès =====
+
+*Essai de l'application d'offres dictées*
+
+Merci d'essayer l'application. Vous décrivez les travaux à voix haute, elle prépare l'offre, vous la corrigez avant de l'envoyer. Vos remarques m'aident à l'améliorer avant sa sortie.
+
+Il faut votre téléphone et 30 à 45 minutes pour le premier essai. Ensuite, vous faites vos 20 offres d'essai à votre rythme.
+
+*Avant de commencer*
+- Adresse : https://easy-offres.xtradev.ch, dans le navigateur du téléphone.
+- Accès : votre adresse électronique et le mot de passe que je vous envoie à part. En cas d'oubli, m'écrire : l'application ne sait pas encore renvoyer un mot de passe.
+- 20 offres d'essai, gratuites et sans engagement. Chaque dictée envoyée compte pour une offre, même courte. Le nombre restant s'affiche dans la liste des offres.
+- Clients inventés seulement. C'est un site d'essai. Un vrai chantier peut servir de modèle, avec un nom, une adresse et un téléphone inventés à la place de ceux du client.
+- Dicter seul. Si le client parle pendant l'enregistrement, il faut son accord : pour l'essai, dicter après la visite ou à l'écart du client.
+
+*L'essai en huit étapes*
+1. Se connecter. Un assistant de bienvenue s'ouvre : remplir les coordonnées de l'entreprise, ou toucher « Plus tard ».
+2. Créer 5 à 10 produits courants. Toucher Plus, puis Catalogue, puis « Nouveau produit » : désignation, unité, prix. Le catalogue est vide au départ, et l'application s'en sert pour reconnaître ce que vous dictez.
+3. Dicter une offre. Toucher le micro, au centre en bas. La première fois, le navigateur demande l'accès au micro : accepter. Garder l'écran allumé pendant la dictée. Parler comme à un collègue, pièce par pièce, avec les quantités, et les prix si vous les dites d'habitude.
+Exemple : « Offre pour Madame Test, à Porrentruy. Salon, murs trente mètres carrés, deux couches. Chambre, cadre de porte à laquer, en bloc deux cents francs. »
+4. Attendre l'offre. Compter quelques minutes. L'offre s'ouvre seule.
+5. Relire et corriger. Toucher une quantité ou un prix pour le changer, la corbeille pour retirer une ligne. Les lignes « À vérifier » sont celles dont l'application doute. Sous une ligne, « Prix dicté » propose le prix que vous avez dit : « Prendre » l'applique.
+6. Ajouter une ligne à la main avec « + », depuis le catalogue ou en texte libre.
+7. Toucher « Générer l'offre ». Choisir ou créer la fiche du client, regarder le PDF, puis « Envoyer », à votre propre adresse.
+8. Facultatif :
+- enregistrer une dictée avec l'enregistreur habituel du téléphone, puis toucher Plus, puis « Importer un enregistrement » ;
+- facturer depuis l'offre (acompte, facture finale, QR-facture). Il faut un IBAN dans Plus, Réglages, « Mon entreprise » : pour l'essai, l'IBAN d'exemple CH93 0076 2011 6238 5295 7 suffit ;
+- ajouter votre logo dans Plus, Réglages, « Ma marque ».
+
+*Ce qui manque encore*
+- Si l'écran se verrouille ou si le réseau coupe pendant la dictée, l'enregistrement peut être perdu. Pour une longue visite : enregistrer avec l'enregistreur du téléphone, puis importer le fichier.
+- Une dictée dure 30 minutes au plus.
+
+*Un problème ?*
+M'envoyer par message au +41 78 893 46 26 une capture d'écran, l'heure et ce que vous faisiez. Je regarde de mon côté.
+
+*Questions fréquentes*
+Combien ça coûte ? Rien pendant l'essai, sans engagement. Le prix sera annoncé avant toute facture.
+
+Où vont mes enregistrements ? Chez Infomaniak, en Suisse : le site, la transcription et l'intelligence artificielle.
+
+L'application peut-elle se tromper ? Oui. Elle propose, vous relisez. Chaque erreur que vous me signalez m'aide à la corriger.
+
+Mes produits et mes prix sont-ils visibles par d'autres artisans ? Non. Chaque compte ne voit que son catalogue, ses clients et ses offres.
+
+Merci.
+Xavier Freléchoz, XtraDev, Delémont
++41 78 893 46 26 · xavier.frelechoz@xtradev.ch
+
+
+===== MESSAGE 2 : à envoyer après le premier essai =====
+
+Merci d'avoir essayé l'application. Six questions, un mot ou une phrase suffit :
+
+1. Qu'est-ce qui vous a fait gagner du temps ? Et perdre du temps ?
+2. Sur votre première offre dictée, combien de lignes avez-vous corrigées, sur combien ?
+3. Un mot, un bouton ou un écran que vous n'avez pas compris ?
+4. Le PDF : l'enverriez-vous tel quel à un client ? Sinon, que faudrait-il changer ?
+5. Vous préférez dicter dans l'application, ou enregistrer avec le téléphone puis importer ? Pendant la visite, ou après ?
+6. Qu'est-ce qui vous empêcherait de l'utiliser ?
+
+Merci.
+Xavier

@@ -1,0 +1,74 @@
+/* Prospects : le catalogue que l'équipe se partage (docs/plans/2026-11-24_prospects, maquette validée par Xavier le
+   2026-11-24). À part, comme suivi.css : admin.css appartient au chantier de l'administration. Aucun style en ligne :
+   la CSP les refuse. Les couleurs viennent des variables de app.css. Aucune bordure de couleur sur les cartes
+   (Xavier, P1 : « soit entièrement soit rien »). */
+.onglets { display: flex; padding: 3px; margin: 0 0 10px; border-radius: 12px; background: var(--chip); }
+.onglets a { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 6px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; text-align: center; white-space: nowrap; }
+.onglets a[aria-current="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .14); }
+.onglets a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.badge.ok { background: var(--ok-soft); color: var(--ok); }
+.badge.retard { background: var(--bad-soft); color: var(--bad); }
+.prospects i.badge, .carte-admin i.badge { font-style: normal; }
+.carte-titre { margin: 0 0 4px; font-family: var(--titre); font-size: 17px; font-weight: 600; line-height: 1.25; }
+.lien-texte { color: var(--ink); font-weight: 600; text-underline-offset: 3px; display: inline-flex; align-items: center; min-height: 48px; }
+
+/* Le prochain pas : une carte, le numéro à toucher et « C'est fait ». */
+.pas-carte p { margin: 0 0 6px; }
+.pas-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pas-tete a { color: var(--ink); text-decoration: none; }
+.pas-tete a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.pas-tete .badge { flex: none; margin-left: 0; }
+
+/* Une ligne de la liste : le nom et sa seconde ligne à gauche, « Je prends » ou le chevron à droite. */
+.lignes-prospects { display: grid; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin: 4px 0 16px; overflow: hidden; }
+.ligne-prospect { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 14px; border-top: 1px solid var(--line); min-height: 64px; }
+.ligne-prospect:first-child { border-top: 0; }
+.ligne-prospect > a, .ligne-prospect > span { display: flex; flex-direction: column; justify-content: center; min-height: 48px; color: var(--ink); text-decoration: none; }
+.ligne-prospect > a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.ligne-prospect b { font-weight: 600; font-size: 16px; }
+.ligne-prospect small { color: var(--muted); font-size: 14px; }
+.ligne-prospect form { margin: 0; }
+.ligne-prospect .btn { min-height: 48px; white-space: nowrap; }
+.ligne-prospect .va { font-style: normal; font-size: 22px; line-height: 1; color: var(--muted); }
+
+/* La fiche. */
+.etats { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.etats .puce[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.deux-champs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pas-nouveau form { margin: 0 0 8px; }
+.note-nouvelle { margin: 0 0 12px; }
+.note-nouvelle .champ { margin-bottom: 8px; }
+.fil.notes li { grid-template-columns: 48px 1fr; }
+.fil.notes span { white-space: pre-line; overflow-wrap: anywhere; }
+.fiche-pied { margin: 12px 0 4px; overflow-wrap: anywhere; }
+.fiche-liens { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 0 0 12px; }
+.fiche-liens form { margin: 0; }
+.fiche-liens .lien { padding-left: 0; }
+
+/* Le formulaire. */
+.choix-puces { border: 0; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.choix-puces legend { padding: 0; margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+.case { display: flex; align-items: center; gap: 10px; min-height: 48px; font-weight: 600; }
+.case input { width: 22px; height: 22px; accent-color: var(--accent); }
+@supports selector(:has(*)) {
+  #fiche:not(:has(input[name="metier"][value="autre"]:checked)) .metier-autre { display: none; }
+}
+.carte-admin .search { position: static; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 12px; padding: 0; background: none; }
+.carte-admin .search .btn { min-height: 48px; }
+
+/* Au téléphone, la fiche a son écran : la liste ne s'y montre pas. */
+.prospects.avec-fiche .prospects-liste { display: none; }
+.table-admin tbody th small { display: block; font-size: 13px; font-weight: 400; color: var(--muted); }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .admin .screen > .prospects { max-width: 920px; }
+  .admin .screen > .prospects.avec-fiche { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; max-width: 1360px; }
+  .prospects.avec-fiche .prospects-liste { display: block; }
+  .prospect-fiche { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .prospect-fiche .admin-tete h1 { font-size: 21px; }
+  .prospect-fiche .card { background: var(--bg); }
+  .prospect-fiche .fil { background: var(--bg); }
+  .prospect-fiche .btn.large { min-height: 48px; font-size: 15px; }
+  .onglets { display: inline-flex; }
+  .onglets a { padding: 0 16px; }
+}

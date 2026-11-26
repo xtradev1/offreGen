@@ -1,0 +1,138 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OffreGen\Http\Controleur;
+
+use OffreGen\Donnees\DepotOffres;
+use OffreGen\Donnees\Portee;
+use OffreGen\Http\Conteneur;
+use OffreGen\Http\Formats;
+use OffreGen\Http\PageIntrouvable;
+use OffreGen\Http\Parametres;
+use OffreGen\Offre\Arrivee;
+use OffreGen\Offre\Offerte;
+use OffreGen\Offre\Saisie;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * Relecture au pouce, une ligne à la fois (décision D5 de Xavier, maquette 24, 2026-11-15). À relire : une ligne
+ * « à vérifier » ou sans prix, dans l'ordre de l'écran de l'offre. « C'est juste » enregistre la quantité et le prix
+ * montrés et retire la marque ; la suivante vient d'elle-même. Aucun appel au modèle.
+ *
+ * @phpstan-import-type Offre from DepotOffres
+ * @phpstan-import-type Ligne from DepotOffres
+ */
+final class RelectureControleur
+{
+    public function __construct(private readonly Conteneur $c)
+    {
+    }
+
+    /** @param array<string, string> $parametres */
+    public function afficher(Request $requete, array $parametres): Response
+    {
+        $offre = $this->offres($requete)->parId(Parametres::id($parametres, 'id')) ?? throw new PageIntrouvable();
+        $restantes = $this->aRelire($requete, $offre['id']);
+        $l = $restantes[0] ?? null;
+        // Toutes les lignes à relire sont dans la page (chantier sans rechargement, 2026-11-23) : « C'est juste » montre
+        // la suivante tout de suite, l'envoi suit. Sans JavaScript, la première seule se voit, comme avant.
+        return $this->rendre($offre, $l, count($restantes), $l === null ? [] : self::champs($l), [], 200, count($this->offres($requete)->lignes($offre['id'])), array_slice($restantes, 1));
+    }
+
+    /** @param array<string, string> $parametres */
+    public function valider(Request $requete, array $parametres): Response
+    {
+        $depot = $this->offres($requete);
+        $offre = $depot->parId(Parametres::id($parametres, 'id')) ?? throw new PageIntrouvable();
+        $l = $depot->ligne($offre['id'], Parametres::id($parametres, 'ligne')) ?? throw new PageIntrouvable();
+        $saisie = ['quantite' => $requete->request->getString('quantite'), 'prix' => $requete->request->getString('prix')];
+        $erreurs = [];
+        $quantite = Saisie::milliemes($saisie['quantite']);
+        if ($quantite === null) {
+            $erreurs['quantite'] = 'Quantité plus grande que 0, par exemple 12 ou 12.5.';
+        }
+        $prix = trim($saisie['prix']) === '' ? null : Saisie::centimes($saisie['prix']);
+        if ($prix === null) {
+            $erreurs['prix'] = "Indiquez le prix en francs, par exemple 28 ou 28.50\u{00A0}; 0 pour l'offrir.";
+        }
+        if ($quantite === null || $prix === null || $erreurs !== []) {
+            return $this->rendre($offre, $l, count($this->aRelire($requete, $offre['id'])), $saisie, $erreurs, 422, count($depot->lignes($offre['id'])));
+        }
+        $depot->corrigerLigne($offre['id'], $l['id'], $l['designation'], $quantite, $l['unite'], $prix);
+        $offerte = Offerte::apresSaisie(Offerte::est($l), $l['prix_centimes'], $saisie['prix'], $prix, null);
+        if ($offerte !== Offerte::est($l)) {
+            $depot->changerOfferte($offre['id'], $l['id'], $offerte);
+        }
+        $depot->confirmerLigne($offre['id'], $l['id']);
+        $depot->marquerModifiee($offre['id'], $this->c->horloge()->now());
+        // La dernière ligne relue : le PDF s'ouvre, ou le choix du client s'il manque (Xavier, 2026-11-26). Par la file de
+        // fluide.js, la réponse envoie alors le navigateur à cette adresse (Morceaux::ailleurs).
+        $reste = count($this->aRelire($requete, $offre['id']));
+        return new RedirectResponse($reste > 0 ? '/offres/' . $offre['id'] . '/relire' : Arrivee::adresse($offre, 0, count($depot->lignes($offre['id']))), 303);
+    }
+
+    private function offres(Request $requete): DepotOffres
+    {
+        return $this->c->offres(new Portee($requete->attributes->getInt('_artisan')));
+    }
+
+    /**
+     * Les lignes à relire, dans l'ordre de l'écran de l'offre (par catégorie) : chaque ligne, puis ses variantes ; les
+     * options à la fin, comme leur groupe sous le total (chantier 2026-11-22_options-variantes).
+     *
+     * @return list<Ligne>
+     */
+    private function aRelire(Request $requete, int $offreId): array
+    {
+        $lignes = $this->offres($requete)->lignes($offreId);
+        $rangees = [];
+        foreach (OffreControleur::grouper($lignes, []) as $g) {
+            foreach ($g['lignes'] as $r) {
+                $rangees[] = $r;
+                array_push($rangees, ...$r['variantes']);
+            }
+        }
+        array_push($rangees, ...OffreControleur::options($lignes));
+        $ordre = [];
+        foreach ($rangees as $r) {
+            if (Arrivee::aRelire($r['l'])) {
+                $ordre[] = $r['l'];
+            }
+        }
+        return $ordre;
+    }
+
+    /**
+     * @param Ligne $l
+     * @return array{quantite: string, prix: string}
+     */
+    private static function champs(array $l): array
+    {
+        return ['quantite' => Formats::saisieQuantite($l['quantite_milliemes']), 'prix' => Formats::saisiePrixLigne($l)];
+    }
+
+    /**
+     * @param Offre $offre
+     * @param Ligne|null $l
+     * @param array<string, string> $champs
+     * @param array<string, string> $erreurs
+     * @param list<Ligne> $suivantes les lignes à relire après celle-ci, déjà dans la page
+     * @param int $lignes le nombre de lignes de l'offre
+     */
+    private function rendre(array $offre, ?array $l, int $restantes, array $champs, array $erreurs, int $code, int $lignes, array $suivantes = []): Response
+    {
+        return new Response($this->c->twig()->render('relecture.html.twig', [
+            'offre' => $offre,
+            'l' => $l,
+            'restantes' => $restantes,
+            'champs' => $champs,
+            'erreurs' => $erreurs,
+            // Où mène « Générer l'offre » une fois tout relu : le PDF, ou le choix du client s'il manque.
+            'suite' => Arrivee::adresse($offre, 0, $lignes),
+            'suivantes' => array_map(static fn (array $s): array => ['l' => $s, 'champs' => self::champs($s)], $suivantes),
+        ]), $code);
+    }
+}

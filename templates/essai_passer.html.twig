@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+{% set sans_ruban = true %}
+
+{# De la démo à l'essai (Xavier, 2026-11-20). Un écran : ce qui reste, ce qui change, le courriel, un bouton. Le
+   compte reste le même ; « par_courriel » dit si ce site envoie le lien du mot de passe ou le fait choisir juste après. #}
+{% block titre %}Passer à l'essai · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
+{% block entete %}Passer à l'essai{% endblock %}
+{% block ecran_classe %} gris{% endblock %}
+
+{% block contenu %}
+  <p><b>Votre mois gratuit&nbsp;: {{ offres }} offres, sans carte bancaire.</b> Il commence maintenant. Vous continuez sur ce compte.</p>
+  <div class="card">
+    <h6>Vous gardez</h6>
+    <p>Les offres que vous avez dictées ou créées, leurs clients, votre catalogue, les prix que vous avez modifiés et vos réglages.</p>
+  </div>
+  <div class="card">
+    <h6>Ce qui est effacé</h6>
+    <p>Les offres d'exemple, même celles que vous avez modifiées, envoyées ou facturées, et les clients d'exemple qui ne sont liés à aucune de vos offres.</p>
+    <p>Les prix d'exemple que vous n'avez pas modifiés repartent à zéro. L'écran «&nbsp;Vos prix&nbsp;» vous les présente un par un&nbsp;: vous reprenez le prix d'exemple ou vous mettez le vôtre.</p>
+  </div>
+  {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+  <form id="essai" method="post" action="/passer-a-l-essai">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="courriel">Votre courriel</label>
+      <input id="courriel" name="courriel" type="email" inputmode="email" autocomplete="email" maxlength="190" value="{{ courriel }}" required>
+      <small class="muted">Il devient l'adresse de votre compte. {% if par_courriel %}Vous y recevrez un lien pour choisir votre mot de passe.{% else %}Vous choisissez votre mot de passe juste après.{% endif %}</small>
+    </div>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><button class="btn primary" type="submit" form="essai">Commencer mon mois gratuit</button></div>
+{% endblock %}

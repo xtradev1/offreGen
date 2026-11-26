@@ -1,0 +1,50 @@
+{% extends 'document/_base.html.twig' %}
+{% import 'document/_blocs.html.twig' as b %}
+{# Chantier : une fiche du chantier à gauche de l'adresse (adresse, contact sur place, accès, début, durée), les
+   postes sur des bandes teintées avec leur total. Sans rien de dit sur le chantier, et pour une facture, la fiche
+   porte les références du document. #}
+
+{% block fixes %}{{ b.pied(_context) }}{% endblock %}
+
+{% block corps %}
+  {% set fiche = [] %}
+  {% if chantier %}
+    {% for rang in [[mots.doc_adresse, chantier.adresse], [mots.bloc_contact, chantier.contact], ['Accès', chantier.acces], [mots.debut, chantier.debut], ['Durée estimée', chantier.duree]] %}
+      {% if rang[1] %}{% set fiche = fiche|merge([rang]) %}{% endif %}
+    {% endfor %}
+  {% endif %}
+  {% set references = [[doc_nom ~ ' n°', doc_numero], ['Date', doc_date]] %}
+  {% if facture %}{% set references = references|merge([['Échéance', f.echeance|jour], ['Référence', b.ref(_context)]]) %}
+  {% else %}
+    {% set references = references|merge([["Valable jusqu'au", valable_jusqu_au]]) %}
+    {% if r.contactNom %}{% set references = references|merge([['Votre contact', r.contactNom]]) %}{% endif %}
+  {% endif %}
+  <div class="doc-in">
+    {{ b.tete(_context) }}
+    <div class="doc-barre c-fond"></div>
+    <table class="doc-duo"><tr>
+      <td>
+        <table class="doc-fiche c-filet">
+          <tr><th colspan="2" class="c-fond">{{ fiche ? mots.doc_fiche : 'Références' }}</th></tr>
+          {% for rang in fiche ?: references %}<tr><td class="c-teinte">{{ rang[0] }}</td><td>{{ rang[1] }}</td></tr>{% endfor %}
+        </table>
+      </td>
+      <td>
+        {{ b.adresse(_context) }}
+        {% if fiche %}<div class="doc-ref">{{ doc_nom }} n°&nbsp;{{ doc_numero }} du {{ doc_date }}<br>Valable jusqu'au {{ valable_jusqu_au }}{% if r.contactNom %}<br>Votre contact&nbsp;: {{ r.contactNom }}{% endif %}</div>{% endif %}
+      </td>
+    </tr></table>
+    <div class="doc-titre"><span class="c-texte">{{ doc_nom }}</span> · {{ doc_objet }}</div>
+    {{ b.annulee(_context) }}
+    {{ b.debut(_context) }}
+    {{ b.lignes(_context, {grp_tot: true, grp: 'c-teinte c-texte', grp_n: 'c-teinte'}) }}
+    {{ b.totaux(_context) }}
+    {{ b.options(_context) }}
+    {{ b.texte(_context, 'apres') }}
+    <div class="doc-fin">
+      {{ b.conditions(_context, {delais: not fiche}) }}
+      {{ b.fin(_context) }}
+      {{ b.signatures(_context) }}
+    </div>
+  </div>
+{% endblock %}

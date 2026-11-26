@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="fr-CH" class="rls-0"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/css/avertissement-envoi.css?v=f9b221e8bcab">  <title>Offre 2 · PDF · Dicta</title>
+  <meta name="theme-color" content="#23272D">
+  
+  
+  <link rel="stylesheet" href="/css/app.css?v=e78f7334a14b">
+    
+<link rel="stylesheet" href="/relecture-textes/ecrans/commun.css"><link rel="stylesheet" href="/relecture-textes/ecrans/avant-envoi.css"></head>
+<body data-compte="2">
+        <div class="app">
+    <header class="bar"><a class="back" href="/offres/2" data-t="T180">Offre</a><h1 data-t="T181">Offre 2 · PDF</h1><a class="vers-site mobile-seul" href="/decouvrir" aria-label="Dicta, le site"><img class="logo" src="/img/dicta-logo-sombre.svg?v=b0fbcb97f417" alt="" width="177" height="64"></a></header>
+      <link rel="stylesheet" href="/css/demo.css?v=0a863d2e76ba">
+  <div class="ruban-demo" role="note">
+    <span data-t="T114"><b>Démo</b> · 7 jours restants</span>
+              <a class="btn" href="/passer-a-l-essai" data-t="T115">Passer à l'essai</a>
+      </div>
+<main class="screen apercu-pdf">      <div class="pdf-zone">
+    <div class="pdf-pages" data-pdf="/offres/2/pdf" data-worker="/js/vendor/pdfjs-6.5.438/pdf.worker.min.js">
+      
+    <img width="716" height="1012" role="img" aria-label="Page 1 sur 1" class="rls-1" src="/relecture-textes/ecrans/avant-envoi-c0.png" alt=""><p class="pdf-attente" data-pdf-etat="" data-t="T182">Pincer pour agrandir</p></div>
+      </div>
+  
+      <div class="avertissement-envoi" data-avertissement-envoi="">
+    <div class="avertissement-carte" role="alertdialog" aria-modal="true" aria-labelledby="avertissement-titre" aria-describedby="avertissement-texte">
+      <h2 id="avertissement-titre" data-t="T183">Votre offre porte encore «&nbsp;Démo Peintre&nbsp;»</h2>
+      <p id="avertissement-texte" data-t="T184">Votre client verra ce nom. Complétez votre entreprise avant d'envoyer, ou envoyez tel quel.</p>
+      <a class="btn primary" href="/reglages/entreprise" data-t="T185">Compléter mon entreprise</a>
+      <button class="btn" type="button" data-envoyer-quand-meme="" data-t="T186">Envoyer quand même</button>
+    </div>
+  </div>
+      <span id="etat-envoi" hidden=""></span>
+  <form method="post" action="/offres/2/envoyee" data-apres-partage=""><input type="hidden" name="_csrf" value=""></form></main>
+                            <div class="bas">
+            <div class="actionbar">
+        <a class="btn grand" href="/offres/2" data-t="T187">Modifier</a>        <a class="btn grand" href="/offres/2/facturer" data-en-feuille="" data-t="T043">Facturer</a><div class="feuille-fond" data-feuille-page="" hidden="">
+  <div class="feuille cadre" role="dialog" aria-modal="true" aria-labelledby="titre-fiche" tabindex="-1">
+    <div class="poignee" aria-hidden="true"></div>
+    <div class="sh-h"><h2 id="titre-fiche" data-feuille-titre=""></h2>
+      <button class="x" type="button" data-fermer="" aria-label="Fermer"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button></div>
+    <div class="sh-corps" data-feuille-corps=""></div>
+    <div class="sh-pied" data-feuille-pied=""></div>
+  </div>
+</div>
+    <a class="btn primary grand" href="/offres/2/pdf" download="Offre-2.pdf" data-partager="" data-titre="Offre n° 2 · Rafraîchissement du séjour" data-t="T012">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"></path></svg>Envoyer</a>
+  </div>
+              <nav class="tabs pc-seul" aria-label="Sections">
+  <a class="marque-pc pc-seul" href="/decouvrir" aria-label="Dicta, le site"><picture><source srcset="/img/dicta-logo-sombre.svg?v=b0fbcb97f417" media="(prefers-color-scheme: dark)"><img src="/img/dicta-logo-clair.svg?v=6e7fb5d646e8" alt="" width="177" height="64"></picture></a>
+  <a href="/" aria-current="page">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5M10 13h6M10 17h6"></path></svg>Offres</a>
+  <a href="/clients">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.7 3 6"></path></svg>Clients</a>
+  <button class="micro-central" type="button" aria-label="Dicter une offre" aria-keyshortcuts="D" data-enregistrer=""><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></span><b class="pc-seul">Dicter une offre</b></button>
+  <a href="/factures">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path><path d="M9 8h6M9 12h6M9 16h3"></path></svg>Factures</a>
+  <a class="pc-seul" href="/catalogue">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"></path><path d="m3 8 9 5 9-5M12 13v8"></path></svg>Catalogue</a>
+  <a class="pc-seul" href="/reglages">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"></path><circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="17" cy="18" r="2"></circle></svg>Réglages</a>
+  <a class="mobile-seul" href="/plus">
+    <svg class="i" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>Plus</a>
+      <a class="pc-seul importer" href="/import" data-importer="">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg>Importer un fichier</a>
+  <small class="pc-seul aide-micro">Micro du portable ou d'un casque · touche <kbd>D</kbd></small>
+</nav>
+
+<div class="nouvelle" data-nouvelle="" data-duree-max="1800">
+  <form id="import" method="post" action="/import" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="">
+    <input class="cache" id="audio" name="audio" type="file" accept="audio/*,.m4a,.mp3,.ogg,.opus,.wav,.amr,.3gp,.webm" required="" data-envoi-fichier="">
+      </form>
+
+          <div class="feuille-fond" data-feuille="" hidden="">
+      <div class="feuille" role="dialog" aria-modal="true" aria-label="Nouvelle offre">
+        <div class="poignee" aria-hidden="true"></div>
+        <button class="x coin" type="button" data-fermer="" aria-label="Fermer" hidden=""><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        <div data-etat="refus" hidden="">
+          <p class="alerte warn" role="alert" data-sans-micro="">Le micro demande une connexion sécurisée (https). En attendant, enregistrez avec le téléphone, puis importez le fichier.</p>
+          <a class="btn primary large" href="/import" data-importer=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg>Importer un fichier</a>
+        </div>
+          <div class="rec" data-etat="enregistrement" hidden="">
+    <div class="timer" data-minuteur="">00:00</div>
+    <div class="dot on" aria-hidden="true"></div>
+            <p data-consigne="Parlez, pièce par pièce.">Parlez, pièce par pièce.</p>
+    <button class="btn danger large" type="button" data-terminer="">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"></rect></svg>Terminer et créer l'offre</button>
+    <button class="lien" type="button" data-abandonner="">Abandonner sans envoyer</button>
+        <p class="muted petit centre" data-astuce-micro="" hidden="" data-ecran="Pour ne plus autoriser le micro à chaque fois&nbsp;: dans les Réglages, ouvrez Safari, puis Micro, Autoriser.">Pour ne plus autoriser le micro à chaque fois&nbsp;: touchez «&nbsp;aA&nbsp;» à côté de l'adresse, puis Réglages du site web, Micro, Autoriser.</p>
+  </div>
+
+                                <div class="suivi" data-etat="envoi" hidden="">
+    <h2 class="suivi-titre">Préparation de l'offre</h2>
+    <ol class="etapes" data-etapes="">
+      <li class="cur"><span class="marque" aria-hidden="true"></span><span class="lib">Envoi de l'enregistrement</span>
+      <progress max="100" value="0" data-progression="" hidden=""></progress>    </li>
+      <li class="todo"><span class="marque" aria-hidden="true"></span><span class="lib">Transcription de la dictée</span>
+          </li>
+      <li class="todo"><span class="marque" aria-hidden="true"></span><span class="lib">Création de l'offre</span>
+          </li>
+      <li class="todo"><span class="marque" aria-hidden="true"></span><span class="lib">Offre prête</span>
+          </li>
+  </ol>
+<p class="muted petit centre" data-etapes-message="" aria-live="polite"></p>
+<p class="alerte warn" role="status" data-etapes-panne="" hidden=""><b>Le traitement s'est arrêté en route.</b> Il reprend tout seul d'ici une minute. Vous pouvez rester sur cet écran ou revenir plus tard.</p>
+    <p class="muted petit centre" data-progression-texte=""></p>
+  </div>
+
+  <div data-etat="court" hidden="">
+    <p class="alerte warn" role="alert">Enregistrement non pris en compte&nbsp;: 5 secondes au minimum.</p>
+    <button class="btn primary large" type="button" data-recommencer="">Recommencer</button>
+  </div>
+
+    <div data-etat="long" hidden="">
+    <p class="alerte warn" role="alert">Fichier trop long&nbsp;: 30&nbsp;minutes au maximum. Il n'a pas été envoyé.</p>
+    <button class="btn primary large" type="button" data-autre-fichier="">Choisir un autre fichier</button>
+  </div>
+
+  <div data-etat="echec" hidden="">
+    <p class="alerte bad" role="alert" data-echec-texte="">L'envoi a échoué.</p>
+    <button class="btn primary large" type="button" data-reessayer="">Réessayer l'envoi</button>
+    <p class="centre"><a class="lien" href="#" download="visite.webm" data-garder="" hidden="">Garder l'enregistrement dans un fichier</a></p>
+  </div>
+
+    <div class="suivi" data-etat="reprise" hidden="">
+    <h2 class="suivi-titre">Une dictée n'est pas partie</h2>
+    <p data-reprise-texte=""></p>
+        <button class="btn primary large" type="button" data-reprise-continuer="" hidden="">Continuer la dictée</button>
+    <button class="btn primary large" type="button" data-reprise-envoyer="">Envoyer et créer l'offre</button>
+    <p class="centre"><a class="lien" href="#" data-reprise-garder="">Garder dans un fichier</a></p>
+    <p class="centre"><button class="lien" type="button" data-reprise-supprimer="">Supprimer la dictée</button></p>
+  </div>
+
+      </div>
+    </div>
+  </div>
+    </div>
+  </div>
+
+
+</body></html>

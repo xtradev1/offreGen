@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facture · offreGen</title>
+<style>
+:root {
+  --ink: #1B1F24; --muted: #69717C; --line: #E4E7EB; --surface: #FFFFFF; --bg: #F3F4F6; --chip: #EFF1F4;
+  --accent: #2457C5; --accent-soft: #E8EEFB; --on-accent: #fff; --ok: #1E7F4F; --ok-soft: #E6F4EC; --warn: #9A5B00; --warn-soft: #FDF3E1;
+  --marque: #1D4E89;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--accent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ink: #E7EAEE; --muted: #9BA3AE; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #8AACF2; --accent-soft: #1F2C47; --on-accent: #0E1524; --ok: #5CC796; --ok-soft: #17301F; --warn: #E9B44C; --warn-soft: #362A12; }
+}
+:root[data-theme="dark"] { --ink: #E7EAEE; --muted: #9BA3AE; --line: #30363D; --surface: #1C2026; --bg: #121519; --chip: #272C33; --accent: #8AACF2; --accent-soft: #1F2C47; --on-accent: #0E1524; --ok: #5CC796; --ok-soft: #17301F; --warn: #E9B44C; --warn-soft: #362A12; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 26px; margin: 18px 0 6px; }
+h2 { font-size: 21px; margin: 40px 0 8px; }
+h3 { font-size: 17px; margin: 0 0 4px; }
+.chapeau { color: var(--muted); max-width: 780px; }
+.grille { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 24px; align-items: start; }
+.trois { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 1100px) { .trois { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 860px) { .grille { grid-template-columns: minmax(0, 1fr); } }
+.carte { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin: 0 0 12px; }
+.carte p, .carte li { margin: 0 0 8px; font-size: 15px; }
+.carte ul { padding-left: 20px; margin: 0 0 8px; }
+.note { font-size: 14px; color: var(--muted); }
+.regle { border-left: 4px solid var(--ok); }
+.regle b.etat { color: var(--ok); }
+figure { margin: 0; }
+figcaption { font-size: 13px; color: var(--muted); margin: 6px 2px 0; }
+
+/* Téléphones */
+.tel { width: 100%; max-width: 390px; height: 720px; border: 1px solid var(--line); border-radius: 26px; overflow: hidden; background: var(--surface); display: flex; flex-direction: column; position: relative; }
+.tel .barre { display: flex; align-items: center; gap: 8px; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); font-weight: 650; font-size: 17px; min-height: 52px; }
+.tel .barre .ret { color: var(--accent); font-weight: 400; font-size: 15px; }
+.tel .ecran { flex: 1; overflow-y: auto; background: var(--bg); padding: 12px 14px 140px; }
+.pied { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 14px 14px; background: var(--surface); border-top: 1px solid var(--line); display: flex; gap: 8px; }
+.btn { flex: 1; font: inherit; font-size: 15px; font-weight: 600; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.btn.prim { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.mini-doc { background: #fff; color: #222; border-radius: 6px; padding: 14px; font-size: 10px; line-height: 1.35; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.mini-doc b.t { color: var(--marque); font-size: 13px; display: block; margin: 8px 0 4px; }
+.mini-doc .l { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 2px 0; }
+.champ { display: grid; gap: 5px; margin: 0 0 12px; }
+.champ label { font-size: 14px; font-weight: 600; }
+.champ input { font: inherit; font-size: 16px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--surface); color: var(--ink); width: 100%; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.aide { font-size: 12.5px; color: var(--muted); }
+.bloc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 0 0 10px; font-size: 14px; }
+.bloc .l { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.bloc .l:last-child { border-bottom: 0; }
+.tot { display: flex; justify-content: space-between; font-weight: 700; font-size: 17px; margin: 8px 2px; }
+.etiquette { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 2px 8px; }
+.etiquette.brouillon { background: var(--warn-soft); color: var(--warn); }
+.etiquette.emise { background: var(--ok-soft); color: var(--ok); }
+.ohead .who { font-size: 13.5px; color: var(--muted); }
+.ohead .t { font-size: 19px; font-weight: 700; margin: 2px 0 6px; }
+
+/* Facture A4 : tout à l'échelle de la largeur de la page (unités cqw), lisible du téléphone au bureau. */
+.grille.doc { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+@media (max-width: 860px) { .grille.doc { grid-template-columns: minmax(0, 1fr); } }
+.a4 { container-type: inline-size; width: 100%; max-width: 794px; aspect-ratio: 210 / 297; background: #fff; color: #1b1b1b; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,.15); font-family: "DejaVu Sans", Arial, sans-serif; line-height: 1.35; margin: 0 auto; overflow: hidden; }
+.a4 .corps { position: absolute; left: 7.5%; right: 7.5%; top: 3.4%; font-size: 1.32cqw; }
+.a4 .tete { display: flex; justify-content: space-between; align-items: flex-start; }
+.a4 .logo { color: var(--marque); font-weight: 700; font-size: 1.8em; letter-spacing: .02em; }
+.a4 .coord { text-align: right; font-size: .9em; }
+.a4 .client { margin: 1.5em 0 1.3em 55%; }
+.a4 .titre { color: var(--marque); font-size: 1.55em; font-weight: 700; margin: 0 0 .15em; }
+.a4 .meta { font-size: .88em; color: #555; margin: 0 0 .8em; }
+.a4 table { width: 100%; border-collapse: collapse; font-size: .9em; }
+.a4 th { text-align: left; border-bottom: 1.5px solid var(--marque); padding: .3em .35em; font-size: .85em; text-transform: uppercase; color: var(--marque); }
+.a4 td { padding: .22em .35em; border-bottom: 1px solid #eee; }
+.a4 .n { text-align: right; white-space: nowrap; }
+.a4 .grp td { font-weight: 700; padding-top: .5em; border-bottom: 0; }
+.a4 .totaux { width: 46%; margin: .6em 0 0 auto; }
+.a4 .totaux td { border: 0; padding: .15em .35em; }
+.a4 .totaux .fort td { font-weight: 700; font-size: 1.15em; border-top: 1.5px solid var(--marque); padding-top: .3em; }
+.a4 .cond { margin-top: .8em; font-size: .9em; }
+/* Section paiement : 105 mm de haut sur 297, récépissé 62 mm, section 148 mm (norme SIX). */
+.a4 .qr { position: absolute; left: 0; right: 0; bottom: 0; height: 35.35%; border-top: 1px dashed #000; display: flex; font-size: 1.02cqw; }
+.a4 .recu { width: 29.5%; border-right: 1px dashed #000; padding: 2.4%; }
+.a4 .paie { flex: 1; padding: 2.4%; display: flex; gap: 4%; }
+.a4 .qr h5 { font-size: 1.4em; margin: 0 0 .7em; }
+.a4 .qr .e { font-weight: 700; font-size: .8em; margin-top: .7em; }
+.a4 .qr .code { width: 31%; flex: none; }
+.a4 .qr .code img { width: 100%; display: block; }
+.a4 .ciseaux { position: absolute; left: 28.7%; bottom: 34.3%; font-size: 1.4cqw; }
+
+/* Réponses */
+.reponse { border-top: 1px dashed var(--line); margin-top: 10px; padding-top: 10px; }
+.reponse .boutons { display: flex; gap: 8px; flex-wrap: wrap; }
+.reponse button { font: inherit; font-size: 14px; min-height: 44px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.reponse button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.reponse textarea { width: 100%; margin-top: 8px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: var(--surface); color: var(--ink); min-height: 44px; }
+.recap textarea { width: 100%; min-height: 150px; font: 13px/1.4 ui-monospace, Consolas, monospace; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface); color: var(--ink); }
+.recap .copier { font: inherit; min-height: 44px; padding: 8px 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav id="mk-toc"></nav>
+<h1>La facture</h1>
+<p class="chapeau">Déjà validé dans la maquette des modèles : « Facturer » depuis l'offre, mêmes lignes corrigeables, numéro modifiable, échéance, QR-facture avec ton IBAN, même modèle et même couleur que l'offre. Ici, le parcours en trois écrans, la facture en vrai, puis quatre choix. Données inventées ; le code QR, lui, est un vrai code (IBAN d'exemple de la norme) : ton application bancaire doit le lire, sans payer.</p>
+
+<h2 id="parcours" data-toc="Parcours">1. De l'offre à la facture</h2>
+<div class="trois">
+  <figure>
+    <div class="tel">
+      <div class="barre"><span class="ret">‹ Offre</span><span>Offre 2</span></div>
+      <div class="ecran">
+        <div class="mini-doc">
+          <b>Peinture Morel Sàrl</b><br>Rue de l'Exemple 12, 2800 Delémont
+          <b class="t">OFFRE N° 2</b>
+          <div class="l"><span>Protection des sols</span><span>180.00</span></div>
+          <div class="l"><span>Peinture des murs, 2 couches</span><span>1 176.00</span></div>
+          <div class="l"><span>Peinture des plafonds</span><span>768.00</span></div>
+          <div class="l"><span>Laquage des plinthes</span><span>312.00</span></div>
+          <div class="l"><span>… et 2 autres lignes, TVA</span><span></span></div>
+          <div class="l"><b>Total CHF</b><b>3 106.80</b></div>
+        </div>
+      </div>
+      <div class="pied"><span class="btn">PDF</span><span class="btn prim">Facturer</span></div>
+    </div>
+    <figcaption>L'aperçu de l'offre gagne « Facturer », à côté de « PDF ».</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="barre"><span class="ret">‹ Offre</span><span>Nouvelle facture</span></div>
+      <div class="ecran">
+        <div class="champ"><label>Numéro</label><input value="2026-001"><span class="aide">Le suivant de ta dernière facture ; tu peux le changer.</span></div>
+        <div class="duo">
+          <div class="champ"><label>Date</label><input value="13.11.2026"></div>
+          <div class="champ"><label>Échéance</label><input value="13.12.2026"></div>
+        </div>
+        <p class="aide">Échéance tirée de tes conditions : à 30 jours.</p>
+        <div class="bloc"><b>Famille Exemple</b><br>Chemin des Essais 4, 1700 Fribourg</div>
+        <div class="bloc"><div class="l"><span>6 lignes reprises de l'offre</span><span>3 106.80</span></div></div>
+      </div>
+      <div class="pied"><span class="btn">Annuler</span><span class="btn prim">Créer la facture</span></div>
+    </div>
+    <figcaption>Deux touchers : « Facturer », puis « Créer la facture ».</figcaption>
+  </figure>
+  <figure>
+    <div class="tel">
+      <div class="barre"><span class="ret">‹ Offres</span><span>Facture 2026-001</span></div>
+      <div class="ecran">
+        <div class="ohead"><div class="who"><b>Famille Exemple</b>, Fribourg · selon offre n° 2</div><div class="t">Rafraîchissement du séjour</div><span class="etiquette brouillon">Brouillon</span></div>
+        <div class="bloc">
+          <div class="l"><span>Protection des sols</span><span>180.00</span></div>
+          <div class="l"><span>Peinture des murs, 42 m²</span><span>1 176.00</span></div>
+          <div class="l"><span>Peinture des plafonds, 24 m²</span><span>768.00</span></div>
+          <div class="l"><span>Laquage des plinthes</span><span>312.00</span></div>
+          <div class="l"><span>… 2 autres lignes</span><span>438.00</span></div>
+          <div class="l"><span>+ Travaux en plus : retouche porte</span><span>95.00</span></div>
+        </div>
+        <div class="tot"><span>Total TTC</span><span>CHF 3 209.50</span></div>
+        <p class="aide">Les lignes se corrigent comme sur l'offre : quantités réelles, travaux en plus.</p>
+      </div>
+      <div class="pied"><span class="btn">Ajouter</span><span class="btn prim">Émettre et PDF</span></div>
+    </div>
+    <figcaption>La facture se corrige comme l'offre, puis part en PDF.</figcaption>
+  </figure>
+</div>
+
+<h2 id="document" data-toc="Document">2. La facture, en vrai</h2>
+<div class="grille doc">
+  <div class="a4" aria-label="Facture, modèle Sobre">
+    <div class="corps">
+      <div class="tete"><div class="logo">PM&nbsp;MOREL</div><div class="coord"><b>Peinture Morel Sàrl</b><br>Rue de l'Exemple 12<br>2800 Delémont<br>032 000 00 00 · CHE-123.456.789 TVA</div></div>
+      <div class="client">Famille Exemple<br>Chemin des Essais 4<br>1700 Fribourg</div>
+      <p class="titre">FACTURE N° 2026-001</p>
+      <p class="meta">Delémont, le 13.11.2026 · Selon offre n° 2 du 10.11.2026 · Objet : Rafraîchissement du séjour</p>
+      <table>
+        <tr><th>Désignation</th><th class="n">Quantité</th><th class="n">Prix</th><th class="n">Montant</th></tr>
+        <tr class="grp"><td colspan="4">Préparation</td></tr>
+        <tr><td>Protection des sols et des meubles</td><td class="n">1 forfait</td><td class="n">180.00</td><td class="n">180.00</td></tr>
+        <tr><td>Rebouchage et ponçage des murs</td><td class="n">42 m²</td><td class="n">9.00</td><td class="n">378.00</td></tr>
+        <tr class="grp"><td colspan="4">Peinture intérieure</td></tr>
+        <tr><td>Peinture des murs, 2 couches</td><td class="n">42 m²</td><td class="n">28.00</td><td class="n">1 176.00</td></tr>
+        <tr><td>Peinture des plafonds, 2 couches</td><td class="n">24 m²</td><td class="n">32.00</td><td class="n">768.00</td></tr>
+        <tr><td>Laquage des plinthes</td><td class="n">26 m</td><td class="n">12.00</td><td class="n">312.00</td></tr>
+        <tr class="grp"><td colspan="4">Divers</td></tr>
+        <tr><td>Déplacement</td><td class="n">1 forfait</td><td class="n">60.00</td><td class="n">60.00</td></tr>
+      </table>
+      <table class="totaux">
+        <tr><td>Sous-total HT</td><td class="n">2 874.00</td></tr>
+        <tr><td>TVA 8,1 %</td><td class="n">232.79</td></tr>
+        <tr><td>Arrondi</td><td class="n">0.01</td></tr>
+        <tr class="fort"><td>Total CHF</td><td class="n">3 106.80</td></tr>
+      </table>
+      <p class="cond">Payable jusqu'au 13.12.2026 avec la section de paiement ci-dessous. Merci de votre confiance.</p>
+    </div>
+    <span class="ciseaux">✂</span>
+    <div class="qr">
+      <div class="recu">
+        <h5>Récépissé</h5>
+        <div class="e">Compte / Payable à</div>CH93 0076 2011 6238 5295 7<br>Peinture Morel Sàrl<br>Rue de l'Exemple 12<br>2800 Delémont
+        <div class="e">Payable par</div>Famille Exemple<br>Chemin des Essais 4<br>1700 Fribourg
+        <div class="e">Monnaie &nbsp;&nbsp; Montant</div>CHF &nbsp;&nbsp; 3 106.80
+      </div>
+      <div class="paie">
+        <div class="code"><h5>Section paiement</h5><img src="MAQUETTE-facture-img/qr.svg" alt="QR-facture : code de paiement suisse, à lire avec une application bancaire" data-full="MAQUETTE-facture-img/qr.svg"><div class="e">Monnaie &nbsp;&nbsp; Montant</div>CHF &nbsp;&nbsp; 3 106.80</div>
+        <div>
+          <div class="e">Compte / Payable à</div>CH93 0076 2011 6238 5295 7<br>Peinture Morel Sàrl<br>Rue de l'Exemple 12<br>2800 Delémont
+          <div class="e">Informations supplémentaires</div>Facture n° 2026-001
+          <div class="e">Payable par</div>Famille Exemple<br>Chemin des Essais 4<br>1700 Fribourg
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="carte">
+      <h3>Ce que porte la facture</h3>
+      <ul>
+        <li>Ton modèle et ta couleur, comme l'offre (ici Sobre).</li>
+        <li>Numéro, date, « selon offre n° 2 », l'objet, le client tel qu'il est le jour de la facture.</li>
+        <li>Échéance tirée de tes conditions de paiement.</li>
+        <li>En bas, la section de paiement suisse : récépissé à gauche, code QR et montant à droite. Plus longue qu'une page, la facture passe la section sur une page à part.</li>
+      </ul>
+      <p class="note">Le code QR de cette page a été produit par le code prévu pour l'application, rendu par le même générateur de PDF, puis relu par un lecteur automatique : 46,1 mm, contenu intact. Essai : scanne-le avec l'application de ta banque ; elle doit afficher Peinture Morel Sàrl et CHF 3 106.80. Ne paie pas, l'IBAN est celui d'exemple de la norme.</p>
+      <div class="reponse" data-decision="document" data-titre="La facture et sa section de paiement" data-choix="Valider|Pas valider"></div>
+    </div>
+  </div>
+</div>
+
+<h2 id="choix" data-toc="Choix">3. Quatre choix</h2>
+<div class="carte">
+  <h3>A. Les acomptes</h3>
+  <p>Tes conditions peuvent dire « 30 % à la commande, 30 % en cours, 40 % à la fin ».</p>
+  <p><b>1.</b> Une seule facture par offre, pour le total ; les acomptes restent une phrase sur l'offre.<br>
+     <b>2.</b> Une facture par acompte (30 %, puis 30 %), puis une facture finale qui déduit ce qui a été facturé.</p>
+  <p class="note">2 est plus juste pour un chantier long, mais ajoute un écran de suivi des acomptes. 1 se fait maintenant, 2 peut venir ensuite.</p>
+  <div class="reponse" data-decision="acomptes" data-titre="A. Acomptes" data-choix="1, une facture par offre|2, une facture par acompte"></div>
+</div>
+<div class="carte">
+  <h3>B. Une facture envoyée se corrige-t-elle ?</h3>
+  <p><b>1.</b> Toujours modifiable, comme l'offre.<br>
+     <b>2.</b> Brouillon modifiable ; « Émettre » la fige (numéro, lignes, montant). Une erreur après coup se corrige par une facture d'annulation et une nouvelle facture.</p>
+  <p class="note">Je recommande 2 : une facture déjà chez le client et un PDF différent dans l'application, c'est un litige qui attend, et la TVA exige une trace. Le brouillon garde toute la souplesse avant l'envoi.</p>
+  <div class="reponse" data-decision="figer" data-titre="B. Facture émise" data-choix="1, toujours modifiable|2, figée une fois émise"></div>
+</div>
+<div class="carte">
+  <h3>C. Où retrouver les factures</h3>
+  <p><b>1.</b> Dans la liste des offres : l'offre facturée porte « Facture 2026-001 », un filtre « Factures » les rassemble, et la fiche du client les liste.<br>
+     <b>2.</b> Un cinquième onglet « Factures ».</p>
+  <p class="note">Je recommande 1 : la barre du bas a déjà quatre onglets, et une facture naît toujours d'une offre.</p>
+  <div class="reponse" data-decision="ou" data-titre="C. Où sont les factures" data-choix="1, dans la liste des offres|2, un onglet Factures"></div>
+</div>
+<div class="carte">
+  <h3>D. La forme du numéro</h3>
+  <p><b>1.</b> Année et rang : 2026-001, 2026-002… qui repart à 001 chaque année.<br>
+     <b>2.</b> Une suite simple : 1, 2, 3…</p>
+  <p class="note">Dans les deux cas tu peux taper un autre numéro (pour reprendre ta suite actuelle) ; les suivants continuent à partir de lui. Deux factures ne peuvent pas porter le même numéro.</p>
+  <div class="reponse" data-decision="numero" data-titre="D. Forme du numéro" data-choix="1, 2026-001|2, 1, 2, 3"></div>
+</div>
+
+<h2 id="regle" data-toc="Réglé">4. Ce que je règle sans te demander</h2>
+<div class="carte regle">
+  <p><b class="etat">Réglé.</b> L'IBAN se saisit une fois, dans Réglages, rubrique « Mon entreprise », à côté du numéro IDE. Sans IBAN, la facture se crée quand même, sans section de paiement, et la rubrique affiche « à compléter ».</p>
+  <p><b class="etat">Réglé.</b> Avec un IBAN ordinaire, la référence de paiement est une référence RF bâtie sur le numéro de facture (ta banque te dira quelle facture est payée) ; avec un QR-IBAN, une référence QR. L'application reconnaît lequel tu as.</p>
+  <p><b class="etat">Réglé.</b> Le client et ses coordonnées sont copiés sur la facture le jour où elle est créée : corriger sa fiche ensuite ne change pas une facture déjà faite.</p>
+  <p><b class="etat">Réglé.</b> La facture garde le lien avec son offre (« selon offre n° 2 ») ; une offre facturée reste modifiable, ses changements ne passent pas dans la facture.</p>
+  <p class="note">Si un de ces points te gêne, écris-le dans le commentaire.</p>
+  <div class="reponse" data-decision="regle" data-titre="Points réglés" data-choix="D'accord|À revoir"></div>
+</div>
+
+<h2 id="recap" data-toc="Copier">Tes réponses</h2>
+<div class="recap carte">
+  <textarea id="texte-recap" readonly></textarea>
+  <p style="margin-top:8px"><button class="copier" type="button" id="copier">Copier le texte</button> <span class="note" id="copie"></span></p>
+</div>
+</main>
+
+<script>
+'use strict';
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const CLE = 'offregen-maquette-facture-v1';
+let reponses = {};
+try { reponses = JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (e) { reponses = {}; }
+const sauver = () => { try { localStorage.setItem(CLE, JSON.stringify(reponses)); } catch (e) { /* navigation privée */ } recap(); };
+function recap() {
+  const lignes = [...document.querySelectorAll('.reponse')].map((r) => {
+    const x = reponses[r.dataset.decision] || {};
+    return `- ${r.dataset.titre} : ${x.choix || '(sans réponse)'}${x.texte ? ' (' + x.texte.trim() + ')' : ''}`;
+  });
+  document.getElementById('texte-recap').value = 'Maquette facture, mes réponses :\n' + lignes.join('\n');
+}
+document.querySelectorAll('.reponse').forEach((r) => {
+  const id = r.dataset.decision; const x = reponses[id] || {};
+  r.innerHTML = `<div class="boutons">${r.dataset.choix.split('|').map((c) => `<button type="button" aria-pressed="${x.choix === c}">${esc(c)}</button>`).join('')}</div><textarea placeholder="Ton commentaire (facultatif)" aria-label="Commentaire, ${esc(r.dataset.titre)}">${esc(x.texte || '')}</textarea>`;
+  r.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    reponses[id] = { ...(reponses[id] || {}), choix: b.textContent };
+    r.querySelectorAll('button').forEach((y) => y.setAttribute('aria-pressed', String(y === b)));
+    sauver();
+  }));
+  r.querySelector('textarea').addEventListener('input', (e) => { reponses[id] = { ...(reponses[id] || {}), texte: e.target.value }; sauver(); });
+});
+recap();
+document.getElementById('copier').addEventListener('click', () => {
+  const t = document.getElementById('texte-recap');
+  (navigator.clipboard ? navigator.clipboard.writeText(t.value) : Promise.reject()).then(() => { document.getElementById('copie').textContent = 'Copié.'; })
+    .catch(() => { t.select(); document.execCommand('copy'); document.getElementById('copie').textContent = 'Copié.'; });
+});
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

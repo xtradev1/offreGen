@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+{% set sans_menu = true %}
+
+{# L'entrée du prospect dans sa démo (Xavier, 2026-11-20 : « il met son mail, il a l'app, il parle ») : un champ, un
+   bouton. Ouvrir cette page ne consomme pas le lien. Le courriel n'est pas confirmé ici : il ne reçoit qu'un lien pour revenir dans la démo. #}
+{% block titre %}Votre démo · {{ nom_application }}{% endblock %}
+
+{% block contenu %}
+  <p><b>Votre démo est prête.</b> Un catalogue d'exemple{% if metier %} ({{ metier|lower }}){% endif %} et deux offres vous attendent. Indiquez votre courriel, puis dictez votre première {{ premiere }}.</p>
+  {% if erreur %}<p class="alerte bad" role="alert">{{ erreur }}</p>{% endif %}
+  <form id="demo" method="post" action="{{ action }}">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="courriel">Votre courriel</label>
+      <input id="courriel" name="courriel" type="email" inputmode="email" autocomplete="email" maxlength="190" value="{{ courriel }}" required>
+      <small class="muted">La personne qui vous a présenté {{ nom_application }} le verra, pour vous recontacter. Si vous vous abonnez, il deviendra l'adresse de votre compte.{% if par_courriel %} Vous y recevrez aussi un lien pour revenir dans votre démo.{% endif %} Aucun mot de passe à choisir.</small>
+    </div>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar"><button class="btn primary" type="submit" form="demo">Commencer</button></div>
+{% endblock %}

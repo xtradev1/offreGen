@@ -1,0 +1,87 @@
+{% extends 'admin/base.html.twig' %}
+
+{# Chronomètre des dictées (sous-chantier 31) : statistiques de la période (D1), liste par pages de 100 avec les durées
+   anormales marquées (D2), export CSV d'une ligne par dictée (D3). Maquette : docs/plans/2026-11-07_voix-offre/
+   31-chronometre-dictees/MAQUETTE-chronometre.html. #}
+{% block sous %}<p class="muted">{{ nombre }} dictée{{ nombre > 1 ? 's' : '' }}{% if criteres.du or criteres.au %} dans la période{% endif %}. Une durée plus de deux fois la médiane de sa colonne est marquée ▲.</p>{% endblock %}
+{% block contenu %}
+  <form class="dictees-outils" method="get" action="/admin/dictees">
+    <label>Du<input type="date" name="du" value="{{ criteres.du }}"></label>
+    <label>Au<input type="date" name="au" value="{{ criteres.au }}"></label>
+    <label>Afficher<select name="filtre">
+      {% for cle, libelle in filtres %}<option value="{{ cle }}"{% if cle == criteres.filtre %} selected{% endif %}>{{ libelle }}</option>{% endfor %}
+    </select></label>
+    <button class="btn" type="submit">Afficher</button>
+    <a class="btn" href="/admin/dictees.csv?{{ {du: criteres.du, au: criteres.au, filtre: criteres.filtre}|url_encode }}">Exporter en CSV</a>
+  </form>
+
+  <h2 class="dictees-titre">Statistiques de la période</h2>
+  <div class="dictees-defile">
+    <table class="table-admin dictees-stats">
+      <thead><tr><th>Étape</th><th class="n pc-seul">Dictées</th><th class="n">Médiane</th><th class="n">Centile 90</th><th class="n">Maximum</th><th class="n pc-seul">Pour 100 jetons reçus, médiane</th><th class="n pc-seul">et maximum</th></tr></thead>
+      <tbody>
+        {% for colonne, libelle in libelles %}
+          {% set s = stats.colonnes[colonne] %}
+          {% set j = stats.par_jetons[colonne] ?? null %}
+          <tr>
+            <th>{{ libelle }}</th>
+            <td class="n pc-seul">{{ s.n }}</td>
+            <td class="n">{{ s.mediane is null ? '-' : (s.mediane|round)|duree_ms }}</td>
+            <td class="n">{{ s.centile90|duree_ms }}</td>
+            <td class="n">{% if s.max_id %}<a href="/admin/dictees/{{ s.max_id }}">{{ s.max|duree_ms }}</a>{% else %}-{% endif %}</td>
+            <td class="n pc-seul">{{ j is null or j.mediane is null ? '' : (j.mediane|round)|duree_ms }}</td>
+            <td class="n pc-seul">{% if j and j.max_id %}<a href="/admin/dictees/{{ j.max_id }}">{{ j.max|duree_ms }}</a>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="dictees-titre">Dictées{% if pages > 1 %}, page {{ page_n }} sur {{ pages }}{% endif %}</h2>
+  {% if lignes is empty %}
+    <p class="muted">Aucune dictée chronométrée dans cette période.</p>
+  {% else %}
+    <div class="dictees-defile pc-seul">
+      <table class="table-admin dictees-liste">
+        <thead><tr>
+          <th>Reçue</th><th class="n">Offre</th><th>Audio</th><th class="n">Total</th>
+          {% for colonne, libelle in colonnes %}<th class="n">{{ libelle }}</th>{% endfor %}
+          <th class="n">Hors étapes</th><th class="n">Tent.</th>
+        </tr></thead>
+        <tbody>
+          {% for l in lignes %}
+            <tr{% if l.accroc %} class="accroc"{% endif %}>
+              <th><a href="/admin/dictees/{{ l.dictee.id }}">{{ l.dictee.recu_le|date_locale }}</a><small class="sous-info">compte {{ l.dictee.artisan_id }}, {{ l.navigateur }}</small></th>
+              <td class="n">{{ l.dictee.offre_id ?? '-' }}</td>
+              <td>{{ l.dictee.duree_ms|duree_ms }}<small class="sous-info">{{ (l.dictee.taille / 1024)|round }}&nbsp;Ko, {{ l.dictee.type_mime|split('/')|last }}{% if l.dictee.origine %}, {{ l.dictee.origine }}{% endif %}</small></td>
+              <td class="n"><b>{{ l.total|duree_ms }}</b></td>
+              {% for colonne, libelle in colonnes %}
+                {% set v = l.colonnes[colonne] %}
+                <td class="n{% if colonne in l.lentes %} lent{% endif %}"{% if colonne in l.lentes %} title="plus de deux fois la médiane ({{ (stats.colonnes[colonne].mediane|round)|duree_ms }})"{% endif %}>{{ v|duree_ms }}{% if colonne in l.lentes %}&nbsp;▲{% endif %}</td>
+              {% endfor %}
+              <td class="n">{{ l.hors|duree_ms }}</td>
+              <td class="n">{{ l.essais }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <ul class="dictees-cartes mobile-seul">
+      {% for l in lignes %}
+        <li><a href="/admin/dictees/{{ l.dictee.id }}">
+          <span class="dc-haut"><span>{% if l.dictee.offre_id %}Offre {{ l.dictee.offre_id }}, {% endif %}{{ l.dictee.recu_le|date_locale }}</span><b>{{ l.total|duree_ms }}</b></span>
+          <svg class="barre-parts" viewBox="0 0 1000 12" preserveAspectRatio="none" aria-hidden="true">{% for p in l.parts %}<rect class="c-{{ p.colonne }}" x="{{ p.x }}" y="0" width="{{ p.largeur }}" height="12"/>{% endfor %}</svg>
+          <span class="dc-bas">{{ l.navigateur }}, {{ l.dictee.duree_ms|duree_ms }} d'audio{% if l.essais > 1 %}, {{ l.essais }} tentatives{% endif %}</span>
+          {% if l.pire %}<span class="dc-lent">▲ {{ libelles[l.pire] }}&nbsp;: {{ l.colonnes[l.pire]|duree_ms }}</span>{% endif %}
+        </a></li>
+      {% endfor %}
+    </ul>
+    <p class="muted petit">Envoi : envoi du téléphone et réception au serveur. Attente : avant traitement et reprise après une panne. Transcription : mesure, conversion, envoi à Infomaniak et attente du texte. Le rapport de chaque dictée les sépare. « - » : étape absente.</p>
+    {% if pages > 1 %}
+      <nav class="dictees-pages" aria-label="Pages">
+        {% if page_n > 1 %}<a class="btn" href="?{{ {du: criteres.du, au: criteres.au, filtre: criteres.filtre, page: page_n - 1}|url_encode }}">Plus récentes</a>{% endif %}
+        {% if page_n < pages %}<a class="btn" href="?{{ {du: criteres.du, au: criteres.au, filtre: criteres.filtre, page: page_n + 1}|url_encode }}">Plus anciennes</a>{% endif %}
+      </nav>
+    {% endif %}
+  {% endif %}
+{% endblock %}

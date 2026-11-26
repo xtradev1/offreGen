@@ -1,0 +1,138 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Ligne · {{ nom_application }}{% endblock %}
+{% block retour %}<a class="back" href="{{ cible.base }}#l{{ l.id }}">{{ cible.retour }}</a>{% endblock %}
+{% block entete %}Ligne{% endblock %}
+
+{% macro erreur(erreurs, champ) %}{% if erreurs[champ] is defined %}<span class="err" id="err-{{ champ }}">{{ erreurs[champ] }}</span>{% endif %}{% endmacro %}
+{% macro invalide(erreurs, champ) %}{% if erreurs[champ] is defined %} aria-invalid="true" aria-describedby="err-{{ champ }}"{% endif %}{% endmacro %}
+
+{% block contenu %}
+  {% import _self as f %}
+  {% if erreurs is not empty %}<p class="alerte bad" role="alert">La ligne n'est pas modifiée&nbsp;: corrigez les champs signalés.</p>{% endif %}
+  <form id="ligne" method="post" action="{{ cible.base }}/lignes/{{ l.id }}">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <div class="champ">
+      <label for="designation">Désignation, telle qu'elle paraîtra sur {{ cible.document }}</label>
+      <input id="designation" name="designation" value="{{ champs.designation }}" maxlength="255" required{{ f.invalide(erreurs, 'designation') }}>
+      {{ f.erreur(erreurs, 'designation') }}
+    </div>
+    <div class="duo">
+      <div class="champ">
+        <label for="quantite">Quantité</label>
+        <input id="quantite" name="quantite" value="{{ champs.quantite }}" inputmode="decimal" autocomplete="off" required{{ f.invalide(erreurs, 'quantite') }}>
+        {{ f.erreur(erreurs, 'quantite') }}
+      </div>
+      <div class="champ">
+        <label for="unite">Unité</label>
+        <select id="unite" name="unite"{{ f.invalide(erreurs, 'unite') }}>
+          {% for u in unites %}<option{% if u == champs.unite %} selected{% endif %}>{{ u }}</option>{% endfor %}
+        </select>
+        {{ f.erreur(erreurs, 'unite') }}
+      </div>
+    </div>
+    <div class="champ">
+      <label for="prix">Prix unitaire (CHF)</label>
+      <input id="prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix"{{ f.invalide(erreurs, 'prix') }}>
+      {{ f.erreur(erreurs, 'prix') }}
+    </div>
+    {# Les réglages rares sous « Plus de réglages » (constat 6 de l'analyse des parcours, Xavier, 2026-11-26) : la
+       désignation, la quantité, l'unité et le prix restent devant. Ouverts d'office quand l'un d'eux sert déjà sur la
+       ligne (offerte, option ou variante, taux particulier, variantes) ou porte une erreur. Repliés, leurs champs
+       partent quand même avec le formulaire. #}
+    {% set reglages_ouverts = champs.offerte == 'offerte' or (champs.nature ?? 'ligne') != 'ligne' or (champs.tva ?? '') != ''
+      or (a_des_variantes ?? false) or erreurs.nature is defined or erreurs.tva is defined or erreurs.categorie is defined %}
+    <details class="libre-detail reglages-ligne"{% if reglages_ouverts %} open{% endif %}>
+      <summary>Plus de réglages</summary>
+    {# Ligne offerte (D1, D17, 2026-11-21) : « Offerte » garde le prix, barré sur le document ; un 0 tapé donne « Offert » seul. #}
+    <fieldset class="groupe choix">
+      <legend>Prix de la ligne</legend>
+      <div class="puces">
+        <label class="puce"><input type="radio" name="offerte" value="facturee"{% if champs.offerte != 'offerte' %} checked{% endif %}>Facturée</label>
+        <label class="puce"><input type="radio" name="offerte" value="offerte"{% if champs.offerte == 'offerte' %} checked{% endif %}>Offerte</label>
+      </div>
+      <p class="muted petit">Offerte&nbsp;: le prix reste sur {{ cible.document }}, barré. Pour «&nbsp;Offert&nbsp;» sans prix, tapez 0.</p>
+    </fieldset>
+    {# Options et variantes (O4, E3) : la nature de la ligne d'une offre ; une variante dit la ligne qu'elle remplace, la
+       dernière ligne du total proposée. Une ligne qui a des variantes reste dans le total. Sans JavaScript, la liste
+       « Elle remplace » reste cachée et la ligne proposée part. #}
+    {% if cible.base starts with '/offres' %}
+      {% set remplace = champs.remplace ?? '' %}
+      {% if remplace == '' and bases is not empty %}{% set remplace = (bases|last).id ~ '' %}{% endif %}
+      <fieldset class="groupe choix" data-nature>
+        <legend>Cette ligne est</legend>
+        <div class="puces">
+          <label class="puce"><input type="radio" name="nature" value="ligne"{% if champs.nature == 'ligne' %} checked{% endif %}>Dans le total</label>
+          <label class="puce"><input type="radio" name="nature" value="option"{% if champs.nature == 'option' %} checked{% endif %}{% if a_des_variantes %} disabled{% endif %}>Option</label>
+          <label class="puce"><input type="radio" name="nature" value="variante"{% if champs.nature == 'variante' %} checked{% endif %}{% if a_des_variantes or bases is empty %} disabled{% endif %}>Variante</label>
+        </div>
+        {% if a_des_variantes %}<p class="muted petit">Elle a des variantes : elle reste dans le total.</p>{% endif %}
+        {{ f.erreur(erreurs, 'nature') }}
+        {% if bases is not empty %}
+          <div class="champ" data-remplace{% if champs.nature != 'variante' %} hidden{% endif %}>
+            <label for="remplace">Elle remplace</label>
+            <select id="remplace" name="remplace">
+              {% for b in bases %}<option value="{{ b.id }}"{% if b.id ~ '' == remplace %} selected{% endif %}>{% if b.piece %}{{ b.piece }}, {% endif %}{{ b.designation }}</option>{% endfor %}
+            </select>
+          </div>
+        {% endif %}
+        {% if champs.nature == 'ligne' and not (l.offerte ?? false) %}
+          <a class="lien" href="{{ cible.base }}/ajouter?nature=variante&amp;remplace={{ l.id }}">+ Variante de cette ligne</a>
+        {% endif %}
+      </fieldset>
+    {% endif %}
+    {# Offre rangée par pièce (sous-chantier 28, P5) : la ligne se déplace d'une pièce à l'autre ; vide, « Général ».
+       Les pièces de l'offre en puces, celle de la ligne choisie, et « Autre pièce » à taper, qui l'emporte (recette du
+       2026-11-24, MP-A14, D3 A ; le même choix que les puces de « + Ligne »). Sans JavaScript, tout marche. #}
+    {% if pieces is not empty %}
+      {% set groupe = mots().groupe %}
+      {% set actuelle = (champs.piece ?? '')|lower %}
+      <fieldset class="groupe choix" data-pieces>
+        <legend>{{ groupe|capitalize }}</legend>
+        <div class="puces">
+          {% for p in [''] | merge(pieces) %}
+            <label class="puce"><input type="radio" name="piece" value="{{ p }}"{% if p|lower == actuelle and not (champs.piece_autre ?? '') %} checked{% endif %}>{{ p == '' ? 'Général' : p }}</label>
+          {% endfor %}
+        </div>
+        <div class="champ">
+          <input name="piece_autre" value="{{ champs.piece_autre ?? '' }}" maxlength="80" autocomplete="off" placeholder="Autre {{ groupe }}" aria-label="Autre {{ groupe }}">
+        </div>
+      </fieldset>
+    {% endif %}
+    {% if tva_habituelle %}
+      {% include '_tva_exception.html.twig' with {actuel: champs.tva ?? '', habituel: 'Taux ' ~ tva_habituelle.de ~ ' (' ~ tva_habituelle.taux|taux ~ ')'} %}
+    {% endif %}
+    {% if l.produit_id is null %}
+      <div class="card">
+        <label class="check"><input type="checkbox" name="garder" value="1"{% if erreurs.categorie is defined %} checked{% endif %}>
+          <span>Garder aussi dans le catalogue<small>L'IA la reconnaîtra dans les prochaines dictées.</small></span></label>
+        <div class="champ">
+          <label for="categorie">Catégorie</label>
+          <select id="categorie" name="categorie">
+            {% for c in categories %}<option{% if c == champs.categorie %} selected{% endif %}>{{ c }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="champ">
+          <label for="nouvelle_categorie">Ou une nouvelle catégorie</label>
+          <input id="nouvelle_categorie" name="nouvelle_categorie" value="{{ champs.nouvelle_categorie }}" maxlength="100"{{ f.invalide(erreurs, 'categorie') }}>
+          {{ f.erreur(erreurs, 'categorie') }}
+        </div>
+      </div>
+    {% endif %}
+    </details>
+    {% if l.produit_id is not null %}
+      <p class="muted petit">Corriger ici change {{ cible.ce }} seulement. Le prix du catalogue se change dans l'onglet Catalogue.</p>
+    {% endif %}
+  </form>
+  <form class="pied" method="post" action="{{ cible.base }}/lignes/{{ l.id }}/supprimer">
+    <input type="hidden" name="_csrf" value="{{ csrf() }}">
+    <button class="lien" type="submit">Supprimer la ligne</button>
+  </form>
+{% endblock %}
+
+{% block actions %}
+  <div class="actionbar">
+    <a class="btn" href="{{ cible.base }}#l{{ l.id }}">Annuler</a>
+    <button class="btn primary" type="submit" form="ligne">Enregistrer</button>
+  </div>
+{% endblock %}

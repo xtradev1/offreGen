@@ -1,0 +1,429 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OffreGen\Http\Controleur;
+
+use OffreGen\Compte\Demos;
+use OffreGen\Compte\Activite;
+use OffreGen\Compte\Marque;
+use OffreGen\Donnees\DepotOffres;
+use OffreGen\Donnees\Portee;
+use OffreGen\Http\Conteneur;
+use OffreGen\Http\Etag;
+use OffreGen\Http\Flash;
+use OffreGen\Http\PageIntrouvable;
+use OffreGen\Http\Parametres;
+use OffreGen\Offre\Chantier;
+use OffreGen\Offre\Piece;
+use OffreGen\Offre\Offerte;
+use OffreGen\Offre\Options;
+use OffreGen\Offre\Rabais;
+use OffreGen\Offre\Saisie;
+use OffreGen\Offre\Totaux;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * L'écran d'une offre (lignes rangées par pièce ou par catégorie, totaux), son en-tête (titre, client),
+ * et le document qu'on remet au client : aperçu à l'écran et PDF.
+ *
+ * @phpstan-import-type Offre from DepotOffres
+ * @phpstan-import-type Ligne from DepotOffres
+ */
+final class OffreControleur
+{
+    public function __construct(private readonly Conteneur $c)
+    {
+    }
+
+    /** @param array<string, string> $parametres */
+    public function afficher(Request $requete, array $parametres): Response
+    {
+        // Sur PC, la liste des offres en cours reste dans sa colonne (D12) ; le téléphone la cache.
+        $portee = new Portee($requete->attributes->getInt('_artisan'));
+        $offres = $this->c->offres($portee)->liste();
+        [$totaux, $aRelire] = AccueilControleur::totauxEtARelire($this->c, $portee, $offres);
+        return new Response($this->c->twig()->render('offre.html.twig', $this->avecFactures($requete, $this->donnees($requete, $parametres)) + [
+            'liste_pc' => ['offres' => $offres, 'totaux' => $totaux, 'a_relire' => $aRelire, 'textes' => AccueilControleur::textes($offres)],
+            // La ligne de recherche au bas du tableau, sur PC (maquette 25, E7).
+            'catalogue' => LigneControleur::catalogue($this->c, $portee),
+        ]));
+    }
+
+    /**
+     * L'objet de l'offre et son chantier. Le client se choisit dans sa fenêtre (ClientControleur::choixPourOffre).
+     *
+     * @param array<string, string> $parametres
+     */
+    public function entete(Request $requete, array $parametres): Response
+    {
+        $offre = $this->offre($requete, $parametres);
+        return $this->formulaireEntete($offre, ['titre' => $offre['titre']] + Chantier::depuisOffre($offre)->versChamps(), [], 200);
+    }
+
+    /** @param array<string, string> $parametres */
+    public function modifierEntete(Request $requete, array $parametres): Response
+    {
+        $offre = $this->offre($requete, $parametres);
+        $champs = ['titre' => $requete->request->getString('titre')];
+        foreach (array_keys((new Chantier())->versChamps()) as $champ) {
+            $champs[$champ] = $requete->request->getString($champ);
+        }
+        $titre = Saisie::texte($champs['titre'], 190);
+        [$chantier, $erreurs] = Chantier::depuisSaisie($champs);
+        if ($titre === null) {
+            $erreurs['titre'] = "Indiquez l'objet de l'offre (190 caractères au plus).";
+        }
+        if ($titre === null || $chantier === null) {
+            return $this->formulaireEntete($offre, $champs, $erreurs, 422);
+        }
+        $this->offres($requete)->modifierTitre($offre['id'], $titre, $this->c->horloge()->now());
+        $this->offres($requete)->modifierChantier($offre['id'], $chantier, $this->c->horloge()->now());
+        Flash::dire($requete, 'info', 'Offre enregistrée');
+        return new RedirectResponse('/offres/' . $offre['id'], 303);
+    }
+
+    /** @param array<string, string> $parametres */
+    public function document(Request $requete, array $parametres): Response
+    {
+        return new Response($this->c->twig()->render('document.html.twig', $this->donnees($requete, $parametres)));
+    }
+
+    /**
+     * « Générer l'offre » montre le PDF, tel que le client le recevra (Xavier, 2026-11-15, décision D7 A) : dessiné dans
+     * l'application par PDF.js, livré avec elle, les boutons restent en bas.
+     *
+     * @param array<string, string> $parametres
+     */
+    public function apercu(Request $requete, array $parametres): Response
+    {
+        $offre = $this->offre($requete, $parametres);
+        $base = '/offres/' . $offre['id'];
+        return new Response($this->c->twig()->render('apercu_pdf.html.twig', [
+            'pdfjs' => self::PDFJS,
+            'titre' => 'Offre ' . $offre['numero'],
+            'retour' => ['href' => $base, 'texte' => 'Offre'],
+            'pdf' => $base . '/pdf',
+            'fichier' => 'Offre-' . $offre['numero'] . '.pdf',
+            'partage' => 'Offre n° ' . $offre['numero'] . ' · ' . $offre['titre'],
+            'marquer' => $base . '/envoyee',
+            'modifier' => $base,
+            'facturer' => $base . '/facturer',
+            // Envoyée et inchangée depuis : le geste suivant est de revenir aux offres (analyse des parcours, 2026-11-26).
+            'envoyee' => $offre['envoyee_le'] !== null && !($offre['modifiee_le'] !== null && $offre['modifiee_le'] > $offre['envoyee_le']),
+            // Avertissement avant l'envoi d'une offre au nom provisoire « Démo <métier> » (chantier onboarding, lot 5).
+            'nom_provisoire' => $this->nomProvisoire($requete),
+        ]));
+    }
+
+    /** Le nom de l'entreprise, s'il est encore le nom provisoire de sa démo ; null sinon. */
+    private function nomProvisoire(Request $requete): ?string
+    {
+        $a = $this->c->artisans()->parId($requete->attributes->getInt('_artisan'));
+        return $a !== null && Demos::estNomProvisoire($a['entreprise'], $a['metier'], $a['metier_saisi']) ? $a['entreprise'] : null;
+    }
+
+    /**
+     * Le partage du téléphone a réussi (décision D8, 2026-11-15) : l'offre est notée envoyée. Le navigateur l'annonce
+     * après le partage ; sans partage possible, le PDF se télécharge et rien n'est noté.
+     *
+     * @param array<string, string> $parametres
+     */
+    public function envoyee(Request $requete, array $parametres): Response
+    {
+        $offre = $this->offre($requete, $parametres);
+        $this->offres($requete)->marquerEnvoyee($offre['id'], $this->c->horloge()->now());
+        Flash::dire($requete, 'info', 'Offre ' . $offre['numero'] . ' envoyée');
+        return new RedirectResponse('/offres/' . $offre['id'], 303);
+    }
+
+    /** Dossier de PDF.js dans public/js/vendor (version verrouillée, empreinte vérifiée : docs/DEPLOIEMENT.md). */
+    public const PDFJS = '/js/vendor/pdfjs-6.5.438';
+
+    /**
+     * Le PDF du même document, prêt à envoyer ou à imprimer.
+     *
+     * @param array<string, string> $parametres
+     */
+    public function pdf(Request $requete, array $parametres): Response
+    {
+        $d = $this->donnees($requete, $parametres);
+        // Lot 5 du chantier sans rechargement : le PDF d'une offre qui n'a pas changé n'est ni refait ni retéléchargé
+        // (gardé au serveur, 304 pour le navigateur qui l'a déjà).
+        $garde = $this->c->pdfGarde();
+        $empreinte = $garde->empreinte(self::htmlPdf($this->c, $d));
+        // no-store : le navigateur ne le garde pas sans session ; le service worker le garde pour le compte et le revalide.
+        $entetes = [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Offre-' . $d['offre']['numero'] . '.pdf"',
+            'Cache-Control' => 'private, no-store',
+            'ETag' => '"' . $empreinte . '"',
+        ];
+        if (Etag::connu($requete, '"' . $empreinte . '"')) {
+            return new Response('', 304, $entetes);
+        }
+        $pdf = $garde->obtenir($requete->attributes->getInt('_artisan'), $d['offre']['id'], $empreinte, fn (): string => self::rendrePdf($this->c, $d));
+        return new Response($pdf, 200, $entetes);
+    }
+
+    /**
+     * Le PDF d'un document (offre ou facture) : le CSS du document et celui de la marque voyagent dedans ; dompdf ne
+     * lit aucune adresse (ressources distantes coupées), donc le logo aussi.
+     *
+     * « Page n / N » : dompdf compte les pages au fil du rendu, mais ne connaît le total qu'à la fin. Un document d'une
+     * page est juste au premier rendu ; un document plus long est rendu une seconde fois, avec son total.
+     *
+     * Un document qui déborde est aussi essayé resserré (« doc-serre », document.css) : gardé s'il compte moins de pages,
+     * sinon la mise en page normale reste (Xavier, 2026-11-23 : la page 2 qui ne portait que conditions et signatures).
+     * $d['serre'] posé par l'appelant : pas d'essai.
+     *
+     * @param array<string, mixed> $d les données du document, avec « m » (Marque)
+     */
+    public static function rendrePdf(Conteneur $c, array $d): string
+    {
+        $pdf = $c->documentPdf();
+        [$sortie, $pages] = $pdf->rendreEtCompter(self::htmlPdf($c, $d));
+        if ($pages > 1 && !isset($d['serre'])) {
+            [$serre, $pagesSerre] = $pdf->rendreEtCompter(self::htmlPdf($c, ['serre' => true] + $d));
+            if ($pagesSerre < $pages) {
+                [$sortie, $pages, $d] = [$serre, $pagesSerre, ['serre' => true] + $d];
+            }
+        }
+        return $pages === 1 ? $sortie : $pdf->rendre(self::htmlPdf($c, ['pages' => $pages] + $d));
+    }
+
+    /**
+     * Le HTML que lit dompdf : feuille de style et logo en ligne (aucune ressource distante), images en data:.
+     *
+     * @param array<string, mixed> $d
+     */
+    public static function htmlPdf(Conteneur $c, array $d): string
+    {
+        $m = $d['m'];
+        if (!$m instanceof Marque) {
+            throw new \LogicException('Document sans marque.');
+        }
+        $d['css'] = $c->documentPdf()->policesCss() . (string) file_get_contents($c->racine() . '/public/css/document.css') . "\n" . $m->css();
+        $logo = $m->logo === null ? null : $c->dossierLogos() . '/' . basename($m->logo);
+        $d['logo_src'] = $logo !== null && is_file($logo) ? 'data:image/jpeg;base64,' . base64_encode((string) file_get_contents($logo)) : null;
+        $d['pdf'] = true;
+        return $c->twig()->render('document_pdf.html.twig', $d);
+    }
+
+    /**
+     * Les factures nées de l'offre, pour les liens « Facture 2026-001 » de son écran.
+     *
+     * @param array{offre: Offre} $d
+     * @return array{offre: Offre, factures: list<array<string, mixed>>}
+     */
+    private function avecFactures(Request $requete, array $d): array
+    {
+        return $d + ['factures' => $this->c->factures(new Portee($requete->attributes->getInt('_artisan')))->deOffre($d['offre']['id'])];
+    }
+
+    /**
+     * Tout ce que montrent l'écran de l'offre et son document.
+     *
+     * @param array<string, string> $parametres
+     * @return array{activite: Activite, mots: array<string, string>, m: Marque, logo_src: string|null, offre: Offre, chantier: Chantier, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     */
+    private function donnees(Request $requete, array $parametres): array
+    {
+        $portee = new Portee($requete->attributes->getInt('_artisan'));
+        $offre = $this->offre($requete, $parametres);
+        return $this->vueDocument($portee, $offre, $this->c->offres($portee)->lignes($offre['id']), $this->c->reglages($portee)->lireMarque());
+    }
+
+    /**
+     * Le document d'une offre, dans la marque donnée : celle de l'artisan, ou un autre modèle pour l'aperçu des réglages.
+     *
+     * @param Offre $offre
+     * @param list<Ligne> $lignes
+     * @return array{activite: Activite, mots: array<string, string>, m: Marque, logo_src: string|null, offre: Offre, chantier: Chantier, groupes: list<array{nom: string, lignes: list<array{l: Ligne, total: int}>, total: int}>, totaux: array{lignes: list<int>, ht: int, tva: int, arrondi: int, ttc: int, par_taux: list<array{taux: int, ht: int, tva: int}>}, tva: int, r: \OffreGen\Compte\Reglages, valable_jusqu_au: string, manque: int, doute: int}
+     */
+    public function vueDocument(Portee $portee, array $offre, array $lignes, Marque $m): array
+    {
+        $r = $this->c->reglages($portee)->lire()->pourOffre($offre['conditions']);
+        $totaux = Totaux::calculer($lignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes, Rabais::liste($offre['rabais']));
+        $date = new \DateTimeImmutable($offre['modifiee_le'] ?? $offre['cree_le'], new \DateTimeZone('UTC'));
+        $valable = $date->setTimezone(new \DateTimeZone('Europe/Zurich'))->modify('+' . $r->validiteJours . ' days')->format('d.m.Y');
+        // L'activité du compte de la portée donne ses mots au document (Compte\Activite) : « Chantier » ou « Lieu », etc.
+        $activite = Activite::lire($this->c->artisans()->parId($portee->artisanId)['activite'] ?? null);
+        return [
+            'activite' => $activite,
+            'mots' => $activite->mots(),
+            'm' => $m,
+            // Aperçu à l'écran : le logo par son adresse (la CSP refuse les images en data:) ; pdf() le remplace.
+            'logo_src' => $m->logo === null ? null : '/reglages/logo?v=' . $m->logo,
+            'offre' => $offre,
+            'chantier' => Chantier::depuisOffre($offre),
+            'groupes' => self::grouper($lignes, $totaux['lignes']),
+            'options' => self::options($lignes),
+            'groupes_document' => self::grouper($lignes, $totaux['lignes'], true),
+            'totaux' => $totaux,
+            'tva' => $r->tvaPourDixMille,
+            'r' => $r,
+            'valable_jusqu_au' => $valable,
+            'manque' => count(array_filter($lignes, static fn (array $l): bool => Offerte::prixManquant($l))),
+            'doute' => count(array_filter($lignes, static fn (array $l): bool => !Offerte::prixManquant($l) && $l['a_verifier'] === 1)),
+        ];
+    }
+
+    /**
+     * L'id du titre d'un groupe de lignes (pièce ou catégorie), stable d'une page à l'autre : un geste sur une ligne
+     * d'une offre rangée par pièce redemande sa ligne et le sous-total de sa pièce, pas toute la liste (chantier sans
+     * rechargement, 2026-11-23).
+     */
+    private static function idGroupe(string $cle): string
+    {
+        return 'g-' . substr(hash('xxh3', $cle), 0, 10);
+    }
+
+    /**
+     * Groupes dans l'ordre où leur première ligne paraît dans l'offre, donc dans l'ordre de la dictée.
+     * Par pièce dès qu'une ligne en a une, « Général » en tête ; sinon par catégorie du catalogue (sous-chantier 28,
+     * décisions P1 A et P2 A de Xavier, 2026-11-17). Sert aussi aux lignes d'une facture, qui n'ont pas de pièce.
+     *
+     * « barre » : le montant qu'une ligne offerte montre barré (D1, 2026-11-21), null pour une ligne facturée.
+     *
+     * Options et variantes (chantier 2026-11-22_options-variantes) : une variante se range sous la ligne qu'elle remplace
+     * (« variantes ») ; « retenue » est celle que le client a choisie, qui prend la place de la ligne sur le document
+     * (point 2) ; « remplacee » le dit à l'écran (E5). Les options n'entrent dans aucun groupe : OffreControleur::options.
+     * « total » d'une option ou d'une variante : son montant, même hors du total ; le sous-total d'un groupe ne compte
+     * que ce qui est dans le total.
+     *
+     * $document : pour le document du client (point 2, 2026-11-22), une option retenue entre dans les lignes de sa pièce,
+     * à son rang ; à l'écran, elle reste dans le groupe « Options » avec sa case (E2 A).
+     *
+     * @template T of array{categorie: string|null, piece?: string|null, quantite_milliemes: int, prix_centimes: int, offerte?: int, id?: int, nature?: string, remplace_id?: int|null, retenue?: int}
+     * @param list<T> $lignes
+     * @param list<int> $totauxLignes total de chaque ligne, dans le même ordre (0 hors du total, Totaux::calculer)
+     * @return list<array{nom: string, lignes: list<array{l: T, total: int, barre: int|null, variantes: list<array{l: T, total: int, barre: int|null}>, retenue: array{l: T, total: int, barre: int|null}|null, remplacee: bool}>, total: int, piece: string|null, par_piece: bool}>
+     */
+    public static function grouper(array $lignes, array $totauxLignes, bool $document = false): array
+    {
+        $entre = static fn (array $l): bool => match (Options::natureEffective($l, $lignes)) {
+            Options::LIGNE => true,
+            Options::OPTION => $document && ($l['retenue'] ?? 0) === 1,
+            Options::VARIANTE => false,
+        };
+        $variantes = [];
+        foreach ($lignes as $i => $l) {
+            if (Options::natureEffective($l, $lignes) === Options::VARIANTE) {
+                $variantes[$l['remplace_id'] ?? 0][] = $i;
+            }
+        }
+        $parPiece = false;
+        $general = false;
+        foreach ($lignes as $l) {
+            // Par pièce ou par catégorie : les lignes seules en décident, à l'écran comme sur le document (revue, C4).
+            if (Options::natureEffective($l, $lignes) !== Options::LIGNE) {
+                continue;
+            }
+            $piece = $l['piece'] ?? null;
+            $parPiece = $parPiece || $piece !== null;
+            $general = $general || $piece === null;
+        }
+        $groupes = [];
+        if ($parPiece && $general) {
+            $groupes[''] = ['nom' => Piece::GENERAL, 'lignes' => [], 'total' => 0, 'piece' => null, 'par_piece' => true, 'id' => self::idGroupe('')];
+        }
+        foreach ($lignes as $i => $l) {
+            if (!$entre($l)) {
+                continue;
+            }
+            if ($parPiece) {
+                $piece = $l['piece'] ?? null;
+                $cle = $piece === null ? '' : 'p:' . Piece::cle($piece);
+                $nom = $piece ?? Piece::GENERAL;
+            } else {
+                // Lire la catégorie à part : un « ?? » sur $l resserrerait son type et perdrait T. Une ligne sans
+                // catégorie va dans un groupe sans titre, en dernier (Xavier, 2026-11-23 : « Hors catalogue » sur les
+                // offres « c'est moche et sert à rien »).
+                $categorie = $l['categorie'];
+                $nom = $categorie ?? '';
+                $cle = 'c:' . $nom;
+                $piece = null;
+            }
+            $sous = [];
+            $retenue = null;
+            $dansLeTotal = $totauxLignes[$i] ?? 0;
+            foreach ($variantes[$l['id'] ?? 0] ?? [] as $j) {
+                $v = self::rangee($lignes[$j], null);
+                $sous[] = $v;
+                $dansLeTotal += $totauxLignes[$j] ?? 0;
+                if ($retenue === null && ($lignes[$j]['retenue'] ?? 0) === 1) {
+                    $retenue = $v;
+                }
+            }
+            $groupes[$cle] ??= ['nom' => $nom, 'lignes' => [], 'total' => 0, 'piece' => $piece, 'par_piece' => $parPiece, 'id' => self::idGroupe($cle)];
+            $groupes[$cle]['lignes'][] = self::rangee($l, $retenue === null ? ($totauxLignes[$i] ?? 0) : null) + ['variantes' => $sous, 'retenue' => $retenue, 'remplacee' => $retenue !== null];
+            $groupes[$cle]['total'] += $dansLeTotal;
+        }
+        if (isset($groupes['c:'])) {
+            $sansTitre = $groupes['c:'];
+            unset($groupes['c:']);
+            $groupes['c:'] = $sansTitre;
+        }
+        return array_values($groupes);
+    }
+
+    /**
+     * Les options de l'offre, dans l'ordre de la dictée, une variante sans ligne de base comprise (O3) : leur groupe
+     * « Options » sous le total (E2 A).
+     *
+     * @template T of array{categorie: string|null, piece?: string|null, quantite_milliemes: int, prix_centimes: int, offerte?: int, id?: int, nature?: string, remplace_id?: int|null, retenue?: int}
+     * @param list<T> $lignes
+     * @return list<array{l: T, total: int, barre: int|null}>
+     */
+    public static function options(array $lignes): array
+    {
+        $options = [];
+        foreach ($lignes as $l) {
+            if (Options::natureEffective($l, $lignes) === Options::OPTION) {
+                $options[] = self::rangee($l, null);
+            }
+        }
+        return $options;
+    }
+
+    /**
+     * Une rangée de l'écran ou du document. $total null : le montant de la ligne elle-même (option, variante), qu'elle
+     * soit dans le total ou non.
+     *
+     * @template T of array{quantite_milliemes: int, prix_centimes: int, offerte?: int}
+     * @param T $l
+     * @return array{l: T, total: int, barre: int|null}
+     */
+    private static function rangee(array $l, ?int $total): array
+    {
+        $offerte = Offerte::est($l);
+        return ['l' => $l, 'total' => $total ?? ($offerte ? 0 : Totaux::brut($l)), 'barre' => $offerte ? Totaux::brut($l) : null];
+    }
+
+    private function offres(Request $requete): DepotOffres
+    {
+        return $this->c->offres(new Portee($requete->attributes->getInt('_artisan')));
+    }
+
+    /**
+     * @param array<string, string> $parametres
+     * @return Offre
+     */
+    private function offre(Request $requete, array $parametres): array
+    {
+        return $this->offres($requete)->parId(Parametres::id($parametres, 'id')) ?? throw new PageIntrouvable();
+    }
+
+    /**
+     * @param Offre $offre
+     * @param array<string, string> $champs
+     * @param array<string, string> $erreurs
+     */
+    private function formulaireEntete(array $offre, array $champs, array $erreurs, int $code): Response
+    {
+        return new Response($this->c->twig()->render('offre_entete.html.twig', ['offre' => $offre, 'champs' => $champs, 'erreurs' => $erreurs]), $code);
+    }
+}

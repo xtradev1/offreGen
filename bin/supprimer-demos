@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Lancé par cron une fois par nuit : supprime les démos finies depuis 30 jours, offres, clients, audio et logo
+// compris (écran de fin K1 : « Vos offres restent consultables jusqu'au …, puis elles sont supprimées »).
+// Les démonstrations partagées (sans date de fin) et les essais ne sont jamais touchés.
+// Usage : bin/supprimer-demos
+
+use OffreGen\Http\Conteneur;
+
+if (PHP_SAPI !== 'cli') {
+    exit(1);
+}
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$resultat = Conteneur::depuisEnvironnement(dirname(__DIR__))->suppressionDemos()->supprimer();
+echo "{$resultat['supprimees']} démo(s) supprimée(s), {$resultat['erreurs']} erreur(s).\n";
+exit($resultat['erreurs'] > 0 ? 1 : 0);

@@ -1,0 +1,92 @@
+/* Dicta : jetons de l'identité, valeurs de la charte du 18 novembre 2026 (docs/identite/CHARTE.html).
+   Chaque texte tient 7:1 sur son fond, chaque forme utile 3:1, en clair comme en sombre : toute valeur changée ici se remesure. */
+:root {
+  --dx-anthracite: #23272D;
+  --dx-terracotta: #C4552D;
+  --dx-sable: #F4F1EA;
+  --dx-fond: #F4F1EA;
+  --dx-carte: #FFFFFF;
+  --dx-texte: #23272D;
+  --dx-texte-doux: #454B55;
+  --dx-trait: #DDD8CC;
+  --dx-etiquette: #EBE7DE;
+  --dx-bord: #7C838C;
+  --dx-bande: #23272D;
+  --dx-sur-bande: #FFFFFF;
+  --dx-bande-doux: #B9BDC3;
+  --dx-bouton: #23272D;
+  --dx-sur-bouton: #FFFFFF;
+  --dx-accent: #C4552D;
+  --dx-sur-accent: #FFFFFF;
+  --dx-ok: #13553A;
+  --dx-ok-fond: #E1EFE6;
+  --dx-attention: #5A4300;
+  --dx-attention-fond: #FFF0B3;
+  --dx-attention-ligne: #FFFAE5;
+  --dx-erreur: #8C1D18;
+  --dx-erreur-fond: #FBE7E4;
+  --dx-police-titre: "Archivo", system-ui, sans-serif;
+  --dx-police-texte: "Inter", system-ui, sans-serif;
+  --dx-rayon-etiquette: 999px;
+  --dx-rayon: 12px;
+  --dx-rayon-carte: 14px;
+  --dx-cible-principale: 64px;
+  --dx-cible-bouton: 56px;
+  --dx-cible: 48px;
+  --dx-ecart-cibles: 8px;
+  --dx-pas: 4px;
+  --dx-marge: 16px;
+  --dx-duree-etat: 150ms;
+  --dx-duree-apparition: 250ms;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --dx-fond: #15171A;
+    --dx-carte: #1E2125;
+    --dx-texte: #ECEAE6;
+    --dx-texte-doux: #B4B9C0;
+    --dx-trait: #33373D;
+    --dx-etiquette: #26292E;
+    --dx-bord: #868C94;
+    --dx-bande: #0F1113;
+    --dx-sur-bande: #FFFFFF;
+    --dx-bande-doux: #AAAFB6;
+    --dx-bouton: #ECEAE6;
+    --dx-sur-bouton: #15171A;
+    --dx-accent: #C4552D;
+    --dx-sur-accent: #FFFFFF;
+    --dx-ok: #7DD3A8;
+    --dx-ok-fond: #183126;
+    --dx-attention: #F0B860;
+    --dx-attention-fond: #3A2A10;
+    --dx-attention-ligne: #221D14;
+    --dx-erreur: #FF9A91;
+    --dx-erreur-fond: #3B1613;
+  }
+}
+:root[data-theme="dark"] {
+  --dx-fond: #15171A;
+  --dx-carte: #1E2125;
+  --dx-texte: #ECEAE6;
+  --dx-texte-doux: #B4B9C0;
+  --dx-trait: #33373D;
+  --dx-etiquette: #26292E;
+  --dx-bord: #868C94;
+  --dx-bande: #0F1113;
+  --dx-sur-bande: #FFFFFF;
+  --dx-bande-doux: #AAAFB6;
+  --dx-bouton: #ECEAE6;
+  --dx-sur-bouton: #15171A;
+  --dx-accent: #C4552D;
+  --dx-sur-accent: #FFFFFF;
+  --dx-ok: #7DD3A8;
+  --dx-ok-fond: #183126;
+  --dx-attention: #F0B860;
+  --dx-attention-fond: #3A2A10;
+  --dx-attention-ligne: #221D14;
+  --dx-erreur: #FF9A91;
+  --dx-erreur-fond: #3B1613;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --dx-duree-etat: 0ms; --dx-duree-apparition: 0ms; }
+}

@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activités : ce qui change d'un mode à l'autre</title>
+<style>
+:root {
+  --bg: #f6f3ec; --surface: #ffffff; --ink: #1f2328; --muted: #4d535b; --line: #d9d3c7;
+  --cp: #1d4e89; --cp-bg: #e3edf9;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--cp);
+  /* L'application et le document restent clairs dans les deux thèmes : ce sont des captures de l'écran réel. */
+  --tel-bg: #f2eee6; --tel-carte: #ffffff; --tel-ink: #1f2328; --tel-muted: #4a4f57; --tel-line: #cfc8ba; --tel-tete: #22252b;
+  /* Surlignages, mesurés sur leur propre fond : texte #1b1b1b sur #ffe27a (14:1), #8c1d18 sur #fde8e6 (9:1),
+     #1d4e89 sur #e3edf9 (7,2:1), #6b3a00 sur #fff1dc (9:1). */
+  --df-bg: #ffe27a; --df-ink: #1b1b1b; --abs-bg: #fde8e6; --abs-ink: #8c1d18; --abs-bord: #b3261e;
+  --cp-ink: #1d4e89; --cp-fond: #e3edf9; --reste-bg: #fff1dc; --reste-ink: #6b3a00; --reste-bord: #b8741a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #16181c; --surface: #202329; --ink: #eceae4; --muted: #c2beb5; --line: #3a3e46; --cp: #9cc3ff; --cp-bg: #1f2f45; }
+}
+:root[data-theme="dark"] { --bg: #16181c; --surface: #202329; --ink: #eceae4; --muted: #c2beb5; --line: #3a3e46; --cp: #9cc3ff; --cp-bg: #1f2f45; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 0 16px 80px; }
+h1 { font-size: 1.7rem; line-height: 1.2; margin: 24px 0 8px; }
+h2 { font-size: 1.35rem; line-height: 1.25; margin: 40px 0 6px; scroll-margin-top: 140px; }
+p { margin: 6px 0; }
+.intro { color: var(--muted); max-width: 760px; }
+.etat { display: inline-block; background: var(--cp-bg); color: var(--cp); border-radius: 999px; padding: 2px 12px; font-size: .9rem; font-weight: 600; }
+
+/* Barre des modes */
+.barre { position: sticky; top: 0; z-index: 20; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 10px 12px; margin: 14px 0 8px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.modes { display: flex; flex-wrap: wrap; gap: 6px; }
+.modes button { min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.modes button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.modes button:focus-visible, .choix button:focus-visible, .copier:focus-visible { outline: 3px solid var(--cp); outline-offset: 2px; }
+.bascule { display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; cursor: pointer; }
+.bascule input { width: 22px; height: 22px; }
+.legende { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .9rem; color: var(--muted); margin: 0 0 8px; }
+/* Téléphone : la barre qui colle tient en deux rangées basses, la légende reste dans la page. */
+@media (max-width: 600px) {
+  .barre { padding: 8px; gap: 4px 10px; }
+  .modes { flex-wrap: nowrap; gap: 4px; }
+  .modes button { padding: 0 9px; font-size: .9rem; }
+  .modes .long { display: none; }
+  .bascule { min-height: 40px; font-size: .95rem; }
+}
+.legende span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Les quatre surlignages : visibles seulement quand « Surligner » est coché. */
+.df { border-radius: 4px; }
+.surligne .df { background: var(--df-bg); color: var(--df-ink); box-shadow: 0 0 0 2px var(--df-bg); cursor: pointer; }
+.ghost, .ghost-bloc { display: none; }
+.surligne .ghost { display: inline; background: var(--abs-bg); color: var(--abs-ink); border: 1px dashed var(--abs-bord);
+  border-radius: 4px; padding: 0 4px; font-size: .85em; font-weight: 600; cursor: pointer; }
+.surligne .ghost-bloc { display: block; background: var(--abs-bg); color: var(--abs-ink); border: 2px dashed var(--abs-bord);
+  border-radius: 10px; padding: 8px 10px; margin: 8px 0; font-size: .88rem; font-weight: 600; }
+.surligne .cp { display: block; background: var(--cp-fond); color: var(--cp-ink); border-left: 4px solid var(--cp-ink);
+  border-radius: 6px; padding: 6px 10px; margin: 6px 0; font-size: .88rem; font-weight: 600; }
+.cp { display: block; font-size: .88rem; font-style: italic; margin: 6px 0; }
+.surligne .reste { background: var(--reste-bg); color: var(--reste-ink); outline: 2px dotted var(--reste-bord); border-radius: 4px; }
+.pastille { display: inline-block; width: 18px; height: 14px; border-radius: 3px; vertical-align: middle; }
+.p-df { background: var(--df-bg); }
+.p-abs { background: var(--abs-bg); border: 1px dashed var(--abs-bord); }
+.p-cp { background: var(--cp-fond); border-left: 4px solid var(--cp-ink); }
+.p-reste { background: var(--reste-bg); outline: 2px dotted var(--reste-bord); }
+
+/* Grille des écrans : un seul mode, ou les trois côte à côte. */
+.ecrans { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); align-items: start; margin-top: 12px; }
+.ecrans.un { grid-template-columns: minmax(0, 380px); }
+.colonne h3 { font-size: 1rem; margin: 0 0 6px; }
+.colonne h3 small { font-weight: 400; color: var(--muted); }
+
+/* Téléphone */
+.tel { width: 100%; max-width: 380px; border: 1px solid var(--tel-line); border-radius: 22px; overflow: hidden; background: var(--tel-bg);
+  color: var(--tel-ink); box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+.tel-h { background: var(--tel-tete); color: #fff; padding: 12px 14px; display: flex; justify-content: space-between; font-weight: 700; }
+.tel-h .logo { font-weight: 800; }
+.tel-c { padding: 12px; }
+.tel label, .tel .lab { display: block; font-weight: 700; font-size: .9rem; margin: 10px 0 4px; }
+.inp { min-height: 42px; border: 1px solid #8d8a83; border-radius: 10px; background: #fff; padding: 9px 12px; color: var(--tel-ink); }
+.inp.ph { color: #4a4f57; font-style: italic; }
+.inp.grand { min-height: 70px; }
+.aide { font-size: .84rem; color: var(--tel-muted); margin: 4px 0; }
+.legend { font-weight: 800; font-size: 1rem; margin: 4px 0 2px; }
+.fs { border-top: 1px solid var(--tel-line); margin-top: 12px; padding-top: 6px; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.carte { background: var(--tel-carte); border: 1px solid var(--tel-line); border-radius: 14px; padding: 10px 12px; margin: 8px 0; }
+.ocard b { display: block; }
+.status { display: inline-block; font-size: .8rem; font-weight: 700; background: #e7e2d6; color: #2b2e33; border-radius: 999px; padding: 1px 8px; margin-top: 4px; }
+.sous { display: block; font-size: .8rem; color: var(--tel-muted); }
+.cat { text-transform: uppercase; font-size: .78rem; letter-spacing: .04em; font-weight: 800; color: var(--tel-muted); margin: 12px 0 4px; }
+.vide { font-size: .9rem; color: var(--tel-muted); }
+.feuille { background: #fff; border: 1px solid var(--tel-line); border-radius: 16px; padding: 14px; text-align: center; }
+.timer { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.dot { width: 14px; height: 14px; border-radius: 50%; background: #c4512b; margin: 4px auto; }
+.consigne { font-weight: 600; margin: 8px 0 12px; }
+.btn { display: block; min-height: 48px; line-height: 48px; border-radius: 12px; font-weight: 700; text-align: center; }
+.btn.noir { background: #22252b; color: #fff; }
+.btn.danger { background: #a3261b; color: #fff; }
+.lien-faux { display: block; text-align: center; color: #1d4e89; text-decoration: underline; font-size: .9rem; margin-top: 8px; }
+.replie { min-height: 44px; display: flex; align-items: center; font-weight: 700; color: #1d4e89; font-size: .92rem; }
+.sans-titre { font-weight: 400; font-style: italic; font-size: .82rem; color: var(--tel-muted); }
+.grp { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 800; border-bottom: 2px solid var(--tel-line);
+  padding: 4px 0; margin-top: 10px; }
+.grp .st { font-weight: 700; font-variant-numeric: tabular-nums; }
+.grp .renom { font-size: .82rem; color: #1d4e89; text-decoration: underline; font-weight: 600; }
+.ligne { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 6px 0; border-bottom: 1px solid #e6e0d4; font-size: .92rem; }
+.ligne .q { color: var(--tel-muted); font-size: .84rem; }
+.ligne .m { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+.puce { border: 1px solid #8d8a83; border-radius: 999px; padding: 4px 12px; font-size: .85rem; background: #fff; }
+.puce.on { background: #22252b; color: #fff; border-color: #22252b; }
+.radio { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
+.rond { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #22252b; flex: none; margin-top: 2px; }
+.rond.on { box-shadow: inset 0 0 0 4px #fff; background: #22252b; }
+.radio small { display: block; font-size: .84rem; color: var(--tel-muted); }
+
+/* Document */
+.papier { background: #fff; color: #1f2328; border: 1px solid #cfc8ba; border-radius: 6px; padding: 16px; font-size: .84rem; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+.papier .ent { font-weight: 800; font-size: 1rem; }
+.papier .obj { border: 1px solid #1f2328; padding: 6px 8px; margin: 10px 0 0; font-weight: 700; }
+.papier .obj b { color: #1d4e89; letter-spacing: .06em; }
+.papier table { width: 100%; border-collapse: collapse; }
+.papier .infos td { border: 1px solid #1f2328; padding: 4px 6px; vertical-align: top; width: 33%; }
+.papier i { display: block; font-style: normal; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: #4a4f57; }
+.papier .lignes-doc { color: #4a4f57; text-align: center; border: 1px dashed #cfc8ba; padding: 8px; margin: 10px 0; }
+.papier ul { margin: 4px 0; padding-left: 18px; }
+.papier .fiche th { background: #1d4e89; color: #fff; text-align: left; padding: 4px 6px; }
+.papier .fiche td { border: 1px solid #cfc8ba; padding: 4px 6px; }
+.papier .fiche td:first-child { background: #e3edf9; width: 42%; }
+.papier .h2 { font-weight: 800; font-size: .95rem; color: #1d4e89; border-bottom: 2px solid #1d4e89; padding-bottom: 2px; }
+.papier p { margin: 6px 0; }
+.mod { font-size: .82rem; color: var(--muted); margin: 14px 0 4px; font-weight: 700; }
+
+/* Coulisses de l'IA */
+.ia { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: .92rem; }
+.ia h4 { margin: 0 0 6px; font-size: .95rem; }
+.ia .commun { color: var(--muted); font-size: .86rem; }
+.ia code { font-size: .86rem; }
+
+/* Tableau des mots */
+.tab-mots { width: 100%; border-collapse: collapse; background: var(--surface); font-size: .92rem; }
+.tab-mots th, .tab-mots td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.tab-mots th { background: var(--bg); }
+.tab-mots td.cle { color: var(--muted); }
+.defile { overflow-x: auto; }
+
+/* Choix sous chaque section */
+.choix { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin: 16px 0 0; max-width: 760px; }
+.choix .q { font-weight: 700; margin-bottom: 8px; }
+.choix .boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+.choix button { min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font: inherit; font-weight: 600; cursor: pointer; }
+.choix button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.choix textarea { width: 100%; min-height: 64px; margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px;
+  font: inherit; background: var(--surface); color: var(--ink); }
+.choix textarea::placeholder { color: var(--muted); font-style: italic; opacity: 1; }
+.copier { min-height: 48px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--ink); color: var(--bg); font: inherit; font-weight: 700; cursor: pointer; }
+#recap { white-space: pre-wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: .9rem; }
+
+/* Bulle des trois valeurs */
+#bulle { position: fixed; z-index: 50; max-width: 320px; background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,.2); font-size: .9rem; display: none; }
+#bulle b { display: block; margin-top: 4px; }
+#bulle .vide-b { color: var(--muted); font-style: italic; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Activités : ce qui change d'un mode à l'autre</h1>
+<p class="intro">Les trois modes de l'application (Bâtiment, Extérieur, Prestations), écran par écran. Les mots viennent du code en service sur le site de test (commit <code>cedc573</code>, <code>src/Compte/Activite.php</code>). Les lignes des offres et des catalogues sont des exemples.</p>
+<p><span class="etat">Réponses de Xavier du 23.11 intégrées : accès replié, catégorie en Prestations, plus de « Hors catalogue »</span></p>
+
+<nav id="mk-toc"></nav>
+
+<div class="barre" id="barre">
+  <div class="modes" role="group" aria-label="Mode affiché">
+    <button type="button" data-mode="batiment">Bâtiment</button>
+    <button type="button" data-mode="exterieur">Extérieur</button>
+    <button type="button" data-mode="prestations">Prestations</button>
+    <button type="button" data-mode="trois" aria-label="Les trois côte à côte">Les trois<span class="long"> côte à côte</span></button>
+  </div>
+  <label class="bascule"><input type="checkbox" id="surligner" checked> Surligner les différences</label>
+</div>
+<div class="legende">
+    <span><i class="pastille p-df"></i> mot qui change (toucher pour voir les trois)</span>
+    <span><i class="pastille p-abs"></i> absent dans ce mode</span>
+    <span><i class="pastille p-cp"></i> comportement qui change</span>
+    <span><i class="pastille p-reste"></i> mot du bâtiment resté, connu</span>
+</div>
+
+<h2 id="dictee">Dictée et accueil</h2>
+<p>La phrase de l'écran de dictée, le nom d'une dictée en cours, le titre d'une offre sans titre dicté.</p>
+<div class="ecrans" data-ecran="dictee"></div>
+<div class="choix" data-q="dictee"></div>
+
+<h2 id="offre">Offre et rangement</h2>
+<p>Les trois modes rangent les lignes par groupe dicté, avec un sous-total et « Renommer » : pièce, zone, catégorie. En Prestations, seulement si les parties sont annoncées en dictant ; sinon l'offre sort par catégorie du catalogue. Les lignes sans catégorie n'ont plus de titre « Hors catalogue », à l'écran comme sur le document (réponses du 23.11).</p>
+<div class="ecrans" data-ecran="offre"></div>
+<div class="choix" data-q="offre"></div>
+
+<h2 id="entete">En-tête de l'offre</h2>
+<p>Le bloc qui porte le lieu, le contact, le début, la durée, le non compris et la date. Les champs sont les mêmes en base dans les trois modes.</p>
+<div class="ecrans" data-ecran="entete"></div>
+<div class="choix" data-q="entete"></div>
+
+<h2 id="document">Document envoyé au client</h2>
+<p>Le haut d'un modèle courant (Sobre, Bandeau, Moderne…), puis les trois modèles qui ont des mots à eux : Chantier, Récapitulatif, Lettre.</p>
+<div class="ecrans" data-ecran="document"></div>
+<div class="choix" data-q="document"></div>
+
+<h2 id="facturer">Facturer</h2>
+<p>Les libellés d'acompte proposés d'un toucher et les aides de la facture.</p>
+<div class="ecrans" data-ecran="facturer"></div>
+<div class="choix" data-q="facturer"></div>
+
+<h2 id="reglages">Réglages</h2>
+<p>Le réglage « Votre activité » (rubrique Mon entreprise et première étape de l'assistant), les aides et les phrases proposées.</p>
+<div class="ecrans" data-ecran="reglages"></div>
+<div class="choix" data-q="reglages"></div>
+
+<h2 id="ia">Ce que lit l'IA</h2>
+<p>Deux phrases de la consigne changent ; toutes les autres règles sont communes. Le second appel range dans les trois modes ; en Prestations, seulement les parties annoncées (réponses du 23.11). Le Bâtiment garde au caractère près la consigne mesurée au banc. Extérieur et Prestations n'ont jamais été mesurés : tes dictées le feront.</p>
+<div class="ecrans" data-ecran="ia"></div>
+<div class="choix" data-q="ia"></div>
+
+<h2 id="catalogue">Catalogue de départ</h2>
+<p>Le métier choisi à la création d'une démo fixe l'activité et le catalogue. Les unités sont les mêmes pour tous : « mois » et « passage » s'ajoutent.</p>
+<div class="ecrans" data-ecran="catalogue"></div>
+<div class="choix" data-q="catalogue"></div>
+
+<h2 id="mots">Tous les mots</h2>
+<p>Chaque mot qui dépend de l'activité, dans les trois modes.</p>
+<div class="mk-filters" data-target="#liste-mots">
+  <button type="button" data-v="all" aria-pressed="true">Tous</button>
+  <button type="button" data-v="change" aria-pressed="false">Seulement ce qui change</button>
+</div>
+<div class="defile"><table class="tab-mots"><thead><tr><th>Où</th><th>Bâtiment</th><th>Extérieur</th><th>Prestations</th></tr></thead><tbody id="liste-mots"></tbody></table></div>
+
+<h2 id="reste">Ce qui parle encore de bâtiment</h2>
+<p>Connu et laissé hors du chantier, visible pour un prestataire :</p>
+<ul>
+  <li>le nom du modèle de document « Chantier » (écran « Ma marque » et une aide de l'en-tête) ;</li>
+  <li>l'aide de « Ma marque » sous les phrases de Lettre : « la date de la visite et l'adresse du chantier » ;</li>
+  <li>l'aperçu de « Ma marque » d'un compte sans offre, qui montre une offre de peintre ;</li>
+  <li>le fichier d'un enregistrement gardé, <code>visite.webm</code> ;</li>
+  <li>les règles communes de la consigne de l'IA, écrites avec « travail » et « travaux » ;</li>
+  <li>le site, la publicité, la page de connexion et l'administration, adressés aux artisans par décision.</li>
+</ul>
+<div class="choix" data-q="reste"></div>
+
+<h2 id="reponses">Vos réponses</h2>
+<p>Elles restent dans ce navigateur. Le bouton les rassemble pour les coller dans la conversation.</p>
+<p><button type="button" class="copier" id="copier">Copier le texte</button></p>
+<div id="recap" aria-live="polite"></div>
+</main>
+
+<div id="bulle" role="dialog" aria-label="Les trois valeurs"></div>
+
+<script>
+(function () {
+  'use strict';
+  var MODES = ['batiment', 'exterieur', 'prestations'];
+  var NOMS = { batiment: 'Bâtiment', exterieur: 'Extérieur', prestations: 'Prestations' };
+  var EXEMPLE_METIER = { batiment: 'démo Peintre', exterieur: 'démo Jardinier, paysagiste', prestations: 'démo Informatique' };
+
+  // Les mots de src/Compte/Activite.php (mots() et dire()), et ce que l'application en fabrique.
+  var BAT = {
+    dictee: 'Parlez, pièce par pièce.',
+    dictee_nom: 'Visite',
+    dictee_objet: 'la visite',
+    titre_defaut: 'Visite',
+    premiere: 'visite',
+    groupe: 'pièce',
+    rangement: 'Rangée par pièce : un second appel à l\'IA lit les pièces dans la dictée.',
+    bloc_titre: 'Chantier',
+    bloc_adresse: 'Adresse du chantier',
+    bloc_contact: 'Contact sur place',
+    bloc_acces: 'Accès',
+    debut: 'Début des travaux',
+    date: 'Date de la visite',
+    non_compris_exemple: 'Peinture de finition',
+    doc_lieu: 'Chantier',
+    doc_adresse: 'Adresse',
+    doc_fiche: 'Chantier',
+    doc_detail: 'Détail des travaux',
+    lettre_date: 'Visite du',
+    travaux: 'travaux',
+    paiement: 'À 30 jours dès la fin des travaux.',
+    acomptes: '30 % à la commande, 30 % en cours de travaux, 40 % à la fin des travaux.',
+    acompte_debut: 'Au début des travaux',
+    acompte_mi: 'À mi-chantier',
+    lettre_offre_debut: 'Nous vous remettons notre offre pour les travaux suivants.',
+    lettre_facture_debut: 'Nous vous adressons notre facture pour les travaux suivants.',
+    lettre_tournure: 'Les travaux étant terminés, voici notre facture.',
+    consigne_pour: 'un artisan suisse',
+    consigne_source: 'la dictée de sa visite chez le client',
+    consigne_titre: 'la nature des travaux et le lieu',
+    groupes_1: 'Tu ranges les lignes d\'une offre d\'artisan dans les pièces où se font les travaux, d\'après la dictée de sa visite.',
+    groupes_2: 'L\'artisan dicte pièce par pièce : une pièce annoncée vaut pour les postes qui suivent, jusqu\'à la suivante.',
+    groupes_3: 'Pour chaque ligne, donne son numéro et la pièce telle qu\'elle est dite (avec l\'étage s\'il est dit).',
+    groupes_4: '« général » pour une ligne qui vaut pour tout le chantier, ou quand aucune pièce n\'est dite.',
+    appels: 'Deux appels à l\'IA par offre'
+  };
+  var M = {
+    batiment: BAT,
+    exterieur: Object.assign({}, BAT, {
+      dictee: 'Parlez, zone par zone.',
+      groupe: 'zone',
+      rangement: 'Rangée par zone : un second appel à l\'IA lit les zones dans la dictée.',
+      bloc_titre: 'Lieu d\'intervention',
+      bloc_adresse: 'Adresse',
+      non_compris_exemple: 'Évacuation des déchets verts',
+      doc_lieu: 'Lieu',
+      doc_fiche: 'Lieu d\'intervention',
+      consigne_pour: 'un jardinier ou un paysagiste suisse',
+      groupes_1: 'Tu ranges les lignes d\'une offre de jardinier ou de paysagiste dans les zones du terrain où se font les travaux, d\'après la dictée de sa visite.',
+      groupes_2: 'Il dicte zone par zone (« devant la maison », « la haie côté route », « le talus ») : une zone annoncée vaut pour les postes qui suivent, jusqu\'à la suivante.',
+      groupes_3: 'Pour chaque ligne, donne son numéro et la zone telle qu\'elle est dite.',
+      groupes_4: '« général » pour une ligne qui vaut pour tout le chantier, ou quand aucune zone n\'est dite.'
+    }),
+    prestations: Object.assign({}, BAT, {
+      dictee: 'Parlez, prestation par prestation.',
+      dictee_nom: 'Dictée',
+      dictee_objet: 'votre dictée',
+      titre_defaut: 'Offre',
+      premiere: 'offre',
+      groupe: 'catégorie',
+      rangement: 'Rangée par partie annoncée en dictant (« pour le site », « phase 1 ») ; rien d\'annoncé : par catégorie du catalogue.',
+      bloc_titre: '',
+      bloc_adresse: 'Lieu',
+      bloc_contact: 'Contact',
+      bloc_acces: '',
+      debut: 'Début',
+      date: 'Date de l\'échange',
+      non_compris_exemple: 'Licences des logiciels',
+      doc_lieu: 'Lieu',
+      doc_adresse: 'Lieu',
+      doc_fiche: 'Informations',
+      doc_detail: 'Détail des prestations',
+      lettre_date: 'Échange du',
+      travaux: 'prestations',
+      paiement: 'À 30 jours dès la fin de la prestation.',
+      acomptes: '30 % à la commande, 30 % en cours de prestation, 40 % à la fin de la prestation.',
+      acompte_debut: 'Au début de la prestation',
+      acompte_mi: 'À mi-parcours',
+      lettre_offre_debut: 'Nous vous remettons notre offre pour les prestations suivantes.',
+      lettre_facture_debut: 'Nous vous adressons notre facture pour les prestations suivantes.',
+      lettre_tournure: 'La prestation étant terminée, voici notre facture.',
+      consigne_pour: 'un prestataire de services suisse (informatique, conseil, marketing)',
+      consigne_source: 'ce qu\'il dicte après son échange avec le client',
+      consigne_titre: 'la nature de la prestation',
+      groupes_1: 'Tu ranges les lignes d\'une offre de prestations dans les parties que le prestataire annonce lui-même dans sa dictée.',
+      groupes_2: 'Range seulement si le prestataire annonce des parties (« pour le site », « phase 1 », « côté hébergement ») : une partie annoncée vaut pour les postes qui suivent, jusqu\'à la suivante.',
+      groupes_3: 'Pour chaque ligne, donne son numéro et la partie telle qu\'elle est dite.',
+      groupes_4: '« général » pour une ligne qui vaut pour toute l\'offre, et pour toutes les lignes quand aucune partie n\'est annoncée. N\'invente aucune partie.'
+    })
+  };
+
+  // Où chaque mot paraît, pour le tableau et la bulle.
+  var OU = [
+    ['dictee', 'Écran de dictée'], ['dictee_nom', 'Dictée en cours, dans la liste'], ['dictee_objet', 'Accueil vide : « le micro enregistre… »'],
+    ['premiere', 'Entrée d\'une démo et message au prospect : « dictez votre première… »'], ['titre_defaut', 'Titre d\'une offre sans titre dicté'],
+    ['groupe', 'Groupe d\'une ligne (renommer, ajouter)'], ['rangement', 'Rangement des lignes'], ['appels', 'Appels à l\'IA par offre'],
+    ['bloc_titre', 'En-tête : titre du bloc'], ['bloc_adresse', 'En-tête : adresse'], ['bloc_contact', 'En-tête et modèle Chantier : contact'],
+    ['bloc_acces', 'En-tête : accès'], ['debut', 'En-tête et document : début'], ['date', 'En-tête : date'],
+    ['non_compris_exemple', 'En-tête : exemple de non compris'], ['doc_lieu', 'Document : case du lieu, Lettre'], ['doc_adresse', 'Modèle Chantier : adresse'],
+    ['doc_fiche', 'Modèle Chantier : titre de la fiche'], ['doc_detail', 'Modèle Récapitulatif : titre des lignes'], ['lettre_date', 'Modèle Lettre : date'],
+    ['paiement', 'Document : phrase de paiement'], ['acomptes', 'Réglages : phrase des acomptes'], ['acompte_debut', 'Facturer : libellé d\'acompte'],
+    ['acompte_mi', 'Facturer : libellé d\'acompte'], ['travaux', 'Aides : TVA, facture'], ['lettre_offre_debut', 'Modèle Lettre : début de l\'offre'],
+    ['lettre_facture_debut', 'Modèle Lettre : début de la facture'], ['lettre_tournure', 'Ma marque : tournure proposée'],
+    ['consigne_pour', 'IA : pour qui'], ['consigne_source', 'IA : à partir de quoi'], ['consigne_titre', 'IA : de quoi est fait le titre'],
+    ['groupes_1', 'IA, second appel : consigne']
+  ];
+  var LIB = {};
+  OU.forEach(function (o) { LIB[o[0]] = o[1]; });
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  // Typographie française sur les mots tirés des données.
+  function fr(s) { return s.replace(/ ([:;!?»%])/g, ' $1').replace(/« /g, '« '); }
+  function h(s) { return fr(esc(s)); }
+  function differe(k) { return new Set(MODES.map(function (m) { return M[m][k]; })).size > 1; }
+  function maj(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  function min(s) { return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
+
+  // Un mot de l'activité : surligné s'il change d'un mode à l'autre, « absent ici » s'il est vide dans ce mode.
+  function T(m, k, f) {
+    var v = M[m][k];
+    if (v === '') { return differe(k) ? '<span class="ghost" data-k="' + k + '" tabindex="0">absent ici</span>' : ''; }
+    var t = h(f ? f(v) : v);
+    return differe(k) ? '<span class="df" data-k="' + k + '" tabindex="0">' + t + '</span>' : t;
+  }
+  function absent(k, texte) { return '<div class="ghost-bloc" data-k="' + k + '" tabindex="0">' + h('Absent ici : ' + texte) + '</div>'; }
+  function cp(m, k) { return '<div class="cp" data-k="' + k + '">' + h(M[m][k]) + '</div>'; }
+  function reste(m, html) { return m === 'prestations' ? '<span class="reste" title="Mot du bâtiment resté, connu">' + html + '</span>' : html; }
+  function tel(titre, corps) { return '<div class="tel"><div class="tel-h"><span>' + titre + '</span><span class="logo">Dicta</span></div><div class="tel-c">' + corps + '</div></div>'; }
+
+  var OFFRES = {
+    batiment: { titre: 'Rafraîchissement du séjour', groupes: [
+      { nom: 'Séjour', st: '1’944.00', lignes: [['Peinture des murs, 2 couches', '42 m²', '1’176.00'], ['Peinture des plafonds, 2 couches', '24 m²', '768.00']] },
+      { nom: 'Cuisine', st: '312.00', lignes: [['Laquage des plinthes', '26 m', '312.00']] }] },
+    exterieur: { titre: 'Entretien d\'automne', groupes: [
+      { nom: 'Devant la maison', st: '360.00', lignes: [['Tonte du gazon, jusqu\'à 300 m²', '1 forfait', '90.00'], ['Taille d\'arbuste', '6 pce', '270.00']] },
+      { nom: 'Haie côté route', st: '570.00', lignes: [['Taille de haie, jusqu\'à 2 m de haut', '38 m', '570.00']] }] },
+    prestations: { titre: 'Site vitrine de la boutique', groupes: [
+      { nom: 'Pour le site', st: '4’400.00', lignes: [['Analyse des besoins et cahier des charges', '1 forfait', '900.00'], ['Site vitrine, cinq pages', '1 forfait', '3’500.00']] },
+      { nom: 'Hébergement', st: '420.00', lignes: [['Hébergement et nom de domaine', '12 mois', '420.00']] }] }
+  };
+  // Une ligne libre, sans catégorie : son groupe, en dernier, n'a plus de titre (Xavier, 2026-11-23).
+  var LIBRE = { batiment: ['Ponçage des radiateurs', '1 forfait', '120.00'], exterieur: ['Nettoyage de la terrasse', '1 forfait', '150.00'],
+    prestations: ['Licence du thème graphique', '1 forfait', '89.00'] };
+  var CATALOGUES = {
+    batiment: { metiers: 'Peintre, Plâtrier, Carreleur, Maçon, Sanitaire, Menuisier, Poseur de sols, Autre métier', modele: 'Marge (peintre)',
+      produits: [['Protection des sols et des meubles', 'forfait', '180'], ['Rebouchage et ponçage des murs', 'm²', '9'], ['Peinture des murs, 2 couches', 'm²', '28'], ['Heure de régie', 'h', '80']] },
+    exterieur: { metiers: 'Jardinier, paysagiste', modele: 'Épuré',
+      produits: [['Tonte du gazon, jusqu\'à 300 m²', 'forfait', '90'], ['Taille de haie, jusqu\'à 2 m de haut', 'm', '15'], ['Gazon en rouleau, fourni et posé', 'm²', '30'], ['Heure de jardinier', 'h', '85']] },
+    prestations: { metiers: 'Informatique, Conseil, Marketing, Autre prestation', modele: 'Technique (informatique), Lettre (conseil), Moderne (marketing), Sobre (autre)',
+      produits: [['Heure de développement', 'h', '140'], ['Journée de développement', 'jour', '1’100'], ['Maintenance et mises à jour', 'mois', '180'], ['Site vitrine, cinq pages', 'forfait', '3’500']] }
+  };
+
+  var ECRANS = {
+    dictee: function (m) {
+      return tel('Mes offres',
+        '<div class="feuille"><div class="timer">00:42</div><div class="dot"></div><p class="consigne">' + T(m, 'dictee') + '</p>' +
+        '<div class="btn danger">Terminer et créer l\'offre</div><span class="lien-faux">Abandonner sans envoyer</span></div>' +
+        '<div class="cat">En préparation</div>' +
+        '<div class="carte ocard"><b>' + T(m, 'dictee_nom') + ' du 22.11.2026</b><span class="status">Transcription</span></div>' +
+        '<div class="cat">Offres</div>' +
+        '<div class="carte ocard"><b>' + T(m, 'titre_defaut') + ' du 22.11.2026</b><span class="sous">titre donné quand la dictée n\'en dit pas</span></div>' +
+        '<p class="vide">Liste vide&nbsp;: «&nbsp;Aucune offre pour l\'instant. Le micro, en bas, enregistre ' + T(m, 'dictee_objet') + '&nbsp;; la flèche importe un fichier.&nbsp;»</p>' +
+        '<p class="vide">Entrée d\'une démo&nbsp;: «&nbsp;… indiquez votre courriel, puis dictez votre première ' + T(m, 'premiere') + '.&nbsp;»</p>');
+    },
+    offre: function (m) {
+      var o = OFFRES[m], g = M[m].groupe;
+      var lignes = o.groupes.map(function (gr) {
+        var tete = g
+          ? '<div class="grp"><span>' + h(gr.nom) + '</span><span class="st">' + gr.st + '</span><span class="renom">Renommer</span></div>'
+          : '<div class="grp"><span>' + h(gr.nom) + '</span></div>';
+        return tete + gr.lignes.map(function (l) {
+          return '<div class="ligne"><span>' + h(l[0]) + '</span><span class="m">' + l[2] + '</span><span class="q">' + h(l[1]) + '</span></div>';
+        }).join('');
+      }).join('') +
+        '<div class="grp"><span class="sans-titre">(sans titre, plus de «&nbsp;Hors catalogue&nbsp;»)</span></div>' +
+        '<div class="ligne"><span>' + h(LIBRE[m][0]) + '</span><span class="m">' + LIBRE[m][2] + '</span><span class="q">' + h(LIBRE[m][1]) + ' · ligne libre</span></div>';
+      var renommer = g
+        ? '<div class="carte"><div class="lab">Renommer la ' + T(m, 'groupe') + '</div><label>Nom de la ' + T(m, 'groupe') + '</label><div class="inp">' + h(o.groupes[0].nom) + '</div>' +
+          '<p class="aide">Toutes les lignes de «&nbsp;' + h(o.groupes[0].nom) + '&nbsp;» suivent. Le nom d\'une autre ' + T(m, 'groupe') + ' de l\'offre les y réunit.</p></div>' +
+          '<div class="carte"><div class="lab">Ajouter une ligne&nbsp;: ' + T(m, 'groupe', maj) + '</div><div class="puces"><span class="puce">Général</span>' +
+          o.groupes.map(function (gr, i) { return '<span class="puce' + (i === 0 ? ' on' : '') + '">' + h(gr.nom) + '</span>'; }).join('') +
+          '</div><div class="inp ph">Autre ' + T(m, 'groupe') + '</div></div>'
+        : absent('groupe', 'ni pièce ni zone. Pas de « Renommer », pas de choix du groupe à l\'ajout d\'une ligne.');
+      return tel('‹ Offres&nbsp;&nbsp;Offre 2', '<b>' + h(o.titre) + '</b>' + cp(m, 'rangement') + lignes + renommer);
+    },
+    entete: function (m) {
+      var acces = M[m].bloc_acces
+        ? '<label>' + T(m, 'bloc_acces') + '</label><div class="inp ph">Clé, place de parc</div><p class="aide">Paraît sur l\'offre dans le modèle «&nbsp;' + reste(m, 'Chantier') + '&nbsp;»&nbsp;: n\'y notez pas un code de porte.</p>'
+        : '<div class="replie" data-k="bloc_acces" tabindex="0">› Ajouter un accès</div><div class="cp">Replié&nbsp;: il s\'ouvre d\'un toucher, ou tout seul quand l\'offre porte déjà un accès.</div>';
+      return tel('‹ Offre&nbsp;&nbsp;Offre 2',
+        '<label>Objet de l\'offre</label><div class="inp">' + h(OFFRES[m].titre) + '</div>' +
+        '<div class="fs">' + (M[m].bloc_titre ? '<div class="legend">' + T(m, 'bloc_titre') + '</div>' : absent('bloc_titre', 'le titre du bloc.')) +
+        '<p class="aide">Facultatif&nbsp;: un champ laissé vide ne paraît pas sur l\'offre.</p>' +
+        '<label>' + T(m, 'bloc_adresse') + '</label><div class="inp"></div>' +
+        '<label>' + T(m, 'bloc_contact') + '</label><div class="inp ph">Nom, téléphone</div><p class="aide">Paraît sur l\'offre dans le modèle «&nbsp;' + reste(m, 'Chantier') + '&nbsp;».</p>' +
+        acces +
+        '<div class="duo"><div><label>' + T(m, 'debut') + '</label><div class="inp ph">semaine 3, 2027</div></div><div><label>Durée</label><div class="inp ph">6 jours ouvrables</div></div></div>' +
+        '<label>Non compris dans l\'offre</label><div class="inp grand"></div><p class="aide">Une ligne par élément, dix au plus. Par exemple&nbsp;: ' + T(m, 'non_compris_exemple') + '.</p>' +
+        '<label>' + T(m, 'date') + '</label><div class="inp ph">jj.mm.aaaa</div><p class="aide">Citée dans le modèle «&nbsp;Lettre&nbsp;».</p></div>');
+    },
+    document: function (m) {
+      var adr = 'Rue du Test 9, 2900 Porrentruy';
+      return '<div class="papier">' +
+        '<div class="ent">Atelier Exemple</div>' +
+        '<div class="obj"><b>OFFRE</b>&nbsp;&nbsp;' + h(OFFRES[m].titre) + '</div>' +
+        '<table class="infos"><tr><td><i>Date</i>22.11.2026</td><td><i>Valable jusqu\'au</i>22.12.2026</td><td><i>' + T(m, 'doc_lieu') + '</i>' + adr + '</td></tr></table>' +
+        '<div class="lignes-doc">les lignes de l\'offre</div>' +
+        '<i>Conditions</i><ul><li>Paiement&nbsp;: ' + T(m, 'paiement') + '</li><li>' + T(m, 'debut') + '&nbsp;: semaine 3, 2027. Durée&nbsp;: 6 jours ouvrables.</li>' +
+        '<li>Offre valable jusqu\'au 22.12.2026. Prix en francs suisses, TVA comprise dans le total.</li></ul></div>' +
+        '<div class="mod">Modèle Chantier, la fiche</div>' +
+        '<div class="papier"><table class="fiche"><tr><th colspan="2">' + T(m, 'doc_fiche') + '</th></tr>' +
+        '<tr><td>' + T(m, 'doc_adresse') + '</td><td>' + adr + '</td></tr><tr><td>' + T(m, 'bloc_contact') + '</td><td>Mme Essai, 079 000 00 00</td></tr>' +
+        '<tr><td>' + T(m, 'debut') + '</td><td>semaine 3, 2027</td></tr><tr><td>Durée estimée</td><td>6 jours ouvrables</td></tr></table></div>' +
+        '<div class="mod">Modèle Récapitulatif, au-dessus des lignes</div>' +
+        '<div class="papier"><div class="h2">' + T(m, 'doc_detail') + '</div></div>' +
+        '<div class="mod">Modèle Lettre, offre puis facture</div>' +
+        '<div class="papier"><p>Madame, Monsieur,</p><p>' + T(m, 'lettre_offre_debut') + ' ' + T(m, 'lettre_date') + ' 12 novembre 2026. ' + T(m, 'doc_lieu') + '&nbsp;: ' + adr + '.</p>' +
+        '<p>' + T(m, 'debut') + '&nbsp;: semaine 3, 2027. Paiement&nbsp;: ' + T(m, 'paiement', min) + '</p>' +
+        '<p style="border-top:1px dashed #cfc8ba;padding-top:6px">' + T(m, 'lettre_facture_debut') + ' Selon notre offre n°&nbsp;2 du 22.11.2026.</p></div>';
+    },
+    facturer: function (m) {
+      return tel('Facturer l\'offre 2',
+        '<div class="lab">Acompte, libellé sur la facture</div>' +
+        '<div class="puces"><span class="puce">À la commande</span><span class="puce">' + T(m, 'acompte_debut') + '</span><span class="puce">' + T(m, 'acompte_mi') + '</span></div>' +
+        '<p class="aide">Les puces remplissent le libellé&nbsp;: «&nbsp;Acompte ' + T(m, 'acompte_debut', min) + ', selon offre n°&nbsp;2&nbsp;».</p>' +
+        '<div class="lab">Facture finale</div><p class="aide">Quantités réelles, ' + T(m, 'travaux') + ' en plus&nbsp;: la facture prendra son numéro à la création.</p>' +
+        '<div class="lab">Brouillon de la facture</div><p class="aide">Corrigez les quantités réelles, ajoutez les ' + T(m, 'travaux') + ' en plus. L\'offre ne change pas.</p>');
+    },
+    reglages: function (m) {
+      var radios = MODES.map(function (x) {
+        var ex = { batiment: 'Peinture, plâtrerie, carrelage, maçonnerie, sanitaire, menuiserie, sols.', exterieur: 'Jardin, paysage, entretien extérieur.', prestations: 'Informatique, conseil, marketing, autres services.' }[x];
+        return '<div class="radio"><span class="rond' + (x === m ? ' on' : '') + '"></span><span><b>' + NOMS[x] + '</b><small>' + h(ex) + '</small></span></div>';
+      }).join('');
+      return tel('‹ Réglages&nbsp;&nbsp;Mon entreprise',
+        '<div class="carte"><div class="lab">Votre activité</div>' + radios +
+        '<p class="aide">Elle règle les mots de l\'application et de vos documents, et le rangement de vos prochaines offres. Votre catalogue et vos offres ne changent pas.</p></div>' +
+        '<div class="carte"><div class="lab">TVA et arrondi</div><p class="aide"><b>8,1&nbsp;%, taux normal</b><br>La plupart des ' + T(m, 'travaux') + ' et des fournitures.</p></div>' +
+        '<div class="carte"><div class="lab">Conditions de l\'offre</div><p class="aide">Sur l\'offre&nbsp;: «&nbsp;' + T(m, 'paiement') + '&nbsp;»</p>' +
+        '<p class="aide">Acomptes 30, 30, 40&nbsp;: «&nbsp;' + T(m, 'acomptes') + '&nbsp;»</p></div>' +
+        '<div class="carte"><div class="lab">Ma marque, phrases du modèle Lettre</div><div class="inp">' + T(m, 'lettre_offre_debut') + '</div>' +
+        '<p class="aide">Tournure proposée&nbsp;: «&nbsp;' + T(m, 'lettre_tournure') + '&nbsp;»</p>' +
+        '<p class="aide">' + reste(m, 'Après le début, la lettre ajoute d\'elle-même la date de la visite et l\'adresse du chantier.') + '</p></div>');
+    },
+    ia: function (m) {
+      var second = M[m].groupes_1
+        ? '<p>' + T(m, 'groupes_1') + '</p><p>Règles&nbsp;:</p><ul><li>' + T(m, 'groupes_2') + '</li><li>' + T(m, 'groupes_3') + '</li><li>' + T(m, 'groupes_4') + '</li><li>Jamais de tiret long&nbsp;: une virgule à la place.</li></ul>'
+        : absent('groupes_1', 'aucun second appel. L\'offre sort rangée par catégorie du catalogue, un appel de moins par offre.');
+      return '<div class="ia"><h4>Premier appel, les lignes de l\'offre</h4>' +
+        '<p>Tu prépares le brouillon d\'une offre pour ' + T(m, 'consigne_pour') + ', à partir de ' + T(m, 'consigne_source') + '.</p>' +
+        '<p class="commun">Règles communes aux trois&nbsp;: une ligne par travail dicté, rien d\'inventé&nbsp;; produit du catalogue ou ligne libre&nbsp;; prix dicté relevé&nbsp;; prix «&nbsp;en bloc&nbsp;»&nbsp;; quantité 1 et «&nbsp;forfait&nbsp;» sans quantité&nbsp;; certitude&nbsp;; extrait&nbsp;; client et lieu.</p>' +
+        '<p>- titre&nbsp;: court, ' + T(m, 'consigne_titre') + ', sans prix.</p>' +
+        cp(m, 'appels') + '</div>' +
+        '<div class="ia" style="margin-top:10px"><h4>Second appel, le rangement</h4>' + second + '</div>';
+    },
+    catalogue: function (m) {
+      var c = CATALOGUES[m];
+      return tel(EXEMPLE_METIER[m],
+        '<div class="lab">Métiers de cette activité</div><p class="aide">' + h(c.metiers) + '</p>' +
+        '<div class="lab">Modèle de document proposé</div><p class="aide">' + h(c.modele) + '</p>' +
+        '<div class="lab">Catalogue, quatre produits sur douze</div>' +
+        c.produits.map(function (p) { return '<div class="ligne"><span>' + h(p[0]) + '</span><span class="m">' + p[2] + '</span><span class="q">' + h(p[1]) + '</span></div>'; }).join('') +
+        '<div class="lab">Unités, les mêmes pour tous</div><div class="puces">' +
+        ['pce', 'm²', 'm', 'ml', 'm³', 'kg', 'h', 'jour', 'mois', 'passage', 'forfait'].map(function (u) { return '<span class="puce">' + u + '</span>'; }).join('') + '</div>');
+    }
+  };
+
+  // Mode affiché et surlignage, retenus par le navigateur.
+  function lire(cle, defaut) { try { var v = localStorage.getItem(cle); return v === null ? defaut : v; } catch (e) { return defaut; } }
+  function ecrire(cle, v) { try { localStorage.setItem(cle, v); } catch (e) { /* navigation privée : rien n'est gardé */ } }
+  var mode = lire('mk-activites-mode', window.innerWidth >= 900 ? 'trois' : 'prestations');
+  var surligne = lire('mk-activites-surligne', '1') === '1';
+
+  function rendre() {
+    document.querySelectorAll('[data-ecran]').forEach(function (bloc) {
+      var f = ECRANS[bloc.getAttribute('data-ecran')];
+      if (mode === 'trois') {
+        bloc.classList.remove('un');
+        bloc.innerHTML = MODES.map(function (m) { return '<div class="colonne"><h3>' + NOMS[m] + ' <small>' + EXEMPLE_METIER[m] + '</small></h3>' + f(m) + '</div>'; }).join('');
+      } else {
+        bloc.classList.add('un');
+        bloc.innerHTML = '<div class="colonne">' + f(mode) + '</div>';
+      }
+    });
+    document.querySelectorAll('.modes button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-mode') === mode)); });
+    document.body.classList.toggle('surligne', surligne);
+    document.getElementById('surligner').checked = surligne;
+  }
+
+  function tableau() {
+    document.getElementById('liste-mots').innerHTML = OU.map(function (o) {
+      var k = o[0], change = differe(k);
+      return '<tr data-v="' + (change ? 'change' : 'pareil') + '"><td class="cle">' + h(o[1]) + '</td>' + MODES.map(function (m) {
+        var v = M[m][k];
+        if (v === '') { return '<td><span class="ghost" data-k="' + k + '" tabindex="0">absent</span></td>'; }
+        var diff = change && v !== M.batiment[k];
+        return '<td>' + (diff ? '<span class="df" data-k="' + k + '" tabindex="0">' + h(v) + '</span>' : h(v)) + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+  }
+
+  // Bulle : les trois valeurs du mot touché.
+  var bulle = document.getElementById('bulle');
+  function montrer(el) {
+    var k = el.getAttribute('data-k');
+    bulle.innerHTML = '<div>' + h(LIB[k] || k) + '</div>' + MODES.map(function (m) {
+      var v = M[m][k];
+      return '<b>' + NOMS[m] + '</b>' + (v === '' ? '<span class="vide-b">absent</span>' : h(v));
+    }).join('');
+    bulle.style.display = 'block';
+    var r = el.getBoundingClientRect(), l = Math.min(window.innerWidth - bulle.offsetWidth - 8, Math.max(8, r.left));
+    var t = r.bottom + 8 + bulle.offsetHeight > window.innerHeight ? r.top - bulle.offsetHeight - 8 : r.bottom + 8;
+    bulle.style.left = l + 'px'; bulle.style.top = Math.max(8, t) + 'px';
+  }
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('.df[data-k], .ghost[data-k], .ghost-bloc[data-k]');
+    if (el && surligne) { montrer(el); return; }
+    if (!e.target.closest('#bulle')) { bulle.style.display = 'none'; }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { bulle.style.display = 'none'; }
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.matches('.df[data-k], .ghost[data-k], .ghost-bloc[data-k]') && surligne) { montrer(document.activeElement); }
+  });
+  window.addEventListener('scroll', function () { bulle.style.display = 'none'; }, { passive: true });
+
+  document.querySelectorAll('.modes button').forEach(function (b) {
+    b.addEventListener('click', function () { mode = b.getAttribute('data-mode'); ecrire('mk-activites-mode', mode); bulle.style.display = 'none'; rendre(); });
+  });
+  document.getElementById('surligner').addEventListener('change', function (e) { surligne = e.target.checked; ecrire('mk-activites-surligne', surligne ? '1' : '0'); bulle.style.display = 'none'; rendre(); });
+
+  // La barre des modes colle sous le sommaire du kit.
+  function caler() {
+    var toc = document.getElementById('mk-toc');
+    document.getElementById('barre').style.top = (toc && getComputedStyle(toc).position === 'sticky' ? toc.offsetHeight : 0) + 'px';
+  }
+
+  // Réponses sous chaque section.
+  var QUESTIONS = { dictee: 'Dictée et accueil', offre: 'Offre et rangement', entete: 'En-tête de l\'offre', document: 'Document envoyé au client',
+    facturer: 'Facturer', reglages: 'Réglages', ia: 'Ce que lit l\'IA', catalogue: 'Catalogue de départ', reste: 'Ce qui parle encore de bâtiment' };
+  var OPTIONS = { reste: ['À laisser pour l\'instant', 'À adapter maintenant'] };
+  var CLE = 'mk-activites-reponses-v1';
+  var rep = {};
+  try { rep = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { rep = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(rep)); } catch (e) { /* rien n'est gardé */ } recap(); }
+  function recap() {
+    var l = ['Maquette des activités, réponses de Xavier :'];
+    Object.keys(QUESTIONS).forEach(function (q) {
+      var r = rep[q] || {};
+      if (r.choix || r.note) { l.push('- ' + QUESTIONS[q] + ' : ' + (r.choix || 'sans choix') + (r.note ? '. ' + r.note : '')); }
+    });
+    document.getElementById('recap').textContent = l.length > 1 ? l.join('\n') : 'Aucune réponse pour l\'instant.';
+  }
+  document.querySelectorAll('.choix[data-q]').forEach(function (bloc) {
+    var q = bloc.getAttribute('data-q'), opts = OPTIONS[q] || ['Valider', 'À changer'];
+    bloc.innerHTML = '<div class="q">' + h(QUESTIONS[q]) + '&nbsp;: votre réponse</div><div class="boutons">' +
+      opts.map(function (o) { return '<button type="button" data-o="' + esc(o) + '" aria-pressed="false">' + h(o) + '</button>'; }).join('') +
+      '</div><textarea aria-label="Commentaire, ' + esc(QUESTIONS[q]) + '" placeholder="Le mot à changer, et par quoi"></textarea>';
+    var r = rep[q] || {};
+    bloc.querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-o') === r.choix));
+      b.addEventListener('click', function () {
+        rep[q] = rep[q] || {};
+        rep[q].choix = rep[q].choix === b.getAttribute('data-o') ? '' : b.getAttribute('data-o');
+        bloc.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.getAttribute('data-o') === rep[q].choix)); });
+        garder();
+      });
+    });
+    var ta = bloc.querySelector('textarea');
+    ta.value = r.note || '';
+    ta.addEventListener('input', function () { rep[q] = rep[q] || {}; rep[q].note = ta.value.trim(); garder(); });
+  });
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('recap').textContent, b = this;
+    function fait() { b.textContent = 'Copié'; setTimeout(function () { b.textContent = 'Copier le texte'; }, 1500); }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(fait, function () { secours(t); fait(); }); } else { secours(t); fait(); }
+  });
+  function secours(t) { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (e) { /* copie refusée */ } a.remove(); }
+
+  tableau();
+  rendre();
+  recap();
+  caler();
+  window.addEventListener('load', caler);
+  window.addEventListener('resize', caler);
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

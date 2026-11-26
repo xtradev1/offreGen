@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lettre, phrases de l'application</title>
+<style>
+:root { --ink: #23272D; --muted: #4A505A; --bg: #F4F1EA; --surface: #FFFFFF; --line: #DDD8CC; --accent: #23272D; --marque: #A8441F; --ok: #13553A; --ok-soft: #E1EFE6; --bad: #8C1D18; --bad-soft: #FBE7E4; --papier: #FFFFFF; --papier-ink: #1E2125; --auto: #EEF1F5; --auto-ink: #3D4450; --bleu: #1D4E89; --jeton: #E4ECF7; --jeton-ink: #163E6E;
+  --mk-ink: var(--ink); --mk-bg: var(--bg); --mk-surface: var(--surface); --mk-line: var(--line); --mk-accent: var(--marque); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --bad: #FF9A91; --bad-soft: #3B1613; --jeton: #22344D; --jeton-ink: #CFE0F7; } }
+:root[data-theme="dark"] { --ink: #ECEAE6; --muted: #B4B9C0; --bg: #15171A; --surface: #1E2125; --line: #33373D; --accent: #ECEAE6; --marque: #F0936E; --ok: #7DD3A8; --ok-soft: #183126; --bad: #FF9A91; --bad-soft: #3B1613; --jeton: #22344D; --jeton-ink: #CFE0F7; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px 16px 80px; }
+h1 { font-size: 26px; line-height: 1.2; margin: 18px 0 6px; }
+h2 { font-size: 21px; line-height: 1.25; margin: 0 0 4px; scroll-margin-top: 70px; }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.chapeau { color: var(--muted); max-width: 760px; }
+section.point { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 14px; margin: 22px 0; }
+.regle { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.regle li { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.regle li b { color: var(--ok); }
+.tranche { background: var(--ok-soft); color: var(--ink); border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
+.tranche b { color: var(--ok); }
+.decision { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.opts button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; }
+.opts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 650; }
+.opts button:focus-visible, textarea:focus-visible, .copier:focus-visible, .demo button:focus-visible, .demo textarea:focus-visible, .demo select:focus-visible, .demo input:focus-visible, summary:focus-visible { outline: 3px solid var(--marque); outline-offset: 2px; }
+textarea { width: 100%; min-height: 64px; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
+.recap textarea { min-height: 150px; font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; }
+.copier { font: inherit; font-weight: 650; min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.copie-ok { margin-left: 10px; color: var(--ok); font-weight: 600; }
+.reco { font-size: 13px; font-weight: 650; color: var(--ok); }
+
+.demo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; margin: 14px 0 6px; align-items: start; }
+@media (max-width: 860px) { .demo { grid-template-columns: 1fr; } }
+.ecran { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+.ecran h4 { margin: 0 0 2px; font-size: 17px; }
+.ecran .aide { font-size: 14px; color: var(--muted); margin: 0 0 10px; }
+details.replie { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; }
+details.replie > summary { cursor: pointer; font-weight: 650; min-height: 48px; display: flex; align-items: center; }
+.onglets { display: flex; gap: 6px; margin: 4px 0 10px; }
+.onglets button { font: inherit; font-size: 15px; font-weight: 600; min-height: 44px; flex: 1; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.onglets button[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.phrase { border-top: 1px solid var(--line); padding: 10px 0 12px; }
+.phrase > b { display: block; font-size: 14px; margin: 0 0 2px; }
+.phrase .quand { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
+.phrase textarea { min-height: 58px; }
+.jetons { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; align-items: center; }
+.jetons span { font-size: 13px; color: var(--muted); }
+.jetons button { font: inherit; font-size: 13.5px; min-height: 36px; padding: 4px 10px; border-radius: 999px; border: 1px solid #9DB3D1; background: var(--jeton); color: var(--jeton-ink); cursor: pointer; }
+.jetons .remettre { border-color: var(--line); background: var(--surface); color: var(--ink); }
+.faute { color: var(--bad); background: var(--bad-soft); border-radius: 8px; padding: 4px 8px; font-size: 13.5px; margin: 6px 0 0; }
+.essai { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 14px; color: var(--muted); margin: 0 0 8px; }
+.essai select { font: inherit; font-size: 14px; min-height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 2px 6px; }
+.feuille-d { background: var(--papier); color: var(--papier-ink); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 22px rgba(0, 0, 0, .12); padding: 26px 28px 30px; font: 15px/1.55 Georgia, "Source Serif 4", "Times New Roman", serif; }
+.feuille-d .concerne { font-weight: 700; margin: 0 0 14px; }
+.feuille-d .concerne span { color: var(--bleu); }
+.feuille-d .ph { margin: 0 0 12px; }
+.feuille-d .auto { background: #FFF3D6; outline: 2px solid #E6A23C; outline-offset: 1px; border-radius: 3px; }
+.feuille-d .donnee { background: var(--auto); color: var(--auto-ink); border-radius: 3px; padding: 0 2px; }
+.feuille-d .tableau-d { border: 1px dashed #9AA3AF; color: #3D4450; border-radius: 6px; padding: 12px; text-align: center; font: 14px/1.4 system-ui, sans-serif; margin: 0 0 12px; }
+.legende-d { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--muted); margin: 8px 0 0; }
+.legende-d span::before { content: ""; display: inline-block; width: 14px; height: 10px; margin-right: 6px; vertical-align: -1px; border-radius: 2px; }
+.legende-d .l-auto::before { background: #FFF3D6; outline: 2px solid #E6A23C; }
+.legende-d .l-donnee::before { background: var(--auto); border: 1px solid #C9CFD8; }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<nav id="mk-toc"></nav>
+<main>
+<h1>Lettre : réécrire les phrases de l'application</h1>
+<p class="chapeau">Ta réponse du 22 novembre : « l'idée c'est qu'on peut changer le texte pour écrire autrement ». Il s'agit des phrases que la lettre écrit d'elle-même à partir de l'offre : « Visite du … », « Chantier : … », les conditions, et sur la facture « Selon notre offre n° … », « Payable jusqu'au … ». Cette page propose de les réécrire autour de pastilles qui portent la donnée, pour que la date, l'adresse ou le montant restent justes. Rien n'est codé.</p>
+
+<section class="point" id="deja">
+<h2 id="h-deja" data-toc="Tranché">Déjà tranché et en place</h2>
+<div class="tranche"><b>L1 à L6</b> : formule d'appel, début et fin de l'offre et de la facture, réglables dans « Ma marque » sous Lettre (commit du 20 novembre, pas encore sur le test).</div>
+<div class="tranche"><b>Texte propre à une offre</b> (autre chantier, 21 novembre) : un texte avant et après les lignes, sur l'offre elle-même. Il remplace la phrase de début de « Ma marque ».</div>
+</section>
+
+<section class="point" id="demo">
+<h2 id="h-demo" data-toc="Essayer">Essayer</h2>
+<p>Réécris une phrase à gauche ; touche une pastille pour y remettre la donnée là où se trouve le curseur. À droite, change ce que porte l'offre (visite, non compris, TVA…) pour voir chaque phrase paraître ou disparaître avec sa donnée. Une pastille inconnue (tapée à la main, mal écrite) est signalée.</p>
+<div class="demo">
+  <div class="ecran" aria-label="Écran de réglage proposé">
+    <h4>4. Les phrases de la lettre</h4>
+    <p class="aide">Sous le modèle Lettre, après la formule d'appel, le début et la fin (déjà en place).</p>
+    <details class="replie" open>
+      <summary>Les phrases écrites d'après l'offre</summary>
+      <div class="onglets" role="group" aria-label="Document">
+        <button type="button" data-doc="offre" aria-pressed="true">Offre</button>
+        <button type="button" data-doc="facture" aria-pressed="false">Facture</button>
+      </div>
+      <div data-liste></div>
+    </details>
+  </div>
+  <div>
+    <div class="essai" data-essai></div>
+    <div class="feuille-d" aria-live="polite" aria-label="La lettre, telle qu'elle sortirait" data-feuille></div>
+    <div class="legende-d"><span class="l-auto">phrase réglable (cette page)</span><span class="l-donnee">donnée tirée de l'offre</span></div>
+  </div>
+</div>
+</section>
+
+<section class="point" id="decisions">
+<h2 id="h-dec" data-toc="Décisions">Cinq décisions</h2>
+
+<h3>M1. Comment réécrire</h3>
+<ul class="regle">
+<li><b>A</b> : la phrase entière se réécrit ; la donnée y est une pastille entre crochets, posée d'un toucher (la démo). Toute tournure est possible : « Nous débuterons les travaux la [début des travaux]. » <span class="reco">Recommandé</span></li>
+<li><b>B</b> : seuls les mots devant la donnée se changent (« Visite du » devient « Visite faite le »). Impossible de casser une phrase, mais impossible aussi de mettre la donnée au milieu.</li>
+</ul>
+<div class="decision" data-q="M1 Comment réécrire">
+<div class="opts"><button type="button" data-v="A">A. Phrase entière, pastilles</button><button type="button" data-v="B">B. Seulement les mots devant</button></div>
+<textarea aria-label="Commentaire sur la façon de réécrire" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h3>M2. Une phrase vidée</h3>
+<ul class="regle">
+<li><b>A</b> : reprend la phrase d'origine, comme le début et la fin. <span class="reco">Recommandé</span></li>
+<li><b>B</b> : la phrase disparaît de la lettre. La validité et le paiement ne peuvent pas disparaître : un client doit les lire.</li>
+</ul>
+<div class="decision" data-q="M2 Phrase vidée">
+<div class="opts"><button type="button" data-v="A">A. Reprend l'originale</button><button type="button" data-v="B">B. Disparaît (sauf validité et paiement)</button></div>
+<textarea aria-label="Commentaire sur une phrase vidée" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h3>M3. Où sur l'écran</h3>
+<ul class="regle">
+<li><b>A</b> : dans le même groupe « 4. Les phrases de la lettre », repliées sous « Les phrases écrites d'après l'offre » : quatorze champs, on ne les ouvre que pour les changer. <span class="reco">Recommandé</span></li>
+<li><b>B</b> : dépliées, à la suite du début et de la fin.</li>
+</ul>
+<div class="decision" data-q="M3 Où sur l'écran">
+<div class="opts"><button type="button" data-v="A">A. Repliées</button><button type="button" data-v="B">B. Dépliées</button></div>
+<textarea aria-label="Commentaire sur l'endroit" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h3>M4. Les onze autres modèles</h3>
+<ul class="regle">
+<li><b>A</b> : seulement la Lettre. Les autres modèles écrivent ces données en liste (« Début des travaux : semaine 3 »), pas en phrases. <span class="reco">Recommandé</span></li>
+<li><b>B</b> : les mêmes phrases servent aussi aux conditions des autres modèles.</li>
+</ul>
+<div class="decision" data-q="M4 Autres modèles">
+<div class="opts"><button type="button" data-v="A">A. Lettre seulement</button><button type="button" data-v="B">B. Tous les modèles</button></div>
+<textarea aria-label="Commentaire sur les autres modèles" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h3>M5. La facture annulée</h3>
+<ul class="regle">
+<li><b>A</b> : « Facture annulée le … : elle ne doit pas être payée. » reste fixe ; c'est elle qui empêche un paiement par erreur. <span class="reco">Recommandé</span></li>
+<li><b>B</b> : réglable comme les autres.</li>
+</ul>
+<div class="decision" data-q="M5 Facture annulée">
+<div class="opts"><button type="button" data-v="A">A. Fixe</button><button type="button" data-v="B">B. Réglable</button></div>
+<textarea aria-label="Commentaire sur la facture annulée" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+</section>
+
+<h2 id="reponses" data-toc="Copier">Copier mes réponses</h2>
+<div class="recap">
+<p>Ce texte se remplit avec tes choix. Copie-le et colle-le dans la conversation.</p>
+<textarea id="recap" readonly aria-label="Récapitulatif des réponses"></textarea>
+<p><button type="button" class="copier" id="copier">Copier le texte</button><span class="copie-ok" id="copie-ok" hidden>Copié.</span></p>
+</div>
+</main>
+
+<script>
+// La démo : chaque phrase porte ses pastilles ; une phrase dont la donnée manque ne paraît pas.
+(function () {
+  var NB = ' ';
+  var PHRASES = {
+    offre: [
+      { cle: 'visite', nom: 'Visite', quand: 'Si l\'offre a une date de visite. Après le début de la lettre.', texte: 'Visite du [date de la visite].', jetons: ['date de la visite'], si: 'visite', place: 'haut' },
+      { cle: 'chantier', nom: 'Chantier', quand: 'Si l\'offre a une adresse de chantier. Après le début de la lettre.', texte: 'Chantier : [adresse du chantier].', jetons: ['adresse du chantier'], si: 'chantier', place: 'haut' },
+      { cle: 'debut', nom: 'Début des travaux', quand: 'Si l\'offre le dit.', texte: 'Début des travaux : [début des travaux].', jetons: ['début des travaux'], si: 'debut', place: 'bas' },
+      { cle: 'duree', nom: 'Durée', quand: 'Si l\'offre la dit.', texte: 'Durée : [durée].', jetons: ['durée'], si: 'duree', place: 'bas' },
+      { cle: 'paiement', nom: 'Paiement', quand: 'Toujours.', texte: 'Paiement : [conditions de paiement]', jetons: ['conditions de paiement'], place: 'bas' },
+      { cle: 'escompte', nom: 'Escompte', quand: 'Si l\'offre a un escompte.', texte: 'Escompte [taux] % à [jours] jours.', jetons: ['taux', 'jours'], si: 'escompte', place: 'bas' },
+      { cle: 'validite', nom: 'Validité', quand: 'Toujours.', texte: 'Cette offre est valable jusqu\'au [date de validité].', jetons: ['date de validité'], place: 'bas' },
+      { cle: 'prix_tva', nom: 'Prix, avec TVA', quand: 'Si l\'offre a de la TVA.', texte: 'Prix en francs suisses, TVA comprise dans le total.', jetons: [], si: 'tva', place: 'bas' },
+      { cle: 'prix_sans', nom: 'Prix, sans TVA', quand: 'Si l\'offre n\'a pas de TVA.', texte: 'Prix en francs suisses.', jetons: [], si: '!tva', place: 'bas' },
+      { cle: 'noncompris', nom: 'Non compris', quand: 'Si l\'offre liste ce qui n\'est pas compris.', texte: '[n\'est pas ou ne sont pas] compris : [ce qui n\'est pas compris].', jetons: ['n\'est pas ou ne sont pas', 'ce qui n\'est pas compris'], si: 'noncompris', place: 'bas' }
+    ],
+    facture: [
+      { cle: 'reference', nom: 'Offre d\'origine', quand: 'Toujours. Après le début de la lettre.', texte: 'Selon notre offre n° [n° de l\'offre] du [date de l\'offre].', jetons: ['n° de l\'offre', 'date de l\'offre'], place: 'haut' },
+      { cle: 'payable', nom: 'Échéance', quand: 'Toujours (sauf facture annulée).', texte: 'Payable jusqu\'au [échéance] avec la section de paiement [ci-dessous ou de la page suivante].', jetons: ['échéance', 'ci-dessous ou de la page suivante'], place: 'bas' },
+      { cle: 'montants_tva', nom: 'Montants, avec TVA', quand: 'Si la facture a de la TVA.', texte: 'Montants en francs suisses, TVA comprise dans le total.', jetons: [], si: 'tva', place: 'bas' },
+      { cle: 'montants_sans', nom: 'Montants, sans TVA', quand: 'Si la facture n\'a pas de TVA.', texte: 'Montants en francs suisses.', jetons: [], si: '!tva', place: 'bas' }
+    ]
+  };
+  var ORIGINE = {};
+  ['offre', 'facture'].forEach(function (d) { PHRASES[d].forEach(function (p) { ORIGINE[p.cle] = p.texte; }); });
+  var ESSAI = [
+    { cle: 'visite', nom: 'Date de visite', val: true }, { cle: 'chantier', nom: 'Chantier', val: true },
+    { cle: 'debut', nom: 'Début', val: true }, { cle: 'duree', nom: 'Durée', val: false },
+    { cle: 'escompte', nom: 'Escompte', val: false }, { cle: 'tva', nom: 'TVA', val: true }
+  ];
+  var etat = { doc: 'offre', noncompris: 2, section: 'bas' };
+  ESSAI.forEach(function (e) { etat[e.cle] = e.val; });
+  var q = function (s) { return document.querySelector(s); };
+  var echapper = function (t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  var valeurs = function () {
+    var nc = etat.noncompris;
+    return {
+      'date de la visite': '5 novembre 2026', 'adresse du chantier': 'Rue du Test 9, 2900 Porrentruy', 'début des travaux': 'semaine 3, 2027', 'durée': '6 jours ouvrables',
+      'conditions de paiement': '30' + NB + '% à la commande, le solde à la fin des travaux.', 'taux': '2', 'jours': '10', 'date de validité': '20.12.2026',
+      'n\'est pas ou ne sont pas': nc > 1 ? 'Ne sont pas' : 'N\'est pas',
+      'ce qui n\'est pas compris': nc > 1 ? 'peinture de finition' + NB + '; installations électriques' : 'peinture de finition',
+      'n° de l\'offre': '42', 'date de l\'offre': '07.11.2026', 'échéance': '20.12.2026',
+      'ci-dessous ou de la page suivante': etat.section === 'bas' ? 'ci-dessous' : 'de la page suivante'
+    };
+  };
+  var actif = function (p) {
+    if (!p.si) return true;
+    if (p.si === '!tva') return !etat.tva;
+    if (p.si === 'noncompris') return etat.noncompris > 0;
+    return Boolean(etat[p.si]);
+  };
+  var rendre = function (p, texte) {
+    var v = valeurs();
+    var t = echapper(texte.trim() || ORIGINE[p.cle]);
+    t = t.replace(/\[([^\]]+)\]/g, function (m, nom) { return Object.prototype.hasOwnProperty.call(v, nom) ? '<span class="donnee">' + echapper(v[nom]) + '</span>' : m; });
+    if (/^<span class="donnee">/.test(t) === false) t = t.charAt(0).toUpperCase() + t.slice(1);
+    return '<span class="auto">' + t.replace(/ ([:;!?])/g, NB + '$1') + '</span>';
+  };
+  var textes = {};
+  ['offre', 'facture'].forEach(function (d) { PHRASES[d].forEach(function (p) { textes[p.cle] = p.texte; }); });
+  var liste = function () {
+    var boite = q('[data-liste]');
+    boite.innerHTML = '';
+    PHRASES[etat.doc].forEach(function (p) {
+      var div = document.createElement('div');
+      div.className = 'phrase';
+      div.innerHTML = '<b>' + p.nom + '</b><p class="quand">' + p.quand + '</p>';
+      var champ = document.createElement('textarea');
+      champ.value = textes[p.cle];
+      champ.setAttribute('aria-label', p.nom);
+      champ.addEventListener('input', function () { textes[p.cle] = champ.value; verifier(); feuille(); });
+      div.appendChild(champ);
+      var jetons = document.createElement('div');
+      jetons.className = 'jetons';
+      if (p.jetons.length) jetons.innerHTML = '<span>Pastilles :</span>';
+      p.jetons.forEach(function (j) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = '[' + j + ']';
+        b.addEventListener('click', function () {
+          var a = champ.selectionStart, z = champ.selectionEnd;
+          champ.value = champ.value.slice(0, a) + '[' + j + ']' + champ.value.slice(z);
+          champ.focus();
+          champ.selectionStart = champ.selectionEnd = a + j.length + 2;
+          champ.dispatchEvent(new Event('input'));
+        });
+        jetons.appendChild(b);
+      });
+      var remettre = document.createElement('button');
+      remettre.type = 'button';
+      remettre.className = 'remettre';
+      remettre.textContent = 'Remettre l\'originale';
+      remettre.addEventListener('click', function () { champ.value = p.texte; champ.dispatchEvent(new Event('input')); });
+      jetons.appendChild(remettre);
+      div.appendChild(jetons);
+      var faute = document.createElement('p');
+      faute.className = 'faute';
+      faute.hidden = true;
+      div.appendChild(faute);
+      var verifier = function () {
+        var inconnues = (champ.value.match(/\[[^\]]*\]/g) || []).filter(function (m) { return p.jetons.indexOf(m.slice(1, -1)) < 0; });
+        faute.hidden = !inconnues.length;
+        faute.textContent = inconnues.length ? 'Pastille inconnue : ' + inconnues.join(', ') + '. Touchez une pastille ci-dessus.' : '';
+      };
+      verifier();
+      boite.appendChild(div);
+    });
+  };
+  var feuille = function () {
+    var d = etat.doc, haut = [], bas = [];
+    PHRASES[d].forEach(function (p) { if (actif(p)) (p.place === 'haut' ? haut : bas).push(rendre(p, textes[p.cle])); });
+    var html = '<p class="concerne"><span>' + (d === 'offre' ? 'Offre n°' + NB + '42' : 'Facture n°' + NB + '2026-014') + '</span>' + NB + ': Rafraîchissement du séjour</p>'
+      + '<p class="ph">Madame, Monsieur,</p>'
+      + '<p class="ph">' + (d === 'offre' ? 'Nous vous remettons notre offre pour les travaux suivants.' : 'Nous vous adressons notre facture pour les travaux suivants.') + (haut.length ? ' ' + haut.join(' ') : '') + '</p>'
+      + '<div class="tableau-d">Le tableau des travaux et le total, inchangés</div>'
+      + '<p class="ph">' + bas.join(' ') + '</p>'
+      + '<p class="ph">' + (d === 'offre' ? 'Nous restons à votre disposition pour toute question et vous adressons, Madame, Monsieur, nos salutations les meilleures.' : 'Nous vous remercions de votre confiance et vous adressons, Madame, Monsieur, nos salutations les meilleures.') + '</p>';
+    q('[data-feuille]').innerHTML = html;
+  };
+  var essai = function () {
+    var boite = q('[data-essai]');
+    boite.innerHTML = '';
+    ESSAI.forEach(function (e) {
+      if (etat.doc === 'facture' && e.cle !== 'tva') return;
+      var l = document.createElement('label');
+      l.innerHTML = '<input type="checkbox"' + (etat[e.cle] ? ' checked' : '') + '> ' + e.nom;
+      l.querySelector('input').addEventListener('change', function (ev) { etat[e.cle] = ev.target.checked; feuille(); });
+      boite.appendChild(l);
+    });
+    var l = document.createElement('label');
+    if (etat.doc === 'offre') {
+      l.innerHTML = 'Non compris <select><option value="0">aucun</option><option value="1">un</option><option value="2">deux</option></select>';
+      l.querySelector('select').value = String(etat.noncompris);
+      l.querySelector('select').addEventListener('change', function (ev) { etat.noncompris = Number(ev.target.value); feuille(); });
+    } else {
+      l.innerHTML = 'Section de paiement <select><option value="bas">au bas de la page</option><option value="apart">page suivante</option></select>';
+      l.querySelector('select').value = etat.section;
+      l.querySelector('select').addEventListener('change', function (ev) { etat.section = ev.target.value; feuille(); });
+    }
+    boite.appendChild(l);
+  };
+  document.querySelectorAll('[data-doc]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      etat.doc = b.getAttribute('data-doc');
+      document.querySelectorAll('[data-doc]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      liste(); essai(); feuille();
+    });
+  });
+  liste(); essai(); feuille();
+})();
+
+// Les réponses : gardées dans ce navigateur, rassemblées pour la conversation.
+(function () {
+  var CLE = 'offregen-modeles-2026-11-22-lettre-phrases-auto';
+  var etat = {};
+  try { etat = JSON.parse(localStorage.getItem(CLE) || '{}') || {}; } catch (e) { etat = {}; }
+  function garder() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  var blocs = document.querySelectorAll('.decision');
+  function recap() {
+    var lignes = [];
+    blocs.forEach(function (b) {
+      var q = b.getAttribute('data-q'), r = etat[q] || {};
+      var choisi = b.querySelector('.opts button[data-v="' + (r.v || '') + '"]');
+      var l = q + ' : ' + (choisi ? choisi.textContent : '(pas de réponse)');
+      if (r.c) l += '. Commentaire : ' + r.c.replace(/\s+/g, ' ').trim();
+      lignes.push(l);
+    });
+    document.getElementById('recap').value = lignes.join('\n');
+  }
+  blocs.forEach(function (b) {
+    var q = b.getAttribute('data-q');
+    etat[q] = etat[q] || {};
+    var boutons = b.querySelectorAll('.opts button');
+    var champ = b.querySelector('textarea');
+    boutons.forEach(function (bt) {
+      bt.setAttribute('aria-pressed', bt.getAttribute('data-v') === etat[q].v ? 'true' : 'false');
+      bt.addEventListener('click', function () {
+        etat[q].v = etat[q].v === bt.getAttribute('data-v') ? '' : bt.getAttribute('data-v');
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-v') === etat[q].v ? 'true' : 'false'); });
+        garder(); recap();
+      });
+    });
+    if (champ) {
+      champ.value = etat[q].c || '';
+      champ.addEventListener('input', function () { etat[q].c = champ.value; garder(); recap(); });
+    }
+  });
+  recap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = document.getElementById('recap');
+    var ok = function () { var s = document.getElementById('copie-ok'); s.hidden = false; setTimeout(function () { s.hidden = true; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); document.execCommand('copy'); ok(); }); }
+    else { t.select(); document.execCommand('copy'); ok(); }
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

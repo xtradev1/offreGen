@@ -1,0 +1,25 @@
+/* Pages juridiques (mentions légales, protection des données, conditions). Chargée après site.css, dont elle reprend les couleurs. */
+.bande img.logo{height:34px;width:auto;display:block}
+.vers-accueil{display:inline-flex;align-items:center;min-height:48px}
+main.juridique{padding:36px 0 64px}
+main.juridique .in{max-width:780px}
+main.juridique h1{font-size:clamp(32px,4.2vw,46px);margin:28px 0 8px}
+main.juridique h2{font-size:clamp(22px,2.6vw,27px);letter-spacing:-.3px;margin:40px 0 12px;scroll-margin-top:80px}
+main.juridique h3{font-size:18px;margin:24px 0 6px}
+main.juridique p{margin:0 0 12px}
+main.juridique ul{margin:0 0 12px;padding-left:22px}
+main.juridique li{margin:6px 0}
+main.juridique a{text-underline-offset:3px}
+.version{color:var(--doux);font-size:15px}
+.fiche{background:var(--blanc);border:1px solid var(--trait);border-radius:12px;padding:16px 20px 4px;margin:0 0 14px}
+.brouillon{background:var(--av-l);color:var(--av);border-radius:8px;box-shadow:inset 4px 0 0 var(--av);padding:12px 16px;font-size:15.5px}
+.a-completer{background:var(--av-f);color:var(--av);font-weight:600;border-radius:4px;padding:1px 5px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+/* Cibles de 44 px au moins (règle du pouce, CODING_RULES.md). site.css les laisse à la hauteur du texte. */
+footer a{display:inline-flex;align-items:center;min-height:44px}
+footer a[aria-current]{color:#fff;text-decoration:none}
+@media (max-width:860px){
+  body{padding-bottom:0} /* site.css réserve 84 px à la barre du pouce de la présentation, absente ici. */
+  .bande img.logo{height:30px}
+  main.juridique{padding:20px 0 48px}
+  main.juridique h1{margin-top:22px}
+}
