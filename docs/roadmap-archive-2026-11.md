@@ -15,3 +15,12 @@ Entrées sorties de `PROJECT_ROADMAP.md`, telles quelles.
 - [2026-11-17] **Luigi, limites, pièces, prix dicté, formules**
   - Réunion avec Luigi ; limites 30 min et 300 postes ; plafond des comptes d'essai ; sous-chantier 28 (pièces) et prix dicté livrés sur le test.
   - Coûts, prix, paiement et formules étudiés. Détail : `26-couts-ia/`, `docs/terrain/2026-11-17_luigi-peintre.md`.
+
+## Archivées le 2026-11-26
+- [2026-11-18] **Mise en production ouverte**
+  - Inventaire, plan, recette regroupée ; `ETAT.md` des sous-chantiers remis à jour ; démo du test remise à zéro, compte `essai-recette` créé.
+  - Détail : `docs/plans/2026-11-17_mise-en-production/`.
+- [2026-11-20] **Page d'accueil de Dicta en ligne sur le test**
+  - Page à `/` (visiteur) et `/decouvrir`, formulaire d'essai, connexion en carte, logo de l'application vers le site, scène qui avance aussi avec « Réduire les animations ».
+  - Validée par Xavier ; restent la phrase « ni conservées », les pages légales, les vignettes.
+  - Détail : `docs/plans/2026-11-17_mise-en-production/ETAT.md`.

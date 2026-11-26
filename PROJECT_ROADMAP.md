@@ -5,7 +5,7 @@
 - Goal : application d'offres vocales pour artisans. L'artisan décrit les travaux à voix haute pendant la visite, l'application produit une offre à partir de son catalogue, il la corrige à la voix ou à l'écran.
 - Owner : Xavier Frelechoz (XtraDev)
 - Created : 2026-11-05
-- Last updated : 2026-11-25
+- Last updated : 2026-11-26
 
 ## Executive summary
 - L'application tourne de bout en bout sur le site de test (`easy-offres.xtradev.ch`) : dictée ou import, Whisper et Qwen 27B chez Infomaniak, offre rangée par pièce, corrections, catalogue, clients, PDF, facture avec QR-facture. Suite verte et PHPStan sans erreur au déploiement de `e046e57` (2026-11-23). La page d'accueil de Dicta est en ligne sur le test (`/`, `/decouvrir`).
@@ -17,7 +17,7 @@
 - Données : adresses et état des logements des clients de l'artisan, transmis à Infomaniak. Une dictée peut contenir par accident des données sensibles (santé d'un occupant, par exemple).
 - Hébergement Infomaniak, serveur Cloud. IA chez Infomaniak (produit 357) : Whisper pour la transcription, Qwen 3.8 27B (bêta) pour l'extraction.
 - Dépôt GitHub privé `xtradev1/offreGen`, plan Free. Copie de travail dans WSL (`~/offreGen`) ; la copie de SynologyDrive n'est plus tenue à jour.
-- Suivi du temps : projet Origin 44. Chantier de la voix à l'offre : tâches 315, 400, 403, 414, 422, 428, 434, 438, 442, 447, 452. Mise en production : tâche 458, sous-tâche 459. Responsive : tâche 478. Options et variantes : tâche 547 (sous-tâches 548 à 554 ; 499 en doublon d'estimation, signalé). Prospects : tâche 616.
+- Suivi du temps : projet Origin 44. Chantier de la voix à l'offre : tâches 315, 400, 403, 414, 422, 428, 434, 438, 442, 447, 452. Mise en production : tâche 458, sous-tâche 459. Responsive : tâche 478. Options et variantes : tâche 547 (sous-tâches 548 à 554 ; 499 en doublon d'estimation, signalé). Prospects : tâche 616. Parcours de la dictée : tâches 626 (sous-tâches 627 à 629), 630 et 631.
 - Règles opposables : `CODING_RULES.md`, `docs/SECURITE.md`, `docs/DEPLOIEMENT.md`.
 
 ## Decisions
@@ -43,6 +43,7 @@
 - [2026-11-24] Dictée et vocabulaire du métier (sous-chantier 30, recette MP-A8) : le catalogue de l'artisan part en `prompt` de Whisper (produits les plus utilisés d'abord, 500 caractères au plus). Écartés après mesure : un lexique par métier écrit à la main, une couche phonétique en code, une règle de « réflexion » dans la consigne (54 produits visés sur 54 avec et sans elle). Détail : `docs/plans/2026-11-07_voix-offre/30-dictee-mal-comprise/ETAT.md`.
 - [2026-11-24] **Prospects** (réponses de Xavier à la maquette, P1 à P9, puis sa décision du même jour) : un catalogue pour que les commerciaux s'organisent entre eux, sans ordres ; chacun prend lui-même une fiche ; un collègue voit le nom, la localité, le métier, qui la suit et depuis quand, sans téléphone ni notes (P2 = A) ; les notes suivent la fiche (P6 = A) ; la liste ne donne aucun droit, la commission reste réglée par C1. Une fiche reste suivie tant qu'on ne la lâche pas, sans plafond, « pour l'instant » (remplace P3 = B et le plafond de 30). À confirmer : un compte d'un collègue se voit en cherchant son nom (exception à « le commercial ne voit que ses artisans » du 19.11). Détail : `docs/plans/2026-11-24_prospects/ETAT.md`.
 - [2026-11-25] **Fluidité sur iPhone** (Xavier, 24 et 25.11) : `fluide.js` chargé dès l'en-tête et `app.js` injecté par lui, pour que les gestes marchent dès que l'offre paraît (« l'interface ne doit pas apparaître en 2 s ») ; zoom de Safari à l'entrée d'un champ coupé par `maximum-scale=1`, posé dans Safari sur iOS seulement (Chrome sur iPhone et Android perdraient le zoom à deux doigts) ; le service worker garde les anciennes versions des scripts tant qu'une page gardée les cite (M7). Détail : `docs/plans/2026-11-24_fluidite-suite/ETAT.md`.
+- [2026-11-26] **Parcours de la dictée** (Xavier, maquettes v1 et v2, puis huit constats « À faire ») : enregistrement en plein écran sombre avec onde, conseils, alerte après 5 s de silence et pause ; attente avec anneau et trois étapes ; dès que l'offre est propre (aucune ligne à relire, client rattaché), le PDF s'ouvre, à la fin de la dictée comme après la dernière ligne relue ; « Offre prête » sans le prix quand il reste des lignes ; bouton « Mettre en arrière-plan ». Un seul compte des lignes à relire, partout (`Offre\Arrivee`). Détail : `docs/plans/2026-11-25_parcours-dictee/ETAT.md`.
 
 ## Current state
 ### Done
@@ -59,6 +60,7 @@
 - [ ] Prospects, le catalogue des commerciaux (`docs/plans/2026-11-24_prospects/`, copie `~/offreGen-prospects`, Origin 616) : rubrique « Prospects » de l'administration en service sur le test (`ec8bab0`, sonde verte, migration `Version20261124210001`), fiche gardée jusqu'à ce qu'on la lâche, sans plafond. Gate prod ouvert : recette de Xavier attendue (`RECETTE.md`, sept scénarios). Les vrais prospects attendent le site de production.
 - [ ] Documents et réglages (`docs/plans/2026-11-24_documents-reglages/`, copie `~/offreGen-documents`, Origin projet 44, tâche à créer sur accord de Xavier) : choix de Xavier L1 à V3 appliqués. « Phrases du document » devient une rubrique des réglages, hors de l'assistant ; filigrane « Aperçu » retiré de Facturer et du brouillon ; une variante reprend la quantité et l'unité de la ligne remplacée, et un produit d'une autre unité passe dans « Relire ». En service sur le test (`2ddda06`, sonde verte, aucune migration), recette de Claude conforme. Gate prod ouvert : recette de Xavier attendue (`RECETTE.md`, quatre scénarios).
 - [ ] Fluidité, suite de la recette du 24.11 (`docs/plans/2026-11-24_fluidite-suite/`, copie `~/offreGen-fluidite`, Origin projet 44, sans tâche à la demande de Xavier) : gestes dès l'affichage (SR-1), « Envoyer » par offre (SR-6), pièces en puces (MP-A14), fiche remplie d'après la dictée (MP-A19), « Enregistrer » après le clavier d'iOS, zoom de Safari, offre gardée sans réseau après un déploiement (M7). En service sur le test (`1c5929e`, sonde verte). Xavier, 25.11 : « c'est top » sur le clavier et le zoom. Reste : sa recette F-1 à F-11 (`RECETTE.md`).
+- [ ] Parcours de la dictée et constats des parcours (`docs/plans/2026-11-25_parcours-dictee/`, copie `~/offreGen-micro`, Origin 626, 630, 631) : onze lots, revue (six défauts corrigés) et bouton « Mettre en arrière-plan » en service sur le test (`34cfb23`, sonde verte, aucune migration), recette de Claude sur le test conforme. Gate prod ouvert : recette de Xavier sur iPhone attendue (`RECETTE.md`, douze scénarios). Ouverts : textes des conseils « extérieur » et « prestations », « en quelques minutes » dans le guide, pièce d'une ligne sous « Plus de réglages ».
 
 ### Next
 - [ ] Recette regroupée par Xavier sur le test (`docs/plans/2026-11-17_mise-en-production/RECETTE.md`).
@@ -128,6 +130,7 @@
 - 2026-11-24 : prospects. Les fiches portent des données personnelles (raisons individuelles, personnes de contact, notes libres) : mention dans la politique de confidentialité et durée de garde à fixer avec le lot juridique (Origin 463), rien n'efface une fiche aujourd'hui. Registre du commerce et registre IDE hors de la version 1 (accès non confirmé, registre IDE annoncé comme remplacé par le BER). Une démo finie supprimée détache sa fiche, qui perd la trace de la démo. Détail : `docs/plans/2026-11-24_prospects/REVUE.md` et `RECETTE.md`. Depuis le 24.11, ni plafond ni libération à date : rien n'empêche un commercial de garder 100 fiches ; question posée à Xavier (l'administrateur doit-il pouvoir libérer une fiche ?).
 - 2026-11-24 : documents. Le filigrane « Aperçu » ne marquait que l'aperçu d'une facture pas encore créée ; il est retiré. Les PDF d'une démo ne portent aucune marque « Démonstration » : une démo sort une facture sans marque, comme avant ce retrait. Suite : Origin 557 et 509. Détail : `docs/plans/2026-11-24_documents-reglages/ETAT.md`.
 - 2026-11-25 : fluidité. Cause du zoom de Safari sur toutes les cases non trouvée au banc (champs à 16 px) : `maximum-scale=1` le coupe sans l'expliquer. Recalage après le clavier d'iOS : contournement d'un défaut de WebKit (iOS 26, encore signalé dans la bêta d'iOS 27), prouvé au banc, pas sur l'appareil. M7 : une ancienne version des scripts reste jusqu'à 14 jours si une page gardée la cite ; la reprise par une nouvelle version du service worker n'est pas jouée au banc. M10 (« Envoyer » touché dans les premières dizaines de millisecondes) reste ouvert. Détail : `docs/plans/2026-11-24_fluidite-suite/REVUE.md`.
+- 2026-11-26 : parcours de la dictée. Rien n'est prouvé sur iPhone : la pause (`MediaRecorder.pause`), le niveau du micro (contexte audio créé dans le toucher), l'alerte de silence et le clavier ouvert par le curseur n'ont été joués que dans Chromium. Durée d'attente annoncée par l'anneau : 10 s plus 3 % de la durée dictée, d'après onze dictées du test de moins de quatre minutes (médiane 8 s). Le guide de la démo n'est couvert par aucun test : à rejouer par Playwright dès qu'un écran de dictée change. Détail : `docs/plans/2026-11-25_parcours-dictee/REVUE.md` et `RECETTE.md`.
 
 ## Archives
 - Décisions anciennes → `docs/roadmap-archive-decisions.md`
@@ -135,13 +138,6 @@
 
 ## Session log
 - Entrées plus anciennes → `docs/roadmap-archive-2026-11.md`.
-- [2026-11-18] **Mise en production ouverte**
-  - Inventaire, plan, recette regroupée ; `ETAT.md` des sous-chantiers remis à jour ; démo du test remise à zéro, compte `essai-recette` créé.
-  - Détail : `docs/plans/2026-11-17_mise-en-production/`.
-- [2026-11-20] **Page d'accueil de Dicta en ligne sur le test**
-  - Page à `/` (visiteur) et `/decouvrir`, formulaire d'essai, connexion en carte, logo de l'application vers le site, scène qui avance aussi avec « Réduire les animations ».
-  - Validée par Xavier ; restent la phrase « ni conservées », les pages légales, les vignettes.
-  - Détail : `docs/plans/2026-11-17_mise-en-production/ETAT.md`.
 - [2026-11-22] **Responsive livré sur le test**
   - Audit, cinq tours de maquette et de décisions, corrections au téléphone, sur tablette et au PC ; recette par l'écran, 980 tests.
   - Reporté depuis une copie propre après le commit des modèles ; 2a et 2b gardés dans leur version du chantier des modèles.
@@ -182,3 +178,7 @@
   - Zoom à l'entrée d'un champ coupé dans Safari sur iOS, texte de l'offre à 16 px. Xavier : « c'est top ».
   - M7 : anciennes versions des scripts gardées tant qu'une page gardée les cite, version récente en secours ; défaut reproduit au banc avec l'ancien service worker, absent avec le correctif ; 1618 tests.
   - `1c5929e` déployé, sonde verte. Recette F-1 à F-11 attendue. Détail : `docs/plans/2026-11-24_fluidite-suite/ETAT.md`.
+- [2026-11-26] **Parcours de la dictée et huit constats en service sur le test**
+  - Micro immédiat (25.11), deux maquettes validées, analyse des parcours (rapport, huit constats « À faire »), onze lots, revue indépendante (six défauts corrigés), 1655 tests.
+  - Arrivée sur le PDF sans toucher quand l'offre est propre ; enregistrement plein écran avec pause et alerte de silence ; « Mettre en arrière-plan ». `34cfb23` déployé, sonde verte ; dictée d'essai traitée en 10 s sur le test.
+  - Non vérifié sur iPhone. Recette de Xavier attendue. Détail : `docs/plans/2026-11-25_parcours-dictee/ETAT.md`.
