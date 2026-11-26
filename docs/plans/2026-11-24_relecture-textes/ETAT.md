@@ -69,6 +69,14 @@ Une première version (2 186 textes extraits du code, page claude.ai) a été re
    fichiers, les copies des écrans et la maquette locale (sans aperçu en direct : un fichier ouvert du disque ne
    peut pas lire les copies).
 
+## Vidéo de mode d'emploi
+
+- 2026-11-26, à la demande de Xavier : 1 min 32, sans son, sous-titrée, enregistrée sur la page du test par
+  `outils/video/video.js` (un correcteur fictif, « Marie Exemple » ; rien n'est écrit sur le serveur). Conversion :
+  `ffmpeg -i <video>.webm -c:v libx264 -crf 24 -pix_fmt yuv420p -movflags +faststart -an relecture-dicta.mp4`.
+- Fichier remis à Xavier hors du dépôt : `SynologyDrive/Travail/Xtradev/Projet/En cours/OffreGen/
+  Relecture-Dicta-mode-d-emploi.mp4` (4,3 Mo). À refaire si la page change.
+
 ## Reste à faire
 
 - Fait le 2026-11-24 avec l'accord de Xavier : déploiement sur le test, ligne `RELECTURE_TEXTES=1` ajoutée à
