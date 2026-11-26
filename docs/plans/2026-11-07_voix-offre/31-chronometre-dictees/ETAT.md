@@ -22,7 +22,9 @@ Lot 8 fait : déployé sur le test (`0ec9fff`), recette par l'interface jouée p
 - Jouer `RECETTE.md`, section « À toi » (iPhone, environ 15 minutes).
 - Trancher S1 de `REVUE.md` : le texte des dictées dans le rapport de l'administration (garder, journaliser chaque ouverture, ou cacher derrière un clic journalisé).
 - Dire si je supprime `~/offreGen-base-coupee` (copie d'une autre session, correctif de connexion en double).
-- Dire si l'alerte d'essai du 2026-11-25 (« essai d'alerte », vers 14 h 50) est arrivée dans la boîte XtraDev.
+- Dire si les alertes du 2026-11-25 sont arrivées dans la boîte XtraDev : « essai d'alerte » vers 14 h 50, « dictées bloquées » dès 15 h 25.
+- Envoyer le message au support d'Infomaniak (texte dans « Preuves », panne du 2026-11-25).
+- Décider du Whisper de secours sur un GPU loué (chiffrage indicatif dans le journal du 2026-11-25) ; si oui, un essai d'une heure sur une L4 d'Infomaniak (moins de CHF 1) pour chronométrer Whisper large-v3 sur les dictées du test.
 - Production : remplir `ALERTES_A` dans le `.env` avant le premier artisan (noté dans `docs/DEPLOIEMENT.md`, contrôles en production).
 
 ## Suivi Origin
@@ -97,8 +99,47 @@ Questions reposées le même jour (outil de questions) : « refaire » = « Rejo
 - 2026-11-25 : réponses de Xavier : 1 s gardé, 1,5 s après 30 s, 300 ms avant l'ouverture de l'offre, JSON « un peu plus tard », rafale permise (« il n'y a personne qui va faire ces appels »). Rafale jouée depuis le serveur de test : aucune limite atteinte à 130 par minute. Réserve : des demandes sur un lot inexistant (404) ; une limite comptée seulement sur les lots réels resterait invisible. Lot 10 codé, suite complète verte.
 - 2026-11-25 : accord de Xavier pour déployer (« Tu peux déployer ») et demande d'un point de vérification. Premier déploiement de `6f49927` refusé à l'analyse statique : `deployer-test.sh` lance phpstan sur la copie de travail, où j'écrivais déjà les fichiers du lot 11. Rien n'est parti (refus avant la construction). Constat : `ALERTES_A` vide sur le test, aucune alerte n'y part. Lot 11 codé ; deux anciens tests simulaient la panne des pièces et des options par un 503, passés à 500 (503 est désormais un refus).
 - 2026-11-25 : lot 11 déployé (`e73398f`, sonde verte). Le test tournait déjà sur `1c5929e` (déployé par la session fluidité), qui contenait les lots 9 et 10 ; les deux commits de cette session non encore en service ne touchaient que des documents. `ALERTES_A` ajouté au `.env` du test (copie gardée : `partage/.env.avant-alertes-2026-11-25`), une alerte d'essai écrite au journal : état des alertes écrit, aucun « alerte non envoyée ». L'arrivée dans la boîte reste à confirmer par Xavier.
+- 2026-11-25 : Xavier signale des transcriptions de 75, 73 et 65 minutes (dictées 46, 47, 48). Cause : Infomaniak. Chez nous, chaque étape dure moins d'une seconde ; seule l'étape `transcription` (attente du texte) traîne. Le cron redemande le texte chaque minute, Infomaniak répond « processing » sans erreur ni 429 (aucun avertissement au journal). Les dictées 46 et 47 sont revenues dans le même passage du cron : file bouchée qui se vide d'un coup. Sonde (son de la dictée 48, envoyée à 17 h 36) toujours « processing » après 20 minutes ; les rejeux 3 et 4 de Xavier ont échoué à 600 s, comme prévu. Panne d'au moins 15 h 20 à 17 h 56, aucun incident publié trouvé. L'alerte « dictées bloquées » est partie à 15 h 25 : le point de vérification du lot 11 a joué son rôle.
+- 2026-11-25 : les réponses 200 d'Infomaniak portent `x-ratelimit-limit: 2000` (1995 restants pendant la panne). La note « aucun en-tête de limite relevé » venait des 404 de la rafale : commentaire de `Traiteur` corrigé.
+- 2026-11-25 : message au support rédigé avec Xavier (trois tours de relecture, puis ses consignes : plus court, sans type ni numéro de produit, question sur la capacité ajoutée), à envoyer par lui. Chiffrage GPU indicatif, prix d'appel hors TVA relevés le 2026-11-25 : L4 24 Go chez Infomaniak (Suisse) CHF 0.29 / h, environ CHF 215 par mois 24 h/24 ou CHF 75 de 7 h à 19 h en semaine, Whisper seul ; L40S 48 Go CHF 0.76 / h, environ CHF 555 par mois, Whisper et Qwen 27B. Ramené à l'offre (environ 0,3 ct aujourd'hui, chiffre du sous-chantier 20, non remesuré) : 21,5 ct de plus à 1 000 offres par mois pour la L4. Avis donné : Whisper de secours sur une L4 quand l'API ne rend pas le texte en 30 à 60 s, Qwen gardé chez Infomaniak (0,5 à 1 s pendant la panne). Rien de décidé.
 
 ## Preuves
+
+### Panne de la transcription d'Infomaniak (2026-11-25, heures UTC sauf mention)
+
+```
+dictée 46  transcription_envoi 14:19:59.229  177 ms   transcription 14:19:59.409 -> 15:35:01.746  4 502 338 ms   ia_* (cron) 15:35:01 -> 15:35:03
+dictée 47  transcription_envoi 14:21:35.403   98 ms   transcription 14:21:35.503 -> 15:35:04.205  4 408 703 ms   ia_* (cron) 15:35:04 -> 15:35:05
+dictée 48  transcription_envoi 15:01:49.543  149 ms   transcription 15:01:49.695 -> 16:07:01.641  3 911 946 ms   ia_* (cron) 16:07:01 -> 16:07:03
+dictée 45  (même jour, 09:03)                          transcription 6 203 ms
+GET /1/ai/357/results/<lot> à 16:35 UTC : status success pour 44 à 48 ; x-ratelimit-limit: 2000, x-ratelimit-remaining: 1999 -> 1995
+sonde a34fa477-4e58-48c7-80e9-f34b9963f1e7 envoyée 16:36:10 : en cours après 1194 s (586 demandes) ; toujours pas de texte après 20 min
+rejeu 3 (dictée 46) 16:40:13 -> échec 16:50:14 « Transcription sans résultat après 600 s. » ; rejeu 4 (dictée 47) 16:40:47 -> échec 16:50:47
+app.log (+01:00) : première « dictées bloquées » à 15:25:02, puis une par minute ; aucun avertissement ni refus de 15:00 à 17:10
+```
+
+Message au support (version de Xavier, à envoyer par lui) :
+
+```
+Objet : transcriptions Whisper très lentes le 25 novembre
+
+Bonjour,
+
+Je construis un produit qui utilise votre API Whisper pour les transcriptions.
+
+Le 25 novembre, en fin d'après-midi, des dictées de quelques secondes sont restées plus d'une heure en « processing ». D'habitude, elles reviennent en moins de 10 secondes. Exemple : le lot a34f82b9-defa-43a7-b5d1-8b3f3fd5628f, envoyé à 16 h 01, terminé vers 17 h 07.
+
+Mes questions :
+1. Y a-t-il eu un souci de votre côté ce jour-là ?
+2. Quel délai puis-je attendre pour une transcription courte, et ce délai est-il garanti ?
+3. Comment m'assurer de la fiabilité du service avant de le mettre en production ?
+4. Combien de requêtes votre service d'IA supporte-t-il, pour la transcription comme pour les modèles de langage ? Combien de transcriptions en même temps, combien par minute, et que se passe-t-il au-delà ?
+
+Merci d'avance,
+
+Xavier Freléchoz
+XtraDev
+```
 
 ### Lot 11 en service et ALERTES_A (2026-11-25)
 

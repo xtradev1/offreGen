@@ -47,8 +47,8 @@ final class Traiteur
      * Rythme des redemandes du texte (Xavier, 2026-11-25) : chaque seconde pendant les ATTENTE_RAPIDE_SECONDES premières
      * secondes, puis toutes les INTERVALLE_LENT_SECONDES (1,5 s, Xavier, 2026-11-25 ; 3 s au premier jet). Le texte
      * arrive en général en moins de 10 s ; une attente qui traîne n'envoie pas une requête par seconde chez Infomaniak
-     * (limite générale de leur API : 60 par minute et par clé, non confirmée pour la transcription, aucun en-tête de
-     * limite relevé le 2026-11-25).
+     * (leurs réponses 200 aux résultats portent x-ratelimit-limit: 2000, relevé le 2026-11-25 ; les 404 de la rafale
+     * du même jour n'en portaient pas).
      */
     public const INTERVALLE_ATTENTE_SECONDES = 1;
     public const INTERVALLE_LENT_SECONDES = 1.5;
