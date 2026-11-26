@@ -36,6 +36,14 @@
       <input id="prix" name="prix" value="{{ champs.prix }}" inputmode="decimal" autocomplete="off" placeholder="Prix"{{ f.invalide(erreurs, 'prix') }}>
       {{ f.erreur(erreurs, 'prix') }}
     </div>
+    {# Les réglages rares sous « Plus de réglages » (constat 6 de l'analyse des parcours, Xavier, 2026-11-26) : la
+       désignation, la quantité, l'unité et le prix restent devant. Ouverts d'office quand l'un d'eux sert déjà sur la
+       ligne (offerte, option ou variante, taux particulier, variantes) ou porte une erreur. Repliés, leurs champs
+       partent quand même avec le formulaire. #}
+    {% set reglages_ouverts = champs.offerte == 'offerte' or (champs.nature ?? 'ligne') != 'ligne' or (champs.tva ?? '') != ''
+      or (a_des_variantes ?? false) or erreurs.nature is defined or erreurs.tva is defined or erreurs.categorie is defined %}
+    <details class="libre-detail reglages-ligne"{% if reglages_ouverts %} open{% endif %}>
+      <summary>Plus de réglages</summary>
     {# Ligne offerte (D1, D17, 2026-11-21) : « Offerte » garde le prix, barré sur le document ; un 0 tapé donne « Offert » seul. #}
     <fieldset class="groupe choix">
       <legend>Prix de la ligne</legend>
@@ -110,7 +118,9 @@
           {{ f.erreur(erreurs, 'categorie') }}
         </div>
       </div>
-    {% else %}
+    {% endif %}
+    </details>
+    {% if l.produit_id is not null %}
       <p class="muted petit">Corriger ici change {{ cible.ce }} seulement. Le prix du catalogue se change dans l'onglet Catalogue.</p>
     {% endif %}
   </form>

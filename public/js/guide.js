@@ -101,7 +101,8 @@
       bulle.style.bottom = Math.max(8, window.innerHeight - r.top + m + 12) + 'px';
     } else {
       bulle.style.bottom = '';
-      bulle.style.top = Math.max(8, r.bottom + m + 12) + 'px';
+      // Jamais sous le bas de l'écran : sur un petit téléphone, la bulle remonte sur sa cible plutôt que de sortir.
+      bulle.style.top = Math.max(8, Math.min(r.bottom + m + 12, window.innerHeight - bulle.offsetHeight - 8)) + 'px';
     }
   }
 

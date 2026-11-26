@@ -42,10 +42,7 @@
       <span><b>{{ role.espace }}</b><small>Artisans, démos, suivi</small></span></a>
     {% endif %}
   </nav>
-  <form class="compte" method="post" action="/deconnexion">
-    <input type="hidden" name="_csrf" value="{{ csrf() }}">
-    <button class="btn large" type="submit">Se déconnecter</button>
-  </form>
+  {% include '_compte.html.twig' %}
 {% endblock %}
 
 {% block onglets %}{% include '_onglets.html.twig' with {actif: 'plus'} %}{% endblock %}

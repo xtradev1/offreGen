@@ -58,7 +58,8 @@ final class RepresentantTest extends TestCase
 
     public function testLaFenetreProposeLesAutresFiches(): void
     {
-        self::assertStringContainsString('Ajouter une régie, un architecte', $this->page($this->offre));
+        // Sans représentant, l'offre porte un lien court, plus une carte vide (analyse des parcours, Xavier, 2026-11-26).
+        self::assertStringContainsString('data-en-feuille>+ Représentant</a>', $this->page($this->offre));
         $page = $this->page($this->offre . '/representant');
         self::assertStringContainsString('Régie Dupont SA', $page);
         self::assertStringNotContainsString('<b>Client a</b>', $page, 'le client ne se représente pas lui-même');

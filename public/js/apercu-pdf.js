@@ -48,7 +48,8 @@ if (zone) {
     if (window.fluide) {
       // Sans réseau, le partage a eu lieu : l'envoi noté attend, l'écran le dit.
       window.fluide.envoyer(marque, {
-        sansResume: true, page: window.location.pathname, morceaux: ['etat-envoi'],
+        // actions-apercu : la barre du bas revient avec « Retour aux offres » en bouton principal.
+        sansResume: true, page: window.location.pathname, morceaux: ['etat-envoi', 'actions-apercu'],
         attente: () => window.fluide.messages.dire('PDF partagé. L’envoi sera noté au retour du réseau.'),
       });
       return;
@@ -81,42 +82,43 @@ if (zone) {
   // « Envoyer » (décision D8) : le partage du téléphone, le PDF joint. Partage réussi : l'offre est notée envoyée
   // (formulaire data-apres-partage). Partage annulé : rien. Pas de partage de fichier (certains navigateurs de PC) : le
   // lien garde son effet, le PDF se télécharge, rien n'est noté.
-  document.querySelectorAll('[data-partager]').forEach((lien) => {
-    lien.addEventListener('click', async (e) => {
-      const attendent = enAttente();
-      if (attendent.length) {
-        e.preventDefault();
-        window.fluide.messages.dire(nommer(attendent), true);
-        return;
-      }
-      if (!navigator.canShare) return;
+  // Écouté sur le document : la barre du bas est remplacée quand l'envoi est noté, « Renvoyer » doit répondre aussi.
+  document.addEventListener('click', async (e) => {
+    const lien = e.target.closest && e.target.closest('[data-partager]');
+    if (!lien) return;
+    const attendent = enAttente();
+    if (attendent.length) {
       e.preventDefault();
-      const nom = lien.getAttribute('download') || 'document.pdf';
-      let fichier;
-      try {
-        fichier = new File([octets || await lire], nom, { type: 'application/pdf' });
-      } catch (erreur) {
-        window.location.assign(lien.href);
-        return;
-      }
-      if (!navigator.canShare({ files: [fichier] })) {
-        const url = URL.createObjectURL(fichier);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fichier.name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-        return;
-      }
-      try {
-        await navigator.share({ files: [fichier], title: lien.dataset.titre || fichier.name });
-      } catch (erreur) {
-        return; // partage annulé : rien n'est envoyé
-      }
-      noterEnvoi();
-    });
+      window.fluide.messages.dire(nommer(attendent), true);
+      return;
+    }
+    if (!navigator.canShare) return;
+    e.preventDefault();
+    const nom = lien.getAttribute('download') || 'document.pdf';
+    let fichier;
+    try {
+      fichier = new File([octets || await lire], nom, { type: 'application/pdf' });
+    } catch (erreur) {
+      window.location.assign(lien.href);
+      return;
+    }
+    if (!navigator.canShare({ files: [fichier] })) {
+      const url = URL.createObjectURL(fichier);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fichier.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      return;
+    }
+    try {
+      await navigator.share({ files: [fichier], title: lien.dataset.titre || fichier.name });
+    } catch (erreur) {
+      return; // partage annulé : rien n'est envoyé
+    }
+    noterEnvoi();
   });
 
   dessiner().catch(() => {

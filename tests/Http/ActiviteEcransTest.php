@@ -40,22 +40,24 @@ final class ActiviteEcransTest extends TestCase
 
     public function testLEcranDeDicteeParleLaLangueDeLActivite(): void
     {
-        // La phrase est aussi dans l'attribut : app.js la remet au début de chaque enregistrement.
-        self::assertStringContainsString('<p data-consigne="Parlez, pièce par pièce.">Parlez, pièce par pièce.</p>', $this->page('/'));
+        // Trois conseils tournent sous l'onde (maquette du parcours de la dictée, Xavier, 2026-11-26) : le premier est
+        // dans la page, les trois dans l'attribut, pour app.js.
+        $page = $this->page('/');
+        self::assertMatchesRegularExpression('#<p data-consigne data-conseils="\[&quot;Commencez par le client et le lieu du chantier\.&quot;,&quot;Puis pièce par pièce\x{00A0}: les travaux, les surfaces, les quantités\.&quot;,&quot;Les fournitures et le déplacement, s&\#039;il y en a\.&quot;\]"[^>]*>Commencez par le client et le lieu du chantier\.</p>#u', $page);
 
         $this->activite('prestations');
         $page = $this->page('/');
-        self::assertStringContainsString('<p data-consigne="Parlez, prestation par prestation.">Parlez, prestation par prestation.</p>', $page);
+        self::assertMatchesRegularExpression('#<p data-consigne data-conseils="[^"]*Puis prestation par prestation[^"]*"[^>]*>Commencez par le client et l&\#039;objet de l&\#039;offre\.</p>#u', $page);
         self::assertStringNotContainsString('pièce par pièce', $page);
 
         $this->activite('exterieur');
-        self::assertStringContainsString('<p data-consigne="Parlez, zone par zone.">Parlez, zone par zone.</p>', $this->page('/'));
+        self::assertMatchesRegularExpression('#<p data-consigne data-conseils="[^"]*Puis zone par zone[^"]*"[^>]*>Commencez par le client et le lieu d&\#039;intervention\.</p>#u', $this->page('/'));
     }
 
     public function testUneActiviteInconnueEnBaseVautLeBatiment(): void
     {
         $this->activite('evenement');
-        self::assertStringContainsString('Parlez, pièce par pièce.', $this->page('/'));
+        self::assertStringContainsString('Puis pièce par pièce', $this->page('/'));
     }
 
     public function testLEnTeteDeLOffreDitLeChantierAuBatiment(): void

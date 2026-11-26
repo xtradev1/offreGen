@@ -67,7 +67,7 @@ final class ActiviteReglageTest extends TestCase
         self::assertSame($avant, $this->reste(), 'ni le catalogue, ni les offres, ni le modèle, ni le reste du compte');
 
         self::assertStringContainsString('name="activite" value="prestations" checked', (string) $this->a->get('/reglages/entreprise')->getContent());
-        self::assertStringContainsString('Parlez, prestation par prestation.', (string) $this->a->get('/')->getContent());
+        self::assertStringContainsString('Puis prestation par prestation', (string) $this->a->get('/')->getContent());
     }
 
     /** Revue du 2026-11-22 : après le changement, la lettre parle de prestations, et le retour au bâtiment de travaux. */

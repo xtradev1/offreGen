@@ -8,18 +8,23 @@
 {% set sans_micro %}Le micro demande une connexion sécurisée (https). En attendant, enregistrez avec le téléphone, puis importez le fichier.{% endset %}
 {% set rond = rond|default(false) %}
 {% set etats %}
-  {# La fenêtre monte dès le toucher (Xavier, 2026-11-25) : tant que le micro s'ouvre, app.js pose la classe
-     « ouverture », l'état le dit, et ni la consigne ni « Terminer » ne se montrent. #}
+  {# Enregistrement en plein écran sombre (piste B de la maquette du parcours de la dictée, Xavier, 2026-11-26) : l'état,
+     le minuteur, l'onde de la voix, un conseil qui tourne, « Terminer » au centre, Abandonner à gauche, Pause à droite.
+     Cinq secondes sans voix : la carte du conseil devient l'alerte. La fenêtre monte dès le toucher (2026-11-25) : tant
+     que le micro s'ouvre, ni conseil, ni « Terminer », ni Pause ne se montrent. app.js pose les classes ouverture,
+     pause et urgent, remplit l'onde et fait tourner les conseils (data-conseils, ceux de l'activité du compte). #}
+  {% set m_dictee = mots() %}
+  {% set conseils = [m_dictee.conseil_1, m_dictee.conseil_2, m_dictee.conseil_3] %}
   <div class="rec" data-etat="enregistrement" hidden>
-    <p class="rec-etat" role="status" data-etat-micro data-ouverture="Le micro s'ouvre…" data-en-cours="Enregistrement en cours">Enregistrement en cours</p>
+    <p class="rec-haut"><span class="rec-etat" role="status" data-etat-micro data-ouverture="Le micro s'ouvre…" data-en-cours="Enregistrement" data-en-pause="En pause">Enregistrement</span><span>Nouvelle offre</span></p>
     <div class="timer" data-minuteur>00:00</div>
-    <div class="dot" aria-hidden="true">{{ icone_micro }}</div>
-    {# La phrase de l'activité du compte ; l'attribut la garde pour app.js, qui la remet à chaque enregistrement. #}
-    {% set dictee = mots().dictee %}
-    <p data-consigne="{{ dictee }}">{{ dictee }}</p>
-    <button class="btn danger large" type="button" data-terminer>
-      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>Terminer et créer l'offre</button>
-    <button class="lien" type="button" data-abandonner data-abandonner-texte="Abandonner sans envoyer" data-annuler="Annuler">Abandonner sans envoyer</button>
+    <div class="onde" data-onde aria-hidden="true">{% for i in 1..34 %}<i></i>{% endfor %}</div>
+    {# L'alerte (silence, arrêt, limite) se dit ici pour un lecteur d'écran ; les conseils qui tournent ne sont pas lus. #}
+    <p class="rec-annonce" role="status" data-annonce></p>
+    <div class="rec-conseil" data-conseil>
+      <small data-conseil-titre data-silence="Le micro n'entend rien">Conseil 1 sur {{ conseils|length }}</small>
+      <p data-consigne data-conseils="{{ conseils|json_encode(constant('JSON_UNESCAPED_UNICODE')) }}" data-silence="Parlez plus près, ou vérifiez qu'un casque Bluetooth ne l'a pas pris.">{{ conseils[0] }}</p>
+    </div>
     {# iPhone et iPad, Safari : une fois par appareil, quand Safari vient de demander le micro (Xavier, 2026-11-24).
        Un site ne peut pas rendre l'autorisation permanente ; Safari le peut, réglé par l'artisan.
        Texte : Safari 26, chemin trouvé par Xavier le 2026-11-25. data-ancien : Safari 18 et avant (bouton « aA », guides tiers).
@@ -27,17 +32,39 @@
     <p class="muted petit centre" data-astuce-micro hidden
        data-ancien="Pour ne plus autoriser le micro à chaque fois&nbsp;: touchez «&nbsp;aA&nbsp;» à côté de l'adresse, puis Réglages du site web, Micro, Autoriser."
        data-ecran="Pour ne plus autoriser le micro à chaque fois&nbsp;: dans les Réglages, ouvrez Safari, puis Micro, Autoriser.">Pour ne plus autoriser le micro à chaque fois&nbsp;: dans la barre d'adresse, touchez le bouton de la page (un rectangle et deux traits), puis les trois petits points, et tout en bas, Micro, Autoriser.</p>
+    <div class="rec-commandes">
+      <button class="rec-petit" type="button" data-abandonner data-abandonner-texte="Abandonner" data-annuler="Annuler"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></span><b>Abandonner</b></button>
+      <button class="rec-stop" type="button" data-terminer aria-label="Terminer et créer l'offre"><span><i></i></span><b>Terminer</b></button>
+      <button class="rec-petit" type="button" data-pause data-pause-texte="Pause" data-reprendre="Reprendre" hidden><span><svg class="i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><svg class="i-reprendre" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span><b>Pause</b></button>
+    </div>
   </div>
 
-  {# Dès « Terminer » ou le fichier choisi : les étapes, la première en cours avec sa barre d'envoi. #}
+  {# Dès « Terminer » ou le fichier choisi : l'attente, en plein écran sombre (maquette v2 du parcours de la dictée,
+     Xavier, 2026-11-26). L'anneau se remplit : l'envoi réel d'abord, puis le temps écoulé sur le temps attendu (app.js).
+     Trois étapes nommées ; ni texte entendu ni lignes qui se dessinent. La phrase du bas ne vient qu'une fois l'envoi fait. #}
   {% set etapes_depart = [] %}
   {% for libelle in constant('OffreGen\\Http\\Controleur\\EnregistrementControleur::ETAPES') %}
     {% set etapes_depart = etapes_depart|merge([{libelle: libelle, etat: loop.first ? 'cur' : 'todo'}]) %}
   {% endfor %}
-  <div class="suivi" data-etat="envoi" hidden>
-    <h2 class="suivi-titre">Préparation de l'offre</h2>
+  <div class="attente" data-etat="envoi" hidden>
+    <h2 class="attente-titre">Préparation de l'offre</h2>
+    <div class="anneau" data-anneau role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Préparation de l'offre">
+      <span><b data-anneau-part>0&nbsp;%</b><small data-anneau-reste></small></span>
+    </div>
     {% include '_etapes.html.twig' with {etapes: etapes_depart} %}
-    <p class="muted petit centre" data-progression-texte></p>
+    <p class="attente-quitter" data-attente-quitter hidden data-echec="Fermez cette fenêtre&nbsp;: la dictée est dans «&nbsp;Offres&nbsp;», où vous pouvez la relancer.">Vous pouvez quitter l'application&nbsp;: l'offre vous attendra dans «&nbsp;Offres&nbsp;».</p>
+  </div>
+
+  {# L'offre est prête et des lignes restent à relire (maquette v2, Xavier, 2026-11-26) : combien, sans le prix ; un
+     toucher mène à la relecture. Propre, l'offre ne passe pas par ici : son PDF s'ouvre, ou le choix de son client
+     (Offre\Arrivee). app.js remplit les nombres et les adresses d'après l'état de l'enregistrement. #}
+  <div class="prete" data-etat="prete" hidden>
+    <span class="prete-coche" aria-hidden="true"></span>
+    <h2 tabindex="-1" data-prete-titre>Offre prête</h2>
+    <p class="prete-qui"><b data-prete-client></b><span data-prete-objet></span></p>
+    <p class="prete-tuiles"><span><b data-prete-lignes></b><span data-prete-lignes-mot>lignes</span></span><span class="warn"><b data-prete-relire></b>à relire</span></p>
+    <a class="btn primary large" href="/" data-prete-suite>Relire</a>
+    <a class="lien" href="/" data-prete-offre>Voir l'offre entière</a>
   </div>
 
   <div data-etat="court" hidden>

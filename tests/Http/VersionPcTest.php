@@ -74,7 +74,7 @@ final class VersionPcTest extends TestCase
         self::assertStringContainsString('<a class="lcard" id="pc-' . $this->jeu->offre['a'] . '" href="/offres/' . $this->jeu->offre['a'] . '" aria-current="page"', $liste);
         self::assertStringContainsString('<a class="lcard" id="pc-' . $autre . '" href="/offres/' . $autre . '"', $liste);
         self::assertStringContainsString('Façade de la maison', $liste);
-        self::assertStringContainsString('1 à vérifier', $liste);
+        self::assertStringContainsString('1 à relire', $liste);
         self::assertStringContainsString('data-filtre="#liste-pc"', $liste);
         // L'autre compte n'y paraît pas.
         self::assertStringNotContainsString('Offre b', $liste);

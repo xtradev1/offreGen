@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace OffreGen\Http\Controleur;
 
+use OffreGen\Catalogue\Recherche;
 use OffreGen\Compte\Demos;
 use OffreGen\Donnees\DepotOffres;
 use OffreGen\Donnees\Portee;
 use OffreGen\Donnees\Statut;
 use OffreGen\Http\Conteneur;
+use OffreGen\Offre\Arrivee;
 use OffreGen\Offre\Rabais;
 use OffreGen\Offre\Totaux;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -67,6 +69,8 @@ final class AccueilControleur
             'archives' => $archives,
             'totaux' => $totaux,
             'a_relire' => $aRelire,
+            // La recherche à la frappe (analyse des parcours, 2026-11-26) : chaque offre porte son texte normalisé.
+            'textes' => self::textes($offres),
             'tri' => $tri,
             'tris' => self::TRIS,
             'du_mois' => $depot->creeesDepuis($this->debutDuMois()),
@@ -90,8 +94,9 @@ final class AccueilControleur
     }
 
     /**
-     * Le total TTC et le nombre de lignes à vérifier de chaque offre, comme la liste les montre. Sert aussi à la
-     * colonne des offres de l'écran d'une offre sur PC (D12).
+     * Le total TTC et le nombre de lignes à relire de chaque offre, comme la liste les montre. Sert aussi à la colonne
+     * des offres de l'écran d'une offre sur PC (D12). Le compte est celui de la relecture (Offre\Arrivee) : la liste
+     * annonçait « 3 à vérifier » quand le bouton de l'offre disait « Relire 5 lignes » (analyse des parcours, 2026-11-26).
      *
      * @param list<Offre> $offres
      * @return array{array<int, int>, array<int, int>}
@@ -105,9 +110,25 @@ final class AccueilControleur
         foreach ($offres as $o) {
             $lesLignes = $lignes[$o['id']] ?? [];
             $totaux[$o['id']] = Totaux::calculer($lesLignes, $r->tvaPourDixMille, $r->arrondiCinqCentimes, Rabais::liste($o['rabais']))['ttc'];
-            $aRelire[$o['id']] = count(array_filter($lesLignes, static fn (array $l): bool => $l['a_verifier'] === 1));
+            $aRelire[$o['id']] = Arrivee::compter($lesLignes);
         }
         return [$totaux, $aRelire];
+    }
+
+    /**
+     * Le texte où chercher une offre : son objet, son client et son numéro, sans accents ni majuscules, comme le filtre
+     * du navigateur (app.js, brancherFiltre). Sert à la liste et à la colonne des offres sur PC.
+     *
+     * @param list<Offre> $offres
+     * @return array<int, string>
+     */
+    public static function textes(array $offres): array
+    {
+        $textes = [];
+        foreach ($offres as $o) {
+            $textes[$o['id']] = Recherche::normaliser($o['titre'] . ' ' . $o['client_nom'] . ' ' . $o['numero']);
+        }
+        return $textes;
     }
 
     /**

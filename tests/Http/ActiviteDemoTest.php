@@ -95,7 +95,7 @@ final class ActiviteDemoTest extends TestCase
         $prospect->get('/bienvenue/entreprise');
         self::assertSame(303, $prospect->post('/bienvenue/passer', [])->getStatusCode());
         $accueil = (string) $prospect->get('/')->getContent();
-        self::assertStringContainsString('Parlez, prestation par prestation.', $accueil);
+        self::assertStringContainsString('Puis prestation par prestation', $accueil);
         self::assertStringContainsString('Site vitrine de la boutique', $accueil);
     }
 

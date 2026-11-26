@@ -66,13 +66,27 @@
       {% endif %}
     </div>
   {% else %}
-  <div class="actionbar">
-    {% if facture ?? null %}<a class="btn grand pc-seul" href="{{ pdf }}" download="{{ fichier }}">Télécharger</a>{% endif %}
-    {% if modifier %}<a class="btn grand" href="{{ modifier }}">Modifier</a>{% endif %}
-    {# « Facturer » s'ouvre dans une feuille par-dessus le PDF de l'offre (maquette 25, E1). #}
-    {% if facturer %}<a class="btn grand" href="{{ facturer }}" data-en-feuille>Facturer</a>{% include '_feuille.html.twig' %}{% endif %}
-    <a class="btn primary grand" href="{{ pdf }}" download="{{ fichier }}" data-partager data-titre="{{ partage }}">
-      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>Envoyer</a>
+  {# actions-apercu : la barre revient en morceau quand l'envoi est noté (apercu-pdf.js). L'offre envoyée et inchangée
+     depuis, le bouton principal devient « Retour aux offres », « Renvoyer » et « Facturer » à côté (constat 7 de
+     l'analyse des parcours, Xavier, 2026-11-26) ; pour modifier, le retour « Offre » de la barre du haut. Au téléphone, le
+     bouton principal prend sa ligne (classe apres-envoi) : ses trois mots ne tiennent pas à côté de deux boutons. #}
+  {% set icone_envoi %}<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/></svg>{% endset %}
+  <div class="actionbar{{ (envoyee ?? false) ? ' apres-envoi' }}" id="actions-apercu">
+    {% if envoyee ?? false %}
+      {% if facturer %}<a class="btn grand" href="{{ facturer }}" data-en-feuille>Facturer</a>{% endif %}
+      <a class="btn grand" href="{{ pdf }}" download="{{ fichier }}" data-partager data-titre="{{ partage }}">
+        {{ icone_envoi }}Renvoyer</a>
+      <a class="btn primary grand" href="/">Retour aux offres</a>
+    {% else %}
+      {% if facture ?? null %}<a class="btn grand pc-seul" href="{{ pdf }}" download="{{ fichier }}">Télécharger</a>{% endif %}
+      {% if modifier %}<a class="btn grand" href="{{ modifier }}">Modifier</a>{% endif %}
+      {# « Facturer » s'ouvre dans une feuille par-dessus le PDF de l'offre (maquette 25, E1). #}
+      {% if facturer %}<a class="btn grand" href="{{ facturer }}" data-en-feuille>Facturer</a>{% endif %}
+      <a class="btn primary grand" href="{{ pdf }}" download="{{ fichier }}" data-partager data-titre="{{ partage }}">
+        {{ icone_envoi }}Envoyer</a>
+    {% endif %}
   </div>
+  {# Hors de la barre : remplacée en morceau, elle emporterait la fenêtre et ce qu'app.js y a branché. #}
+  {% if facturer %}{% include '_feuille.html.twig' %}{% endif %}
   {% endif %}
 {% endblock %}

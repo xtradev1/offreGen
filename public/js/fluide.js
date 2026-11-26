@@ -35,7 +35,9 @@ const fluide = (() => {
   // Le message d'une page de refus : erreurs d'un champ, sinon le titre de la page d'erreur.
   const messageDe = (html, code) => {
     const page = new DOMParser().parseFromString(html || '', 'text/html');
-    const erreurs = [...page.querySelectorAll('.err, .alerte.bad')].map((e) => e.textContent.trim()).filter(Boolean);
+    // Les erreurs montrées par la page, pas celles qu'elle garde cachées : la fenêtre de dictée, présente sur chaque
+    // écran, porte un « L'envoi a échoué. » caché qui se collait à tous les refus (analyse des parcours, 2026-11-26).
+    const erreurs = [...page.querySelectorAll('.err, .alerte.bad')].filter((e) => !e.closest('[hidden]')).map((e) => e.textContent.trim()).filter(Boolean);
     if (erreurs.length) return erreurs.join(' ');
     const titre = page.querySelector('main.screen p.muted') || page.querySelector('header.bar h1');
     return titre && titre.textContent.trim() ? titre.textContent.trim() : (code ? 'Refusé par le serveur (' + code + ')' : 'Refusé par le serveur');
@@ -801,7 +803,21 @@ const fluide = (() => {
     const gestes = document.querySelector('[data-relu-gestes]');
     if (!gestes) return;
     const bouton = gestes.querySelector('button[type=submit]');
+    const libelle = bouton.querySelector('[data-relu-libelle]');
     const corriger = gestes.querySelector('[data-relu-corriger]');
+    const visible = () => document.querySelector('section[data-relu]:not([hidden])');
+    const prixDe = (section) => section && section.querySelector('[data-relu-prix]');
+    const sansPrix = (section) => { const p = prixDe(section); return !!p && p.value.trim() === ''; };
+    // Constat 1 de l'analyse des parcours (Xavier, 2026-11-26) : sans prix, le bouton ne dit pas « C'est juste » ; il dit
+    // ce qui manque, et le curseur est dans le prix.
+    const accorder = () => {
+      const manque = sansPrix(visible());
+      bouton.classList.toggle('ok', !manque);
+      if (libelle) libelle.textContent = manque ? bouton.dataset.manque : bouton.dataset.juste;
+    };
+    // Un seul message de refus à la fois ; il part avec sa ligne.
+    let refus = null;
+    const oublierRefus = () => { if (refus) { refus.remove(); refus = null; messages.empiler(); } };
     const montrer = (section) => {
       document.querySelectorAll('section[data-relu]').forEach((s) => { s.hidden = s !== section; });
       const fini = !section;
@@ -811,8 +827,12 @@ const fluide = (() => {
         bouton.setAttribute('form', section.querySelector('form').id);
         if (corriger) corriger.href = section.dataset.corriger;
       }
+      accorder();
       window.scrollTo({ top: 0 });
+      if (sansPrix(section)) prixDe(section).focus({ preventScroll: true });
     };
+    document.addEventListener('input', (e) => { if (e.target.matches && e.target.matches('[data-relu-prix]')) accorder(); });
+    accorder();
     // Un temps de lecture après chaque ligne : un double toucher ne valide pas la suivante sans qu'on l'ait vue (revue,
     // B-I5). Avant, le rechargement de la page jouait ce rôle.
     let lisible = 0;
@@ -821,18 +841,22 @@ const fluide = (() => {
       const section = form.closest && form.closest('section[data-relu]');
       if (!section || e.defaultPrevented) return;
       e.preventDefault();
+      // Le prix manque : rien ne part, le curseur va dans le prix.
+      if (sansPrix(section)) { prixDe(section).focus(); return; }
       if (Date.now() < lisible) return;
-      let suivante = section.nextElementSibling;
-      while (suivante && !suivante.matches('section[data-relu]')) suivante = suivante.nextElementSibling;
+      // La suivante : la première ligne pas encore validée. Après un refus, celles d'après, déjà validées, ne reviennent pas.
+      const suivante = [...document.querySelectorAll('section[data-relu]')].find((s) => s !== section && !s.dataset.reluFaite) || null;
       envoyer(form, {
         sansResume: true,
         anticiper: () => {
-          montrer(suivante || null);
+          section.dataset.reluFaite = '1';
+          oublierRefus();
+          montrer(suivante);
           lisible = Date.now() + 700;
           bouton.disabled = true;
           setTimeout(() => { bouton.disabled = false; }, 700);
         },
-        refus: (err) => { montrer(section); messages.dire('Pas enregistré' + NB + ': ' + err.message, true); },
+        refus: (err) => { delete section.dataset.reluFaite; oublierRefus(); montrer(section); refus = messages.dire('Pas enregistré' + NB + ': ' + err.message, true); },
       });
     });
   };

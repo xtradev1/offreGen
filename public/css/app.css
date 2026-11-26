@@ -113,12 +113,21 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .feuille-fond:not(.ouvert) { pointer-events: none; }
 .feuille { position: relative; background: var(--surface); width: 100%; max-width: 480px; border-radius: 18px 18px 0 0; padding: 0 16px calc(16px + env(safe-area-inset-bottom)); max-height: 92%; overflow-y: auto; transform: translateY(100%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); box-shadow: 0 -6px 24px rgba(0, 0, 0, .18); }
 .feuille-fond.ouvert .feuille { transform: none; }
-.feuille-fond.pleine .feuille { min-height: 70%; display: flex; flex-direction: column; }
-/* Pendant l'enregistrement, « Terminer » descend sous le pouce (écran F de la maquette 24). */
-.feuille-fond.pleine .rec:not([hidden]) { flex: 1; display: flex; flex-direction: column; align-items: center; }
-/* L'état, le minuteur, le rond et la consigne se tiennent au milieu de la place libre, « Terminer » reste en bas. */
-.feuille-fond.pleine .rec .rec-etat { margin-top: auto; }
-.feuille-fond.pleine .rec [data-terminer] { margin-top: auto; width: 100%; min-height: 72px; font-size: 19px; }
+/* Enregistrement, puis attente après « Terminer » : la fenêtre prend tout l'écran, en sombre quel que soit le thème
+   (maquettes du parcours de la dictée, Xavier, 2026-11-26). Les couleurs sont celles du thème sombre : chaque composant dedans les suit. */
+.feuille-fond.sombre .feuille {
+  --ink: #ECEAE6; --muted: #B4B9C0; --line: #33373D; --surface: #15171A; --bg: #15171A; --chip: #26292E; --bord: #868C94;
+  --accent: #ECEAE6; --accent-soft: #2D3138; --on-accent: #15171A;
+  --ok: #7DD3A8; --ok-soft: #183126; --on-ok: #15171A; --warn: #F0B860; --warn-soft: #3A2A10; --bad: #FF9A91; --bad-soft: #3B1613; --on-bad: #15171A;
+  --trait: #E07A52;
+  color-scheme: dark; color: var(--ink); height: 100%; max-height: none; border-radius: 0; display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+}
+.feuille-fond.sombre .poignee, .feuille-fond.plein .poignee { visibility: hidden; }
+.feuille-fond.sombre .attente:not([hidden]), .feuille-fond.sombre .rec:not([hidden]) { flex: 1; }
+/* « Offre prête » : tout l'écran aussi, au thème de l'application. */
+.feuille-fond.plein .feuille { height: 100%; max-height: none; border-radius: 0; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+.feuille-fond.plein .prete:not([hidden]) { flex: 1; }
 .feuille:focus { outline: none; }
 .poignee { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 8px auto 2px; }
 .x.coin { position: absolute; top: 4px; right: 14px; }
@@ -168,7 +177,6 @@ body.calque-ouvert { overflow: hidden; }
 .rond svg { width: 34px; height: 34px; box-sizing: content-box; padding: 22px; border-radius: 50%; background: var(--chip); color: var(--ink); }
 .rond.micro svg { background: var(--marque); color: var(--on-marque); }
 .rond:focus-visible svg { outline: 3px solid var(--focus); outline-offset: 3px; }
-.nouvelle .rec { padding: 16px 0; }
 
 .erreur-code { font-size: 48px; font-weight: 700; color: var(--muted); margin: 24px 0 0; }
 .petit { font-size: 12.5px; }
@@ -241,33 +249,100 @@ body.calque-ouvert { overflow: hidden; }
 /* Import, enregistrement et préparation. */
 .intro { margin: 8px 0 16px; }
 .intro ul { padding-left: 18px; }
-.rec { text-align: center; padding: 32px 0; }
-/* Écran d'enregistrement (2026-11-25) : le rond reprend le micro de la barre, à sa couleur ; deux halos en partent
-   tant que le micro écoute. L'état est écrit (« Enregistrement en cours »), le point rouge ne fait que l'accompagner. */
-.rec-etat { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 4px; min-height: 24px; font-size: 14px; font-weight: 600; color: var(--bad); }
+/* Écran d'enregistrement (piste B de la maquette du parcours de la dictée, Xavier, 2026-11-26) : l'état et « Nouvelle
+   offre » en haut, le minuteur, l'onde de la voix (une barre toutes les 90 ms, les huit dernières en clair), la carte
+   du conseil, puis les commandes en bas, au pouce : Abandonner, Terminer au centre, Pause. Dans la fenêtre, tout est
+   sombre ; sur la page Import, le même bloc suit le thème de la page. */
+.rec { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 12px 0 4px; }
+.rec-haut { align-self: stretch; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 28px; margin: 0; font-size: 14px; color: var(--muted); }
+.rec-etat { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--bad); }
 .rec-etat::before { content: ""; flex: none; box-sizing: border-box; width: 10px; height: 10px; border-radius: 50%; background: currentColor; animation: clignote 1.4s ease-in-out infinite; }
 @keyframes clignote { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
-.timer { font-size: 46px; line-height: 1.1; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.01em; transition: color .2s ease; }
-/* La boîte du rond a la taille du halo le plus large (104 px x 1,5) : rien n'en dépasse. Le rond est le fond de l'icône. */
-.rec .dot { position: relative; width: 156px; height: 156px; margin: 4px auto; color: var(--on-marque); display: grid; place-items: center; }
-.rec .dot svg { position: relative; z-index: 1; box-sizing: border-box; width: 104px; height: 104px; padding: 32px; border-radius: 50%; background: var(--marque); transition: background-color .2s ease, color .2s ease; }
-.rec .dot::before, .rec .dot::after { content: ""; position: absolute; inset: 26px; border-radius: 50%; background: var(--marque); opacity: 0; pointer-events: none; animation: halo 2.2s ease-out infinite; }
-.rec .dot::after { animation-delay: 1.1s; }
-@keyframes halo { from { transform: scale(1); opacity: .3; } to { transform: scale(1.5); opacity: 0; } }
-.rec [data-consigne] { margin: 0 0 12px; font-size: 17px; }
-.rec [data-terminer], .rec [data-consigne] { transition: opacity .18s ease; }
-/* Le micro s'ouvre : rond neutre, sans halo, un rond qui tourne devant l'état ; rien n'invite encore à parler. */
+.timer { margin: 28px 0 20px; font-size: 60px; line-height: 1; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.02em; transition: color .2s ease; }
+/* Sur un écran de 320 px, les 34 barres se serrent au lieu de déborder. */
+.onde { align-self: stretch; height: 96px; display: flex; align-items: center; justify-content: center; gap: clamp(2px, 1vw, 4px); }
+.onde i { flex: 0 1 5px; min-width: 0; width: 5px; height: 4px; border-radius: 3px; background: var(--bord); transition: height .09s linear; }
+.onde i:nth-last-child(-n+8) { background: var(--trait, var(--marque)); }
+.rec-annonce { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.rec-conseil { align-self: stretch; min-height: 96px; margin: 24px 0 0; padding: 12px 16px; border-radius: 14px; background: var(--chip); text-align: left; transition: background-color .2s ease; }
+.rec-conseil small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.rec-conseil p { margin: 4px 0 0; font-size: 17px; line-height: 1.35; }
+.rec.urgent .rec-conseil { background: var(--warn-soft); }
+.rec.urgent .rec-conseil small, .rec.urgent .rec-conseil p { color: var(--warn); }
+.rec.urgent .rec-conseil p { font-weight: 600; }
+.rec [data-astuce-micro] { margin: 12px 0 0; }
+.rec-commandes { align-self: stretch; margin-top: auto; padding-top: 24px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; justify-items: center; }
+.rec-commandes button { font: inherit; font-size: 14px; min-width: 96px; padding: 0; background: none; border: 0; color: var(--ink); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.rec-commandes button > span { display: grid; place-items: center; border-radius: 50%; transition: scale .09s ease-out; }
+.rec-commandes button:active > span { scale: .93; }
+.rec-commandes button:focus-visible { outline: none; }
+.rec-commandes button:focus-visible > span { outline: 3px solid var(--focus); outline-offset: 3px; }
+.rec-petit { margin-top: 16px; }
+.rec-petit > span { width: 64px; height: 64px; background: var(--chip); }
+.rec-petit svg { width: 24px; height: 24px; }
+.rec-stop > span { width: 96px; height: 96px; border: 4px solid var(--ink); }
+.rec-stop > span i { width: 34px; height: 34px; border-radius: 9px; background: #E5484D; }
+.rec-stop b { font-size: 16px; }
+.rec .i-reprendre, .rec.pause .i-pause { display: none; }
+.rec.pause .i-reprendre { display: block; }
+/* En pause : l'état en orange, deux traits fixes à la place du point ; le minuteur s'efface. */
+.rec.pause .rec-etat { color: var(--warn); }
+.rec.pause .rec-etat::before { animation: none; border-radius: 1px; background: linear-gradient(90deg, currentColor 35%, transparent 35% 65%, currentColor 65%); }
+.rec.pause .timer { color: var(--muted); }
+.rec.pause .onde i { background: var(--bord); }
+/* Le micro s'ouvre : un rond qui tourne devant l'état ; ni conseil, ni « Terminer », ni Pause : rien n'invite à parler. */
 .rec.ouverture .rec-etat { color: var(--muted); }
 .rec.ouverture .rec-etat::before { width: 14px; height: 14px; background: none; border: 2.5px solid currentColor; border-right-color: transparent; animation: tourne .8s linear infinite; }
 .rec.ouverture .timer { color: var(--muted); }
-.rec.ouverture .dot svg { background: var(--chip); color: var(--muted); }
-.rec.ouverture .dot::before, .rec.ouverture .dot::after { animation: none; }
-.rec.ouverture [data-consigne], .rec.ouverture [data-terminer] { opacity: 0; visibility: hidden; }
+.rec.ouverture .rec-conseil, .rec.ouverture .rec-stop, .rec.ouverture [data-pause] { visibility: hidden; }
 .rec.ouverture [data-astuce-micro] { display: none; }
 @media (prefers-reduced-motion: reduce) {
-  .rec-etat::before, .rec .dot::before, .rec .dot::after { animation: none; }
-  .timer, .rec .dot svg, .rec [data-terminer], .rec [data-consigne] { transition: none; }
+  .rec-etat::before { animation: none; }
+  .timer, .onde i, .rec-conseil, .rec-commandes button > span { transition: none; }
 }
+/* L'attente : l'anneau se remplit (--p, de 0 à 1, posé par app.js), la part et la durée restante au centre ; les trois
+   étapes dans une carte, la part de l'envoi à droite de la première. Sur la page Import, hors de la fenêtre, le même
+   bloc suit le thème de la page. */
+.attente { display: flex; flex-direction: column; align-items: center; padding: 8px 0; }
+.attente-titre { margin: 8px 0 0; font-size: 15px; font-weight: 600; color: var(--muted); }
+.anneau { --p: 0; position: relative; flex: none; width: 176px; height: 176px; margin: 28px 0; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--trait, var(--marque)) calc(var(--p) * 360deg), var(--chip) 0); }
+/* Le disque du centre est un élément, pas un pseudo-élément : le texte a un fond uni derrière lui, mesurable. */
+.anneau > span { width: calc(100% - 22px); height: calc(100% - 22px); border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.anneau b { font-size: 36px; line-height: 1; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.anneau small { min-height: 20px; margin-top: 6px; font-size: 14px; color: var(--muted); }
+.anneau.rate { background: var(--chip); }
+.anneau.rate b { font-size: 24px; color: var(--bad); }
+.attente .etapes { align-self: stretch; margin: 0; padding: 2px 14px; border-radius: 14px; background: var(--chip); }
+.attente .etapes li { grid-template-columns: 26px minmax(0, 1fr) auto; padding: 13px 0; }
+.attente .etapes li + li { border-top: 1px solid var(--line); }
+.attente .etapes li::after { display: none; }
+.attente .etapes .marque { width: 26px; height: 26px; background: none; border-color: var(--bord); }
+.attente .etapes li.done .marque { background: var(--ok); }
+.attente .etapes li.done .marque::before { width: 6px; height: 11px; border-width: 0 2.5px 2.5px 0; }
+.attente .etapes progress { display: none; }
+.etapes .part { font-style: normal; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.etapes .part:empty { display: none; }
+.attente [data-etapes-message] { margin: 12px 0 0; min-height: 18px; }
+.attente [data-etapes-message]:empty { display: none; }
+.attente .alerte { align-self: stretch; }
+.attente-quitter { margin: auto 0 0; padding: 20px 8px 4px; text-align: center; font-size: 14px; color: var(--muted); }
+/* « Offre prête », quand des lignes restent à relire (maquette v2, Xavier, 2026-11-26) : la coche, le client et l'objet,
+   deux tuiles (lignes, à relire), jamais le prix ; le bouton de la relecture en bas, au pouce. */
+.prete { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 48px 4px 4px; }
+.prete-coche { flex: none; width: 84px; height: 84px; border-radius: 50%; background: var(--ok); display: grid; place-items: center; }
+.prete-coche::before { content: ""; width: 16px; height: 32px; border: solid var(--on-ok); border-width: 0 5px 5px 0; transform: translateY(-4px) rotate(45deg); }
+.prete h2 { margin: 18px 0 6px; font-family: var(--titre); font-size: 26px; line-height: 1.2; }
+.prete h2:focus { outline: none; }
+.prete-qui { margin: 0; display: flex; flex-direction: column; gap: 2px; color: var(--muted); font-size: 15px; }
+.prete-qui b { color: var(--ink); font-size: 16px; }
+.prete-qui b:empty { display: none; }
+.prete-tuiles { align-self: stretch; margin: 26px 8px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.prete-tuiles > span { display: flex; flex-direction: column; padding: 12px 6px; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; color: var(--muted); }
+.prete-tuiles b { font-family: var(--titre); font-size: 28px; line-height: 1.15; color: var(--ink); }
+.prete-tuiles .warn { background: var(--warn-soft); border-color: var(--warn-soft); color: var(--warn); }
+.prete-tuiles .warn b { color: var(--warn); }
+.prete [data-prete-suite] { margin-top: auto; min-height: 64px; font-size: 18px; }
+.prete .lien { margin-top: 8px; }
 /* Étapes du traitement : un rond qui tourne sur l'étape en cours, une coche verte qui saute quand elle
    est faite, un trait qui se colore de l'une à l'autre. */
 .suivi { padding: 4px 0 8px; }
@@ -389,6 +464,16 @@ form[data-rabais]:has(input[name="choix"]:checked) .si-pct + .si-chf::before { c
 .bandeau-renvoi .btn { min-height: 48px; }
 /* Textes et conditions propres à l'offre (D5 A, 2026-11-21). */
 .texte-offre { display: grid; gap: 4px; margin: 12px 0; }
+/* Ce qui est facultatif et vide dans l'en-tête de l'offre : deux liens sur une ligne, les lignes de l'offre remontent
+   (analyse des parcours, 2026-11-26). Le texte se déplie sur toute la largeur, sous les liens. */
+.ajouts-offre { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; margin: 0 0 4px; }
+.ajouts-offre > .lien, .ajouts-offre summary { display: inline-flex; align-items: center; min-height: 48px; padding: 0; font-size: 14px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ajouts-offre summary { list-style: none; }
+.ajouts-offre summary::-webkit-details-marker { display: none; }
+.ajouts-offre summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.ajouts-offre details[open] { flex-basis: 100%; }
+.ajouts-offre details .texte-offre { margin-top: 0; }
+.ajouts-offre details .texte-offre label { display: none; }
 .texte-offre label { font-size: 14px; color: var(--muted); }
 .texte-offre textarea { font: inherit; font-size: 16px; width: 100%; min-height: 64px; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface); color: var(--ink); resize: vertical; }
 a.carte-lien.conditions { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 14px; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: 15px; }
@@ -759,6 +844,7 @@ fieldset.adresse legend { font-size: 14px; font-weight: 600; padding: 0; margin:
 .relu-champ:focus-within { border-color: var(--accent); }
 .relu-champ.faux { border-color: var(--bad); }
 .relu-montant { display: flex; justify-content: space-between; align-items: baseline; font-size: 18px; margin: 4px 0 8px; font-variant-numeric: tabular-nums; }
+[data-relu-gestes] button:not(.ok) svg { display: none; }
 .relu-fin { text-align: center; margin: auto 0; }
 .relu-fin svg.i { width: 56px; height: 56px; color: var(--ok); }
 .relu-fin h2 { margin: 8px 0 4px; }
@@ -825,6 +911,11 @@ body:has(input[name="onglet_catalogue"][value="existant"]:checked) .panneau-cata
 .legende { margin: 6px 2px 0; }
 .apercu-facture { position: relative; }
 .actionbar.avec-phrase { flex-wrap: wrap; }
+/* Aperçu d'une offre envoyée (analyse des parcours, 2026-11-26) : « Retour aux offres » prend sa ligne sous « Facturer »
+   et « Renvoyer » ; à côté d'eux, ses trois mots se cassaient sur trois lignes à 390 px. */
+.actionbar.apres-envoi { flex-wrap: wrap; }
+.actionbar.apres-envoi .btn:not(.primary) { min-height: 56px; }
+.actionbar.apres-envoi .btn.primary { flex-basis: 100%; }
 .actionbar .phrase { flex-basis: 100%; margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
 .apercu-grand { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: var(--bg); }
 .apercu-grand:focus { outline: none; }
@@ -910,6 +1001,8 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
   .actionbar { padding: 12px 28px; justify-content: flex-end; }
   .actionbar .btn { flex: 0 1 auto; min-width: 140px; }
   .actionbar .btn.grand { flex: 0 1 320px; }
+  .actionbar.apres-envoi { flex-wrap: nowrap; }
+  .actionbar.apres-envoi .btn.primary { flex: 0 1 320px; }
   .actionbar.empile { flex-direction: row; align-items: center; }
   .actionbar.empile .btn { width: auto; }
   .actionbar.empile .btn.grand { flex: 0 1 320px; }
@@ -947,6 +1040,7 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
   /* Les fenêtres s'ouvrent au milieu de l'écran plutôt qu'en bas. */
   .feuille-fond { align-items: center; }
   .feuille { max-width: 560px; border-radius: 18px; max-height: 88%; }
+  .feuille-fond.sombre .feuille, .feuille-fond.plein .feuille { height: auto; min-height: min(640px, 88%); max-height: 88%; border-radius: 18px; }
 
   .fchips { flex-wrap: wrap; overflow: visible; padding-right: 0; -webkit-mask-image: none; mask-image: none; }
 
@@ -1007,6 +1101,8 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
   .actionbar { padding: 12px 28px; justify-content: flex-end; }
   .actionbar .btn { flex: 0 1 auto; min-width: 160px; }
   .actionbar .btn.grand { flex: 0 1 420px; }
+  .actionbar.apres-envoi { flex-wrap: nowrap; }
+  .actionbar.apres-envoi .btn.primary { flex: 0 1 420px; }
   .actionbar .phrase { text-align: right; }
   .totalbar { padding: 10px 28px 0; }
   .tabs a { font-size: 13px; }
@@ -1017,6 +1113,7 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
   .app:not(:has(.screen .rows, .screen .facturer, .screen .panneau-facture)) .actionbar { padding-left: max(28px, calc((100% - 720px) / 2)); padding-right: max(28px, calc((100% - 720px) / 2)); }
   .feuille-fond { align-items: center; }
   .feuille { max-width: 640px; border-radius: 18px; max-height: 90%; }
+  .feuille-fond.sombre .feuille, .feuille-fond.plein .feuille { height: auto; min-height: min(640px, 90%); max-height: 90%; border-radius: 18px; }
   .feuille.large { max-width: 760px; }
   .facture-mini { height: 360px; }
   .facture-mini [data-apercu-mini] > .apercu-facture { width: 200%; transform: scale(.5); }
@@ -1055,11 +1152,20 @@ kbd { font: 600 12px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; borde
 @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
   .bar { min-height: 44px; padding: 2px 20px; }
   .bar .logo { height: 24px; }
-  .rec { padding: 8px 0; }
-  .rec .dot { width: 84px; height: 84px; margin: 4px auto 2px; }
-  .rec .dot svg { width: 56px; height: 56px; padding: 15px; }
-  .rec .dot::before, .rec .dot::after { inset: 14px; }
-  .timer { font-size: 30px; }
+  .rec { padding: 4px 0 0; }
+  .timer { margin: 4px 0; font-size: 34px; }
+  .onde { height: 32px; }
+  .rec-conseil { min-height: 0; margin-top: 6px; padding: 8px 12px; }
+  .rec-conseil p { font-size: 15px; }
+  .rec-commandes { padding-top: 8px; }
+  .rec-petit { margin-top: 6px; }
+  .rec-petit > span { width: 52px; height: 52px; }
+  .rec-stop > span { width: 64px; height: 64px; }
+  .rec-stop > span i { width: 24px; height: 24px; border-radius: 7px; }
+  .anneau { width: 120px; height: 120px; margin: 8px 0; }
+  .anneau b { font-size: 26px; }
+  .attente .etapes li { padding: 6px 0; }
+  .attente-quitter { padding-top: 8px; }
 }
 /* Fenêtre étroite d'un PC : la largeur sert aux lignes ; les fiches et formulaires restent une colonne. */
 @media (min-width: 700px) and (max-width: 1023px) and (hover: hover) and (pointer: fine) {

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace OffreGen\Http\Controleur;
 
 use OffreGen\Compte\Demos;
-use OffreGen\Catalogue\Recherche;
 use OffreGen\Compte\Activite;
 use OffreGen\Compte\Marque;
 use OffreGen\Donnees\DepotOffres;
@@ -46,12 +45,8 @@ final class OffreControleur
         $portee = new Portee($requete->attributes->getInt('_artisan'));
         $offres = $this->c->offres($portee)->liste();
         [$totaux, $aRelire] = AccueilControleur::totauxEtARelire($this->c, $portee, $offres);
-        $textes = [];
-        foreach ($offres as $o) {
-            $textes[$o['id']] = Recherche::normaliser($o['titre'] . ' ' . $o['client_nom'] . ' ' . $o['numero']);
-        }
         return new Response($this->c->twig()->render('offre.html.twig', $this->avecFactures($requete, $this->donnees($requete, $parametres)) + [
-            'liste_pc' => ['offres' => $offres, 'totaux' => $totaux, 'a_relire' => $aRelire, 'textes' => $textes],
+            'liste_pc' => ['offres' => $offres, 'totaux' => $totaux, 'a_relire' => $aRelire, 'textes' => AccueilControleur::textes($offres)],
             // La ligne de recherche au bas du tableau, sur PC (maquette 25, E7).
             'catalogue' => LigneControleur::catalogue($this->c, $portee),
         ]));
@@ -116,6 +111,8 @@ final class OffreControleur
             'marquer' => $base . '/envoyee',
             'modifier' => $base,
             'facturer' => $base . '/facturer',
+            // Envoyée et inchangée depuis : le geste suivant est de revenir aux offres (analyse des parcours, 2026-11-26).
+            'envoyee' => $offre['envoyee_le'] !== null && !($offre['modifiee_le'] !== null && $offre['modifiee_le'] > $offre['envoyee_le']),
             // Avertissement avant l'envoi d'une offre au nom provisoire « Démo <métier> » (chantier onboarding, lot 5).
             'nom_provisoire' => $this->nomProvisoire($requete),
         ]));

@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette : parcours de la dictée, deux pistes</title>
+<style>
+@font-face { font-family: "Inter"; font-weight: 400 700; font-display: swap; src: url("MAQUETTE-parcours-dictee-img/inter-latin.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-weight: 500 700; font-display: swap; src: url("MAQUETTE-parcours-dictee-img/archivo-latin.woff2") format("woff2"); }
+
+/* Page de la maquette : couleurs du kit, claires et sombres. */
+:root { --mk-ink: #23272D; --mk-bg: #F4F1EA; --mk-surface: #FFFFFF; --mk-line: #DDD8CC; --mk-accent: #9E3F1E; --p-muted: #454B55; --p-ok: #13553A; --p-ok-soft: #E1EFE6; --p-warn: #5A4300; --p-warn-soft: #FFF0B3; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #F0A27F; --p-muted: #B4B9C0; --p-ok: #7DD3A8; --p-ok-soft: #183126; --p-warn: #F0B860; --p-warn-soft: #3A2A10; } }
+:root[data-theme="dark"] { --mk-ink: #ECEAE6; --mk-bg: #15171A; --mk-surface: #1E2125; --mk-line: #33373D; --mk-accent: #F0A27F; --p-muted: #B4B9C0; --p-ok: #7DD3A8; --p-ok-soft: #183126; --p-warn: #F0B860; --p-warn-soft: #3A2A10; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--mk-bg); color: var(--mk-ink); font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1060px; margin: 0 auto; padding: 24px 16px 80px; }
+h1, h2, h3 { font-family: "Archivo", system-ui, sans-serif; line-height: 1.2; }
+h1 { font-size: 28px; margin: 8px 0 10px; }
+h2 { font-size: 22px; margin: 48px 0 10px; padding-top: 8px; border-top: 1px solid var(--mk-line); }
+h3 { font-size: 17px; margin: 0 0 6px; }
+p { margin: 0 0 12px; }
+.chapeau { font-size: 17px; max-width: 760px; }
+.muted { color: var(--p-muted); }
+.petit { font-size: 14px; }
+.bloc { background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 14px; padding: 16px 18px; margin: 14px 0; }
+.regle { border-color: var(--p-ok); background: var(--p-ok-soft); }
+.regle b { color: var(--p-ok); }
+.pistes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.pistes .bloc { margin: 0; }
+.etiquette { display: inline-block; font: 700 12px/1 "Archivo", sans-serif; letter-spacing: .04em; text-transform: uppercase; padding: 5px 8px; border-radius: 6px; background: var(--mk-ink); color: var(--mk-bg); margin-bottom: 8px; }
+ul.serre { margin: 6px 0 0; padding-left: 20px; }
+ul.serre li { margin: 4px 0; }
+
+/* Constats sur l'actuel : quatre captures, défaut écrit dessous. */
+.constats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.constats figure { margin: 0; background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 14px; padding: 10px; }
+.constats img { width: 100%; height: auto; border-radius: 8px; display: block; border: 1px solid var(--mk-line); cursor: zoom-in; }
+.constats figcaption { font-size: 14px; margin-top: 8px; }
+.constats figcaption b { display: block; font-family: "Archivo", sans-serif; font-size: 15px; margin-bottom: 2px; }
+@media (max-width: 900px) { .constats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Trois colonnes par étape : l'actuel (capture), la piste A, la piste B. */
+.trio { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; margin: 16px 0 6px; }
+.colonne { width: 300px; display: flex; flex-direction: column; align-items: center; }
+.colonne > h3 { align-self: stretch; text-align: center; }
+.colonne > p { align-self: stretch; font-size: 14px; margin: 10px 0 0; }
+.capture { width: 300px; height: 650px; object-fit: cover; object-position: top; border-radius: 26px; border: 8px solid #111; background: #111; display: block; cursor: zoom-in; }
+.duo { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; margin-top: 10px; }
+
+/* Démo : deux téléphones jouables côte à côte. */
+.demo { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; margin: 18px 0; }
+.demo .colonne { width: 316px; }
+.commandes { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
+.commandes button, .choix-btns button, .copier { font: 600 14px/1.2 "Archivo", sans-serif; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--mk-ink); background: var(--mk-surface); color: var(--mk-ink); cursor: pointer; }
+.commandes button:focus-visible, .choix-btns button:focus-visible, .copier:focus-visible, .choix textarea:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+
+/* Choix sous chaque étape. */
+.choix { background: var(--mk-surface); border: 2px solid var(--mk-ink); border-radius: 14px; padding: 14px 16px; margin: 18px 0 6px; }
+.choix > p { font-weight: 600; margin-bottom: 10px; }
+.choix-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.choix-btns button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.choix textarea { width: 100%; min-height: 64px; font: 15px/1.4 "Inter", sans-serif; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--mk-line); background: var(--mk-bg); color: var(--mk-ink); resize: vertical; }
+.choix .note { font-size: 14px; color: var(--p-muted); margin: 0 0 10px; font-weight: 400; }
+table.couts { width: 100%; border-collapse: collapse; background: var(--mk-surface); border-radius: 12px; overflow: hidden; font-size: 15px; }
+table.couts th, table.couts td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--mk-line); }
+table.couts th { font-family: "Archivo", sans-serif; }
+.recap { white-space: pre-wrap; font: 14px/1.5 ui-monospace, "Cascadia Mono", monospace; background: var(--mk-surface); border: 1px solid var(--mk-line); border-radius: 12px; padding: 14px; margin: 10px 0; overflow-wrap: anywhere; }
+
+/* ===== Téléphone : couleurs de l'application (app.css), claires, indépendantes du thème de la page. ===== */
+.tel { --ink: #23272D; --muted: #454B55; --line: #DDD8CC; --surface: #FFFFFF; --bg: #F4F1EA; --chip: #EBE7DE; --bord: #7C838C; --ok: #13553A; --ok-soft: #E1EFE6; --warn: #5A4300; --warn-soft: #FFF0B3; --bad: #8C1D18; --marque: #C4552D; --bande: #23272D;
+  width: 300px; height: 650px; border-radius: 34px; border: 8px solid #111; background: #111; position: relative; overflow: hidden; flex: none; box-shadow: 0 14px 30px rgba(0, 0, 0, .18); }
+.ecran { position: absolute; inset: 0; background: var(--bg); color: var(--ink); font: 12.5px/1.4 "Inter", system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+.ecran button { font: inherit; color: inherit; cursor: pointer; }
+.t-bar { height: 46px; flex: none; background: var(--bande); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font: 600 14px/1 "Archivo", sans-serif; }
+.t-bar .logo { font: 700 16px/1 "Archivo", sans-serif; letter-spacing: -.01em; }
+.t-bar .logo::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 3px 3px 3px 0; background: var(--marque); vertical-align: -1px; }
+.t-corps { flex: 1; overflow: hidden; padding: 12px; background: var(--surface); }
+.t-entete { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.t-carte { border: 1px solid var(--line); border-radius: 12px; padding: 10px 11px; margin-bottom: 8px; background: var(--surface); display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+.t-carte b { font: 600 13px/1.25 "Archivo", sans-serif; }
+.t-carte small { color: var(--muted); font-size: 11.5px; }
+.t-carte .m { font-weight: 700; font-size: 12px; align-self: end; }
+.badge { justify-self: end; font-size: 10.5px; font-weight: 600; padding: 3px 7px; border-radius: 999px; align-self: start; white-space: nowrap; }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.ok { background: var(--ok-soft); color: var(--ok); }
+.t-tabs { height: 58px; flex: none; display: flex; align-items: stretch; background: var(--surface); border-top: 1px solid var(--line); position: relative; }
+.t-tabs > span { flex: 1; display: grid; place-items: center; font-size: 10.5px; color: var(--muted); padding-top: 18px; }
+.t-tabs > span:first-child { color: var(--ink); font-weight: 600; }
+.t-micro { flex: 1.15; position: relative; border: 0; background: none; padding: 0; -webkit-tap-highlight-color: transparent; }
+.t-micro > span { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); width: 58px; height: 58px; border-radius: 50%; background: var(--marque); color: #fff; display: grid; place-items: center; border: 4px solid var(--surface); box-shadow: 0 5px 12px rgba(35, 39, 45, .24); transition: scale .09s ease-out; }
+.t-micro:active > span { scale: .92; }
+.t-micro svg { width: 24px; height: 24px; }
+.t-micro.appel > span { animation: appel 1.6s ease-in-out infinite; }
+@keyframes appel { 0%, 100% { box-shadow: 0 5px 12px rgba(35, 39, 45, .24), 0 0 0 0 rgba(196, 85, 45, .45); } 50% { box-shadow: 0 5px 12px rgba(35, 39, 45, .24), 0 0 0 10px rgba(196, 85, 45, 0); } }
+.voile { position: absolute; inset: 0; background: rgba(0, 0, 0, .4); }
+.feuille { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 16px 16px 0 0; padding: 6px 14px 14px; display: flex; flex-direction: column; animation: monte .3s cubic-bezier(.2, .8, .2, 1); }
+.feuille.haute { top: 30%; }
+.feuille.moyenne { top: 44%; }
+@keyframes monte { from { transform: translateY(100%); } }
+.poignee { width: 34px; height: 4px; border-radius: 2px; background: var(--line); margin: 2px auto 8px; flex: none; }
+.t-btn { border: 1px solid var(--bord); background: var(--surface); border-radius: 11px; min-height: 44px; padding: 8px 12px; font: 600 13px/1.2 "Archivo", sans-serif; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.t-btn.grand { width: 100%; min-height: 54px; font-size: 15px; }
+.t-btn.rouge { background: var(--bad); border-color: var(--bad); color: #fff; }
+.t-btn.noir { background: var(--ink); border-color: var(--ink); color: #fff; }
+.t-btn .carre { width: 9px; height: 9px; border-radius: 2px; background: currentColor; }
+.t-lien { border: 0; background: none; text-decoration: underline; text-underline-offset: 3px; color: var(--muted); min-height: 40px; font-size: 12.5px; }
+
+/* Enregistrement, piste A : l'écran d'hier, plus le niveau de la voix et l'alerte de silence. */
+.r { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.r-etat { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 11.5px; color: var(--bad); }
+.r-etat i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: clignote 1.4s ease-in-out infinite; }
+@keyframes clignote { 50% { opacity: .25; } }
+.r-min { font: 650 36px/1.1 "Inter", sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.r-rond { --niv: .3; position: relative; width: 120px; height: 120px; display: grid; place-items: center; margin: 2px 0; }
+.r-rond .fond { position: absolute; inset: 30px; border-radius: 50%; background: var(--marque); opacity: .18; transform: scale(calc(1 + var(--niv) * .95)); transition: transform .09s linear; }
+.r-rond .fond.deux { opacity: .1; transform: scale(calc(1 + var(--niv) * 1.5)); }
+.r-rond svg { position: relative; width: 60px; height: 60px; padding: 17px; border-radius: 50%; background: var(--marque); color: #fff; box-sizing: border-box; }
+.r-entend { min-height: 34px; margin: 2px 0 4px; font-size: 11.5px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 6px; }
+.r-entend.ok { color: var(--ok); }
+.r-entend.ok::before { content: ""; width: 7px; height: 4px; border: solid currentColor; border-width: 0 0 2px 2px; transform: rotate(-45deg) translateY(-1px); }
+.r-entend.alerte { background: var(--warn-soft); color: var(--warn); border-radius: 9px; padding: 6px 9px; font-weight: 600; text-align: left; }
+.r-cons { font-size: 13.5px; margin: 0 0 auto; }
+.r .t-btn { margin-top: 14px; }
+.r.ouv .r-etat { color: var(--muted); }
+.r.ouv .r-etat i { background: none; border: 2px solid currentColor; border-right-color: transparent; width: 11px; height: 11px; animation: tourne .8s linear infinite; }
+.r.ouv .r-min { color: var(--muted); }
+.r.ouv .r-rond svg { background: var(--chip); color: var(--muted); }
+.r.ouv .r-rond .fond, .r.ouv .r-cons, .r.ouv .t-btn.rouge, .r.ouv .r-entend { visibility: hidden; }
+@keyframes tourne { to { transform: rotate(360deg); } }
+
+/* Attente, piste A : trois étapes, durée annoncée, barre d'ensemble. */
+.p-titre { text-align: center; font: 600 15px/1.2 "Archivo", sans-serif; margin: 2px 0 2px; }
+.p-sous { text-align: center; color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+.p-barre { height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; margin: 0 4px 6px; }
+.p-barre i { display: block; height: 100%; width: 0; background: var(--marque); border-radius: 3px; transition: width .25s linear; }
+.p-etapes { list-style: none; padding: 0; margin: 6px 0; }
+.p-etapes li { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; padding: 8px 2px; color: var(--muted); }
+.p-etapes li span { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; box-sizing: border-box; }
+.p-etapes li.cur { color: var(--ink); font-weight: 600; }
+.p-etapes li.cur span { border-color: var(--chip); border-top-color: var(--marque); animation: tourne .8s linear infinite; }
+.p-etapes li.done { color: var(--ink); }
+.p-etapes li.done span { background: var(--ok); border-color: var(--ok); }
+.p-etapes li.done span::before { content: ""; width: 5px; height: 10px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg); }
+.p-etapes em { font-style: normal; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.p-quitter { margin-top: auto; text-align: center; font-size: 11.5px; color: var(--muted); }
+
+/* Offre prête, piste A : la page s'ouvre sur ses lignes, un bandeau dit le résultat. */
+.o-ban { flex: none; display: flex; align-items: center; gap: 9px; background: var(--ok-soft); color: var(--ok); padding: 9px 12px; animation: bandeau .35s cubic-bezier(.2, .8, .2, 1); }
+.o-ban .coche { width: 22px; height: 22px; border-radius: 50%; background: var(--ok); display: grid; place-items: center; flex: none; }
+.o-ban .coche::before { content: ""; width: 4px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
+.o-ban div { flex: 1; font-size: 12px; }
+.o-ban b { display: block; font: 600 13px/1.2 "Archivo", sans-serif; }
+.o-ban button { border: 0; background: none; width: 32px; height: 32px; font-size: 16px; color: var(--ok); }
+@keyframes bandeau { from { transform: translateY(-100%); opacity: 0; } }
+.o-client { font-size: 12px; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--surface); flex: none; display: flex; justify-content: space-between; }
+.o-client b { color: var(--ink); font-weight: 600; }
+.o-lignes { flex: 1; overflow: hidden; padding: 6px 12px; background: var(--surface); }
+.o-sec { font: 700 11px/1 "Archivo", sans-serif; letter-spacing: .05em; color: var(--muted); margin: 10px 0 4px; display: flex; gap: 8px; }
+.o-l { padding: 8px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+.o-l b { font-weight: 500; }
+.o-l small { color: var(--muted); font-size: 11px; }
+.o-l .tt { font-weight: 700; font-size: 12px; align-self: end; }
+.o-l.verif { box-shadow: inset 3px 0 0 var(--warn); padding-left: 8px; }
+.o-l.cascade { animation: entre .35s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes entre { from { opacity: 0; transform: translateY(10px); } }
+.o-plus { font-size: 12px; color: var(--muted); text-decoration: underline; margin: 10px 0 0; display: inline-block; }
+.o-bas { flex: none; display: flex; gap: 8px; padding: 8px 10px 24px; background: var(--surface); border-top: 1px solid var(--line); }
+.o-bas .t-btn.noir { flex: 1; flex-direction: column; gap: 0; min-height: 50px; }
+.o-bas .t-btn.noir small { font-weight: 500; font-size: 11px; }
+
+/* ===== Piste B : enregistrement et attente en plein écran, sombre. ===== */
+.b { position: absolute; inset: 0; background: #15171A; color: #ECEAE6; display: flex; flex-direction: column; align-items: center; padding: 18px 16px 16px; text-align: center; animation: fondu .25s ease-out; }
+@keyframes fondu { from { opacity: 0; transform: scale(.97); } }
+.b-haut { align-self: stretch; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #B4B9C0; min-height: 24px; }
+.b-rec { display: inline-flex; align-items: center; gap: 6px; color: #FF9A91; font-weight: 600; }
+.b-rec i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: clignote 1.4s ease-in-out infinite; }
+.b.ouv .b-rec { color: #B4B9C0; }
+.b.ouv .b-rec i { background: none; border: 2px solid currentColor; border-right-color: transparent; width: 11px; height: 11px; animation: tourne .8s linear infinite; }
+.b.pause .b-rec { color: #F0B860; }
+.b.pause .b-rec i { animation: none; border-radius: 1px; width: 8px; background: linear-gradient(90deg, currentColor 35%, transparent 35% 65%, currentColor 65%); }
+.b-min { font: 600 54px/1 "Inter", sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -.02em; margin: 26px 0 18px; }
+.b.ouv .b-min, .b.pause .b-min { color: #8B9098; }
+.b-onde { height: 86px; align-self: stretch; display: flex; align-items: center; justify-content: center; gap: 3px; }
+.b-onde i { width: 4px; border-radius: 2px; background: #E07A52; height: 4px; transition: height .09s linear; }
+.b-onde i.vieux { background: #6B4A3E; }
+.b-conseil { margin: 22px 0 0; min-height: 76px; align-self: stretch; background: #1E2125; border-radius: 14px; padding: 10px 14px; text-align: left; }
+.b-conseil small { color: #B4B9C0; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; }
+.b-conseil p { margin: 3px 0 0; font-size: 13.5px; line-height: 1.35; animation: fondu .4s ease-out; }
+.b-ctrl { margin-top: auto; align-self: stretch; display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; }
+.b-ctrl button { background: none; border: 0; color: #ECEAE6; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; }
+.b-ctrl .petit span { width: 50px; height: 50px; border-radius: 50%; background: #2A2E34; display: grid; place-items: center; font-size: 16px; }
+.b-ctrl .petit span svg { width: 20px; height: 20px; }
+.b-stop span { width: 76px; height: 76px; border-radius: 50%; border: 4px solid #ECEAE6; display: grid; place-items: center; }
+.b-stop span i { width: 28px; height: 28px; border-radius: 7px; background: #E5484D; }
+.b-stop:active span { scale: .93; }
+.b.ouv .b-stop { visibility: hidden; }
+.b-stop b { font-weight: 600; font-size: 12px; }
+/* Attente B : anneau, texte entendu, lignes qui se dessinent. */
+.b-anneau { --p: 0; width: 150px; height: 150px; border-radius: 50%; margin: 22px 0 12px; display: grid; place-items: center; background: conic-gradient(#E07A52 calc(var(--p) * 360deg), #2A2E34 0); position: relative; }
+.b-anneau::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: #15171A; }
+.b-anneau div { position: relative; display: flex; flex-direction: column; }
+.b-anneau b { font: 600 32px/1 "Inter", sans-serif; font-variant-numeric: tabular-nums; }
+.b-anneau small { color: #B4B9C0; font-size: 11.5px; margin-top: 4px; }
+.b-etape { font: 600 14px/1.2 "Archivo", sans-serif; margin: 0 0 12px; }
+.b-entendu { align-self: stretch; background: #1E2125; border-radius: 14px; padding: 10px 12px; text-align: left; min-height: 92px; }
+.b-entendu small { color: #B4B9C0; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; }
+.b-entendu p { margin: 4px 0 0; font-size: 12.5px; line-height: 1.4; }
+.b-entendu p.attend { color: #8B9098; }
+.b-squel { align-self: stretch; margin-top: 10px; display: grid; gap: 7px; }
+.b-squel i { height: 26px; border-radius: 8px; background: linear-gradient(90deg, #22262B 20%, #2F343A 50%, #22262B 80%); background-size: 200% 100%; animation: luit 1.3s linear infinite; }
+.b-squel i:nth-child(2) { width: 86%; } .b-squel i:nth-child(3) { width: 70%; }
+@keyframes luit { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.b-quitter { margin-top: auto; font-size: 11.5px; color: #B4B9C0; }
+/* Résultat B : écran clair avant l'offre. */
+.v { position: absolute; inset: 0; background: var(--surface); display: flex; flex-direction: column; align-items: center; text-align: center; padding: 50px 18px 18px; animation: fondu .3s ease-out; }
+.v-coche { width: 74px; height: 74px; border-radius: 50%; background: var(--ok); display: grid; place-items: center; animation: saute .45s cubic-bezier(.3, 1.6, .5, 1); }
+.v-coche::before { content: ""; width: 14px; height: 28px; border: solid #fff; border-width: 0 5px 5px 0; transform: translateY(-3px) rotate(45deg); }
+@keyframes saute { from { transform: scale(.3); } }
+.v h3 { font: 700 21px/1.2 "Archivo", sans-serif; margin: 16px 0 4px; }
+.v p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.v p b { color: var(--ink); }
+.v-tuiles { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 7px; align-self: stretch; margin: 20px 0 0; }
+.v-tuiles div { border: 1px solid var(--line); border-radius: 12px; padding: 9px 4px; display: flex; flex-direction: column; font-size: 11px; color: var(--muted); }
+.v-tuiles b { font: 700 17px/1.2 "Archivo", sans-serif; color: var(--ink); }
+.v-tuiles .warn { background: var(--warn-soft); border-color: var(--warn-soft); color: var(--warn); }
+.v-tuiles .warn b { color: var(--warn); }
+.v .t-btn { margin-top: auto; }
+/* Les entrées (feuille qui monte, fondu, bandeau) ne jouent qu'au changement d'état, pas à chaque mise à jour. */
+.ecran:not(.neuf) .feuille, .ecran:not(.neuf) .b, .ecran:not(.neuf) .v, .ecran:not(.neuf) .o-ban, .ecran:not(.neuf) .v-coche { animation: none; }
+@media (prefers-reduced-motion: reduce) { .ecran *, .ecran *::before, .ecran *::after { animation: none !important; transition: none !important; } }
+</style>
+<style data-mk-kit>
+/* Kit maquette (skill « maquette »). Injecté en ligne avant </head>. Les variables --mk-*
+   se règlent dans la page ; à défaut, ces valeurs. */
+:root { --mk-ink: #2B2419; --mk-bg: #F2ECDE; --mk-surface: #FBF8F1; --mk-line: #DDD3BF; --mk-accent: #7B2D2A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; } }
+:root[data-theme="dark"] { --mk-ink: #ECE3CF; --mk-bg: #1C1712; --mk-surface: #262019; --mk-line: #3C3322; --mk-accent: #F0B9AE; }
+
+/* 1. Zoom */
+img.mk-zoomable { cursor: zoom-in; }
+img.mk-zoomable:focus-visible { outline: 3px solid var(--mk-accent); outline-offset: 2px; }
+html.mk-lb-open { overflow: hidden; }
+#mk-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(12, 10, 8, .97); backdrop-filter: blur(6px); display: flex; flex-direction: column; }
+#mk-lightbox[hidden] { display: none; }
+.mk-lb-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: #F2ECDE; font: 14px/1.4 system-ui, sans-serif; }
+.mk-lb-cap { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-lb-count { font-family: ui-monospace, monospace; opacity: .8; }
+.mk-lb-btn { font: inherit; min-width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F2ECDE; cursor: pointer; }
+.mk-lb-btn:hover, .mk-lb-btn:focus-visible { background: rgba(255,255,255,.12); }
+.mk-lb-stage { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px; }
+/* Ajustée à l'écran, agrandie au besoin : un zoom qui laisse l'image à sa taille de vignette ne sert à rien. */
+.mk-lb-stage img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+#mk-lightbox.is-real .mk-lb-stage { display: block; cursor: grab; }
+#mk-lightbox.is-real .mk-lb-stage img { width: auto; height: auto; max-width: none; max-height: none; cursor: zoom-out; margin: 0 auto; display: block; }
+
+/* 2. Sommaire collant */
+#mk-toc { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; background: var(--mk-bg); }
+#mk-toc a { border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); text-decoration: none; padding: 4px 12px; border-radius: 999px; font-size: 14px; }
+#mk-toc a:hover, #mk-toc a:focus-visible { border-color: var(--mk-accent); }
+
+/* 3. Avant / après */
+.mk-compare { display: grid; gap: 12px; }
+.mk-compare-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.mk-compare-bar button, .mk-filters button { font: inherit; font-size: 13px; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.mk-compare-bar button[aria-pressed="true"], .mk-filters button[aria-pressed="true"] { background: var(--mk-ink); color: var(--mk-bg); }
+.mk-compare[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.mk-compare > .mk-compare-bar { grid-column: 1 / -1; }
+.mk-compare[data-mode="before"] > figure:nth-of-type(2), .mk-compare[data-mode="after"] > figure:nth-of-type(1) { display: none; }
+.mk-compare figure { margin: 0; }
+.mk-compare figcaption { font-size: 13px; opacity: .75; margin-top: 4px; }
+@media (max-width: 760px) { .mk-compare[data-mode="both"] { grid-template-columns: 1fr; } }
+
+/* 5 et 6. Outils flottants */
+.mk-tools { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; flex-direction: column; gap: 8px; }
+.mk-tools > * { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--mk-line); background: var(--mk-surface); color: var(--mk-ink); font: 18px/38px system-ui, sans-serif; text-align: center; text-decoration: none; cursor: pointer; padding: 0; }
+@media print { .mk-tools, #mk-toc { display: none; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Parcours de la dictée : deux pistes</h1>
+<p class="chapeau">Du toucher sur le micro jusqu'à l'offre à relire. Pour chaque étape : l'écran actuel en capture, puis une piste « sage » (A) et une piste « franche » (B). Votre choix se pose sous chaque étape ; les étapes se mélangent (par exemple l'enregistrement de B avec l'attente de A).</p>
+<nav id="mk-toc"></nav>
+
+<h2 id="regle" data-toc="Réglé">Déjà réglé</h2>
+<div class="bloc regle"><b>Bouton du micro : réponse immédiate.</b> La fenêtre monte dès le toucher avec « Le micro s'ouvre… », le bouton s'enfonce sous le doigt. En service sur le test depuis le 25.11 (commit f2c1aad), vous l'avez essayé : « ça marche ». Rien à choisir ici.</div>
+
+<h2 id="constats" data-toc="Constats">Ce qui ne va pas aujourd'hui</h2>
+<p class="muted petit">Captures du parcours actuel sur le serveur local, compte de démonstration, envoi simulé (aucune dictée transcrite). Cliquez une capture pour l'agrandir.</p>
+<div class="constats">
+  <figure><img src="MAQUETTE-parcours-dictee-img/actuel-enregistrement.jpg" alt="Actuel : enregistrement en cours, rond orange, minuteur, bouton Terminer"><figcaption><b>Enregistrement.</b> Rien ne dit que le micro entend. Un casque Bluetooth qui prend le micro, un doigt posé dessus : l'artisan parle deux minutes dans le vide et ne le découvre qu'à l'offre vide.</figcaption></figure>
+  <figure><img src="MAQUETTE-parcours-dictee-img/actuel-envoi.jpg" alt="Actuel : préparation de l'offre, envoi en cours avec une barre grise presque invisible"><figcaption><b>Envoi.</b> La barre d'envoi est un trait gris clair, presque invisible. Le titre ne dit pas combien de temps l'attente va durer.</figcaption></figure>
+  <figure><img src="MAQUETTE-parcours-dictee-img/actuel-transcription.jpg" alt="Actuel : quatre étapes, transcription en cours"><figcaption><b>Attente.</b> 30 à 50 secondes sans durée annoncée (transcription de 6 à 20 s, extraction de 18 à 27 s, chronomètre des dictées). « Offre prête » figure comme une étape alors qu'elle est l'arrivée. Derrière, la liste d'avant, sans rien de neuf.</figcaption></figure>
+  <figure><img src="MAQUETTE-parcours-dictee-img/actuel-offre.jpg" alt="Actuel : l'offre s'ouvre en haut, cartes client, représenté par, objet, puis un champ vide avant les lignes"><figcaption><b>Offre prête.</b> L'offre s'ouvre en haut : trois cartes et un champ vide « Texte avant les lignes » passent avant les lignes dictées. Les lignes à vérifier ne se comptent que dans le bouton du bas.</figcaption></figure>
+</div>
+
+<h2 id="pistes" data-toc="Pistes">Les deux pistes</h2>
+<div class="pistes">
+  <div class="bloc"><span class="etiquette">Piste A, sage</span><p>Mêmes écrans, mêmes couleurs.</p><ul class="serre"><li>Le rond suit la voix ; « Le micro vous entend » ; une alerte après 5 secondes de silence.</li><li>L'attente annonce sa durée, une barre d'ensemble avance, trois étapes au lieu de quatre.</li><li>L'offre s'ouvre sur ses lignes, un bandeau vert dit le résultat, les lignes arrivent l'une après l'autre.</li></ul><p class="muted petit" style="margin-top:10px">Tout se passe dans le navigateur, le serveur ne change pas.</p></div>
+  <div class="bloc"><span class="etiquette">Piste B, franche</span><p>L'enregistrement et l'attente prennent tout l'écran, en sombre, à la manière du Dictaphone de l'iPhone.</p><ul class="serre"><li>Onde de la voix qui défile, conseils qui changent toutes les 6 secondes, gros bouton d'arrêt au centre, Pause.</li><li>Pendant l'attente : un anneau qui se remplit, le texte entendu qui s'affiche, les lignes qui se dessinent.</li><li>À l'arrivée, un écran de résultat (lignes, à vérifier, total), puis l'offre.</li></ul><p class="muted petit" style="margin-top:10px">Le texte entendu demande une modification du serveur ; la Pause est une fonction nouvelle.</p></div>
+</div>
+
+<h2 id="demo" data-toc="Démo">Démo : jouez les deux pistes</h2>
+<p>Touchez le micro rouge de chaque téléphone, parlez si vous voulez (la voix est simulée), puis « Terminer ». <span class="muted">L'attente est raccourcie à 12 secondes pour la démo ; en vrai, 30 à 50 secondes.</span></p>
+<div class="demo">
+  <div class="colonne"><h3>Piste A</h3><div class="tel" id="demo-a"><div class="ecran"></div></div>
+    <div class="commandes"><button type="button" data-demo="demo-a" data-cmd="silence">Couper la voix 7 s</button><button type="button" data-demo="demo-a" data-cmd="rejouer">Rejouer</button></div></div>
+  <div class="colonne"><h3>Piste B</h3><div class="tel" id="demo-b"><div class="ecran"></div></div>
+    <div class="commandes"><button type="button" data-demo="demo-b" data-cmd="rejouer">Rejouer</button></div></div>
+</div>
+
+<h2 id="enregistrement" data-toc="1. Enregistrement">Étape 1 : enregistrement</h2>
+<div class="trio">
+  <div class="colonne"><h3>Actuel</h3><img class="capture" src="MAQUETTE-parcours-dictee-img/actuel-enregistrement.jpg" alt="Actuel : écran d'enregistrement"><p>L'écran refait hier. Les halos tournent en boucle, qu'on parle ou non.</p></div>
+  <div class="colonne"><h3>Piste A</h3><div class="tel" data-fige="A rec"><div class="ecran"></div></div><p>Le rond grandit avec la voix, « Le micro vous entend » le confirme.</p></div>
+  <div class="colonne"><h3>Piste B</h3><div class="tel" data-fige="B rec"><div class="ecran"></div></div><p>Plein écran sombre : l'onde défile, un conseil change toutes les 6 secondes, l'arrêt est au centre sous le pouce, Abandonner et Pause de part et d'autre.</p></div>
+</div>
+<div class="duo">
+  <div class="colonne"><h3>A ou B : 5 secondes sans voix</h3><div class="tel" data-fige="A silence"><div class="ecran"></div></div><p>L'alerte prend la place de « Le micro vous entend ». Elle vaut pour les deux pistes ; c'est le « message Bluetooth » de la tâche 519.</p></div>
+  <div class="colonne"><h3>B : en pause</h3><div class="tel" data-fige="B pause"><div class="ecran"></div></div><p>Le minuteur s'arrête et grisaille, l'onde se fige, Pause devient Reprendre.</p></div>
+</div>
+<div class="choix" data-q="enregistrement" data-titre="Étape 1, enregistrement">
+  <p>Écran d'enregistrement</p>
+  <div class="choix-btns"><button type="button" data-v="Actuel">Garder l'actuel</button><button type="button" data-v="A">Piste A</button><button type="button" data-v="B">Piste B</button></div>
+  <textarea aria-label="Commentaire sur l'enregistrement" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="choix" data-q="silence" data-titre="Alerte après 5 s de silence">
+  <p>Alerte après 5 secondes sans voix</p>
+  <p class="note">Le micro mesure le niveau de la voix ; rien n'est envoyé pour cela. Vaut pour A comme pour B.</p>
+  <div class="choix-btns"><button type="button" data-v="Oui">Oui</button><button type="button" data-v="Non">Non</button></div>
+  <textarea aria-label="Commentaire sur l'alerte de silence" placeholder="Commentaire (facultatif), par exemple un autre délai"></textarea>
+</div>
+<div class="choix" data-q="pause" data-titre="Pause pendant la dictée">
+  <p>Pause pendant la dictée (fonction nouvelle, piste B ; possible aussi dans A)</p>
+  <p class="note">Le temps en pause ne compte pas dans les 30 minutes. Safari annonce la pause de l'enregistreur depuis sa version 14.1 : non vérifié sur iPhone, à prouver avant de la livrer.</p>
+  <div class="choix-btns"><button type="button" data-v="Oui">Oui</button><button type="button" data-v="Non">Non</button></div>
+  <textarea aria-label="Commentaire sur la pause" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h2 id="attente" data-toc="2. Attente">Étape 2 : envoi et préparation</h2>
+<div class="trio">
+  <div class="colonne"><h3>Actuel</h3><img class="capture" src="MAQUETTE-parcours-dictee-img/actuel-transcription.jpg" alt="Actuel : quatre étapes, transcription en cours"><p>Quatre étapes, pas de durée, la liste d'avant derrière le voile.</p></div>
+  <div class="colonne"><h3>Piste A</h3><div class="tel" data-fige="A prep"><div class="ecran"></div></div><p>« Environ 15 secondes » se met à jour, une barre d'ensemble avance, l'envoi affiche son pourcentage, « Offre prête » n'est plus une étape.</p></div>
+  <div class="colonne"><h3>Piste B</h3><div class="tel" data-fige="B prep"><div class="ecran"></div></div><p>L'anneau se remplit, le texte entendu s'affiche dès la transcription : l'artisan vérifie ce que la machine a compris pendant qu'elle travaille.</p></div>
+</div>
+<div class="choix" data-q="attente" data-titre="Étape 2, attente">
+  <p>Écran d'attente</p>
+  <div class="choix-btns"><button type="button" data-v="Actuel">Garder l'actuel</button><button type="button" data-v="A">Piste A</button><button type="button" data-v="B">Piste B</button></div>
+  <textarea aria-label="Commentaire sur l'attente" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+<div class="choix" data-q="entendu" data-titre="Texte entendu pendant l'attente">
+  <p>Afficher le texte entendu pendant l'attente</p>
+  <p class="note">Le serveur l'a dès la fin de la transcription ; il faut le joindre à l'état du traitement que la page interroge chaque seconde (environ 1 heure). Possible aussi dans la piste A.</p>
+  <div class="choix-btns"><button type="button" data-v="Oui">Oui</button><button type="button" data-v="Non">Non</button></div>
+  <textarea aria-label="Commentaire sur le texte entendu" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h2 id="offre" data-toc="3. Offre prête">Étape 3 : offre prête</h2>
+<div class="trio">
+  <div class="colonne"><h3>Actuel</h3><img class="capture" src="MAQUETTE-parcours-dictee-img/actuel-offre.jpg" alt="Actuel : l'offre ouverte en haut de page"><p>Les lignes dictées sont sous le pli.</p></div>
+  <div class="colonne"><h3>Piste A</h3><div class="tel" data-fige="A offre"><div class="ecran"></div></div><p>La page s'ouvre sur ses lignes. Le bandeau dit « 5 lignes, dont 3 à vérifier » et se ferme d'un toucher ; un filet jaune marque chaque ligne à vérifier. Le texte avant les lignes se replie en un lien tant qu'il est vide.</p></div>
+  <div class="colonne"><h3>Piste B</h3><div class="tel" data-fige="B resultat"><div class="ecran"></div></div><p>Un écran de résultat, puis « Relire les 3 lignes à vérifier » mène à la première. Un toucher de plus que A, en échange d'un vrai moment d'arrivée.</p></div>
+</div>
+<div class="choix" data-q="offre" data-titre="Étape 3, offre prête">
+  <p>Arrivée de l'offre</p>
+  <div class="choix-btns"><button type="button" data-v="Actuel">Garder l'actuel</button><button type="button" data-v="A">Piste A</button><button type="button" data-v="B">Piste B</button></div>
+  <textarea aria-label="Commentaire sur l'arrivée de l'offre" placeholder="Commentaire (facultatif)"></textarea>
+</div>
+
+<h2 id="couts" data-toc="Coûts">Ce que chaque piste coûte</h2>
+<table class="couts">
+  <thead><tr><th>Piste</th><th>Travail (estimation de Claude)</th><th>Ce qui change hors de l'écran</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>Environ 3 heures</td><td>Rien. La jauge de la voix reprend la tâche 519 (« Jauge lissée et message Bluetooth »), encore ouverte.</td></tr>
+    <tr><td>B</td><td>Environ 7 heures</td><td>Le texte entendu dans l'état du traitement (serveur, environ 1 heure). La Pause touche la durée dictée, la limite des 30 minutes et la reprise d'une dictée coupée.</td></tr>
+    <tr><td>Mélange</td><td>Selon les étapes retenues</td><td>Chaque étape se code à part ; l'ordre conseillé est l'attente, puis l'offre prête, puis l'enregistrement.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="reponses" data-toc="Réponses">Vos réponses</h2>
+<p class="muted petit">Elles restent dans ce navigateur. Le bouton copie le texte à coller dans la conversation.</p>
+<div class="recap" id="recap">Aucune réponse pour l'instant.</div>
+<button type="button" class="copier" id="copier">Copier le texte</button>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var MICRO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  var CROIX = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  var PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  var REPRENDRE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  var CONSEILS = ['Commencez par le client et le lieu du chantier.', 'Puis pièce par pièce : les travaux, les surfaces, les quantités.', 'Les fournitures et le déplacement, s\'il y en a.'];
+  var ENTENDU = 'Famille Dupont, rue du Marché 1 à Fribourg. Protection des sols et des meubles, un forfait. Salon : murs en deux couches, environ soixante-quatre mètres carrés, plafond vingt-deux mètres carrés…';
+  var OFFRES = [
+    ['Appartement Rue du Marché, rénovation complète', 'Famille Dupont · Offre 3', 'CHF 27’080.65', '3 à vérifier', 'warn'],
+    ['Rafraîchissement du séjour', 'Famille Exemple · Offre 2', 'CHF 3’106.80', 'Prête', 'ok'],
+    ['Cage d\'escalier, immeuble Avenue de la Gare', 'Madame Rochat · Offre 4', 'CHF 14’615.10', 'Prête', 'ok'],
+  ];
+  var LIGNES = [
+    ['Protection des sols et des meubles', '1 forfait × 180.00', '180.00', false, 'GÉNÉRAL'],
+    ['Déplacement', '1 forfait × 821.00', '821.00', false, ''],
+    ['Murs, deux couches', '64 m² × 28.00', '1’792.00', true, 'SALON'],
+    ['Plafond', '22 m² × 24.00', '528.00', true, ''],
+    ['Rebouchage des fissures', '1 forfait × 240.00', '240.00', true, ''],
+  ];
+  var DUREE_REELLE = 40; // secondes d'attente annoncées en vrai (30 à 50 mesurées)
+  var DUREE_DEMO = 12000;
+
+  var deux = function (n) { return String(n).padStart(2, '0'); };
+  var horloge = function (s) { return deux(Math.floor(s / 60)) + ':' + deux(s % 60); };
+  var esc = function (t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+
+  function barre(titre) { return '<div class="t-bar"><span>' + titre + '</span><span class="logo">Dicta</span></div>'; }
+  function onglets(appel) {
+    return '<div class="t-tabs"><span>Offres</span><span>Clients</span><button type="button" class="t-micro' + (appel ? ' appel' : '') + '" data-act="micro" aria-label="Dicter une offre"><span>' + MICRO + '</span></button><span>Factures</span><span>Plus</span></div>';
+  }
+  function liste() {
+    return '<div class="t-corps"><div class="t-entete">Peinture Mesure Sàrl · 5 offres ce mois</div>' + OFFRES.map(function (o) {
+      return '<div class="t-carte"><b>' + esc(o[0]) + '</b><span class="badge ' + o[4] + '">' + o[3] + '</span><small>' + esc(o[1]) + '</small><span class="m">' + o[2] + '</span></div>';
+    }).join('') + '</div>';
+  }
+  function accueil(appel) { return barre('Mes offres') + liste() + onglets(appel); }
+
+  // Piste A, enregistrement (et ouverture, silence).
+  function recA(d) {
+    var ouv = d.etat === 'ouverture';
+    var entend = d.silence ? '<p class="r-entend alerte">Le micro n\'entend rien depuis 5 s. Parlez plus près, ou vérifiez qu\'un casque Bluetooth ne l\'a pas pris.</p>'
+      : '<p class="r-entend ok">Le micro vous entend</p>';
+    return accueil(false) + '<div class="voile"></div><div class="feuille haute"><div class="poignee"></div><div class="r' + (ouv ? ' ouv' : '') + '">'
+      + '<span class="r-etat"><i></i>' + (ouv ? 'Le micro s\'ouvre…' : 'Enregistrement en cours') + '</span>'
+      + '<div class="r-min">' + horloge(d.s) + '</div>'
+      + '<div class="r-rond" style="--niv:' + d.niv + '"><span class="fond deux"></span><span class="fond"></span>' + MICRO + '</div>'
+      + entend + '<p class="r-cons">Parlez, pièce par pièce.</p>'
+      + '<button type="button" class="t-btn rouge grand" data-act="terminer"><span class="carre"></span>Terminer et créer l\'offre</button>'
+      + '<button type="button" class="t-lien" data-act="abandon">' + (ouv ? 'Annuler' : 'Abandonner sans envoyer') + '</button></div></div>';
+  }
+  // Piste B, enregistrement (et ouverture, pause).
+  function onde(n) { var h = ''; for (var i = 0; i < n; i++) h += '<i></i>'; return h; }
+  function recB(d) {
+    var ouv = d.etat === 'ouverture';
+    var classe = ouv ? ' ouv' : d.pause ? ' pause' : '';
+    var etat = ouv ? 'Le micro s\'ouvre…' : d.pause ? 'En pause' : 'Enregistrement';
+    return '<div class="b' + classe + '"><div class="b-haut"><span class="b-rec"><i></i>' + etat + '</span><span>Nouvelle offre</span></div>'
+      + '<div class="b-min">' + horloge(d.s) + '</div><div class="b-onde">' + onde(34) + '</div>'
+      + '<div class="b-conseil"><small>Conseil ' + (d.conseil + 1) + ' sur ' + CONSEILS.length + '</small><p>' + esc(CONSEILS[d.conseil]) + '</p></div>'
+      + '<div class="b-ctrl"><button type="button" class="petit" data-act="abandon"><span>' + CROIX + '</span>' + (ouv ? 'Annuler' : 'Abandonner') + '</button>'
+      + '<button type="button" class="b-stop" data-act="terminer" aria-label="Terminer et créer l\'offre"><span><i></i></span><b>Terminer</b></button>'
+      + '<button type="button" class="petit" data-act="pause"' + (ouv ? ' style="visibility:hidden"' : '') + '><span>' + (d.pause ? REPRENDRE : PAUSE) + '</span>' + (d.pause ? 'Reprendre' : 'Pause') + '</button></div></div>';
+  }
+  // Attente : p de 0 à 1 sur toute la préparation.
+  function phase(p) { return p < 0.125 ? 0 : p < 0.42 ? 1 : 2; }
+  function prepA(d) {
+    var ph = phase(d.p);
+    var reste = Math.max(1, Math.round((1 - d.p) * DUREE_REELLE / 5) * 5);
+    var envoi = Math.min(100, Math.round(d.p / 0.125 * 100));
+    var li = function (i, lib, extra) { return '<li class="' + (i < ph ? 'done' : i === ph ? 'cur' : 'todo') + '"><span></span>' + lib + (extra || '<em></em>') + '</li>'; };
+    return accueil(false) + '<div class="voile"></div><div class="feuille moyenne"><div class="poignee"></div>'
+      + '<div class="p-titre">Préparation de l\'offre</div><p class="p-sous">Environ ' + reste + ' secondes</p>'
+      + '<div class="p-barre"><i style="width:' + Math.round(d.p * 100) + '%"></i></div>'
+      + '<ol class="p-etapes">' + li(0, 'Envoi de l\'enregistrement', '<em>' + envoi + ' %</em>') + li(1, 'Transcription de la dictée') + li(2, 'Lignes de l\'offre') + '</ol>'
+      + '<p class="p-quitter">Vous pouvez quitter l\'application : l\'offre vous attendra dans « Offres ».</p></div>';
+  }
+  function prepB(d) {
+    var ph = phase(d.p);
+    var reste = Math.max(1, Math.round((1 - d.p) * DUREE_REELLE / 5) * 5);
+    var libelles = ['Envoi de l\'enregistrement', 'Transcription de la dictée', 'Lignes de l\'offre'];
+    var texte = ph < 2 ? '<p class="attend">Le texte apparaîtra ici dès la transcription.</p>' : '<p>' + esc(ENTENDU.slice(0, d.lettres)) + '</p>';
+    return '<div class="b"><div class="b-haut"><span>Préparation de l\'offre</span><span>' + (ph + 1) + ' / 3</span></div>'
+      + '<div class="b-anneau" style="--p:' + d.p.toFixed(3) + '"><div><b>' + Math.round(d.p * 100) + ' %</b><small>environ ' + reste + ' s</small></div></div>'
+      + '<p class="b-etape">' + libelles[ph] + '</p><div class="b-entendu"><small>Entendu</small>' + texte + '</div>'
+      + (ph === 2 ? '<div class="b-squel"><i></i><i></i><i></i></div>' : '')
+      + '<p class="b-quitter">Vous pouvez quitter l\'application : l\'offre vous attendra dans « Offres ».</p></div>';
+  }
+  // Offre : page sur ses lignes (A), écran de résultat (B).
+  function lignes(cascade) {
+    return LIGNES.map(function (l, i) {
+      return (l[4] ? '<div class="o-sec">' + l[4] + '</div>' : '') + '<div class="o-l' + (l[3] ? ' verif' : '') + (cascade ? ' cascade' : '') + '" style="animation-delay:' + (i * 70) + 'ms"><b>' + esc(l[0]) + '</b><span class="tt">' + l[2] + '</span><small>' + esc(l[1]) + (l[3] ? ' · <b style="color:var(--warn);font-weight:600">à vérifier</b>' : '') + '</small></div>';
+    }).join('');
+  }
+  function offreA(d) {
+    return barre('‹ Offres&nbsp;&nbsp;Offre 3')
+      + (d.bandeau === false ? '' : '<div class="o-ban"><span class="coche"></span><div><b>Offre prête</b>5 lignes, dont 3 à vérifier</div><button type="button" data-act="bandeau" aria-label="Fermer">✕</button></div>')
+      + '<div class="o-client"><span><b>Famille Dupont</b> · Fribourg</span><span>›</span></div>'
+      + '<div class="o-lignes">' + lignes(d.cascade) + '<span class="o-plus">+ Texte avant les lignes</span></div>'
+      + '<div class="o-bas"><button type="button" class="t-btn">+ Ligne</button><button type="button" class="t-btn noir">✓ Relire 5 lignes<small>CHF 27’080.65</small></button></div>' + onglets(false);
+  }
+  function resultatB() {
+    return '<div class="v"><div class="v-coche"></div><h3>Offre prête</h3><p><b>Famille Dupont</b><br>Appartement Rue du Marché, rénovation complète</p>'
+      + '<div class="v-tuiles"><div><b>5</b>lignes</div><div class="warn"><b>3</b>à vérifier</div><div><b>27’080.65</b>CHF</div></div>'
+      + '<button type="button" class="t-btn noir grand" data-act="voir">Relire les 3 lignes à vérifier</button><button type="button" class="t-lien" data-act="voir">Voir l\'offre entière</button></div>';
+  }
+  function ecran(piste, d) {
+    if (d.etat === 'accueil') return accueil(true);
+    if (d.etat === 'ouverture' || d.etat === 'rec') return piste === 'A' ? recA(d) : recB(d);
+    if (d.etat === 'prep') return piste === 'A' ? prepA(d) : prepB(d);
+    if (d.etat === 'resultat') return resultatB();
+    return offreA(d);
+  }
+  function remplirOnde(el, niveaux) {
+    var barres = el.querySelectorAll('.b-onde i');
+    barres.forEach(function (b, i) { var v = niveaux[i] || 0; b.style.height = Math.max(4, Math.round(v * 80)) + 'px'; b.classList.toggle('vieux', i < barres.length - 8); });
+  }
+
+  // Écrans figés des étapes.
+  document.querySelectorAll('[data-fige]').forEach(function (tel) {
+    var p = tel.dataset.fige.split(' ');
+    var piste = p[0];
+    var cas = p[1];
+    var d = { etat: 'rec', s: 47, niv: 0.62, silence: false, pause: false, conseil: 1, p: 0.55, lettres: 120, cascade: false };
+    if (cas === 'silence') { d.silence = true; d.niv = 0; d.s = 52; }
+    if (cas === 'pause') { d.pause = true; d.s = 83; }
+    if (cas === 'prep') { d.etat = 'prep'; d.p = 0.62; }
+    if (cas === 'offre') d.etat = 'offre';
+    if (cas === 'resultat') d.etat = 'resultat';
+    var e = tel.querySelector('.ecran');
+    e.classList.add('neuf');
+    e.innerHTML = ecran(piste, d);
+    if (piste === 'B' && (cas === 'rec' || cas === 'pause')) {
+      var n = []; for (var i = 0; i < 34; i++) n.push(0.15 + 0.75 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.6)));
+      remplirOnde(e, n);
+    }
+  });
+
+  // Démos jouables.
+  function Demo(tel, piste) {
+    var e = tel.querySelector('.ecran');
+    var d;
+    var minuteurs = [];
+    var boucle = null;
+    var niveaux = [];
+    var t = 0;
+    var debut = 0;
+    var dansPause = 0;
+    var pauseDepuis = 0;
+    var silenceJusqua = 0;
+    var muetDepuis = 0;
+    var conseilAffiche = 0;
+    var plus =function (f, ms) { minuteurs.push(setTimeout(f, ms)); };
+    var tout = function (neuf) { e.classList.toggle('neuf', !!neuf); e.innerHTML = ecran(piste, d); if (piste === 'B' && d.etat === 'rec') remplirOnde(e, niveaux); };
+    var arreter = function () { minuteurs.forEach(clearTimeout); minuteurs = []; if (boucle) cancelAnimationFrame(boucle); boucle = null; };
+    var raz = function () { arreter(); d = { etat: 'accueil', s: 0, niv: 0, silence: false, pause: false, conseil: 0, p: 0, lettres: 0, cascade: true }; niveaux = []; dansPause = 0; conseilAffiche = 0; silenceJusqua = 0; tout(true); };
+    var voix = function (ms) {
+      if (ms < silenceJusqua) return 0;
+      var parole = (Math.sin(ms / 900) + Math.sin(ms / 370) * 0.6) > -0.6;
+      return parole ? Math.min(1, 0.25 + Math.random() * 0.55 + Math.abs(Math.sin(ms / 120)) * 0.25) : Math.random() * 0.06;
+    };
+    var enregistrer = function () {
+      var ms = performance.now();
+      if (d.etat !== 'rec') return;
+      if (!d.pause) {
+        var v = voix(ms);
+        d.niv = d.niv * 0.6 + v * 0.4;
+        d.s = Math.floor((ms - debut - dansPause) / 1000);
+        d.conseil = Math.floor(d.s / 6) % CONSEILS.length;
+        if (v > 0.12) muetDepuis = ms;
+        var avant = d.silence;
+        d.silence = ms - muetDepuis > 5000;
+        if (ms - t > 90) { t = ms; niveaux.push(v); if (niveaux.length > 34) niveaux.shift(); }
+        if (piste === 'A') {
+          if (avant !== d.silence) tout();
+          var r = e.querySelector('.r-rond'); if (r) r.style.setProperty('--niv', d.niv.toFixed(3));
+          var m = e.querySelector('.r-min'); if (m) m.textContent = horloge(d.s);
+        } else {
+          var mm = e.querySelector('.b-min'); if (mm) mm.textContent = horloge(d.s);
+          if (d.conseil !== conseilAffiche) { conseilAffiche = d.conseil; tout(); } else remplirOnde(e, niveaux);
+        }
+      }
+      boucle = requestAnimationFrame(enregistrer);
+    };
+    // Les chiffres de l'attente, mis à jour sans refaire l'écran (le rond qui tourne et la lueur continuent).
+    var majAttente = function () {
+      var reste = Math.max(1, Math.round((1 - d.p) * DUREE_REELLE / 5) * 5);
+      if (piste === 'A') {
+        e.querySelector('.p-barre i').style.width = Math.round(d.p * 100) + '%';
+        e.querySelector('.p-sous').textContent = 'Environ ' + reste + ' secondes';
+        e.querySelector('.p-etapes em').textContent = Math.min(100, Math.round(d.p / 0.125 * 100)) + ' %';
+      } else {
+        var a = e.querySelector('.b-anneau');
+        a.style.setProperty('--p', d.p.toFixed(3));
+        a.querySelector('b').textContent = Math.round(d.p * 100) + ' %';
+        a.querySelector('small').textContent = 'environ ' + reste + ' s';
+        if (phase(d.p) === 2) e.querySelector('.b-entendu p').textContent = ENTENDU.slice(0, d.lettres);
+      }
+    };
+    var preparer = function () {
+      var t0 = performance.now();
+      var phaseAffichee = -1;
+      var tour = function () {
+        if (d.etat !== 'prep') return;
+        d.p = Math.min(1, (performance.now() - t0) / DUREE_DEMO);
+        if (phase(d.p) === 2) d.lettres = Math.min(ENTENDU.length, d.lettres + 3);
+        var ph = phase(d.p);
+        if (ph !== phaseAffichee) { phaseAffichee = ph; tout(false); } else majAttente();
+        if (d.p >= 1) { plus(function () { d.etat = piste === 'A' ? 'offre' : 'resultat'; d.cascade = true; tout(true); }, 300); return; }
+        plus(tour, 100);
+      };
+      tour();
+    };
+    tel.addEventListener('click', function (ev) {
+      var b = ev.target.closest('[data-act]');
+      if (!b) return;
+      var act = b.dataset.act;
+      if (act === 'micro' && d.etat === 'accueil') {
+        d.etat = 'ouverture'; d.s = 0; tout(true);
+        plus(function () { d.etat = 'rec'; debut = performance.now(); muetDepuis = debut; tout(); enregistrer(); }, 700);
+      } else if (act === 'abandon') {
+        raz();
+      } else if (act === 'terminer' && d.etat === 'rec') {
+        arreter(); d.etat = 'prep'; d.p = 0; d.lettres = 0; tout(true); preparer();
+      } else if (act === 'pause' && d.etat === 'rec') {
+        if (d.pause) { dansPause += performance.now() - pauseDepuis; } else { pauseDepuis = performance.now(); }
+        d.pause = !d.pause; tout();
+      } else if (act === 'bandeau') {
+        d.bandeau = false; d.cascade = false; tout();
+      } else if (act === 'voir') {
+        d.etat = 'offre'; d.bandeau = false; d.cascade = true; tout(true);
+      }
+    });
+    raz();
+    return {
+      rejouer: raz,
+      silence: function () { silenceJusqua = performance.now() + 7000; },
+    };
+  }
+  var demos = { 'demo-a': Demo(document.getElementById('demo-a'), 'A'), 'demo-b': Demo(document.getElementById('demo-b'), 'B') };
+  document.querySelectorAll('[data-demo]').forEach(function (b) {
+    b.addEventListener('click', function () { demos[b.dataset.demo][b.dataset.cmd](); });
+  });
+
+  // Choix : gardés dans le navigateur, rassemblés en un texte à copier.
+  var CLE = 'maquette-parcours-dictee-2026-11-25';
+  var lire = function () { try { return JSON.parse(localStorage.getItem(CLE) || '{}'); } catch (err) { return {}; } };
+  var ecrire = function (r) { try { localStorage.setItem(CLE, JSON.stringify(r)); } catch (err) { /* stockage refusé : les réponses restent à l'écran */ } };
+  var reponses = lire();
+  var blocs = Array.prototype.slice.call(document.querySelectorAll('.choix'));
+  var recap = document.getElementById('recap');
+  var texte = function () {
+    var l = [];
+    blocs.forEach(function (c) {
+      var r = reponses[c.dataset.q] || {};
+      if (!r.v && !r.c) return;
+      l.push('- ' + c.dataset.titre + ' : ' + (r.v || 'sans choix') + (r.c ? '. Commentaire : ' + r.c.trim() : ''));
+    });
+    return l.length ? 'Maquette du parcours de la dictée, mes réponses :\n' + l.join('\n') : '';
+  };
+  var majRecap = function () { recap.textContent = texte() || 'Aucune réponse pour l\'instant.'; };
+  blocs.forEach(function (c) {
+    var q = c.dataset.q;
+    var r = reponses[q] || {};
+    var boutons = c.querySelectorAll('.choix-btns button');
+    var zone = c.querySelector('textarea');
+    boutons.forEach(function (b) {
+      b.setAttribute('aria-pressed', String(r.v === b.dataset.v));
+      b.addEventListener('click', function () {
+        var cur = reponses[q] || {};
+        cur.v = cur.v === b.dataset.v ? '' : b.dataset.v;
+        reponses[q] = cur;
+        boutons.forEach(function (x) { x.setAttribute('aria-pressed', String(cur.v === x.dataset.v)); });
+        ecrire(reponses); majRecap();
+      });
+    });
+    zone.value = r.c || '';
+    zone.addEventListener('input', function () { var cur = reponses[q] || {}; cur.c = zone.value; reponses[q] = cur; ecrire(reponses); majRecap(); });
+  });
+  majRecap();
+  document.getElementById('copier').addEventListener('click', function () {
+    var t = texte();
+    var bouton = this;
+    if (!t) { bouton.textContent = 'Rien à copier'; setTimeout(function () { bouton.textContent = 'Copier le texte'; }, 1500); return; }
+    var fini = function () { bouton.textContent = 'Copié'; setTimeout(function () { bouton.textContent = 'Copier le texte'; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(fini, function () { window.prompt('Copiez ce texte :', t); });
+    else window.prompt('Copiez ce texte :', t);
+  });
+})();
+</script>
+<script data-mk-kit>
+/* Kit maquette (skill « maquette »). Sans dépendance, injecté en ligne avant </body>.
+ * 1. Zoom des images : un clic ouvre l'image en grand dans la page ; jamais de navigation vers
+ *    le fichier. Deuxième clic : taille réelle, la souris ou le doigt déplace l'image.
+ *    ← → passent à l'image voisine, Échap ou un clic à côté ferme.
+ * 2. Sommaire : chaque <h2 id> alimente une barre de navigation collante (#mk-toc).
+ * 3. Avant / après : <div class="mk-compare"> avec deux <figure> ; boutons Avant, Après, Côte à côte.
+ * 4. Filtres : <div class="mk-filters" data-target="#liste"> et boutons data-v ; les éléments
+ *    [data-v] de la cible s'affichent selon le bouton pressé (data-v="all" : tout).
+ * 5. Thème : bouton clair / sombre (#mk-theme), mémorisé dans le navigateur quand c'est possible.
+ * 6. Retour en haut.
+ */
+(function () {
+  'use strict';
+  var doc = document;
+
+  /* ---------- 1. Zoom ---------- */
+  var IMG_LINK = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
+  function zoomables() {
+    return Array.prototype.filter.call(doc.querySelectorAll('img'), function (i) {
+      return !i.closest('#mk-lightbox') && !i.hasAttribute('data-no-zoom');
+    });
+  }
+  var box = doc.createElement('div');
+  box.id = 'mk-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Image agrandie');
+  box.hidden = true;
+  box.innerHTML = '<div class="mk-lb-bar"><span class="mk-lb-count"></span><span class="mk-lb-cap"></span>' +
+    '<button type="button" class="mk-lb-btn" data-act="prev" aria-label="Image précédente">←</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="next" aria-label="Image suivante">→</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="real" aria-label="Taille réelle">1:1</button>' +
+    '<button type="button" class="mk-lb-btn" data-act="close" aria-label="Fermer">✕</button></div>' +
+    '<div class="mk-lb-stage"><img alt=""></div>';
+  var stage, big, cap, count, list = [], idx = 0, opener = null;
+  function srcOf(el) {
+    var a = el.closest('a[href]');
+    if (a && IMG_LINK.test(a.getAttribute('href'))) { return a.getAttribute('href'); }
+    return el.getAttribute('data-full') || el.currentSrc || el.src;
+  }
+  function captionOf(el) {
+    var fig = el.closest('figure');
+    var fc = fig && fig.querySelector('figcaption');
+    return (fc && fc.textContent.trim()) || el.getAttribute('alt') || '';
+  }
+  function show(i) {
+    idx = (i + list.length) % list.length;
+    var el = list[idx];
+    box.classList.remove('is-real');
+    big.src = srcOf(el);
+    big.alt = el.getAttribute('alt') || '';
+    cap.textContent = captionOf(el);
+    count.textContent = list.length > 1 ? (idx + 1) + ' / ' + list.length : '';
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+  }
+  function open(el) {
+    list = zoomables().filter(function (i) { return i.offsetParent !== null || i === el; });
+    var i = list.indexOf(el);
+    if (i < 0) { list.push(el); i = list.length - 1; }
+    opener = el;
+    box.hidden = false;
+    doc.documentElement.classList.add('mk-lb-open');
+    show(i);
+    box.querySelector('[data-act="close"]').focus();
+  }
+  function close() {
+    box.hidden = true;
+    doc.documentElement.classList.remove('mk-lb-open');
+    big.removeAttribute('src');
+    if (opener && opener.focus) { opener.focus({ preventScroll: true }); }
+  }
+  function initZoom() {
+    doc.body.appendChild(box);
+    stage = box.querySelector('.mk-lb-stage');
+    big = stage.querySelector('img');
+    cap = box.querySelector('.mk-lb-cap');
+    count = box.querySelector('.mk-lb-count');
+    zoomables().forEach(function (img) {
+      img.classList.add('mk-zoomable');
+      if (!img.hasAttribute('tabindex') && !img.closest('a,button')) { img.setAttribute('tabindex', '0'); }
+    });
+    // Capture : on passe avant tout lien qui entoure l'image, pour ne jamais quitter la page.
+    doc.addEventListener('click', function (e) {
+      var img = e.target.closest && e.target.closest('img.mk-zoomable');
+      var a = !img && e.target.closest && e.target.closest('a[href]');
+      if (a && IMG_LINK.test(a.getAttribute('href')) && !a.hasAttribute('data-no-zoom')) {
+        img = a.querySelector('img.mk-zoomable');
+        if (!img) {
+          e.preventDefault();
+          var tmp = doc.createElement('img'); tmp.src = a.getAttribute('href'); tmp.alt = a.textContent.trim();
+          list = [tmp]; opener = a; box.hidden = false; doc.documentElement.classList.add('mk-lb-open'); show(0);
+          return;
+        }
+      }
+      if (img) { e.preventDefault(); e.stopPropagation(); open(img); }
+    }, true);
+    doc.addEventListener('keydown', function (e) {
+      if (!box.hidden) {
+        if (e.key === 'Escape') { close(); }
+        else if (e.key === 'ArrowRight') { show(idx + 1); }
+        else if (e.key === 'ArrowLeft') { show(idx - 1); }
+        return;
+      }
+      var t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('mk-zoomable')) { e.preventDefault(); open(t); }
+    });
+    box.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-act]');
+      if (act) {
+        var a = act.getAttribute('data-act');
+        if (a === 'close') { close(); } else if (a === 'next') { show(idx + 1); }
+        else if (a === 'prev') { show(idx - 1); } else if (a === 'real') { box.classList.toggle('is-real'); }
+        return;
+      }
+      if (e.target === big) { box.classList.toggle('is-real'); return; }
+      if (e.target === stage || e.target === box) { close(); }
+    });
+    // Glisser pour déplacer l'image en taille réelle.
+    var drag = null;
+    stage.addEventListener('pointerdown', function (e) {
+      if (!box.classList.contains('is-real')) { return; }
+      drag = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop, moved: false };
+    });
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag) { return; }
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 4) { drag.moved = true; }
+      stage.scrollLeft = drag.l - dx; stage.scrollTop = drag.t - dy;
+    });
+    stage.addEventListener('pointerup', function (e) {
+      if (drag && drag.moved) { e.preventDefault(); stage.addEventListener('click', function stop(ev) { ev.stopPropagation(); stage.removeEventListener('click', stop, true); }, true); }
+      drag = null;
+    });
+  }
+
+  /* ---------- 2. Sommaire ---------- */
+  function initToc() {
+    var toc = doc.getElementById('mk-toc');
+    if (!toc || toc.children.length) { return; }
+    Array.prototype.forEach.call(doc.querySelectorAll('h2[id]'), function (h) {
+      var a = doc.createElement('a'); a.href = '#' + h.id; a.textContent = h.getAttribute('data-toc') || h.textContent.trim();
+      toc.appendChild(a);
+    });
+  }
+
+  /* ---------- 3. Avant / après ---------- */
+  function initCompare() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-compare'), function (c) {
+      if (c.querySelector('.mk-compare-bar')) { return; }
+      var bar = doc.createElement('div'); bar.className = 'mk-compare-bar'; bar.setAttribute('role', 'group');
+      [['before', 'Avant'], ['after', 'Après'], ['both', 'Côte à côte']].forEach(function (m) {
+        var b = doc.createElement('button'); b.type = 'button'; b.textContent = m[1]; b.dataset.mode = m[0];
+        b.setAttribute('aria-pressed', m[0] === 'both' ? 'true' : 'false');
+        bar.appendChild(b);
+      });
+      c.insertBefore(bar, c.firstChild);
+      c.dataset.mode = 'both';
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) { return; }
+        c.dataset.mode = b.dataset.mode;
+        Array.prototype.forEach.call(bar.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+    });
+  }
+
+  /* ---------- 4. Filtres ---------- */
+  function initFilters() {
+    Array.prototype.forEach.call(doc.querySelectorAll('.mk-filters[data-target]'), function (f) {
+      f.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-v]'); if (!b) { return; }
+        Array.prototype.forEach.call(f.querySelectorAll('button[data-v]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        var target = doc.querySelector(f.getAttribute('data-target'));
+        if (!target) { return; }
+        Array.prototype.forEach.call(target.querySelectorAll('[data-v]'), function (el) {
+          el.hidden = !(b.dataset.v === 'all' || el.dataset.v === b.dataset.v);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. Thème et 6. retour en haut ---------- */
+  function store(k, v) { try { if (v === undefined) { return localStorage.getItem(k); } localStorage.setItem(k, v); } catch (e) { return null; } return null; }
+  function initChrome() {
+    var saved = store('mk-theme');
+    if (saved) { doc.documentElement.setAttribute('data-theme', saved); }
+    var tools = doc.createElement('div'); tools.className = 'mk-tools';
+    tools.innerHTML = '<button type="button" id="mk-theme" aria-label="Changer de thème">◐</button>' +
+      '<a href="#" id="mk-top" aria-label="Retour en haut">↑</a>';
+    doc.body.appendChild(tools);
+    tools.querySelector('#mk-theme').addEventListener('click', function () {
+      var cur = doc.documentElement.getAttribute('data-theme') ||
+        (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      doc.documentElement.setAttribute('data-theme', next); store('mk-theme', next);
+    });
+  }
+
+  function init() { initZoom(); initToc(); initCompare(); initFilters(); initChrome(); }
+  if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

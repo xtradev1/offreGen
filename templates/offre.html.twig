@@ -3,7 +3,7 @@
 {% block titre %}{{ offre.titre }} · {{ nom_application }}{% endblock %}
 {% block retour %}<a class="back" href="/">Offres</a>{% endblock %}
 {% block entete %}Offre {{ offre.numero }}{% endblock %}
-{% block ecran_donnees %} data-resume="etat-offre sauvegarde totaux options total-fixe renvoi actions-offre pc-{{ offre.id }}" data-fenetre="carte-client carte-representant carte-objet factures-offre carte-conditions lignes"{% endblock %}
+{% block ecran_donnees %} data-resume="etat-offre sauvegarde totaux options total-fixe renvoi actions-offre pc-{{ offre.id }}" data-fenetre="carte-client carte-representant carte-objet factures-offre avant-lignes carte-conditions lignes"{% endblock %}
 
 {% block colonne %}{% include '_liste_offres_pc.html.twig' with {liste: liste_pc, courante: offre.id} %}{% endblock %}
 
@@ -23,8 +23,10 @@
   <div class="ohead">
     <a class="who carte-lien" id="carte-client" href="/offres/{{ offre.id }}/client" data-en-feuille aria-label="Client de l'offre : chercher ou changer"><span>{% if offre.client_nom %}<b>{{ offre.client_nom }}</b>{% if offre.client_adresse %}<small>{{ offre.client_adresse|replace({"\n": ', '}) }}</small>{% endif %}{% if offre.client_id is null %}<span class="etiquette nouveau">à confirmer</span>{% endif %}{% else %}<span class="manque-client">Choisir le client</span>{% endif %}</span>
       <svg class="i loupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
-    {# Représenté par (D8 A, 2026-11-21) : une régie, une gérance, un architecte ; à qui vont l'offre et les factures. #}
-    <a class="rep carte-lien" id="carte-representant" href="/offres/{{ offre.id }}/representant" data-en-feuille><span>{% if offre.representant_nom %}<small>Représenté par</small><b>{{ offre.representant_nom }}</b><small>{{ offre.offre_adressee == 'client' ? "L'offre va au client" : "L'offre lui est adressée" }}</small>{% else %}<small>Représenté par</small><span class="muted">Ajouter une régie, un architecte…</span>{% endif %}</span></a>
+    {# Représenté par (D8 A, 2026-11-21) : une régie, une gérance, un architecte ; à qui vont l'offre et les factures.
+       Sans représentant, pas de carte : un lien « + Représentant » sous l'en-tête (analyse des parcours, 2026-11-26).
+       data-apres : la carte, arrivée en morceau après le choix, se pose sous le client. #}
+    {% if offre.representant_nom %}<a class="rep carte-lien" id="carte-representant" data-apres="carte-client" href="/offres/{{ offre.id }}/representant" data-en-feuille><span><small>Représenté par</small><b>{{ offre.representant_nom }}</b><small>{{ offre.offre_adressee == 'client' ? "L'offre va au client" : "L'offre lui est adressée" }}</small></span></a>{% endif %}
     <a class="t carte-lien" id="carte-objet" href="/offres/{{ offre.id }}/modifier" data-en-feuille><span><b>{{ offre.titre }}</b><small>Objet de l'offre</small></span></a>
     {% if factures is not empty %}<span class="factures-offre" id="factures-offre" data-apres="carte-objet">{% for f in factures %}<a class="etiquette facture{% if f.statut == 'annulee' %} annulee{% endif %}" href="/factures/{{ f.id }}{{ f.statut != 'brouillon' ? '/apercu' }}">{{ f.numero ? 'Facture ' ~ f.numero : 'Brouillon de facture' }}</a>{% endfor %}</span>{% endif %}
     {# Toutes les lignes, options et variantes comprises (vueDocument : manque et doute). #}{% set a_relire = manque + doute %}
@@ -39,7 +41,20 @@
   {# Textes avant et après les lignes (D5 A) ; dans Lettre, le texte avant remplace la phrase de Ma marque (D6 A), le
      texte après se place avant la formule de politesse (D16 A). #}
   {% import _self as o %}{% set lettre = m.modele == 'lettre' %}
-  {{ o.texte(offre, 'avant', "Texte avant les lignes", lettre ? r.lettre.texte('offre_debut', offre.client_nom, activite()) : 'Facultatif') }}
+  {# Les lignes plus haut (constat 3 de l'analyse des parcours, Xavier, 2026-11-26) : tant qu'ils sont vides, le
+     représentant et le texte avant les lignes tiennent sur une ligne de deux liens. Le texte se déplie sur place, sans
+     JavaScript ; rempli, il reprend son champ au-dessus des lignes. Le champ et les liens sont dans un seul morceau
+     (avant-lignes), que les fenêtres de l'offre remplacent entier : le texte tapé dans le bloc replié reste à l'écran. #}
+  {% set texte_avant = o.texte(offre, 'avant', "Texte avant les lignes", lettre ? r.lettre.texte('offre_debut', offre.client_nom, activite()) : 'Facultatif') %}
+  {% set sans_representant = not offre.representant_nom %}
+  {% set sans_texte_avant = (offre.texte_avant ?? '') == '' %}
+  <div id="avant-lignes">
+  {% if not sans_texte_avant %}{{ texte_avant }}{% endif %}
+  <div class="ajouts-offre" id="ajouts-offre"{% if not (sans_representant or sans_texte_avant) %} hidden{% endif %}>
+    {% if sans_representant %}<a class="lien" href="/offres/{{ offre.id }}/representant" data-en-feuille>+ Représentant</a>{% endif %}
+    {% if sans_texte_avant %}<details><summary>+ Texte avant les lignes</summary>{{ texte_avant }}</details>{% endif %}
+  </div>
+  </div>
   {% include '_lignes.html.twig' with {base: '/offres/' ~ offre.id, modifiable: true, ranger: true, vide:"Aucun poste dans cette offre. « Ajouter », en bas, en ajoute un."} %}
   {% include '_ajout_pc.html.twig' with {base: '/offres/' ~ offre.id} %}
 

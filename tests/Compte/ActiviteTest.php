@@ -32,7 +32,7 @@ final class ActiviteTest extends TestCase
     public function testLesMotsDuBatimentSontCeuxDAvant(): void
     {
         $m = Activite::Batiment->mots();
-        self::assertSame('Parlez, pièce par pièce.', $m['dictee']);
+        self::assertSame("Puis pièce par pièce\u{00A0}: les travaux, les surfaces, les quantités.", $m['conseil_2']);
         self::assertSame('Chantier', $m['bloc_titre']);
         self::assertSame('Début des travaux', $m['debut']);
         self::assertSame('Date de la visite', $m['date']);

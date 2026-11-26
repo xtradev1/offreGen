@@ -33,6 +33,8 @@
       </form>
     </nav>
   {% endif %}
+  {# Analyse des parcours (Xavier, 2026-11-26) : la recherche passe avant « Elle va », qui sert rarement. #}
+  {% set elle_va %}
   {# Options et variantes (O4, E3) : où va la ligne ajoutée, en un toucher ; une variante remplace la dernière ligne du
      total de la pièce, ou celle choisie. Des liens et un petit formulaire : sans JavaScript. #}
   {% if cible.base starts with '/offres' %}
@@ -66,13 +68,15 @@
       {% endif %}
     </nav>
   {% endif %}
+  {% endset %}
   {% if erreurs is empty %}
     <form class="search" method="get" action="{{ cible.base }}/ajouter" role="search">
       <div class="box">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="cherche" name="q" type="search" value="{{ q }}" placeholder="Chercher un produit ou taper une ligne" autocomplete="off" aria-label="Chercher dans le catalogue" data-filtre="#res" data-copie="#rapide-designation" data-copie-texte="#rapide-texte" data-premier>
+        <input id="cherche" name="q" type="search" value="{{ q }}" placeholder="Chercher ou taper une ligne" autocomplete="off" aria-label="Chercher dans le catalogue" data-filtre="#res" data-copie="#rapide-designation" data-copie-texte="#rapide-texte" data-premier>
       </div>
     </form>
+    {{ elle_va }}
     <div id="res" class="res sobre">
       {% for p in produits %}
         <form method="post" action="{{ cible.base }}/lignes" data-texte="{{ p.texte }}"{% if not p.visible %} hidden{% endif %}>
@@ -98,6 +102,7 @@
       </form>
     </div>
   {% else %}
+    {{ elle_va }}
     <p class="alerte bad" role="alert">La ligne n'est pas ajoutée&nbsp;: corrigez les champs signalés.</p>
   {% endif %}
 

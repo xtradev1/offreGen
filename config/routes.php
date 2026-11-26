@@ -99,8 +99,10 @@ return static function (Conteneur $c): array {
             ['/mentions-legales', '/protection-des-donnees', '/conditions']),
         // « Bon pour essai » : tant que l'inscription n'existe pas, le courriel du visiteur part à l'exploitant (2026-11-20).
         new Route('demande_essai', '/essai', ['POST'], static fn (Request $r): Response => (new DemandeEssaiControleur($c))->deposer($r), Route::PUBLIC),
-        // « Plus » (décision D2, 2026-11-15) : catalogue, réglages, import, déconnexion. Lecture seule.
-        new Route('plus', '/plus', ['GET'], static fn (): Response => new Response($c->twig()->render('plus.html.twig')), Route::ARTISAN),
+        // « Plus » (décision D2, 2026-11-15) : catalogue, réglages, import, et le compte avec sa déconnexion. Lecture seule.
+        new Route('plus', '/plus', ['GET'], static fn (Request $r): Response => new Response($c->twig()->render('plus.html.twig', [
+            'courriel' => $c->artisans()->parId($r->attributes->getInt('_artisan'))['courriel'] ?? '',
+        ])), Route::ARTISAN),
         new Route('import', '/import', ['GET'], static fn (Request $r): Response => $import()->afficher($r), Route::ARTISAN),
         new Route('import_envoi', '/import', ['POST'], static fn (Request $r): Response => $import()->envoyer($r), Route::ARTISAN),
         new Route('enregistrement', '/enregistrements/{uuid}', ['GET'], static fn (Request $r, array $p): Response => (new EnregistrementControleur($c))->afficher($r, $p), Route::ARTISAN),

@@ -40,11 +40,7 @@
   </a>
   {% endif %}
 
-  <form class="compte" method="post" action="/deconnexion">
-    <input type="hidden" name="_csrf" value="{{ csrf() }}">
-    <span class="muted">Compte&nbsp;: {{ courriel }}{% if demo %} (démonstration){% endif %}</span>
-    <button class="lien" type="submit">Se déconnecter</button>
-  </form>
+  {% include '_compte.html.twig' with {classe: 'pc-seul'} %}
 {% endblock %}
 
 {% block onglets %}{% include '_onglets.html.twig' with {actif: 'reglages'} %}{% endblock %}

@@ -1,0 +1,8 @@
+{# Le compte et sa sortie (analyse des parcours, Xavier, 2026-11-26) : un geste rare, en lien discret, une seule fois par
+   écran. Au téléphone, au bas de « Plus » ; sur PC, où « Plus » n'existe pas, au bas des Réglages (classe pc-seul).
+   Paramètres : courriel ; classe (facultative). #}
+<form class="compte{{ classe is defined ? ' ' ~ classe }}" method="post" action="/deconnexion">
+  <input type="hidden" name="_csrf" value="{{ csrf() }}">
+  <span class="muted">Compte&nbsp;: {{ courriel }}{% if demo() %} (démonstration){% endif %}</span>
+  <button class="lien" type="submit">Se déconnecter</button>
+</form>

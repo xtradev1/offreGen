@@ -76,7 +76,10 @@ enum Activite: string
     public function mots(): array
     {
         $batiment = [
-            'dictee' => 'Parlez, pièce par pièce.',
+            // Les conseils qui tournent pendant l'enregistrement (maquette du parcours de la dictée, Xavier, 2026-11-26).
+            'conseil_1' => 'Commencez par le client et le lieu du chantier.',
+            'conseil_2' => "Puis pièce par pièce\u{00A0}: les travaux, les surfaces, les quantités.",
+            'conseil_3' => "Les fournitures et le déplacement, s'il y en a.",
             'dictee_nom' => 'Visite',
             'dictee_objet' => 'la visite',
             'titre_defaut' => 'Visite',
@@ -99,7 +102,8 @@ enum Activite: string
         return match ($this) {
             self::Batiment => $batiment,
             self::Exterieur => [
-                'dictee' => 'Parlez, zone par zone.',
+                'conseil_1' => "Commencez par le client et le lieu d'intervention.",
+                'conseil_2' => "Puis zone par zone\u{00A0}: les travaux, les surfaces, les quantités.",
                 'groupe' => 'zone',
                 'bloc_titre' => "Lieu d'intervention",
                 'bloc_adresse' => 'Adresse',
@@ -108,7 +112,9 @@ enum Activite: string
                 'doc_fiche' => "Lieu d'intervention",
             ] + $batiment,
             self::Prestations => [
-                'dictee' => 'Parlez, prestation par prestation.',
+                'conseil_1' => "Commencez par le client et l'objet de l'offre.",
+                'conseil_2' => "Puis prestation par prestation\u{00A0}: ce qui est fait, les quantités.",
+                'conseil_3' => "Les frais et le déplacement, s'il y en a.",
                 'dictee_nom' => 'Dictée',
                 'dictee_objet' => 'votre dictée',
                 'titre_defaut' => 'Offre',

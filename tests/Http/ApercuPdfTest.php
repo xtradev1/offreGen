@@ -49,6 +49,30 @@ final class ApercuPdfTest extends TestCase
         self::assertStringContainsString("<noscript><p><a href=\"{$this->offre}/pdf\">Ouvrir le PDF</a></p></noscript>", $page);
     }
 
+    /**
+     * Constat 7 de l'analyse des parcours (Xavier, 2026-11-26) : l'offre envoyée, le bouton principal devient « Retour
+     * aux offres » ; « Renvoyer » et « Facturer » restent à côté. Modifiée depuis l'envoi, elle retrouve « Envoyer ».
+     */
+    public function testEnvoyeeLeBoutonPrincipalRameneAuxOffres(): void
+    {
+        $id = $this->jeu->offre['a'];
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = {$this->jeu->client['a']}, envoyee_le = '2026-11-07 11:00:00' WHERE id = $id");
+        $page = (string) $this->a->get($this->offre . '/apercu')->getContent();
+        self::assertSame(1, preg_match('#<div class="actionbar apres-envoi" id="actions-apercu">(.*?)</div>#s', $page, $m));
+        $barre = $m[1] ?? '';
+        self::assertStringContainsString('<a class="btn primary grand" href="/">Retour aux offres</a>', $barre);
+        self::assertMatchesRegularExpression("#<a class=\"btn grand\" href=\"{$this->offre}/pdf\" download=\"Offre-\d+\.pdf\" data-partager data-titre=\"[^\"]+\">.*Renvoyer</a>#s", $barre);
+        self::assertStringContainsString("<a class=\"btn grand\" href=\"{$this->offre}/facturer\" data-en-feuille>Facturer</a>", $barre);
+        self::assertStringNotContainsString('Modifier', $barre);
+        self::assertSame(1, substr_count($barre, 'primary'));
+
+        BaseDeTest::pdo()->exec("UPDATE offre SET modifiee_le = '2026-11-07 12:00:00' WHERE id = $id");
+        $page = (string) $this->a->get($this->offre . '/apercu')->getContent();
+        self::assertSame(1, preg_match('#<div class="actionbar" id="actions-apercu">(.*?)</div>#s', $page, $m));
+        self::assertMatchesRegularExpression('#<a class="btn primary grand" href="[^"]+/pdf"[^>]*data-partager[^>]*>.*Envoyer</a>#s', $m[1] ?? '');
+        self::assertStringNotContainsString('Retour aux offres', $m[1] ?? '');
+    }
+
     public function testLesFichiersDePdfJsSontLivresAvecLApplication(): void
     {
         $page = (string) $this->a->get($this->offre . '/apercu')->getContent();

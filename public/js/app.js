@@ -33,9 +33,12 @@ function filtres() {
 function brancherFiltre(champ) {
   if (champ.dataset.branche) return;
   champ.dataset.branche = '1';
-  const liste = document.querySelector(champ.dataset.filtre);
-  if (!liste) return;
+  if (!document.querySelector(champ.dataset.filtre)) return;
   const appliquer = () => {
+    // La liste se relit à chaque frappe : revenue en morceau (fluide.js), l'ancienne n'est plus à l'écran, et le filtre
+    // tournait sur elle (revue du 2026-11-26, I1).
+    const liste = document.querySelector(champ.dataset.filtre);
+    if (!liste) return;
     const mots = normaliser(champ.value).split(' ').filter(Boolean);
     let trouves = 0;
     let groupe = null;
@@ -260,7 +263,7 @@ const abri = (() => {
       t.objectStore('dictees').put(Object.assign({}, d, {
         // Une suite coupée avant sa première tranche n'a rien ajouté : pas de nouvelle partie vide (revue du 2026-11-24).
         etat: 'enregistrement', parties: (d.parties || [0]).includes(d.tranches) ? d.parties || [0] : (d.parties || [0]).concat(d.tranches),
-        avant: dureeMs(d), partie: maintenant, fin: maintenant, vu: maintenant,
+        avant: dureeMs(d), partie: maintenant, fin: maintenant, vu: maintenant, pause: 0,
       }));
       return fin(t).then(() => true);
     }), false),
@@ -312,9 +315,9 @@ const abri = (() => {
 })();
 const VERROU = 'offregen-abri-';
 
-// La durée dictée : les parties d'avant, plus la dernière jusqu'à sa dernière tranche.
+// La durée dictée : les parties d'avant, plus la dernière jusqu'à sa dernière tranche, sans ses pauses.
 function dureeMs(d) {
-  return (d.avant || 0) + (d.fin || d.debut) - (d.partie || d.debut);
+  return (d.avant || 0) + (d.fin || d.debut) - (d.partie || d.debut) - (d.pause || 0);
 }
 
 function nomDictee(type, d) {
@@ -328,9 +331,10 @@ function nomPartie(nom, n) {
   return nom.replace(/(\.[a-z0-9]+)?$/, '-partie-' + n + '$1');
 }
 
-// Demande l'état chaque seconde et fait avancer les étapes ; appelle fini(offre) quand l'offre est prête.
-// Rend une fonction qui arrête le suivi.
-function suivreEtapes(liste, uuid, fini) {
+// Demande l'état chaque seconde et fait avancer les étapes ; appelle fini(etat) quand l'offre est prête, rate() quand
+// la préparation a échoué. Rend une fonction qui arrête le suivi. L'état dit où aller (suite) ; une page gardée par un
+// serveur plus ancien ne le dit pas : l'offre elle-même.
+function suivreEtapes(liste, uuid, fini, rate = () => {}) {
   const message = liste.parentElement.querySelector('[data-etapes-message]');
   const panne = liste.parentElement.querySelector('[data-etapes-panne]');
   const dire = (t) => { if (message) message.textContent = t; };
@@ -342,8 +346,8 @@ function suivreEtapes(liste, uuid, fini) {
       marquerEtapes(liste, e.faites, e.echec);
       if (panne) panne.hidden = !e.interrompu;
       dire(e.echec ? 'La préparation a échoué après plusieurs essais.' : e.essais > 0 ? 'Un souci passager, nouvel essai en cours…' : '');
-      if (e.offre) { arret = true; abri.oublier(uuid); fini(e.offre); }
-      if (e.echec) arret = true;
+      if (e.offre) { arret = true; abri.oublier(uuid); fini(e.suite ? e : Object.assign({}, e, { suite: '/offres/' + e.offre, a_relire: 0 })); }
+      if (e.echec) { arret = true; rate(); }
     })
     .catch(() => dire('Connexion perdue, nouvel essai…'))
     .finally(() => { if (!arret) setTimeout(tour, 1000); });
@@ -356,7 +360,8 @@ function preparation() {
   const liste = document.querySelector('main [data-etapes][data-uuid]');
   if (!liste) return;
   // 300 ms : l'étape cochée se voit, puis l'offre s'ouvre (Xavier, 2026-11-25 ; 900 ms depuis le 2026-11-12).
-  suivreEtapes(liste, liste.dataset.uuid, (offre) => setTimeout(() => window.location.replace('/offres/' + offre), 300));
+  // Des lignes à relire : la page, rechargée, le dit et propose la relecture ; sinon le PDF, ou le choix du client.
+  suivreEtapes(liste, liste.dataset.uuid, (e) => setTimeout(() => { if (e.a_relire > 0) window.location.reload(); else window.location.replace(e.suite); }, 300));
 }
 
 // Nouvelle offre : parler ou importer. Sur l'accueil, deux boutons ronds au centre ; l'enregistrement
@@ -399,6 +404,7 @@ function nouvelleOffre() {
   let etatCourant = 'choix';
   let occupe = false;
   let arreterSuivi = () => {};
+  let enSuivi = false; // l'audio est au serveur, l'offre se prépare
   let duMicro = false; // le fichier en cours vient du micro : le fermer sans l'envoyer pourrait le perdre
   let copieAbri = false; // le fichier en cours est aussi gardé dans le navigateur
   const perteAcceptee = () => !duMicro || window.confirm(copieAbri
@@ -421,14 +427,24 @@ function nouvelleOffre() {
       etatCourant = 'choix';
       occupe = false;
       arreterSuivi();
+      attente.arreter();
       lacher();
+      // Fermée pendant la préparation ou sur « Offre prête » : la liste des offres se met à jour sans recharger la page.
+      if (enSuivi && window.fluide && document.getElementById('preparation')) {
+        window.fluide.rafraichir(['preparation', 'liste-offres']).then(() => {
+          // La liste revenue entière : le texte tapé dans la recherche la filtre de nouveau.
+          const champ = document.querySelector('input[data-filtre="#liste-offres"]');
+          if (champ) champ.dispatchEvent(new Event('input'));
+        });
+      }
+      enSuivi = false;
     },
     // Pendant l'enregistrement et l'envoi, le retour ne ferme rien ; après un échec, il demande.
     retenir: () => {
       // Le micro s'ouvre encore : le retour annule, rien n'est enregistré.
       if (annulerOuverture()) return false;
       // Après l'envoi, le traitement continue au serveur : la fenêtre peut se fermer.
-      if (['choix', 'suivi', 'court', 'long', 'refus', 'reprise'].includes(etatCourant)) return false;
+      if (['choix', 'suivi', 'prete', 'court', 'long', 'refus', 'reprise'].includes(etatCourant)) return false;
       if (etatCourant === 'echec') return !perteAcceptee();
       return true;
     },
@@ -440,9 +456,12 @@ function nouvelleOffre() {
     if (etatCourant === 'reprise' && !['reprise', 'enregistrement', 'envoi', 'refus'].includes(etat)) plusTard(repriseCourante);
     etatCourant = etat;
     zone.querySelectorAll('[data-etat]').forEach((s) => { s.hidden = s.dataset.etat !== etat; });
-    if (fermerX) fermerX.hidden = !['echec', 'court', 'long', 'refus', 'reprise'].includes(etat);
+    if (fermerX) fermerX.hidden = !['echec', 'court', 'long', 'refus', 'reprise', 'prete'].includes(etat);
+    if (etat !== 'envoi') attente.arreter();
     if (!fenetre) return;
-    feuille.classList.toggle('pleine', etat === 'enregistrement');
+    // L'enregistrement et l'attente : plein écran sombre (piste B de la maquette, Xavier, 2026-11-26).
+    feuille.classList.toggle('sombre', etat === 'enregistrement' || etat === 'envoi');
+    feuille.classList.toggle('plein', etat === 'prete');
     if (etat === 'choix') { lacher(); calques.fermer(fenetre); return; }
     if (calques.ouvert() !== fenetre) calques.ouvrir(fenetre);
   };
@@ -459,7 +478,8 @@ function nouvelleOffre() {
   });
   zone.addEventListener('animationend', (e) => { if (e.animationName === 'onde') e.target.classList.remove('touche'); });
   if (fermerX) fermerX.addEventListener('click', () => {
-    if (etatCourant === 'reprise') { montrer('choix'); return; }
+    // Pendant la préparation, l'audio est au serveur ; prête, l'offre est dans la liste : fermer ne perd rien.
+    if (['reprise', 'suivi', 'prete'].includes(etatCourant)) { montrer('choix'); return; }
     if (perteAcceptee()) montrer('choix');
   });
 
@@ -481,6 +501,50 @@ function nouvelleOffre() {
   const lacher = () => { lacherVerrou(); lacherVerrou = () => {}; };
   const echec = (texte) => { el('[data-echec-texte]').textContent = texte; montrer('echec'); };
   const liste = el('[data-etapes]');
+  // L'anneau de l'attente (maquette v2 du parcours de la dictée, Xavier, 2026-11-26). L'envoi réel en remplit le premier
+  // huitième ; ensuite le temps écoulé sur le temps attendu, jusqu'à 95 % : l'offre prête le ferme. Temps attendu : 10 s
+  // plus 3 % de la durée dictée (11 dictées du site de test le 2026-11-26 : de 4 à 25 s, médiane 8 s). Dépassé, l'anneau
+  // ne promet plus de durée.
+  const attente = (() => {
+    const anneau = el('[data-anneau]');
+    const part = el('[data-anneau-part]');
+    const reste = el('[data-anneau-reste]');
+    const quitter = el('[data-attente-quitter]');
+    const phraseQuitter = quitter.textContent;
+    const NB = String.fromCharCode(0xA0);
+    const PART_ENVOI = 0.125;
+    const PLAFOND = 0.95;
+    let minuterie = null;
+    const poser = (p, texte) => {
+      anneau.style.setProperty('--p', p.toFixed(3));
+      anneau.setAttribute('aria-valuenow', String(Math.round(p * 100)));
+      anneau.classList.remove('rate');
+      part.textContent = Math.round(p * 100) + NB + '%';
+      reste.textContent = texte;
+    };
+    const arreter = () => { clearInterval(minuterie); minuterie = null; };
+    return {
+      arreter,
+      // part : de 0 à 1, ce qui est parti du fichier.
+      envoi(partEnvoyee) { arreter(); quitter.hidden = true; quitter.textContent = phraseQuitter; poser(PART_ENVOI * partEnvoyee, 'envoi'); },
+      preparer(dureeAudio) {
+        arreter();
+        quitter.hidden = false;
+        const attendu = 10000 + 0.03 * Math.max(0, dureeAudio || 0);
+        const depart = performance.now();
+        const tour = () => {
+          const q = (performance.now() - depart) / attendu;
+          const secondes = Math.max(5, Math.round((attendu * (1 - q)) / 5000) * 5);
+          poser(PART_ENVOI + (PLAFOND - PART_ENVOI) * Math.min(1, q), q < 1 ? 'environ ' + secondes + NB + 's' : 'encore un instant');
+        };
+        tour();
+        minuterie = setInterval(tour, 250);
+      },
+      finir() { arreter(); poser(1, ''); },
+      // La préparation a échoué : plus de promesse ; l'écran dit où est la dictée, avec son « Réessayer ».
+      rater() { arreter(); quitter.textContent = quitter.dataset.echec; quitter.hidden = false; anneau.classList.add('rate'); part.textContent = 'Échec'; reste.textContent = ''; },
+    };
+  })();
   // Une partie par fichier ; plusieurs téléchargements de suite, espacés, que le navigateur accepte mieux.
   const telecharger = (liste) => liste.forEach((f, i) => setTimeout(() => {
     const a = document.createElement('a');
@@ -522,10 +586,11 @@ function nouvelleOffre() {
     occupe = true;
     marquerEtapes(liste, 0, false);
     const progression = el('[data-progression]');
-    const texte = el('[data-progression-texte]');
+    const partEnvoi = el('[data-progression-part]');
     progression.value = 0;
     progression.hidden = false;
-    texte.textContent = '';
+    partEnvoi.textContent = '0' + String.fromCharCode(0xA0) + '%';
+    attente.envoi(0);
     const cle = cleCourante;
     const donnees = new FormData();
     donnees.append('_csrf', form.querySelector('input[name=_csrf]').value);
@@ -548,7 +613,8 @@ function nouvelleOffre() {
       if (cle && Date.now() - signe > 5000) { signe = Date.now(); abri.modifier(cle, { vu: signe }); }
       if (!e.lengthComputable) return;
       progression.value = Math.round((e.loaded / e.total) * 100);
-      texte.textContent = (e.loaded / 1048576).toFixed(1) + ' sur ' + (e.total / 1048576).toFixed(1) + ' Mo';
+      partEnvoi.textContent = progression.value + String.fromCharCode(0xA0) + '%';
+      attente.envoi(e.loaded / e.total);
     });
     // Le verrou ne couvre que l'envoi lui-même (revue du 2026-11-24) : un onglet resté sur un échec, puis suspendu par
     // le téléphone, ne doit pas cacher la dictée aux autres onglets.
@@ -560,14 +626,22 @@ function nouvelleOffre() {
       if (xhr.status === 200 && xhr.responseURL.includes('/enregistrements/')) {
         occupe = false;
         etatCourant = 'suivi';
+        enSuivi = true;
         progression.hidden = true;
-        texte.textContent = '';
+        partEnvoi.textContent = '';
         marquerEtapes(liste, 1, false);
+        attente.preparer(dureeAudioMs);
+        // La préparation continue au serveur : la croix ferme sans rien perdre.
+        if (fermerX) fermerX.hidden = false;
         const uuid = xhr.responseURL.split('/enregistrements/')[1].split(/[/?#]/)[0];
         // Arrivée au serveur : la copie reste jusqu'à l'offre prête (suivreEtapes, ou au prochain lancement).
         if (cle) abri.modifier(cle, { etat: 'envoye', uuid, vu: Date.now() });
         if (debutEnvoi > 0 && finEnvoi > debutEnvoi) signalerEnvoi(uuid, Math.max(1, Math.round(finEnvoi - debutEnvoi)));
-        arreterSuivi = suivreEtapes(liste, uuid, (offre) => setTimeout(() => { if (etatCourant === 'suivi') partir('/offres/' + offre); }, 300));
+        arreterSuivi = suivreEtapes(liste, uuid, (e) => {
+          attente.finir();
+          // Offre propre : son PDF, ou le choix de son client, s'ouvre. Des lignes à relire : l'écran « Offre prête ».
+          setTimeout(() => { if (etatCourant !== 'suivi') return; if (e.a_relire > 0) offrePrete(e); else partir(e.suite); }, 300);
+        }, attente.rater);
         return;
       }
       const page = new DOMParser().parseFromString(xhr.responseText || '', 'text/html');
@@ -578,6 +652,27 @@ function nouvelleOffre() {
     xhr.send(donnees);
   };
   el('[data-reessayer]').addEventListener('click', envoyer);
+
+  // « Offre prête » (maquette v2, Xavier, 2026-11-26) : le nombre de lignes et celles à relire, jamais le prix.
+  const offrePrete = (e) => {
+    el('[data-prete-client]').textContent = e.client || '';
+    el('[data-prete-objet]').textContent = e.titre || '';
+    el('[data-prete-lignes]').textContent = String(e.lignes);
+    el('[data-prete-lignes-mot]').textContent = e.lignes > 1 ? 'lignes' : 'ligne';
+    el('[data-prete-relire]').textContent = String(e.a_relire);
+    const suite = el('[data-prete-suite]');
+    suite.textContent = e.a_relire > 1 ? 'Relire les ' + e.a_relire + ' lignes' : 'Relire la ligne';
+    suite.setAttribute('href', e.suite);
+    el('[data-prete-offre]').setAttribute('href', '/offres/' + e.offre);
+    montrer('prete');
+    // Le titre prend le focus : un lecteur d'écran l'annonce, le clavier repart de là.
+    el('[data-prete-titre]').focus({ preventScroll: true });
+  };
+  // La fenêtre a ajouté une entrée à l'historique : partir() la remplace, le retour ramène à la liste.
+  zone.querySelectorAll('[data-prete-suite], [data-prete-offre]').forEach((lien) => lien.addEventListener('click', (e) => {
+    e.preventDefault();
+    partir(lien.getAttribute('href'));
+  }));
 
   // Importer : le fichier choisi part aussitôt, avec la progression.
   // La durée d'un fichier, lue par le navigateur avant l'envoi (Xavier, 2026-11-24 : un fichier trop long « doit être
@@ -624,6 +719,11 @@ function nouvelleOffre() {
   let veille = null;
   let debut = 0;
   let finMs = 0; // heure où l'enregistreur s'est arrêté
+  // Pause (Xavier, 2026-11-26) : l'enregistreur s'arrête, le micro reste ouvert. « debut » avance de la durée de chaque
+  // pause : le minuteur, le minimum de 5 secondes, la limite des 30 minutes et la durée envoyée comptent la dictée seule.
+  let enPause = false;
+  let pauseDepuis = 0;
+  let pauseCumul = 0; // pauses de la partie en cours, gardées avec la copie (abri, champ « pause »)
   // Règle de Xavier (2026-11-12) : moins de 5 secondes, l'enregistrement n'est pas envoyé.
   const DUREE_MIN_MS = 5000;
   // Règle de Xavier (2026-11-17) : 30 minutes au plus. Prévenu 5 minutes avant, l'enregistrement s'arrête et part seul.
@@ -631,6 +731,7 @@ function nouvelleOffre() {
   const PREAVIS_S = Math.min(300, Math.floor(DUREE_MAX_S / 6));
   const libererMicro = () => {
     clearInterval(minuteur);
+    ecoute.arreter();
     if (flux) flux.getTracks().forEach((t) => t.stop());
     flux = null;
     if (veille) veille.release().catch(() => {});
@@ -710,23 +811,168 @@ function nouvelleOffre() {
     const h = Math.floor(s / 3600);
     return (h ? h + ':' : '') + deux(Math.floor(s / 60) % 60) + ':' + deux(s % 60);
   };
+  const abandonTexte = abandon.querySelector('b');
+  const boutonPause = el('[data-pause]');
+  const pauseTexte = boutonPause.querySelector('b');
+
+  // La carte sous l'onde : un conseil qui tourne. Passent devant lui, dans l'ordre : l'arrêt inattendu, le préavis de
+  // fin, puis l'alerte de silence (Xavier, 2026-11-26 : « Alerte après 5 s de silence : Oui »).
+  const consigne = el('[data-consigne]');
+  const titreCarte = el('[data-conseil-titre]');
+  const annonce = el('[data-annonce]');
+  const CONSEILS = JSON.parse(consigne.dataset.conseils || '[]');
+  const CONSEIL_S = 8;
+  const carte = { arret: false, preavis: '', silence: false, secondes: 0 };
+  const afficherCarte = () => {
+    const urgent = carte.arret ? ['Enregistrement arrêté', 'L’enregistrement s’est arrêté (appel ou autre application). « Terminer » envoie ce qui est enregistré.']
+      : carte.preavis ? ['Limite de durée', carte.preavis]
+        : carte.silence && !enPause ? [titreCarte.dataset.silence, consigne.dataset.silence] : null;
+    const n = CONSEILS.length ? Math.floor(carte.secondes / CONSEIL_S) % CONSEILS.length : 0;
+    const [titre, texte] = urgent || ['Conseil ' + (n + 1) + ' sur ' + CONSEILS.length, CONSEILS[n] || ''];
+    blocMicro.classList.toggle('urgent', !!urgent);
+    // Un lecteur d'écran annonce une alerte, pas chaque conseil qui tourne : la zone d'annonce ne reçoit qu'elle.
+    const dit = urgent ? urgent[0] + '. ' + urgent[1] : '';
+    if (annonce.textContent !== dit) annonce.textContent = dit;
+    if (titreCarte.textContent !== titre) titreCarte.textContent = titre;
+    if (consigne.textContent !== texte) consigne.textContent = texte;
+  };
+
+  // Le niveau du micro, pour l'onde et l'alerte de silence. Le contexte audio naît dans le toucher (Safari le laisse
+  // sinon suspendu). S'il ne tourne pas, il n'y a ni onde ni alerte : jamais d'alerte sur un micro qu'on n'écoute pas.
+  const ContexteAudio = window.AudioContext || window.webkitAudioContext;
+  const barres = [...zone.querySelectorAll('[data-onde] i')];
+  const SILENCE_MS = 5000;
+  const SEUIL_VOIX = 0.02; // moyenne quadratique du signal, de 0 à 1 ; une voix à portée de bras dépasse 0,05
+  const ecoute = (() => {
+    let contexte = null;
+    let source = null;
+    let analyseur = null;
+    let donnees = null;
+    let boucle = null;
+    let niveaux = [];
+    let voixLe = 0;
+    const dessiner = () => barres.forEach((b, i) => {
+      const v = niveaux[niveaux.length - barres.length + i] || 0;
+      b.style.height = 'max(4px, ' + Math.round(v * 100) + '%)';
+    });
+    const mesurer = () => {
+      if (!analyseur || contexte.state !== 'running') return null;
+      analyseur.getByteTimeDomainData(donnees);
+      let somme = 0;
+      for (let i = 0; i < donnees.length; i++) { const v = (donnees[i] - 128) / 128; somme += v * v; }
+      return Math.sqrt(somme / donnees.length);
+    };
+    const tour = () => {
+      if (enPause) return;
+      const v = mesurer();
+      if (v === null) return;
+      // La racine étale les voix faibles : 0,02 monte au quart de la hauteur, 0,25 la remplit.
+      niveaux.push(Math.min(1, Math.sqrt(v * 4)));
+      if (niveaux.length > barres.length) niveaux.shift();
+      dessiner();
+      if (v >= SEUIL_VOIX) voixLe = Date.now();
+      const silence = Date.now() - voixLe > SILENCE_MS;
+      if (silence !== carte.silence) { carte.silence = silence; afficherCarte(); }
+    };
+    const fermer = () => {
+      clearInterval(boucle);
+      boucle = null;
+      if (source) { try { source.disconnect(); } catch (e) { /* déjà débranchée */ } }
+      if (contexte) contexte.close().catch(() => {});
+      contexte = null;
+      source = null;
+      analyseur = null;
+    };
+    return {
+      // Dans le toucher, avant toute attente.
+      preparer() {
+        fermer();
+        try { contexte = ContexteAudio ? new ContexteAudio() : null; } catch (e) { contexte = null; }
+      },
+      brancher(fluxMicro) {
+        niveaux = [];
+        dessiner();
+        voixLe = Date.now();
+        carte.silence = false;
+        if (!contexte) return;
+        try {
+          source = contexte.createMediaStreamSource(fluxMicro);
+          analyseur = contexte.createAnalyser();
+          analyseur.fftSize = 1024;
+          donnees = new Uint8Array(analyseur.fftSize);
+          source.connect(analyseur);
+        } catch (e) { analyseur = null; return; }
+        if (contexte.state === 'suspended') contexte.resume().catch(() => {});
+        boucle = setInterval(tour, 90);
+      },
+      // Après une pause : le silence de la pause ne compte pas.
+      repartir() { voixLe = Date.now(); },
+      arreter: fermer,
+    };
+  })();
+
+  const montrerPause = (oui) => {
+    blocMicro.classList.toggle('pause', oui);
+    pauseTexte.textContent = oui ? boutonPause.dataset.reprendre : boutonPause.dataset.pauseTexte;
+    if (!ouverture) etatMicroEcran.textContent = oui ? etatMicroEcran.dataset.enPause : etatMicroEcran.dataset.enCours;
+    afficherCarte();
+  };
+  // La pause finie (« Reprendre », ou l'arrêt pendant la pause) : sa durée sort de la dictée.
+  const solderPause = () => {
+    if (!enPause) return;
+    const maintenant = Date.now();
+    const duree = maintenant - pauseDepuis;
+    debut += duree;
+    pauseCumul += duree;
+    enPause = false;
+    montrerPause(false);
+    // La copie du téléphone reçoit la pause et l'heure ensemble : sa durée (dureeMs) reste juste, que la tranche suivante
+    // arrive ou non (revue du 2026-11-26, I5 : pendant la seconde d'après, elle devenait négative et la dictée, jugée
+    // trop courte, était effacée à la réouverture).
+    const rec = enregistreur;
+    const total = pauseCumul;
+    if (rec) rec.copie.then((ok) => ok && abri.modifier(rec.cle, { pause: total, fin: maintenant }));
+  };
+  boutonPause.addEventListener('click', () => {
+    const rec = enregistreur;
+    if (!rec || rec.arret || ouverture || rec.state === 'inactive') return;
+    if (!enPause) {
+      // La tranche en cours part à l'abri avant la pause : coupée pendant la pause, la dictée garde tout ce qui est dit,
+      // et sa durée s'arrête ici.
+      rec.requestData();
+      rec.pause();
+      enPause = true;
+      pauseDepuis = Date.now();
+      montrerPause(true);
+      return;
+    }
+    rec.resume();
+    solderPause();
+    ecoute.repartir();
+  });
+
   const attendreMicro = (rang, d) => {
     ouverture = rang;
     blocMicro.classList.add('ouverture');
     etatMicroEcran.textContent = etatMicroEcran.dataset.ouverture;
-    abandon.textContent = abandon.dataset.annuler;
+    abandonTexte.textContent = abandon.dataset.annuler;
     affichage.textContent = horloge(d ? Math.floor(dureeMs(d) / 1000) : 0);
+    enPause = false;
+    montrerPause(false);
+    Object.assign(carte, { arret: false, preavis: '', silence: false, secondes: 0 });
+    afficherCarte();
     montrer('enregistrement');
   };
   const finAttente = () => {
     ouverture = 0;
     blocMicro.classList.remove('ouverture');
     etatMicroEcran.textContent = etatMicroEcran.dataset.enCours;
-    abandon.textContent = abandon.dataset.abandonnerTexte;
+    abandonTexte.textContent = abandon.dataset.abandonnerTexte;
   };
   const annulerOuverture = () => {
     if (!ouverture) return false;
     finAttente();
+    ecoute.arreter();
     return true;
   };
 
@@ -741,6 +987,7 @@ function nouvelleOffre() {
     // Le micro se demande avant tout affichage : monter la fenêtre ne retarde pas son ouverture (11 ms mesurées sur un
     // processeur ralenti quatre fois quand la fenêtre passait devant).
     const micro = navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+    ecoute.preparer();
     attendreMicro(maDemande, d);
     let pris = null;
     try {
@@ -748,6 +995,7 @@ function nouvelleOffre() {
     } catch (e) {
       if (ouverture !== maDemande) return;
       finAttente();
+      ecoute.arreter();
       // Page /import, sans fenêtre : Parler et Importer reviennent, avec le message.
       if (!feuille) montrer('choix');
       refus('Le micro est refusé ou absent. Autorisez-le pour ce site dans les réglages du navigateur, ou enregistrez avec le téléphone puis « Importer ».');
@@ -783,7 +1031,17 @@ function nouvelleOffre() {
     }
     // Une suite garde le format du début : les parties d'une dictée sont rangées sous un seul type.
     const type = (d && MediaRecorder.isTypeSupported(d.type) ? d.type : null) || TYPES.find((t) => MediaRecorder.isTypeSupported(t)) || '';
-    const rec = new MediaRecorder(flux, type ? { mimeType: type, audioBitsPerSecond: 32000 } : {});
+    let rec = null;
+    try {
+      rec = new MediaRecorder(flux, type ? { mimeType: type, audioBitsPerSecond: 32000 } : {});
+    } catch (e) {
+      // Le navigateur ne sait pas enregistrer ce micro : le micro et le contexte audio se referment, l'import reste.
+      finAttente();
+      libererMicro();
+      if (!feuille) montrer('choix');
+      refus('L’enregistrement ne démarre pas dans ce navigateur. Enregistrez avec le téléphone, puis « Importer ».');
+      return;
+    }
     enregistreur = rec;
     morceaux = [];
     // Chaque tranche part aussi à l'abri, dans l'ordre : coupé n'importe quand, le début de la dictée reste.
@@ -802,35 +1060,42 @@ function nouvelleOffre() {
       rec.copie.then((ok) => ok && abri.ajouter(rec.cle, n, e.data));
     });
     rec.addEventListener('stop', () => {
+      // Arrêté pendant une pause : la pause ne compte pas dans la durée.
+      solderPause();
       finMs = Date.now();
       libererMicro();
       lacher();
       if (rec.arret === 'terminer') finir(rec);
       else if (rec.arret === 'abandon') abandonnerCopie(rec);
       // Arrêt sans « Terminer » (appel entrant, autre application sur le micro) : ce qui est enregistré reste.
-      else el('[data-consigne]').textContent = 'L’enregistrement s’est arrêté (appel ou autre application). « Terminer » envoie ce qui est enregistré.';
+      else { carte.arret = true; afficherCarte(); }
     });
     rec.start(1000);
     finAttente();
+    pauseCumul = 0;
+    boutonPause.hidden = typeof rec.pause !== 'function' || typeof rec.requestData !== 'function';
+    ecoute.brancher(flux);
     occupe = true;
     duMicro = true;
     // Une suite repart de la durée déjà dictée : le minuteur et la limite des 30 minutes valent pour la dictée entière.
     debut = Date.now() - (d ? dureeMs(d) : 0);
     finMs = 0;
-    const consigne = el('[data-consigne]');
-    // La phrase de l'activité du compte, écrite par le serveur dans l'attribut (_nouvelle_offre.html.twig).
-    consigne.textContent = consigne.dataset.consigne;
+    // Les conseils repartent du premier à chaque enregistrement, même pour une suite.
+    const depart = Math.floor((Date.now() - debut) / 1000);
     // Un premier tour tout de suite : une suite s'affiche à sa durée déjà dictée, pas à 00:00.
     const tour = () => {
+      // En pause, le temps de la dictée ne passe pas.
+      if (enPause) return;
       const s = Math.floor((Date.now() - debut) / 1000);
       affichage.textContent = horloge(s);
       if (s >= DUREE_MAX_S) {
         clearInterval(minuteur);
         el('[data-terminer]').click();
-      } else if (s >= DUREE_MAX_S - PREAVIS_S) {
-        const reste = Math.ceil((DUREE_MAX_S - s) / 60);
-        consigne.textContent = 'Encore ' + reste + ' min, puis l’enregistrement s’arrête et part.';
+        return;
       }
+      carte.secondes = s - depart;
+      carte.preavis = s >= DUREE_MAX_S - PREAVIS_S ? 'Encore ' + Math.ceil((DUREE_MAX_S - s) / 60) + ' min, puis l’enregistrement s’arrête et part.' : '';
+      afficherCarte();
     };
     tour();
     minuteur = setInterval(tour, 500);
@@ -1029,6 +1294,11 @@ function fichesEnFenetre() {
     rangees.forEach((r) => { r.classList.remove('eclair'); void r.offsetWidth; r.classList.add('eclair'); });
     if (rangees.length) rangees[rangees.length - 1].scrollIntoView({ block: 'center' });
   };
+  // La quantité de la dernière ligne ajoutée : c'est là que l'artisan continue (analyse des parcours, 2026-11-26).
+  const quantiteAjoutee = () => {
+    const rangee = ajoutees.length ? document.getElementById('l' + ajoutees[ajoutees.length - 1]) : null;
+    return rangee ? rangee.querySelector('input[name=quantite]') : null;
+  };
   const calque = {
     montrer: () => apparaitre(fond),
     cacher: () => {
@@ -1037,9 +1307,21 @@ function fichesEnFenetre() {
         return;
       }
       disparaitre(fond);
-      if (ajoutees.length) { eclairer(ajoutees); ajoutees = []; }
       prechargerAjout();
-      rendreFocus(declencheur);
+      if (ajoutees.length) {
+        // La dernière ligne ajoutée vient au milieu de l'écran, éclairée, le curseur dans sa quantité. Après la fenêtre :
+        // le retour de l'historique remet d'abord la page où elle était (en haut), et le défilement fait ici se perdait.
+        const ids = ajoutees;
+        ajoutees = [];
+        setTimeout(() => {
+          eclairer(ids);
+          const rangee = document.getElementById('l' + ids[ids.length - 1]);
+          const champ = rangee && rangee.querySelector('input[name=quantite]');
+          if (champ) { champ.focus({ preventScroll: true }); champ.select(); } else rendreFocus(declencheur);
+        }, DUREE_ANIMATION);
+      } else {
+        rendreFocus(declencheur);
+      }
       // Une fiche enregistrée au fil de la saisie : la liste derrière se met à jour.
       if (enregistreSeul !== null) {
         const id = enregistreSeul;
@@ -1058,7 +1340,13 @@ function fichesEnFenetre() {
     const m = (e.target.getAttribute('action') || '').match(/\/(\d+)$/);
     enregistreSeul = m ? m[1] : '';
   });
-  const fermer = () => calques.fermer(calque);
+  // « Terminé », la croix : le curseur va dans la quantité de la ligne ajoutée dès le toucher (un iPhone n'ouvre le
+  // clavier que dans le geste) ; la fenêtre fermée, la ligne vient à l'écran.
+  const fermer = () => {
+    const champ = quantiteAjoutee();
+    if (champ) champ.focus({ preventScroll: true });
+    calques.fermer(calque);
+  };
 
   const afficher = (html) => {
     const page = new DOMParser().parseFromString(html, 'text/html');

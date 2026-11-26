@@ -51,6 +51,16 @@
   {% endif %}</div>
 
   <div class="cat liste"><h5>Offres</h5><span id="compte-offres">{{ offres|length }}</span></div>
+  {# La recherche, comme dans Clients, Catalogue et Factures (analyse des parcours, Xavier, 2026-11-26) : à la frappe,
+     sur l'objet, le client et le numéro (app.js, brancherFiltre). Avec une seule offre, rien à chercher. #}
+  {% if offres|length > 1 %}
+    <form class="search" method="get" action="/" role="search">
+      <div class="box">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="oq" name="q" type="search" placeholder="Chercher une offre, un client" autocomplete="off" aria-label="Chercher une offre ou un client" data-filtre="#liste-offres">
+      </div>
+    </form>
+  {% endif %}
   {% if offres|length > 1 %}
     <nav class="fchips tri" aria-label="Trier les offres">
       {% for cle, libelle in tris %}<a href="{{ cle == 'recent' ? '/' : '/?tri=' ~ cle }}"{% if cle == tri %} aria-current="true"{% endif %}><span>{{ libelle }}</span></a>{% endfor %}
@@ -60,14 +70,14 @@
      Tab les atteint et les fait apparaître. #}
   <div id="liste-offres">
   {% for o in offres %}
-    <div class="glisse" id="o{{ o.id }}" data-glisse data-rang="{{ rangs[o.id] }}" data-client="{{ o.client_nom }}" data-montant="{{ totaux[o.id] }}" data-relire="{{ a_relire[o.id] > 0 ? 1 : 0 }}" data-modifiee="{{ o.modifiee_le ?? o.cree_le }}">
+    <div class="glisse" id="o{{ o.id }}" data-glisse data-rang="{{ rangs[o.id] }}" data-client="{{ o.client_nom }}" data-montant="{{ totaux[o.id] }}" data-relire="{{ a_relire[o.id] > 0 ? 1 : 0 }}" data-modifiee="{{ o.modifiee_le ?? o.cree_le }}" data-texte="{{ textes[o.id] }}">
       <div class="actions-glisse">
         <form method="post" action="/offres/{{ o.id }}/archiver"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="arch" type="submit" data-t="Archiver"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg><span>Archiver</span></button></form>
         <form method="post" action="/offres/{{ o.id }}/supprimer"><input type="hidden" name="_csrf" value="{{ csrf() }}"><button class="supp" type="submit" data-t="Supprimer"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Supprimer</span></button></form>
       </div>
       <a class="ocard" href="/offres/{{ o.id }}">
         <span class="l1"><b class="titre">{{ o.titre }}</b>
-          {% if a_relire[o.id] > 0 %}<span class="status a-verifier">{{ a_relire[o.id] }} à vérifier</span>{% else %}<span class="status relue">Prête</span>{% endif %}</span>
+          {% if a_relire[o.id] > 0 %}<span class="status a-verifier">{{ a_relire[o.id] }} à relire</span>{% else %}<span class="status relue">Prête</span>{% endif %}</span>
         <span class="l2"><span>{% if o.client_nom %}{{ o.client_nom }} · {% endif %}Offre {{ o.numero }} · {% if o.modifiee_le %}modifiée le {{ o.modifiee_le|date_locale }}{% else %}{{ o.cree_le|date_locale }}{% endif %}</span><b>{{ totaux[o.id]|chf }}</b></span>
       </a>
     </div>
@@ -78,6 +88,7 @@
       <p class="vide">Aucune offre pour l'instant. Le micro, en bas, enregistre {{ m.dictee_objet }}&nbsp;; la flèche importe un fichier.</p>
     {% endif %}
   {% endfor %}
+  {% if offres is not empty %}<p class="vide" data-aucun hidden>Aucune offre ne correspond.</p>{% endif %}
   </div>
 
   {# Toujours là, caché sans archive : archiver la première offre le fait paraître (morceau « archives »). #}

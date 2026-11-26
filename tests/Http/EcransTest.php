@@ -243,6 +243,13 @@ final class EcransTest extends TestCase
 
         $page = $this->page("{$this->offre}/ajouter");
         self::assertStringContainsString('<input type="hidden" name="reste" value="1">', $page);
+        // Analyse des parcours (Xavier, 2026-11-26) : la recherche d'abord, « Elle va » dessous, puis la liste ; le texte
+        // du champ tient dans sa largeur au téléphone.
+        self::assertStringContainsString('placeholder="Chercher ou taper une ligne"', $page);
+        $recherche = strpos($page, 'id="cherche"');
+        $elleVa = strpos($page, 'class="pieces-ajout nature-ajout"');
+        $liste = strpos($page, '<div id="res"');
+        self::assertTrue($recherche !== false && $elleVa !== false && $liste !== false && $recherche < $elleVa && $elleVa < $liste, 'recherche, « Elle va », liste');
         self::assertStringContainsString('<form class="pick-libre" method="post" action="' . $this->offre . '/lignes" data-aucun', $page);
         $r = $this->a->post("{$this->offre}/lignes", ['produit' => (string) $this->jeu->produit['a'], 'reste' => '1']);
         $nouvelle = (int) BaseDeTest::ligne("SELECT MAX(id) AS id FROM ligne WHERE offre_id = {$this->jeu->offre['a']}")['id'];
@@ -377,6 +384,11 @@ final class EcransTest extends TestCase
         self::assertStringContainsString('href="/reglages"', $plus);
         self::assertMatchesRegularExpression('#<a [^>]*href="/import"[^>]*data-importer#', $plus);
         self::assertStringContainsString('action="/deconnexion"', $plus);
+        // Analyse des parcours (Xavier, 2026-11-26) : « Se déconnecter » une seule fois au téléphone, en lien discret au
+        // bas de « Plus », avec l'adresse du compte ; les Réglages ne le gardent que sur PC, où « Plus » n'existe pas.
+        self::assertMatchesRegularExpression('#<form class="compte" method="post" action="/deconnexion">.*?Compte&nbsp;: a@exemple\.ch.*?<button class="lien" type="submit">Se déconnecter</button>#s', $plus);
+        self::assertStringNotContainsString('<button class="btn large" type="submit">Se déconnecter</button>', $plus);
+        self::assertStringContainsString('<form class="compte pc-seul" method="post" action="/deconnexion">', $this->page('/reglages'));
         foreach (['/plus', '/catalogue', '/reglages', '/reglages/entreprise'] as $chemin) {
             self::assertStringContainsString('<a class="mobile-seul" href="/plus" aria-current="page">', $this->page($chemin), $chemin);
         }
@@ -533,18 +545,22 @@ final class EcransTest extends TestCase
         $uuid = $this->jeu->uuid['a'];
         $page = $this->page("/enregistrements/$uuid");
         // Reçu : l'envoi est fait, la transcription en cours ; app.js interroge l'état de cet enregistrement.
-        self::assertMatchesRegularExpression('#<ol class="etapes" data-etapes data-uuid="' . $uuid . '">\s*<li class="done">.*Envoi de l&\#039;enregistrement.*<li class="cur">.*Transcription de la dictée.*<li class="todo">.*Création de l&\#039;offre.*<li class="todo">.*Offre prête#s', $page);
+        self::assertMatchesRegularExpression('#<ol class="etapes" data-etapes data-uuid="' . $uuid . '">\s*<li class="done">.*Envoi de l&\#039;enregistrement.*<li class="cur">.*Transcription de la dictée.*<li class="todo">.*Lignes de l&\#039;offre#s', $page);
+        // « Offre prête » n'est plus une étape (maquette v2, 2026-11-26) : la liste en compte trois.
+        self::assertSame(1, preg_match('#<ol class="etapes" data-etapes data-uuid="' . $uuid . '">(.*?)</ol>#s', $page, $m));
+        self::assertSame(3, substr_count($m[1] ?? '', '<li class='));
         self::assertStringContainsString('<noscript><meta http-equiv="refresh" content="5"></noscript>', $page);
 
         $etat = $this->a->get("/enregistrements/$uuid/etat");
         self::assertSame('no-store, private', $etat->headers->get('Cache-Control'));
-        self::assertSame(['statut' => 'recu', 'faites' => 1, 'echec' => false, 'essais' => 0, 'interrompu' => false, 'offre' => null], json_decode((string) $etat->getContent(), true));
+        // Les six premiers champs : le suivi. Les suivants disent où arriver (ArriveeDicteeTest).
+        self::assertSame(['statut' => 'recu', 'faites' => 1, 'echec' => false, 'essais' => 0, 'interrompu' => false, 'offre' => null], array_slice(json_decode((string) $etat->getContent(), true), 0, 6));
 
         BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'transcrit' WHERE uuid = '$uuid'");
         self::assertSame(2, json_decode((string) $this->a->get("/enregistrements/$uuid/etat")->getContent(), true)['faites']);
         BaseDeTest::pdo()->exec("UPDATE enregistrement SET statut = 'pret' WHERE uuid = '$uuid'");
-        self::assertSame(['statut' => 'pret', 'faites' => 4, 'echec' => false, 'essais' => 0, 'interrompu' => false, 'offre' => $this->jeu->offre['a']],
-            json_decode((string) $this->a->get("/enregistrements/$uuid/etat")->getContent(), true));
+        self::assertSame(['statut' => 'pret', 'faites' => 3, 'echec' => false, 'essais' => 0, 'interrompu' => false, 'offre' => $this->jeu->offre['a']],
+            array_slice(json_decode((string) $this->a->get("/enregistrements/$uuid/etat")->getContent(), true), 0, 6));
         // Prête : plus de suivi sur la page, le bouton mène à l'offre.
         $page = $this->page("/enregistrements/$uuid");
         self::assertStringNotContainsString('data-uuid', $page);

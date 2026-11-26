@@ -63,7 +63,7 @@ final class RelectureTest extends TestCase
         self::assertMatchesRegularExpression('#name="quantite" value="12.5"[^>]*inputmode="decimal"#', $page);
         self::assertMatchesRegularExpression('#name="prix" value="18.50"[^>]*inputmode="decimal"#', $page);
         self::assertStringContainsString('Encore 1 à relire', $page);
-        self::assertMatchesRegularExpression('#<button class="btn ok grand" type="submit" form="relecture">.*C\'est juste</button>#s', $page);
+        self::assertMatchesRegularExpression('#<button class="btn grand ok" type="submit" form="relecture" data-juste="C\'est juste" data-manque="Indiquez le prix">.*<span data-relu-libelle>C\'est juste</span></button>#s', $page);
         self::assertStringContainsString("href=\"{$this->offre}/lignes/{$this->ligne}\"", $page, '« Corriger » ouvre la ligne entière');
     }
 
@@ -86,7 +86,42 @@ final class RelectureTest extends TestCase
         $fin = $this->page($this->offre . '/relire');
         self::assertMatchesRegularExpression('#<div class="relu-fin" data-relu-fin>.*?Toutes les lignes sont relues#s', $fin, 'la fin est visible');
         self::assertStringNotContainsString('<section data-relu=', $fin, 'plus aucune ligne à relire');
-        self::assertMatchesRegularExpression("#<div class=\"actionbar\" data-relu-fin>.*?href=\"{$this->offre}/apercu\"#s", $fin, 'le geste suivant : générer l\'offre');
+        // L'offre du jeu n'a pas de client : « Générer l'offre » passe par son choix, puis le PDF (Offre\Arrivee).
+        self::assertMatchesRegularExpression("#<div class=\"actionbar\" data-relu-fin>.*?href=\"{$this->offre}/client\?suite=apercu\"#s", $fin, 'le geste suivant : générer l\'offre');
+    }
+
+    /** Xavier, 2026-11-26 : « Après la dernière ligne relue : PDF directement ». */
+    public function testLaDerniereLigneRelueOuvreLePdf(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 1 WHERE id = {$this->ligne}");
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = {$this->jeu->client['a']} WHERE id = {$this->jeu->offre['a']}");
+        $this->page($this->offre . '/relire');
+        $r = $this->a->post("{$this->offre}/relire/{$this->ligne}", ['quantite' => '12.5', 'prix' => '18.50']);
+        self::assertSame(303, $r->getStatusCode());
+        self::assertSame($this->offre . '/apercu', $r->headers->get('Location'));
+        self::assertMatchesRegularExpression("#<div class=\"actionbar\" data-relu-fin>.*?href=\"{$this->offre}/apercu\"#s", $this->page($this->offre . '/relire'));
+    }
+
+    /** Le client manque encore : son choix d'abord (« Pour qui est cette offre ? »), qui mène au PDF. */
+    public function testLaDerniereLigneRelueSansClientMeneAuChoixDuClient(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 1 WHERE id = {$this->ligne}");
+        $this->page($this->offre . '/relire');
+        $r = $this->a->post("{$this->offre}/relire/{$this->ligne}", ['quantite' => '12.5', 'prix' => '18.50']);
+        self::assertSame($this->offre . '/client?suite=apercu', $r->headers->get('Location'));
+    }
+
+    /** Par la file de fluide.js : la réponse envoie le navigateur au PDF (Morceaux::aller), sans page à découper. */
+    public function testLaDerniereLigneRelueParLaFileEnvoieLeNavigateurAuPdf(): void
+    {
+        BaseDeTest::pdo()->exec("UPDATE ligne SET a_verifier = 1 WHERE id = {$this->ligne}");
+        BaseDeTest::pdo()->exec("UPDATE offre SET client_id = {$this->jeu->client['a']} WHERE id = {$this->jeu->offre['a']}");
+        $this->page($this->offre . '/relire');
+        $r = $this->a->post("{$this->offre}/relire/{$this->ligne}", ['quantite' => '12.5', 'prix' => '18.50'], [], true, false,
+            ['X-Morceaux' => '', 'X-Morceaux-Ici' => $this->offre . '/relire', 'X-Cle-Envoi' => 'cle-relecture-0001', 'X-Compte' => (string) $this->jeu->a]);
+        self::assertSame(200, $r->getStatusCode());
+        self::assertSame('1', $r->headers->get('X-Morceaux-Aller'));
+        self::assertSame($this->offre . '/apercu', $r->headers->get('X-Morceaux-Adresse'));
     }
 
     /** Toutes les lignes à relire sont dans la page, la première visible : la suivante paraît sans requête (fluide.js). */
@@ -108,6 +143,10 @@ final class RelectureTest extends TestCase
         $page = $this->page($this->offre . '/relire');
         self::assertStringContainsString('<h2 class="relu-nom">Crépi</h2>', $page);
         self::assertMatchesRegularExpression('#name="prix" value=""#', $page);
+        // Constat 1 de l'analyse des parcours (Xavier, 2026-11-26) : sans prix, le bouton ne dit pas « C'est juste » et le
+        // curseur est dans le prix.
+        self::assertMatchesRegularExpression('#<button class="btn grand" type="submit" form="relecture" data-juste="C\'est juste" data-manque="Indiquez le prix">.*<span data-relu-libelle>Indiquez le prix</span></button>#s', $page);
+        self::assertMatchesRegularExpression('#name="prix" value=""[^>]*data-relu-prix autofocus>#', $page);
         $r = $this->a->post("{$this->offre}/relire/$libre", ['quantite' => '18', 'prix' => '']);
         self::assertSame(422, $r->getStatusCode());
         self::assertStringContainsString('Indiquez le prix', (string) $r->getContent());
